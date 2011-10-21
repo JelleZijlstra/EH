@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?
-require_once('/Users/jellezijlstra/Dropbox/ucucha/Common/common.php');
+require_once(__DIR__ . '/../Common/common.php');
 // don't load catalog when we have an argument that doesn't need it
 if(!in_array($argv[1], array('backup', 'revert', 'diff', 'findcode', 'test')))
 	require_once(__DIR__ . '/load.php');
@@ -41,8 +41,7 @@ switch($argv[1]) {
 	case 'revert': revert($catalog); break;
 	case 'diff': diff($catalog); break;
 	case 'findcode': findcode($argv[2]); break;
-	case 'test': 
-		convertfile('/Users/jellezijlstra/Dropbox/ucucha/Catalog/data/catalog.csv', '/Users/jellezijlstra/Dropbox/ucucha/Catalog/data/catalog.ods');
+	case 'test': break;
 	default: mydie('Invalid argument');
 }
 if($csvlist) $csvlist->saveifneeded();

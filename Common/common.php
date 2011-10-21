@@ -5,7 +5,7 @@
  * Contains functions used in several of my programs
  *
  * to use:
-require_once("/Users/jellezijlstra/Dropbox/common.php");
+require_once(__DIR__ . "../Common/common.php");
  */
 /* notes: regexes to cleanup PHP code syntax
 s/"([a-zA-Z\s\.]+)"/'\1'/

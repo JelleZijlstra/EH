@@ -1,4 +1,7 @@
 <?php
+/*
+ * GeneralList - generates a FileList/ListEntry-type set of classes to handle an input CSV file.
+ */
 require_once(__DIR__ . '/../Common/common.php');
 define('GLISTREPO', BPATH . '/GeneralList');
 require_once(BPATH . '/GeneralList/ExecuteHandler.php');

@@ -322,6 +322,16 @@ abstract class ExecuteHandler {
 							$paras[$result] = $paras[$key];
 					}
 					break;
+				case 'askifempty':
+					if(!is_array($pp_value))
+						$pp_value = array($pp_value);
+					foreach($pp_value as $key) {
+						if(!isset($paras[$key])) {
+							echo $key . ': ';
+							$paras['key'] = getinput();
+						}
+					}
+					break;
 				case 'errorifempty':
 					if(!is_array($pp_value))
 						$pp_value = array($pp_value);

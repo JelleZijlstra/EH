@@ -185,19 +185,37 @@ class FullFile extends ListEntry {
 		$this->inform();
 		if($this->isfile()) echo shell_exec('ls -l ' . $this->path()) . PHP_EOL;
 	}
-	public function path($paras = '') {
+	public function path($paras = array()) {
 	// returns path to file
+		$this->process_paras($paras, array(
+			'checklist' => array('type', 'folder'),
+			'default' => array('type' => 'shell'),
+		));
 		if(!$this->isfile()) {
 			return false;
 		}
-		$out = LIBRARY . "/" . escape_shell($this->folder);
+		switch($paras['type']) {
+			case 'shell': $process = function($in) {
+				return escape_shell($in);
+			};
+			break;
+			case 'url': $process = function($in) {
+				return str_replace('%2F', '/', rawurlencode($in));
+			};
+			break;
+			case 'none': $process = function($in) {
+				return $in;
+			};
+			break;
+		}
+		$out = $process(LIBRARY) . "/" . $process($this->folder);
 		if($this->sfolder) {
-			$out .= "/" . escape_shell($this->sfolder);
+			$out .= "/" . $process($this->sfolder);
 			if($this->ssfolder)
-				$out .= "/" . escape_shell($this->ssfolder);
+				$out .= "/" . $process($this->ssfolder);
 		}
 		if($paras['folder']) return $out;
-		$out .= "/" . escape_shell($this->name);
+		$out .= "/" . $process($this->name);
 		return $out;
 	}
 	public function openf($paras = '') {
@@ -2569,6 +2587,55 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			echo $key . ': ' . $value . '; ';
 		echo PHP_EOL;
 		return $out;
+	}
+	public function email($paras = array()) {
+	// Inspired by http://www.webcheatsheet.com/PHP/send_email_text_html_attachment.php#attachment
+		$this->process_paras($paras, array(
+			// what do we want?
+			'checklist' => array(
+				'to', // who to e-mail to
+				'message', // e-mail message
+				'subject', // subject
+			),
+			'default' => array(
+				'subject' => $this->name,
+			),
+			'askifempty' => array(
+				'to',
+			),
+		));
+		if(!isset($paras['message'])) {
+			$paras['message'] = "<p>Please find attached the following paper:</p>\r\n<ul><li>" . $this->citepaper() . "</li></ul>\r\n";
+		}
+		// generate boundary hash
+		$boundary_hash = md5(date('r', time()));
+		$headers = "From: " . FROMADDRESS . 
+			"\r\nReply-To: " . FROMADDRESS .
+			"\r\nContent-Type: multipart/mixed; boundary=\"PHP-mixed-" . 
+			$boundary_hash . "\"";
+		$message = '--PHP-mixed-' . $boundary_hash . 
+'Content-Type: multipart/alternative; boundary="PHP-alt-' . $boundary_hash . '--
+
+--PHP-alt-' . $boundary_hash . '--
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+
+' . $paras['message'] . '
+
+--PHP-alt-' . $boundary_hash . '--
+
+--PHP-mixed-' . $boundary_hash . '
+Content-Type: application/zip; name="' . $this->name . '" 
+Content-Transfer-Encoding: base64 
+Content-Disposition: attachment 
+
+' . chunk_split(base64_encode(file_get_contents($this->path(array('type' => 'none'))))) . '
+--PHP-mixed-' . $boundary_hash . '--';
+		if(!mail($paras['to'], $paras['subject'], $message, $headers)) {
+			echo 'Error sending e-mail' . PHP_EOL;
+			return false;
+		}
+		return true;
 	}
 	/* PROGRAMMING HELPS */
 /*	public function cleanup() {

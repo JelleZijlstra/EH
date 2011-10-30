@@ -353,6 +353,18 @@ abstract class ExecuteHandler {
 							$paras[$key] = $result;
 					}
 					break;
+				case 'checklist':
+					if(!is_array($pp_value)) {
+						echo 'Error: list of parameter is not an array' . PHP_EOL;
+						$founderror = true;
+						break;
+					}
+					foreach($paras as $key => $result) {
+						if(!in_array($key, $pp_value)) {
+							echo 'Warning: unrecognized parameter ' . $key . PHP_EOL;
+						}
+					}
+					break;
 				default:
 					echo 'Error: unrecognized parameter ' . $pp_key . PHP_EOL;
 					$founderror = true;

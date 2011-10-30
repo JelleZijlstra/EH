@@ -2613,10 +2613,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			"\r\nReply-To: " . FROMADDRESS .
 			"\r\nContent-Type: multipart/mixed; boundary=\"PHP-mixed-" . 
 			$boundary_hash . "\"";
-		$message = '--PHP-mixed-' . $boundary_hash . 
-'Content-Type: multipart/alternative; boundary="PHP-alt-' . $boundary_hash . '--
+		$message = '
+--PHP-mixed-' . $boundary_hash . '
+Content-Type: multipart/alternative; boundary="PHP-alt-' . $boundary_hash . '"
 
---PHP-alt-' . $boundary_hash . '--
+--PHP-alt-' . $boundary_hash . '
 Content-Type: text/html; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 
@@ -2630,7 +2631,8 @@ Content-Transfer-Encoding: base64
 Content-Disposition: attachment 
 
 ' . chunk_split(base64_encode(file_get_contents($this->path(array('type' => 'none'))))) . '
---PHP-mixed-' . $boundary_hash . '--';
+--PHP-mixed-' . $boundary_hash . '--
+';
 		if(!mail($paras['to'], $paras['subject'], $message, $headers)) {
 			echo 'Error sending e-mail' . PHP_EOL;
 			return false;

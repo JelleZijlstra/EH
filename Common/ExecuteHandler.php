@@ -5,6 +5,17 @@ define(PROCESS_PARAS_ERROR_FOUND, 0x1);
 abstract class ExecuteHandler {
 	private $commands;
 	private $synonyms;
+	private $config = array(
+		'debug' => false,
+	);
+	/* command history */
+	// holds all executed commands
+	private $history = array();
+	// length of history array
+	private $histlen = 0;
+	// pointer to where in the array we currently are
+	private $histptr = 0;
+	
 	protected $current;
 	protected $trystatic; // set to true to try additional stuff in expand_cmd
 	// array of codes that can be given in the 'execute' field of a command, and descriptions
@@ -36,8 +47,18 @@ abstract class ExecuteHandler {
 			'desc' => 'Execute a series of commands from a file',
 			'arg' => 'File path',
 			'execute' => 'callmethodarg'),
+		'shell' => array('name' => 'shell',
+			'aka' => 'exec_catch',
+			'desc' => 'Execute a command from the shell',
+			'arg' => 'Shell command',
+			'execute' => 'callmethodarg'),
+		'configset' => array('name' => 'configset',
+			'aka' => 'setconfig',
+			'desc' => 'Set a configuration variable',
+			'arg' => 'Variables to be set',
+			'execute' => 'callmethod'),
 	);
-	function __construct($commands) {
+	public function __construct($commands) {
 		$this->setup_ExecuteHandler($commands);
 	}
 	public function setup_ExecuteHandler($commands = NULL) {
@@ -76,10 +97,10 @@ abstract class ExecuteHandler {
 		if(!self::testcommand($command)) return false;
 		if($command['aka']) {
 			if(!is_array($command['aka'])) {
-				if($this->synonyms[$aka])
+				if($this->synonyms[$command['aka']])
 					trigger_error('Error: ' . $aka . ' already exists as a synonym for ' . $this->synonyms[$aka], E_USER_NOTICE);
 				else
-					$this->synonyms[$aka] = $command['name'];			
+					$this->synonyms[$command['aka']] = $command['name'];			
 			}
 			else foreach($command['aka'] as $aka) {
 				if($this->synonyms[$aka])
@@ -133,12 +154,25 @@ abstract class ExecuteHandler {
 		$splitcmd = $this->divide_cmd($in);
 		$rawcmd = array_shift($splitcmd);
 		$cmd = $this->expand_cmd($rawcmd);
+		// handle output redirection
+		$outputredir = false;
+		$nextoutput = false;
 		if(!$cmd) {
 			echo 'Invalid command: ' . $in . PHP_EOL;
 			return true;
 		}
 		$paras = array();
 		foreach($splitcmd as $piece) {
+			// handle output redirection
+			if($piece === '>') {
+				$nextoutput = true;
+				continue;
+			}
+			if($nextoutput) {
+				$outputredir = $piece;
+				$nextoutput = false;
+				continue;
+			}
 			// arguments without initial -
 			if($piece[0] !== '-') {
 				// allow for escaping
@@ -199,6 +233,10 @@ abstract class ExecuteHandler {
 		foreach($paras as &$text) {
 			if($text and is_string($text)) $text = self::remove_quotes($text);
 		}
+		// output redirection
+		if($outputredir and $cmd['execute'] !== 'quit') {
+			ob_start();
+		}
 		// execute it
 		switch($cmd['execute']) {
 			case 'doallorcurr':
@@ -234,6 +272,16 @@ abstract class ExecuteHandler {
 		}
 		if($cmd['setcurrent'] and $arg)
 			$this->current = $arg;
+		if($outputredir) {
+			$file = fopen($outputredir, 'w');
+			if(!$file) {
+				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
+				ob_end_clean();
+				return true;
+			}
+			fwrite($file, ob_get_contents());
+			ob_end_clean();
+		}
 		return true;
 	}
 	private function divide_cmd($in) {
@@ -378,7 +426,8 @@ abstract class ExecuteHandler {
 	}
 	public function setup_commandline($name, $paras = '') {
 	// Performs various functions in a pseudo-command line. A main entry point.
-		if($paras['undoable']) {
+	// stty stuff inspired by sfinktah at http://php.net/manual/en/function.fgetc.php
+		if($paras['undoable'] and !$this->hascommand('undo')) {
 			$this->tmp = clone $this;
 			$newcmd['name'] = 'undo';
 			$newcmd['desc'] = 'Return to the previous state of the object';
@@ -387,13 +436,130 @@ abstract class ExecuteHandler {
 			$this->addcommand($newcmd, array('ignoreduplicates' => true));
 		}
 		echo 'Welcome to command line mode. Type "help" for help.' . PHP_EOL;
+		// save stty settings
+		$saved_stty = preg_replace("/.*; ?/s", "", $this->stty("-a"));
+		// set our settings
+		$this->stty('cbreak');
+		// loop through commands
 		while(true) {
-			echo $name . '> ';
-			$cmd = getinput();
+			// save current cursor position
+			echo $name . "> \033[s";
+			// get command
+			$cmd = '';
+			$cmdlen = 0;
+			while(true) {
+				// get input
+				$c = fgetc(STDIN);
+				if($this->config['debug']) {
+					echo ' '. ord($c) . ' ';
+				}
+				switch(ord($c)) {
+					case 27: // arrow keys
+						$c2 = fgetc(STDIN);
+						if(ord($c2) == 91) {
+							$c3 = fgetc(STDIN);
+							// put back cursor
+							echo "\033[4D\033[K";
+							switch(ord($c3)) {
+								case 65: // KEY_UP
+									// decrement pointer
+									if($this->histptr > 0)
+										$this->histptr--;
+									// go back to saved cursor position; clear line
+									if($cmdlen > 0)
+										echo "\033[" . $cmdlen . "D\033[K"; 
+									// get new command
+									$cmd = $this->history[$this->histptr];
+									$cmdlen = strlen($cmd);
+									echo $cmd;
+									break;
+								case 66: // KEY_DOWN
+									// increment pointer
+									if($this->histptr < $this->histlen)
+										$this->histptr++;
+									// go back to saved cursor position; clear line
+									if($cmdlen > 0)
+										echo "\033[" . $cmdlen . "D\033[K"; 
+									// get new command
+									if($this->histpr < $this->histlen) {
+										$cmd = $this->history[$this->histptr];
+										$cmdlen = strlen($cmd);
+										echo $cmd;
+									}
+									else {
+										// reset command
+										$cmd = '';
+										$cmdlen = 0;
+									}
+									break;
+								case 68: // KEY_LEFT
+									echo "\033[1D";
+									break;
+								case 67: // KEY_RIGHT
+									echo "\033[1C";
+									break;
+							}
+						}
+						break;
+					case 127: //backspace
+						if($cmdlen > 0) {
+							echo "\033[3D\033[K"; // move cursor back three spots (because it puts stuff there for backspace), and erase to end of line
+							$cmdlen--;
+						}
+						else {
+							// remove junk
+							echo "\033[2D\033[K";
+						}
+						break; 
+					case 10: //newline
+						break 2; 
+					default: 
+						$cmd[$cmdlen] = $c;
+						$cmdlen++;
+						break; 
+					// it looks like KEY_UP etcetera may have more than one... need to see how to handle those
+				}
+			}
+			// create the command in string form
+			// it will sometimes be an array at this point, which will need to be imploded
+			if(is_string($cmd))
+				$tmpcmd = $cmd;
+			else if(is_array($cmd))
+				$tmpcmd = implode($cmd);
+			else if(is_null($cmd)) // don't try to execute empty command
+				continue;
+			else {
+				var_dump($cmd);
+			}
+			$cmd = substr($tmpcmd, 0, $cmdlen);
+			unset($c);
+			// save to history
+			$this->history[$this->histlen] = $cmd;
+			$this->histlen++;
+			$this->histptr = $this->histlen;
+			// execute the command
 			if(!$this->execute($cmd)) {
 				echo 'Goodbye.' . PHP_EOL;
 				return;
 			}
+		}
+		// restore stty settings
+		$this->stty($saved_stty);
+	}
+	private function stty($opt) {
+		$cmd = "/bin/stty " . $opt;
+		exec($cmd, $output, $return);
+		if($return !== 0) {
+			trigger_error("Failed to execute " . $cmd);
+			return false;
+		}
+		return implode(' ', $output);
+	}
+	protected function configset($paras = array()) {
+	// sets something in the $this->config array, which configures the EH instance
+		foreach($paras as $key => $value) {
+			if(array_key_exists($key, $this->config))
+				$this->config[$key] = $value;
 		}
 	}
 	abstract public function cli(); // sets up command line
@@ -424,6 +590,17 @@ abstract class ExecuteHandler {
 				echo "\t" . $from . ' -> ' . $to . PHP_EOL; 
 		}
 	}
+	protected function hascommand($cmd) {
+		if($this->commands[$cmd])
+			return true;
+		if($this->synonyms[$cmd])
+			return true;
+		if($this->trystatic and static::${get_called_class() . '_commands'}[$cmd])
+			return true;
+		if($this->trystatic and static::${get_called_class() . '_synonyms'}[$cmd])
+			return true;
+		return false;
+	}
 	protected function exec_file($file, $paras = '') {
 		$in = fopen($file, 'r');
 		if(!$in) {
@@ -434,7 +611,7 @@ abstract class ExecuteHandler {
 			$this->execute(trim($line));
 		return true;
 	}
-	static function testregex($in) {
+	static protected function testregex($in) {
 	// tests whether a regex pattern is valid
 		ob_start();
 		$t = @preg_match($in, 'test');
@@ -443,6 +620,20 @@ abstract class ExecuteHandler {
 			return false;
 		else
 			return true;
+	}
+	static private function shell($in) {
+		// cd won't actually change the shell until we do some special magic
+		if(preg_match('/^cd /', $in)) {
+			$dir = substr($in, 3);
+			// handle home directory
+			if($dir[0] === '~') {
+				$home = trim(shell_exec('echo $HOME'));
+				$dir = preg_replace('/^~/u', $home, $dir);
+			}
+			chdir($dir);
+		}
+		else
+			echo shell_exec($in);
 	}
 }
 ?>

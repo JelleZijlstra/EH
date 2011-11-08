@@ -11,12 +11,12 @@ abstract class ExecuteHandler {
 	/* command history */
 	// holds all executed commands
 	private $history = array();
+	// history we're currently in
+	private $currhist = 0;
 	// length of history array
-	private $histlen = 0;
-	// pointer to where in the array we currently are
-	private $histptr = 0;
+	private $histlen = array();
 	// where we are in execution (program counter)
-	private $pc = 0;
+	private $pc = array();
 	// array of variables defined internally
 	private $vars = array();
 	// current scope (set to > 0 on function calls when we implement those)
@@ -91,6 +91,9 @@ abstract class ExecuteHandler {
 			),
 		'endfor' => array('name' => 'endfor',
 			'desc' => 'End a for loop',
+			),
+		'//' => array('name' => '//',
+			'desc' => 'Introduce a comment',
 			),
 	);
 	public function __construct($commands) {
@@ -190,10 +193,28 @@ abstract class ExecuteHandler {
 	}
 	private function getvar($var) {
 	// get the value of an internal variable
-		return $this->vars[$this->currscope][$var];
+		if(!isset($this->vars[$this->currscope][$var]))
+			return NULL;
+		else
+			return $this->vars[$this->currscope][$var];
 	}
-	public function execute($in) {
+	private function evaluate($in) {
+		if(preg_match("/^(.*)\s*([+\-*\/])\s*(.*)$/u", $in, $matches)) {
+			switch($matches[2]) {
+				case '+': return $matches[1] + $matches[3];
+				case '-': return $matches[1] - $matches[3];
+				case '*': return $matches[1] * $matches[3];
+				case '/': return $matches[1] / $matches[3];
+			}
+		}
+		else
+			return $in;
+	}
+	public function execute($in = NULL) {
 	// functions as an interpreter of the byfile() "command line"
+		if($in === NULL) {
+			$in = $this->curr('pcres');
+		}
 		// substitute variable references
 		if(preg_match_all("/\\\$(\{[a-zA-Z]+\}|[a-zA-Z]+)/u", $in, $matches)) {
 			foreach($matches[1] as $reference) {
@@ -220,37 +241,56 @@ abstract class ExecuteHandler {
 			// execute language construct
 			switch($rawcmd) {
 				case '$': // variable assignment
-					$count = preg_match('/^\$\s+([a-zA-Z]+)\s*=\s*(.*)$/u', $in, $matches);
-					if($count !== 1) {
-						echo "Syntax error: In line: " . $in . PHP_EOL;
-						$this->pc++;
-						return false;
+					if(preg_match('/^\$\s+([a-zA-Z]+)\s*=\s*(.*)$/u', $in, $matches)) {
+						$var = $matches[1];
+						if(!preg_match("/^[a-zA-Z]+$/u", $var)) {
+							echo "Syntax error: Invalid variable name: $var" . PHP_EOL;
+							$this->pcinc();
+							return false;
+						}
+						$rawassigned = $matches[2];
+						$rawassigned = $this->evaluate($rawassigned);
+						if(preg_match("/^(\"|').*(\"|')$/u", $rawassigned, $matches)) {
+							// string assignment
+							$rawassigned = substr($rawassigned, 1, -1);
+							// remove quote escapes
+							$regex = "/\\\\(?=" . $matches[1] . ")/u";
+							$assigned = preg_replace($regex, '', $rawassigned);
+						}
+						else if(preg_match("/^(\d+|\d+\.\d+|0x\d+)$/u", $rawassigned)) {
+							// number
+							$assigned = $rawassigned;
+						}
+						else {
+							echo "Syntax error: Unrecognized assignment value: $rawassigned" . PHP_EOL;
+							$this->pcinc();
+							return false;
+						}
+						$this->setvar($var, $assigned);
+						$this->pcinc();
+						return true;
 					}
-					$var = $matches[1];
-					if(!preg_match("/^[a-zA-Z]+$/u", $var)) {
-						echo "Syntax error: Invalid variable name: $var" . PHP_EOL;
-						$this->pc++;
-						return false;
-					}
-					$rawassigned = $matches[2];
-					if(preg_match("/^(\"|').*(\"|')$/u", $rawassigned, $matches)) {
-						// string assignment
-						$rawassigned = substr($rawassigned, 1, -1);
-						// remove quote escapes
-						$regex = "/\\\\(?=" . $matches[1] . ")/u";
-						$assigned = preg_replace($regex, '', $rawassigned);
-					}
-					else if(preg_match("/^(\d+|\d+\.\d+|0x\d+)$/u", $rawassigned)) {
-						// number
-						$assigned = $rawassigned;
+					else if(preg_match('/^\$\s+([a-zA-Z]+)(\+\+|\-\-)$/u', $in, $matches)) {
+						$varname = $matches[1];
+						$var = $this->getvar($varname);
+						if($var === NULL) {
+							echo 'Notice: Unrecognized variable ' . $varname;
+							$this->pcinc();
+							return true;
+						}
+						switch($matches[2]) {
+							case '++': $var++; break;
+							case '--': $var--; break;
+						}
+						$this->setvar($varname, $var);
+						$this->pcinc();
+						return true;
 					}
 					else {
-						echo "Syntax error: Unrecognized assignment value: $rawassigned" . PHP_EOL;
-						$this->pc++;
+						echo "Syntax error: In line: " . $in . PHP_EOL;
+						$this->pcinc();
 						return false;
 					}
-					$this->setvar($var, $assigned);
-					return true;
 				case 'if':
 					$condition = false;
 					if(preg_match("/^if\s+(.*)=(.*)$/u", $in, $matches)) {
@@ -264,7 +304,7 @@ abstract class ExecuteHandler {
 					}
 					else {
 						echo "Syntax error: In line: " . $in . PHP_EOL;
-						$this->pc++;
+						$this->pcinc();
 						return false;
 					}
 					$this->flowctr++;
@@ -272,70 +312,73 @@ abstract class ExecuteHandler {
 						'type' => 'if',
 						'part' => 'then',
 						'condition' => $condition,
-						'line' => $this->pc,
+						'line' => $this->curr('pc'),
 					);
-					$this->pc++;
+					$this->pcinc();
 					return true;
 				case 'else':
 					if($this->flow[$this->flowctr]['type'] !== 'if') {
 						echo 'Unexpected "else"' . PHP_EOL;
-						$this->pc++;
+						$this->pcinc();
 						return false;
 					}
 					$this->flow[$this->flowctr]['part'] = 'else';
-					$this->pc++;
+					$this->pcinc();
 					return true;
 				case 'endif':
 					if($this->flow[$this->flowctr]['type'] !== 'if') {
 						echo 'Unexpected "endif"' . PHP_EOL;
-						$this->pc++;
+						$this->pcinc();
 						return false;
 					}
 					$this->flowctr--;
-					$this->pc++;
+					$this->pcinc();
 					return true;
 				case 'for':
 					if(!preg_match("/^for\s+(\d+)\s+count\s+(.*)$/u", $in, $matches)) {
 						echo 'Syntax error: In line: ' . $in . PHP_EOL;
-						$this->pc++;
+						$this->pcinc();
 						return false;
 					}
 					$max = (int) $matches[1];
 					$var = $matches[2];
 					$this->setvar($var, 0);
 					$this->flowctr++;
+					$this->pcinc();
 					$this->flow[$this->flowctr] = array(
 						'type' => 'for',
 						'subtype' => 'count',
 						'counter' => 0,
 						'max' => $max,
 						'countervar' => $var,
-						'line' => $this->pc,
+						'line' => $this->curr('pc'),
 					);
-					$this->pc++;
 					return true;
 				case 'endfor':
 					$f = $this->flow[$this->flowctr];
 					if($f['type'] !== 'for') {
 						echo 'Syntax error: Unexpected "endfor"' . PHP_EOL;
-						$this->pc++;
+						$this->pcinc();
 						return false;
 					}
 					if($f['subtype'] !== 'count') {
 						echo 'Unrecognized subtype: ' . $f['subtype'] . PHP_EOL;
-						$this->pc++;
+						$this->pcinc();
 						return false;
 					}
 					$ctr = $this->getvar($f['countervar']);
 					$ctr++;
 					if($ctr < $f['max']) {
-						$this->pc = $f['line'];
+						$this->pc[$this->currhist] = $f['line'];
 						$this->setvar($f['countervar'], $ctr);
 					}
 					else {
 						$this->flowctr--;
-						$this->pc++;
+						$this->pcinc();
 					}
+					return true;
+				case '//':
+					$this->pcinc();
 					return true;
 			}
 		}
@@ -347,7 +390,7 @@ abstract class ExecuteHandler {
 			$cmd = $this->expand_cmd($rawcmd);
 			if(!$cmd) {
 				echo 'Invalid command: ' . $in . PHP_EOL;
-				$this->pc++;
+				$this->pcinc();
 				return true;
 			}
 			$paras = array();
@@ -433,13 +476,13 @@ abstract class ExecuteHandler {
 					if($f['condition'])
 						break;
 					else {
-						$this->pc++;
+						$this->pcinc();
 						return true;
 					}
 				}
 				else if($f['part'] === 'else') {
 					if($f['condition']) {
-						$this->pc++;
+						$this->pcinc();
 						return true;
 					}
 					else
@@ -480,7 +523,7 @@ abstract class ExecuteHandler {
 				$cmd['name']($rawarg, $paras);
 				break;			
 			case 'quit':
-				$this->pc++;
+				$this->pcinc();
 				return false;
 			default:
 				trigger_error('Unrecognized execution mode', E_USER_NOTICE); 
@@ -493,13 +536,13 @@ abstract class ExecuteHandler {
 			if(!$file) {
 				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
 				ob_end_clean();
-				$this->pc++;
+				$this->pcinc();
 				return true;
 			}
 			fwrite($file, ob_get_contents());
 			ob_end_clean();
 		}
-		$this->pc++;
+		$this->pcinc();
 		return true;
 	}
 	private function divide_cmd($in) {
@@ -660,6 +703,9 @@ abstract class ExecuteHandler {
 			'type' => 'global',
 			'start' => 0,
 		);
+		$this->history[$this->currhist] = array();
+		$this->histlen[$this->currhist] = 0;
+		$this->pc[$this->currhist] = 0;
 		// lambda function to get string-form command
 		$getcmd = function() use(&$cmd, &$cmdlen) {
 			// create the command in string form
@@ -693,6 +739,7 @@ abstract class ExecuteHandler {
 			$cmdlen = 0;
 			$keypos = 0;
 			while(true) {
+				$histptr = $this->histlen[$this->currhist];
 				// get input
 				$c = fgetc(STDIN);
 				if($this->config['fulldebug']) {
@@ -708,21 +755,21 @@ abstract class ExecuteHandler {
 							switch(ord($c3)) {
 								case 65: // KEY_UP
 									// decrement pointer
-									if($this->histptr > 0)
-										$this->histptr--;
+									if($histptr > 0)
+										$histptr--;
 									// go back to saved cursor position; clear line
 									if($cmdlen > 0)
 										echo "\033[" . $keypos . "D\033[K"; 
 									// get new command
-									$cmd = $this->history[$this->histptr];
+									$cmd = $this->history[$this->currhist][$histptr];
 									$cmdlen = strlen($cmd);
 									$keypos = $cmdlen;
 									echo $cmd;
 									break;
 								case 66: // KEY_DOWN
 									// increment pointer
-									if($this->histptr < $this->histlen)
-										$this->histptr++;
+									if($histptr < $this->histlen[$this->currhist])
+										$histptr++;
 									// go back to saved cursor position; clear line
 									if($cmdlen > 0) {
 										if($keypos > 0)
@@ -730,8 +777,8 @@ abstract class ExecuteHandler {
 										echo "\033[K"; 
 									}
 									// get new command
-									if($this->histpr < $this->histlen) {
-										$cmd = $this->history[$this->histptr];
+									if($histpr < $this->histlen[$this->currhist]) {
+										$cmd = $this->history[$this->currhist][$histptr];
 										$cmdlen = strlen($cmd);
 										$keypos = $cmdlen;
 										echo $cmd;
@@ -815,10 +862,6 @@ abstract class ExecuteHandler {
 			$cmd = $getcmd();
 			if($cmd == NULL) continue;
 			unset($c);
-			// save to history
-			$this->history[$this->histlen] = $cmd;
-			$this->histlen++;
-			$this->histptr = $this->histlen;
 			// restore sane stty settings for the duration of command execution
 			$this->stty("sane");
 			if($this->config['debug']) var_dump($cmd);
@@ -890,16 +933,24 @@ abstract class ExecuteHandler {
 		return false;
 	}
 	protected function exec_file($file, $paras = '') {
+		// save old currscope
+		$oldcurrhist = $this->currhist;
+		$this->currhist = 1; // want something more intelligent here eventually
+		$this->history[$this->currhist] = array();
+		$this->histlen[$this->currhist] = 0;
+		$this->pc[$this->currhist] = 0;
 		$in = fopen($file, 'r');
 		if(!$in) {
 			echo 'Invalid input file' . PHP_EOL;
 			return false;
 		}
 		while(($line = fgets($in)) !== false) {
-			$line = trim($line);
-			if(!$this->driver($line))
+			if(!$this->driver($line)) {
+				$this->currhist = $oldcurrhist;
 				return false;
+			}
 		}
+		$this->currhist = $oldcurrhist;
 		return true;
 	}
 	static protected function testregex($in) {
@@ -932,19 +983,35 @@ abstract class ExecuteHandler {
 	private function driver($in) {
 	// adds lines to the history array, and handles execution
 		// add line to the history array
-		$this->history[$this->histptr] = $in;
-		$this->histptr++;
+		$this->history[$this->currhist][$this->histlen[$this->currhist]] = trim($in);
+		$this->histlen[$this->currhist]++;
 		// execute at first
-		$firstret = $this->execute($in);
+		if($this->config['debug']) 
+			echo "Executing command: " . $this->curr('pcres') . PHP_EOL;
+		$firstret = $this->execute();
 		if($firstret == false)
 			return false;
 		// continue executing as long as PC is below length of program
-		while($this->pc < $this->histptr) {
-			$ret = $this->execute($this->history[$this->pc]);
+		while($this->curr('pc') < $this->curr('histlen')) {
+			if($this->config['debug']) 
+				echo "Executing command: " . $this->curr('pcres') . PHP_EOL;
+			$ret = $this->execute();
 			if($ret == false)
 				return false;
 		}
 		return $firstret;
+	}
+	private function curr($var, $ctr = NULL) {
+		switch($var) {
+			case 'pc': return $this->pc[$this->currhist];
+			case 'histlen': return $this->histlen[$this->currhist];
+			case 'history': return $this->history[$this->currhist][$ctr];
+			case 'pcres': return $this->history[$this->currhist][$this->pc[$this->currhist]];
+		}
+		return NULL;
+	}
+	private function pcinc() {
+		$this->pc[$this->currhist]++;
 	}
 }
 ?>

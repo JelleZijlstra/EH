@@ -199,12 +199,18 @@ abstract class ExecuteHandler {
 			return $this->vars[$this->currscope][$var];
 	}
 	private function evaluate($in) {
-		if(preg_match("/^(.*)\s*([+\-*\/])\s*(.*)$/u", $in, $matches)) {
+		if(preg_match("/^(.*)\s*([+\-*\/=><]|!=|>=|<=)\s*(.*)$/u", $in, $matches)) {
 			switch($matches[2]) {
 				case '+': return $matches[1] + $matches[3];
 				case '-': return $matches[1] - $matches[3];
 				case '*': return $matches[1] * $matches[3];
 				case '/': return $matches[1] / $matches[3];
+				case '=': return ($matches[1] == $matches[3]);
+				case '>': return ($matches[1] > $matches[3]);
+				case '<': return ($matches[1] < $matches[3]);
+				case '!=': return ($matches[1] != $matches[3]);
+				case '>=': return ($matches[1] >= $matches[3]);
+				case '<=': return ($matches[1] <= $matches[3]);
 			}
 		}
 		else
@@ -335,48 +341,76 @@ abstract class ExecuteHandler {
 					$this->pcinc();
 					return true;
 				case 'for':
-					if(!preg_match("/^for\s+(\d+)\s+count\s+(.*)$/u", $in, $matches)) {
+					if(preg_match("/^for\s+(\d+)\s+count\s+(.*)$/u", $in, $matches)) {
+						$max = (int) $matches[1];
+						$var = $matches[2];
+						$this->setvar($var, 0);
+						$this->flowctr++;
+						$this->pcinc();
+						$this->flow[$this->flowctr] = array(
+							'type' => 'for',
+							'subtype' => 'count',
+							'counter' => 0,
+							'max' => $max,
+							'countervar' => $var,
+							'line' => $this->curr('pc'),
+						);
+						return true;
+					}
+					else if(preg_match("/^for\s+(\d+)$/u", $in, $matches)) {
+						$max = (int) $matches[1];
+						$this->flowctr++;
+						$this->pcinc();
+						$this->flow[$this->flowctr] = array(
+							'type' => 'for',
+							'subtype' => 'barecount',
+							'counter' => 0,
+							'max' => $max,
+							'line' => $this->curr('pc'),
+						);
+						return true;
+					}
+					else {
 						echo 'Syntax error: In line: ' . $in . PHP_EOL;
 						$this->pcinc();
 						return false;
 					}
-					$max = (int) $matches[1];
-					$var = $matches[2];
-					$this->setvar($var, 0);
-					$this->flowctr++;
-					$this->pcinc();
-					$this->flow[$this->flowctr] = array(
-						'type' => 'for',
-						'subtype' => 'count',
-						'counter' => 0,
-						'max' => $max,
-						'countervar' => $var,
-						'line' => $this->curr('pc'),
-					);
-					return true;
 				case 'endfor':
-					$f = $this->flow[$this->flowctr];
+					$f =& $this->flow[$this->flowctr];
 					if($f['type'] !== 'for') {
 						echo 'Syntax error: Unexpected "endfor"' . PHP_EOL;
 						$this->pcinc();
 						return false;
 					}
-					if($f['subtype'] !== 'count') {
+					if($f['subtype'] === 'count') {
+						$ctr = $this->getvar($f['countervar']);
+						$ctr++;
+						if($ctr < $f['max']) {
+							$this->pc[$this->currhist] = $f['line'];
+							$this->setvar($f['countervar'], $ctr);
+						}
+						else {
+							$this->flowctr--;
+							$this->pcinc();
+						}
+						return true;
+					}
+					else if($f['subtype'] === 'barecount') {
+						$f['counter']++;
+						if($f['counter'] < $f['max']) {
+							$this->pc[$this->currhist] = $f['line'];
+						}
+						else {
+							$this->flowctr--;
+							$this->pcinc();
+						}
+						return true;
+					}
+					else {
 						echo 'Unrecognized subtype: ' . $f['subtype'] . PHP_EOL;
 						$this->pcinc();
 						return false;
 					}
-					$ctr = $this->getvar($f['countervar']);
-					$ctr++;
-					if($ctr < $f['max']) {
-						$this->pc[$this->currhist] = $f['line'];
-						$this->setvar($f['countervar'], $ctr);
-					}
-					else {
-						$this->flowctr--;
-						$this->pcinc();
-					}
-					return true;
 				case '//':
 					$this->pcinc();
 					return true;

@@ -86,6 +86,12 @@ abstract class ExecuteHandler {
 		'endif' => array('name' => 'endif',
 			'desc' => 'Ends an if condition',
 			),
+		'for' => array('name' => 'for',
+			'desc' => 'Introduces a for loop',
+			),
+		'endfor' => array('name' => 'endfor',
+			'desc' => 'End a for loop',
+			),
 	);
 	public function __construct($commands) {
 		$this->setup_ExecuteHandler($commands);
@@ -178,6 +184,14 @@ abstract class ExecuteHandler {
 		}
 		return true;	
 	}
+	private function setvar($var, $value) {
+	// set a variable in the internal language
+		$this->vars[$this->currscope][$var] = $value;
+	}
+	private function getvar($var) {
+	// get the value of an internal variable
+		return $this->vars[$this->currscope][$var];
+	}
 	public function execute($in) {
 	// functions as an interpreter of the byfile() "command line"
 		// substitute variable references
@@ -187,7 +201,7 @@ abstract class ExecuteHandler {
 					$fmreference = substr($reference, 1, -1);
 				else
 					$fmreference = $reference;
-				if($this->vars[$this->currscope][$fmreference]) {
+				if(isset($this->vars[$this->currscope][$fmreference])) {
 					$in = preg_replace(
 						"/\\\$" . preg_quote($reference) . "/u",
 						$this->vars[$this->currscope][$fmreference],
@@ -209,11 +223,13 @@ abstract class ExecuteHandler {
 					$count = preg_match('/^\$\s+([a-zA-Z]+)\s*=\s*(.*)$/u', $in, $matches);
 					if($count !== 1) {
 						echo "Syntax error: In line: " . $in . PHP_EOL;
+						$this->pc++;
 						return false;
 					}
 					$var = $matches[1];
 					if(!preg_match("/^[a-zA-Z]+$/u", $var)) {
 						echo "Syntax error: Invalid variable name: $var" . PHP_EOL;
+						$this->pc++;
 						return false;
 					}
 					$rawassigned = $matches[2];
@@ -230,9 +246,10 @@ abstract class ExecuteHandler {
 					}
 					else {
 						echo "Syntax error: Unrecognized assignment value: $rawassigned" . PHP_EOL;
+						$this->pc++;
 						return false;
 					}
-					$this->vars[$this->currscope][$var] = $assigned;
+					$this->setvar($var, $assigned);
 					return true;
 				case 'if':
 					$condition = false;
@@ -247,6 +264,7 @@ abstract class ExecuteHandler {
 					}
 					else {
 						echo "Syntax error: In line: " . $in . PHP_EOL;
+						$this->pc++;
 						return false;
 					}
 					$this->flowctr++;
@@ -254,22 +272,70 @@ abstract class ExecuteHandler {
 						'type' => 'if',
 						'part' => 'then',
 						'condition' => $condition,
-						'line' => $this->histlen,
+						'line' => $this->pc,
 					);
+					$this->pc++;
 					return true;
 				case 'else':
 					if($this->flow[$this->flowctr]['type'] !== 'if') {
 						echo 'Unexpected "else"' . PHP_EOL;
+						$this->pc++;
 						return false;
 					}
 					$this->flow[$this->flowctr]['part'] = 'else';
+					$this->pc++;
 					return true;
 				case 'endif':
 					if($this->flow[$this->flowctr]['type'] !== 'if') {
-						echo 'Unexpected "else"' . PHP_EOL;
+						echo 'Unexpected "endif"' . PHP_EOL;
+						$this->pc++;
 						return false;
 					}
 					$this->flowctr--;
+					$this->pc++;
+					return true;
+				case 'for':
+					if(!preg_match("/^for\s+(\d+)\s+count\s+(.*)$/u", $in, $matches)) {
+						echo 'Syntax error: In line: ' . $in . PHP_EOL;
+						$this->pc++;
+						return false;
+					}
+					$max = (int) $matches[1];
+					$var = $matches[2];
+					$this->setvar($var, 0);
+					$this->flowctr++;
+					$this->flow[$this->flowctr] = array(
+						'type' => 'for',
+						'subtype' => 'count',
+						'counter' => 0,
+						'max' => $max,
+						'countervar' => $var,
+						'line' => $this->pc,
+					);
+					$this->pc++;
+					return true;
+				case 'endfor':
+					$f = $this->flow[$this->flowctr];
+					if($f['type'] !== 'for') {
+						echo 'Syntax error: Unexpected "endfor"' . PHP_EOL;
+						$this->pc++;
+						return false;
+					}
+					if($f['subtype'] !== 'count') {
+						echo 'Unrecognized subtype: ' . $f['subtype'] . PHP_EOL;
+						$this->pc++;
+						return false;
+					}
+					$ctr = $this->getvar($f['countervar']);
+					$ctr++;
+					if($ctr < $f['max']) {
+						$this->pc = $f['line'];
+						$this->setvar($f['countervar'], $ctr);
+					}
+					else {
+						$this->flowctr--;
+						$this->pc++;
+					}
 					return true;
 			}
 		}
@@ -281,6 +347,7 @@ abstract class ExecuteHandler {
 			$cmd = $this->expand_cmd($rawcmd);
 			if(!$cmd) {
 				echo 'Invalid command: ' . $in . PHP_EOL;
+				$this->pc++;
 				return true;
 			}
 			$paras = array();
@@ -365,15 +432,21 @@ abstract class ExecuteHandler {
 				if($f['part'] === 'then') {
 					if($f['condition'])
 						break;
-					else
+					else {
+						$this->pc++;
 						return true;
+					}
 				}
 				else if($f['part'] === 'else') {
-					if($f['condition'])
+					if($f['condition']) {
+						$this->pc++;
 						return true;
+					}
 					else
 						break;
 				}
+			case 'for':
+				break;
 		}
 		// output redirection
 		if($outputredir and $cmd['execute'] !== 'quit') {
@@ -407,6 +480,7 @@ abstract class ExecuteHandler {
 				$cmd['name']($rawarg, $paras);
 				break;			
 			case 'quit':
+				$this->pc++;
 				return false;
 			default:
 				trigger_error('Unrecognized execution mode', E_USER_NOTICE); 
@@ -419,11 +493,13 @@ abstract class ExecuteHandler {
 			if(!$file) {
 				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
 				ob_end_clean();
+				$this->pc++;
 				return true;
 			}
 			fwrite($file, ob_get_contents());
 			ob_end_clean();
 		}
+		$this->pc++;
 		return true;
 	}
 	private function divide_cmd($in) {
@@ -747,7 +823,7 @@ abstract class ExecuteHandler {
 			$this->stty("sane");
 			if($this->config['debug']) var_dump($cmd);
 			// execute the command
-			if(!$this->execute($cmd)) {
+			if(!$this->driver($cmd)) {
 				echo 'Goodbye.' . PHP_EOL;
 				return;
 			}
@@ -819,8 +895,11 @@ abstract class ExecuteHandler {
 			echo 'Invalid input file' . PHP_EOL;
 			return false;
 		}
-		while(($line = fgets($in)) !== false)
-			$this->execute(trim($line));
+		while(($line = fgets($in)) !== false) {
+			$line = trim($line);
+			if(!$this->driver($line))
+				return false;
+		}
 		return true;
 	}
 	static protected function testregex($in) {

@@ -15,8 +15,18 @@ abstract class ExecuteHandler {
 	private $histlen = 0;
 	// pointer to where in the array we currently are
 	private $histptr = 0;
+	// where we are in execution (program counter)
+	private $pc = 0;
+	// array of variables defined internally
+	private $vars = array();
+	// current scope (set to > 0 on function calls when we implement those)
+	private $currscope = 0;
+	// array of control flow structures we're currently in
+	private $flow = array();
+	// counter that holds the structure we're in at the moment
+	private $flowctr = 0;
 	
-	protected $current;
+	protected $current; // currently handled files
 	protected $trystatic; // set to true to try additional stuff in expand_cmd
 	// array of codes that can be given in the 'execute' field of a command, and descriptions
 	protected static $handlers = array(
@@ -57,6 +67,25 @@ abstract class ExecuteHandler {
 			'desc' => 'Set a configuration variable',
 			'arg' => 'Variables to be set',
 			'execute' => 'callmethod'),
+		'myecho' => array('name' => 'myecho',
+			'aka' => 'echo',
+			'desc' => 'Echo input',
+			'arg' => 'Text to be echoed',
+			'execute' => 'callmethodarg'),
+	);
+	private static $constructs = array(
+		'$' => array('name' => '$',
+			'desc' => 'Declare and set a variable'
+			),
+		'if' => array('name' => 'if',
+			'desc' => 'Sets a condition',
+			),
+		'else' => array('name' => 'else',
+			'desc' => 'Executes if condition in if is false',
+			),
+		'endif' => array('name' => 'endif',
+			'desc' => 'Ends an if condition',
+			),
 	);
 	public function __construct($commands) {
 		$this->setup_ExecuteHandler($commands);
@@ -151,87 +180,200 @@ abstract class ExecuteHandler {
 	}
 	public function execute($in) {
 	// functions as an interpreter of the byfile() "command line"
+		// substitute variable references
+		if(preg_match_all("/\\\$(\{[a-zA-Z]+\}|[a-zA-Z]+)/u", $in, $matches)) {
+			foreach($matches[1] as $reference) {
+				if($reference[0] === '{') 
+					$fmreference = substr($reference, 1, -1);
+				else
+					$fmreference = $reference;
+				if($this->vars[$this->currscope][$fmreference]) {
+					$in = preg_replace(
+						"/\\\$" . preg_quote($reference) . "/u",
+						$this->vars[$this->currscope][$fmreference],
+						$in,
+						1
+					);
+				}
+				else {
+					echo "Notice: unrecognized variable " . $fmreference . PHP_EOL;
+				}
+			}
+		}
 		$splitcmd = $this->divide_cmd($in);
 		$rawcmd = array_shift($splitcmd);
-		$cmd = $this->expand_cmd($rawcmd);
+		if(array_key_exists($rawcmd, self::$constructs)) {
+			// execute language construct
+			switch($rawcmd) {
+				case '$': // variable assignment
+					$count = preg_match('/^\$\s+([a-zA-Z]+)\s*=\s*(.*)$/u', $in, $matches);
+					if($count !== 1) {
+						echo "Syntax error: In line: " . $in . PHP_EOL;
+						return false;
+					}
+					$var = $matches[1];
+					if(!preg_match("/^[a-zA-Z]+$/u", $var)) {
+						echo "Syntax error: Invalid variable name: $var" . PHP_EOL;
+						return false;
+					}
+					$rawassigned = $matches[2];
+					if(preg_match("/^(\"|').*(\"|')$/u", $rawassigned, $matches)) {
+						// string assignment
+						$rawassigned = substr($rawassigned, 1, -1);
+						// remove quote escapes
+						$regex = "/\\\\(?=" . $matches[1] . ")/u";
+						$assigned = preg_replace($regex, '', $rawassigned);
+					}
+					else if(preg_match("/^(\d+|\d+\.\d+|0x\d+)$/u", $rawassigned)) {
+						// number
+						$assigned = $rawassigned;
+					}
+					else {
+						echo "Syntax error: Unrecognized assignment value: $rawassigned" . PHP_EOL;
+						return false;
+					}
+					$this->vars[$this->currscope][$var] = $assigned;
+					return true;
+				case 'if':
+					$condition = false;
+					if(preg_match("/^if\s+(.*)=(.*)$/u", $in, $matches)) {
+						// perhaps have some more sophisticated checking here than relying on PHP type juggling
+						if(trim($matches[1]) == trim($matches[2]))
+							$condition = true;
+					}
+					else if(preg_match("/^if\s+(.*)$/u", $in, $matches)) {
+						if(trim($matches[1]))
+							$condition = true;
+					}
+					else {
+						echo "Syntax error: In line: " . $in . PHP_EOL;
+						return false;
+					}
+					$this->flowctr++;
+					$this->flow[$this->flowctr] = array(
+						'type' => 'if',
+						'part' => 'then',
+						'condition' => $condition,
+						'line' => $this->histlen,
+					);
+					return true;
+				case 'else':
+					if($this->flow[$this->flowctr]['type'] !== 'if') {
+						echo 'Unexpected "else"' . PHP_EOL;
+						return false;
+					}
+					$this->flow[$this->flowctr]['part'] = 'else';
+					return true;
+				case 'endif':
+					if($this->flow[$this->flowctr]['type'] !== 'if') {
+						echo 'Unexpected "else"' . PHP_EOL;
+						return false;
+					}
+					$this->flowctr--;
+					return true;
+			}
+		}
 		// handle output redirection
 		$outputredir = false;
 		$nextoutput = false;
-		if(!$cmd) {
-			echo 'Invalid command: ' . $in . PHP_EOL;
-			return true;
-		}
-		$paras = array();
-		foreach($splitcmd as $piece) {
-			// handle output redirection
-			if($piece === '>') {
-				$nextoutput = true;
-				continue;
+		// block of stuff for ease of usage
+		{
+			$cmd = $this->expand_cmd($rawcmd);
+			if(!$cmd) {
+				echo 'Invalid command: ' . $in . PHP_EOL;
+				return true;
 			}
-			if($nextoutput) {
-				$outputredir = $piece;
-				$nextoutput = false;
-				continue;
-			}
-			// arguments without initial -
-			if($piece[0] !== '-') {
-				// allow for escaping
-				if(substr($piece, 0, 2) === '\-')
-					$piece = substr($piece, 1);
-				if($splitcmd['unnamedseparate'])
-					$paras[] = $piece;
-				else {
-					if($rawarg) $rawarg .= ' ';
-					$rawarg .= $piece;
-				}
-				continue;
-			}
-			// long-form arguments
-			if($piece[1] === '-') {
-				if(($pos = strpos($piece, '=')) === false)
-					$paras[substr($piece, 2)] = true;
-				else if($pos === 2) {
-					echo 'Invalid argument: ' . $piece . PHP_EOL;
+			$paras = array();
+			foreach($splitcmd as $piece) {
+				// handle output redirection
+				if($piece === '>') {
+					$nextoutput = true;
 					continue;
 				}
+				if($nextoutput) {
+					$outputredir = $piece;
+					$nextoutput = false;
+					continue;
+				}
+				// arguments without initial -
+				if($piece[0] !== '-') {
+					// allow for escaping
+					if(substr($piece, 0, 2) === '\-')
+						$piece = substr($piece, 1);
+					if($splitcmd['unnamedseparate'])
+						$paras[] = $piece;
+					else {
+						if($rawarg) $rawarg .= ' ';
+						$rawarg .= $piece;
+					}
+					continue;
+				}
+				// long-form arguments
+				if($piece[1] === '-') {
+					if(($pos = strpos($piece, '=')) === false)
+						$paras[substr($piece, 2)] = true;
+					else if($pos === 2) {
+						echo 'Invalid argument: ' . $piece . PHP_EOL;
+						continue;
+					}
+					else {
+						$key = substr($piece, 2, $pos - 2);
+						$value = substr($piece, $pos + 1);
+						$paras[$key] = $value;
+					}
+				}
+				// short-form arguments
+				else if(($pos = strpos($piece, '=')) === false) {
+					$len = strlen($piece);
+					for($i = 1; $i < $len; $i++)
+						$paras[$piece[$i]] = true;
+				}
+				else if($pos === 2) {
+					$paras[$piece[1]] = substr($piece, 3);
+				}
 				else {
-					$key = substr($piece, 2, $pos - 2);
-					$value = substr($piece, $pos + 1);
-					$paras[$key] = $value;
+					echo 'Invalid argument: ' . $piece . PHP_EOL;		
 				}
 			}
-			// short-form arguments
-			else if(($pos = strpos($piece, '=')) === false) {
-				$len = strlen($piece);
-				for($i = 1; $i < $len; $i++)
-					$paras[$piece[$i]] = true;
-			}
-			else if($pos === 2) {
-				$paras[$piece[1]] = substr($piece, 3);
+			if($rawarg) {
+				$rawarg = self::remove_quotes($rawarg);
+				// handle shortcut
+				if($rawarg === '*')
+					$arg = $this->current;
+				else {
+					$arg = array($rawarg);
+					if(method_exists($this, 'has') and $this->has($rawarg))
+						$this->current = $arg;
+				}
+				$paras[0] = $rawarg;
 			}
 			else {
-				echo 'Invalid argument: ' . $piece . PHP_EOL;		
+				$arg = array();
+				$rawarg = '';
 			}
+			// cleanup
+			foreach($paras as &$text) {
+				if($text and is_string($text)) $text = self::remove_quotes($text);
+			}		
 		}
-		if($rawarg) {
-			$rawarg = self::remove_quotes($rawarg);
-			// handle shortcut
-			if($rawarg === '*')
-				$arg = $this->current;
-			else {
-				$arg = array($rawarg);
-				if(method_exists($this, 'has') and $this->has($rawarg))
-					$this->current = $arg;
-			}
-			$paras[0] = $rawarg;
-		}
-		else {
-			$arg = array();
-			$rawarg = '';
-		}
-		// cleanup
-		foreach($paras as &$text) {
-			if($text and is_string($text)) $text = self::remove_quotes($text);
+		// handle control flow
+		$f = $this->flow[$this->flowctr];
+		switch($f['type']) {
+			case 'global':
+				break;
+			case 'if':
+				if($f['part'] === 'then') {
+					if($f['condition'])
+						break;
+					else
+						return true;
+				}
+				else if($f['part'] === 'else') {
+					if($f['condition'])
+						return true;
+					else
+						break;
+				}
 		}
 		// output redirection
 		if($outputredir and $cmd['execute'] !== 'quit') {
@@ -436,21 +578,48 @@ abstract class ExecuteHandler {
 			$this->addcommand($newcmd, array('ignoreduplicates' => true));
 		}
 		echo 'Welcome to command line mode. Type "help" for help.' . PHP_EOL;
-		// save stty settings
-		$saved_stty = preg_replace("/.*; ?/s", "", $this->stty("-a"));
-		// set our settings
-		$this->stty('cbreak');
+		// initialize stuff
+		$this->vars[$this->currscope] = array();
+		$this->flow[$this->flowctr] = array(
+			'type' => 'global',
+			'start' => 0,
+		);
+		// lambda function to get string-form command
+		$getcmd = function() use(&$cmd, &$cmdlen) {
+			// create the command in string form
+			// it will sometimes be an array at this point, which will need to be imploded
+			if(is_string($cmd))
+				$tmpcmd = $cmd;
+			else if(is_array($cmd))
+				$tmpcmd = implode($cmd);
+			else if(is_null($cmd)) // don't try to execute empty command
+				return NULL;
+			else {
+				trigger_error("Command of unsupported type");
+				var_dump($cmd);
+			}
+			$tmpcmd = substr($tmpcmd, 0, $cmdlen);
+			return $tmpcmd;
+		};
+		$showcursor = function() use (&$cmdlen, &$keypos, &$getcmd) {
+			echo $getcmd();
+			if($cmdlen > $keypos)
+				echo "\033[" . ($cmdlen - $keypos) . "D";	
+		};
 		// loop through commands
 		while(true) {
+			// set our settings
+			$this->stty('cbreak');
 			// save current cursor position
 			echo $name . "> \033[s";
 			// get command
 			$cmd = '';
 			$cmdlen = 0;
+			$keypos = 0;
 			while(true) {
 				// get input
 				$c = fgetc(STDIN);
-				if($this->config['debug']) {
+				if($this->config['fulldebug']) {
 					echo ' '. ord($c) . ' ';
 				}
 				switch(ord($c)) {
@@ -467,10 +636,11 @@ abstract class ExecuteHandler {
 										$this->histptr--;
 									// go back to saved cursor position; clear line
 									if($cmdlen > 0)
-										echo "\033[" . $cmdlen . "D\033[K"; 
+										echo "\033[" . $keypos . "D\033[K"; 
 									// get new command
 									$cmd = $this->history[$this->histptr];
 									$cmdlen = strlen($cmd);
+									$keypos = $cmdlen;
 									echo $cmd;
 									break;
 								case 66: // KEY_DOWN
@@ -478,82 +648,124 @@ abstract class ExecuteHandler {
 									if($this->histptr < $this->histlen)
 										$this->histptr++;
 									// go back to saved cursor position; clear line
-									if($cmdlen > 0)
-										echo "\033[" . $cmdlen . "D\033[K"; 
+									if($cmdlen > 0) {
+										if($keypos > 0)
+											echo "\033[" . $keypos . "D";
+										echo "\033[K"; 
+									}
 									// get new command
 									if($this->histpr < $this->histlen) {
 										$cmd = $this->history[$this->histptr];
 										$cmdlen = strlen($cmd);
+										$keypos = $cmdlen;
 										echo $cmd;
 									}
 									else {
 										// reset command
 										$cmd = '';
 										$cmdlen = 0;
+										$keypos = 0;
 									}
 									break;
 								case 68: // KEY_LEFT
-									echo "\033[1D";
+									$this->debugecho($keypos);
+									if($keypos > 0) {
+										echo "\033[" . $keypos . "D\033[K";
+										$keypos--;
+									}
+									$showcursor();
 									break;
 								case 67: // KEY_RIGHT
-									echo "\033[1C";
+									if($keypos < $cmdlen) {
+										if($keypos > 0) 
+											echo "\033[". $keypos . "D";
+										echo "\033[K";
+										$keypos++;
+									}
+									else if($keypos > 0)
+										echo "\033[" . $keypos . "D";
+									$showcursor();
 									break;
-							}
+/**/							}
 						}
 						break;
 					case 127: //backspace
 						if($cmdlen > 0) {
-							echo "\033[3D\033[K"; // move cursor back three spots (because it puts stuff there for backspace), and erase to end of line
+							echo "\033[2D\033[K";
+							$tmp = '';
+							$nchars = $cmdlen - $keychars;
+							for($i = $keypos; $i < $cmdlen; $i++) {
+								$tmp .= $cmd[$i];
+							}
 							$cmdlen--;
+							$keypos--;
+							for($i = 0; $i < $nchars; $i++) {
+								$cmd[$keypos + $i] = $tmp[$i];
+							}
+							if($keypos >= 0)
+								echo "\033[" . ($keypos + 1) . "D";
+							echo "\033[K";
+							$showcursor();
 						}
 						else {
 							// remove junk
 							echo "\033[2D\033[K";
+							// put stuff back in the right place
+							$showcursor();
 						}
 						break; 
 					case 10: //newline
-						break 2; 
-					default: 
-						$cmd[$cmdlen] = $c;
+						break 2;
+					default:
+						// save piece of command after char we're inputting
+						$tmp = '';
+						$nchars = $cmdlen - $keypos;
+						for($i = $keypos; $i < $cmdlen; $i++) {
+							$tmp .= $cmd[$i];
+						}
+						$cmd[$keypos] = $c;
 						$cmdlen++;
+						$keypos++;
+						for($i = 0; $i < $nchars; $i++) {
+							$cmd[$keypos + $i] = $tmp[$i];
+						}
+						echo "\033[" . $keypos . "D\033[K";
+						$showcursor();
 						break; 
 					// it looks like KEY_UP etcetera may have more than one... need to see how to handle those
 				}
 			}
-			// create the command in string form
-			// it will sometimes be an array at this point, which will need to be imploded
-			if(is_string($cmd))
-				$tmpcmd = $cmd;
-			else if(is_array($cmd))
-				$tmpcmd = implode($cmd);
-			else if(is_null($cmd)) // don't try to execute empty command
-				continue;
-			else {
-				var_dump($cmd);
-			}
-			$cmd = substr($tmpcmd, 0, $cmdlen);
+			if($this->config['debug']) var_dump($cmd);
+			$cmd = $getcmd();
+			if($cmd == NULL) continue;
 			unset($c);
 			// save to history
 			$this->history[$this->histlen] = $cmd;
 			$this->histlen++;
 			$this->histptr = $this->histlen;
+			// restore sane stty settings for the duration of command execution
+			$this->stty("sane");
+			if($this->config['debug']) var_dump($cmd);
 			// execute the command
 			if(!$this->execute($cmd)) {
 				echo 'Goodbye.' . PHP_EOL;
 				return;
 			}
 		}
-		// restore stty settings
-		$this->stty($saved_stty);
+	}
+	private function debugecho($var) {
+		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
+		shell_exec("echo '$var' > $file");
 	}
 	private function stty($opt) {
 		$cmd = "/bin/stty " . $opt;
+		if($this->config['debug']) echo $cmd . PHP_EOL;
 		exec($cmd, $output, $return);
 		if($return !== 0) {
 			trigger_error("Failed to execute " . $cmd);
 			return false;
 		}
-		return implode(' ', $output);
+		return implode("\n", $output);
 	}
 	protected function configset($paras = array()) {
 	// sets something in the $this->config array, which configures the EH instance
@@ -634,6 +846,26 @@ abstract class ExecuteHandler {
 		}
 		else
 			echo shell_exec($in);
+	}
+	protected function myecho($in) {
+		echo $in . PHP_EOL;
+	}
+	private function driver($in) {
+	// adds lines to the history array, and handles execution
+		// add line to the history array
+		$this->history[$this->histptr] = $in;
+		$this->histptr++;
+		// execute at first
+		$firstret = $this->execute($in);
+		if($firstret == false)
+			return false;
+		// continue executing as long as PC is below length of program
+		while($this->pc < $this->histptr) {
+			$ret = $this->execute($this->history[$this->pc]);
+			if($ret == false)
+				return false;
+		}
+		return $firstret;
 	}
 }
 ?>

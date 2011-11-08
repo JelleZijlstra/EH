@@ -95,6 +95,12 @@ abstract class ExecuteHandler {
 		'//' => array('name' => '//',
 			'desc' => 'Introduce a comment',
 			),
+		'while' => array('name' => 'while',
+			'desc' => 'Introduces a while loop',
+			),
+		'endwhile' => array('name' => 'endwhile',
+			'desc' => 'Ends a while loop',
+			),
 	);
 	public function __construct($commands) {
 		$this->setup_ExecuteHandler($commands);
@@ -216,11 +222,7 @@ abstract class ExecuteHandler {
 		else
 			return $in;
 	}
-	public function execute($in = NULL) {
-	// functions as an interpreter of the byfile() "command line"
-		if($in === NULL) {
-			$in = $this->curr('pcres');
-		}
+	private function substitutevars($in) {
 		// substitute variable references
 		if(preg_match_all("/\\\$(\{[a-zA-Z]+\}|[a-zA-Z]+)/u", $in, $matches)) {
 			foreach($matches[1] as $reference) {
@@ -241,6 +243,20 @@ abstract class ExecuteHandler {
 				}
 			}
 		}
+		return $in;	
+	}
+	public function execute($in = NULL) {
+	// functions as an interpreter of the byfile() "command line"
+		if($in === NULL) {
+			$in = $this->curr('pcres');
+		}
+		// handle empty commands
+		if($in === '') {
+			$this->pcinc();
+			return true;
+		}
+		$rawin = $in;
+		$in = $this->substitutevars($in);
 		$splitcmd = $this->divide_cmd($in);
 		$rawcmd = array_shift($splitcmd);
 		if(array_key_exists($rawcmd, self::$constructs)) {
@@ -298,21 +314,12 @@ abstract class ExecuteHandler {
 						return false;
 					}
 				case 'if':
-					$condition = false;
-					if(preg_match("/^if\s+(.*)=(.*)$/u", $in, $matches)) {
-						// perhaps have some more sophisticated checking here than relying on PHP type juggling
-						if(trim($matches[1]) == trim($matches[2]))
-							$condition = true;
-					}
-					else if(preg_match("/^if\s+(.*)$/u", $in, $matches)) {
-						if(trim($matches[1]))
-							$condition = true;
-					}
-					else {
+					if(!preg_match("/^if\s+(.*)$/u", $in, $matches)) {
 						echo "Syntax error: In line: " . $in . PHP_EOL;
 						$this->pcinc();
-						return false;
+						return false;					
 					}
+					$condition = $this->evaluate($matches[1]) ? true : false;
 					$this->flowctr++;
 					$this->flow[$this->flowctr] = array(
 						'type' => 'if',
@@ -411,9 +418,43 @@ abstract class ExecuteHandler {
 						$this->pcinc();
 						return false;
 					}
-				case '//':
+				case '//': // comment, ignored
 					$this->pcinc();
 					return true;
+				case 'while':
+					if(!preg_match("/^while\s+(.*)$/u", $rawin, $matches)) {
+						echo "Syntax error: In line: " . $rawin . PHP_EOL;
+						$this->pcinc();
+						return false;					
+					}
+					$condition = $matches[1];
+					$execute = $this->evaluate($this->substitutevars($condition)) ? true : false;
+					$this->pcinc();
+					$this->flowctr++;
+					$this->flow[$this->flowctr] = array(
+						'type' => 'while',
+						'condition' => $condition,
+						'execute' => $execute,
+						'line' => $this->curr('pc'),
+					);
+					return true;
+				case 'endwhile':
+					$f =& $this->flow[$this->flowctr];
+					if($f['type'] !== 'while') {
+						echo 'Syntax error: Unexpected "endwhile"' . PHP_EOL;
+						$this->pcinc();
+						return false;
+					}
+					$f['execute'] = $this->evaluate($this->substitutevars($f['condition'])) ? true : false;
+					if($f['execute']) {
+						$this->pc[$this->currhist] = $f['line'];
+						return true;
+					}
+					else
+					{
+						$this->pcinc();
+						return true;
+					}
 			}
 		}
 		// handle output redirection
@@ -523,7 +564,11 @@ abstract class ExecuteHandler {
 						break;
 				}
 			case 'for':
-				break;
+				// only execute if the loop is supposed to be executed
+				if($f['max'] > 0)
+					break;
+				else
+					return true;
 		}
 		// output redirection
 		if($outputredir and $cmd['execute'] !== 'quit') {

@@ -1,6 +1,5 @@
 <?php
-//TODO: implement some sort of stuff that enables KEY_UP and KEY_DOWN to work
-//Look at PHP's pcntl_signal()
+//TODO: Fix issues with control flow statements in non-executed text (e.g. in pennies.eh when $days < 28). Adding 'execute' variable to all control flow arrays should do it; we should read the ifs and elses inside a block of non-executed code, but otherwise ignore them.
 define(PROCESS_PARAS_ERROR_FOUND, 0x1);
 define(EVALUATE_ERROR, 0x1);
 define(EVALUATE_FUNCTION_CALL, 0x2);
@@ -8,6 +7,10 @@ define(CHECK_FLOW_IN_IF, 0x1);
 define(CHECK_FLOW_IN_FOR, 0x2);
 define(CHECK_FLOW_IN_FUNC, 0x3);
 define(CHECK_FLOW_IN_WHILE, 0x4);
+define(EXECUTE_NEXT, 0x0); // execute says: go on with next
+define(EXECUTE_PC, 0x1); // execute whatever is in the PC now
+define(EXECUTE_SYNTAX_ERROR, 0x2); // execute returned syntax error
+define(EXECUTE_QUIT, 0x3); // execute asked to quit the program
 abstract class ExecuteHandler {
 	private $commands;
 	private $synonyms;
@@ -20,20 +23,34 @@ abstract class ExecuteHandler {
 	// history we're currently in
 	private $currhist = 0;
 	// length of history array
-	private $histlen = array();
+	private $histlen = array(
+		0 => 0,
+	);
 	// where we are in execution (program counter)
-	private $pc = array();
-	// array of variables defined internally
-	private $vars = array();
+	private $pc = array(
+		0 => 0,
+	);
+	// array of variables defined internally. Three-dimensional, indexed by currhist, currscope, var name.
+	private $vars = array(
+		0 => array(
+			0 => array(),
+		),
+	);
 	// current scope (set to > 0 on function calls when we implement those)
-	private $currscope = 0;
+	private $currscope = array(
+		0 => 0,
+	);
 	// array of control flow structures we're currently in
 	private $flow = array(
-		0 => array('type' => 'global'),
+		0 => array(
+			0 => array('type' => 'global', 'execute' => true),
+		),
 	);
 	// counter that holds the structure we're in at the moment
-	private $flowctr = 0;
-	// functions that we have defined
+	private $flowctr = array(
+		0 => 0,
+	);
+	// functions that we have defined (not indexed by hist)
 	private $funcs = array();
 	// holds last function return value
 	private $eax;
@@ -237,14 +254,14 @@ abstract class ExecuteHandler {
 	}
 	private function setvar($var, $value) {
 	// set a variable in the internal language
-		$this->vars[$this->currscope][$var] = $value;
+		$this->vars[$this->currhist][$this->curr('currscope')][$var] = $value;
 	}
 	private function getvar($var) {
 	// get the value of an internal variable
-		if(!isset($this->vars[$this->currscope][$var]))
+		if(!isset($this->vars[$this->currhist][$this->curr('currscope')][$var]))
 			return NULL;
 		else
-			return $this->vars[$this->currscope][$var];
+			return $this->vars[$this->currhist][$this->curr('currscope')][$var];
 	}
 	private function evaluate($in) {
 		if($this->config['debug']) var_dump($in);
@@ -294,8 +311,9 @@ abstract class ExecuteHandler {
 				}
 				$this->funcargs = $vars;
 				$this->retline = $this->curr('pc');
+				if($this->config['debug']) var_dump($this->retline);
 				$this->evaluate_ret = EVALUATE_FUNCTION_CALL;
-				$this->pc[$this->currhist] = $func['line'];
+				$this->curr('pc', $func['line']);
 				return NULL;
 			}
 		}
@@ -321,7 +339,7 @@ abstract class ExecuteHandler {
 				}
 				$this->retline = $this->curr('pc');
 				$this->evaluate_ret = EVALUATE_FUNCTION_CALL;
-				$this->pc[$this->currhist] = $func['line'];
+				$this->curr('pc', $func['line']);
 				return NULL;
 			}
 		}
@@ -329,7 +347,7 @@ abstract class ExecuteHandler {
 			return $in;
 	}
 	private function substitutevars($in) {
-		$f = $this->flow[$this->flowctr];
+		$f = $this->curr('flowo');
 		// don't bother when we're in a non-executing function
 		if($f['type'] === 'func' && !$f['execute'])
 			return $in;
@@ -340,10 +358,11 @@ abstract class ExecuteHandler {
 					$fmreference = substr($reference, 1, -1);
 				else
 					$fmreference = $reference;
-				if(isset($this->vars[$this->currscope][$fmreference])) {
+				$cvars = $this->curr('vars');
+				if(isset($cvars[$fmreference])) {
 					$in = preg_replace(
 						"/\\\$" . preg_quote($reference) . "/u",
-						$this->vars[$this->currscope][$fmreference],
+						$cvars[$fmreference],
 						$in,
 						1
 					);
@@ -356,7 +375,7 @@ abstract class ExecuteHandler {
 		return $in;	
 	}
 	private function check_flow() {
-		$f = $this->flow[$this->flowctr];
+		$f = $this->curr('flowo');
 		switch($f['type']) {
 			case 'global':
 				return 0;
@@ -404,13 +423,9 @@ abstract class ExecuteHandler {
 		}
 		// handle empty commands
 		if($in === '') {
-			$this->pcinc();
-			return true;
+			return EXECUTE_NEXT;
 		}
-		$rawin = $in;
-		$in = $this->substitutevars($in);
-		$splitcmd = $this->divide_cmd($in);
-		$rawcmd = array_shift($splitcmd);
+		$rawcmd = preg_replace("/ .*\$/u", '', $in);
 		// handle control flow
 		switch($this->check_flow()) {
 			case 0: break;
@@ -418,24 +433,26 @@ abstract class ExecuteHandler {
 				if(in_array($rawcmd, array('else', 'endif')))
 					break;
 				else {
-					$this->pcinc();
-					return true;
+					return EXECUTE_NEXT;
 				}
 			case CHECK_FLOW_IN_FOR: 
 				if(in_array($rawcmd, array('endfor')))
 					break;
 				else {
-					$this->pcinc();
-					return true;
+					return EXECUTE_NEXT;
 				}
 			case CHECK_FLOW_IN_FUNC: 
 				if(in_array($rawcmd, array('endfunc')))
 					break;
 				else {
-					$this->pcinc();
-					return true;
+					return EXECUTE_NEXT;
 				}
 		}
+		$rawin = $in;
+		$in = $this->substitutevars($in);
+		$splitcmd = $this->divide_cmd($in);
+		$rawcmd = array_shift($splitcmd);
+		if($this->config['debug']) echo 'Executing command: ' . $rawcmd . PHP_EOL;
 		if(array_key_exists($rawcmd, self::$constructs)) {
 			// execute language construct
 			switch($rawcmd) {
@@ -445,12 +462,12 @@ abstract class ExecuteHandler {
 						if(!preg_match("/^[a-zA-Z]+$/u", $var)) {
 							echo "Syntax error: Invalid variable name: $var" . PHP_EOL;
 							$this->pcinc();
-							return false;
+							return EXECUTE_SYNTAX_ERROR;
 						}
 						$rawassigned = $matches[2];
 						$rawassigned = $this->evaluate($rawassigned);
 						if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
-							return true;
+							return EXECUTE_PC;
 						if(preg_match("/^(\"|').*(\"|')$/u", $rawassigned, $matches)) {
 							// string assignment
 							$rawassigned = substr($rawassigned, 1, -1);
@@ -465,183 +482,170 @@ abstract class ExecuteHandler {
 						else {
 							echo "Syntax error: Unrecognized assignment value: $rawassigned" . PHP_EOL;
 							$this->pcinc();
-							return false;
+							return EXECUTE_SYNTAX_ERROR;
 						}
 						$this->setvar($var, $assigned);
-						$this->pcinc();
-						return true;
+						return EXECUTE_NEXT;
 					}
 					else if(preg_match('/^\$\s+([a-zA-Z]+)(\+\+|\-\-)$/u', $in, $matches)) {
 						$varname = $matches[1];
 						$var = $this->getvar($varname);
 						if($var === NULL) {
 							echo 'Notice: Unrecognized variable ' . $varname;
-							$this->pcinc();
-							return true;
+							return EXECUTE_NEXT;
 						}
 						switch($matches[2]) {
 							case '++': $var++; break;
 							case '--': $var--; break;
 						}
 						$this->setvar($varname, $var);
-						$this->pcinc();
-						return true;
+						return EXECUTE_NEXT;
 					}
 					else {
 						echo "Syntax error: In line: " . $in . PHP_EOL;
 						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
 				case 'if':
 					if(!preg_match("/^if\s+(.*)$/u", $in, $matches)) {
 						echo "Syntax error: In line: " . $in . PHP_EOL;
 						$this->pcinc();
-						return false;					
+						return EXECUTE_SYNTAX_ERROR;					
 					}
 					$condition = $this->evaluate($matches[1]);
 					if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
-						return true;
+						return EXECUTE_PC;
 					$condition = $condition ? true : false;
-					$this->flowctr++;
-					$this->flow[$this->flowctr] = array(
+					$this->curr('flowctr', '++');
+					$this->curr('flowo', array(
 						'type' => 'if',
 						'part' => 'then',
 						'condition' => $condition,
 						'line' => $this->curr('pc'),
-					);
-					$this->pcinc();
-					return true;
+					));
+					return EXECUTE_NEXT;
 				case 'else':
-						var_dump($this->flow, $this->flowctr);
-					if($this->flow[$this->flowctr]['type'] !== 'if') {
+					$f =& $this->curr('flowo');
+					if($f['type'] !== 'if') {
 						echo 'Unexpected "else"' . PHP_EOL;
 						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
-					$this->flow[$this->flowctr]['part'] = 'else';
-					$this->pcinc();
-					return true;
+					$f['part'] = 'else';
+					return EXECUTE_NEXT;
 				case 'endif':
-						var_dump($this->flow, $this->flowctr);
-					if($this->flow[$this->flowctr]['type'] !== 'if') {
+					$f =& $this->curr('flowo');
+					if($f['type'] !== 'if') {
 						echo 'Unexpected "endif"' . PHP_EOL;
 						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
-					$this->flowctr--;
-					$this->pcinc();
-					return true;
+					$this->curr('flowctr', '--');
+					return EXECUTE_NEXT;
 				case 'for':
 					if(preg_match("/^for\s+(\d+)\s+count\s+(.*)$/u", $in, $matches)) {
 						$max = (int) $matches[1];
 						$var = $matches[2];
 						$this->setvar($var, 0);
-						$this->flowctr++;
+						$this->curr('flowctr', '++');
 						$this->pcinc();
-						$this->flow[$this->flowctr] = array(
+						$this->curr('flowo', array(
 							'type' => 'for',
 							'subtype' => 'count',
 							'counter' => 0,
 							'max' => $max,
 							'countervar' => $var,
 							'line' => $this->curr('pc'),
-						);
-						return true;
+						));
+						return EXECUTE_PC;
 					}
 					else if(preg_match("/^for\s+(\d+)$/u", $in, $matches)) {
 						$max = (int) $matches[1];
-						$this->flowctr++;
+						$this->curr('flowctr', '++');
 						$this->pcinc();
-						$this->flow[$this->flowctr] = array(
+						$this->curr('flowo', array(
 							'type' => 'for',
 							'subtype' => 'barecount',
 							'counter' => 0,
 							'max' => $max,
 							'line' => $this->curr('pc'),
-						);
-						return true;
+						));
+						return EXECUTE_PC;
 					}
 					else {
 						echo 'Syntax error: In line: ' . $in . PHP_EOL;
-						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
 				case 'endfor':
-					$f =& $this->flow[$this->flowctr];
+					$f =& $this->curr('flowo');
 					if($f['type'] !== 'for') {
 						echo 'Syntax error: Unexpected "endfor"' . PHP_EOL;
-						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
 					if($f['subtype'] === 'count') {
 						$ctr = $this->getvar($f['countervar']);
 						$ctr++;
 						if($ctr < $f['max']) {
-							$this->pc[$this->currhist] = $f['line'];
+							$this->curr('pc', $f['line']);
 							$this->setvar($f['countervar'], $ctr);
 						}
 						else {
-							$this->flowctr--;
+							$this->curr('flowctr', '--');
 							$this->pcinc();
 						}
-						return true;
+						return EXECUTE_PC;
 					}
 					else if($f['subtype'] === 'barecount') {
 						$f['counter']++;
 						if($f['counter'] < $f['max']) {
-							$this->pc[$this->currhist] = $f['line'];
+							$this->curr('pc', $f['line']);
 						}
 						else {
-							$this->flowctr--;
+							$this->curr('flowctr', '--');
 							$this->pcinc();
 						}
-						return true;
+						return EXECUTE_PC;
 					}
 					else {
 						echo 'Unrecognized subtype: ' . $f['subtype'] . PHP_EOL;
-						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
 				case '//': // comment, ignored
-					$this->pcinc();
-					return true;
+					return EXECUTE_NEXT;
 				case 'while':
 					if(!preg_match("/^while\s+(.*)$/u", $rawin, $matches)) {
 						echo "Syntax error: In line: " . $rawin . PHP_EOL;
-						$this->pcinc();
-						return false;					
+						return EXECUTE_SYNTAX_ERROR;					
 					}
 					$condition = $matches[1];
 					$execute = $this->evaluate($this->substitutevars($condition)) ? true : false;
 					if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
-						return true;
+						return EXECUTE_PC;
 					$this->pcinc();
-					$this->flowctr++;
-					$this->flow[$this->flowctr] = array(
+					$this->curr('flowctr', '++');
+					$this->curr('flowo', array(
 						'type' => 'while',
 						'condition' => $condition,
 						'execute' => $execute,
 						'line' => $this->curr('pc'),
-					);
-					return true;
+					));
+					return EXECUTE_PC;
 				case 'endwhile':
-					$f =& $this->flow[$this->flowctr];
+					$f =& $this->curr('flowo');
 					if($f['type'] !== 'while') {
 						echo 'Syntax error: Unexpected "endwhile"' . PHP_EOL;
-						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
 					$f['execute'] = $this->evaluate($this->substitutevars($f['condition'])) ? true : false;
 					if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
-						return true;
+						return EXECUTE_PC;
 					if($f['execute']) {
-						$this->pc[$this->currhist] = $f['line'];
-						return true;
+						$this->curr('pc', $f['line']);
+						return EXECUTE_PC;
 					}
 					else
 					{
-						$this->pcinc();
-						return true;
+						return EXECUTE_NEXT;
 					}
 				case 'func': // function introduction
 					// compile function definition
@@ -650,23 +654,21 @@ abstract class ExecuteHandler {
 						$in, 
 						$matches)) {
 						echo "Syntax error: In line: $in" . PHP_EOL;
-						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
 					$name = $matches[1];
 					$vars = preg_split("/,\s+/", $matches[2]);
 					// functions get their own scope
-					$this->currscope++;
-					$this->vars[$this->currscope] = array();
+					$this->curr('currscope', '++');
+					$this->curr('vars', array());
 					// increment flowcounter so we can edit its variables
-					$this->flowctr++;
+					$this->curr('flowctr', '++');
 					$f = $this->funcs[$name];
 					if($f) {
 						// function already exists; call it
 						if($this->retline < 0) {
 							echo "Syntax error: Redefinition of function $name" . PHP_EOL;
-							$this->pcinc();
-							return false;
+							return EXECUTE_SYNTAX_ERROR;
 						}
 						foreach($f['args'] as $key => $value) {
 							$this->setvar($value, $this->funcargs[$key]);
@@ -676,6 +678,7 @@ abstract class ExecuteHandler {
 							'execute' => true,
 							'ret' => $this->retline,
 						);
+						// reset variables
 						$this->retline = -1;
 						$this->funcargs = array();
 					}
@@ -695,60 +698,77 @@ abstract class ExecuteHandler {
 							'function' => $name,
 						);
 					}
-					$this->flow[$this->flowctr] = $flow;
-					$this->pcinc();
-					return true;
+					$this->curr('flowo', $flow); // note that flowctr has already been incremented
+					return EXECUTE_NEXT;
 				case 'ret':
-					$f = $this->flow[$this->flowctr];
+					// loop through inner control flow structures until we found our function
+					$flow = $this->curr('flowctr');
+					do {
+						$f = $this->flow[$this->currhist][$flow];
+						$flow--;
+						if($flow < 0) {
+							echo 'Syntax error: Unexpected "ret"' . PHP_EOL;
+							return EXECUTE_SYNTAX_ERROR;
+						}
+					} while($f['type'] !== 'func');
 					if(!$f['execute']) {
-						$this->pcinc();
-						return true;
+						return EXECUTE_NEXT;
 					}
 					if(!preg_match("/^ret\s+(.*)\$/u", $in, $matches)) {
 						echo 'Syntax error: In line: ' . $rawin . PHP_EOL;
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
 					$this->eax = $matches[1];
-					$this->pc[$this->currhist] = $f['ret'];
+					$this->curr('pc', $f['ret']);
 					$this->funcexecuted = true;
-					$this->flowctr--;
-					$this->currscope--;
-					return true;
+					$this->curr('flowctr', $flow);
+					$this->curr('currscope', '--');
+					return EXECUTE_PC;
 				case 'endfunc':
-					$f = $this->flow[$this->flowctr];
+					$f = $this->curr('flowo');
 					if($f['type'] !== 'func') {
 						echo 'Syntax error: Unexpected "endfunc"' . PHP_EOL;
-						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
 					if($f['execute']) {
 						// we reached end of an executing function, so return NULL
 						$this->eax = NULL;
-						$this->pc[$this->currhist] = $f['ret'];
+						$this->curr('pc', $f['ret']);
 						$this->funcexecuted = true;
 					}
-					$this->flowctr--;
-					$this->currscope--;
-					$this->pcinc();
-					return true;
+					$this->curr('flowctr', '--');
+					$this->curr('currscope', '--');
+					return EXECUTE_NEXT;
 				case 'call':
 					if(!preg_match("/^call\s+(.*)\$/u", $in, $matches)) {
 						echo 'Syntax error: In line: ' . $in . PHP_EOL;
-						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
 					$call = $matches[1];
 					$eval = $this->evaluate($call);
 					if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
-						return true;
-					$this->pcinc();
-					return true;
-			}
+						return EXECUTE_PC;
+					return EXECUTE_NEXT;
+/*				case 'global':
+					if(!preg_match("/^global\s+([a-zA-Z]+)\$/u", $in, $matches)) {
+						echo 'Syntax error: In line: ' . $in . PHP_EOL;
+						$this->pcinc();
+						return false;
+					}
+					if($this->flowctr == 0) {
+						return EXECUTE_NEXT;
+					}
+					$var = $matches[1];
+					if(isset($this->vars[$this->currhist][$this->flowctr])) {
+						echo 'Notice: attempted global variable ' . $var . ' already exists locally' . PHP_EOL;
+						return EXECUTE_NEXT;
+					}
+					if(!isset($this->vars[
+*/			}
 		}
 		if($in === NULL) {
 			// this happens if we're inside a function non-execution
-			$this->pcinc();
-			return true;
+			return EXECUTE_NEXT;
 		}
 		// handle output redirection
 		$outputredir = false;
@@ -758,8 +778,7 @@ abstract class ExecuteHandler {
 			$cmd = $this->expand_cmd($rawcmd);
 			if(!$cmd) {
 				echo 'Invalid command: ' . $in . PHP_EOL;
-				$this->pcinc();
-				return true;
+				return EXECUTE_NEXT;
 			}
 			$paras = array();
 			foreach($splitcmd as $piece) {
@@ -866,8 +885,7 @@ abstract class ExecuteHandler {
 				$cmd['name']($rawarg, $paras);
 				break;			
 			case 'quit':
-				$this->pcinc();
-				return false;
+				return EXECUTE_QUIT;
 			default:
 				trigger_error('Unrecognized execution mode', E_USER_NOTICE); 
 				break;
@@ -879,14 +897,12 @@ abstract class ExecuteHandler {
 			if(!$file) {
 				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
 				ob_end_clean();
-				$this->pcinc();
-				return true;
+				return EXECUTE_NEXT;
 			}
 			fwrite($file, ob_get_contents());
 			ob_end_clean();
 		}
-		$this->pcinc();
-		return true;
+		return EXECUTE_NEXT;
 	}
 	private function divide_cmd($in) {
 	// divides a string into pieces at each space, and keeps strings in '' together
@@ -1041,14 +1057,15 @@ abstract class ExecuteHandler {
 		}
 		echo 'Welcome to command line mode. Type "help" for help.' . PHP_EOL;
 		// initialize stuff
-		$this->vars[$this->currscope] = array();
-		$this->flow[$this->flowctr] = array(
+		$this->curr('currscope', 0);
+		$this->curr('vars', array());
+		$this->curr('flowo', array(
 			'type' => 'global',
 			'start' => 0,
-		);
-		$this->history[$this->currhist] = array();
-		$this->histlen[$this->currhist] = 0;
-		$this->pc[$this->currhist] = 0;
+		));
+		$this->curr('history', array());
+		$this->curr('histlen', 0);
+		$this->curr('pc', 0);
 		// lambda function to get string-form command
 		$getcmd = function() use(&$cmd, &$cmdlen) {
 			// create the command in string form
@@ -1060,8 +1077,7 @@ abstract class ExecuteHandler {
 			else if(is_null($cmd)) // don't try to execute empty command
 				return NULL;
 			else {
-				trigger_error("Command of unsupported type");
-				var_dump($cmd);
+				trigger_error("Command of unsupported type: $cmd");
 			}
 			$tmpcmd = substr($tmpcmd, 0, $cmdlen);
 			return $tmpcmd;
@@ -1082,7 +1098,7 @@ abstract class ExecuteHandler {
 			$cmdlen = 0;
 			$keypos = 0;
 			while(true) {
-				$histptr = $this->histlen[$this->currhist];
+				$histptr = $this->curr('histlen');
 				// get input
 				$c = fgetc(STDIN);
 				if($this->config['fulldebug']) {
@@ -1111,7 +1127,7 @@ abstract class ExecuteHandler {
 									break;
 								case 66: // KEY_DOWN
 									// increment pointer
-									if($histptr < $this->histlen[$this->currhist])
+									if($histptr < $this->curr('histlen'))
 										$histptr++;
 									// go back to saved cursor position; clear line
 									if($cmdlen > 0) {
@@ -1120,7 +1136,7 @@ abstract class ExecuteHandler {
 										echo "\033[K"; 
 									}
 									// get new command
-									if($histpr < $this->histlen[$this->currhist]) {
+									if($histpr < $this->curr('histlen')) {
 										$cmd = $this->history[$this->currhist][$histptr];
 										$cmdlen = strlen($cmd);
 										$keypos = $cmdlen;
@@ -1279,9 +1295,9 @@ abstract class ExecuteHandler {
 		// save old currscope
 		$oldcurrhist = $this->currhist;
 		$this->currhist = 1; // want something more intelligent here eventually
-		$this->history[$this->currhist] = array();
-		$this->histlen[$this->currhist] = 0;
-		$this->pc[$this->currhist] = 0;
+		$this->curr('history', array());
+		$this->curr('histlen', 0);
+		$this->curr('pc', 0);
 		$in = fopen($file, 'r');
 		if(!$in) {
 			echo 'Invalid input file' . PHP_EOL;
@@ -1331,34 +1347,76 @@ abstract class ExecuteHandler {
 	// adds lines to the history array, and handles execution
 		// add line to the history array
 		$this->history[$this->currhist][$this->histlen[$this->currhist]] = trim($in);
-		$this->histlen[$this->currhist]++;
+		$this->curr('histlen', '++');
 		// execute at first
 		if($this->config['debug']) 
-			echo "Executing command: " . $this->curr('pcres') . PHP_EOL;
+			echo "Feeding command (" . $this->curr('pc') . "): " . $this->curr('pcres') . PHP_EOL;
 		$firstret = $this->execute();
-		if($firstret == false)
-			return false;
+		switch($firstret) {
+			case EXECUTE_NEXT: $this->pcinc(); break;
+			case EXECUTE_PC: break;
+			case EXECUTE_SYNTAX_ERROR:
+			case EXECUTE_QUIT:
+				return false;
+		}
 		// continue executing as long as PC is below length of program
 		while($this->curr('pc') < $this->curr('histlen')) {
 			if($this->config['debug']) 
-				echo "Executing command: " . $this->curr('pcres') . PHP_EOL;
+				echo "Feeding command (" . $this->curr('pc') . "): " . $this->curr('pcres') . PHP_EOL;
 			$ret = $this->execute();
-			if($ret == false)
-				return false;
+			switch($ret) {
+				case EXECUTE_NEXT: 
+					$this->pcinc(); 
+					break;
+				case EXECUTE_PC: 
+					break;
+				case EXECUTE_SYNTAX_ERROR:
+				case EXECUTE_QUIT:
+					return false;
+			}
 		}
-		return $firstret;
+		return true;
 	}
-	private function curr($var, $ctr = NULL) {
+	private function &curr($var, $set = NULL) {
+		$ret = NULL;
 		switch($var) {
-			case 'pc': return $this->pc[$this->currhist];
-			case 'histlen': return $this->histlen[$this->currhist];
-			case 'history': return $this->history[$this->currhist][$ctr];
-			case 'pcres': return $this->history[$this->currhist][$this->pc[$this->currhist]];
+			case 'pc': 
+				$ret =& $this->pc[$this->currhist];
+				break;
+			case 'histlen': 
+				$ret =& $this->histlen[$this->currhist];
+				break;
+			case 'history': 
+				$ret =& $this->history[$this->currhist];
+				break;
+			case 'flow': 
+				$ret =& $this->flow[$this->currhist];
+				break;
+			case 'flowo': // object pointing to current control flow block
+				$ret =& $this->flow[$this->currhist][$this->flowctr[$this->currhist]];
+				break;
+			case 'flowctr': 
+				$ret =& $this->flowctr[$this->currhist];
+				break;
+			case 'pco': case 'pcres': 
+				$ret =& $this->history[$this->currhist][$this->pc[$this->currhist]];
+				break;
+			case 'currscope':
+				$ret =& $this->currscope[$this->currhist];
+				break;
+			case 'vars':
+				$ret =& $this->vars[$this->currhist][$this->currscope[$this->currhist]];
 		}
-		return NULL;
+		if($set === NULL) return $ret;
+		switch($set) {
+			case '++': $ret++; break;
+			case '--': $ret--; break;
+			default: $ret = $set; break;
+		}
+		return $ret;
 	}
 	private function pcinc() {
-		$this->pc[$this->currhist]++;
+		$this->curr('pc', '++');
 	}
 }
 ?>

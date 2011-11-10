@@ -2,6 +2,12 @@
 //TODO: implement some sort of stuff that enables KEY_UP and KEY_DOWN to work
 //Look at PHP's pcntl_signal()
 define(PROCESS_PARAS_ERROR_FOUND, 0x1);
+define(EVALUATE_ERROR, 0x1);
+define(EVALUATE_FUNCTION_CALL, 0x2);
+define(CHECK_FLOW_IN_IF, 0x1);
+define(CHECK_FLOW_IN_FOR, 0x2);
+define(CHECK_FLOW_IN_FUNC, 0x3);
+define(CHECK_FLOW_IN_WHILE, 0x4);
 abstract class ExecuteHandler {
 	private $commands;
 	private $synonyms;
@@ -22,9 +28,23 @@ abstract class ExecuteHandler {
 	// current scope (set to > 0 on function calls when we implement those)
 	private $currscope = 0;
 	// array of control flow structures we're currently in
-	private $flow = array();
+	private $flow = array(
+		0 => array('type' => 'global'),
+	);
 	// counter that holds the structure we're in at the moment
 	private $flowctr = 0;
+	// functions that we have defined
+	private $funcs = array();
+	// holds last function return value
+	private $eax;
+	// set to true when a function has just executed, to let a line know that its function call has completed
+	private $funcexecuted = false;
+	// line to which function needs to return
+	private $retline = -1;
+	// holds arguments to a function being called
+	private $funcargs = array();
+	// return code of $this->evaluate()
+	private $evaluate_ret = 0;
 	
 	protected $current; // currently handled files
 	protected $trystatic; // set to true to try additional stuff in expand_cmd
@@ -37,6 +57,12 @@ abstract class ExecuteHandler {
 		'callfunc' => 'Execute the given function, with as its argument $paras.',
 		'callfuncarg' => 'As callfunc, with $rawarg as the first argument.',
 		'quit' => 'Quit the command line.',
+	);
+	// array of functions that shell code is allowed to call
+	private static $php_funcs = array(
+		'getinput',
+		'strlen',
+		'substr',
 	);
 	private static $basic_commands = array(
 		'execute_help' => array('name' => 'execute_help',
@@ -72,6 +98,10 @@ abstract class ExecuteHandler {
 			'desc' => 'Echo input',
 			'arg' => 'Text to be echoed',
 			'execute' => 'callmethodarg'),
+		'put' => array('name' => 'put',
+			'desc' => 'Print input to terminal',
+			'arg' => 'Text to be printed',
+			'execute' => 'callmethodarg'),
 	);
 	private static $constructs = array(
 		'$' => array('name' => '$',
@@ -100,6 +130,18 @@ abstract class ExecuteHandler {
 			),
 		'endwhile' => array('name' => 'endwhile',
 			'desc' => 'Ends a while loop',
+			),
+		'func' => array('name' => 'func',
+			'desc' => 'Starts a function definition',
+			),
+		'ret' => array('name' => 'ret',
+			'desc' => 'Returns from a function',
+			),
+		'endfunc' => array('name' => 'endfunc',
+			'desc' => 'Ends a function definition',
+			),
+		'call' => array('name' => 'call',
+			'desc' => 'Call a function (and discard its return value)',
 			),
 	);
 	public function __construct($commands) {
@@ -205,24 +247,92 @@ abstract class ExecuteHandler {
 			return $this->vars[$this->currscope][$var];
 	}
 	private function evaluate($in) {
+		if($this->config['debug']) var_dump($in);
+		$this->evaluate_ret = 0;
 		if(preg_match("/^(.*)\s*([+\-*\/=><]|!=|>=|<=)\s*(.*)$/u", $in, $matches)) {
+			$lval = trim($matches[1]);
+			$rval = trim($matches[3]);
 			switch($matches[2]) {
-				case '+': return $matches[1] + $matches[3];
-				case '-': return $matches[1] - $matches[3];
-				case '*': return $matches[1] * $matches[3];
-				case '/': return $matches[1] / $matches[3];
-				case '=': return ($matches[1] == $matches[3]);
-				case '>': return ($matches[1] > $matches[3]);
-				case '<': return ($matches[1] < $matches[3]);
-				case '!=': return ($matches[1] != $matches[3]);
-				case '>=': return ($matches[1] >= $matches[3]);
-				case '<=': return ($matches[1] <= $matches[3]);
+				case '+': return $lval + $rval;
+				case '-': return $lval - $rval;
+				case '*': return $lval * $rval;
+				case '/': return $lval / $rval;
+				case '=': return ($lval == $rval);
+				case '>': return ($lval > $rval);
+				case '<': return ($lval < $rval);
+				case '!=': return ($lval != $rval);
+				case '>=': return ($lval >= $rval);
+				case '<=': return ($lval <= $rval);
+			}
+		}
+		// function calls
+		else if(preg_match("/^([a-zA-Z]+):\s+((.+,\s+)*.+)\$/u", $in, $matches)) {
+			if($this->funcexecuted) { // we already executed the program
+				$this->funcexecuted = false;
+				return $this->eax;
+			}
+			else {
+				$funcname = $matches[1];
+				$vars = preg_split("/,\s+/u", $matches[2]);
+				$argcount = count($vars);
+				$func = $this->funcs[$funcname];
+				if(!$func) {
+					if(in_array($funcname, self::$php_funcs)) {
+						$ret = call_user_func_array($funcname, $vars);
+						if(is_string($ret))
+							$ret = '"' . $ret . '"';
+						return $ret;
+					}
+					echo 'Error: unrecognized function ' . $funcname . PHP_EOL;
+					$this->evaluate_ret = EVALUATE_ERROR;
+					return NULL;
+				}
+				if($argcount != $func['argcount']) {
+					echo "Error: incorrect variable number for function  $funcname (expected {$func['argcount']}, got $argcount)\n";
+					$this->evaluate_ret = EVALUATE_ERROR;
+					return NULL;
+				}
+				$this->funcargs = $vars;
+				$this->retline = $this->curr('pc');
+				$this->evaluate_ret = EVALUATE_FUNCTION_CALL;
+				$this->pc[$this->currhist] = $func['line'];
+				return NULL;
+			}
+		}
+		// function call without argument
+		else if(preg_match("/^([a-zA-Z]+):\s*\$/u", $in, $matches)) {
+			if($this->funcexecuted) { // we already executed the program
+				$this->funcexecuted = false;
+				return $this->eax;
+			}
+			else {
+				$funcname = $matches[1];
+				$func = $this->funcs[$funcname];
+				if(!$func) {
+					if(in_array($funcname, self::$php_funcs)) {
+						$ret = call_user_func($funcname);
+						if(is_string($ret))
+							$ret = '"' . $ret . '"';
+						return $ret;
+					}
+					echo 'Error: unrecognized function ' . $funcname . PHP_EOL;
+					$this->evaluate_ret = EVALUATE_ERROR;
+					return NULL;
+				}
+				$this->retline = $this->curr('pc');
+				$this->evaluate_ret = EVALUATE_FUNCTION_CALL;
+				$this->pc[$this->currhist] = $func['line'];
+				return NULL;
 			}
 		}
 		else
 			return $in;
 	}
 	private function substitutevars($in) {
+		$f = $this->flow[$this->flowctr];
+		// don't bother when we're in a non-executing function
+		if($f['type'] === 'func' && !$f['execute'])
+			return $in;
 		// substitute variable references
 		if(preg_match_all("/\\\$(\{[a-zA-Z]+\}|[a-zA-Z]+)/u", $in, $matches)) {
 			foreach($matches[1] as $reference) {
@@ -245,6 +355,48 @@ abstract class ExecuteHandler {
 		}
 		return $in;	
 	}
+	private function check_flow() {
+		$f = $this->flow[$this->flowctr];
+		switch($f['type']) {
+			case 'global':
+				return 0;
+			case 'if':
+				if($f['part'] === 'then') {
+					if($f['condition'])
+						return 0;
+					else {
+						return CHECK_FLOW_IN_IF;
+					}
+				}
+				else if($f['part'] === 'else') {
+					if($f['condition']) {
+						return CHECK_FLOW_IN_IF;
+					}
+					else
+						return 0;
+				}
+			case 'for':
+				// only execute if the loop is supposed to be executed
+				if($f['max'] > 0)
+					return 0;
+				else {
+					return CHECK_FLOW_IN_FOR;
+				}
+			case 'while':
+				if(!$f['execute']) {
+					return CHECK_FLOW_IN_WHILE;
+				}
+				else
+					return 0;
+			case 'func':
+				if(!$f['execute']) {
+					return CHECK_FLOW_IN_FUNC;
+				}
+				else
+					return 0;
+		}
+		return 0;
+	}
 	public function execute($in = NULL) {
 	// functions as an interpreter of the byfile() "command line"
 		if($in === NULL) {
@@ -259,6 +411,31 @@ abstract class ExecuteHandler {
 		$in = $this->substitutevars($in);
 		$splitcmd = $this->divide_cmd($in);
 		$rawcmd = array_shift($splitcmd);
+		// handle control flow
+		switch($this->check_flow()) {
+			case 0: break;
+			case CHECK_FLOW_IN_IF: 
+				if(in_array($rawcmd, array('else', 'endif')))
+					break;
+				else {
+					$this->pcinc();
+					return true;
+				}
+			case CHECK_FLOW_IN_FOR: 
+				if(in_array($rawcmd, array('endfor')))
+					break;
+				else {
+					$this->pcinc();
+					return true;
+				}
+			case CHECK_FLOW_IN_FUNC: 
+				if(in_array($rawcmd, array('endfunc')))
+					break;
+				else {
+					$this->pcinc();
+					return true;
+				}
+		}
 		if(array_key_exists($rawcmd, self::$constructs)) {
 			// execute language construct
 			switch($rawcmd) {
@@ -272,6 +449,8 @@ abstract class ExecuteHandler {
 						}
 						$rawassigned = $matches[2];
 						$rawassigned = $this->evaluate($rawassigned);
+						if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
+							return true;
 						if(preg_match("/^(\"|').*(\"|')$/u", $rawassigned, $matches)) {
 							// string assignment
 							$rawassigned = substr($rawassigned, 1, -1);
@@ -279,7 +458,7 @@ abstract class ExecuteHandler {
 							$regex = "/\\\\(?=" . $matches[1] . ")/u";
 							$assigned = preg_replace($regex, '', $rawassigned);
 						}
-						else if(preg_match("/^(\d+|\d+\.\d+|0x\d+)$/u", $rawassigned)) {
+						else if(preg_match("/^-?(\d+|\d+\.\d+|0x\d+)$/u", $rawassigned)) {
 							// number
 							$assigned = $rawassigned;
 						}
@@ -319,7 +498,10 @@ abstract class ExecuteHandler {
 						$this->pcinc();
 						return false;					
 					}
-					$condition = $this->evaluate($matches[1]) ? true : false;
+					$condition = $this->evaluate($matches[1]);
+					if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
+						return true;
+					$condition = $condition ? true : false;
 					$this->flowctr++;
 					$this->flow[$this->flowctr] = array(
 						'type' => 'if',
@@ -330,6 +512,7 @@ abstract class ExecuteHandler {
 					$this->pcinc();
 					return true;
 				case 'else':
+						var_dump($this->flow, $this->flowctr);
 					if($this->flow[$this->flowctr]['type'] !== 'if') {
 						echo 'Unexpected "else"' . PHP_EOL;
 						$this->pcinc();
@@ -339,6 +522,7 @@ abstract class ExecuteHandler {
 					$this->pcinc();
 					return true;
 				case 'endif':
+						var_dump($this->flow, $this->flowctr);
 					if($this->flow[$this->flowctr]['type'] !== 'if') {
 						echo 'Unexpected "endif"' . PHP_EOL;
 						$this->pcinc();
@@ -429,6 +613,8 @@ abstract class ExecuteHandler {
 					}
 					$condition = $matches[1];
 					$execute = $this->evaluate($this->substitutevars($condition)) ? true : false;
+					if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
+						return true;
 					$this->pcinc();
 					$this->flowctr++;
 					$this->flow[$this->flowctr] = array(
@@ -446,6 +632,8 @@ abstract class ExecuteHandler {
 						return false;
 					}
 					$f['execute'] = $this->evaluate($this->substitutevars($f['condition'])) ? true : false;
+					if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
+						return true;
 					if($f['execute']) {
 						$this->pc[$this->currhist] = $f['line'];
 						return true;
@@ -455,7 +643,112 @@ abstract class ExecuteHandler {
 						$this->pcinc();
 						return true;
 					}
+				case 'func': // function introduction
+					// compile function definition
+					if(!preg_match(
+						"/^func\s+([a-zA-Z]+):\s+(([a-zA-Z]+,\s+)*[a-zA-Z]+)\$/u", 
+						$in, 
+						$matches)) {
+						echo "Syntax error: In line: $in" . PHP_EOL;
+						$this->pcinc();
+						return false;
+					}
+					$name = $matches[1];
+					$vars = preg_split("/,\s+/", $matches[2]);
+					// functions get their own scope
+					$this->currscope++;
+					$this->vars[$this->currscope] = array();
+					// increment flowcounter so we can edit its variables
+					$this->flowctr++;
+					$f = $this->funcs[$name];
+					if($f) {
+						// function already exists; call it
+						if($this->retline < 0) {
+							echo "Syntax error: Redefinition of function $name" . PHP_EOL;
+							$this->pcinc();
+							return false;
+						}
+						foreach($f['args'] as $key => $value) {
+							$this->setvar($value, $this->funcargs[$key]);
+						}
+						$flow = array(
+							'type' => 'func',
+							'execute' => true,
+							'ret' => $this->retline,
+						);
+						$this->retline = -1;
+						$this->funcargs = array();
+					}
+					else {
+						// create new function
+						$func = array(
+							'name' => $name,
+							'args' => $vars,
+							'line' => $this->curr('pc'),
+							'argcount' => count($vars),
+						);
+						$this->funcs[$name] = $func;
+						$flow = array(
+							'type' => 'func',
+							'execute' => false, // don't execute while we're loading function
+							'line' => $this->curr('pc'),
+							'function' => $name,
+						);
+					}
+					$this->flow[$this->flowctr] = $flow;
+					$this->pcinc();
+					return true;
+				case 'ret':
+					$f = $this->flow[$this->flowctr];
+					if(!$f['execute']) {
+						$this->pcinc();
+						return true;
+					}
+					if(!preg_match("/^ret\s+(.*)\$/u", $in, $matches)) {
+						echo 'Syntax error: In line: ' . $rawin . PHP_EOL;
+						return false;
+					}
+					$this->eax = $matches[1];
+					$this->pc[$this->currhist] = $f['ret'];
+					$this->funcexecuted = true;
+					$this->flowctr--;
+					$this->currscope--;
+					return true;
+				case 'endfunc':
+					$f = $this->flow[$this->flowctr];
+					if($f['type'] !== 'func') {
+						echo 'Syntax error: Unexpected "endfunc"' . PHP_EOL;
+						$this->pcinc();
+						return false;
+					}
+					if($f['execute']) {
+						// we reached end of an executing function, so return NULL
+						$this->eax = NULL;
+						$this->pc[$this->currhist] = $f['ret'];
+						$this->funcexecuted = true;
+					}
+					$this->flowctr--;
+					$this->currscope--;
+					$this->pcinc();
+					return true;
+				case 'call':
+					if(!preg_match("/^call\s+(.*)\$/u", $in, $matches)) {
+						echo 'Syntax error: In line: ' . $in . PHP_EOL;
+						$this->pcinc();
+						return false;
+					}
+					$call = $matches[1];
+					$eval = $this->evaluate($call);
+					if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
+						return true;
+					$this->pcinc();
+					return true;
 			}
+		}
+		if($in === NULL) {
+			// this happens if we're inside a function non-execution
+			$this->pcinc();
+			return true;
 		}
 		// handle output redirection
 		$outputredir = false;
@@ -540,35 +833,6 @@ abstract class ExecuteHandler {
 			foreach($paras as &$text) {
 				if($text and is_string($text)) $text = self::remove_quotes($text);
 			}		
-		}
-		// handle control flow
-		$f = $this->flow[$this->flowctr];
-		switch($f['type']) {
-			case 'global':
-				break;
-			case 'if':
-				if($f['part'] === 'then') {
-					if($f['condition'])
-						break;
-					else {
-						$this->pcinc();
-						return true;
-					}
-				}
-				else if($f['part'] === 'else') {
-					if($f['condition']) {
-						$this->pcinc();
-						return true;
-					}
-					else
-						break;
-				}
-			case 'for':
-				// only execute if the loop is supposed to be executed
-				if($f['max'] > 0)
-					break;
-				else
-					return true;
 		}
 		// output redirection
 		if($outputredir and $cmd['execute'] !== 'quit') {
@@ -1058,6 +1322,10 @@ abstract class ExecuteHandler {
 	}
 	protected function myecho($in) {
 		echo $in . PHP_EOL;
+	}
+	protected function put($in) {
+	// like myecho(), but does not put newline
+		echo $in;
 	}
 	private function driver($in) {
 	// adds lines to the history array, and handles execution

@@ -333,6 +333,11 @@ class Bot extends Snoopy {
 		// get WP:CUP and list of Cup participants
 		$date = new DateTime();
 		$year = $date->format('Y');
+		// WikiCup does not run in November or December, so do not add notices
+		$month = $date->format('n');
+		if($month > 10) {
+			return;
+		}
 		$wpcup = $this->fetchwp('Wikipedia:WikiCup/History/' . $year);
 		preg_match_all(
 			'/(?<=\{\{Wikipedia:WikiCup\/Participant2\|)[^\}]*(?=\}\})/u',

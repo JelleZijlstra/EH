@@ -1150,7 +1150,6 @@ abstract class ExecuteHandler {
 									}
 									break;
 								case 68: // KEY_LEFT
-									$this->debugecho($keypos);
 									if($keypos > 0) {
 										echo "\033[" . $keypos . "D\033[K";
 										$keypos--;

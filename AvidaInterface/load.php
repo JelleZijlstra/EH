@@ -11,5 +11,4 @@ if($argv[1]) {
 else
 	$ai->cli();
 
-
 ?>

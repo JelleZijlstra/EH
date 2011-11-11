@@ -4,13 +4,15 @@ require_once(BPATH . "/Common/ExecuteHandler.php");
 define(AVIDADIR, "/Users/jellezijlstra/Desktop/Avida");
 define(AVIDACONFIG, AVIDADIR . "/avida.cfg");
 define(AVIDAEVENTS, AVIDADIR . "/events.cfg");
+define(AVIDAPROG, AVIDADIR . "/avida");
+define(AVIDAANALYZE, AVIDADIR . "/analyze.cfg");
 class AvidaInterface extends ExecuteHandler {
 	protected static $AvidaInterface_commands = array(
-		'config_avida' => array('name' => 'config_avida',
+		'avida_config' => array('name' => 'avida_config',
 			'desc' => 'Set Avida configuration settings',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
-		'config_avida_default' => array('name' => 'config_avida_default',
+		'avida_config_default' => array('name' => 'avida_config_default',
 			'desc' => 'Restore default Avida settings',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
@@ -26,42 +28,62 @@ class AvidaInterface extends ExecuteHandler {
 			'desc' => 'Save assembled events list to event file',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
+		'avida_run' => array('name' => 'avida_run',
+			'desc' => 'Run Avida',
+			'arg' => 'File to save results to',
+			'execute' => 'callmethodarg'),
+		'avida_analyze_start' => array('name' => 'avida_analyze_start',
+			'desc' => 'Start assembling Avida analysis file',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
+		'avida_analyze_add' => array('name' => 'avida_analyze_add',
+			'desc' => 'Start adding files to Avida analyze list',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
+		'avida_analyze_push' => array('name' => 'avida_analyze_push',
+			'desc' => 'Save assembled analyze list to config file',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
+		'avida_analyze' => array('name' => 'avida_analyze',
+			'desc' => 'Run Avida in analysis mode',
+			'arg' => 'File to save results to',
+			'execute' => 'callmethodarg'),
 	);
 	public function __construct() {
 		parent::__construct(self::$AvidaInterface_commands);
+		chdir(AVIDADIR);
 	}
 	public function cli() {
 		$this->setup_commandline('Avida');
 	}
-	public function config_avida($paras = array()) {
-		if(count($paras) == 0)
+	public function avida_config($paras = array()) {
+		if(count($paras) === 0)
 			return true;
 		$configfile = file_get_contents(AVIDACONFIG);
 		if(!$configfile) {
 			echo "Error retrieving configuration file";
 			return false;
 		}
-/*		$time = new DateTime();
-		// save configuration
-		exec_catch("cp " . AVIDACONFIG . ' ' . AVIDACONFIG . "." . $time->getTimestamp());*/
 		foreach($paras as $key => $value) {
-			$configfile = preg_replace("/^(?<=" . preg_quote($key) . " )[^ ]+(?= )/mu", $value, $configfile, 1, $count);
+			$configfile = preg_replace("/" . preg_quote($key) . " [^ ]*/u", $key . ' ' . $value, $configfile, 1, $count);
 			if($count !== 1) {
-				echo "Invalid configuration setting: " . $key . PHP_EOL;
+				// then just add it
+				$configfile .= "\n" . $key . ' ' . $value. "\n";
 			}
 		}
+		//echo $configfile;
 		if(!file_put_contents(AVIDACONFIG, $configfile)) {
 			echo "Error writing configuration" . PHP_EOL;
 			return false;
 		}
 		return true;
 	}
-	public function config_avida_default() {
-		if(!exec_catch("mv " . AVIDACONFIG . ".default " . AVIDACONFIG)) {
+	public function avida_config_default() {
+		if(!exec_catch("cp " . AVIDACONFIG . ".default " . AVIDACONFIG)) {
 			echo "Error restoring default configuration" . PHP_EOL;
 			return false;
 		}
-		if(!exec_catch("mv " . AVIDAEVENTS . ".default " . AVIDAEVENTS)) {
+		if(!exec_catch("cp " . AVIDAEVENTS . ".default " . AVIDAEVENTS)) {
 			echo "Error restoring default configuration" . PHP_EOL;
 			return false;
 		}
@@ -105,8 +127,55 @@ class AvidaInterface extends ExecuteHandler {
 	}
 	public function avida_events_push() {
 		$events = implode('', $this->avida_events);
-		if(!file_put_contents(AVIDACONFIG, $events)) {
+		if(!file_put_contents(AVIDAEVENTS, $events)) {
 			echo 'Error saving new events.cfg' . PHP_EOL;
+			return false;
+		}
+		return true;
+	}
+	public function avida_run($file) {
+		// random seed
+		static $seed = 0;
+		chdir(AVIDADIR);
+		$cmd = AVIDAPROG . " -s $seed > '$file'; echo \$?";
+		$seed++;
+		$ret = shell_exec($cmd);
+		echo 'Avida exited with exit code ' . $ret . PHP_EOL;
+		return true;
+	}
+	public function avida_analyze($file) {
+		chdir(AVIDADIR);
+		$cmd = AVIDAPROG . " -a > '" . $file. "'; echo \$?";
+		$ret = shell_exec($cmd);
+		echo 'Avida exited with exit code ' . $ret . PHP_EOL;
+		return true;
+	}
+	public function avida_analyze_start() {
+	// start assembling events
+		$this->avida_analyze = array();
+	}
+	public function avida_analyze_add($paras = array()) {
+		if($this->process_paras($paras, array(
+			'errorifempty' => array('cmd'),
+			'checklist' => array(
+				'cmd', // Avida command
+				'arg', // argument to be given
+				'comment', // explaining what this does
+			),
+		)) == PROCESS_PARAS_ERROR_FOUND)
+			return false;
+		// we always start events with u for now
+		$line = $paras['cmd'];
+		if($paras['arg']) $line .= ' ' . $paras['arg'];
+		if($paras['comment']) $line .= ' # ' . $paras['comment'];
+		$line .= "\n";
+		$this->avida_analyze[] = $line;
+		return true;
+	}
+	public function avida_analyze_push() {
+		$events = implode('', $this->avida_analyze);
+		if(!file_put_contents(AVIDAANALYZE, $events)) {
+			echo 'Error saving new analyze.cfg' . PHP_EOL;
 			return false;
 		}
 		return true;

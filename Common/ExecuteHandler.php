@@ -39,6 +39,7 @@ abstract class ExecuteHandler {
 	// current scope (set to > 0 on function calls when we implement those)
 	private $currscope = array(
 		0 => 0,
+		1 => 0,
 	);
 	// array of control flow structures we're currently in
 	private $flow = array(
@@ -160,6 +161,9 @@ abstract class ExecuteHandler {
 		'call' => array('name' => 'call',
 			'desc' => 'Call a function (and discard its return value)',
 			),
+		'global' => array('name' => 'global',
+			'desc' => 'Includes a global variable',
+			),
 	);
 	public function __construct($commands) {
 		$this->setup_ExecuteHandler($commands);
@@ -258,15 +262,16 @@ abstract class ExecuteHandler {
 	}
 	private function getvar($var) {
 	// get the value of an internal variable
+	
 		if(!isset($this->vars[$this->currhist][$this->curr('currscope')][$var]))
 			return NULL;
 		else
 			return $this->vars[$this->currhist][$this->curr('currscope')][$var];
 	}
 	private function evaluate($in) {
-		if($this->config['debug']) var_dump($in);
+		if($this->config['debug']) echo '"' . $in . '"';
 		$this->evaluate_ret = 0;
-		if(preg_match("/^(.*)\s*([+\-*\/=><]|!=|>=|<=)\s*(.*)$/u", $in, $matches)) {
+		if(preg_match("/^(?![\"'])(.*)\s*([+\-*\/=><]|!=|>=|<=)\s*(.*)(?<![\"'])$/u", $in, $matches)) {
 			$lval = trim($matches[1]);
 			$rval = trim($matches[3]);
 			switch($matches[2]) {
@@ -311,7 +316,6 @@ abstract class ExecuteHandler {
 				}
 				$this->funcargs = $vars;
 				$this->retline = $this->curr('pc');
-				if($this->config['debug']) var_dump($this->retline);
 				$this->evaluate_ret = EVALUATE_FUNCTION_CALL;
 				$this->curr('pc', $func['line']);
 				return NULL;
@@ -368,7 +372,7 @@ abstract class ExecuteHandler {
 					);
 				}
 				else {
-					echo "Notice: unrecognized variable " . $fmreference . PHP_EOL;
+					echo "Notice: unrecognized variable " . $fmreference . " (in scope " . $this->curr('currscope') . ")" . PHP_EOL;
 				}
 			}
 		}
@@ -735,6 +739,9 @@ abstract class ExecuteHandler {
 						$this->eax = NULL;
 						$this->curr('pc', $f['ret']);
 						$this->funcexecuted = true;
+						$this->curr('flowctr', '--');
+						$this->curr('currscope', '--');
+						return EXECUTE_PC;
 					}
 					$this->curr('flowctr', '--');
 					$this->curr('currscope', '--');
@@ -749,22 +756,28 @@ abstract class ExecuteHandler {
 					if($this->evaluate_ret === EVALUATE_FUNCTION_CALL)
 						return EXECUTE_PC;
 					return EXECUTE_NEXT;
-/*				case 'global':
+				case 'global':
 					if(!preg_match("/^global\s+([a-zA-Z]+)\$/u", $in, $matches)) {
 						echo 'Syntax error: In line: ' . $in . PHP_EOL;
-						$this->pcinc();
-						return false;
+						return EXECUTE_SYNTAX_ERROR;
 					}
 					if($this->flowctr == 0) {
 						return EXECUTE_NEXT;
 					}
 					$var = $matches[1];
-					if(isset($this->vars[$this->currhist][$this->flowctr])) {
+					if($this->getvar($var) !== NULL) {
 						echo 'Notice: attempted global variable ' . $var . ' already exists locally' . PHP_EOL;
 						return EXECUTE_NEXT;
 					}
-					if(!isset($this->vars[
-*/			}
+					if(!isset($this->vars[$this->currhist][0][$var])) {
+						echo 'Notice: there is no global variable ' . $var . PHP_EOL;
+						$this->setvar($var, NULL);
+						return EXECUTE_NEXT;
+					}
+					// alias local variable to global
+					$this->vars[$this->currhist][$this->curr('currscope')][$var] =& $this->vars[$this->currhist][0][$var];
+					return EXECUTE_NEXT;
+			}
 		}
 		if($in === NULL) {
 			// this happens if we're inside a function non-execution
@@ -1044,6 +1057,33 @@ abstract class ExecuteHandler {
 		else
 			return 0;
 	}
+	public function exec_file($file, $paras = '') {
+		// save old currscope
+		$oldcurrhist = $this->currhist;
+		$this->currhist = 1; // want something more intelligent here eventually
+		$this->curr('currscope', 0);
+		$this->curr('vars', array());
+		$this->curr('flowo', array(
+			'type' => 'global',
+			'start' => 0,
+		));
+		$this->curr('history', array());
+		$this->curr('histlen', 0);
+		$this->curr('pc', 0);
+		$in = fopen($file, 'r');
+		if(!$in) {
+			echo 'Invalid input file' . PHP_EOL;
+			return false;
+		}
+		while(($line = fgets($in)) !== false) {
+			if(!$this->driver($line)) {
+				$this->currhist = $oldcurrhist;
+				return false;
+			}
+		}
+		$this->currhist = $oldcurrhist;
+		return true;
+	}
 	public function setup_commandline($name, $paras = '') {
 	// Performs various functions in a pseudo-command line. A main entry point.
 	// stty stuff inspired by sfinktah at http://php.net/manual/en/function.fgetc.php
@@ -1216,13 +1256,11 @@ abstract class ExecuteHandler {
 					// it looks like KEY_UP etcetera may have more than one... need to see how to handle those
 				}
 			}
-			if($this->config['debug']) var_dump($cmd);
 			$cmd = $getcmd();
 			if($cmd == NULL) continue;
 			unset($c);
 			// restore sane stty settings for the duration of command execution
 			$this->stty("sane");
-			if($this->config['debug']) var_dump($cmd);
 			// execute the command
 			if(!$this->driver($cmd)) {
 				echo 'Goodbye.' . PHP_EOL;
@@ -1289,27 +1327,6 @@ abstract class ExecuteHandler {
 		if($this->trystatic and static::${get_called_class() . '_synonyms'}[$cmd])
 			return true;
 		return false;
-	}
-	protected function exec_file($file, $paras = '') {
-		// save old currscope
-		$oldcurrhist = $this->currhist;
-		$this->currhist = 1; // want something more intelligent here eventually
-		$this->curr('history', array());
-		$this->curr('histlen', 0);
-		$this->curr('pc', 0);
-		$in = fopen($file, 'r');
-		if(!$in) {
-			echo 'Invalid input file' . PHP_EOL;
-			return false;
-		}
-		while(($line = fgets($in)) !== false) {
-			if(!$this->driver($line)) {
-				$this->currhist = $oldcurrhist;
-				return false;
-			}
-		}
-		$this->currhist = $oldcurrhist;
-		return true;
 	}
 	static protected function testregex($in) {
 	// tests whether a regex pattern is valid
@@ -1401,17 +1418,21 @@ abstract class ExecuteHandler {
 				$ret =& $this->history[$this->currhist][$this->pc[$this->currhist]];
 				break;
 			case 'currscope':
+				//debug_print_backtrace();
 				$ret =& $this->currscope[$this->currhist];
 				break;
 			case 'vars':
 				$ret =& $this->vars[$this->currhist][$this->currscope[$this->currhist]];
+				break;
 		}
 		if($set === NULL) return $ret;
-		switch($set) {
-			case '++': $ret++; break;
-			case '--': $ret--; break;
-			default: $ret = $set; break;
-		}
+		// can't use switch because 0 == '++'
+		if($set === '++')
+			$ret++;
+		else if($set === '--')
+			$ret--; 
+		else
+			$ret = $set;
 		return $ret;
 	}
 	private function pcinc() {

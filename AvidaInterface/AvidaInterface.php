@@ -48,6 +48,14 @@ class AvidaInterface extends ExecuteHandler {
 			'desc' => 'Run Avida in analysis mode',
 			'arg' => 'File to save results to',
 			'execute' => 'callmethodarg'),
+		'avida_get_org' => array('name' => 'avida_get_org',
+			'desc' => 'Place an Avida organism in the main directory',
+			'arg' => 'Organism name',
+			'execute' => 'callmethodarg'),
+		'avida_lineages' => array('name' => 'avida_lineages',
+			'desc' => 'Compute lineage statistics for an Avida saved population file',
+			'arg' => 'Filename',
+			'execute' => 'callmethodarg'),
 	);
 	public function __construct() {
 		parent::__construct(self::$AvidaInterface_commands);
@@ -135,19 +143,23 @@ class AvidaInterface extends ExecuteHandler {
 	}
 	public function avida_run($file) {
 		// random seed
-		static $seed = 0;
+		static $seed = 42;
 		chdir(AVIDADIR);
-		$cmd = AVIDAPROG . " -s $seed > '$file'; echo \$?";
+		$cmd = AVIDAPROG . " -s $seed 1> '$file' 2> /dev/null; echo \$?";
 		$seed++;
-		$ret = shell_exec($cmd);
-		echo 'Avida exited with exit code ' . $ret . PHP_EOL;
+		$before = time();
+		$ret = trim(shell_exec($cmd));
+		$after = time();
+		echo 'Avida exited with exit code ' . $ret . ' after ' . ($after - $before) . ' seconds' . PHP_EOL;
 		return true;
 	}
 	public function avida_analyze($file) {
 		chdir(AVIDADIR);
-		$cmd = AVIDAPROG . " -a > '" . $file. "'; echo \$?";
-		$ret = shell_exec($cmd);
-		echo 'Avida exited with exit code ' . $ret . PHP_EOL;
+		$cmd = AVIDAPROG . " -a 1> '" . $file. "' 2> /dev/null; echo \$?";
+		$before = time();
+		$ret = trim(shell_exec($cmd));
+		$after = time();
+		echo 'Avida exited from analysis mode with exit code ' . $ret . ' after ' . ($after - $before) . ' seconds' . PHP_EOL;
 		return true;
 	}
 	public function avida_analyze_start() {
@@ -177,6 +189,40 @@ class AvidaInterface extends ExecuteHandler {
 		if(!file_put_contents(AVIDAANALYZE, $events)) {
 			echo 'Error saving new analyze.cfg' . PHP_EOL;
 			return false;
+		}
+		return true;
+	}
+	public function avida_get_org($org) {
+	// place an organism in the main directory
+		$cmd = "cp " . AVIDADIR . "/data/$org/$org " . AVIDADIR . "/$org";
+		if(!exec_catch($cmd))
+			$success = false;
+		else
+			$success = true;
+		// report organism fitness
+		$fp = file_get_contents(AVIDADIR . "/$org");
+		$count = preg_match("/# Fitness\.\.\.\.\.\.\.\.\.: (\d+\.\d+)/u", $fp, $matches);
+		if($count === 0)
+			echo 'Unable to find fitness' . PHP_EOL;
+		else
+			echo 'Fitness: ' . $matches[1] . PHP_EOL;
+		return $success;
+	}
+	public function avida_lineages($in) {
+		$fh = fopen(AVIDADIR . '/' . $in, 'r');
+		if(!$fh) {
+			echo __METHOD__ . ': Could not open input file: ' . $in;
+			return false;
+		}
+		$counts = array();
+		while($line = fgets($fh)) {
+			if(!$line or ($line[0] === '#'))
+				continue;
+			$lineage = (int) substr($line, -3, 1);
+			$counts[$lineage]++;
+		}
+		foreach($counts as $n => $count) {
+			echo "Lineage $n: $count\n";
 		}
 		return true;
 	}

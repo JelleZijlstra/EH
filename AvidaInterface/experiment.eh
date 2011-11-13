@@ -7,9 +7,9 @@
 // setconfig --debug=true
 $ generaterun = 2000
 $ initrun = 5000
-$ secondrun = 2000
-$ gen = 15
-$ smallworld = 7
+$ secondrun = 5000
+$ gen = 20
+$ smallworld = 15
 $ largeworld = 25
 // Number of replicates on first run
 // set to 4 

@@ -784,8 +784,8 @@ abstract class ExecuteHandler {
 			return EXECUTE_NEXT;
 		}
 		// handle output redirection
-		$outputredir = false;
-		$nextoutput = false;
+		$outputredir = $outputredirvar = $returnredir = $returnredirvar = false;
+		$next = false;
 		// block of stuff for ease of usage
 		{
 			$cmd = $this->expand_cmd($rawcmd);
@@ -796,13 +796,18 @@ abstract class ExecuteHandler {
 			$paras = array();
 			foreach($splitcmd as $piece) {
 				// handle output redirection
-				if($piece === '>') {
-					$nextoutput = true;
+				if($piece === '>' || $piece === '>$' || $piece === '}' || $piece === '}$' ) {
+					$next = $piece;
 					continue;
 				}
-				if($nextoutput) {
-					$outputredir = $piece;
-					$nextoutput = false;
+				if($next !== false) {
+					switch($next) {
+						case '>': $outputredir = $piece; break;
+						case '>$': $outputredirvar = $piece; break;
+						case '}': $returnredir = $piece; break;
+						case '}$': $returnedirvar = $piece; break;
+					}
+					$next = false;
 					continue;
 				}
 				// arguments without initial -
@@ -867,35 +872,37 @@ abstract class ExecuteHandler {
 			}		
 		}
 		// output redirection
-		if($outputredir and $cmd['execute'] !== 'quit') {
+		if(($outputredir || $outputredirvar) and $cmd['execute'] !== 'quit') {
 			ob_start();
 		}
+		// return value of executed command
+		$ret = NULL;
 		// execute it
 		switch($cmd['execute']) {
 			case 'doallorcurr':
 				if($arg and is_array($arg)) {
 					foreach($arg as $file)
-						if(!$this->{$cmd['name']}($file, $paras)) break;
+						if(!($ret = $this->{$cmd['name']}($file, $paras))) break;
 				}
 				else
-					$this->doall($cmd['name'], $paras);
+					$ret = $this->doall($cmd['name'], $paras);
 				break;
 			case 'docurr':
 				foreach($arg as $entry) {
-					$this->{$cmd['name']}($entry, $paras);
+					$ret = $this->{$cmd['name']}($entry, $paras);
 				}
 				break;
 			case 'callmethod':
-				$this->{$cmd['name']}($paras);
+				$ret = $this->{$cmd['name']}($paras);
 				break;
 			case 'callmethodarg':
-				$this->{$cmd['name']}($rawarg, $paras);
+				$ret = $this->{$cmd['name']}($rawarg, $paras);
 				break;
 			case 'callfunc':
-				$cmd['name']($paras);
+				$ret = $cmd['name']($paras);
 				break;
 			case 'callfuncarg':
-				$cmd['name']($rawarg, $paras);
+				$ret = $cmd['name']($rawarg, $paras);
 				break;			
 			case 'quit':
 				return EXECUTE_QUIT;
@@ -915,6 +922,25 @@ abstract class ExecuteHandler {
 			fwrite($file, ob_get_contents());
 			ob_end_clean();
 		}
+		else if($outputredirvar) {
+			$this->setvar($outputredirvar, ob_get_contents());
+			ob_end_clean();
+		}
+		if($returnredir) {
+			$file = fopen($returnredir, 'w');
+			if(!$file) {
+				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
+				ob_end_clean();
+				return EXECUTE_NEXT;
+			}
+			fwrite($file, $ret);
+		}
+		// no else here; having both returnredir and returnredirvar makes sense
+		if($returnredirvar) {
+			$this->setvar($returnredirvar, $ret);
+		}
+		// always make return value accessible to script
+		$this->setvar('ret', $ret);
 		return EXECUTE_NEXT;
 	}
 	private function divide_cmd($in) {

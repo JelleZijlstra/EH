@@ -204,8 +204,10 @@ class AvidaInterface extends ExecuteHandler {
 		$count = preg_match("/# Fitness\.\.\.\.\.\.\.\.\.: (\d+\.\d+)/u", $fp, $matches);
 		if($count === 0)
 			echo 'Unable to find fitness' . PHP_EOL;
-		else
-			echo 'Fitness: ' . $matches[1] . PHP_EOL;
+		else {
+			$fitness = (float) $matches[1];
+			echo 'Fitness: ' . round($fitness, 2) . PHP_EOL;
+		}
 		return $success;
 	}
 	public function avida_lineages($in) {
@@ -214,15 +216,19 @@ class AvidaInterface extends ExecuteHandler {
 			echo __METHOD__ . ': Could not open input file: ' . $in;
 			return false;
 		}
-		$counts = array();
+		$counts = array(0, 0);
 		while($line = fgets($fh)) {
 			if(!$line or ($line[0] === '#'))
 				continue;
-			$lineage = (int) substr($line, -3, 1);
-			$counts[$lineage]++;
+			$lineage = substr($line, -3, 1);
+			// get only active organisms
+			if($lineage === '0' || $lineage === '1') {
+				$lineage = (int) $lineage;
+				$counts[$lineage]++;
+			}
 		}
-		foreach($counts as $n => $count) {
-			echo "Lineage $n: $count\n";
+		for($i = 0; $i < 2; $i++) {
+			echo "Lineage $i: {$counts[$i]}\n";
 		}
 		return true;
 	}

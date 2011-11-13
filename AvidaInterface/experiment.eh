@@ -8,11 +8,13 @@
 $ generaterun = 2000
 $ initrun = 5000
 $ secondrun = 5000
-$ gen = 20
-$ smallworld = 15
+// World size for generate run. 15 in Experiment 1, 20 in Experiment 2
+$ gen = 15
+// World size for small world. 7 in Experiment 1, 15 in Experiment 2.
+$ smallworld = 7
+// World size for large world.
 $ largeworld = 25
 // Number of replicates on first run
-// set to 4 
 $ firstreps = 5
 // Hold default configuration (analyze settings)
 $ dflt = "--BIRTH_METHOD=4 --COPY_MUT_PROB=0.012"
@@ -151,5 +153,4 @@ for $inputs count i
 	endfor
 endfor
 // Find out results
-// TODO
 avida_config_default

@@ -46,6 +46,11 @@ class FullFile extends ListEntry {
 			'desc' => 'Get a citation for this file',
 			'arg' => 'Optionally, citation type to be used',
 			'execute' => 'callmethod'),
+		'echopdfcontent' => array('name' => 'echopdfcontent',
+			'aka' => array('echopdf'),
+			'desc' => 'Print the contents of the first page of the PDF file',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
 		'openf' => array('name' => 'openf',
 			'aka' => array('o', 'open'),
 			'desc' => 'Open the file',
@@ -73,6 +78,10 @@ class FullFile extends ListEntry {
 		'format' => array('name' => 'format',
 			'desc' => 'Format the file',
 			'arg' => 'None required',
+			'execute' => 'callmethod'),
+		'test' => array('name' => 'test',
+			'desc' => 'Testing stuff',
+			'arg' => 'None',
 			'execute' => 'callmethod'),
 	);
 	static $FullFile_synonyms = array();
@@ -1672,6 +1681,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$this->trybioone() or
 						$this->trydoi() or
 						$this->trygeodiv() or
+						$this->trype() or
 						$this->trygoogle() or
 						$this->doiamnhinput() or
 						$this->trymanual());
@@ -1900,6 +1910,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!$this->pdfcontent) return false;
 		return $this->pdfcontent;
 	}
+	public function echopdfcontent() {
+		$c = $this->getpdfcontent();
+		if($c === false)
+			return false;
+		echo $c;
+		return true;
+	}
 	private function findtitle_pdfcontent() {
 	// tries to detect the title from $this->pdfcontent
 	// assumes it is the first line with real running text
@@ -2072,6 +2089,43 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$authors = preg_replace("/((?<=\.), |& )/", "; ", $authors);
 		// comma before initials
 		$this->authors = preg_replace("/(?<=[a-z]) (?=[A-Z]\.)/", ", ", $authors);
+		return true;
+	}
+	private function trype() {
+	// Palaeontologia Electronica
+		if(!preg_match("/\n([^\n]+)\s*\$/u", $this->pdfcontent, $matches))
+			return false;
+		$citation = $matches[1];
+		if(!preg_match("/Palaeontologia Electronica Vol\./u", $citation))
+			return false;
+		preg_match(
+			"/^(.*?), (\d{4})\. (.*?), Palaeontologia Electronica Vol\. (\d+), Issue (\d+); ([\dA-Z]+):(\d+)p, [\dA-Za-z]+; ([^\s]*)\$/u", 
+			$citation, 
+			$matches
+		);
+		$authors = explode(', ', $matches[1]);
+		$this->authors = '';
+		foreach($authors as $key => $aut) {
+			if(($key % 2) === 0) { // even index
+				$this->authors .= preg_replace('/^and /u', '', $aut) . ', ';
+			}
+			else {
+				$auta = explode(' ', $aut);
+				foreach($auta as $autp) {
+					$this->authors .= $autp[0] . '.';
+				}
+				$this->authors .= '; ';
+			}
+		}
+		$this->authors = preg_replace('/; $/u', '', $this->authors);
+		$this->year = $matches[2];
+		$this->title = $matches[3];
+		$this->journal = 'Palaeontologia Electronica';
+		$this->volume = $matches[4];
+		$this->issue = $matches[5];
+		$this->start = $matches[6];
+		$this->pages = $matches[7];
+		$this->url = $matches[8];
 		return true;
 	}
 	private function trydoi() {
@@ -2640,6 +2694,11 @@ Content-Disposition: attachment
 		return true;
 	}
 	/* PROGRAMMING HELPS */
+	public function test() {
+		$this->putpdfcontent();
+		var_dump($this->trype());
+		$this->my_inform();
+	}
 /*	public function cleanup() {
 		unset($this->year);
 		unset($this->title);

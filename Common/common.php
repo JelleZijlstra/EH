@@ -164,6 +164,4 @@ if(!function_exists('cal_days_in_month')) {
 		}
 	}
 }
-// legacy code, test whether anything breaks without it
-//if(!isset($stdin)) $stdin = fopen('php://stdin', 'r');
 ?>

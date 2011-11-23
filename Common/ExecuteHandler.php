@@ -362,19 +362,18 @@ abstract class ExecuteHandler {
 			return $in;
 	}
 	private function substitutevars($in) {
-		$f = $this->curr('flowo');
-		// don't bother when we're in a non-executing function
-		if($f['type'] === 'func' && !$f['execute'])
-			return $in;
 		// substitute variable references
 		if(preg_match_all("/\\\$(\{[a-zA-Z]+\}|[a-zA-Z]+)/u", $in, $matches)) {
 			foreach($matches[1] as $reference) {
+				// check for ${varname} syntax
 				if($reference[0] === '{') 
 					$fmreference = substr($reference, 1, -1);
 				else
 					$fmreference = $reference;
+				// get variables in current scope
 				$cvars = $this->curr('vars');
 				if(isset($cvars[$fmreference])) {
+					// substitute them
 					$in = preg_replace(
 						"/\\\$" . preg_quote($reference) . "/u",
 						$cvars[$fmreference],
@@ -435,17 +434,21 @@ abstract class ExecuteHandler {
 	}
 	public function execute($in = NULL) {
 	// functions as an interpreter of the byfile() "command line"
+		// by default, take current value of PC
 		if($in === NULL) {
 			$in = $this->curr('pcres');
 		}
-		// handle empty commands
+		// handle empty commands (do nothing)
 		if($in === '') {
 			return self::EXECUTE_NEXT;
 		}
-		$rawcmd = preg_replace("/ .*\$/u", '', $in);
+		// divide input into keyword and argument
+		preg_match("/^\s*([^\s]+)(\s+(.*))?\s*\$/u", $in, $matches);
+		$rawcmd = $matches[1];
+		$rawarg = $matches[3];
 		// if we're in an if statement that's executing, we need special rules
 		$inif = false;
-		// handle control flow
+		// handle control flow, and exit if we are not executing this code
 		switch($this->check_flow()) {
 			case 0: break;
 			case self::CHECK_FLOW_IN_IF: 
@@ -475,20 +478,17 @@ abstract class ExecuteHandler {
 				else
 					return self::EXECUTE_NEXT;
 		}
-		$rawin = $in;
-		$in = $this->substitutevars($in);
-		$splitcmd = $this->divide_cmd($in);
-		$rawcmd = array_shift($splitcmd);
+		// substitute variables in argument
+		$arg = $this->substitutevars($rawarg);
 		if($this->config['debug']) echo 'Executing command: ' . $rawcmd . PHP_EOL;
 		if(array_key_exists($rawcmd, self::$constructs)) {
 			// execute language construct
 			switch($rawcmd) {
 				case '$': // variable assignment
-					if(preg_match('/^\$\s+([a-zA-Z]+)\s*=\s*(.*)$/u', $in, $matches)) {
+					if(preg_match('/^([a-zA-Z]+)\s*=\s*(.*)$/u', $arg, $matches)) {
 						$var = $matches[1];
 						if(!preg_match("/^[a-zA-Z]+$/u", $var)) {
 							echo "Syntax error: Invalid variable name: $var" . PHP_EOL;
-							$this->pcinc();
 							return self::EXECUTE_SYNTAX_ERROR;
 						}
 						$rawassigned = $matches[2];
@@ -508,13 +508,12 @@ abstract class ExecuteHandler {
 						}
 						else {
 							echo "Syntax error: Unrecognized assignment value: $rawassigned" . PHP_EOL;
-							$this->pcinc();
 							return self::EXECUTE_SYNTAX_ERROR;
 						}
 						$this->setvar($var, $assigned);
 						return self::EXECUTE_NEXT;
 					}
-					else if(preg_match('/^\$\s+([a-zA-Z]+)(\+\+|\-\-)$/u', $in, $matches)) {
+					else if(preg_match('/^([a-zA-Z]+)(\+\+|\-\-)$/u', $arg, $matches)) {
 						$varname = $matches[1];
 						$var = $this->getvar($varname);
 						if($var === NULL) {
@@ -530,27 +529,28 @@ abstract class ExecuteHandler {
 					}
 					else {
 						echo "Syntax error: In line: " . $in . PHP_EOL;
-						$this->pcinc();
 						return self::EXECUTE_SYNTAX_ERROR;
 					}
 				case 'if':
-					if(!preg_match("/^if\s+(.*)$/u", $in, $matches)) {
-						echo "Syntax error: In line: " . $in . PHP_EOL;
-						$this->pcinc();
-						return self::EXECUTE_SYNTAX_ERROR;					
-					}
 					// evaluate condition
-					$condition = (bool) $this->evaluate($matches[1]);
-					if($this->evaluate_ret === self::EVALUATE_FUNCTION_CALL)
-						return self::EXECUTE_PC;
+					$condition = (bool) $this->evaluate($arg);
+					switch($this->evaluate_ret) {
+						case self::EVALUATE_FUNCTION_CALL:
+							return self::EXECUTE_PC;
+						case self::EVALUATE_ERROR:
+							return self::EXECUTE_SYNTAX_ERROR;
+					}
 					// execute?
 					// this gets set when we're in a non-executing part of an if
 					// statement that is getting evaluated
-					if($inif) 
-						$f = false;
-					else
+					if($inif)
+						// not executing code we're in, so not executing this if either
+						$execute = false;
+					else {
+						// are we executing the outer flow object?
 						$f = $this->curr('flowo');
-					$execute = $f['execute'];
+						$execute = $f['execute'];
+					}
 					$this->curr('flowctr', '++');
 					$this->curr('flowo', array(
 						'type' => 'if',
@@ -579,7 +579,7 @@ abstract class ExecuteHandler {
 					$this->curr('flowctr', '--');
 					return self::EXECUTE_NEXT;
 				case 'for':
-					if(preg_match("/^for\s+(\d+)\s+count\s+(.*)$/u", $in, $matches)) {
+					if(preg_match("/^(\d+)\s+count\s+(.*)$/u", $arg, $matches)) {
 						$max = (int) $matches[1];
 						$var = $matches[2];
 						if($max < 1)
@@ -602,7 +602,7 @@ abstract class ExecuteHandler {
 						));
 						return self::EXECUTE_PC;
 					}
-					else if(preg_match("/^for\s+(\d+)$/u", $in, $matches)) {
+					else if(preg_match("/^(\d+)$/u", $arg, $matches)) {
 						$max = (int) $matches[1];
 						if($max < 1)
 							$execute = false;
@@ -668,20 +668,20 @@ abstract class ExecuteHandler {
 				case '//': // comment, ignored
 					return self::EXECUTE_NEXT;
 				case 'while':
-					if(!preg_match("/^while\s+(.*)$/u", $rawin, $matches)) {
-						echo "Syntax error: In line: " . $rawin . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;					
-					}
-					$condition = $matches[1];
+					$condition = $rawarg;
 					$execute = (bool) $this->evaluate($this->substitutevars($condition));
+					switch($this->evaluate_ret) {
+						case self::EVALUATE_FUNCTION_CALL:
+							return self::EXECUTE_PC;
+						case self::EVALUATE_ERROR:
+							return self::EXECUTE_SYNTAX_ERROR;
+					}
 					// check whether we're executing this area at all
 					if($execute) {
 						$f = $this->curr('flowo');
 						if(!$f['execute'])
 							$execute = false;
 					}
-					if($this->evaluate_ret === self::EVALUATE_FUNCTION_CALL)
-						return self::EXECUTE_PC;
 					$this->pcinc();
 					$this->curr('flowctr', '++');
 					$this->curr('flowo', array(
@@ -716,8 +716,8 @@ abstract class ExecuteHandler {
 				case 'func': // function introduction
 					// compile function definition
 					if(!preg_match(
-						"/^func\s+([a-zA-Z]+):\s+(([a-zA-Z]+,\s+)*[a-zA-Z]+)\$/u", 
-						$in, 
+						"/^([a-zA-Z]+):\s+(([a-zA-Z]+,\s+)*[a-zA-Z]+)\$/u", 
+						$arg, 
 						$matches)) {
 						echo "Syntax error: In line: $in" . PHP_EOL;
 						return self::EXECUTE_SYNTAX_ERROR;
@@ -783,11 +783,8 @@ abstract class ExecuteHandler {
 							return self::EXECUTE_SYNTAX_ERROR;
 						}
 					} while($f['type'] !== 'func');
-					if(!preg_match("/^ret\s+(.*)\$/u", $in, $matches)) {
-						echo 'Syntax error: In line: ' . $rawin . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					$this->eax = $matches[1];
+					// return value is the same as the argument; does not get evaluated. If there is no argument, we return NULL.
+					$this->eax = $arg;
 					$this->curr('pc', $f['ret']);
 					$this->funcexecuted = true;
 					$this->curr('flowctr', $flow);
@@ -812,24 +809,29 @@ abstract class ExecuteHandler {
 					$this->curr('currscope', '--');
 					return self::EXECUTE_NEXT;
 				case 'call':
-					if(!preg_match("/^call\s+(.*)\$/u", $in, $matches)) {
+					// call makes no sense without an argument
+					if($arg === NULL) {
 						echo 'Syntax error: In line: ' . $in . PHP_EOL;
 						return self::EXECUTE_SYNTAX_ERROR;
 					}
-					$call = $matches[1];
-					$eval = $this->evaluate($call);
-					if($this->evaluate_ret === self::EVALUATE_FUNCTION_CALL)
-						return self::EXECUTE_PC;
+					// return value gets discarded; just evaluate argument
+					$this->evaluate($arg);
+					switch($this->evaluate_ret) {
+						case self::EVALUATE_FUNCTION_CALL:
+							return self::EXECUTE_PC;
+						case self::EVALUATE_ERROR:
+							return self::EXECUTE_SYNTAX_ERROR;
+					}
 					return self::EXECUTE_NEXT;
 				case 'global':
-					if(!preg_match("/^global\s+([a-zA-Z]+)\$/u", $in, $matches)) {
+					if(!preg_match("/^([a-zA-Z]+)\$/u", $arg, $matches)) {
 						echo 'Syntax error: In line: ' . $in . PHP_EOL;
 						return self::EXECUTE_SYNTAX_ERROR;
 					}
 					if($this->flowctr == 0) {
 						return self::EXECUTE_NEXT;
 					}
-					$var = $matches[1];
+					$var = $arg;
 					if($this->getvar($var) !== NULL) {
 						echo 'Notice: attempted global variable ' . $var . ' already exists locally' . PHP_EOL;
 						return self::EXECUTE_NEXT;
@@ -844,22 +846,23 @@ abstract class ExecuteHandler {
 					return self::EXECUTE_NEXT;
 			}
 		}
-		if($in === NULL) {
-			// this happens if we're inside a function non-execution
+		// now we're looking only at EH-defined commands, not language constructs
+		$cmd = $this->expand_cmd($rawcmd);
+		if(!$cmd) {
+			echo 'Invalid command: ' . $in . PHP_EOL;
 			return self::EXECUTE_NEXT;
 		}
-		// handle output redirection
-		$outputredir = $outputredirvar = $returnredir = $returnredirvar = false;
-		$next = false;
+		// split command into pieces
+		$splitarg = $this->divide_cmd($arg);
 		// block of stuff for ease of usage
 		{
-			$cmd = $this->expand_cmd($rawcmd);
-			if(!$cmd) {
-				echo 'Invalid command: ' . $in . PHP_EOL;
-				return self::EXECUTE_NEXT;
-			}
-			$paras = array();
-			foreach($splitcmd as $piece) {
+			// handle output redirection
+			$outputredir = $outputredirvar = $returnredir = $returnredirvar = false;
+			$next = false;
+			$paras = array(); // parameters to be sent to command
+			$argument = ''; // argument to be sent to command
+			$argarray = array(); // array of argument for docurr commands
+			foreach($splitarg as $piece) {
 				// handle output redirection
 				if($piece === '>' || $piece === '>$' || $piece === '}' || $piece === '}$' ) {
 					$next = $piece;
@@ -883,8 +886,8 @@ abstract class ExecuteHandler {
 					if($splitcmd['unnamedseparate'])
 						$paras[] = $piece;
 					else {
-						if($rawarg) $rawarg .= ' ';
-						$rawarg .= $piece;
+						if($argument) $argument .= ' ';
+						$argument .= $piece;
 					}
 					continue;
 				}
@@ -915,21 +918,14 @@ abstract class ExecuteHandler {
 					echo 'Invalid argument: ' . $piece . PHP_EOL;		
 				}
 			}
-			if($rawarg) {
-				$rawarg = self::remove_quotes($rawarg);
+			if($argument) {
+				$argument = self::remove_quotes($argument);
 				// handle shortcut
-				if($rawarg === '*')
-					$arg = $this->current;
-				else {
-					$arg = array($rawarg);
-					if(method_exists($this, 'has') and $this->has($rawarg))
-						$this->current = $arg;
-				}
+				if($argument === '*')
+					$argarray = $this->current;
+				else
+					$argarray = array($argument);
 				$paras[0] = $rawarg;
-			}
-			else {
-				$arg = array();
-				$rawarg = '';
 			}
 			// cleanup
 			foreach($paras as &$text) {
@@ -945,15 +941,15 @@ abstract class ExecuteHandler {
 		// execute it
 		switch($cmd['execute']) {
 			case 'doallorcurr':
-				if($arg and is_array($arg)) {
-					foreach($arg as $file)
+				if($argarray) {
+					foreach($argarray as $file)
 						if(!($ret = $this->{$cmd['name']}($file, $paras))) break;
 				}
 				else
 					$ret = $this->doall($cmd['name'], $paras);
 				break;
 			case 'docurr':
-				foreach($arg as $entry) {
+				foreach($argarray as $entry) {
 					$ret = $this->{$cmd['name']}($entry, $paras);
 				}
 				break;
@@ -961,13 +957,13 @@ abstract class ExecuteHandler {
 				$ret = $this->{$cmd['name']}($paras);
 				break;
 			case 'callmethodarg':
-				$ret = $this->{$cmd['name']}($rawarg, $paras);
+				$ret = $this->{$cmd['name']}($argument, $paras);
 				break;
 			case 'callfunc':
 				$ret = $cmd['name']($paras);
 				break;
 			case 'callfuncarg':
-				$ret = $cmd['name']($rawarg, $paras);
+				$ret = $cmd['name']($argument, $paras);
 				break;			
 			case 'quit':
 				return self::EXECUTE_QUIT;
@@ -975,8 +971,8 @@ abstract class ExecuteHandler {
 				trigger_error('Unrecognized execution mode', E_USER_NOTICE); 
 				break;
 		}
-		if($cmd['setcurrent'] and $arg)
-			$this->current = $arg;
+		if($cmd['setcurrent'] and (count($argarray) !== 0))
+			$this->current = $argarray;
 		if($outputredir) {
 			$file = fopen($outputredir, 'w');
 			if(!$file) {
@@ -1026,10 +1022,15 @@ abstract class ExecuteHandler {
 		return $out;
 	}
 	private function expand_cmd($in) {
+		// substitute variable names in command
+		$cmd = $this->substitutevars($cmd);
+		// search for dynamic commands
 		$cmd = $this->synonyms[$in] ?: ($this->commands[$in] ? $in : false);
 		if($cmd) 
 			return $this->commands[$cmd];
-		if(!$this->trystatic) return false;
+		// should we try for static commands?
+		if(!$this->trystatic) 
+			return false;
 		$cmd = static::${get_called_class() . '_synonyms'}[$in] ?: (static::${get_called_class() . '_commands'}[$in] ? $in : false);
 		return $cmd ? static::${get_called_class() . '_commands'}[$cmd] : false;
 	}
@@ -1059,6 +1060,7 @@ abstract class ExecuteHandler {
 		}
 	}
 	static protected function expandargs(&$paras, $synonyms) {
+	// utility function for EH commands
 		if(!is_array($synonyms)) return false;
 		foreach($synonyms as $key => $result) {
 			if(isset($paras[$key]) and !isset($paras[$result]))

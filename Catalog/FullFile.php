@@ -217,6 +217,9 @@ class FullFile extends ListEntry {
 			};
 			break;
 		}
+		// if there is no folder, just return filename and hope for the best
+		if($this->folder === NULL)
+			return $process($this->name);
 		$out = $process(LIBRARY) . "/" . $process($this->folder);
 		if($this->sfolder) {
 			$out .= "/" . $process($this->sfolder);

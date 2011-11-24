@@ -12,6 +12,7 @@ class CsvList extends FileList {
 	public $sugglist; // list of suggestions used in FullFile::newadd()
 	public $foldertree; // tree of folders used in the List
 	public $foldertree_n;
+	public $pdfcontentcache = array(); // cache for FullFile::$pdfcontent
 	protected static $resolve_redirects = true;
 	protected static $inform_exclude = array('pdfcontent');
 	static $CsvList_commands = array(
@@ -138,6 +139,10 @@ class CsvList extends FileList {
 			'execute' => 'callmethod'),
 		'temp' => array('name' => 'temp',
 			'desc' => 'Temporary cleanup command. Does whatever cleanup it is currently programmed to do.',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
+		'testtitles' => array('name' => 'testtitles',
+			'desc' => 'Test FullFile::findtitle_pdfcontent()\'s capabilities',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 	);
@@ -698,9 +703,10 @@ class CsvList extends FileList {
 		return $this->urls_by_journal[$journal] ?: false;
 	}
 	public function temp() {
-	// general cleanup function; does whatever it is currently programmed to do
+	// general cleanup/test function; does whatever it is currently programmed to do
+		$this->c['Microgale Andringitra.pdf']->getsimpletitle();
 		// remove leading "Mammalia"
-		foreach($this->c as $name => $file) {
+/*		foreach($this->c as $name => $file) {
 			if($file->isredirect()) continue;
 			if(substr($name, 0, 9) !== 'Mammalia ') continue;
 			echo 'processing ' . $name . '...' . PHP_EOL;
@@ -720,7 +726,46 @@ class CsvList extends FileList {
 				}
 			}
 			$file->move($newname);
+		}*/
+	}
+	public function testtitles() {
+	// Test the findtitle_pdfcontent() method.
+		$matches = $mismatches = $impossible = 0;
+		foreach($this->c as $child) {
+			$pdftitle = $child->findtitle_pdfcontent();
+			if(!$pdftitle or $child->title[0] === '/') {
+				$impossible++;
+				continue;
+			}
+			$rectitle = $child->getsimpletitle();
+			$dettitle = $child->getsimpletitle($pdftitle);
+			if(($dettitle != $rectitle) and ($rectitle ? (strpos($dettitle, $rectitle) === false) : true) and ($dettitle ? (strpos($rectitle, $dettitle) === false) : true)) {
+				echo 'Title mismatch for file ' . $child->name . PHP_EOL;
+				echo 'Actual title: ' . $child->title . PHP_EOL;
+				echo "\tSimplified as $rectitle\n";
+				echo "\tSimplified as $dettitle\n";
+				echo 'Detected title: ' . $pdftitle . PHP_EOL;
+				$mismatches++;
+			}
+			else {
+				$matches++;
+			}
 		}
+		echo "\n\nTotal matches: $matches\nTotal mismatches: $mismatches\nCould not determine title: $impossible\n";
+	}
+	public function getpdfcontentcache() {
+		if(count($this->pdfcontentcache) !== 0) return false;
+		// this may take huge amounts of memory...
+		ini_set('memory_limit', 1e10);
+		$this->pdfcontentcache = json_decode(file_get_contents(PDFCONTENTCACHE), true);
+		if(!$this->pdfcontentcache) {
+			echo 'Error retrieving PDF content cache' . PHP_EOL;
+			return false;
+		}
+		return true;
+	}
+	public function putpdfcontentcache() {
+		file_put_contents(PDFCONTENTCACHE, json_encode($this->pdfcontentcache));
 	}
 }
 class Suggester {

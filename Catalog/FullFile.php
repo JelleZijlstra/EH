@@ -1904,13 +1904,28 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!$this->isfile() or $this->isredirect() or !preg_match('/\.pdf$/', $this->name)) 
 			return false;
 		// only get first page
-		$shcommand = PDFTOTEXT . " " . $this->path() . " - -l 1";
+		$shcommand = PDFTOTEXT . " " . $this->path() . " - -l 1 2>> " . __DIR__ . "/pdftotextlog";
 		$this->pdfcontent = trim(utf8_encode(shell_exec($shcommand)));
 		return $this->pdfcontent ? true : false;
 	}
-	public function getpdfcontent() {
-		if(!$this->pdfcontent) $this->putpdfcontent();
+	public function getpdfcontent($paras = array()) {
+		$this->process_paras($paras, array(
+			'checklist' => array('force'),
+			'default' => array('force' => false),
+		));
+		if(!$paras['force']) {
+			$this->p->getpdfcontentcache();
+			if($this->p->pdfcontentcache[$this->name]) {
+				$this->pdfcontent =& $this->p->pdfcontentcache[$this->name];
+				return $this->pdfcontent;
+			}
+			if(!$this->pdfcontent) $this->putpdfcontent();
+		}
+		else {
+			$this->putpdfcontent();
+		}
 		if(!$this->pdfcontent) return false;
+		$this->p->pdfcontentcache[$this->name] =& $this->pdfcontent;
 		return $this->pdfcontent;
 	}
 	public function echopdfcontent() {
@@ -1920,23 +1935,34 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		echo $c;
 		return true;
 	}
-	private function findtitle_pdfcontent() {
+	public function findtitle_pdfcontent() {
 	// tries to detect the title from $this->pdfcontent
 	// assumes it is the first line with real running text
-		$lines = explode("\n", $this->pdfcontent);
+		$lines = explode("\n", $this->getpdfcontent());
 		foreach($lines as $line) {
 			// empty line
 			if(!$line) continue;
+			$line = trim($line);
 			// titles are generally more than two words
-			if(preg_match_all('/ /', $line, $matches) > 2) continue;
-			// this looks like a volume-issue-pages kind of thing
-			if(preg_match('/\d\s*[­\-–]\s*\d|\(\s*\d+\s*\)\s*:|\d{5}|\d\s*,\s*\d|(Vol|No)\.?\s*\d/', $line)) continue;
+			if(preg_match_all('/ /', $line, $matches) <= 2) continue;
+			// probably not a title
+			if(preg_match('/[©@·]/u', $line)) continue;
+			// this looks like a volume-issue-pages kind of thing, or a date. This regex is matching a substantial number of existing articles; check how much of it is needed.
+			if(preg_match('/\d\s*[­\-–]\s*\d|\(\s*\d+\s*\)\s*:|\d{5}|\d\s*,\s*\d|(Vol|No)\.?\s*\d|\d+\s*\(\d+\)\s*\d+|\d+\s*\(\s*\d+\s*\),|\d+\.\d+\.\d+|Volume \d+|\d+\s*(January|February|April|June|July|August|September|October|November|December)\s*\d+/ui', $line)) continue;
 			// no URLs in title
-			if(strpos($line, 'http://') !== false) continue;
+			if((strpos($line, 'http://') !== false) or (strpos($line, 'www.') !== false)) continue;
 			// if there is no four-letter word in it, it's probably not a title
 			if(!preg_match('/[a-zA-Z]{4}/', $line)) continue;
-			// if we got to such a long line, we're probably already in the abstract and we're not going to find the title
-			if(strlen($line) > 400) return false;
+			// title will contain at least one uppercase letter
+			if(!preg_match('/[A-Z]/', $line)) continue;
+			// looks like an author listing
+			if(preg_match('/Jr\.|[A-Z]\.\s*[A-Z]\./u', $line)) continue;
+			// JSTOR, ScienceDirect stuff, probable author line, publisher line, other stuff
+			if(preg_match('/collaborating with JSTOR|ScienceDirect|^By|^Issued|^Geobios|^Palaeogeography|^Published|^Printed|^Received|^Mitt\.|,$|^Journal compilation|^E \d+|^Zeitschrift|^J Mol|^Open access|^YMPEV|x{3}|^Reproduced|^BioOne|^Alcheringa|^MOLECULAR PHYLOGENETICS AND EVOLUTION|Article in press - uncorrected proof|Ann\. Naturhist(or)?\. Mus\. Wien|Letter to the Editor|Proc\. Natl\. Acad\. Sci\. USA|American Society of Mammalogists|CONTRIBUTIONS FROM THE MUSEUM OF PALEONTOLOGY|American College of Veterinary Pathologists|Stuttgarter Beiträge zur Naturkunde|^The Newsletter|^Short notes|^No\. of pages|Verlag|^This copy|Southwestern Association of Naturalists|^Peabody Museum|^(c) |^Number|^Occasional Papers|^Article in press|^Museum|^The university|^University|^Journal|^Key words|^International journal|^Terms of use|^Bulletin|^A journal|^The Bulletin|^Academy/i', $line)) continue;
+			// if it starts with a year, it's unlikely to be a title
+			if(preg_match('/^\d{3}/u', $line)) continue;
+			// if we got to such a long line, we're probably already in the abstract and we're not going to find the title. Longest title in database as of November 24, 2011 is 292
+			if(strlen($line) > 300) return false;
 			// how is this?
 			else return $line;
 		}
@@ -2100,7 +2126,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!preg_match("/(\n|Acceptance:\s*(\d+\s*[A-Z][a-z]+|\?\?)\s*\d+\s*)(?!PE Article Number)([^\n]+Palaeontologia Electronica Vol\.[^\n]+)(\s*\$|\n)/u", $this->pdfcontent, $matches))
 			return false;
 		$citation = $matches[3];
-		var_dump($citation);
 		$processauthors = function($in) {
 			$authors = explode(', ', $in);
 			$out = '';
@@ -2139,7 +2164,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$citation,
 			$matches
 		)) {
-			var_dump($matches);
 			$this->authors = $processauthors($matches[1]);
 			$this->year = $matches[2];
 			$this->title = $matches[3];
@@ -2276,7 +2300,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	private function googletitle($title = '') {
 		if(!$title) $title = $this->title;
-		return urlencode(preg_replace("/\(|\)|;|-+(?=\s)|(?<=\s)-+|<\/?i>/", "", $title));
+		return urlencode(preg_replace("/\(|\)|;|-+\\/(?=\s)|(?<=\s)-+|<\/?i>/", "", $title));
 	}
 	private function fetchgoogle($search) {
 		// get data from Google
@@ -2618,12 +2642,33 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!$refname) $refname = $this->title;
 		if(is_numeric($refname)) $refname = 'ref' . $refname;
 		$refname = str_replace("'", "", $refname);
-//		echo $this->name . ': ' . $refname . PHP_EOL;
 		return $refname;
 	}
-	function getsimpletitle() {
+	public function getsimpletitle($title = '') {
 	// should probably get rid of this
-		return simplify($this->title);
+		if(!$title) $title = $this->title;
+		$title = preg_replace(
+			array(
+				'/<\/?i>|[\'"`*,\.:;\-+()–´«»\/!]|\s*/u',
+				'/[áàâ]/u',
+				'/[éèê]/u',
+				'/[îíì]/u',
+				'/[óôòõ]/u',
+				'/[ûúù]/u',
+				'/ñ/u',
+			),
+			array(
+				'',
+				'a',
+				'e',
+				'i',
+				'o',
+				'u',
+				'n',
+			),
+			mb_strtolower($title, mb_detect_encoding($title))
+		);
+		return $title;
 	}
 	function openurl() {
 		if($this->url) 

@@ -126,6 +126,9 @@ abstract class FileList extends ExecuteHandler {
 			}
 		}
 		echo "done" . PHP_EOL;
+		// HACK: replace this with a hook system when we're ready for it
+		if(method_exists($this, 'putpdfcontentcache'))
+			$this->putpdfcontentcache();
 		// we saved it, so we don't need to right now
 		$this->needsave = false;
 		return true;
@@ -258,6 +261,7 @@ abstract class FileList extends ExecuteHandler {
 	public function mlist($field, $paras = '') {
 	// @paras: array('sort' => 'ksort', 'function' => , 'isfunc' => false, 'print' => <bool>)
 		if(self::process_paras($paras, array(
+			'checklist' => array('sort', 'function', 'isfunc', 'print', 'groupby', 'array'),
 			'default' => array('print' => true),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
@@ -351,6 +355,15 @@ abstract class FileList extends ExecuteHandler {
 	public function bfind($paras = '') {
 	// @paras: /array(function => <string>, openfiles => <bool>, isfunc => <bool>, print => <bool>, printresult => <bool>, current => true, return => objectarray)
 		if(self::process_paras($paras, array(
+			'checklist' => array('function',
+				'openfiles',
+				'isfunc',
+				'print',
+				'printresult',
+				'current',
+				'return',
+				'array',
+			),
 			'default' => array('print' => true,
 				'printresult' => true,
 				'setcurrent' => true,

@@ -2096,40 +2096,62 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	private function trype() {
 	// Palaeontologia Electronica
-		if(!preg_match("/\n([^\n]+)\s*\$/u", $this->pdfcontent, $matches))
+		// PE has a citation block after either a new line or something like "Accepted: 5 October 2011"
+		if(!preg_match("/(\n|Acceptance:\s*(\d+\s*[A-Z][a-z]+|\?\?)\s*\d+\s*)(?!PE Article Number)([^\n]+Palaeontologia Electronica Vol\.[^\n]+)(\s*\$|\n)/u", $this->pdfcontent, $matches))
 			return false;
-		$citation = $matches[1];
-		if(!preg_match("/Palaeontologia Electronica Vol\./u", $citation))
-			return false;
-		preg_match(
+		$citation = $matches[3];
+		var_dump($citation);
+		$processauthors = function($in) {
+			$authors = explode(', ', $in);
+			$out = '';
+			foreach($authors as $key => $aut) {
+				if(($key % 2) === 0) { // even index
+					$out .= preg_replace('/^and /u', '', $aut) . ', ';
+				}
+				else {
+					$auta = explode(' ', $aut);
+					foreach($auta as $autp) {
+						$out .= $autp[0] . '.';
+					}
+					$out .= '; ';
+				}
+			}
+			return preg_replace('/; $/u', '', $out);		
+		};
+		if(preg_match(
 			"/^(.*?), (\d{4})\. (.*?), Palaeontologia Electronica Vol\. (\d+), Issue (\d+); ([\dA-Z]+):(\d+)p, [\dA-Za-z]+; ([^\s]*)\$/u", 
 			$citation, 
 			$matches
-		);
-		$authors = explode(', ', $matches[1]);
-		$this->authors = '';
-		foreach($authors as $key => $aut) {
-			if(($key % 2) === 0) { // even index
-				$this->authors .= preg_replace('/^and /u', '', $aut) . ', ';
-			}
-			else {
-				$auta = explode(' ', $aut);
-				foreach($auta as $autp) {
-					$this->authors .= $autp[0] . '.';
-				}
-				$this->authors .= '; ';
-			}
+		)) {
+			$this->authors = $processauthors($matches[1]);
+			$this->year = $matches[2];
+			$this->title = $matches[3];
+			$this->journal = 'Palaeontologia Electronica';
+			$this->volume = $matches[4];
+			$this->issue = $matches[5];
+			$this->start = $matches[6];
+			$this->pages = $matches[7];
+			$this->url = $matches[8];
+			return true;
 		}
-		$this->authors = preg_replace('/; $/u', '', $this->authors);
-		$this->year = $matches[2];
-		$this->title = $matches[3];
-		$this->journal = 'Palaeontologia Electronica';
-		$this->volume = $matches[4];
-		$this->issue = $matches[5];
-		$this->start = $matches[6];
-		$this->pages = $matches[7];
-		$this->url = $matches[8];
-		return true;
+		else if(preg_match(
+			"/^(.*?) (\d{4})\. (.*?). Palaeontologia Electronica Vol\. (\d+), Issue (\d+); ([\dA-Z]+):(\d+)p; ([^\s]*)\$/u",			
+			$citation,
+			$matches
+		)) {
+			var_dump($matches);
+			$this->authors = $processauthors($matches[1]);
+			$this->year = $matches[2];
+			$this->title = $matches[3];
+			$this->journal = 'Palaeontologia Electronica';
+			$this->volume = $matches[4];
+			$this->issue = $matches[5];
+			$this->start = $matches[6];
+			$this->pages = $matches[7];
+			$this->url = 'http://' . $matches[8];
+			return true;
+		}
+		return false;
 	}
 	private function trydoi() {
 		if(preg_match("/(doi|DOI)\s*(\/((full|abs|pdf)\/)?|:|\.org\/)?\s*([^\s]*?),?\s/su", $this->pdfcontent, $doi)) {

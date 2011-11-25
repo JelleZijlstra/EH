@@ -276,27 +276,8 @@ abstract class ExecuteHandler {
 	private function evaluate($in) {
 		if($this->config['debug']) echo 'Evaluating: "' . $in . '"' . PHP_EOL;
 		$this->evaluate_ret = 0;
-		if(preg_match(
-			"/^(?![\"'])([^\s]*)\s*([+\-*\/=><]|!=|>=|<=)\s*([^\s]*)(?<![\"'])$/u", 
-			$in, 
-			$matches)) {
-			$lval = (float) trim($matches[1]);
-			$rval = (float) trim($matches[3]);
-			switch($matches[2]) {
-				case '+': return $lval + $rval;
-				case '-': return $lval - $rval;
-				case '*': return $lval * $rval;
-				case '/': return $lval / $rval;
-				case '=': return ($lval == $rval);
-				case '>': return ($lval > $rval);
-				case '<': return ($lval < $rval);
-				case '!=': return ($lval != $rval);
-				case '>=': return ($lval >= $rval);
-				case '<=': return ($lval <= $rval);
-			}
-		}
 		// function calls
-		else if(preg_match(
+		if(preg_match(
 			"/^([a-zA-Z]+):\s+((.+,\s+)*.+)\$/u", 
 			$in, 
 			$matches)) {
@@ -356,6 +337,25 @@ abstract class ExecuteHandler {
 				$this->evaluate_ret = self::EVALUATE_FUNCTION_CALL;
 				$this->curr('pc', $func['line']);
 				return NULL;
+			}
+		}
+		else if(preg_match(
+			"/^(?![\"'])([^\s]*)\s*([+\-*\/=><]|!=|>=|<=)\s*([^\s]*)(?<![\"'])$/u", 
+			$in, 
+			$matches)) {
+			$lval = (float) trim($matches[1]);
+			$rval = (float) trim($matches[3]);
+			switch($matches[2]) {
+				case '+': return $lval + $rval;
+				case '-': return $lval - $rval;
+				case '*': return $lval * $rval;
+				case '/': return $lval / $rval;
+				case '=': return ($lval == $rval);
+				case '>': return ($lval > $rval);
+				case '<': return ($lval < $rval);
+				case '!=': return ($lval != $rval);
+				case '>=': return ($lval >= $rval);
+				case '<=': return ($lval <= $rval);
 			}
 		}
 		else
@@ -873,7 +873,7 @@ abstract class ExecuteHandler {
 						case '>': $outputredir = $piece; break;
 						case '>$': $outputredirvar = $piece; break;
 						case '}': $returnredir = $piece; break;
-						case '}$': $returnedirvar = $piece; break;
+						case '}$': $returnredirvar = $piece; break;
 					}
 					$next = false;
 					continue;

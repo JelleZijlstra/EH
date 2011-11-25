@@ -728,8 +728,13 @@ class CsvList extends FileList {
 			$file->move($newname);
 		}*/
 	}
-	public function testtitles() {
+	public function testtitles($paras = array()) {
 	// Test the findtitle_pdfcontent() method.
+		$this->process_paras($paras, array(
+			'checklist' => array('file'),
+			'default' => array('file' => false),
+		));
+		if($paras['file']) $fp = fopen($paras['file'], 'w');
 		$matches = $mismatches = $impossible = 0;
 		foreach($this->c as $child) {
 			$pdftitle = $child->findtitle_pdfcontent();
@@ -741,16 +746,19 @@ class CsvList extends FileList {
 			$dettitle = $child->getsimpletitle($pdftitle);
 			if(($dettitle != $rectitle) and ($rectitle ? (strpos($dettitle, $rectitle) === false) : true) and ($dettitle ? (strpos($rectitle, $dettitle) === false) : true)) {
 				echo 'Title mismatch for file ' . $child->name . PHP_EOL;
+				echo 'Levenshtein distance: ' . ($levenshtein = levenshtein($dettitle, $rectitle)) . PHP_EOL;
 				echo 'Actual title: ' . $child->title . PHP_EOL;
 				echo "\tSimplified as $rectitle\n";
 				echo "\tSimplified as $dettitle\n";
 				echo 'Detected title: ' . $pdftitle . PHP_EOL;
 				$mismatches++;
+				if($paras['file']) fputcsv($fp, array($child->name, $child->title, $pdftitle, $rectitle, $dettitle, $levenshtein));
 			}
 			else {
 				$matches++;
 			}
 		}
+		if($paras['file']) fclose($fp);
 		echo "\n\nTotal matches: $matches\nTotal mismatches: $mismatches\nCould not determine title: $impossible\n";
 	}
 	public function getpdfcontentcache() {

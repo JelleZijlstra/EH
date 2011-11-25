@@ -1952,17 +1952,18 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			// probably not a title
 			if(preg_match('/[©@·]/u', $line)) continue;
 			// this looks like a volume-issue-pages kind of thing, or a date. This regex is matching a substantial number of existing articles; check how much of it is needed.
-			if(preg_match('/\d\s*[­\-–]\s*\d|\(\s*\d+\s*\)\s*:|\d{5}|\d\s*,\s*\d|(Vol|No)\.?\s*\d|\d+\s*\(\d+\)\s*\d+|\d+\s*\(\s*\d+\s*\),|\d+\.\d+\.\d+|Volume \d+|\s*(January|February|April|June|July|August|September|October|November|December)\s*\d+/ui', $line)) continue;
+			if(preg_match('/\(\s*\d+\s*\)\s*:|\d{5}|\d\s*,\s*\d|\d+\s*\(\d+\)\s*\d+|\d+\s*\(\s*\d+\s*\),|\d+\s*\.\s*\d+\s*\.\s*\d+|Volume \d+|\s*(January|February|April|June|July|August|September|October|November|December)\s*\d+|\/\d|\d:\s*\d|\d\(\d+\)|\d\s*\(\d|\d\s*\)\s*:\s*\d|;\s*\d|\s+\/\s+|\d\s+\d|doi:|Vol\.?\s*\d+\s*No\.?\s*\d+|Pages?\s*\d|Vol\.\s*\d+,|\*{2}|\d\s+&|,\s*pp\.\s*\d|\d\)\s*\d/ui', $line)) continue;
 			// no URLs in title
 			if((strpos($line, 'http://') !== false) or (strpos($line, 'www.') !== false)) continue;
 			// if there is no four-letter word in it, it's probably not a title
 			if(!preg_match('/[a-zA-Z]{4}/', $line)) continue;
 			// title will contain at least one uppercase letter
 			if(!preg_match('/[A-Z]/', $line)) continue;
-			// looks like an author listing
-			if(preg_match('/Jr\.|[A-Z]\.\s*[A-Z]\./u', $line)) continue;
+			// looks like an author listing (but this matches 24 real articles)
+			if(preg_match('/Jr\.|\s([a-z]\s){2,}/u', $line)) continue;
+			// [A-Z]\.\s*[A-Z]\.|
 			// JSTOR, ScienceDirect stuff, probable author line, publisher line, other stuff
-			if(preg_match('/collaborating with JSTOR|ScienceDirect|^By|^Issued|^Geobios|^Palaeogeography|^Published|^Printed|^Received|^Mitt\.|,$|^Journal compilation|^E \d+|^Zeitschrift|^J Mol|^Open access|^YMPEV|x{3}|^Reproduced|^BioOne|^Alcheringa|^MOLECULAR PHYLOGENETICS AND EVOLUTION|Ann\. Naturhist(or)?\. Mus\. Wien|Letter to the Editor|Proc\. Natl\. Acad\. Sci\. USA|American Society of Mammalogists|CONTRIBUTIONS FROM THE MUSEUM OF PALEONTOLOGY|American College of Veterinary Pathologists|Stuttgarter Beiträge zur Naturkunde|^The Newsletter|^Short notes|^No\. of pages|Verlag|^This copy|Southwestern Association of Naturalists|^Peabody Museum|^(c) |^Number|^Occasional Papers|^Article in press|^Museum|^The university|^University|^Journal|^Key words|^International journal|^Terms? of use|^Bulletin|^A journal|^The Bulletin|^Academy|en prensa|^American Journal|^Contributions from|Museum of Natural History$|^The American|^Notes on geographic distribution$|Publications$|Sistema de Información Científica|Press$|^Downloaded|^Serie/i', $line)) continue;
+			if(preg_match('/collaborating with JSTOR|ScienceDirect|^By|^Issued|^Geobios|^Palaeogeography|^Published|^Printed|^Received|^Mitt\.|,$|^Journal compilation|^E \d+|^Zeitschrift|^J Mol|^Open access|^YMPEV|x{3}|^Reproduced|^BioOne|^Alcheringa|^MOLECULAR PHYLOGENETICS AND EVOLUTION|Ann\. Naturhist(or)?\. Mus\. Wien|Letter to the Editor|Proc\. Natl\. Acad\. Sci\. USA|American Society of Mammalogists|CONTRIBUTIONS FROM THE MUSEUM OF PALEONTOLOGY|American College of Veterinary Pathologists|Stuttgarter Beiträge zur Naturkunde|^The Newsletter|^Short notes|^No\. of pages|Verlag|^This copy|Southwestern Association of Naturalists|^Peabody Museum|^(c) |^Number|^Occasional Papers|^Article in press|^Museum|^The university|^University|^Journal|^Key words|^International journal|^Terms? of use|^Bulletin|^A journal|^The Bulletin|^Academy|en prensa|^American Journal|^Contributions from|Museum of Natural History$|^The American|^Notes on geographic distribution$|Publications$|Sistema de Información Científica|Press$|^Downloaded|^Serie|issn|^Society|University of|Elsevier|^Australian Journal/ui', $line)) continue;
 			// if it starts with a year, it's unlikely to be a title
 			if(preg_match('/^\d{3}/u', $line)) continue;
 			// if we got to such a long line, we're probably already in the abstract and we're not going to find the title. Longest title in database as of November 24, 2011 is 292
@@ -2653,13 +2654,15 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!$title) $title = $this->title;
 		$title = preg_replace(
 			array(
-				'/<\/?i>|[\'"`*,\.:;\-+()–´«»\/!—]|\s*/u',
+				'/<\/?i>/u', // |[\'"`*,\.:;\-+()–´«»\/!—]|\s*
 				'/[áàâ]/u',
 				'/[éèê]/u',
 				'/[îíì]/u',
 				'/[óôòõ]/u',
 				'/[ûúù]/u',
 				'/ñ/u',
+				'/[çč]/u',
+				'/[^a-z0-9]/u',
 			),
 			array(
 				'',
@@ -2669,6 +2672,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				'o',
 				'u',
 				'n',
+				'c',
+				'',
 			),
 			mb_strtolower($title, mb_detect_encoding($title))
 		);

@@ -267,7 +267,6 @@ abstract class ExecuteHandler {
 	}
 	private function getvar($var) {
 	// get the value of an internal variable
-	
 		if(!isset($this->vars[$this->currhist][$this->curr('currscope')][$var]))
 			return NULL;
 		else
@@ -281,16 +280,18 @@ abstract class ExecuteHandler {
 			"/^([a-zA-Z]+):\s+((.+,\s+)*.+)\$/u", 
 			$in, 
 			$matches)) {
-			if($this->funcexecuted) { // we already executed the program
+			if($this->funcexecuted) { 
+			// we already executed the program
 				$this->funcexecuted = false;
 				return $this->eax;
 			}
 			else {
 				$funcname = $matches[1];
 				$vars = preg_split("/,\s+/u", $matches[2]);
-				$argcount = count($vars);
 				$func = $this->funcs[$funcname];
 				if(!$func) {
+					// use inbuilt PHP functions
+					// TODO: add argcount checking here
 					if(in_array($funcname, self::$php_funcs)) {
 						$ret = call_user_func_array($funcname, $vars);
 						if(is_string($ret))
@@ -301,6 +302,7 @@ abstract class ExecuteHandler {
 					$this->evaluate_ret = self::EVALUATE_ERROR;
 					return NULL;
 				}
+				$argcount = count($vars);
 				if($argcount != $func['argcount']) {
 					echo "Error: incorrect variable number for function  $funcname (expected {$func['argcount']}, got $argcount)\n";
 					$this->evaluate_ret = self::EVALUATE_ERROR;
@@ -315,7 +317,8 @@ abstract class ExecuteHandler {
 		}
 		// function call without argument
 		else if(preg_match("/^([a-zA-Z]+):\s*\$/u", $in, $matches)) {
-			if($this->funcexecuted) { // we already executed the program
+			if($this->funcexecuted) { 
+			// we already executed the program
 				$this->funcexecuted = false;
 				return $this->eax;
 			}
@@ -339,6 +342,7 @@ abstract class ExecuteHandler {
 				return NULL;
 			}
 		}
+		// math
 		else if(preg_match(
 			"/^(?![\"'])([^\s]*)\s*([+\-*\/=><]|!=|>=|<=)\s*([^\s]*)(?<![\"'])$/u", 
 			$in, 
@@ -382,7 +386,11 @@ abstract class ExecuteHandler {
 					);
 				}
 				else {
-					echo "Notice: unrecognized variable " . $fmreference . " (in scope " . $this->curr('currscope') . ")" . PHP_EOL;
+					echo "Notice: unrecognized variable " . 
+						$fmreference . 
+						" (in scope " . 
+						$this->curr('currscope') . 
+						")" . PHP_EOL;
 				}
 			}
 		}
@@ -399,14 +407,12 @@ abstract class ExecuteHandler {
 				if($f['part'] === 'then') {
 					if($f['condition'])
 						return 0;
-					else {
+					else
 						return self::CHECK_FLOW_IN_IF;
-					}
 				}
 				else if($f['part'] === 'else') {
-					if($f['condition']) {
+					if($f['condition'])
 						return self::CHECK_FLOW_IN_IF;
-					}
 					else
 						return 0;
 				}
@@ -414,19 +420,16 @@ abstract class ExecuteHandler {
 				// only execute if the loop is supposed to be executed
 				if($f['max'] > 0)
 					return 0;
-				else {
+				else
 					return self::CHECK_FLOW_IN_FOR;
-				}
 			case 'while':
-				if(!$f['execute']) {
+				if(!$f['execute'])
 					return self::CHECK_FLOW_IN_WHILE;
-				}
 				else
 					return 0;
 			case 'func':
-				if(!$f['execute']) {
+				if(!$f['execute'])
 					return self::CHECK_FLOW_IN_FUNC;
-				}
 				else
 					return 0;
 		}
@@ -1005,18 +1008,26 @@ abstract class ExecuteHandler {
 		return self::EXECUTE_NEXT;
 	}
 	private function divide_cmd($in) {
-	// divides a string into pieces at each space, and keeps strings in '' together
+	// divides a string into pieces at each space, and keeps strings in ''/"" together
 		$len = strlen($in);
 		$out = array();
-		$key = 0;
-		$instring = false;
+		$key = 0; // array key, starting at 0
+		$insstring = false; // are we in a single-quoted string?
+		$indstring = false; // are we in a double-quoted string?
 		for($i = 0; $i < $len; $i++) {
-			if($in[$i] === ' ' and ($i === 0 or $in[$i-1] !== '\\') and !$instring) {
+			if($in[$i] === ' ' and 
+				($i === 0 or $in[$i-1] !== '\\') and 
+				!$indstring and 
+				!$insstring) {
 				$key++;
 				continue;
 			}
-			if($in[$i] === "'" and ($i === 0 or $in[$i-1] !== '\\'))
-				$instring = $instring ? false : true;
+			var_dump($in[$i]);
+			var_dump($in[$i] === '"');
+			if($in[$i] === "'" and !$indstring and ($i === 0 or $in[$i-1] !== '\\'))
+				$insstring = $insstring ? false : true;
+			if($in[$i] === '"' and !$insstring and ($i === 0 or $in[$i-1] !== '\\'))
+				$indstring = $indstring ? false : true;
 			$out[$key] .= $in[$i];
 		}
 		return $out;
@@ -1035,7 +1046,8 @@ abstract class ExecuteHandler {
 		return $cmd ? static::${get_called_class() . '_commands'}[$cmd] : false;
 	}
 	static public function remove_quotes($in) {
-		return preg_replace("/^'|'$|\\\\(?=')/u", '', $in);
+	// TODO: replace this and execute()s functionality so we'll be able to do all this in divide_command(). This will fail with weirdly quoted strings.
+		return preg_replace("/^['\"]|[\"']$|\\\\(?=['\"])/u", '', $in);
 	}
 	private function execute_help($in) {	
 		// array of functions with info
@@ -1461,17 +1473,6 @@ abstract class ExecuteHandler {
 		// add line to the history array
 		$this->history[$this->currhist][$this->histlen[$this->currhist]] = trim($in);
 		$this->curr('histlen', '++');
-		// execute at first
-		if($this->config['debug']) 
-			echo "Feeding command (" . $this->curr('pc') . "): " . $this->curr('pcres') . PHP_EOL;
-		$firstret = $this->execute();
-		switch($firstret) {
-			case self::EXECUTE_NEXT: $this->pcinc(); break;
-			case self::EXECUTE_PC: break;
-			case self::EXECUTE_SYNTAX_ERROR:
-			case self::EXECUTE_QUIT:
-				return false;
-		}
 		// continue executing as long as PC is below length of program
 		while($this->curr('pc') < $this->curr('histlen')) {
 			if($this->config['debug']) 

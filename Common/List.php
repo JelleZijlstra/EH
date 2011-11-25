@@ -261,7 +261,16 @@ abstract class FileList extends ExecuteHandler {
 	public function mlist($field, $paras = '') {
 	// @paras: array('sort' => 'ksort', 'function' => , 'isfunc' => false, 'print' => <bool>)
 		if(self::process_paras($paras, array(
-			'checklist' => array('sort', 'function', 'isfunc', 'print', 'groupby', 'array'),
+/* hide because this method can take arbitrary other parameters
+			'checklist' => array(
+				'sort', // sort function to be applied to results
+				'function', // function to be applied to results
+				'isfunc', // is the query a function?
+				'print', // print results
+				'groupby', // column to group results by
+				'array', // array to search in
+			),
+*/
 			'default' => array('print' => true),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
@@ -353,17 +362,18 @@ abstract class FileList extends ExecuteHandler {
 		return $values;
 	}
 	public function bfind($paras = '') {
-	// @paras: /array(function => <string>, openfiles => <bool>, isfunc => <bool>, print => <bool>, printresult => <bool>, current => true, return => objectarray)
 		if(self::process_paras($paras, array(
-			'checklist' => array('function',
-				'openfiles',
-				'isfunc',
-				'print',
-				'printresult',
-				'current',
-				'return',
-				'array',
+/* hide this because bfind can take arbitrary other parameters; kept here for ease of documentation
+			'checklist' => array('function', // String function applied to text found
+				'openfiles', // Open files found?
+				'isfunc', // Is the query parameter a function?
+				'print', // Print the files found?
+				'printresult', // Print number of files found?
+				'current', // Set $this->current?
+				'return', // What to return
+				'array', // Array to search in
 			),
+*/
 			'default' => array('print' => true,
 				'printresult' => true,
 				'setcurrent' => true,

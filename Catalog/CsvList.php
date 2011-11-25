@@ -758,14 +758,20 @@ class CsvList extends FileList {
 		// this may take huge amounts of memory...
 		ini_set('memory_limit', 1e10);
 		$this->pdfcontentcache = json_decode(file_get_contents(PDFCONTENTCACHE), true);
-		if(!$this->pdfcontentcache) {
+		if($this->pdfcontentcache === NULL) {
 			echo 'Error retrieving PDF content cache' . PHP_EOL;
 			return false;
 		}
 		return true;
 	}
 	public function putpdfcontentcache() {
-		file_put_contents(PDFCONTENTCACHE, json_encode($this->pdfcontentcache));
+		// only save if we've actually retrieved the cache
+		if(count($this->pdfcontentcache) > 0)) {
+			file_put_contents(
+				PDFCONTENTCACHE, 
+				json_encode($this->pdfcontentcache)
+			);
+		}
 	}
 }
 class Suggester {

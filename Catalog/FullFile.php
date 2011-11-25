@@ -751,6 +751,9 @@ class FullFile extends ListEntry {
 	// returns whether this 'file' is a file
 		return ($this->folder !== 'NOFILE');
 	}
+	public function ispdf() {
+		return in_array(substr($this->name, -4, 4), array('.pdf', '.PDF'));
+	}
 	function isnofile() {
 		return !$this->isfile();
 	}
@@ -1901,7 +1904,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	private function putpdfcontent() {
 		// only do actual PDF files
-		if(!$this->isfile() or $this->isredirect() or !preg_match('/\.pdf$/', $this->name)) 
+		if(!$this->ispdf() or $this->isredirect())
 			return false;
 		// only get first page
 		$shcommand = PDFTOTEXT . " " . $this->path() . " - -l 1 2>> " . __DIR__ . "/pdftotextlog";
@@ -1909,13 +1912,14 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return $this->pdfcontent ? true : false;
 	}
 	public function getpdfcontent($paras = array()) {
+		if(!$this->ispdf() or $this->isredirect()) return false;
 		$this->process_paras($paras, array(
 			'checklist' => array('force'),
 			'default' => array('force' => false),
 		));
 		if(!$paras['force']) {
 			$this->p->getpdfcontentcache();
-			if($this->p->pdfcontentcache[$this->name]) {
+			if(isset($this->p->pdfcontentcache[$this->name])) {
 				$this->pdfcontent =& $this->p->pdfcontentcache[$this->name];
 				return $this->pdfcontent;
 			}
@@ -1924,8 +1928,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		else {
 			$this->putpdfcontent();
 		}
-		if(!$this->pdfcontent) return false;
 		$this->p->pdfcontentcache[$this->name] =& $this->pdfcontent;
+		if(!$this->pdfcontent) return false;
 		return $this->pdfcontent;
 	}
 	public function echopdfcontent() {
@@ -1948,7 +1952,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			// probably not a title
 			if(preg_match('/[©@·]/u', $line)) continue;
 			// this looks like a volume-issue-pages kind of thing, or a date. This regex is matching a substantial number of existing articles; check how much of it is needed.
-			if(preg_match('/\d\s*[­\-–]\s*\d|\(\s*\d+\s*\)\s*:|\d{5}|\d\s*,\s*\d|(Vol|No)\.?\s*\d|\d+\s*\(\d+\)\s*\d+|\d+\s*\(\s*\d+\s*\),|\d+\.\d+\.\d+|Volume \d+|\d+\s*(January|February|April|June|July|August|September|October|November|December)\s*\d+/ui', $line)) continue;
+			if(preg_match('/\d\s*[­\-–]\s*\d|\(\s*\d+\s*\)\s*:|\d{5}|\d\s*,\s*\d|(Vol|No)\.?\s*\d|\d+\s*\(\d+\)\s*\d+|\d+\s*\(\s*\d+\s*\),|\d+\.\d+\.\d+|Volume \d+|\s*(January|February|April|June|July|August|September|October|November|December)\s*\d+/ui', $line)) continue;
 			// no URLs in title
 			if((strpos($line, 'http://') !== false) or (strpos($line, 'www.') !== false)) continue;
 			// if there is no four-letter word in it, it's probably not a title
@@ -1958,7 +1962,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			// looks like an author listing
 			if(preg_match('/Jr\.|[A-Z]\.\s*[A-Z]\./u', $line)) continue;
 			// JSTOR, ScienceDirect stuff, probable author line, publisher line, other stuff
-			if(preg_match('/collaborating with JSTOR|ScienceDirect|^By|^Issued|^Geobios|^Palaeogeography|^Published|^Printed|^Received|^Mitt\.|,$|^Journal compilation|^E \d+|^Zeitschrift|^J Mol|^Open access|^YMPEV|x{3}|^Reproduced|^BioOne|^Alcheringa|^MOLECULAR PHYLOGENETICS AND EVOLUTION|Ann\. Naturhist(or)?\. Mus\. Wien|Letter to the Editor|Proc\. Natl\. Acad\. Sci\. USA|American Society of Mammalogists|CONTRIBUTIONS FROM THE MUSEUM OF PALEONTOLOGY|American College of Veterinary Pathologists|Stuttgarter Beiträge zur Naturkunde|^The Newsletter|^Short notes|^No\. of pages|Verlag|^This copy|Southwestern Association of Naturalists|^Peabody Museum|^(c) |^Number|^Occasional Papers|^Article in press|^Museum|^The university|^University|^Journal|^Key words|^International journal|^Terms? of use|^Bulletin|^A journal|^The Bulletin|^Academy|en prensa|^American Journal|^Contributions from|Museum of Natural History$/i', $line)) continue;
+			if(preg_match('/collaborating with JSTOR|ScienceDirect|^By|^Issued|^Geobios|^Palaeogeography|^Published|^Printed|^Received|^Mitt\.|,$|^Journal compilation|^E \d+|^Zeitschrift|^J Mol|^Open access|^YMPEV|x{3}|^Reproduced|^BioOne|^Alcheringa|^MOLECULAR PHYLOGENETICS AND EVOLUTION|Ann\. Naturhist(or)?\. Mus\. Wien|Letter to the Editor|Proc\. Natl\. Acad\. Sci\. USA|American Society of Mammalogists|CONTRIBUTIONS FROM THE MUSEUM OF PALEONTOLOGY|American College of Veterinary Pathologists|Stuttgarter Beiträge zur Naturkunde|^The Newsletter|^Short notes|^No\. of pages|Verlag|^This copy|Southwestern Association of Naturalists|^Peabody Museum|^(c) |^Number|^Occasional Papers|^Article in press|^Museum|^The university|^University|^Journal|^Key words|^International journal|^Terms? of use|^Bulletin|^A journal|^The Bulletin|^Academy|en prensa|^American Journal|^Contributions from|Museum of Natural History$|^The American|^Notes on geographic distribution$|Publications$|Sistema de Información Científica|Press$|^Downloaded|^Serie/i', $line)) continue;
 			// if it starts with a year, it's unlikely to be a title
 			if(preg_match('/^\d{3}/u', $line)) continue;
 			// if we got to such a long line, we're probably already in the abstract and we're not going to find the title. Longest title in database as of November 24, 2011 is 292
@@ -2649,7 +2653,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!$title) $title = $this->title;
 		$title = preg_replace(
 			array(
-				'/<\/?i>|[\'"`*,\.:;\-+()–´«»\/!]|\s*/u',
+				'/<\/?i>|[\'"`*,\.:;\-+()–´«»\/!—]|\s*/u',
 				'/[áàâ]/u',
 				'/[éèê]/u',
 				'/[îíì]/u',

@@ -766,7 +766,7 @@ class CsvList extends FileList {
 	}
 	public function putpdfcontentcache() {
 		// only save if we've actually retrieved the cache
-		if(count($this->pdfcontentcache) > 0)) {
+		if(count($this->pdfcontentcache) > 0) {
 			file_put_contents(
 				PDFCONTENTCACHE, 
 				json_encode($this->pdfcontentcache)

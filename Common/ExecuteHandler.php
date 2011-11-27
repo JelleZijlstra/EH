@@ -1022,8 +1022,6 @@ abstract class ExecuteHandler {
 				$key++;
 				continue;
 			}
-			var_dump($in[$i]);
-			var_dump($in[$i] === '"');
 			if($in[$i] === "'" and !$indstring and ($i === 0 or $in[$i-1] !== '\\'))
 				$insstring = $insstring ? false : true;
 			if($in[$i] === '"' and !$insstring and ($i === 0 or $in[$i-1] !== '\\'))

@@ -648,6 +648,7 @@ class FullFile extends ListEntry {
 			case 'CMPUM': case 'Contributions from the Museum of Paleontology, The University of Michigan': $o = 'Contributions from the Museum of Paleontology, University of Michigan'; break;
 			case 'CN': $o = 'Chiroptera Neotropical'; break;
 			case 'CPMHNM': case 'Comunicaciones Paleontologicas del Museo de Historia Natural de Montevideo': $o = 'Comunicaciones Paleontológicas del Museo de Historia Natural de Montevideo'; break;
+			case 'Comptes Rendus de l\'Académie des Sciences de Paris, Earth and Planetary Sciences': case 'Comptes Rendus de l\'Académie des Sciences de Paris, Sciences de la Terre et des planètes': $o = 'Comptes Rendus de l\'Académie des Sciences - Series IIA - Earth and Planetary Science'; break;
 			case 'CP': case 'COL-PA': $o = 'Coloquios de Paleontología'; break;
 			case 'EA': case 'Evolutionary Anthropology': $o = 'Evolutionary Anthropology: Issues, News, and Reviews'; break;
 			case 'EG': case 'Estudios Geologicos': $o = 'Estudios Geológicos'; break;
@@ -727,13 +728,13 @@ class FullFile extends ListEntry {
 		}
 		return false;
 	}
-	function isfullissue() {
+	public function isfullissue() {
 		return $this->fullissue ? true : false;
 	}
-	function iserratum() {
+	public function iserratum() {
 		return (strpos($this->name, 'erratum') !== false);
 	}
-	function isnopagenumberjournal() {
+	public function isnopagenumberjournal() {
 	// these journals don't have page numbers, only "volume" and "issue". They should get rid of their failure to implement standard practices, but in the meantime we have to handle them.
 		return in_array($this->journal, 
 			array('Palaeontologia Electronica', 
@@ -747,20 +748,20 @@ class FullFile extends ListEntry {
 				'Journal of Biomedicine and Biotechnology',
 		));
 	}
-	function isfile() {
+	public function isfile() {
 	// returns whether this 'file' is a file
 		return ($this->folder !== 'NOFILE');
 	}
 	public function ispdf() {
 		return in_array(substr($this->name, -4, 4), array('.pdf', '.PDF'));
 	}
-	function isnofile() {
+	public function isnofile() {
 		return !$this->isfile();
 	}
-	function isredirect() {
+	public function isredirect() {
 		return (substr($this->folder, 0, 4) === 'SEE ');
 	}
-	function truename() {
+	public function truename() {
 	// if file is a redirect, return true name
 	/* example use
 		if($this->truename()) return $this->truename_return;
@@ -783,7 +784,7 @@ class FullFile extends ListEntry {
 		else
 			return false;
 	}
-	function gettruename() {
+	public function gettruename() {
 		if($this->isredirect()) {
 			$target = substr($this->folder, 4);
 			if($this->p->has($target))
@@ -796,14 +797,14 @@ class FullFile extends ListEntry {
 		else
 			return $this->name;
 	}
-	function isinpress() {
+	public function isinpress() {
 	// checks whether file is in "in press" (and therefore, year etcetera cannot be given
 		return ($this->start === 'in press');
 	}
-	function issupplement() {
+	public function issupplement() {
 		return ($this->title[0] === '/');
 	}
-	function isamnh() {
+	public function isamnh() {
 		return in_array(
 			$this->journal, 
 			array(
@@ -814,14 +815,14 @@ class FullFile extends ListEntry {
 				)
 			);
 	}
-	function isweb() {
+	public function isweb() {
 	// is this a web publication?
 		return (!$this->bookpages && !$this->volume && !$this->start && !$this->journal && !$this->isbn && $this->url);
 	}
-	function isthesis() {
+	public function isthesis() {
 		return preg_match('/^(PhD|MSc|BSc) thesis/', $this->publisher);
 	}
-	function supp_getbasic() {
+	public function supp_getbasic() {
 		$out = preg_replace('/^.*\//u', '', $this->title);
 		if($this->p->has($out)) 
 			return $out;
@@ -830,7 +831,7 @@ class FullFile extends ListEntry {
 			return false;
 		}
 	}
-	function hasid() {
+	private function hasid() {
 	// whether this file has any kind of online ID
 		return ($this->url or $this->doi or $this->jstor or $this->hdl or $this->pmid or $this->pmc);
 	}
@@ -1038,7 +1039,7 @@ class FullFile extends ListEntry {
 		$func = 'cite' . $this->p->citetype;
 		return $this->$func();
 	}
-	function cite_getclass() {
+	private function cite_getclass() {
 	// get the type of citation needed (journal, book, chapter, etc.)
 		// redirect resolution magic?
 		if($this->issupplement)

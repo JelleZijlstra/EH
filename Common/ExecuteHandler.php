@@ -1236,6 +1236,7 @@ abstract class ExecuteHandler {
 		};
 		// loop through commands
 		while(true) {
+			$histptr = $this->curr('histlen');
 			// set our settings
 			$this->stty('cbreak');
 			// save current cursor position
@@ -1245,7 +1246,6 @@ abstract class ExecuteHandler {
 			$cmdlen = 0;
 			$keypos = 0;
 			while(true) {
-				$histptr = $this->curr('histlen');
 				// get input
 				$c = fgetc(STDIN);
 				if($this->config['fulldebug']) {
@@ -1381,7 +1381,6 @@ abstract class ExecuteHandler {
 	}
 	private function stty($opt) {
 		$cmd = "/bin/stty " . $opt;
-		if($this->config['debug']) echo $cmd . PHP_EOL;
 		exec($cmd, $output, $return);
 		if($return !== 0) {
 			trigger_error("Failed to execute " . $cmd);

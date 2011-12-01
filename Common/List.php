@@ -464,6 +464,9 @@ abstract class FileList extends ExecuteHandler {
 				$hay = $query['func'] 
 					? $file->{$query['field']}() 
 					: $file->{$query['field']};
+				// apply function
+				if($paras['function'])
+					$hay = $paras['function']($hay);
 				if($query['regex']) 
 					$found = preg_match($query['content'], $hay);
 				else if($query['>'])

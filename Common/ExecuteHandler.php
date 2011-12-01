@@ -1238,7 +1238,7 @@ abstract class ExecuteHandler {
 		while(true) {
 			$histptr = $this->curr('histlen');
 			// set our settings
-			$this->stty('cbreak');
+			$this->stty('cbreak iutf8');
 			// save current cursor position
 			echo $name . "> \033[s";
 			// get command

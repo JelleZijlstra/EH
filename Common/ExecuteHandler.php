@@ -1,5 +1,7 @@
 <?php
 define(PROCESS_PARAS_ERROR_FOUND, 0x1);
+// TODO: fix bugs with multi-byte characters in history.
+//     - more effectively ignore Ctrl+P and stuff like that.
 abstract class ExecuteHandler {
 	/* Class constants */
 	const EVALUATE_ERROR = 0x1;
@@ -1196,6 +1198,7 @@ abstract class ExecuteHandler {
 	public function setup_commandline($name, $paras = '') {
 	// Performs various functions in a pseudo-command line. A main entry point.
 	// stty stuff inspired by sfinktah at http://php.net/manual/en/function.fgetc.php
+		// perhaps kill this; I never use it
 		if($paras['undoable'] and !$this->hascommand('undo')) {
 			$this->tmp = clone $this;
 			$newcmd['name'] = 'undo';
@@ -1217,21 +1220,22 @@ abstract class ExecuteHandler {
 			'execute' => true,
 			'start' => 0,
 		));
+		// offset where the cursor should go
 		$promptoffset = strlen($name) + 2;
 		// lambda function to get string-form command
 		$getcmd = function() use(&$cmd, &$cmdlen) {
 			// create the command in string form
 			// it will sometimes be an array at this point, which will need to be imploded
 			if(is_string($cmd))
-				$tmpcmd = $cmd;
+				return $cmd;
 			else if(is_array($cmd))
-				$tmpcmd = implode($cmd);
+				return implode($cmd);
 			else if(is_null($cmd)) // don't try to execute empty command
 				return NULL;
 			else {
 				trigger_error("Command of unsupported type: $cmd");
+				return NULL;
 			}
-			return $tmpcmd;
 		};
 		$showcursor = function() use (&$cmdlen, &$keypos, &$getcmd) {
 			echo $getcmd();
@@ -1268,6 +1272,7 @@ abstract class ExecuteHandler {
 							$histptr++;
 						// get new command
 						if($histpr < $this->curr('histlen')) {
+							// TODO: get a $this->curr() method for this
 							$cmd = str_split($this->history[$this->currhist][$histptr]);
 							$cmdlen = count($cmd);
 							$keypos = $cmdlen;
@@ -1297,6 +1302,7 @@ abstract class ExecuteHandler {
 						for($i = 0; $i < $nchars; $i++) {
 							$cmd[$keypos + $i] = $tmp[$i];
 						}
+						// remove killed characters, so we don't need to use substr() in $getcmd()
 						for($i = $keypos + $i; $i < $cmdlen; $i++) {
 							unset($cmd[$i]);
 						}
@@ -1305,15 +1311,18 @@ abstract class ExecuteHandler {
 					case "\012": // newline
 						break 2;
 					// more cases for Ctrl stuff
-					default:
-						$tmp = '';
+					default: // other characters: add to command
+						// temporary array to hold characters to be moved over
+						$tmp = array();
 						$nchars = $cmdlen - $keypos;
 						for($i = $keypos; $i < $cmdlen; $i++) {
-							$tmp .= $cmd[$i];
+							$tmp[] = $cmd[$i];
 						}
+						// add new character to command
 						$cmd[$keypos] = $c;
 						$cmdlen++;
 						$keypos++;
+						// add characters back to command
 						for($i = 0; $i < $nchars; $i++) {
 							$cmd[$keypos + $i] = $tmp[$i];
 						}
@@ -1497,11 +1506,11 @@ abstract class ExecuteHandler {
 	}
 	protected function fgetc($infile) {
 	// re-implementation of fgetc that allows multi-byte characters
+		// internal version of fgetc(), converting number into integer
 		$fgetc = function() use($infile) {
 			$out = ord(fgetc($infile));
 			return $out;
 		};
-		$c1 = $fgetc(STDIN);
 		// use bit mask stuff for 1- to 4-byte character detection
 		$test1 = function($in) {
 			$bitmasked = $in & 0x80;
@@ -1524,6 +1533,8 @@ abstract class ExecuteHandler {
 			$bitmasked = $in & 0xc0;
 			return ($bitmasked === 0x80);
 		};
+		// get first character
+		$c1 = $fgetc(STDIN);
 		if($test1($c1)) {
 			// Ctrl+D
 			if($c1 === 4)
@@ -1569,6 +1580,8 @@ abstract class ExecuteHandler {
 			return false;
 	}
 	public function test() {
+	// Test function that might do anything I currently want to test
+	// Currently, testing my fgetc by reading a single character and then echoing it.
 		$this->stty('cbreak iutf8');
 		$counter = 0;
 		while(true) {
@@ -1584,9 +1597,4 @@ abstract class ExecuteHandler {
 		$this->stty('sane');
 	}
 }
-	 function debugecho($var) {
-		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
-		shell_exec("echo '$var' >> $file");
-	}
-
 ?>

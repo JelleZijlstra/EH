@@ -13,10 +13,13 @@ class FileExecuter extends ExecuteHandler {
 		parent::__construct(array());
 	}
 	public function cli() {
-		$this->setupcommandline(__CLASS__);
+		$this->setup_commandline(__CLASS__);
 	}
 }
 $fe = new FileExecuter();
-$fe->execute("exec_file " . $arg);
+if($arg === '-i')
+	$fe->cli();
+else
+	$fe->execute("exec_file " . $arg);
 exit(0);
 ?>

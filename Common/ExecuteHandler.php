@@ -125,6 +125,10 @@ abstract class ExecuteHandler {
 			'desc' => 'Print input to terminal',
 			'arg' => 'Text to be printed',
 			'execute' => 'callmethodarg'),
+		'test' => array('name' => 'test',
+			'desc' => 'Do something random',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
 	);
 	private static $constructs = array(
 		'$' => array('name' => '$',
@@ -1213,6 +1217,7 @@ abstract class ExecuteHandler {
 			'execute' => true,
 			'start' => 0,
 		));
+		$promptoffset = strlen($name) + 2;
 		// lambda function to get string-form command
 		$getcmd = function() use(&$cmd, &$cmdlen) {
 			// create the command in string form
@@ -1226,7 +1231,6 @@ abstract class ExecuteHandler {
 			else {
 				trigger_error("Command of unsupported type: $cmd");
 			}
-			$tmpcmd = substr($tmpcmd, 0, $cmdlen);
 			return $tmpcmd;
 		};
 		$showcursor = function() use (&$cmdlen, &$keypos, &$getcmd) {
@@ -1242,110 +1246,66 @@ abstract class ExecuteHandler {
 			// save current cursor position
 			echo $name . "> \033[s";
 			// get command
-			$cmd = '';
+			$cmd = array();
 			$cmdlen = 0;
 			$keypos = 0;
 			while(true) {
 				// get input
-				$c = fgetc(STDIN);
-				if($this->config['fulldebug']) {
-					echo ' '. ord($c) . ' ';
-				}
-				switch(ord($c)) {
-					case 27: // arrow keys
-						$c2 = fgetc(STDIN);
-						if(ord($c2) == 91) {
-							$c3 = fgetc(STDIN);
-							// put back cursor
-							echo "\033[4D\033[K";
-							switch(ord($c3)) {
-								case 65: // KEY_UP
-									// decrement pointer
-									if($histptr > 0)
-										$histptr--;
-									// go back to saved cursor position; clear line
-									if($cmdlen > 0)
-										echo "\033[" . $keypos . "D\033[K"; 
-									// get new command
-									$cmd = $this->history[$this->currhist][$histptr];
-									$cmdlen = strlen($cmd);
-									$keypos = $cmdlen;
-									echo $cmd;
-									break;
-								case 66: // KEY_DOWN
-									// increment pointer
-									if($histptr < $this->curr('histlen'))
-										$histptr++;
-									// go back to saved cursor position; clear line
-									if($cmdlen > 0) {
-										if($keypos > 0)
-											echo "\033[" . $keypos . "D";
-										echo "\033[K"; 
-									}
-									// get new command
-									if($histpr < $this->curr('histlen')) {
-										$cmd = $this->history[$this->currhist][$histptr];
-										$cmdlen = strlen($cmd);
-										$keypos = $cmdlen;
-										echo $cmd;
-									}
-									else {
-										// reset command
-										$cmd = '';
-										$cmdlen = 0;
-										$keypos = 0;
-									}
-									break;
-								case 68: // KEY_LEFT
-									if($keypos > 0) {
-										echo "\033[" . $keypos . "D\033[K";
-										$keypos--;
-									}
-									$showcursor();
-									break;
-								case 67: // KEY_RIGHT
-									if($keypos < $cmdlen) {
-										if($keypos > 0) 
-											echo "\033[". $keypos . "D";
-										echo "\033[K";
-										$keypos++;
-									}
-									else if($keypos > 0)
-										echo "\033[" . $keypos . "D";
-									$showcursor();
-									break;
-/**/							}
-						}
+				$c = $this->fgetc(STDIN);
+  				switch($c) {
+					case "\033[A": // KEY_UP
+						// decrement pointer
+						if($histptr > 0)
+							$histptr--;
+						// get new command
+						$cmd = str_split($this->history[$this->currhist][$histptr]);
+						$cmdlen = count($cmd);
+						$keypos = $cmdlen;
 						break;
-					case 127: //backspace
-						if($cmdlen > 0) {
-							echo "\033[2D\033[K";
-							$tmp = '';
-							$nchars = $cmdlen - $keychars;
-							for($i = $keypos; $i < $cmdlen; $i++) {
-								$tmp .= $cmd[$i];
-							}
-							$cmdlen--;
-							$keypos--;
-							for($i = 0; $i < $nchars; $i++) {
-								$cmd[$keypos + $i] = $tmp[$i];
-							}
-							if($keypos >= 0)
-								echo "\033[" . ($keypos + 1) . "D";
-							echo "\033[K";
-							$showcursor();
+					case "\033[B": // KEY_DOWN
+						// increment pointer
+						if($histptr < $this->curr('histlen'))
+							$histptr++;
+						// get new command
+						if($histpr < $this->curr('histlen')) {
+							$cmd = str_split($this->history[$this->currhist][$histptr]);
+							$cmdlen = count($cmd);
+							$keypos = $cmdlen;
 						}
 						else {
-							// remove junk
-							echo "\033[2D\033[K";
-							// put stuff back in the right place
-							$showcursor();
+							// reset command
+							$cmd = array();
+							$cmdlen = 0;
+							$keypos = 0;
 						}
-						break; 
-					case 10: //newline
+						break;
+					case "\033[D": // KEY_LEFT
+						if($keypos > 0)
+							$keypos--;
+						break;
+					case "\033[C": // KEY_RIGHT
+						if($keypos < $cmdlen)
+							$keypos++;
+						break;
+					case "\177": // KEY_BACKSPACE
+						$tmp = array();
+						$nchars = $cmdlen - $keypos;
+						for($i = $keypos; $i < $cmdlen; $i++) {
+							$tmp[] = $cmd[$i];
+						}
+						$keypos--;
+						for($i = 0; $i < $nchars; $i++) {
+							$cmd[$keypos + $i] = $tmp[$i];
+						}
+						for($i = $keypos + $i; $i < $cmdlen; $i++) {
+							unset($cmd[$i]);
+						}
+						$cmdlen--;
+						break;
+					case "\012": // newline
 						break 2;
+					// more cases for Ctrl stuff
 					default:
-						// save piece of command after char we're inputting
 						$tmp = '';
 						$nchars = $cmdlen - $keypos;
 						for($i = $keypos; $i < $cmdlen; $i++) {
@@ -1357,11 +1317,13 @@ abstract class ExecuteHandler {
 						for($i = 0; $i < $nchars; $i++) {
 							$cmd[$keypos + $i] = $tmp[$i];
 						}
-						echo "\033[" . $keypos . "D\033[K";
-						$showcursor();
-						break; 
-					// it looks like KEY_UP etcetera may have more than one... need to see how to handle those
+						break;
 				}
+				// show command
+				// return to saved cursor position, clear line
+				$backmove = $promptoffset + $cmdlen + 10;
+				echo "\033[" . $backmove . "D\033[" . $promptoffset . "C\033[K";
+				$showcursor();
 			}
 			$cmd = $getcmd();
 			if($cmd == NULL) continue;
@@ -1377,7 +1339,7 @@ abstract class ExecuteHandler {
 	}
 	private function debugecho($var) {
 		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
-		shell_exec("echo '$var' > $file");
+		shell_exec("echo '$var' >> $file");
 	}
 	private function stty($opt) {
 		$cmd = "/bin/stty " . $opt;
@@ -1533,5 +1495,98 @@ abstract class ExecuteHandler {
 	private function pcinc() {
 		$this->curr('pc', '++');
 	}
+	protected function fgetc($infile) {
+	// re-implementation of fgetc that allows multi-byte characters
+		$fgetc = function() use($infile) {
+			$out = ord(fgetc($infile));
+			return $out;
+		};
+		$c1 = $fgetc(STDIN);
+		// use bit mask stuff for 1- to 4-byte character detection
+		$test1 = function($in) {
+			$bitmasked = $in & 0x80;
+			return ($bitmasked === 0x0);
+		};
+		$test2 = function($in) {
+			$bitmasked = $in & 0xe0;
+			return ($bitmasked === 0xc0);
+		};
+		$test3 = function($in) {
+			$bitmasked = $in & 0xf0;
+			return ($bitmasked === 0xe0);
+		};
+		$test4 = function($in) {
+			$bitmasked = $in & 0xf8;
+			return ($bitmasked === 0xf0);
+		};
+		// test validity of high-order bytes
+		$testm = function($in) {
+			$bitmasked = $in & 0xc0;
+			return ($bitmasked === 0x80);
+		};
+		if($test1($c1)) {
+			// Ctrl+D
+			if($c1 === 4)
+				return false;
+			// special-case KEY_UP etcetera
+			if($c1 === 27) {
+				$c2 = $fgetc(STDIN);
+				if($c2 !== 91)
+					return false;
+				$c3 = $fgetc(STDIN);
+				return (chr($c1) . chr($c2) . chr($c3));
+			}
+			return chr($c1);
+		}
+		else if($test2($c1)) {
+			$c2 = $fgetc(STDIN);
+			if(!$testm($c2))
+				return false;
+			return (chr($c1) . chr($c2));
+		}
+		else if($test3($c1)) {
+			$c2 = $fgetc(STDIN);
+			if(!$testm($c2))
+				return false;
+			$c3 = $fgetc(STDIN);
+			if(!$testm($c3))
+				return false;
+			return (chr($c1) . chr($c2) . chr($c3));
+		}
+		else if($test4($c1)) {
+			$c2 = $fgetc(STDIN);
+			if(!$testm($c2))
+				return false;
+			$c3 = $fgetc(STDIN);
+			if(!$testm($c3))
+				return false;
+			$c4 = $fgetc(STDIN);
+			if(!$testm($c4))
+				return false;
+			return (chr($c1) . chr($c2) . chr($c3) . chr($c4));
+		}
+		else
+			return false;
+	}
+	public function test() {
+		$this->stty('cbreak iutf8');
+		$counter = 0;
+		while(true) {
+			$c = $this->fgetc(STDIN);
+			if($c === false)
+				break;
+			$counter++;
+			echo $c . PHP_EOL;
+			echo PHP_EOL;
+			echo '---------' . PHP_EOL;
+		}
+		echo 'Wrote ' . $counter . ' characters' . PHP_EOL;
+		$this->stty('sane');
+	}
 }
+	 function debugecho($var) {
+		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
+		shell_exec("echo '$var' >> $file");
+	}
+
 ?>

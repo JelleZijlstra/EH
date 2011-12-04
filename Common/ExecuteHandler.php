@@ -1256,13 +1256,19 @@ abstract class ExecuteHandler {
 			while(true) {
 				// get input
 				$c = $this->fgetc(STDIN);
+				if($c === false) {
+				// break if we encounter EOF or invalid UTF-8, causing fgetc to return false
+					echo PHP_EOL;
+					$cmd = 'quit';
+					break;
+				}
   				switch($c) {
 					case "\033[A": // KEY_UP
 						// decrement pointer
 						if($histptr > 0)
 							$histptr--;
 						// get new command
-						$cmd = str_split($this->history[$this->currhist][$histptr]);
+						$cmd = mb_str_split($this->history[$this->currhist][$histptr]);
 						$cmdlen = count($cmd);
 						$keypos = $cmdlen;
 						break;
@@ -1273,7 +1279,7 @@ abstract class ExecuteHandler {
 						// get new command
 						if($histpr < $this->curr('histlen')) {
 							// TODO: get a $this->curr() method for this
-							$cmd = str_split($this->history[$this->currhist][$histptr]);
+							$cmd = mb_str_split($this->history[$this->currhist][$histptr]);
 							$cmdlen = count($cmd);
 							$keypos = $cmdlen;
 						}
@@ -1484,7 +1490,6 @@ abstract class ExecuteHandler {
 				$ret =& $this->history[$this->currhist][$this->pc[$this->currhist]];
 				break;
 			case 'currscope':
-				//debug_print_backtrace();
 				$ret =& $this->currscope[$this->currhist];
 				break;
 			case 'vars':

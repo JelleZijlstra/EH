@@ -13,6 +13,11 @@ s/\s+(?=\r)//
 s/\r\s+(?={)/ /
 */
 define('BPATH', __DIR__ . '/..');
+// set encoding
+if(mb_internal_encoding('UTF-8') === false) {
+	echo "Unable to set encoding" . PHP_EOL;
+	exit(1);
+}
 function setupbot() {
 	global $editffile;
 	require_once(BPATH . "/UcuchaBot/wpbot.php");
@@ -121,6 +126,7 @@ function convertfile($in, $out) {
 	exec_catch('java -jar /Users/jellezijlstra/Documents/Programs/jodconverter-2.2.2/lib/jodconverter-cli-2.2.2.jar ' . $in . ' ' . $out);
 	return true;
 }
+/* some stuff standard PHP mb is missing */
 function mb_ucfirst($in) {
     $in[0] = mb_strtoupper($in[0]);
     return $in;
@@ -128,6 +134,9 @@ function mb_ucfirst($in) {
 function mb_lcfirst($in) {
 	$in[0] = mb_strtolower($in[1]);
 	return $in;
+}
+function mb_str_split($in) {
+	return preg_split('/(?<!^)(?!$)/u', $in);
 }
 function mw_normalize($in) {
 // normalize MediaWiki link text

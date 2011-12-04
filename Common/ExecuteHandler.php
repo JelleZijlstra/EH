@@ -1091,7 +1091,7 @@ abstract class ExecuteHandler {
 	// processes a function's $paras array, as specified in the $pp_paras parameter
 		if(!is_array($paras)) {
 			echo 'Error: invalid parameters given' . PHP_EOL;
-			return PROCESS_PARA_ERROR_FOUND;
+			return PROCESS_PARAS_ERROR_FOUND;
 		}
 		if(!is_array($pp_paras)) {
 			// this means we only have to check whether $paras is an array
@@ -1161,7 +1161,7 @@ abstract class ExecuteHandler {
 			}
 		}
 		if($founderror)
-			return PROCESS_PARA_ERROR_FOUND;
+			return PROCESS_PARAS_ERROR_FOUND;
 		else
 			return 0;
 	}
@@ -1221,130 +1221,16 @@ abstract class ExecuteHandler {
 		));
 		// offset where the cursor should go
 		$promptoffset = strlen($name) + 2;
-		// lambda function to get string-form command
-		$getcmd = function() use(&$cmd, &$cmdlen) {
-			// create the command in string form
-			// it will sometimes be an array at this point, which will need to be imploded
-			if(is_string($cmd))
-				return $cmd;
-			else if(is_array($cmd))
-				return implode($cmd);
-			else if(is_null($cmd)) // don't try to execute empty command
-				return NULL;
-			else {
-				trigger_error("Command of unsupported type: $cmd");
-				return NULL;
-			}
-		};
-		$showcursor = function() use (&$cmdlen, &$keypos, $getcmd, $promptoffset) {
-			// return to saved cursor position, clear line
-			$backmove = $promptoffset + $cmdlen + 10;
-			echo "\033[" . $backmove . "D\033[" . $promptoffset . "C\033[K";
-			// put the command back
-			echo $getcmd();
-			// put the cursor in the right position
-			if($cmdlen > $keypos)
-				echo "\033[" . ($cmdlen - $keypos) . "D";	
-		};
 		// loop through commands
 		while(true) {
-			$histptr = $this->curr('histlen');
-			// set our settings
-			$this->stty('cbreak iutf8');
-			// save current cursor position
+			// print prompt
 			echo $name . "> ";
-			// get command
-			$cmd = array();
-			$cmdlen = 0;
-			$keypos = 0;
-			while(true) {
-				// get input
-				$c = $this->fgetc(STDIN);
-				if($c === false) {
-				// break if we encounter EOF or invalid UTF-8, causing fgetc to return false
-					echo PHP_EOL;
-					$cmd = 'quit';
-					break;
-				}
-  				switch($c) {
-					case "\033[A": // KEY_UP
-						// decrement pointer
-						if($histptr > 0)
-							$histptr--;
-						// get new command
-						$cmd = mb_str_split($this->history[$this->currhist][$histptr]);
-						$cmdlen = count($cmd);
-						$keypos = $cmdlen;
-						break;
-					case "\033[B": // KEY_DOWN
-						// increment pointer
-						if($histptr < $this->curr('histlen'))
-							$histptr++;
-						// get new command
-						if($histpr < $this->curr('histlen')) {
-							// TODO: get a $this->curr() method for this
-							$cmd = mb_str_split($this->history[$this->currhist][$histptr]);
-							$cmdlen = count($cmd);
-							$keypos = $cmdlen;
-						}
-						else {
-							// reset command
-							$cmd = array();
-							$cmdlen = 0;
-							$keypos = 0;
-						}
-						break;
-					case "\033[D": // KEY_LEFT
-						if($keypos > 0)
-							$keypos--;
-						break;
-					case "\033[C": // KEY_RIGHT
-						if($keypos < $cmdlen)
-							$keypos++;
-						break;
-					case "\177": // KEY_BACKSPACE
-						$tmp = array();
-						$nchars = $cmdlen - $keypos;
-						for($i = $keypos; $i < $cmdlen; $i++) {
-							$tmp[] = $cmd[$i];
-						}
-						$keypos--;
-						for($i = 0; $i < $nchars; $i++) {
-							$cmd[$keypos + $i] = $tmp[$i];
-						}
-						// remove killed characters, so we don't need to use substr() in $getcmd()
-						for($i = $keypos + $i; $i < $cmdlen; $i++) {
-							unset($cmd[$i]);
-						}
-						$cmdlen--;
-						break;
-					case "\012": // newline
-						break 2;
-					// more cases for Ctrl stuff
-					default: // other characters: add to command
-						// temporary array to hold characters to be moved over
-						$tmp = array();
-						$nchars = $cmdlen - $keypos;
-						for($i = $keypos; $i < $cmdlen; $i++) {
-							$tmp[] = $cmd[$i];
-						}
-						// add new character to command
-						$cmd[$keypos] = $c;
-						$cmdlen++;
-						$keypos++;
-						// add characters back to command
-						for($i = 0; $i < $nchars; $i++) {
-							$cmd[$keypos + $i] = $tmp[$i];
-						}
-						break;
-				}
-				// show command
-				$showcursor();
-			}
-			$cmd = $getcmd();
-			if($cmd == NULL) continue;
-			// restore sane stty settings for the duration of command execution
-			$this->stty("sane");
+			$cmd = $this->getline(array(
+				'lines' => $this->history[$this->currhist], 
+				'offset' => $promptoffset)
+			);
+			if($cmd === false)
+				$cmd = 'quit';
 			// execute the command
 			if(!$this->driver($cmd)) {
 				echo 'Goodbye.' . PHP_EOL;
@@ -1583,6 +1469,143 @@ abstract class ExecuteHandler {
 		}
 		else
 			return false;
+	}
+	protected function getline($paras) {
+	// get a line from stdin, allowing for use of arrow keys, backspace, etc.
+	// Return false upon EOF or failure.
+		if(self::process_paras($paras, array(
+			'checklist' => array(
+				'lines', // array of lines accessed upon KEY_UP, KEY_DOWN etcetera
+				'offset', // offset where prompt starts
+			),
+			'errorifempty' => array(
+				'lines',
+				'offset',
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND)
+			return false;
+		$promptoffset = $paras['offset'];
+		// start value of the pointer
+		$histptr = count($paras['lines']);
+		// lambda function to get string-form command
+		$getcmd = function() use(&$cmd, &$cmdlen) {
+			// create the command in string form
+			// it will sometimes be an array at this point, which will need to be imploded
+			if(is_string($cmd))
+				return $cmd;
+			else if(is_array($cmd))
+				return implode($cmd);
+			else if(is_null($cmd)) // don't try to execute empty command
+				return NULL;
+			else {
+				trigger_error("Command of unsupported type: $cmd");
+				return NULL;
+			}
+		};
+		$showcursor = function() use (&$cmdlen, &$keypos, $getcmd, $promptoffset) {
+			// return to saved cursor position, clear line
+			$backmove = $promptoffset + $cmdlen + 10;
+			echo "\033[" . $backmove . "D\033[" . $promptoffset . "C\033[K";
+			// put the command back
+			echo $getcmd();
+			// put the cursor in the right position
+			if($cmdlen > $keypos)
+				echo "\033[" . ($cmdlen - $keypos) . "D";	
+		};
+		// set our settings
+		$this->stty('cbreak iutf8');
+		// get command
+		$cmd = array();
+		$cmdlen = 0;
+		$keypos = 0;
+		while(true) {
+			// get input
+			$c = $this->fgetc(STDIN);
+			if($c === false) {
+			// if we encounter EOF or invalid UTF-8, which causes fgetc to 
+			// return false, also return false
+				echo PHP_EOL;
+				return false;
+			}
+			switch($c) {
+				case "\033[A": // KEY_UP
+					// decrement pointer
+					if($histptr > 0)
+						$histptr--;
+					// get new command
+					$cmd = mb_str_split($paras['lines'][$histptr]);
+					$cmdlen = count($cmd);
+					$keypos = $cmdlen;
+					break;
+				case "\033[B": // KEY_DOWN
+					// increment pointer
+					if($histptr < $this->curr('histlen'))
+						$histptr++;
+					// get new command
+					if($histpr < $this->curr('histlen')) {
+						// TODO: get a $this->curr() method for this
+						$cmd = mb_str_split($paras['lines'][$histptr]);
+						$cmdlen = count($cmd);
+						$keypos = $cmdlen;
+					}
+					else {
+						// reset command
+						$cmd = array();
+						$cmdlen = 0;
+						$keypos = 0;
+					}
+					break;
+				case "\033[D": // KEY_LEFT
+					if($keypos > 0)
+						$keypos--;
+					break;
+				case "\033[C": // KEY_RIGHT
+					if($keypos < $cmdlen)
+						$keypos++;
+					break;
+				case "\177": // KEY_BACKSPACE
+					$tmp = array();
+					$nchars = $cmdlen - $keypos;
+					for($i = $keypos; $i < $cmdlen; $i++) {
+						$tmp[] = $cmd[$i];
+					}
+					$keypos--;
+					for($i = 0; $i < $nchars; $i++) {
+						$cmd[$keypos + $i] = $tmp[$i];
+					}
+					// remove killed characters, so we don't need to use substr() in $getcmd()
+					for($i = $keypos + $i; $i < $cmdlen; $i++) {
+						unset($cmd[$i]);
+					}
+					$cmdlen--;
+					break;
+				case "\012": // newline
+					$cmd = $getcmd();
+					if($cmd === NULL) return false;
+					// restore sane stty settings for the duration of command execution
+					$this->stty("sane");
+					return $cmd;
+				// more cases for Ctrl stuff needed
+				default: // other characters: add to command
+					// temporary array to hold characters to be moved over
+					$tmp = array();
+					$nchars = $cmdlen - $keypos;
+					for($i = $keypos; $i < $cmdlen; $i++) {
+						$tmp[] = $cmd[$i];
+					}
+					// add new character to command
+					$cmd[$keypos] = $c;
+					$cmdlen++;
+					$keypos++;
+					// add characters back to command
+					for($i = 0; $i < $nchars; $i++) {
+						$cmd[$keypos + $i] = $tmp[$i];
+					}
+					break;
+			}
+			// show command
+			$showcursor();
+		}
 	}
 	public function test() {
 	// Test function that might do anything I currently want to test

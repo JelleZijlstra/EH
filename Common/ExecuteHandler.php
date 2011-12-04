@@ -1075,7 +1075,8 @@ abstract class ExecuteHandler {
 		}
 	}
 	static protected function expandargs(&$paras, $synonyms) {
-	// utility function for EH commands
+	// utility function for EH commands.
+	// Deprecated: use process_paras instead
 		if(!is_array($synonyms)) return false;
 		foreach($synonyms as $key => $result) {
 			if(isset($paras[$key]) and !isset($paras[$result]))
@@ -1166,9 +1167,14 @@ abstract class ExecuteHandler {
 			return 0;
 	}
 	public function exec_file($file, $paras = '') {
-		// save old currscope
-		$oldcurrhist = $this->currhist;
-		$this->currhist = 1; // want something more intelligent here eventually
+		// open input file
+		$in = fopen($file, 'r');
+		if(!$in) {
+			echo 'Invalid input file' . PHP_EOL;
+			return false;
+		}
+		$this->currhist++;
+		// set stuff up
 		$this->curr('currscope', 0);
 		$this->curr('vars', array());
 		$this->curr('history', array());
@@ -1180,18 +1186,13 @@ abstract class ExecuteHandler {
 			'start' => 0,
 			'execute' => true,
 		));
-		$in = fopen($file, 'r');
-		if(!$in) {
-			echo 'Invalid input file' . PHP_EOL;
-			return false;
-		}
 		while(($line = fgets($in)) !== false) {
 			if(!$this->driver($line)) {
-				$this->currhist = $oldcurrhist;
+				$this->currhist--;
 				return false;
 			}
 		}
-		$this->currhist = $oldcurrhist;
+		$this->currhist--;
 		return true;
 	}
 	public function setup_commandline($name, $paras = '') {
@@ -1239,6 +1240,7 @@ abstract class ExecuteHandler {
 		}
 	}
 	private function debugecho($var) {
+	// For debugging: adds output to a log file. Useful when debugging methods like fgetc()
 		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
 		shell_exec("echo '$var' >> $file");
 	}
@@ -1291,10 +1293,12 @@ abstract class ExecuteHandler {
 			return true;
 		if($this->synonyms[$cmd])
 			return true;
-		if($this->trystatic and static::${get_called_class() . '_commands'}[$cmd])
-			return true;
-		if($this->trystatic and static::${get_called_class() . '_synonyms'}[$cmd])
-			return true;
+		if($this->trystatic) {
+			if(static::${get_called_class() . '_commands'}[$cmd])
+				return true;
+			if(static::${get_called_class() . '_synonyms'}[$cmd])
+				return true;
+		}
 		return false;
 	}
 	static protected function testregex($in) {
@@ -1302,6 +1306,7 @@ abstract class ExecuteHandler {
 		ob_start();
 		$t = @preg_match($in, 'test');
 		ob_end_clean();
+		// if regex was invalid, preg_match returned FALSE
 		if($t === false)
 			return false;
 		else
@@ -1336,7 +1341,8 @@ abstract class ExecuteHandler {
 		// continue executing as long as PC is below length of program
 		while($this->curr('pc') < $this->curr('histlen')) {
 			if($this->config['debug']) 
-				echo "Feeding command (" . $this->curr('pc') . "): " . $this->curr('pcres') . PHP_EOL;
+				echo "Feeding command (" . $this->curr('pc') . "): " . 
+					$this->curr('pcres') . PHP_EOL;
 			$ret = $this->execute();
 			switch($ret) {
 				case self::EXECUTE_NEXT: 

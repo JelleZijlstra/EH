@@ -1118,7 +1118,10 @@ abstract class ExecuteHandler {
 					foreach($pp_value as $key) {
 						if(!isset($paras[$key])) {
 							echo $key . ': ';
-							$paras['key'] = getinput();
+							$offset = strlen($key) + 2;
+							$paras['key'] = $this->getline(array(
+								'offset' => $offset,
+							));
 						}
 					}
 					break;
@@ -1485,8 +1488,10 @@ abstract class ExecuteHandler {
 				'offset', // offset where prompt starts
 			),
 			'errorifempty' => array(
-				'lines',
 				'offset',
+			),
+			'default' => array(
+				'lines' => array(),
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;

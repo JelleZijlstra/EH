@@ -242,16 +242,20 @@ class CsvList extends FileList {
 			echo "File " . $paras['name'] . " already exists.";
 			if($this->isredirect($file->name)) echo ' The existing file is a redirect.';
 			echo PHP_EOL;
-			makemenu(array('s' => 'skip this file',
-				'r' => 'overwrite the existing file',
-				'm' => 'rename the new file',
+			$cmd = $this->menu(array(
+				'options' => array(
+					's' => 'skip this file',
+					'r' => 'overwrite the existing file',
+					'm' => 'rename the new file',
+				),
 			));
-			switch(getinput()) {
+			switch($cmd) {
 				case 's': return false;
 				case 'r': break 2;
 				case 'm':
-					echo 'New name of file: ';
-					$newname = getinput();
+					$newname = $this->getline(array(
+						'prompt' => 'New name of file: '
+					));
 					if(!$file->move($newname)) {
 						echo 'Error moving file' . PHP_EOL;
 						continue 2;
@@ -270,8 +274,11 @@ class CsvList extends FileList {
 	}
 	function add_nofile($handle = '') {
 		if(!$handle) while(true) {
-			echo 'Handle for new reference ("q" to quit): '; 
-			$handle = getinput();
+			$handle = $this->menu(array(
+				'head' => 'Type the handle for the new reference',
+				'options' => array('q' => 'quit'),
+				'validfunction' => function() { return true; },			
+			));
 			if($handle === 'q') return false;
 			if($this->has($handle) or strpos($handle, '.') !== false)
 				echo 'Invalid handle' . PHP_EOL;
@@ -286,8 +293,11 @@ class CsvList extends FileList {
 	}
 	function add_redirect($handle = '', $target = '') {
 		if(!$handle) while(true) {
-			echo 'Handle for new redirect ("q" to quit): '; 
-			$handle = getinput();
+			$handle = $this->menu(array(
+				'head' => 'Type the handle for the new redirect',
+				'options' => array('q' => 'quit'),
+				'validfunction' => function() { return true; },			
+			));
 			if($handle === 'q') return false;
 			if($this->has($handle) or strpos($handle, '.') !== false)
 				echo 'Invalid handle' . PHP_EOL;
@@ -299,8 +309,11 @@ class CsvList extends FileList {
 			return false;
 		}
 		if(!$target) while(true) {
-			echo 'Target for new redirect ("q" to quit): '; 
-			$target = getinput();
+			$target = $this->menu(array(
+				'head' => 'Type the target for the new redirect',
+				'options' => array('q' => 'quit'),
+				'validfunction' => function() { return true; },			
+			));
 			if($target === 'q') return false;
 			if(!$this->has($target))
 				echo 'Invalid target' . PHP_EOL;
@@ -385,27 +398,34 @@ class CsvList extends FileList {
 				}
 			}
 			else if($file->isfile() && !$file->isredirect()) {
-				makemenu(array('i' => 'give information about this file',
+				echo PHP_EOL;
+				$cmd = $this->menu(array(
+					'options' => array(
+						'i' => 'give information about this file',
 						'l' => 'file has been renamed', 
 						'r' => 'remove this file from the catalog',
 						'm' => 'move to the next component',
 						's' => 'skip this file',
 						'q' => 'quit the program',
-					), PHP_EOL . 'Could not find file ' . $file->name);
-				while(true) {
-					switch(getinput()) {
-						case 'q': return false;
-						case 'm': return true;
-						case 'i': $file->my_inform(); break;
-						case 'l': $file->rename('csv'); break 2;
-						case 's': return true;
-						// set name to NULL; putcsvlist() will then not write the file
-						case 'r':
-							$file->log('Removed');
-							$this->needsave = true;
-							$file->name = NULL;
-							return true;
-					}
+					),
+					'head' => 'Could not find file ' . $file->name,
+					'process' => array(
+						'i' => function() use($file) { 
+							$file->my_inform(); 
+						},
+					),
+				));
+				switch($cmd) {
+					case 'q': return false;
+					case 'm': return true;
+					case 'l': $file->rename('csv'); break;
+					case 's': break;
+					// set name to NULL; putcsvlist() will then not write the file
+					case 'r':
+						$file->log('Removed');
+						$this->needsave = true;
+						$file->name = NULL;
+						return true;
 				}
 			}
 		}
@@ -419,23 +439,26 @@ class CsvList extends FileList {
 		echo "checking whether articles in library are in catalog... ";
 		foreach($this->lslist as $lsfile) {
 			if(!$this->has($lsfile->name)) {
-				makemenu(array('l' => 'file has been renamed',
-					'a' => 'add the file to the catalog',
-					's' => 'skip this file',
-					'q' => 'quit the program',
-					'm' => 'move to the next component of the catalog',
-				), PHP_EOL . 'Could not find file ' . $lsfile->name . ' in catalog');
-				while(true) {
-					switch(getinput()) {
-						case 'q': return false;
-						case 'm': return true;
-						case 'l': $lsfile->rename('ls'); break 2;
-						case 's': return true;
-						case 'a': 
-							$lsfile->add();
-							$this->add_entry($lsfile, array('isnew' => true));
-							break 2;
-					}
+				echo PHP_EOL;
+				$cmd = $this->menu(array(
+					'options' => array(
+						'l' => 'file has been renamed',
+						'a' => 'add the file to the catalog',
+						's' => 'skip this file',
+						'q' => 'quit the program',
+						'm' => 'move to the next component of the catalog',
+					),
+					'head' => 'Could not find file ' . $lsfile->name . ' in catalog',
+				));
+				switch($cmd) {
+					case 'q': return false;
+					case 'm': return true;
+					case 'l': $lsfile->rename('ls'); break;
+					case 's': break;
+					case 'a': 
+						$lsfile->add();
+						$this->add_entry($lsfile, array('isnew' => true));
+						break;
 				}
 			}
 		}
@@ -515,9 +538,13 @@ class CsvList extends FileList {
 		's: quit this duplicate set' . PHP_EOL .
 		'q: quit this function' . PHP_EOL .
 		'o: open the files' . PHP_EOL;
+		$history = array();
 		while(true) {
-			echo 'dups_core> ';
-			$in = getinput();
+			$in = $this->getline(array(
+				'lines' => $history,
+				'prompt' => 'dups_core> ',
+			));
+			$history[] = $in;
 			if(strlen($in) > 2) {
 				$file = substr($in, 2);
 				if($this->has($file))
@@ -530,8 +557,9 @@ class CsvList extends FileList {
 			switch($in[0]) {
 				case 'e': $this->c[$file]->edit(); break;
 				case 'm':
-					echo 'New name of file: ';
-					$newname = getinput();
+					$newname = $this->getline(array(
+						'prompt' => 'New name of file: '
+					));
 					if($newname === 'q') break;
 					$this->c[$file]->move($newname);
 					$this->needsave = true;
@@ -555,8 +583,10 @@ class CsvList extends FileList {
 						echo 'Could not determine redirect target. Options:' . PHP_EOL;
 						foreach($targets as $target)
 							echo '- ' . $target . PHP_EOL;
-						echo 'Type the redirect target below (q to quit):' . PHP_EOL;
-						$target = getinput();
+						$target = $this->menu(array(
+							'head' => 'Type the redirect target below',
+							'options' => array('q' => 'Quit this file'),
+						));
 						if($target === 'q') break;
 					}
 					$this->add_entry(new FullFile(array($file, $target), 'r'));
@@ -616,8 +646,7 @@ class CsvList extends FileList {
 		else {
 			echo 'Current citetype: ' . $this->citetype . PHP_EOL;
 			while(true) {
-				echo "New citetype: ";
-				$new = getinput();
+				$new = $this->getline(array('prompt' => "New citetype: "));
 				if($this->validcitetype($new)) {
 					$this->citetype = $new;
 					break;
@@ -703,30 +732,7 @@ class CsvList extends FileList {
 		return $this->urls_by_journal[$journal] ?: false;
 	}
 	public function temp() {
-	// general cleanup/test function; does whatever it is currently programmed to do
-		$this->c['Microgale Andringitra.pdf']->getsimpletitle();
-		// remove leading "Mammalia"
-/*		foreach($this->c as $name => $file) {
-			if($file->isredirect()) continue;
-			if(substr($name, 0, 9) !== 'Mammalia ') continue;
-			echo 'processing ' . $name . '...' . PHP_EOL;
-			$newname = substr($name, 9);
-			if($this->has($newname)) {
-				echo 'new name already exists' . PHP_EOL;
-				continue;
-			}
-			echo 'Do you want to rename this file? (y/n; o to open it; e to edit it; q to quit) ';
-			while(true) {
-				switch(getinput()) {
-					case 'y': break 2;
-					case 'n': continue 3;
-					case 'o': $file->openf();
-					case 'e': $file->edit();
-					case 'q': break 3;
-				}
-			}
-			$file->move($newname);
-		}*/
+	// general cleanup/test function; does whatever it is currently programmed to do (which at the moment is nothing)
 	}
 	public function testtitles($paras = array()) {
 	// Test the findtitle_pdfcontent() method.

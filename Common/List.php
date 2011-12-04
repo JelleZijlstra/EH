@@ -187,8 +187,7 @@ abstract class FileList extends ExecuteHandler {
 	// Get one file from the list using stdin input
 	// This could be converted to menu() when we can use $this-> in lambda functions. Or it could be scrapped, because it is apparently unused.
 		while(true) {
-			echo '> ';
-			$file = $this->getline(array('offset' => 2));
+			$file = $this->getline();
 			if(in_array($file, $cmds)) 
 				return $file;
 			if($this->has($file))
@@ -527,9 +526,7 @@ abstract class FileList extends ExecuteHandler {
 		$childclass = static::$childclass;
 		while(true) {
 			if(!$key) {
-				$message = 'Key to search on: ';
-				echo $message;
-				$key = $this->getline(array('offset' => strlen($message)));
+				$key = $this->getline(array('prompt' => 'Key to search on: '));
 			}
 			if(strpos($key, '()') !== false) {
 				$paras['isfunc'] = true;
@@ -547,9 +544,7 @@ abstract class FileList extends ExecuteHandler {
 			else break;
 		}
 		while(true) {
-			$message = 'Value to search for: ';
-			echo $message;
-			$value = $this->getline(array('offset' => strlen($message)));
+			$value = $this->getline(array('prompt' => 'Value to search for: '));
 			if($value === 'q') return true;
 			if($value) break;
 		}
@@ -557,8 +552,8 @@ abstract class FileList extends ExecuteHandler {
 	}
 	public function find_cmd($cmd = '') {
 		if(!$cmd) {
-			echo 'Syntax: <field> <value>' . PHP_EOL . 'find> ';
-			$cmd = $this->getline(array('offset' => 6));
+			echo 'Syntax: <field> <value>' . PHP_EOL;
+			$cmd = $this->getline(array('prompt' => 'find> '));
 		}
 		if($cmd === 'q') return false;
 		$sep = strpos($cmd, ' ');
@@ -928,9 +923,7 @@ abstract class ListEntry extends ExecuteHandler {
 				$new = $arguments[0];
 				if($new === NULL) {
 					if($this->$prop) echo 'Current value: ' . $this->$prop . PHP_EOL;
-					$message = 'New value: ';
-					echo $message;
-					$new = $this->getline(array('offset' => strlen($message)));
+					$new = $this->getline(array('prompt' => 'New value: '));
 				}
 				return $this->set(array($prop => $new));
 			}

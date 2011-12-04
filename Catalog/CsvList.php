@@ -750,7 +750,10 @@ class CsvList extends FileList {
 			}
 			$rectitle = $child->getsimpletitle();
 			$dettitle = $child->getsimpletitle($pdftitle);
-			if(($dettitle != $rectitle) and ($rectitle ? (strpos($dettitle, $rectitle) === false) : true) and ($dettitle ? (strpos($rectitle, $dettitle) === false) : true)) {
+			if(($dettitle != $rectitle) and 
+				($rectitle ? (strpos($dettitle, $rectitle) === false) : true) and 
+				($dettitle ? (strpos($rectitle, $dettitle) === false) : true)
+			) {
 				echo 'Title mismatch for file ' . $child->name . PHP_EOL;
 				echo 'Levenshtein distance: ' . ($levenshtein = levenshtein($dettitle, $rectitle)) . PHP_EOL;
 				echo 'Actual title: ' . $child->title . PHP_EOL;

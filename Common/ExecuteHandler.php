@@ -1621,6 +1621,7 @@ abstract class ExecuteHandler {
 				'printoptions', // Always print options?
 				'helpcommand', // Make help command available? (If set to true, commands beginning with "help" will not get returned.)
 				'validfunction', // Function to determine validity of command
+				'process', // Array of callbacks to execute when a given option is called.
 			),
 			'default' => array(
 				'head' => 'MENU',
@@ -1629,6 +1630,7 @@ abstract class ExecuteHandler {
 				'validfunction' => function($in) use(&$options) {
 					return in_array($in, $options);
 				},
+				'process' => array(),
 			),
 			'errorifempty' => array('options'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
@@ -1667,9 +1669,14 @@ abstract class ExecuteHandler {
 			}
 			// return command if valid
 			if($paras['validfunction']($cmd)) {
-				return $cmd;
+				if(array_key_exists($cmd, $paras['process'])) {
+					$paras['process'][$cmd]();
+				}
+				else
+					return $cmd;
 			}
-			echo 'Unrecognized option ' . $cmd . PHP_EOL;
+			else
+				echo 'Unrecognized option ' . $cmd . PHP_EOL;
 		}
 	}
 	public function test() {

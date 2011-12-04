@@ -184,8 +184,11 @@ abstract class FileList extends ExecuteHandler {
 		return call_user_func_array(array($this->c[$file], $func), $args);
 	}
 	public function getone($cmds = array('q')) {
+	// Get one file from the list using stdin input
+	// This could be converted to menu() when we can use $this-> in lambda functions. Or it could be scrapped, because it is apparently unused.
 		while(true) {
-			$file = getinput();
+			echo '> ';
+			$file = $this->getline(array('offset' => 2));
 			if(in_array($file, $cmds)) 
 				return $file;
 			if($this->has($file))
@@ -209,6 +212,7 @@ abstract class FileList extends ExecuteHandler {
 	}
 	public function doone($func) {
 	// wrapper function for various utilities that do the following: get a filename and call function FullFile::$function() on it
+	// Doesn't look like it's currently used anywhere, though.
 		echo "Type a filename. Alternatively, type 'q' to quit $func()." . PHP_EOL;
 		while(true) {
 			echo "Name: ";
@@ -523,8 +527,9 @@ abstract class FileList extends ExecuteHandler {
 		$childclass = static::$childclass;
 		while(true) {
 			if(!$key) {
-				echo 'Key to search on: '; 
-				$key = getinput();
+				$message = 'Key to search on: ';
+				echo $message;
+				$key = $this->getline(array('offset' => strlen($message)));
 			}
 			if(strpos($key, '()') !== false) {
 				$paras['isfunc'] = true;
@@ -542,16 +547,18 @@ abstract class FileList extends ExecuteHandler {
 			else break;
 		}
 		while(true) {
-			echo 'Value to search for: ';
-			$value = getinput();
+			$message = 'Value to search for: ';
+			echo $message;
+			$value = $this->getline(array('offset' => strlen($message)));
 			if($value === 'q') return true;
-			$this->bfind(array($key => $value));
+			if($value) break;
 		}
+		$this->bfind(array($key => $value));
 	}
 	public function find_cmd($cmd = '') {
 		if(!$cmd) {
 			echo 'Syntax: <field> <value>' . PHP_EOL . 'find> ';
-			$cmd = getinput();
+			$cmd = $this->getline(array('offset' => 6));
 		}
 		if($cmd === 'q') return false;
 		$sep = strpos($cmd, ' ');
@@ -914,14 +921,16 @@ abstract class ListEntry extends ExecuteHandler {
 		return $out;
 	}
 	public function __call($name, $arguments) {
+		// allow setting properties
 		if(substr($name, 0, 3) === 'set') {
 			$prop = substr($name, 3);
 			if(static::hasproperty($prop)) {
 				$new = $arguments[0];
-				if(!$new) {
+				if($new === NULL) {
 					if($this->$prop) echo 'Current value: ' . $this->$prop . PHP_EOL;
-					echo 'New value: ';
-					$new = getinput();
+					$message = 'New value: ';
+					echo $message;
+					$new = $this->getline(array('offset' => strlen($message)));
 				}
 				return $this->set(array($prop => $new));
 			}

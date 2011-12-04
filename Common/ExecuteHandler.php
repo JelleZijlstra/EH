@@ -1,7 +1,6 @@
 <?php
 define(PROCESS_PARAS_ERROR_FOUND, 0x1);
-// TODO: fix bugs with multi-byte characters in history.
-//     - more effectively ignore Ctrl+P and stuff like that.
+// TODO: more effectively ignore Ctrl+P and stuff like that.
 abstract class ExecuteHandler {
 	/* Class constants */
 	const EVALUATE_ERROR = 0x1;
@@ -1237,8 +1236,13 @@ abstract class ExecuteHandler {
 				return NULL;
 			}
 		};
-		$showcursor = function() use (&$cmdlen, &$keypos, &$getcmd) {
+		$showcursor = function() use (&$cmdlen, &$keypos, $getcmd, $promptoffset) {
+			// return to saved cursor position, clear line
+			$backmove = $promptoffset + $cmdlen + 10;
+			echo "\033[" . $backmove . "D\033[" . $promptoffset . "C\033[K";
+			// put the command back
 			echo $getcmd();
+			// put the cursor in the right position
 			if($cmdlen > $keypos)
 				echo "\033[" . ($cmdlen - $keypos) . "D";	
 		};
@@ -1248,7 +1252,7 @@ abstract class ExecuteHandler {
 			// set our settings
 			$this->stty('cbreak iutf8');
 			// save current cursor position
-			echo $name . "> \033[s";
+			echo $name . "> ";
 			// get command
 			$cmd = array();
 			$cmdlen = 0;
@@ -1335,9 +1339,6 @@ abstract class ExecuteHandler {
 						break;
 				}
 				// show command
-				// return to saved cursor position, clear line
-				$backmove = $promptoffset + $cmdlen + 10;
-				echo "\033[" . $backmove . "D\033[" . $promptoffset . "C\033[K";
 				$showcursor();
 			}
 			$cmd = $getcmd();

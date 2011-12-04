@@ -1485,10 +1485,7 @@ abstract class ExecuteHandler {
 		if(self::process_paras($paras, array(
 			'checklist' => array(
 				'lines', // array of lines accessed upon KEY_UP, KEY_DOWN etcetera
-				'offset', // offset where prompt starts
-			),
-			'errorifempty' => array(
-				'offset',
+				'offset', // offset where prompt starts. If set to 0, this function will print '> ' as the prompt.
 			),
 			'default' => array(
 				'lines' => array(),
@@ -1496,6 +1493,11 @@ abstract class ExecuteHandler {
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
 		$promptoffset = $paras['offset'];
+		// default to printing '> '
+		if(!$promptoffset) {
+			echo '> ';
+			$promptoffset = 2;
+		}
 		// start value of the pointer
 		$histptr = count($paras['lines']);
 		// lambda function to get string-form command
@@ -1651,8 +1653,7 @@ abstract class ExecuteHandler {
 		$options = array_keys($paras['options']);
 		while(true) {
 			// get command
-			echo '> ';
-			$cmd = $this->getline(array('lines' => $options, 'offset' => 2));
+			$cmd = $this->getline(array('lines' => $options));
 			if($cmd === false)
 				return false;
 			// provide help if necessary

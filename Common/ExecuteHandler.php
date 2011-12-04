@@ -1117,10 +1117,8 @@ abstract class ExecuteHandler {
 						$pp_value = array($pp_value);
 					foreach($pp_value as $key) {
 						if(!isset($paras[$key])) {
-							echo $key . ': ';
-							$offset = strlen($key) + 2;
 							$paras['key'] = $this->getline(array(
-								'offset' => $offset,
+								'prompt' => $key . ': ',
 							));
 						}
 					}
@@ -1223,15 +1221,12 @@ abstract class ExecuteHandler {
 			'execute' => true,
 			'start' => 0,
 		));
-		// offset where the cursor should go
-		$promptoffset = strlen($name) + 2;
 		// loop through commands
 		while(true) {
-			// print prompt
-			echo $name . "> ";
+			// get input
 			$cmd = $this->getline(array(
 				'lines' => $this->history[$this->currhist], 
-				'offset' => $promptoffset)
+				'prompt' => $name . '> ')
 			);
 			if($cmd === false)
 				$cmd = 'quit';
@@ -1485,19 +1480,15 @@ abstract class ExecuteHandler {
 		if(self::process_paras($paras, array(
 			'checklist' => array(
 				'lines', // array of lines accessed upon KEY_UP, KEY_DOWN etcetera
-				'offset', // offset where prompt starts. If set to 0, this function will print '> ' as the prompt.
+				'prompt', // Prompt to be printed.
 			),
 			'default' => array(
 				'lines' => array(),
+				'prompt' => '> ',
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
-		$promptoffset = $paras['offset'];
-		// default to printing '> '
-		if(!$promptoffset) {
-			echo '> ';
-			$promptoffset = 2;
-		}
+		$promptoffset = strlen($paras['prompt']);
 		// start value of the pointer
 		$histptr = count($paras['lines']);
 		// lambda function to get string-form command
@@ -1531,6 +1522,7 @@ abstract class ExecuteHandler {
 		$cmd = array();
 		$cmdlen = 0;
 		$keypos = 0;
+		echo $paras['prompt'];
 		while(true) {
 			// get input
 			$c = $this->fgetc(STDIN);

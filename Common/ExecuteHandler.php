@@ -1343,7 +1343,6 @@ abstract class ExecuteHandler {
 			}
 			$cmd = $getcmd();
 			if($cmd == NULL) continue;
-			unset($c);
 			// restore sane stty settings for the duration of command execution
 			$this->stty("sane");
 			// execute the command

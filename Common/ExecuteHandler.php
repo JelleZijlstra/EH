@@ -1613,22 +1613,75 @@ abstract class ExecuteHandler {
 			$showcursor();
 		}
 	}
+	protected function menu($paras) {
+	// Function that creates a menu and gets input
+		if(self::process_paras($paras, array(
+			'checklist' => array(
+				'head', // Menu heading
+				'options', // List of options. Associative array, with option in key and description in value
+				'printoptions', // Always print options?
+				'helpcommand', // Make help command available? (If set to true, commands beginning with "help" will not get returned.)
+				'validfunction', // Function to determine validity of command
+			),
+			'default' => array(
+				'head' => 'MENU',
+				'printoptions' => false,
+				'helpcommand' => true,
+				'validfunction' => function($in) use(&$options) {
+					return in_array($in, $options);
+				},
+			),
+			'errorifempty' => array('options'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		// print menu heading
+		echo $paras['head'] . PHP_EOL;
+		$printoptions = function() use($paras) {
+			echo 'Options available:' . PHP_EOL;
+			foreach($paras['options'] as $cmd => $desc) {
+				echo "-'" . $cmd . "': " . $desc . PHP_EOL;
+			}
+		};
+		if($paras['printoptions'])
+			$printoptions();
+		$options = array_keys($paras['options']);
+		while(true) {
+			// get command
+			echo '> ';
+			$cmd = $this->getline(array('lines' => $options, 'offset' => 2));
+			if($cmd === false)
+				return false;
+			// provide help if necessary
+			if($paras['helpcommand']) {
+				// just 'help' prints all options
+				if($cmd === 'help') {
+					$printoptions();
+					continue;
+				}
+				// help about a specific command
+				if(substr($cmd, 0, 5) === 'help ') {
+					$option = substr($cmd, 5);
+					if($paras['options'][$option])
+						echo $option . ': ' . $paras['options'][$option] . PHP_EOL;
+					else
+						echo 'Option ' . $option . ' does not exist.' . PHP_EOL;
+					continue;
+				}
+			}
+			// return command if valid
+			if($paras['validfunction']($cmd)) {
+				return $cmd;
+			}
+			echo 'Unrecognized option ' . $cmd . PHP_EOL;
+		}
+	}
 	public function test() {
 	// Test function that might do anything I currently want to test
-	// Currently, testing my fgetc by reading a single character and then echoing it.
-		$this->stty('cbreak iutf8');
-		$counter = 0;
-		while(true) {
-			$c = $this->fgetc(STDIN);
-			if($c === false)
-				break;
-			$counter++;
-			echo $c . PHP_EOL;
-			echo PHP_EOL;
-			echo '---------' . PHP_EOL;
-		}
-		echo 'Wrote ' . $counter . ' characters' . PHP_EOL;
-		$this->stty('sane');
+	// Currently, testing the menu() method
+		$cmd = $this->menu(array(
+			'options' => array('a' => 'Do something', 'b' => 'Do something else'),
+			'helpcommand' => false,
+		));
+		echo $cmd . PHP_EOL;
 	}
 }
 ?>

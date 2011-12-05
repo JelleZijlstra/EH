@@ -246,8 +246,8 @@ class FullFile extends ListEntry {
 	}
 	public function remove() {
 	// remove a file
-		echo 'Are you sure you want to remove file ' . $this->name . '? (y/n)'. PHP_EOL;
-		while(true) switch(getinput()) {
+		$cmd = $this->ynmenu('Are you sure you want to remove file ' . $this->name . '?');
+		switch($cmd) {
 			case 'y':
 				if($this->isfile()) exec_catch('rm ' . $this->path());
 				$this->log('Removed file');
@@ -255,8 +255,8 @@ class FullFile extends ListEntry {
 				echo "File $this->name removed." . PHP_EOL;
 				unset($this->name); // this will prevent CsvList::save() from writing this file
 				$this->p->needsave();
-				break 2;
-			case 'n': break 2;
+				break;
+			case 'n': break;
 		}
 		return true;
 	}
@@ -265,7 +265,7 @@ class FullFile extends ListEntry {
 		if($this->isredirect()) return true;
 		if($this->name === $newname) return true;
 		if(!$newname or !is_string($newname)) while(true) {
-			echo 'New name: '; $newname = getinput();
+			$newname = $this->getline('New name: ');
 			if($newname === 'q') return false;
 			break;
 		}
@@ -273,9 +273,9 @@ class FullFile extends ListEntry {
 		if($this->p->has($newname)) {
 			echo 'New name already exists: ' . $newname . PHP_EOL;
 			if($this->p->isredirect($newname)) {
-				echo 'The existing file is a redirect. Do you want to overwrite it? (y/n)' . PHP_EOL;
-				while(true) switch(getinput()) {
-					case 'y': break(2);
+				$cmd = $this->ynmenu('The existing file is a redirect. Do you want to overwrite it?');
+				switch($cmd) {
+					case 'y': break;
 					case 'n': return false;
 				}
 			}
@@ -322,11 +322,12 @@ class FullFile extends ListEntry {
 		echo PHP_EOL . "Type 'q' to quit and 'i' to get information about this file." . PHP_EOL;
 		// ask user
 		while(true) {
-			echo "New name of file: ";
-			$newname = getinput();
+			$newname = $this->getline("New name of file: ");
 			// get a way to escape
-			if($newname === "q") return false;
-			if($newname === "i") $this->my_inform();
+			if($newname === "q")
+				return false;
+			if($newname === "i") 
+				$this->my_inform();
 			else {
 				$searchres = $searchlist[$newname];
 				if($searchres) {
@@ -876,8 +877,7 @@ class FullFile extends ListEntry {
 			'm<filename>' => 'move to editing the title of file <filename>',
 		), 'Command syntax:');
 		while(true) {
-			echo 'edittitle> ';
-			$cmd = getinput();
+			$cmd = $this->getline('edittitle> ');
 			if(preg_match('/^([a-z]\d+(-\d+)?|m.*)$/', $cmd)) {
 				$n = substr($cmd, 1);
 				if(strpos($n, '-') !== false) {
@@ -964,8 +964,7 @@ class FullFile extends ListEntry {
 				case 'e':
 					if(isset($n)) {
 						echo 'Current value of word ' . $n . ': ' . $splittitle[$n] . PHP_EOL;
-						echo 'New value: ';
-						$splittitle[$n] = getinput();
+						$splittitle[$n] = $this->getline('New value: ');
 						break;
 					}
 					else {
@@ -977,7 +976,7 @@ class FullFile extends ListEntry {
 							'b' => 'return to word-by-word editing without saving new title',
 						), 'Enter new title. Other commands:');
 						while(true) {
-							$cmd2 = getinput();
+							$cmd2 = $this->getline();
 							if(strlen($cmd2) > 1) $newtitle = $cmd2;
 							else switch($cmd2) {
 								case 'q': return false;
@@ -1546,13 +1545,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				'r' => 'rename this file',
 				'<enter>' => 'add this file to the catalog',
 			), "Adding file $this->name");
-		while(true) switch(getinput()) {
+		while(true) switch($this->getline()) {
 			case 'o': $this->openf(array('place' => 'temp')); break;
 			case 'q': return 0;
 			case 's': return 1;
 			case 'r':
 				$oldname = $this->name;
-				echo 'New name: '; $newname = getinput();
+				$newname = $this->getline('New name: ');
 				if($newname === 'q')
 					break;
 				// allow renaming to existing name, for example to replace in-press files, but warn
@@ -1579,11 +1578,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					'o' => 'open the new and existing files',
 				), 'A file with this name already exists. Please enter a new filename');
 			while(true) {
-				switch($newname = getinput()) {
+				switch($newname = $this->getline()) {
 					case 'o':
 						$this->openf(array('place' => 'temp'));
 						$this->p->lslist[$this->name]->openf();
-						continue 2;
+						break;
 					case 'r':
 						$cmd = 'mv ' . TEMPPATH . '/' . escape_shell($this->name) . ' ' . $this->p->lslist[$this->name]->path();
 						if(!exec_catch($cmd)) echo "Error moving file" . PHP_EOL;
@@ -1605,25 +1604,30 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$key = $this->getkey();
 			if($this->p->sugglist[$key]) {
 				$suggs = $this->p->sugglist[$key]->getsugg();
-				echo "Type 'y' if this suggestion is correct; 'n' if it is not; 's' to stop suggestions; 'q' to quit this file." . PHP_EOL;
-				foreach ($suggs as $sugg) {
+				foreach($suggs as $sugg) {
 					echo 'Suggested placement. Folder: ' . $sugg[0];
 					if($sugg[1]) {
 						echo '; subfolder: ' . $sugg[1];
 						if($sugg[2]) echo '; sub-subfolder: ' . $sugg[2];
 					}
-					echo PHP_EOL;
-					while(true) {
-						switch(getinput()) {
-							case 'y': $this->folder = $sugg[0];
-								$this->sfolder = $sugg[1];
-								$this->ssfolder = $sugg[2];
-								break 3;
-							case 'n': break 2;
-							case 's': break 3;
-							case 'q': return 1;
-							default: echo "Unrecognized command." . PHP_EOL;
-						}
+					$cmd = $this->menu(array(
+						'head' => PHP_EOL,
+						'options' => array(
+							'y' => 'if this suggestion is correct',
+							'n' => 'this suggestion is not correct',
+							's' => 'stop suggestions',
+							'q' => 'quit this file',
+						),
+					));
+					switch($cmd) {
+						case 'y': 
+							$this->folder = $sugg[0];
+							$this->sfolder = $sugg[1];
+							$this->ssfolder = $sugg[2];
+							break 2;
+						case 'n': break;
+						case 's': break 2;
+						case 'q': return 1;
 					}
 				}
 			}
@@ -1632,7 +1636,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				/* folder */
 				echo 'Suggestions: '; 
 				$suggs = $this->sugg_helper($this->p->foldertree);
-				echo 'Folder: '; $cmd = getinput();
+				$cmd = $this->getline('Folder: ');
 				if($cmd === 'q') continue 2;
 				if(is_numeric($cmd)) $this->folder = $suggs[$cmd];
 				else $this->folder = $cmd;
@@ -1640,7 +1644,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				if(count($this->p->foldertree[$this->folder]) !== 0) {
 					echo 'Suggestions: '; 
 					$suggs = $this->sugg_helper($this->p->foldertree[$this->folder]);
-					echo 'Subfolder: '; $cmd = getinput();
+					$cmd = $this->getline('Subfolder: ');
 					if($cmd === 'q') continue 2;
 					if(is_numeric($cmd)) $this->sfolder = $suggs[$cmd];
 					else $this->sfolder = $cmd;
@@ -1648,7 +1652,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					if(count($this->p->foldertree[$this->folder][$this->sfolder]) !== 0) {
 						echo 'Suggestions: '; 
 						$suggs = $this->sugg_helper($this->p->foldertree[$this->folder][$this->sfolder]);
-						echo 'Sub-subfolder: '; $cmd = getinput();
+						$cmd = $this->getline(array(
+							'prompt' => 'Sub-subfolder: ',
+						));
 						if($cmd === 'q') continue 2;
 						if(is_numeric($cmd)) $this->ssfolder = $suggs[$cmd];
 						else $this->ssfolder = $cmd;
@@ -1769,50 +1775,57 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				echo PHP_EOL . $this->title . PHP_EOL;
 				$this->echocite(array('mode' => 'paper'));
 				echo PHP_EOL;
-				makemenu(array('y' => 'this URL is correct',
-					'n' => 'this URL is not correct',
-					'q' => 'quit the function',
-					'o' => 'open the URL',
-					'r' => 'stop adding data',
-					'u' => 'add a different URL',
-					'i' => 'give information about this file',
-					'e' => 'edit this file',
+				makemenu(array(
 				));
 				$first = false;
 			}
 			echo "Title: " . $result->title . PHP_EOL;
 			echo "URL: " . $result->link . PHP_EOL;
-			while(true) switch(getinput()) {
-				case 'y':
-					$this->p->needsave();
-					$this->url = $result->link;
-					echo 'data added' . PHP_EOL;
-					return true;
-				case 'q': 
-					echo 'nothing found' . PHP_EOL; 
-					$this->triedfindurl = true;
-					return false;
-				case 'o': 
-					exec_catch("open '" . str_replace("'", "\'", $result->link) . "'"); 
-					break;
-				case 'i': 
-					$this->my_inform(); 
-					break;
-				case 'n':
-					break 2;
-				case 'u':
-					echo 'New url: ';
-					$this->url = getinput();
-					$this->p->needsave();
-					echo 'data added' . PHP_EOL;
-					return true;
-				case 'r':
-					$this->adddata_return = true; 
-					echo 'nothing found' . PHP_EOL; 
-					return false;
-				case 'e':
-					$this->edit();
-					break;
+			while(true) {
+				$cmd = $this->menu(array(
+					'options' => array(
+						'y' => 'this URL is correct',
+						'n' => 'this URL is not correct',
+						'q' => 'quit the function',
+						'o' => 'open the URL',
+						'r' => 'stop adding data',
+						'u' => 'add a different URL',
+						'i' => 'give information about this file',
+						'e' => 'edit this file',
+					),
+					'head' => '',
+				));
+				switch($cmd) {
+					case 'y':
+						$this->p->needsave();
+						$this->url = $result->link;
+						echo 'data added' . PHP_EOL;
+						return true;
+					case 'q': 
+						echo 'nothing found' . PHP_EOL; 
+						$this->triedfindurl = true;
+						return false;
+					case 'o': 
+						exec_catch("open '" . str_replace("'", "\'", $result->link) . "'"); 
+						break;
+					case 'i': 
+						$this->my_inform(); 
+						break;
+					case 'n':
+						break 2;
+					case 'u':
+						$this->url = $this->getline('New url: ');
+						$this->p->needsave();
+						echo 'data added' . PHP_EOL;
+						return true;
+					case 'r':
+						$this->adddata_return = true; 
+						echo 'nothing found' . PHP_EOL; 
+						return false;
+					case 'e':
+						$this->edit();
+						break;
+				}
 			}
 		}
 		$this->triedfindurl = true;
@@ -1877,8 +1890,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		else {
 			exec_catch('open \'' . $url . '\'');
-			echo 'HDL: ';
-			$hdl = getinput();
+			$hdl = $this->getline('HDL: ');
 			if($hdl === 'q') return false;
 			if(strpos($hdl, 'http') !== false) {
 				preg_match('/2246\/\d+$/', $hdl, $matches);
@@ -1897,8 +1909,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			if(!$this->openurl())
 				$this->searchgoogletitle();
 			$this->echocite();
-			echo 'DOI: ';
-			$doi = getinput();
+			$doi = $this->getline('DOI: ');
 			if($doi === 'q') return false;
 			else if($doi) $this->doi = $doi;
 		}
@@ -2279,13 +2290,22 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			foreach($cjson->items as $result) {
 				echo "Title: " . $result->title . PHP_EOL;
 				echo "URL: " . $result->link . PHP_EOL;
-				makemenu(array('y' => 'this URL is correct',
-					'n' => 'this URL is not correct',
-					'q' => 'quit the function',
-					'o' => 'open the URL',
-					'r' => 'stop adding data',
+				$url = $result->link;
+				$cmd = $this->menu(array(
+					'options' => array(
+						'y' => 'this URL is correct',
+						'n' => 'this URL is not correct',
+						'q' => 'quit the function',
+						'o' => 'open the URL',
+						'r' => 'stop adding data',
+					),
+					'process' => array(
+						'o' => function() use(&$url) {
+							exec_catch("open '" . str_replace("'", "\'", $url) . "'"); 
+						},
+					),
 				));
-				while(true) switch(getinput()) {
+				switch($cmd) {
 					case 'y':
 						// BioOne
 						if($jvp || $jparas || $swnat || $wnanat || $mammstudy || $jpaleont || $jmamm) $doi = preg_replace(array("/^.*\/doi\/(abs|pdf|full)\//", "/\?.*$/"), array("", ""), $result->link);
@@ -2295,10 +2315,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						else if ($bioljlinnsoc || $bioljlinnsoc2 || $mammreview || $jbiogeogr || $ajpa || $zooljlinnsoc) $doi = preg_replace("/^.*\/doi\/|\/(abstract|full|pdf)$/", "", $result->link);
 						$this->doi = trim($doi);
 						return $this->expanddoi();
-					case 'q': return false;
-					case 'o': exec_catch("open '" . str_replace("'", "\'", $url) . "'"); break;
-					case 'n': break 2;
-					case 'r': $this->adddata_return = true; return false;
+					case 'q': 
+						return false;
+					case 'n': 
+						break;
+					case 'r': 
+						$this->adddata_return = true; 
+						return false;
 				}
 			}
 		}
@@ -2330,42 +2353,66 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	private function doiamnhinput() {
 		if(!$this->p->addmanual) return false;
 		if($this->pdfcontent) echo $this->pdfcontent . PHP_EOL;
-		echo 'If this file has a DOI or AMNH handle, please enter it.' . PHP_EOL .
-			"'c': continue to direct input of data" . PHP_EOL .
-			"'o': open the file" . PHP_EOL .
-			"'r': re-use a citation from a NOFILE entry" . PHP_EOL;
-		while(true) {
-			$doi = trimdoi(preg_replace("/doi:\s*/", "", getinput()));
-			switch($doi) {
-				case 'c': return false;
-				case 'o': $this->openf(); break;
-				case 'r':
-					echo 'Enter the citation handle.' . PHP_EOL .
-						"'q': stop trying csvrefs" . PHP_EOL;
-					while(true) {
-						$handle = getinput();
-						if($handle === 'q') break 2;
-						if($this->p->has($handle)) 
-							break;
-						else
-							echo 'Could not find handle' . PHP_EOL;
-					}
-					$blacklist = array('addmonth', 'addday', 'addyear', 'name', 'folder', 'sfolder', 'ssfolder');
-					foreach($this->p->get($handle) as $key => $value) {
-						if(!in_array($key, $blacklist))
-							$this->$key = $value;
-					}
-					// make redirect
-					$this->p->makeredirect($handle, $this->name);
-					echo "Data copied. Type 'e' to review and edit information now associated with this file" . PHP_EOL;
-					$cmd = getinput();
-					if($cmd === 'e') {
-						$this->my_inform();
-						$this->edit();
-					}
+		$name = $this->name;
+		$doi = $this->menu(array(
+			'head' => 'If this file has a DOI or AMNH handle, please enter it.', 
+			'options' => array(
+				'c' => "continue to direct input of data",
+				'o' => "open the file",
+				'r' => "re-use a citation from a NOFILE entry",
+			),
+			'processcommand' => function($in) {
+				return trimdoi(preg_replace("/doi:\s*/", "", $in));
+			},
+			'validfunction' => function($in) use (&$options) {
+				if(in_array($in, $options))
 					return true;
-				default: if(strlen($doi) > 2) break(2);
-			}
+				if(strlen($in) > 2)
+					return true;
+				return false;
+			},
+			'process' => array(
+				'o' => function() use($name) {
+					// this is a hack, until we can actually use $this in an anonymous function
+					global $csvlist;
+					$csvlist->openf($name);
+				},
+			),
+		));
+		switch($doi) {
+			case 'c': return false;
+			case 'r':
+				echo 'Enter the citation handle.' . PHP_EOL .
+					"'q': stop trying csvrefs" . PHP_EOL;
+				while(true) {
+					$handle = $this->getline();
+					if($handle === 'q') break 2;
+					if($this->p->has($handle)) 
+						break;
+					else
+						echo 'Could not find handle' . PHP_EOL;
+				}
+				$blacklist = array('addmonth', 'addday', 'addyear', 'name', 'folder', 'sfolder', 'ssfolder');
+				foreach($this->p->get($handle) as $key => $value) {
+					if(!in_array($key, $blacklist))
+						$this->$key = $value;
+				}
+				// make redirect
+				$this->p->makeredirect($handle, $this->name);
+				$cmd = $this->menu(array(
+					'head' => "Data copied.",
+					'options' => array(
+						'e' => "Type 'e' to review and edit information now associated with this file",
+					),
+					'validfunction' => function($in) {
+						return true;
+					},
+				));
+				if($cmd === 'e') {
+					$this->my_inform();
+					$this->edit();
+				}
+				return true;
 		}
 		if(substr($doi, 0, 22) === 'http://hdl.handle.net/') {
 			$this->hdl = substr($doi, 22);
@@ -2392,10 +2439,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$params = array("authors", "year", "title", "journal", "volume", "issue", "start", "end", "pages", "url", "bookauthors", "booktitle", "publisher", "bookpages", "isbn", "location", "parturl");
 		foreach($params as $key) {
 			while(true) {
-				echo $key . ": ";
-				switch($cmd = getinput()) {
+				switch($cmd = $this->getline($key . ": ")) {
 					case 'q': return false;
-					case 's': break(3);
+					case 's': break 3;
 					case 'd': $this->doiamnhinput(); break;
 					case 'o': $this->openf(); break;
 					case 'e': $this->edit(array('cannotmove' => true)); break;
@@ -2572,8 +2618,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			'c' => 'continue with the next file'), 
 			'Enter file names and page ranges');
 		while(true) {
-			echo 'File name: ';
-			switch($name = getinput()) {
+			switch($name = $this->getline('File name: ')) {
 				case 'c': 
 					$cmd = 'mv -n \'' . BURSTPATH . '/' . $this->name . '\' \'' . BURSTPATH . '/Old/' . $this->name . '\'';
 					if(!exec_catch($cmd))
@@ -2582,16 +2627,15 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				case 'q': return false;
 				default:
 					if($this->p->has($name)) {
-						echo 'A file with this name already exists. Do you want to continue anyway? (y/n)';
-						while(true) switch($cmd = getinput()) {
+						$cmd = $this->ynmenu('A file with this name already exists. Do you want to continue anyway?');
+						switch($cmd) {
 							case 'y': break 3;
 							case 'n': continue 4;
 						}
 					}
 			}
 			while(true) {
-				echo 'Page range: ';
-				$range = getinput();
+				$range = $this->getline('Page range: ');
 				if(!preg_match('/^\d+-\d+$/', $range)) {
 					echo 'Invalid range' . PHP_EOL;
 					continue;
@@ -2617,8 +2661,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		// open files for review
 		exec_catch("open $tmppath");
 		$this->openf();
-		echo "Do you want to replace the file? (y/n) ";
-		while(true) switch(getinput()) {
+		$cmd = $this->ynmenu("Do you want to replace the file?");
+		switch($cmd) {
 			case 'y':
 				return exec_catch("mv $tmppath {$this->path()}");
 			case 'n': 
@@ -2779,14 +2823,5 @@ Content-Disposition: attachment
 		var_dump($this->trype());
 		$this->my_inform();
 	}
-/*	public function cleanup() {
-		unset($this->year);
-		unset($this->title);
-		unset($this->volume);
-		unset($this->series);
-		unset($this->authors);
-		unset($this->issue);
-		unset($this->start);
-	}*/
 }
 ?>

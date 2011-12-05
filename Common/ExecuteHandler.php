@@ -1474,9 +1474,12 @@ abstract class ExecuteHandler {
 		else
 			return false;
 	}
-	protected function getline($paras) {
+	protected function getline($paras = array()) {
 	// get a line from stdin, allowing for use of arrow keys, backspace, etc.
 	// Return false upon EOF or failure.
+		// common use case
+		if(is_string($paras))
+			$paras = array('prompt' => $paras);
 		if(self::process_paras($paras, array(
 			'checklist' => array(
 				'lines', // array of lines accessed upon KEY_UP, KEY_DOWN etcetera
@@ -1622,6 +1625,7 @@ abstract class ExecuteHandler {
 				'helpcommand', // Make help command available? (If set to true, commands beginning with "help" will not get returned.)
 				'validfunction', // Function to determine validity of command
 				'process', // Array of callbacks to execute when a given option is called.
+				'processcommand', // Function used to process the command after input
 			),
 			'default' => array(
 				'head' => 'MENU',
@@ -1631,6 +1635,7 @@ abstract class ExecuteHandler {
 					return in_array($in, $options);
 				},
 				'process' => array(),
+				'processcommand' => false,
 			),
 			'errorifempty' => array('options'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
@@ -1667,6 +1672,8 @@ abstract class ExecuteHandler {
 					continue;
 				}
 			}
+			if($paras['processcommand'])
+				$cmd = $paras['processcommand']($cmd);
 			// return command if valid
 			if($paras['validfunction']($cmd)) {
 				if(array_key_exists($cmd, $paras['process'])) {
@@ -1678,6 +1685,24 @@ abstract class ExecuteHandler {
 			else
 				echo 'Unrecognized option ' . $cmd . PHP_EOL;
 		}
+	}
+	protected function ynmenu($head, $process = NULL) {
+	// Make a yes-no menu
+		return $this->menu(array(
+			'options' => array(
+				'y' => 'Yes',
+				'n' => 'No',
+			),
+			'head' => $head,
+			'process' => $process,
+			'processcommand' => function($in) {
+				switch($in) {
+					case 'y': case 'yes': case 'Yes': case 'Y': return 'y';
+					case 'n': case 'no': case 'No': case 'N': return 'n';
+					default: return $in;
+				}
+			},
+		));
 	}
 	public function test() {
 	// Test function that might do anything I currently want to test

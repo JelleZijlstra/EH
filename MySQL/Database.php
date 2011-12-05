@@ -61,10 +61,24 @@ class Database extends ExecuteHandler {
 	}
 	public function count($paras = array()) {
 		$query = 'SELECT COUNT(*) FROM ' . $this->table . ' ' . $this->where($paras);
+		$result = $this->query($query);
+		if(!$result) return false;
+		$row = mysql_fetch_array($result);
+		return $row[0];
 	}
 	private function where($paras) {
 	// assemble where clause
-		
+		$out = 'WHERE ';
+		foreach($paras as $key => $value) {
+			if(in_array($key, $this->columns)) {
+				$out .= mysql_real_escape_string($key) . 
+					' = ' . 
+					mysql_real_escape_string($value) . 
+					' AND ';
+			}
+		}
+		$out = preg_replace('/ AND $/u', '', $out);
+		return $out;
 	}
 	public function showcolumns() {
 	// show columns in default table

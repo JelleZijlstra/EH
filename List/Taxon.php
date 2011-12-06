@@ -363,28 +363,30 @@ class Taxon extends ListEntry {
 	}
 	function editcomments() {
 		if($this->comments)
-			echo "Current value of comments field: " . $this->comments . PHP_EOL;
-		echo "Text to be added (type 'e' to edit the entire text): ";
-		$add = getinput();
-		if($add === 'e') {
-			echo "New value of comments field: ";
-			$this->comments = getinput();
-		}
+			echo "Current value of comments field: " . 
+				$this->comments . PHP_EOL;
+		$add = $this->getline(
+			"Text to be added (type 'e' to edit the entire text): "
+		);
+		if($add === 'e')
+			$this->comments = $this->getline("New value of comments field: ");
 		else if($add)
 			$this->comments .= " " . $add;
 	}
 	function editdistribution() {
 		if($this->rank !== 'species') return true;
 		$this->informrange();
-		makemenu(array('c' => 'quit this taxon and continue',
+		makemenu(array(
+			'c' => 'quit this taxon and continue',
 			'q' => 'quit this taxon and stop editing ranges',
 			'i' => 'get information about this taxon',
 			'e' => 'edit the comments for this taxon',
 			'<n> <country>' => 'set range in country <country> to <n>',
 			'm <taxon>' => 'move to editing taxon <taxon>',
-			), 'Editing range for taxon ' . $this->name . '. Command syntax:');
+			), 'Editing range for taxon ' . $this->name . '. Command syntax:'
+		);
 		while(true) {
-			$cmd = getinput();
+			$cmd = $this->getline();
 			// process command
 			if(strlen($cmd) > 1) {
 				$arg = substr($cmd, 2);
@@ -410,12 +412,13 @@ class Taxon extends ListEntry {
 					}
 					// source
 					$osource = $source;
-					echo 'Source (\'u\' to use last source used): '; $source = getinput();
+					$source = $this->getline(
+						'Source (\'u\' to use last source used): ');
 					if($source === 'q') break;
 					if($source === 'u') $source = $osource;
 					// comment
 					$ocomment = $comment;
-					echo 'Comment: '; $comment = getinput();
+					$comment = $this->getline('Comment: ');
 					if($comment === 'q') break;
 					if($comment === 'u') $comment = $ocomment;
 					// commit changes
@@ -565,7 +568,7 @@ class Taxon extends ListEntry {
 	}
 	public function merge($paras = '') {
 		while(!$this->has($paras['into'])) {
-			$paras['into'] = getinput_label('Taxon to be merged into');
+			$paras['into'] = $this->getline('Taxon to be merged into: ');
 			if($paras['into'] === 'q') return false;
 		}
 		$children = $this->p->getchildren($paras['into']);

@@ -60,17 +60,19 @@ class TaxonList extends FileList {
 		}
 		if(!$paras['name']) $paras['name'] = $file->name;
 		while($this->has($paras['name'])) {
-			echo "File " . $paras['name'] . " already exists." . PHP_EOL;
-			makemenu(array('s' => 'skip this taxon',
-				'r' => 'overwrite the existing taxon',
-				'm' => 'rename the new taxon',
+			$cmd = $this->menu(array(
+				'head' => "File " . $paras['name'] . " already exists.",
+				'options' => array(
+					's' => 'skip this taxon',
+					'r' => 'overwrite the existing taxon',
+					'm' => 'rename the new taxon',
+				),
 			));
-			switch(getinput()) {
+			switch($cmd) {
 				case 's': return false;
 				case 'r': break 2;
 				case 'm':
-					echo 'New name of taxon: ';
-					$newname = getinput();
+					$newname = $this->getline('New name of taxon: ');
 					if(!$file->move($newname)) {
 						echo 'Error moving file' . PHP_EOL;
 						continue 2;
@@ -203,8 +205,8 @@ class TaxonList extends FileList {
 		self::expandargs($paras, array(0 => 'name'));
 		self::setifneeded($paras, 'name');
 		while($this->has($paras['name'])) {
-			echo 'A taxon with this name already exists. Enter a new name: ';
-			$paras['name'] = getinput();
+			echo 'A taxon with this name already exists.' . PHP_EOL;
+			$paras['name'] = $this->getline('Enter a new name: ');
 		}
 		return $this->add_entry(new Taxon($paras['name'], 'n'), array('isnew' => true));
 	}

@@ -513,7 +513,8 @@ class Bot extends Snoopy {
 			//edit TFA talk page
 			$talkpage = $this->fetchwp('Talk:' . $page['name']);
 			if(preg_match('/\|\s*maindate\s*=/u', $talkpage))
-				echo 'Maindate already exists on talkpage of page ' . $page['name'] . PHP_EOL;
+				echo 'Maindate already exists on talkpage of page ' . 
+					$page['name'] . PHP_EOL;
 			else {
 				$text = preg_replace('/(\|\s*currentstatus\s*=\s*FA\s*)/u',
 					"$1|maindate=" . $page['date'] . "\n",
@@ -521,19 +522,26 @@ class Bot extends Snoopy {
 					-1,
 					$count);
 				if($count !== 1) {
-					echo 'Adding maindate failed for page ' . $page['name'] . PHP_EOL;
+					echo 'Adding maindate failed for page ' . $page['name'] .
+						PHP_EOL;
 					var_dump($text, $count);
 					// tell me that it failed
 					$this->writewp('User talk: Ucucha', array(
 						'kind' => 'appendtext',
-						'summary' => 'Failed to write maindate: ' . $page['name'],
-						'text' => 'I was unable to insert a <code>|maindate=</code> on the page [[Talk:' . $page['name'] . '. It is TFA on ' . $page['date'] . '. Thank you! ~~~~',
+						'summary' => 'Failed to write maindate: ' . 
+							$page['name'],
+						'text' => 'I was unable to insert a' .
+							'<code>|maindate=</code> on the page [[Talk:' .
+							$page['name'] . '. It is TFA on ' .
+							$page['date'] . '. Thank you! ~~~~',
+						'donotmarkasbot' => true,
 					));
 				}
 				else
 					$this->writewp('Talk:' . $page['name'], array(
 						'text' => $text,
-						'summary' => 'Bot edit: This page will appear as today\'s featured article in the near future',
+						'summary' => 'Bot edit: This page will appear as' . 
+							'today\'s featured article in the near future',
 					));
 			}
 			// get noms
@@ -582,7 +590,9 @@ class Bot extends Snoopy {
 						'|date=' . $page['date'] .
 						'|blurb=' . $page['blurb'] .
 						'}}',
-					'summary' => 'Bot edit: Notice that [[' . $page['name'] . ']] will appear as today\'s featured article in the near future',
+					'summary' => 'Bot edit: Notice that [[' . $page['name'] . 
+						']] will appear as today\'s featured article in the' .
+						' near future',
 					'kind' => 'appendtext',
 					'donotmarkasbot' => true,
 				));

@@ -1,6 +1,7 @@
 <?php
 define(PROCESS_PARAS_ERROR_FOUND, 0x1);
 // TODO: more effectively ignore Ctrl+P and stuff like that.
+// Fix function definitions in exec_file. Currently, they just do random stuff when executed outside the exec_file context.
 abstract class ExecuteHandler {
 	/* Class constants */
 	const EVALUATE_ERROR = 0x1;

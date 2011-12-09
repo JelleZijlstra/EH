@@ -523,6 +523,12 @@ class Bot extends Snoopy {
 				if($count !== 1) {
 					echo 'Adding maindate failed for page ' . $page['name'] . PHP_EOL;
 					var_dump($text, $count);
+					// tell me that it failed
+					$this->writewp('User talk: Ucucha', array(
+						'kind' => 'appendtext',
+						'summary' => 'Failed to write maindate: ' . $page['name'],
+						'text' => 'I was unable to insert a <code>|maindate=</code> on the page [[Talk:' . $page['name'] . '. It is TFA on ' . $page['date'] . '. Thank you! ~~~~',
+					));
 				}
 				else
 					$this->writewp('Talk:' . $page['name'], array(

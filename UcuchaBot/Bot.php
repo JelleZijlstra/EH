@@ -8,7 +8,7 @@ define(DEBUG, 0);
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/List.php');
 require_once(BPATH . '/UcuchaBot/Snoopy.class.php');
-function getbot($paras = '') {
+function getbot($paras = array()) {
 	if($paras['new'] === true)
 		return new Bot();
 	global $bot;
@@ -275,18 +275,21 @@ class Bot extends Snoopy {
 			array(
 				'text' => $wpfa, 
 				'summary' => "Bot: bolding today's featured article"
-			));
+			)
+		);
 		echo "Done" . PHP_EOL;
 		// update [[WP:FANMP]]. Perhaps replace this with a wholesale copying of WP:FA plus regex/other changes
 		$writepage = 'Wikipedia:Featured articles that haven\'t been on the Main Page';
 		$wpfanmp = $this->fetchwp($writepage);
 		$pattern = "/(?<=\n)·?\s*(''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?\s*/u";
-		$wpfa = preg_replace($pattern, '', $wpfanmp);
-		$this->writewp($writepage, 
-			array(
-				'text' => $wpfanmp, 
-				'summary' => "Bot: removing today's featured article"
-			));
+		$wpfanmp = preg_replace($pattern, '', $wpfanmp);
+// Task not yet approved.
+//		$this->writewp($writepage, 
+//			array(
+//				'text' => $wpfanmp, 
+//				'summary' => "Bot: removing today's featured article"
+//			)
+//		);
 		echo "Done" . PHP_EOL;
 		return true;
 	}

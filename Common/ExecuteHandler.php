@@ -1632,7 +1632,7 @@ abstract class ExecuteHandler {
 				'head' => 'MENU',
 				'printoptions' => false,
 				'helpcommand' => true,
-				'validfunction' => function($in) use(&$options) {
+				'validfunction' => function($in, $options) {
 					return in_array($in, $options);
 				},
 				'process' => array(),
@@ -1676,7 +1676,7 @@ abstract class ExecuteHandler {
 			if($paras['processcommand'])
 				$cmd = $paras['processcommand']($cmd);
 			// return command if valid
-			if($paras['validfunction']($cmd)) {
+			if($paras['validfunction']($cmd, $options)) {
 				if(array_key_exists($cmd, $paras['process'])) {
 					$paras['process'][$cmd]();
 				}

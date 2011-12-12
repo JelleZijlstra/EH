@@ -921,7 +921,7 @@ abstract class ListEntry extends ExecuteHandler {
 			$prop = substr($name, 3);
 			if(static::hasproperty($prop)) {
 				$new = $arguments[0];
-				if($new === NULL) {
+				if($new === NULL or $new === '') {
 					if($this->$prop) echo 'Current value: ' . $this->$prop . PHP_EOL;
 					$new = $this->getline(array('prompt' => 'New value: '));
 				}

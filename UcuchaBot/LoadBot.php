@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?
-require_once('../Common/common.php');
+require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/UcuchaBot/Bot.php');
 $bot = new Bot();
 // remove script name

@@ -4,7 +4,7 @@
  * Author: Smith609
  * License: PHP license
  */
-define(DEBUG, 0);
+define(DEBUG, 1);
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/List.php');
 require_once(BPATH . '/UcuchaBot/Snoopy.class.php');
@@ -54,6 +54,10 @@ class Bot extends Snoopy {
 			'execute' => 'callmethod'),
 		'do_fanmp_update' => array('name' => 'do_fanmp_update',
 			'desc' => 'Update [[WP:FANMP]]',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
+		'do_create_fa_logs' => array('name' => 'do_create_fa_logs',
+			'desc' => 'Create monthly FA logs',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 	);

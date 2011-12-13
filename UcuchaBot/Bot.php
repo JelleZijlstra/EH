@@ -672,15 +672,18 @@ class Bot extends Snoopy {
 	public function do_create_fa_logs() {
 		$date = new DateTime();
 		$month = $date->format('F Y');
-		$editsummary = 'Bot creating new monthly log page';
-		$deftext = "{{TOClimit|3}}\n==$month==";
 		$writeparas = array(
-			'text' => $deftext,
+			'text' => "{{TOClimit|3}}\n==$month==",
 			'abortifexists' => true,
-			'summary' => $editsummary,
+			'summary' => 'Bot creating new monthly log page',
 		);
 		$this->writewp('Wikipedia:Featured article candidates/Featured log/' . $month, $writeparas);
 		$this->writewp('Wikipedia:Featured article candidates/Archived nominations/' . $month, $writeparas);
+		$writeparas['text'] = "{{Featured list log}}\n{{TOClimit|3}}";
+		$this->writewp('Wikipedia:Featured list candidates/Featured log/' . $month, $writeparas);
+		$this->writewp('Wikipedia:Featured list candidates/Failed log/' . $month, $writeparas);
+		$writeparas['text'] = "{{Featured list log}}\n\n==Kept==\n\n==Delisted==";
+		$this->writewp('Wikipedia:Featured list removal candidates/log/' . $month, $writeparas);		
 		return true;
 	}
 	public function do_add_fa_stats() {

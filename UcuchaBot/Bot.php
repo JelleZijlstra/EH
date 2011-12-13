@@ -52,6 +52,10 @@ class Bot extends Snoopy {
 			'desc' => 'Get information about the TFA for a specific day',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
+		'do_fanmp_update' => array('name' => 'do_fanmp_update',
+			'desc' => 'Update [[WP:FANMP]]',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
 	);
 	/* Basic functionality */
 	function __construct() {
@@ -267,7 +271,7 @@ class Bot extends Snoopy {
 			return false;
 		}
 		echo "Done: ". $tfa . PHP_EOL;
-		echo "Editing $writepage..." . PHP_EOL;
+		echo "Editing $writepage... " . PHP_EOL;
 		$wpfa = $this->fetchwp($writepage);
 		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?)/";
 		$wpfa = preg_replace($pattern, "{{FA/BeenOnMainPage|$1}}", $wpfa);
@@ -277,20 +281,79 @@ class Bot extends Snoopy {
 				'summary' => "Bot: bolding today's featured article"
 			)
 		);
-		echo "Done" . PHP_EOL;
-		// update [[WP:FANMP]]. Perhaps replace this with a wholesale copying of WP:FA plus regex/other changes
-		$writepage = 'Wikipedia:Featured articles that haven\'t been on the Main Page';
-		$wpfanmp = $this->fetchwp($writepage);
-		$pattern = "/(?<=\n)·?\s*(''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?\s*/u";
-		$wpfanmp = preg_replace($pattern, '', $wpfanmp);
-// Task not yet approved.
-//		$this->writewp($writepage, 
-//			array(
-//				'text' => $wpfanmp, 
-//				'summary' => "Bot: removing today's featured article"
-//			)
-//		);
-		echo "Done" . PHP_EOL;
+		echo "done" . PHP_EOL;
+		return true;
+	}
+	public function do_fanmp_update() {
+	// update [[WP:FANMP]].
+		echo 'Updating WP:FANMP... ';
+		$writetitle = 'Wikipedia:Featured articles that haven\'t been on the Main Page';
+		$fetchtitle = 'Wikipedia:Featured articles';
+		// get input pages
+		$fetchpage = $this->fetchwp($fetchtitle);
+		$writepage = $this->fetchwp($writetitle);
+		// total articles not on main page
+		$totalnmp = 0;
+		// get header and footer for WP:FANMP
+		// == indicates first section of articles
+		$writeheader = substr($writepage, 0, strpos($writepage, '=='));
+		// |} ends list of articles
+		$writefooter = substr($writepage, strrpos($writepage, '|}'));
+		$writebody = '';
+		$falist = explode("\n", $fetchpage);
+		$inheader = true;
+		// number of FAs in current sublist
+		$currlist = 0;
+		// print the number of articles in a section; update totals
+		$printnumber = function() use(&$currlist, &$totalnmp, &$writebody) {
+			$totalnmp += $currlist;
+			if($currlist === 0) $writebody .= "'''None'''\n";
+			$writebody .= "<!-- $currlist -->\n\n";
+			$currlist = 0;
+		};
+		foreach($falist as $line) {
+			// ignore empty lines
+			if($line === '') continue;
+			// ignore header
+			if($inheader and $line[0] !== '=') continue;
+			// we got to the end
+			if($line === '|}') {
+				$printnumber();
+				break;
+			}
+			// ignore once that have been on the MP
+			if(strpos($line, 'FA/BeenOnMainPage') !== false) 
+				continue;
+			// if we're in the FA list and get a link, it's an FA
+			if(strpos($line, '[[') !== false)
+				$currlist++;
+			// section headers
+			if($line[0] === '=') {
+				if($inheader) 
+					$inheader = false;
+				else
+					$printnumber();
+			}
+			// add to body
+			$writebody .= $line . "\n";
+		}
+		// clean up
+		$writebody = preg_replace('/(?<===\n)· /u', '', $writebody);
+		// update total number
+		$writeheader = preg_replace(
+			"/(?<=''')[\d,]+(?=''' articles are listed here\.)/u",
+			number_format($totalnmp),
+			$writeheader
+		);
+		$writetext = $writeheader . $writebody . $writefooter;
+		// commit edit
+		$this->writewp($writepage,
+			array(
+				'text' => $writetext,
+				'summary' => "Bot: updating WP:FANMP"
+			)
+		);
+		echo "done" . PHP_EOL;
 		return true;
 	}
 	public function do_fl_bolding() {

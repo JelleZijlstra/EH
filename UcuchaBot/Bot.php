@@ -148,7 +148,7 @@ class Bot extends Snoopy {
 			return false;
 		}
 		if($pagetext and $paras['abortifexists']) {
-			echo 'Page' . $page . ' already exists, so aborting edit.' . PHP_EOL;
+			echo 'Page ' . $page . ' already exists, so aborting edit.' . PHP_EOL;
 			return false;
 		}
 		// prepare query
@@ -671,7 +671,7 @@ class Bot extends Snoopy {
 	}
 	public function do_create_fa_logs() {
 		$date = new DateTime();
-		$month = $date->format('m Y');
+		$month = $date->format('F Y');
 		$editsummary = 'Bot creating new monthly log page';
 		$deftext = "{{TOClimit|3}}\n==$month==";
 		$writeparas = array(

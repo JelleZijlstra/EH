@@ -1448,6 +1448,71 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$out = preg_replace(array("/\s\s/u", "/\.(?=,)/u", "/\.\./u"), array(" ", "", "."), $out);
 		return $out;
 	}
+	public function citebibtex() {
+		// lambda function to add a property to the output
+		$add = function($key, $value, $mandatory = false) use(&$out) {
+			if(is_null($value)) {
+				if($mandatory)
+					echo 'Bibtex error: required property ' . $key . ' is empty' . PHP_EOL;
+				return;
+			}
+			$out .= "\t" . $key . ' = "' . $value . "\",\n";
+		};
+		$out = '@';
+		switch($class = $this->cite_getclass()) {
+			case 'journal':
+				$out .= 'article';
+				break;
+			case 'book':
+				$out .= 'book';
+				break;
+			case 'chapter':
+				$out .= 'incollection';
+				break;
+			case 'thesis':
+				switch(substr($this->publisher, 0, 3)) {
+					case 'PhD': $out .= 'phdthesis'; break;
+					case 'MSc': $out .= 'mscthesis'; break;
+					case 'BSc': $out .= 'misc'; break;
+				}
+				break;
+			default:
+				$out .= 'misc';
+				break;
+		}
+		$out .= '{' . $this->getrefname() . ",\n";
+		$authors = preg_replace(
+			array("/\./u", "/;/u", "/\s+/u", "/\s\$/u"), 
+			array(". ", " and", " ", ""), 
+			$this->authors
+		);
+		// stuff that goes in every citation type
+		$add('author', $authors, true);
+		$add('year', $this->year, true);
+		$title = str_replace(
+			array('<i>', '</i>'), 
+			array('\textit{', '}'), 
+			$this->title
+		);
+		$add('title', $title, true);
+		switch($class) {
+			case 'thesis':
+				$add('school', substr($this->publisher, 12), true);
+				break;
+			case 'journal':
+				$add('journal', $this->journal, true);
+				$add('volume', $this->volume);
+				$add('number', $this->issue);
+				$add('pages', $this->start . '--' . $this->end);
+				break;
+			case 'book':
+				$add('publisher', $this->publisher, true);
+				$add('address', $this->location);
+				break;
+		}
+		$out .= '}';
+		return $out;
+	}
 	public function echocite($paras = '') {
 		$this->p->verbosecite = true;
 		echo PHP_EOL;

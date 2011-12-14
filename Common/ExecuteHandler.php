@@ -1595,6 +1595,22 @@ abstract class ExecuteHandler {
 					$this->stty("sane");
 					return $cmd;
 				// more cases for Ctrl stuff needed
+				case "\001": // Ctrl+A
+				case "\002": // Ctrl+B
+				case "\005": // Ctrl+E
+				case "\006": // Ctrl+F
+				case "\007": // Ctrl+G
+				case "\008": // Ctrl+H
+				case "\009": // Ctrl+I
+				case "\011": // Ctrl+K
+				case "\012": // Ctrl+L
+				case "\014": // Ctrl+N
+				case "\016": // Ctrl+P
+				case "\022": // Ctrl+V
+				case "\024": // Ctrl+Z
+				case "\027": // Ctrl+[
+				case "\029": // Ctrl+]
+					break;
 				default: // other characters: add to command
 					// temporary array to hold characters to be moved over
 					$tmp = array();

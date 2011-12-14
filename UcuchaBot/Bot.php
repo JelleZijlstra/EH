@@ -4,7 +4,7 @@
  * Author: Smith609
  * License: PHP license
  */
-define(DEBUG, 1);
+define(DEBUG, 0);
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/List.php');
 require_once(BPATH . '/UcuchaBot/Snoopy.class.php');
@@ -264,6 +264,7 @@ class Bot extends Snoopy {
 			return $out;
 	}
 	/* Bot tasks */
+	/* TFA */
 	public function do_fa_bolding() {
 		$writepage = 'Wikipedia:Featured articles';
 		$time = new DateTime();
@@ -287,278 +288,6 @@ class Bot extends Snoopy {
 		);
 		echo "done" . PHP_EOL;
 		return true;
-	}
-	public function do_fanmp_update() {
-	// update [[WP:FANMP]].
-		echo 'Updating WP:FANMP... ';
-		$writetitle = 'Wikipedia:Featured articles that haven\'t been on the Main Page';
-		$fetchtitle = 'Wikipedia:Featured articles';
-		// get input pages
-		$fetchpage = $this->fetchwp($fetchtitle);
-		$writepage = $this->fetchwp($writetitle);
-		// total articles not on main page
-		$totalnmp = 0;
-		// get header and footer for WP:FANMP
-		// == indicates first section of articles
-		$writeheader = substr($writepage, 0, strpos($writepage, '=='));
-		// |} ends list of articles
-		$writefooter = substr($writepage, strrpos($writepage, '|}'));
-		$writebody = '';
-		$falist = explode("\n", $fetchpage);
-		$inheader = true;
-		// number of FAs in current sublist
-		$currlist = 0;
-		// print the number of articles in a section; update totals
-		$printnumber = function() use(&$currlist, &$totalnmp, &$writebody) {
-			$totalnmp += $currlist;
-			if($currlist === 0) $writebody .= "'''None'''\n";
-			$writebody .= "<!-- $currlist -->\n\n";
-			$currlist = 0;
-		};
-		foreach($falist as $line) {
-			// ignore empty lines
-			if($line === '') continue;
-			// ignore header
-			if($inheader and $line[0] !== '=') continue;
-			// we got to the end
-			if($line === '|}') {
-				$printnumber();
-				break;
-			}
-			// ignore once that have been on the MP
-			if(strpos($line, 'FA/BeenOnMainPage') !== false) 
-				continue;
-			// if we're in the FA list and get a link, it's an FA
-			if(strpos($line, '[[') !== false)
-				$currlist++;
-			// section headers
-			if($line[0] === '=') {
-				if($inheader) 
-					$inheader = false;
-				else
-					$printnumber();
-			}
-			// add to body
-			$writebody .= $line . "\n";
-		}
-		// clean up
-		$writebody = preg_replace('/(?<===\n)· /u', '', $writebody);
-		// update total number
-		$writeheader = preg_replace(
-			"/(?<=''')[\d,]+(?=''' articles are listed here\.)/u",
-			number_format($totalnmp),
-			$writeheader
-		);
-		$writetext = $writeheader . $writebody . $writefooter;
-		// commit edit
-		$this->writewp($writepage,
-			array(
-				'text' => $writetext,
-				'summary' => "Bot: updating WP:FANMP"
-			)
-		);
-		echo "done" . PHP_EOL;
-		return true;
-	}
-	public function do_fl_bolding() {
-		$writepage = 'Wikipedia:Featured lists';
-		$time = new DateTime();
-		$date = $time->format('F j, Y');
-		echo $date . ": finding today's TFL..." . PHP_EOL;
-		$tfa = $this->fetchwp('Template:TFL title/' . $date);
-		if(!$tfa) {
-			echo "Could not find TFL name." . PHP_EOL;
-			return false;
-		}
-		echo "Done: ". $tfa . PHP_EOL;
-		echo "Editing $writepage..." . PHP_EOL;
-		$wpfa = $this->fetchwp($writepage);
-		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?)/";
-		$wpfa = preg_replace($pattern, "{{FA/BeenOnMainPage|$1}}", $wpfa);
-		$this->writewp($writepage, 
-			array(
-				'text' => $wpfa, 
-				'summary' => "Bot: bolding today's featured list"
-			));
-		echo "Done" . PHP_EOL;
-		return true;
-	}
-	private function setup_facs() {
-		global $FacsList;
-		if(!class_exists('FacsList') or !$FacsList instanceof FacsList) {
-			require_once(BPATH . '/UcuchaBot/Facs.php');
-			$FacsList = new FacsList();
-			$FacsList->update();
-		}
-	}
-	public function do_fac_maintenance() {
-		$this->setup_facs();
-		$this->do_wikicup_notice();
-		$this->do_move_marker();
-		global $FacsList;
-		$FacsList->saveifneeded();
-	}
-	public function do_wikicup_notice() {
-		global $FacsList;
-		// get WP:CUP and list of Cup participants
-		$date = new DateTime();
-		$year = $date->format('Y');
-		// WikiCup does not run in November or December, so do not add notices
-		$month = $date->format('n');
-		if($month > 10) {
-			return;
-		}
-		$wpcup = $this->fetchwp('Wikipedia:WikiCup/History/' . $year);
-		preg_match_all(
-			'/(?<=\{\{Wikipedia:WikiCup\/Participant2\|)[^\}]*(?=\}\})/u',
-			$wpcup,
-			$matches,
-			PREG_PATTERN_ORDER);
-		$cuppers = array();
-		foreach($matches[0] as $person)
-			$cuppers[] = $person;
-		// get FACs we need to check
-		$tocheck = $FacsList->bfind(array('checkedcup' => '/^$/'));
-		$cupnoms = array();
-		if(is_array($tocheck)) foreach($tocheck as $fac) {
-			$cupnoms[$fac->name] = array();
-			if(!is_array($fac->nominators)) {
-				echo 'No nominators for FAC ' . $fac->name . PHP_EOL;
-				continue;
-			}
-			foreach($fac->nominators as $nom) {
-				if(in_array($nom, $cuppers))
-					$cupnoms[$fac->name][] = $nom;
-			}
-			if(count($cupnoms[$fac->name]) > 0) {
-				$nomstring = '[[User:' . implode('|]], [[User:', 	$cupnoms[$fac->name]) . '|]]';
-				$msg = PHP_EOL . '{{subst:User:Ucucha/Cup|' . $nomstring . '}}';
-				$this->writewp(
-					$fac->name,
-					array('text' => $msg,
-						'summary' => 'Bot adding notice that this is a WikiCup nomination',
-						'kind' => 'appendtext',
-				));
-			}
-			$fac->checkedcup = true;
-		}
-	}
-	public function do_move_marker() {
-		global $FacsList;
-		$dt = new DateTime('-14 days');
-		$date = $dt->format('Ymd');
-		// get FAC that older noms needs to be above
-		$oldfacs = $FacsList->bfind(array('date' => '<' . $date, 'archived' => '/^$/', 'print' => false, 'printresult' => false));
-		if(!is_array($oldfacs) or count($oldfacs) === 0) return false;
-		$newlocobj = $FacsList->largest($oldfacs, 'id', array('return' => 'object'));
-		$newloc = $newlocobj->name;
-		// TODO
-		$fac = $this->fetchwp(FacsList::fac);
-		preg_match('/==\s*Older nominations\s*==\s*{{([^\}]*)/u', $fac, $matches);
-		$currloc = $matches[1];
-		if($currloc === $newloc) {
-			echo 'Marker does not need to be moved.' . PHP_EOL;
-			return true;
-		}
-		$fac = preg_replace(
-			array('/_/u',
-				'/ +(?=\n)/u',
-				'/(?<=\d)\s+(?=\}\})/u',
-				'/(?<=\n)\s*==\s*Older nominations\s*==\n/u',
-			),
-			array(' ',
-				'',
-				'',
-				'',
-			),
-			$fac);
-		// put in new line
-		$fac = preg_replace(
-			'/(?={{' . escape_regex($newloc) . '}})/u',
-			"\n== Older nominations ==\n",
-			$fac,
-			1,
-			$count);
-		if($count !== 1) {
-			echo 'Error: could not find new location' . PHP_EOL;
-			return false;
-		}
-		return $this->writewp(FacsList::fac, array(
-			'text' => $fac,
-			'summary' => 'Bot edit: Move marker'));
-	}
-	private function parse_ah($paras = array()) {
-	// parse an article's ArticleHistory template
-		//@para ['text'] text of article talk page
-		//@para ['page'] page to be checked. If ['text'] is given, this is disregarded, to avoid an unnecessary API call.
-		if(!isset($paras['text'])) {
-			$paras['text'] = $this->fetchwp('Talk:' . $paras['page']);
-			if(!isset($paras['text'])) {
-				echo 'Could not retrieve talk page.';
-				return false;
-			}
-		}
-		preg_match('/{{\s*ArticleHistory\s*([^}]*?)\s*}}/u', $paras['text'], $matches);
-		$ahtext = $matches[1];
-		if(!$ahtext) {
-			echo 'Could not retrieve AH template' . PHP_EOL;
-			return false;
-		}
-		$ahparas = array();
-		$split1 = explode('|', $ahtext);
-		foreach($split1 as $para) {
-			$split2 = explode('=', $para);
-			if(!is_array($split2)) continue;
-			switch(count($split2)) {
-				case 1: $ahparas[] = $split2[0]; break; // unnamed parameter
-				case 2: $ahparas[trim($split2[0])] = trim($split2[1]); break;
-			}
-		}
-		return $ahparas;
-	}
-	protected function gettfa($paras = array()) {
-	// get information about a TFA for a day
-	// @return Array with keys
-	// 'page' String page where the TFA is located
-	// 'name' String name of the TFA. Set to false if name cannot be located.
-	// 'date' String date of the TFA
-	// 'blurb' String TFA blurb
-		if(!isset($paras['base'])) 
-			$paras['base'] = 'Wikipedia:Today\'s featured article';
-		if($paras['rawdate']) {
-			$paras['date'] = new DateTime($paras['rawdate']);
-		}
-		if(!isset($paras['date'])) 
-			$paras['date'] = new DateTime();
-		else if(!$paras['date'] instanceof DateTime) {
-			echo __METHOD__ . ': date parameter is invalid' . PHP_EOL;
-			$paras['date'] = new DateTime();			
-		}
-		$newpage = array();
-		$newpage['page'] = $paras['base'] . '/' . $paras['date']->format(self::stddate);
-		$tfatext = $this->fetchwp($newpage['page']);
-		if(!$tfatext or strpos($tfatext, '{{TFAempty}}') !== false) // day hasn't been set yet
-			return false;
-		if(!preg_match(
-			// this regex based on the code for Anomiebot II
-			"/(?:'''|<b>)\s*\[\[\s*([^|\]]+?)\s*(?:\|[^]]+)?\]\]\s*('''|<\/b>)/u", 
-			$tfatext, 
-			$matches)) {
-			echo 'Error: could not retrieve TFA name from page ' . $tfapage . PHP_EOL;
-			$newpage['name'] = false;
-		}
-		else
-			$newpage['name'] = str_replace('&nbsp;', ' ', $matches[1]);
-		$newpage['date'] = $paras['date']->format(self::stddate);
-		$newpage['blurb'] = trim(preg_replace(
-			'/(Recently featured:|\{\{TFAfooter)[^\n]+(\n|$)/u',
-			'',
-			$tfatext));
-		if($paras['print']) {
-			foreach($newpage as $key => $value)
-				echo $key . ': ' . $value . PHP_EOL;
-		}
-		return $newpage;
 	}
 	public function do_mp_notice() {
 		$revnotifylimit = 90;
@@ -669,6 +398,199 @@ class Bot extends Snoopy {
 			}
 		}
 	}
+	public function do_fanmp_update() {
+	// update [[WP:FANMP]].
+		echo 'Updating WP:FANMP... ';
+		$writetitle = 'Wikipedia:Featured articles that haven\'t been on the Main Page';
+		$fetchtitle = 'Wikipedia:Featured articles';
+		// get input pages
+		$fetchpage = $this->fetchwp($fetchtitle);
+		$writepage = $this->fetchwp($writetitle);
+		// total articles not on main page
+		$totalnmp = 0;
+		// get header and footer for WP:FANMP
+		// == indicates first section of articles
+		$writeheader = substr($writepage, 0, strpos($writepage, '=='));
+		// |} ends list of articles
+		$writefooter = substr($writepage, strrpos($writepage, '|}'));
+		$writebody = '';
+		$falist = explode("\n", $fetchpage);
+		$inheader = true;
+		// number of FAs in current sublist
+		$currlist = 0;
+		// print the number of articles in a section; update totals
+		$printnumber = function() use(&$currlist, &$totalnmp, &$writebody) {
+			$totalnmp += $currlist;
+			if($currlist === 0) $writebody .= "'''None'''\n";
+			$writebody .= "<!-- $currlist -->\n\n";
+			$currlist = 0;
+		};
+		foreach($falist as $line) {
+			// ignore empty lines
+			if($line === '') continue;
+			// ignore header
+			if($inheader and $line[0] !== '=') continue;
+			// we got to the end
+			if($line === '|}') {
+				$printnumber();
+				break;
+			}
+			// ignore once that have been on the MP
+			if(strpos($line, 'FA/BeenOnMainPage') !== false) 
+				continue;
+			// if we're in the FA list and get a link, it's an FA
+			if(strpos($line, '[[') !== false)
+				$currlist++;
+			// section headers
+			if($line[0] === '=') {
+				if($inheader) 
+					$inheader = false;
+				else
+					$printnumber();
+			}
+			// add to body
+			$writebody .= $line . "\n";
+		}
+		// clean up
+		$writebody = preg_replace('/(?<===\n)· /u', '', $writebody);
+		// update total number
+		$writeheader = preg_replace(
+			"/(?<=''')[\d,]+(?=''' articles are listed here\.)/u",
+			number_format($totalnmp),
+			$writeheader
+		);
+		$writetext = $writeheader . $writebody . $writefooter;
+		// commit edit
+		$this->writewp($writepage,
+			array(
+				'text' => $writetext,
+				'summary' => "Bot: updating WP:FANMP"
+			)
+		);
+		echo "done" . PHP_EOL;
+		return true;
+	}
+	public function do_fl_bolding() {
+		$writepage = 'Wikipedia:Featured lists';
+		$time = new DateTime();
+		$date = $time->format('F j, Y');
+		echo $date . ": finding today's TFL..." . PHP_EOL;
+		$tfa = $this->fetchwp('Template:TFL title/' . $date);
+		if(!$tfa) {
+			echo "Could not find TFL name." . PHP_EOL;
+			return false;
+		}
+		echo "Done: ". $tfa . PHP_EOL;
+		echo "Editing $writepage..." . PHP_EOL;
+		$wpfa = $this->fetchwp($writepage);
+		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?)/";
+		$wpfa = preg_replace($pattern, "{{FA/BeenOnMainPage|$1}}", $wpfa);
+		$this->writewp($writepage, 
+			array(
+				'text' => $wpfa, 
+				'summary' => "Bot: bolding today's featured list"
+			));
+		echo "Done" . PHP_EOL;
+		return true;
+	}
+	/* FAC */
+	public function do_fac_maintenance() {
+		$this->setup_facs();
+		$this->do_wikicup_notice();
+		$this->do_move_marker();
+		global $FacsList;
+		$FacsList->saveifneeded();
+	}
+	public function do_wikicup_notice() {
+		global $FacsList;
+		// get WP:CUP and list of Cup participants
+		$date = new DateTime();
+		$year = $date->format('Y');
+		// WikiCup does not run in November or December, so do not add notices
+		$month = $date->format('n');
+		if($month > 10) {
+			return;
+		}
+		$wpcup = $this->fetchwp('Wikipedia:WikiCup/History/' . $year);
+		preg_match_all(
+			'/(?<=\{\{Wikipedia:WikiCup\/Participant2\|)[^\}]*(?=\}\})/u',
+			$wpcup,
+			$matches,
+			PREG_PATTERN_ORDER);
+		$cuppers = array();
+		foreach($matches[0] as $person)
+			$cuppers[] = $person;
+		// get FACs we need to check
+		$tocheck = $FacsList->bfind(array('checkedcup' => '/^$/'));
+		$cupnoms = array();
+		if(is_array($tocheck)) foreach($tocheck as $fac) {
+			$cupnoms[$fac->name] = array();
+			if(!is_array($fac->nominators)) {
+				echo 'No nominators for FAC ' . $fac->name . PHP_EOL;
+				continue;
+			}
+			foreach($fac->nominators as $nom) {
+				if(in_array($nom, $cuppers))
+					$cupnoms[$fac->name][] = $nom;
+			}
+			if(count($cupnoms[$fac->name]) > 0) {
+				$nomstring = '[[User:' . implode('|]], [[User:', 	$cupnoms[$fac->name]) . '|]]';
+				$msg = PHP_EOL . '{{subst:User:Ucucha/Cup|' . $nomstring . '}}';
+				$this->writewp(
+					$fac->name,
+					array('text' => $msg,
+						'summary' => 'Bot adding notice that this is a WikiCup nomination',
+						'kind' => 'appendtext',
+				));
+			}
+			$fac->checkedcup = true;
+		}
+	}
+	public function do_move_marker() {
+		global $FacsList;
+		$dt = new DateTime('-14 days');
+		$date = $dt->format('Ymd');
+		// get FAC that older noms needs to be above
+		$oldfacs = $FacsList->bfind(array('date' => '<' . $date, 'archived' => '/^$/', 'print' => false, 'printresult' => false));
+		if(!is_array($oldfacs) or count($oldfacs) === 0) return false;
+		$newlocobj = $FacsList->largest($oldfacs, 'id', array('return' => 'object'));
+		$newloc = $newlocobj->name;
+		// TODO
+		$fac = $this->fetchwp(FacsList::fac);
+		preg_match('/==\s*Older nominations\s*==\s*{{([^\}]*)/u', $fac, $matches);
+		$currloc = $matches[1];
+		if($currloc === $newloc) {
+			echo 'Marker does not need to be moved.' . PHP_EOL;
+			return true;
+		}
+		$fac = preg_replace(
+			array('/_/u',
+				'/ +(?=\n)/u',
+				'/(?<=\d)\s+(?=\}\})/u',
+				'/(?<=\n)\s*==\s*Older nominations\s*==\n/u',
+			),
+			array(' ',
+				'',
+				'',
+				'',
+			),
+			$fac);
+		// put in new line
+		$fac = preg_replace(
+			'/(?={{' . escape_regex($newloc) . '}})/u',
+			"\n== Older nominations ==\n",
+			$fac,
+			1,
+			$count);
+		if($count !== 1) {
+			echo 'Error: could not find new location' . PHP_EOL;
+			return false;
+		}
+		return $this->writewp(FacsList::fac, array(
+			'text' => $fac,
+			'summary' => 'Bot edit: Move marker'));
+	}
+	/* Miscellaneous FA */
 	public function do_create_fa_logs() {
 		$date = new DateTime();
 		$month = $date->format('F Y');
@@ -742,5 +664,87 @@ class Bot extends Snoopy {
 		));
 		$newtext = maketemplate('subst:User:UcuchaBot/FAS line', $tparas);
 		echo $newtext . PHP_EOL;
+	}
+	/* Helper methods */
+	private function parse_ah($paras = array()) {
+	// parse an article's ArticleHistory template
+		//@para ['text'] text of article talk page
+		//@para ['page'] page to be checked. If ['text'] is given, this is disregarded, to avoid an unnecessary API call.
+		if(!isset($paras['text'])) {
+			$paras['text'] = $this->fetchwp('Talk:' . $paras['page']);
+			if(!isset($paras['text'])) {
+				echo 'Could not retrieve talk page.';
+				return false;
+			}
+		}
+		preg_match('/{{\s*ArticleHistory\s*([^}]*?)\s*}}/u', $paras['text'], $matches);
+		$ahtext = $matches[1];
+		if(!$ahtext) {
+			echo 'Could not retrieve AH template' . PHP_EOL;
+			return false;
+		}
+		$ahparas = array();
+		$split1 = explode('|', $ahtext);
+		foreach($split1 as $para) {
+			$split2 = explode('=', $para);
+			if(!is_array($split2)) continue;
+			switch(count($split2)) {
+				case 1: $ahparas[] = $split2[0]; break; // unnamed parameter
+				case 2: $ahparas[trim($split2[0])] = trim($split2[1]); break;
+			}
+		}
+		return $ahparas;
+	}
+	private function gettfa($paras = array()) {
+	// get information about a TFA for a day
+	// @return Array with keys
+	// 'page' String page where the TFA is located
+	// 'name' String name of the TFA. Set to false if name cannot be located.
+	// 'date' String date of the TFA
+	// 'blurb' String TFA blurb
+		if(!isset($paras['base'])) 
+			$paras['base'] = 'Wikipedia:Today\'s featured article';
+		if($paras['rawdate']) {
+			$paras['date'] = new DateTime($paras['rawdate']);
+		}
+		if(!isset($paras['date'])) 
+			$paras['date'] = new DateTime();
+		else if(!$paras['date'] instanceof DateTime) {
+			echo __METHOD__ . ': date parameter is invalid' . PHP_EOL;
+			$paras['date'] = new DateTime();			
+		}
+		$newpage = array();
+		$newpage['page'] = $paras['base'] . '/' . $paras['date']->format(self::stddate);
+		$tfatext = $this->fetchwp($newpage['page']);
+		if(!$tfatext or strpos($tfatext, '{{TFAempty}}') !== false) // day hasn't been set yet
+			return false;
+		if(!preg_match(
+			// this regex based on the code for Anomiebot II
+			"/(?:'''|<b>)\s*\[\[\s*([^|\]]+?)\s*(?:\|[^]]+)?\]\]\s*('''|<\/b>)/u", 
+			$tfatext, 
+			$matches)) {
+			echo 'Error: could not retrieve TFA name from page ' . $tfapage . PHP_EOL;
+			$newpage['name'] = false;
+		}
+		else
+			$newpage['name'] = str_replace('&nbsp;', ' ', $matches[1]);
+		$newpage['date'] = $paras['date']->format(self::stddate);
+		$newpage['blurb'] = trim(preg_replace(
+			'/(Recently featured:|\{\{TFAfooter)[^\n]+(\n|$)/u',
+			'',
+			$tfatext));
+		if($paras['print']) {
+			foreach($newpage as $key => $value)
+				echo $key . ': ' . $value . PHP_EOL;
+		}
+		return $newpage;
+	}
+	private function setup_facs() {
+		global $FacsList;
+		if(!class_exists('FacsList') or !$FacsList instanceof FacsList) {
+			require_once(BPATH . '/UcuchaBot/Facs.php');
+			$FacsList = new FacsList();
+			$FacsList->update();
+		}
 	}
 }

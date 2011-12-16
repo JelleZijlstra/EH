@@ -42,7 +42,11 @@ switch($argv[1]) {
 	case 'diff': diff($catalog); break;
 	case 'findcode': findcode($argv[2]); break;
 	case 'test': break;
-	default: mydie('Invalid argument');
+	default:
+		// execute arguments as command
+		array_shift($argv);
+		$csvlist->execute(implode(' ', $argv));
+		break;
 }
 if($csvlist) $csvlist->saveifneeded();
 ?>

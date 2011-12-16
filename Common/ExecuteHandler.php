@@ -70,8 +70,6 @@ abstract class ExecuteHandler {
 	private $evaluate_ret = 0;
 	// currently handled files
 	protected $current; 
-	// set to true to try additional stuff in expand_cmd
-	protected $trystatic; 
 	// array of codes that can be given in the 'execute' field of a command, and 
 	// descriptions
 	private static $handlers = array(
@@ -189,12 +187,6 @@ abstract class ExecuteHandler {
 		if($commands) foreach($commands as $command) {
 			$this->addcommand($command);
 		}
-		if($this->trystatic) {
-			foreach(static::${get_called_class() . '_commands'} as $cmd) {
-				if($cmd['aka']) foreach($cmd['aka'] as $aka)
-					static::${get_called_class() . '_synonyms'}[$aka] = $cmd['name'];
-			}
-		}
 	}
 	public function addcommand($command) {
 	// adds a command to the object's library
@@ -228,23 +220,6 @@ abstract class ExecuteHandler {
 			}
 		}
 		$this->commands[$command['name']] = $command;
-		return true;
-	}
-	static public function addstaticcommand($command, $paras = '') {
-		if(static::${get_called_class() . '_commands'}[$command['name']]) {
-			if(!$paras['ignoreduplicates']) trigger_error('Command ' . $command['name'] . ' already exists', E_USER_NOTICE);
-			return false;
-		}
-		if(!self::testcommand($command)) return false;
-		if($command['aka']) {
-			foreach($command['aka'] as $aka) {
-				if(static::${get_called_class() . '_synonyms'}[$aka])
-					trigger_error('Error: ' . $aka . ' already exists as a synonym for ' . static::${get_called_class() . '_synonyms'}[$aka], E_USER_NOTICE);
-				else
-					static::${get_called_class() . '_synonyms'}[$aka] = $command['name'];
-			}
-		}
-		static::${get_called_class() . '_commands'}[$command['name']] = $command;
 		return true;
 	}
 	static private function testcommand($command) {
@@ -1043,11 +1018,6 @@ abstract class ExecuteHandler {
 		$cmd = $this->synonyms[$in] ?: ($this->commands[$in] ? $in : false);
 		if($cmd) 
 			return $this->commands[$cmd];
-		// should we try for static commands?
-		if(!$this->trystatic) 
-			return false;
-		$cmd = static::${get_called_class() . '_synonyms'}[$in] ?: (static::${get_called_class() . '_commands'}[$in] ? $in : false);
-		return $cmd ? static::${get_called_class() . '_commands'}[$cmd] : false;
 	}
 	static public function remove_quotes($in) {
 	// TODO: replace this and execute()s functionality so we'll be able to do all this in divide_command(). This will fail with weirdly quoted strings.
@@ -1269,35 +1239,18 @@ abstract class ExecuteHandler {
 		}
 	}
 	private function listcommands() {
-		echo 'Dynamic commands:' . PHP_EOL;
+		echo 'Commands:' . PHP_EOL;
 		foreach($this->commands as $command => $content)
 			echo "\t" . $command . PHP_EOL;
-		if($this->trystatic) {
-			echo 'Static commands:' . PHP_EOL;
-			foreach(static::${get_called_class() . '_commands'} as $command => $content) {
-				echo "\t" . $command . PHP_EOL;
-			}
-		}
-		echo 'Dynamic synonyms:' . PHP_EOL;
+		echo 'Synonyms:' . PHP_EOL;
 		foreach($this->synonyms as $from => $to)
 			echo "\t" . $from . ' -> ' . $to . PHP_EOL;
-		if($this->trystatic) {
-			echo 'Static synonyms:' . PHP_EOL;
-			foreach(static::${get_called_class() . '_synonyms'} as $from => $to)
-				echo "\t" . $from . ' -> ' . $to . PHP_EOL; 
-		}
 	}
 	protected function hascommand($cmd) {
 		if($this->commands[$cmd])
 			return true;
 		if($this->synonyms[$cmd])
 			return true;
-		if($this->trystatic) {
-			if(static::${get_called_class() . '_commands'}[$cmd])
-				return true;
-			if(static::${get_called_class() . '_synonyms'}[$cmd])
-				return true;
-		}
 		return false;
 	}
 	static protected function testregex($in) {

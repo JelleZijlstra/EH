@@ -2110,7 +2110,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		// get rid of occasional text above relevant info
 		$head = preg_replace("/^.*\n\n/", "", $head);
 		// split into fields
-		$head = preg_split("/( Author\(s\): | Source: | Published by: | Stable URL: |( \.)? Accessed: )/", $head);
+		$head = preg_split("/( Author\(s\): |\s*(Reviewed work\(s\):.*)?Source: | Published by: | Stable URL: |( \.)? Accessed: )/", $head);
 		// handle the easy ones
 		$this->title = $head[0];
 		$this->doi = '10.2307/' . substr($head[4], 28);

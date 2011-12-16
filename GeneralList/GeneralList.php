@@ -103,7 +103,6 @@ class {$classname}Entry extends ListEntry {
 		}
 		fwrite($outclass,
 "	public function __construct(\$in = '', \$code = '') {
-		\$this->trystatic = true;
 		global \${self::\$parentlist};
 		if(!\${self::\$parentlist}) \$this->p = \${self::\$parentlist};
 		switch(\$code) {

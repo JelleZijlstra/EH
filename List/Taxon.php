@@ -29,7 +29,6 @@ class Taxon extends ListEntry {
 	function __construct($in, $code) {
 	// $in: input data (array or string)
 	// $code: kind of FullFile to make
-		$this->trystatic = true;
 		if(!self::$Taxon_synonyms) {
 			foreach(self::$Taxon_commands as $cmd) {
 				if($cmd['aka']) foreach($cmd['aka'] as $aka) {

@@ -83,7 +83,6 @@ class FacsEntry extends ListEntry {
 	public $isnew; // Bool used internally; whether it was found on current update()
 	public $id; // ID on FAC
 	public function __construct($in = '', $code = '') {
-		$this->trystatic = true;
 		global ${self::$parentlist};
 		if(!${self::$parentlist}) $this->p = ${self::$parentlist};
 		switch($code) {

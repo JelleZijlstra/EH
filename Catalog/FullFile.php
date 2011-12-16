@@ -2382,14 +2382,15 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			));
 			switch($cmd) {
 				case 'y':
-					// BioOne
-					if($jvp || $jparas || $swnat || $wnanat || $mammstudy || $jpaleont || $jmamm) $doi = preg_replace(array("/^.*\/doi\/(abs|pdf|full)\//", "/\?.*$/"), array("", ""), $result->link);
-					// ReferenceGlobal
-					else if($mammalia) $doi = preg_replace("/^.*\/doi\/(abs|url|pdfplusdirect)\//", "", $result->link);
-					// Wiley
-					else if ($bioljlinnsoc || $bioljlinnsoc2 || $mammreview || $jbiogeogr || $ajpa || $zooljlinnsoc) $doi = preg_replace("/^.*\/doi\/|\/(abstract|full|pdf)$/", "", $result->link);
-					$this->doi = trim($doi);
-					return $this->expanddoi();
+					$doi = preg_replace(array("/^.*\/doi\/(abs|pdf|full|url|pdfplusdirect)?\/?/", "/(\?.*|\/(abstract|full|pdf))$/"), array("", ""), $result->link);
+					if($doi === $result->link) {
+						$this->url = $result->link;
+						return true;
+					}
+					else {
+						$this->doi = trim($doi);
+						return $this->expanddoi();
+					}
 				case 'q': 
 					return false;
 				case 'n': 

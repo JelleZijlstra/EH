@@ -2310,8 +2310,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	private function trydoi() {
 		if(preg_match_all("/(doi|DOI)\s*(\/((full|abs|pdf)\/)?|:|\.org\/)?\s*(?!URL:)([^\s]*?),?\s/su", $this->pdfcontent, $matches)) {
 			echo "Detected possible DOI." . PHP_EOL;
-			foreach($matches as $match) {
-				$doi = trimdoi($match[5]);
+			foreach($matches[5] as $match) {
+				$doi = trimdoi($match);
 				// PNAS tends to return this
 				if(preg_match('/^10.\d{4}\/?$/', $doi))
 					$doi = preg_replace("/.*?10\.(\d{4})\/? ([^\s]+).*/s", "10.$1/$2", $this->pdfcontent);
@@ -2354,9 +2354,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$search .= urlencode(" site:wiley.com");
 		// fetch data
 		$cjson = self::fetchgoogle($search);
-		if(($cjson === false) 
-			or !isset($cjson->items) 
-			or !is_array($cjson->items)) {
+		if($cjson === false) {
 			// we didn't find anything
 			echo "Could not find any results in Google" . PHP_EOL;
 			return false;
@@ -2402,11 +2400,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			}
 		}
 	}
-	private function googletitle($title = '') {
+	private static function googletitle($title = '') {
 		if(!$title) $title = $this->title;
 		return urlencode(preg_replace("/\(|\)|;|-+\\/(?=\s)|(?<=\s)-+|<\/?i>/", "", $title));
 	}
-	private function fetchgoogle($search) {
+	private static function fetchgoogle($search) {
 		// get data from Google
 		$url = "https://www.googleapis.com/customsearch/v1?key=" . GOOGLEKEY . "&cx=" . GOOGLECUS . "&q=" . $search;
 		$json = @file_get_contents($url);
@@ -2421,8 +2419,10 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			return false;
 		}
 		// this means we got good input, but found no results in Google
-		if(!$cjson->items or !is_array($csjon->items))
-			return NULL;
+		if((!isset($cjson->items)) or (!is_array($cjson->items))) {
+			echo "Could not find anything in Google." . PHP_EOL;
+			return false;
+		}
 		return $cjson;
 	}
 	private function doiamnhinput() {
@@ -2894,9 +2894,7 @@ Content-Disposition: attachment
 	}
 	/* PROGRAMMING HELPS */
 	public function test() {
-		$this->putpdfcontent();
-		var_dump($this->trype());
-		$this->my_inform();
+		self::fetchgoogle("test");
 	}
 }
 ?>

@@ -2400,7 +2400,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			}
 		}
 	}
-	private static function googletitle($title = '') {
+	private function googletitle($title = '') {
 		if(!$title) $title = $this->title;
 		return urlencode(preg_replace("/\(|\)|;|-+\\/(?=\s)|(?<=\s)-+|<\/?i>/", "", $title));
 	}

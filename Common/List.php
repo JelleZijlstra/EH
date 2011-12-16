@@ -71,6 +71,10 @@ abstract class FileList extends ExecuteHandler {
 			'desc' => 'Print statistics about the library',
 			'arg' => '"-f" will also print the number of files in each folder',
 			'execute' => 'callmethod'),
+		'execute_all' => array('name' => 'execute_all',
+			'desc' => 'Execute a command on all list entries',
+			'arg' => 'Command',
+			'execute' => 'callmethodarg'),
 	);
 	public function __construct($commands = array()) {
 		echo "processing CSV catalog... ";
@@ -196,7 +200,7 @@ abstract class FileList extends ExecuteHandler {
 				echo 'File does not exist' . PHP_EOL;
 		}
 	}
-	public function doall($func, $paras = '') {
+	public function doall($func, $paras = array()) {
 	// $paras['continueiffalse']: whether we go on with the next one if function returns false
 		if(!method_exists(static::$childclass, $func)) {
 			echo 'Method does not exist: ' . $func . PHP_EOL;
@@ -208,6 +212,19 @@ abstract class FileList extends ExecuteHandler {
 			else
 				if(!$file->$func()) return;
 		}
+	}
+	public function execute_all($cmd, $paras = array()) {
+	// execute a command on all files in the list
+		foreach($this->c as $file) {
+			try {
+				$file->execute($cmd);
+			}
+			catch(EHException $e) {
+				echo $e;
+				return false;
+			}
+		}
+		return true;
 	}
 	public function doone($func) {
 	// wrapper function for various utilities that do the following: get a filename and call function FullFile::$function() on it

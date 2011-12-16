@@ -330,7 +330,7 @@ class Bot extends Snoopy {
 						'kind' => 'appendtext',
 						'summary' => 'Failed to write maindate: ' . 
 							$page['name'],
-						'text' => 'I was unable to insert a' .
+						'text' => 'I was unable to insert a ' .
 							'<code>|maindate=</code> on the page [[Talk:' .
 							$page['name'] . '. It is TFA on ' .
 							$page['date'] . '. Thank you! ~~~~',
@@ -340,7 +340,7 @@ class Bot extends Snoopy {
 				else
 					$this->writewp('Talk:' . $page['name'], array(
 						'text' => $text,
-						'summary' => 'Bot edit: This page will appear as' . 
+						'summary' => 'Bot edit: This page will appear as ' . 
 							'today\'s featured article in the near future',
 					));
 			}
@@ -391,8 +391,8 @@ class Bot extends Snoopy {
 						'|blurb=' . $page['blurb'] .
 						'}}',
 					'summary' => 'Bot edit: Notice that [[' . $page['name'] . 
-						']] will appear as today\'s featured article in the' .
-						' near future',
+						']] will appear as today\'s featured article in the ' .
+						'near future',
 					'kind' => 'appendtext',
 					'donotmarkasbot' => true,
 				));

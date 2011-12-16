@@ -872,7 +872,7 @@ abstract class ExecuteHandler {
 						// short-form or long-form?
 						if(!isset($arg[$i++])) {
 							throw new EHException(
-								"Unexpected - in command $in",
+								"Unexpected -",
 								EHException::E_RECOVERABLE);
 						}
 						// long form
@@ -882,7 +882,7 @@ abstract class ExecuteHandler {
 							for( ; $arg[$i] !== '='; $i++) {
 								if($i === $len) {
 									throw new EHException(
-										"Unexpected end of command while in parameter name in command $in",
+										"Unexpected end of command while in parameter name",
 										EHException::E_RECOVERABLE
 									);
 								}
@@ -894,7 +894,7 @@ abstract class ExecuteHandler {
 							for( ; $arg[$i] !== ' ' and $i < $len; $i++) {
 								if(in_array($arg[$i], array('=', '"', "'"))) {
 									throw new EHException(
-										"Unexpected {$arg[$i]} in command $in",
+										"Unexpected {$arg[$i]}",
 										EHException::E_RECOVERABLE);
 								}
 								$paras[$arg[$i]] = true;
@@ -921,7 +921,7 @@ abstract class ExecuteHandler {
 						for( ; ; $i++) {
 							if($i === $len) {
 								throw new EHException(
-									"Unexpected end of command while in single-quoted string in command $in",
+									"Unexpected end of command while in single-quoted string",
 									EHException::E_RECOVERABLE
 								);
 							}
@@ -936,7 +936,7 @@ abstract class ExecuteHandler {
 						for( ; ; $i++) {
 							if($i === $len) {
 								throw new EHException(
-									"Unexpected end of command while in double-quoted string in command $in",
+									"Unexpected end of command while in double-quoted string",
 									EHException::E_RECOVERABLE
 								);
 							}

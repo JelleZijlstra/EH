@@ -866,8 +866,6 @@ abstract class ExecuteHandler {
 						if($key === 0)
 							$paras[0] .= ' ';
 						$key = 0;
-						// decrement $i temporarily to make this work with arguments at beginning of string
-						//$i--;
 					}
 					// handle parameter names
 					else if($arg[$i] === '-' and ($i === 0 or $arg[$i-1] === ' ')) {
@@ -1322,7 +1320,12 @@ abstract class ExecuteHandler {
 			if($this->config['debug']) 
 				echo "Feeding command (" . $this->curr('pc') . "): " . 
 					$this->curr('pcres') . PHP_EOL;
-			$ret = $this->execute();
+			try {
+				$ret = $this->execute();
+			}
+			catch(EHException $e) {
+				echo "Error '" . $e->getMessage() . "' occurred while executing command '" . $in . "'" . PHP_EOL;
+			}
 			switch($ret) {
 				case self::EXECUTE_NEXT: 
 					$this->pcinc(); 

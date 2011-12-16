@@ -86,7 +86,6 @@ class FullFile extends ListEntry {
 	public function __construct($in = '', $code = '') {
 	// $in: input data (array or string)
 	// $code: kind of FullFile to make
-		$this->trystatic = true;
 		global $csvlist;
 		if($csvlist) $this->p = $csvlist;
 		if(!$code) return;

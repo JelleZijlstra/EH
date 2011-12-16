@@ -1018,6 +1018,7 @@ abstract class ExecuteHandler {
 		$cmd = $this->synonyms[$in] ?: ($this->commands[$in] ? $in : false);
 		if($cmd) 
 			return $this->commands[$cmd];
+		return false;
 	}
 	static public function remove_quotes($in) {
 	// TODO: replace this and execute()s functionality so we'll be able to do all this in divide_command(). This will fail with weirdly quoted strings.

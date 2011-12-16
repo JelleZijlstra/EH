@@ -5,6 +5,7 @@
  * License: PHP license
  */
 define(DEBUG, 0);
+error_reporting(E_ALL);
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/List.php');
 require_once(BPATH . '/UcuchaBot/Snoopy.class.php');
@@ -37,7 +38,7 @@ class Bot extends Snoopy {
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 		'do_fac_maintenance' => array('name' => 'do_fac_maintenance',
-			'desc' => 'Add WikiCup notices to new FACs (UcuchaBot proposed task 2)',
+			'desc' => 'Perform a series of FAC maintenance tasks',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 		'do_mp_notice' => array('name' => 'do_mp_notice',

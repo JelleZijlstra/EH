@@ -309,6 +309,7 @@ class Bot extends Snoopy {
 		file_put_contents($datefile, $date->format(self::stddate));
 		// HANDLE EACH PAGE
 		foreach($pages as $page) {
+			echo "Notifying contributors for page " . $page . PHP_EOL;
 			$notifiedusers = array(); // users to notify
 			//edit TFA talk page
 			$talkpage = $this->fetchwp('Talk:' . $page['name']);
@@ -382,6 +383,7 @@ class Bot extends Snoopy {
 					$notifiedusers[$user] = true;
 			}
 			//notify users
+			echo "Notifying " . count($notifiedusers) . " users: " . implode(' ', $notifiedusers) . PHP_EOL;
 			foreach($notifiedusers as $user => $bool) {
 				if(!$bool) continue;
 				$this->writewp('User talk:' . $user, array(

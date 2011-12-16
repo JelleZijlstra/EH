@@ -2308,27 +2308,28 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return false;
 	}
 	private function trydoi() {
-		if(preg_match("/(doi|DOI)\s*(\/((full|abs|pdf)\/)?|:|\.org\/)?\s*(?!URL:)([^\s]*?),?\s/su", $this->pdfcontent, $doi)) {
+		if(preg_match_all("/(doi|DOI)\s*(\/((full|abs|pdf)\/)?|:|\.org\/)?\s*(?!URL:)([^\s]*?),?\s/su", $this->pdfcontent, $matches)) {
 			echo "Detected possible DOI." . PHP_EOL;
-			$doi = trimdoi($doi[5]);
-			// PNAS tends to return this
-			if(preg_match('/^10.\d{4}\/?$/', $doi))
-				$doi = preg_replace("/.*?10\.(\d{4})\/? ([^\s]+).*/s", "10.$1/$2", $this->pdfcontent);
-			// Elsevier accepted manuscripts
-			if(in_array($doi, array("Reference:", "Accepted Manuscript"))) {
-				preg_match("/Accepted date: [^\s]+ ([^\s]+)/s", $this->pdfcontent, $doi);
-				$doi = $doi[1];
-			}
-			// get rid of false positive DOIs containing only letters or numbers, or containing line breaks
-			if($doi && !preg_match("/^([a-z\(\)]*|\d*)$/", $doi) && !preg_match("/\n/", $doi)) {
-				// remove final period
-				$this->doi = preg_replace("/\.$/", "", $doi);
-				echo "Found DOI: $this->doi" . PHP_EOL;
-				return $this->expanddoi();
-			}
-			else {
-				echo "Could not find DOI: $doi." . PHP_EOL;
-				return false;
+			foreach($matches as $match) {
+				$doi = trimdoi($match[5]);
+				// PNAS tends to return this
+				if(preg_match('/^10.\d{4}\/?$/', $doi))
+					$doi = preg_replace("/.*?10\.(\d{4})\/? ([^\s]+).*/s", "10.$1/$2", $this->pdfcontent);
+				// Elsevier accepted manuscripts
+				if(in_array($doi, array("Reference:", "Accepted Manuscript"))) {
+					preg_match("/Accepted date: [^\s]+ ([^\s]+)/s", $this->pdfcontent, $doi);
+					$doi = $doi[1];
+				}
+				// get rid of false positive DOIs containing only letters or numbers, or containing line breaks
+				if($doi && !preg_match("/^([a-z\(\)]*|\d*)$/", $doi) && !preg_match("/\n/", $doi)) {
+					// remove final period
+					$this->doi = preg_replace("/\.$/", "", $doi);
+					echo "Found DOI: $this->doi" . PHP_EOL;
+					return $this->expanddoi();
+				}
+				else {
+					echo "Could not find DOI: $doi." . PHP_EOL;
+				}
 			}
 		}
 		return false;

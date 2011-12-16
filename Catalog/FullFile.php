@@ -79,10 +79,6 @@ class FullFile extends ListEntry {
 			'desc' => 'Format the file',
 			'arg' => 'None required',
 			'execute' => 'callmethod'),
-		'test' => array('name' => 'test',
-			'desc' => 'Testing stuff',
-			'arg' => 'None',
-			'execute' => 'callmethod'),
 	);
 	static $FullFile_synonyms = array();
 	protected static $arrays_to_check = array('ids', 'comm', 'bools');

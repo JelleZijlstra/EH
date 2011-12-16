@@ -24,5 +24,4 @@ switch($argv[1]) {
 		$csvlist->execute(implode(' ', $argv));
 		break;
 }
-if($csvlist) $csvlist->saveifneeded();
 ?>

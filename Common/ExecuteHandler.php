@@ -1,5 +1,6 @@
 <?php
 define(PROCESS_PARAS_ERROR_FOUND, 0x1);
+require_once(BPATH . "/Common/EHException.php");
 // TODO: more effectively ignore Ctrl+P and stuff like that.
 // Fix function definitions in exec_file. Currently, they just do random stuff when executed outside the exec_file context.
 abstract class ExecuteHandler {
@@ -128,7 +129,7 @@ abstract class ExecuteHandler {
 		'test' => array('name' => 'test',
 			'desc' => 'Do something random',
 			'arg' => 'None',
-			'execute' => 'callmethod'),
+			'execute' => 'callmethodarg'),
 	);
 	private static $constructs = array(
 		'$' => array('name' => '$',
@@ -836,88 +837,140 @@ abstract class ExecuteHandler {
 			echo 'Invalid command: ' . $in . PHP_EOL;
 			return self::EXECUTE_NEXT;
 		}
-		// split command into pieces
-		$splitarg = $this->divide_cmd($arg);
-		// block of stuff for ease of usage
-		{
+		$redirection = array(
+			'>' => false,
+			'>$' => false,
+			'}' => false,
+			'}$' => false,
+		);
+		if($cmd['rawarg']) {
+			/* Argument is simply the raw argument */
+			$argument = $arg;
+		}
+		else {
+			/* First, initialize variables */
 			// handle output redirection
 			$outputredir = $outputredirvar = $returnredir = $returnredirvar = false;
-			$next = false;
 			$paras = array(); // parameters to be sent to command
 			$argument = ''; // argument to be sent to command
 			$argarray = array(); // array of argument for docurr commands
-			foreach($splitarg as $piece) {
-				// handle output redirection
-				if($piece === '>' || $piece === '>$' || $piece === '}' || $piece === '}$' ) {
-					$next = $piece;
-					continue;
-				}
-				if($next !== false) {
-					switch($next) {
-						case '>': $outputredir = $piece; break;
-						case '>$': $outputredirvar = $piece; break;
-						case '}': $returnredir = $piece; break;
-						case '}$': $returnredirvar = $piece; break;
+			/* Lambda function to do the work */
+			$divide_cmd = function($arg) use($in, &$redirection, &$argument, &$argarray, &$paras) {
+			// divides a string into pieces at each space, and keeps strings in ''/"" together
+				$len = strlen($arg);
+				$next = false;
+				$key = 0; // array key, either 0 for the argument or a para name
+				for($i = 0; $i < $len; $i++) {
+					if($arg[$i] === ' ' and ($i === 0 or $arg[$i-1] !== '\\')) {
+						// add space to separate parts of $argument
+						if($key === 0)
+							$paras[0] .= ' ';
+						$key = 0;
+						// decrement $i temporarily to make this work with arguments at beginning of string
+						//$i--;
 					}
-					$next = false;
-					continue;
-				}
-				// arguments without initial -
-				if($piece[0] !== '-') {
-					// allow for escaping
-					if(substr($piece, 0, 2) === '\-')
-						$piece = substr($piece, 1);
-					if($splitcmd['unnamedseparate'])
-						$paras[] = $piece;
-					else {
-						if($argument) $argument .= ' ';
-						$argument .= $piece;
+					// handle parameter names
+					else if($arg[$i] === '-' and ($i === 0 or $arg[$i-1] === ' ')) {
+						// short-form or long-form?
+						if(!isset($arg[$i++])) {
+							throw new EHException(
+								"Unexpected - in command $in",
+								EHException::E_RECOVERABLE);
+						}
+						// long form
+						if($arg[$i] === '-') {
+							$i++;
+							$key = '';
+							for( ; $arg[$i] !== '='; $i++) {
+								if($i === $len) {
+									throw new EHException(
+										"Unexpected end of command while in parameter name in command $in",
+										EHException::E_RECOVERABLE
+									);
+								}
+								$key .= $arg[$i];
+							}
+						}
+						// short form
+						else {
+							for( ; $arg[$i] !== ' ' and $i < $len; $i++) {
+								if(in_array($arg[$i], array('=', '"', "'"))) {
+									throw new EHException(
+										"Unexpected {$arg[$i]} in command $in",
+										EHException::E_RECOVERABLE);
+								}
+								$paras[$arg[$i]] = true;
+							}
+						}
 					}
-					continue;
-				}
-				// long-form arguments
-				if($piece[1] === '-') {
-					if(($pos = strpos($piece, '=')) === false)
-						$paras[substr($piece, 2)] = true;
-					else if($pos === 2) {
-						echo 'Invalid argument: ' . $piece . PHP_EOL;
-						continue;
+					// output and return redirection (handled as special key)
+					else if(($arg[$i] === '>' or $arg[$i] === '}') and ($i === 0 or $arg[$i-1] === ' ')) {
+						$var = $arg[$i];
+						if($arg[$i+1] === '$') {
+							$i++;
+							$key = $var . '$';
+						}
+						else {
+							$key = $var;
+						}
+						// ignore space
+						if($arg[$i+1] === ' ')
+							$i++;
 					}
-					else {
-						$key = substr($piece, 2, $pos - 2);
-						$value = substr($piece, $pos + 1);
-						$paras[$key] = $value;
+					else if($arg[$i] === "'" and ($i === 0 or $arg[$i-1] !== '\\')) {
+						// consume characters until end of quoted string
+						$i++;
+						for( ; ; $i++) {
+							if($i === $len) {
+								throw new EHException(
+									"Unexpected end of command while in single-quoted string in command $in",
+									EHException::E_RECOVERABLE
+								);
+							}
+							if($arg[$i] === "'" and $arg[$i-1] !== '\\')
+								break;
+							$paras[$key] .= $arg[$i];
+						}
+					}
+					else if($arg[$i] === '"' and ($i === 0 or $arg[$i-1] !== '\\')) {
+						// consume characters until end of quoted string
+						$i++;
+						for( ; ; $i++) {
+							if($i === $len) {
+								throw new EHException(
+									"Unexpected end of command while in double-quoted string in command $in",
+									EHException::E_RECOVERABLE
+								);
+							}
+							if($arg[$i] === '"' and $arg[$i-1] !== '\\')
+								break;
+							$paras[$key] .= $arg[$i];
+						}
+					}
+					else
+						$paras[$key] .= $arg[$i];
+				}
+				// separate argument from paras
+				$argument = trim($paras[0]);
+				unset($paras[0]);
+				// separate output redirection and friends
+				foreach($redirection as $key => $var) {
+					if(isset($paras[$key])) {
+						$redirection[$key] = $paras[$key];
+						unset($paras[$key]);
 					}
 				}
-				// short-form arguments
-				else if(($pos = strpos($piece, '=')) === false) {
-					$len = strlen($piece);
-					for($i = 1; $i < $len; $i++)
-						$paras[$piece[$i]] = true;
-				}
-				else if($pos === 2) {
-					$paras[$piece[1]] = substr($piece, 3);
-				}
-				else {
-					echo 'Invalid argument: ' . $piece . PHP_EOL;		
-				}
-			}
-			if($argument) {
-				$argument = self::remove_quotes($argument);
 				// handle shortcut
 				if($argument === '*')
 					$argarray = $this->current;
 				else
 					$argarray = array($argument);
-				$paras[0] = $rawarg;
-			}
-			// cleanup
-			foreach($paras as &$text) {
-				if($text and is_string($text)) $text = self::remove_quotes($text);
-			}		
+			};
+			// split command into pieces
+			$divide_cmd($arg);
 		}
 		// output redirection
-		if(($outputredir || $outputredirvar) and $cmd['execute'] !== 'quit') {
+		if(($redirection['>'] !== false or $redirection['>$'] !== false) and $cmd['execute'] !== 'quit') {
 			ob_start();
 		}
 		// return value of executed command
@@ -957,8 +1010,8 @@ abstract class ExecuteHandler {
 		}
 		if($cmd['setcurrent'] and (count($argarray) !== 0))
 			$this->current = $argarray;
-		if($outputredir) {
-			$file = fopen($outputredir, 'w');
+		if($redirection['>'] !== false) {
+			$file = fopen($redirection['>'], 'w');
 			if(!$file) {
 				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
 				ob_end_clean();
@@ -967,12 +1020,12 @@ abstract class ExecuteHandler {
 			fwrite($file, ob_get_contents());
 			ob_end_clean();
 		}
-		else if($outputredirvar) {
-			$this->setvar($outputredirvar, ob_get_contents());
+		else if($redirection['>$'] !== false) {
+			$this->setvar($redirection['>$'], ob_get_contents());
 			ob_end_clean();
 		}
-		if($returnredir) {
-			$file = fopen($returnredir, 'w');
+		if($redirection['}']) {
+			$file = fopen($redirection['}'], 'w');
 			if(!$file) {
 				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
 				ob_end_clean();
@@ -981,35 +1034,12 @@ abstract class ExecuteHandler {
 			fwrite($file, $ret);
 		}
 		// no else here; having both returnredir and returnredirvar makes sense
-		if($returnredirvar) {
-			$this->setvar($returnredirvar, $ret);
+		if($redirection['}$']) {
+			$this->setvar($redirect['}$'], $ret);
 		}
 		// always make return value accessible to script
 		$this->setvar('ret', $ret);
 		return self::EXECUTE_NEXT;
-	}
-	private function divide_cmd($in) {
-	// divides a string into pieces at each space, and keeps strings in ''/"" together
-		$len = strlen($in);
-		$out = array();
-		$key = 0; // array key, starting at 0
-		$insstring = false; // are we in a single-quoted string?
-		$indstring = false; // are we in a double-quoted string?
-		for($i = 0; $i < $len; $i++) {
-			if($in[$i] === ' ' and 
-				($i === 0 or $in[$i-1] !== '\\') and 
-				!$indstring and 
-				!$insstring) {
-				$key++;
-				continue;
-			}
-			if($in[$i] === "'" and !$indstring and ($i === 0 or $in[$i-1] !== '\\'))
-				$insstring = $insstring ? false : true;
-			if($in[$i] === '"' and !$insstring and ($i === 0 or $in[$i-1] !== '\\'))
-				$indstring = $indstring ? false : true;
-			$out[$key] .= $in[$i];
-		}
-		return $out;
 	}
 	private function expand_cmd($in) {
 		// substitute variable names in command
@@ -1019,10 +1049,6 @@ abstract class ExecuteHandler {
 		if($cmd) 
 			return $this->commands[$cmd];
 		return false;
-	}
-	static public function remove_quotes($in) {
-	// TODO: replace this and execute()s functionality so we'll be able to do all this in divide_command(). This will fail with weirdly quoted strings.
-		return preg_replace("/^['\"]|[\"']$|\\\\(?=['\"])/u", '', $in);
 	}
 	private function execute_help($in) {	
 		// array of functions with info
@@ -1677,12 +1703,8 @@ abstract class ExecuteHandler {
 	}
 	public function test() {
 	// Test function that might do anything I currently want to test
-	// Currently, testing the menu() method
-		$cmd = $this->menu(array(
-			'options' => array('a' => 'Do something', 'b' => 'Do something else'),
-			'helpcommand' => false,
-		));
-		echo $cmd . PHP_EOL;
+	// Currently, testing what arguments it is getting
+		var_dump(func_get_args());
 	}
 }
 ?>

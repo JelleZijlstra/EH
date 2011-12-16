@@ -774,6 +774,24 @@ abstract class ListEntry extends ExecuteHandler {
 	public function __construct($commands) {
 		parent::__construct(array_merge(self::$ListEntry_commands, $commands));
 	}
+	protected function setup_eh_ListEntry() {
+	// set up EH handler for a ListEntry
+		$this->setup_ExecuteHandler(array_merge(
+			self::$ListEntry_commands,
+			static::${get_called_class() . '_commands'}
+		));
+		foreach($this->listproperties() as $property) {
+			if(is_array($property)) continue;
+			$this->addcommand(array(
+				'name' => 'set' . $property,
+				'aka' => $property,
+				'desc' => 'Edit the field "' . $property . '"',
+				'arg' => 'Optionally, new content of field',
+				'execute' => 'callmethodarg',
+			));
+		}
+		$this->setup_execute = true;
+	}
 	abstract public function toarray();
 	public function my_inform() {
 		// implementors may want to do more stuff here
@@ -950,21 +968,7 @@ abstract class ListEntry extends ExecuteHandler {
 	public function cli($paras = '') {
 	// edit information associated with an entry
 		if(!$this->setup_execute) {
-			$this->setup_ExecuteHandler();
-			foreach($this->listproperties() as $property) {
-				if(is_array($property)) continue;
-				$command['name'] = 'set' . $property;
-				$command['aka'] = array($property);
-				$command['desc'] = 'Edit the field "' . $property . '"';
-				$command['arg'] = 'Optionally, new content of field';
-				$command['execute'] = 'callmethodarg';
-				self::addstaticcommand($command, array('ignoreduplicates' => true));
-			}
-			if(isset(self::${get_called_class() . '_commands'}))
-				foreach(self::${get_called_class() . '_commands'} as $cmd)
-					self::addstaticcommand($cmd, array('ignoreduplicates' => true));
-			foreach(self::$ListEntry_commands as $cmd)
-				self::addstaticcommand($cmd, array('ignoreduplicates' => true));
+			$this->setup_eh_ListEntry();
 			$this->setup_execute = true;
 		}
 		$this->setup_commandline($this->name, array('undoable' => true));

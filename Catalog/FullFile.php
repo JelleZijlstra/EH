@@ -2357,6 +2357,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			or !isset($cjson->items) 
 			or !is_array($cjson->items)) {
 			// we didn't find anything
+			echo "Could not find any results in Google" . PHP_EOL;
 			return false;
 		}
 		/*
@@ -2427,6 +2428,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!$this->p->addmanual) return false;
 		if($this->pdfcontent) echo $this->pdfcontent . PHP_EOL;
 		$name = $this->name;
+		$that = $this;
 		$doi = $this->menu(array(
 			'head' => 'If this file has a DOI or AMNH handle, please enter it.', 
 			'options' => array(
@@ -2445,10 +2447,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				return false;
 			},
 			'process' => array(
-				'o' => function() use($name) {
+				'o' => function() use($that) {
 					// this is a hack, until we can actually use $this in an anonymous function
-					global $csvlist;
-					$csvlist->openf($name);
+					$that->openf();
 				},
 			),
 		));

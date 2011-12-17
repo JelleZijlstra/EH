@@ -199,7 +199,7 @@ abstract class ExecuteHandler {
 	// - desc: String description of what the command does
 	// - arg: String description of the arguments the command takes
 	// - setcurrent: Bool whether $this->current needs to be set to $arg
-	// - unnamedseparate: Bool whether all unnamed parameters should be placed in $arg together
+	// - rawarg: Bool whether the argument can be used "raw" (i.e., unprocessed)
 	// - method: String method called by the command
 		if(isset($this->commands[$command['name']])) {
 			if(!$paras['ignoreduplicates']) trigger_error('Command ' . $command['name'] . ' already exists', E_USER_NOTICE);
@@ -220,25 +220,29 @@ abstract class ExecuteHandler {
 					$this->synonyms[$aka] = $command['name'];
 			}
 		}
+		if(!isset($command['setcurrent']))
+			$command['setcurrent'] = false;
+		if(!isset($command['rawarg']))
+			$command['rawarg'] = false;
 		$this->commands[$command['name']] = $command;
 		return true;
 	}
 	static private function testcommand($command) {
 		/* check and handle input */
 		// if we don't have those, little point in proceeding
-		if(!$command['name']) {
+		if(!isset($command['name'])) {
 			trigger_error('No name given for new command', E_USER_NOTICE);
 			return false;
 		}
-		if(!$command['execute'] or !array_key_exists($command['execute'], self::$handlers)) {
+		if(!isset($command['execute']) or !array_key_exists($command['execute'], self::$handlers)) {
 			trigger_error('No valid execute sequence given for new command ' . $command['name'], E_USER_NOTICE);
 			return false;
 		}
 		// warn if no documentation
-		if(!$command['desc']) {
+		if(!isset($command['desc'])) {
 			trigger_error('No documentation given for new command ' . $command['name'], E_USER_NOTICE);
 		}
-		if(!$command['arg']) {
+		if(!isset($command['arg'])) {
 			trigger_error('No listing of arguments given for new command ' . $command['name'], E_USER_NOTICE);
 		}
 		return true;	

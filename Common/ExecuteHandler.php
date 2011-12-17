@@ -1512,8 +1512,8 @@ abstract class ExecuteHandler {
 		};
 		$showcursor = function() use (&$cmdlen, &$keypos, $getcmd, $promptoffset) {
 			// return to saved cursor position, clear line
-			$backmove = $promptoffset + $cmdlen + 10;
-			echo "\033[" . $backmove . "D\033[" . $promptoffset . "C\033[K";
+			// first move as far west as we can; 200 positions should suffice
+			echo "\033[200D\033[" . $promptoffset . "C\033[K";
 			// put the command back
 			echo $getcmd();
 			// put the cursor in the right position
@@ -1724,7 +1724,7 @@ abstract class ExecuteHandler {
 	public function test() {
 	// Test function that might do anything I currently want to test
 	// Currently, testing what arguments it is getting
-		var_dump(func_get_args());
+		echo "a\033[2K"; fgetc(STDIN);
 	}
 }
 ?>

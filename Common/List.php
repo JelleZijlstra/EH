@@ -226,12 +226,18 @@ abstract class FileList extends ExecuteHandler {
 			$arg = $paras['arg'];
 			unset($paras['arg']);
 		}
+		if(isset($paras['continueiffalse'])) {
+			$ciffalse = $paras['continueiffalse'];
+			unset($paras['continueiffalse']);
+		}
 		foreach($this->c as $file) {
 			try {
 				if(isset($arg))
-					$file->$cmd($arg, $paras);
+					$ret = $file->$cmd($arg, $paras);
 				else
-					$file->$cmd($paras);
+					$ret = $file->$cmd($paras);
+				if(!$ciffalse and $ret === false)
+					break;
 			}
 			catch(EHException $e) {
 				echo $e->getMessage();

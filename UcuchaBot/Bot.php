@@ -121,7 +121,7 @@ class Bot extends Snoopy {
 	// @para ['kind'] String appendtext, prependtext, or text (default). Which of those to use.
 	// @para ['abortifexists'] Bool whether to abort the edit if the page already exists. Defaults to "false".
 	// @para ['donotmarkasbot'] Bool whether to pretend we're not a bot (useful for talk messages)
-		if(self::process_paras($paras, 
+		if(self::process_paras($paras, array(
 			'checklist' => array(
 				'text',
 				'file',

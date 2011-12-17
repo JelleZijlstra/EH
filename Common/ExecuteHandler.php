@@ -1042,11 +1042,13 @@ abstract class ExecuteHandler {
 	private function expand_cmd($in) {
 		// substitute variable names in command
 		$cmd = $this->substitutevars($in);
-		// search for dynamic commands
-		$cmd = $this->synonyms[$cmd] ?: ($this->commands[$cmd] ? $cmd : false);
-		if($cmd)
+		// search for commands
+		if(isset($this->synonyms[$cmd]))
+			$cmd = $this->synonyms[$cmd];
+		if(isset($this->commands[$cmd]))
 			return $this->commands[$cmd];
-		return false;
+		else
+			return false;
 	}
 	private function execute_help($in) {	
 		// array of functions with info

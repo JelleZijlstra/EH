@@ -778,6 +778,7 @@ abstract class FileList extends ExecuteHandler {
 abstract class ListEntry extends ExecuteHandler {
 	protected static $parentlist;
 	protected static $arrays_to_check;
+	public $props; // properties that are not otherwise specified
 	public function __construct($commands) {
 		parent::__construct(array_merge(self::$ListEntry_commands, $commands));
 	}

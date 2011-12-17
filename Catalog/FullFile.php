@@ -27,7 +27,6 @@ class FullFile extends ListEntry {
 	public $ids;
 	public $comm;
 	public $bools;
-	public $props; // properties that are not otherwise specified
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
 	static $n_comm = array('pages', 'newtaxa', 'draft', 'muroids'); // names of commentary fields supported
 	static $n_bools = array('editedtitle', 'parturl', 'fullissue', 'triedfindurl', 'triedfinddoi', 'triedadddata'); // variables (mostly boolean) supported

@@ -738,6 +738,7 @@ class Bot extends Snoopy {
 			'default' => array(
 				'base' => 'Wikipedia:Today\'s featured article',
 				'print' => false,
+				'rawdate' => false,
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if($paras['rawdate']) {

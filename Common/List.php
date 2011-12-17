@@ -892,7 +892,7 @@ abstract class ListEntry extends ExecuteHandler {
 		$out = self::findarray($property);
 		if($out)
 			return $out;
-		else if(is_array($this->props) and array_key_exists($property, $this->props))
+		else if(isset($this->props) and is_array($this->props) and array_key_exists($property, $this->props))
 			return 'props';
 		else
 			return false;		

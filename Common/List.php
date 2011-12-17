@@ -205,6 +205,10 @@ abstract class FileList extends ExecuteHandler {
 	}
 	public function doall($func, $paras = array()) {
 	// $paras['continueiffalse']: whether we go on with the next one if function returns false
+		if(self::process_paras($paras, array(
+			'checklist' => array('continueiffalse'),
+			'default' => array('continueiffalse' => false),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!method_exists(static::$childclass, $func)) {
 			echo 'Method does not exist: ' . $func . PHP_EOL;
 			return false;

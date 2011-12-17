@@ -489,7 +489,7 @@ class Bot extends Snoopy {
 		);
 		$writetext = $writeheader . $writebody . $writefooter;
 		// commit edit
-		$success = $this->writewp($writepage,
+		$success = $this->writewp($writetitle,
 			array(
 				'text' => $writetext,
 				'summary' => "Bot: updating WP:FANMP",

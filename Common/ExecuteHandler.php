@@ -949,7 +949,7 @@ abstract class ExecuteHandler {
 						$paras[$key] .= $arg[$i];
 				}
 				// separate argument from paras
-				$argument = trim($paras[0]);
+				$argument = isset($paras[0]) ? trim($paras[0]) : '';
 				unset($paras[0]);
 				// separate output redirection and friends
 				foreach($redirection as $key => $var) {

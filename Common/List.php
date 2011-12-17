@@ -230,7 +230,7 @@ abstract class FileList extends ExecuteHandler {
 					$file->$cmd($paras);
 			}
 			catch(EHException $e) {
-				echo $e;
+				echo $e->getMessage();
 				return false;
 			}
 		}

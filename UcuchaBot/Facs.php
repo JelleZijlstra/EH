@@ -1,5 +1,5 @@
 <?php
-require_once('../Common/common.php');
+require_once(__DIR__  . '/../Common/common.php');
 require_once(BPATH . '/Common/List.php');
 require_once(BPATH . '/UcuchaBot/Bot.php');
 class FacsList extends FileList {

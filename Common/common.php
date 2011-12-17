@@ -13,6 +13,8 @@ s/\s+(?=\r)//
 s/\r\s+(?={)/ /
 */
 define('BPATH', __DIR__ . '/..');
+// show all errors
+ini_set("display_errors", E_ALL | E_STRICT);
 // set encoding
 if(mb_internal_encoding('UTF-8') === false) {
 	echo "Unable to set encoding" . PHP_EOL;

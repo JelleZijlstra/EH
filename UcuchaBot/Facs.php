@@ -8,9 +8,9 @@ class FacsList extends FileList {
 	public $bot;
 	const fac = 'Wikipedia:Featured article candidates';
 	public function __construct() {
+		self::$fileloc = BPATH . '/UcuchaBot/facs.csv';
 		parent::__construct();
 		$this->bot = getbot();
-		self::$fileloc = BPATH . '/UcuchaBot/facs.csv';
 	}
 	public function cli() {
 		$this->setup_commandline('Facs');

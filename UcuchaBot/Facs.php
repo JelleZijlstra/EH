@@ -3,11 +3,10 @@ require_once(__DIR__  . '/../Common/common.php');
 require_once(BPATH . '/Common/List.php');
 require_once(BPATH . '/UcuchaBot/Bot.php');
 class FacsList extends FileList {
-	protected static $fileloc = 'facs.csv';
+	protected static $fileloc = __DIR__ . '/facs.csv';
 	protected static $childclass = 'FacsEntry';
 	public $bot;
 	const fac = 'Wikipedia:Featured article candidates';
-	//const fac = 'User:UcuchaBot/FAC';
 	public function __construct() {
 		parent::__construct();
 		$this->bot = getbot();

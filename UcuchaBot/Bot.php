@@ -155,7 +155,7 @@ class Bot extends Snoopy {
 			'titles' => $page,
 		));
 		if(!is_array($result)) {
-			echo "Failed to fetch page to write to" . PHP_EOL;
+			echo "Failed to fetch page to write to: " . $page . PHP_EOL;
 			return false;
 		}
 		foreach($result['query']['pages'] as $i_page) {

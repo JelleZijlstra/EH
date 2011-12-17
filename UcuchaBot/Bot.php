@@ -154,8 +154,10 @@ class Bot extends Snoopy {
 			'intoken' => 'edit',
 			'titles' => $page,
 		));
-		if(!is_array($result))
+		if(!is_array($result)) {
+			echo "Failed to fetch page to write to" . PHP_EOL;
 			return false;
+		}
 		foreach($result['query']['pages'] as $i_page) {
 			$my_page = $i_page;
 		}
@@ -487,13 +489,17 @@ class Bot extends Snoopy {
 		);
 		$writetext = $writeheader . $writebody . $writefooter;
 		// commit edit
-		$this->writewp($writepage,
+		$success = $this->writewp($writepage,
 			array(
 				'text' => $writetext,
-				'summary' => "Bot: updating WP:FANMP"
+				'summary' => "Bot: updating WP:FANMP",
 			)
 		);
-		echo "done" . PHP_EOL;
+		if($success === false)
+			echo "failed";
+		else
+			echo "done";
+		echo PHP_EOL;
 		return true;
 	}
 	public function do_fl_bolding() {

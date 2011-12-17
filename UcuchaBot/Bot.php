@@ -121,6 +121,24 @@ class Bot extends Snoopy {
 	// @para ['kind'] String appendtext, prependtext, or text (default). Which of those to use.
 	// @para ['abortifexists'] Bool whether to abort the edit if the page already exists. Defaults to "false".
 	// @para ['donotmarkasbot'] Bool whether to pretend we're not a bot (useful for talk messages)
+		if(self::process_paras($paras, 
+			'checklist' => array(
+				'text',
+				'file',
+				'summary',
+				'override',
+				'kind',
+				'abortifexists',
+				'donotmarkasbot',
+			),
+			'default' => array(
+				'summary' => 'Bot edit',
+				'override' => false,
+				'kind' => 'text',
+				'abortifexists' => false,
+				'donotmarkasbot' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!$this->check_login()) return false;
 		if(is_string($paras['text']))
 			$data = $paras['text'];
@@ -130,8 +148,6 @@ class Bot extends Snoopy {
 			echo 'No text to write to ' . $page . PHP_EOL;
 			return false;
 		}
-		$paras['summary'] = $paras['summary'] ?: 'Bot edit';
-		$paras['kind'] = $paras['kind'] ?: 'text';
 		$result = $this->fetchapi(array(
 			'action' => 'query',
 			'prop' => 'info',
@@ -239,8 +255,13 @@ class Bot extends Snoopy {
 		return $this->results ?: false;
 	}
 	public function fetchapi($apiparas, $paras = array()) {
+		if(self::process_paras($paras, array(
+			'checklist' => array('pageonly'),
+			'default' => array('pageonly' => false),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$url = self::api . '?';
-		$apiparas['format'] = $apiparas['format'] ?: 'json';
+		if(!isset($apiparas['format']))
+			$apiparas['format'] = 'json';
 		foreach($apiparas as $key => $value)
 			$url .= urlencode($key) . '=' . urlencode($value) . '&';
 		// remove last &
@@ -309,7 +330,7 @@ class Bot extends Snoopy {
 		file_put_contents($datefile, $date->format(self::stddate));
 		// HANDLE EACH PAGE
 		foreach($pages as $page) {
-			echo "Notifying contributors for page " . $page . PHP_EOL;
+			echo "Notifying contributors for page " . $page['name'] . PHP_EOL;
 			$notifiedusers = array(); // users to notify
 			//edit TFA talk page
 			$talkpage = $this->fetchwp('Talk:' . $page['name']);
@@ -376,6 +397,8 @@ class Bot extends Snoopy {
 			$apipage = array_pop($api['query']['pages']);
 			$users = array();
 			foreach($apipage['revisions'] as $rev) {
+				if(!isset($users[$rev['user']])) 
+					$users[$rev['user']] = 0;
 				$users[$rev['user']]++;
 			}
 			foreach($users as $user => $number) {
@@ -705,8 +728,18 @@ class Bot extends Snoopy {
 	// 'name' String name of the TFA. Set to false if name cannot be located.
 	// 'date' String date of the TFA
 	// 'blurb' String TFA blurb
-		if(!isset($paras['base'])) 
-			$paras['base'] = 'Wikipedia:Today\'s featured article';
+		if(self::process_paras(array(
+			'checklist' => array(
+				'base',
+				'date',
+				'rawdate',
+				'print',
+			),
+			'default' => array(
+				'base' => 'Wikipedia:Today\'s featured article',
+				'print' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if($paras['rawdate']) {
 			$paras['date'] = new DateTime($paras['rawdate']);
 		}

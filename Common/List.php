@@ -900,7 +900,7 @@ abstract class ListEntry extends ExecuteHandler {
 	static protected function findarray($property) {
 	// used in overloading methods
 		foreach(static::$arrays_to_check as $array) {
-			if(in_array($property, static::${n_ . $array}))
+			if(in_array($property, static::${'n_' . $array}))
 				return $array;
 		}
 		return false;

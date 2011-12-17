@@ -387,7 +387,8 @@ abstract class FileList extends ExecuteHandler {
 	public function bfind($paras = '') {
 		if(self::process_paras($paras, array(
 /* hide this because bfind can take arbitrary other parameters; kept here for ease of documentation
-			'checklist' => array('function', // String function applied to text found
+			'checklist' => array(
+				'function', // String function applied to text found
 				'openfiles', // Open files found?
 				'isfunc', // Is the query parameter a function?
 				'print', // Print the files found?
@@ -401,6 +402,9 @@ abstract class FileList extends ExecuteHandler {
 				'printresult' => true,
 				'setcurrent' => true,
 				'return' => 'objectarray',
+				'openfiles' => false,
+				'array' => false,
+				'function' => false,
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
@@ -484,21 +488,21 @@ abstract class FileList extends ExecuteHandler {
 		foreach($this->$arr as $file) {
 			if($file->isredirect()) continue;
 			foreach($queries as $query) {
-				$hay = $query['func'] 
+				$hay = isset($query['func'])
 					? $file->{$query['field']}() 
 					: $file->{$query['field']};
 				// apply function
 				if($paras['function'])
 					$hay = $paras['function']($hay);
-				if($query['regex']) 
+				if(isset($query['regex']))
 					$found = preg_match($query['content'], $hay);
-				else if($query['>'])
+				else if(isset($query['>']))
 					$found = ($hay > $query['content']);
-				else if($query['>='])
+				else if(isset($query['>=']))
 					$found = ($hay >= $query['content']);
-				else if($query['<'])
+				else if(isset($query['<']))
 					$found = ($hay < $query['content']);
-				else if($query['<='])
+				else if(isset($query['<=']))
 					$found = ($hay <= $query['content']);
 				else
 					$found = ($query['content'] == $hay);

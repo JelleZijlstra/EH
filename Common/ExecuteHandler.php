@@ -860,6 +860,8 @@ abstract class ExecuteHandler {
 				$len = strlen($arg);
 				$next = false;
 				$key = 0; // array key, either 0 for the argument or a para name
+				// initialize
+				$paras[0] = '';
 				for($i = 0; $i < $len; $i++) {
 					if($arg[$i] === ' ' and ($i === 0 or $arg[$i-1] !== '\\')) {
 						// add space to separate parts of $argument
@@ -888,6 +890,7 @@ abstract class ExecuteHandler {
 								}
 								$key .= $arg[$i];
 							}
+							$paras[$key] = '';
 						}
 						// short form
 						else {
@@ -949,7 +952,7 @@ abstract class ExecuteHandler {
 						$paras[$key] .= $arg[$i];
 				}
 				// separate argument from paras
-				$argument = isset($paras[0]) ? trim($paras[0]) : '';
+				$argument = trim($paras[0]);
 				unset($paras[0]);
 				// separate output redirection and friends
 				foreach($redirection as $key => $var) {

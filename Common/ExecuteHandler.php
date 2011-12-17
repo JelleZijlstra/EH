@@ -430,7 +430,7 @@ abstract class ExecuteHandler {
 		// divide input into keyword and argument
 		preg_match("/^\s*([^\s]+)(\s+(.*))?\s*\$/u", $in, $matches);
 		$rawcmd = $matches[1];
-		$rawarg = $matches[3];
+		$rawarg = isset($matches[3]) ? $matches[3] : '';
 		// if we're in an if statement that's executing, we need special rules
 		$inif = false;
 		// handle control flow, and exit if we are not executing this code
@@ -1192,9 +1192,17 @@ abstract class ExecuteHandler {
 		$this->currhist--;
 		return true;
 	}
-	public function setup_commandline($name, $paras = '') {
+	public function setup_commandline($name, $paras = array()) {
 	// Performs various functions in a pseudo-command line. A main entry point.
 	// stty stuff inspired by sfinktah at http://php.net/manual/en/function.fgetc.php
+		if(self::process_paras($paras, array(
+			'checklist' => array(
+				'undoable', // whether we should be able to undo changes to the object
+			),
+			'default' => array(
+				'undoable' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// perhaps kill this; I never use it
 		if($paras['undoable'] and !$this->hascommand('undo')) {
 			$this->tmp = clone $this;

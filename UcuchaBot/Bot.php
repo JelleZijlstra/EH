@@ -89,6 +89,9 @@ class Bot extends Snoopy {
 				$cookies = explode(";", substr($header, 12));
 				foreach($cookies as $oCook) {
 					$cookie = explode("=", $oCook);
+					// ignore non-cookies
+					if(count($cookie) !== 2) 
+						continue;
 					$this->cookies[trim($cookie[0])] = $cookie[1];
 				}
 			}

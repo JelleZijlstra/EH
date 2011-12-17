@@ -1,5 +1,5 @@
 <?php
-define(PROCESS_PARAS_ERROR_FOUND, 0x1);
+define('PROCESS_PARAS_ERROR_FOUND', 0x1);
 require_once(BPATH . "/Common/EHException.php");
 // TODO: more effectively ignore Ctrl+P and stuff like that.
 // Fix function definitions in exec_file. Currently, they just do random stuff when executed outside the exec_file context.
@@ -201,20 +201,20 @@ abstract class ExecuteHandler {
 	// - setcurrent: Bool whether $this->current needs to be set to $arg
 	// - unnamedseparate: Bool whether all unnamed parameters should be placed in $arg together
 	// - method: String method called by the command
-		if($this->commands[$command['name']]) {
+		if(isset($this->commands[$command['name']])) {
 			if(!$paras['ignoreduplicates']) trigger_error('Command ' . $command['name'] . ' already exists', E_USER_NOTICE);
 			return false;
 		}
 		if(!self::testcommand($command)) return false;
-		if($command['aka']) {
+		if(isset($command['aka'])) {
 			if(!is_array($command['aka'])) {
-				if($this->synonyms[$command['aka']])
+				if(isset($this->synonyms[$command['aka']]))
 					trigger_error('Error: ' . $aka . ' already exists as a synonym for ' . $this->synonyms[$aka], E_USER_NOTICE);
 				else
 					$this->synonyms[$command['aka']] = $command['name'];			
 			}
 			else foreach($command['aka'] as $aka) {
-				if($this->synonyms[$aka])
+				if(isset($this->synonyms[$aka]))
 					trigger_error('Error: ' . $aka . ' already exists as a synonym for ' . $this->synonyms[$aka], E_USER_NOTICE);
 				else
 					$this->synonyms[$aka] = $command['name'];
@@ -1041,10 +1041,10 @@ abstract class ExecuteHandler {
 	}
 	private function expand_cmd($in) {
 		// substitute variable names in command
-		$cmd = $this->substitutevars($cmd);
+		$cmd = $this->substitutevars($in);
 		// search for dynamic commands
-		$cmd = $this->synonyms[$in] ?: ($this->commands[$in] ? $in : false);
-		if($cmd) 
+		$cmd = $this->synonyms[$cmd] ?: ($this->commands[$cmd] ? $cmd : false);
+		if($cmd)
 			return $this->commands[$cmd];
 		return false;
 	}

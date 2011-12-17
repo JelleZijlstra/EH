@@ -10,7 +10,7 @@ require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/List.php');
 require_once(BPATH . '/UcuchaBot/Snoopy.class.php');
 function getbot($paras = array()) {
-	if($paras['new'] === true)
+	if(isset($paras['new']) and $paras['new'] === true)
 		return new Bot();
 	global $bot;
 	if(!$bot)
@@ -728,7 +728,7 @@ class Bot extends Snoopy {
 	// 'name' String name of the TFA. Set to false if name cannot be located.
 	// 'date' String date of the TFA
 	// 'blurb' String TFA blurb
-		if(self::process_paras(array(
+		if(self::process_paras($paras, array(
 			'checklist' => array(
 				'base',
 				'date',

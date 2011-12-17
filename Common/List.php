@@ -823,14 +823,14 @@ abstract class ListEntry extends ExecuteHandler {
 			'arg' => 'None',
 			'execute' => 'quit'),*/
 	);
-	protected function getarray($var, $paras = '') {
+	protected function getarray($var, $paras = array()) {
 	// helper for toarray(), to prepare array variables for storage
 		if(!is_array($this->$var)) return NULL;
 		foreach($this->$var as $key => &$value) {
 			if($value)
 				$out[$key] = $value;
 		}
-		if($paras['func'])
+		if(isset($paras['func']))
 			$func = $paras['func'];
 		else
 			$func = 'json_encode';

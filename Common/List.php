@@ -217,10 +217,17 @@ abstract class FileList extends ExecuteHandler {
 		}
 	}
 	public function execute_all($cmd, $paras = array()) {
-	// execute a command on all files in the list
+	// execute a function on all files in the list. Don't actually execute the command, since that is prohibitively expensive (requires EH to be initialized on every single ListEntry).
+		if(isset($paras['arg'])) {
+			$arg = $paras['arg'];
+			unset($paras['arg']);
+		}
 		foreach($this->c as $file) {
 			try {
-				$file->execute($cmd);
+				if(isset($arg))
+					$file->$cmd($arg, $paras);
+				else
+					$file->$cmd($paras);
 			}
 			catch(EHException $e) {
 				echo $e;

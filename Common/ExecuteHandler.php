@@ -843,7 +843,7 @@ abstract class ExecuteHandler {
 			'}' => false,
 			'}$' => false,
 		);
-		if($cmd['rawarg']) {
+		if(isset($cmd['rawarg']) and $cmd['rawarg'] === true) {
 			/* Argument is simply the raw argument */
 			$argument = $arg;
 		}

@@ -842,11 +842,6 @@ abstract class ListEntry extends ExecuteHandler {
 			'desc' => 'Empty a property of the entry',
 			'arg' => 'Property to be emptied',
 			'execute' => 'callmethodarg'),
-/*		'continue' => array('name' => 'continue',
-			'aka' => array('a'),
-			'desc' => 'Quit this file and continue with the next',
-			'arg' => 'None',
-			'execute' => 'quit'),*/
 	);
 	protected function getarray($var, $paras = array()) {
 	// helper for toarray(), to prepare array variables for storage
@@ -921,7 +916,7 @@ abstract class ListEntry extends ExecuteHandler {
 		$out = self::findarray($property);
 		if($out)
 			return $out;
-		else if(isset($this->props) and is_array($this->props) and array_key_exists($property, $this->props))
+		else if(is_array($this->props) and array_key_exists($property, $this->props))
 			return 'props';
 		else
 			return false;		
@@ -958,7 +953,7 @@ abstract class ListEntry extends ExecuteHandler {
 			}
 		}
 	}
-	public function edit($paras = '') {
+	public function edit($paras = array()) {
 		return $this->cli($paras);
 	}
 	public function log($msg, $writefull = true) {

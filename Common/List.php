@@ -93,14 +93,14 @@ abstract class FileList extends ExecuteHandler {
 		$this->saveifneeded();
 	}
 	protected static $resolve_redirects;
-	public function add_entry($file, $paras = '') {
+	public function add_entry($file, $paras = array()) {
 	// very basic add_entry function. Possibly some of the complex stuff that TaxonList and CsvList have should be moved to FileList somehow.
 		if($this->has($file->name))
 			return false;
 		$this->c[$file->name] = $file;
 		return true;
 	}
-	public function remove_entry($file, $paras = '') {
+	public function remove_entry($file, $paras = array()) {
 		if(!$this->has($file)) {
 			echo 'File ' . $file . ' does not exist' . PHP_EOL;
 			return false;
@@ -111,8 +111,8 @@ abstract class FileList extends ExecuteHandler {
 	public function has($file) {
 		return isset($this->c[$file]);
 	}
-	public function save() {
-	// should be private (callers from outside the class should use saveifneeded() instead)
+	protected function save() {
+	// save the list to disk
 		if(count($this->c) < 10) {
 			echo __FUNCTION__ . ' warning: input appears too short. Aborting.' . PHP_EOL;
 			return false;
@@ -160,9 +160,8 @@ abstract class FileList extends ExecuteHandler {
 		}
 	}
 	public function saveifneeded() {
-		if($this->needsave) {
+		if($this->needsave)
 			return $this->save();
-		}
 		else
 			return false;
 	}
@@ -311,7 +310,14 @@ abstract class FileList extends ExecuteHandler {
 				'array', // array to search in
 			),
 */
-			'default' => array('print' => true),
+			'default' => array(
+				'print' => true,
+				'array' => '',
+				'function' => '',
+				'isfunc' => false,
+				'groupby' => '',
+				'sort' => '',
+			),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
 		$arr = $paras['array'] ?: 'c';
@@ -558,8 +564,9 @@ abstract class FileList extends ExecuteHandler {
 		}
 	}
 	public function find($key, $needle, $paras = '') {
-	// Wrapper for bfind
+	// Wrapper for bfind. Is this used anywhere?
 	// @paras: /array(function => <string>, openfiles => <bool>, isfunc => <bool>, print => <bool>, printresult => <bool>, isregex => <bool>, current => true)
+		trigger_error("FileList::find is deprecated", E_USER_NOTICE);
 		$paras[$key] = $needle;
 		return $this->bfind($paras);
 	}

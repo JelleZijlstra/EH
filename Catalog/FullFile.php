@@ -659,7 +659,7 @@ class FullFile extends ListEntry {
 			case 'JSP': $o = 'Journal of Systematic Palaeontology'; break;
 			case 'JSZ': case 'JZS': $o = 'Journal of Zoological Systematics and Evolutionary Research'; break;
 			case 'JVMS': case 'Journal of Veterinary and Medical Sciences': $o = 'Journal of Veterinary Medical Science'; break;
-			case 'MB': case 'Mammalian Biology - Zeitschrift fur Saugetierkunde': case 'Mammalian Biology - Zeitschrift fur Säugetierkunde': $o = 'Mammalian Biology'; break;
+			case 'MB': case 'Mammalian Biology - Zeitschrift fur Saugetierkunde': case 'Mammalian Biology - Zeitschrift fur Säugetierkunde': case 'Mammalian Biology - Zeitschrift für Säugetierkunde': $o = 'Mammalian Biology'; break;
 			case 'MBE': $o = 'Molecular Biology and Evolution'; break;
 			case 'MIOC': case 'Mem. Inst. Oswaldo Cruz': $o = 'Memórias do Instituto Oswaldo Cruz'; break;
 			case 'MN': $o = 'Mastozoología Neotropical'; break;

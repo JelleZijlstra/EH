@@ -979,7 +979,7 @@ abstract class ExecuteHandler {
 		// execute it
 		switch($cmd['execute']) {
 			case 'doallorcurr':
-				if($argarray) {
+				if(count($argarray) > 0 and $argarray[0] !== '') {
 					foreach($argarray as $file)
 						if(!($ret = $this->{$cmd['name']}($file, $paras))) 
 							break;

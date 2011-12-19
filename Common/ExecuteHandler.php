@@ -382,6 +382,104 @@ abstract class ExecuteHandler {
 		}
 		return $in;	
 	}
+	private function divide_cmd($arg) {
+	// transforms an argument string into a $paras array, taking care of quoted strings and output redirection
+		$len = strlen($arg);
+		$next = false;
+		$key = 0; // array key, either 0 for the argument or a para name
+		// initialize
+		$paras[0] = '';
+		for($i = 0; $i < $len; $i++) {
+			if($arg[$i] === ' ' and ($i === 0 or $arg[$i-1] !== '\\')) {
+				// add space to separate parts of $argument
+				if($key === 0)
+					$paras[0] .= ' ';
+				$key = 0;
+			}
+			// handle parameter names
+			else if($arg[$i] === '-' and ($i === 0 or $arg[$i-1] === ' ')) {
+				// short-form or long-form?
+				if(!isset($arg[$i++])) {
+					throw new EHException(
+						"Unexpected -",
+						EHException::E_RECOVERABLE);
+				}
+				// long form
+				if($arg[$i] === '-') {
+					$i++;
+					$key = '';
+					for( ; $arg[$i] !== '='; $i++) {
+						if($i === $len) {
+							throw new EHException(
+								"Unexpected end of command while in parameter name",
+								EHException::E_RECOVERABLE
+							);
+						}
+						$key .= $arg[$i];
+					}
+					$paras[$key] = '';
+				}
+				// short form
+				else {
+					for( ; $arg[$i] !== ' ' and $i < $len; $i++) {
+						if(in_array($arg[$i], array('=', '"', "'"))) {
+							throw new EHException(
+								"Unexpected {$arg[$i]}",
+								EHException::E_RECOVERABLE);
+						}
+						$paras[$arg[$i]] = true;
+					}
+				}
+			}
+			// output and return redirection (handled as special key)
+			else if(($arg[$i] === '>' or $arg[$i] === '}') and ($i === 0 or $arg[$i-1] === ' ')) {
+				$var = $arg[$i];
+				if($arg[$i+1] === '$') {
+					$i++;
+					$key = $var . '$';
+				}
+				else {
+					$key = $var;
+				}
+				// ignore space
+				if($arg[$i+1] === ' ')
+					$i++;
+			}
+			else if($arg[$i] === "'" and ($i === 0 or $arg[$i-1] !== '\\')) {
+				// consume characters until end of quoted string
+				$i++;
+				for( ; ; $i++) {
+					if($i === $len) {
+						throw new EHException(
+							"Unexpected end of command while in single-quoted string",
+							EHException::E_RECOVERABLE
+						);
+					}
+					if($arg[$i] === "'" and $arg[$i-1] !== '\\')
+						break;
+					$paras[$key] .= $arg[$i];
+				}
+			}
+			else if($arg[$i] === '"' and ($i === 0 or $arg[$i-1] !== '\\')) {
+				// consume characters until end of quoted string
+				$i++;
+				for( ; ; $i++) {
+					if($i === $len) {
+						throw new EHException(
+							"Unexpected end of command while in double-quoted string",
+							EHException::E_RECOVERABLE
+						);
+					}
+					if($arg[$i] === '"' and $arg[$i-1] !== '\\')
+						break;
+					$paras[$key] .= $arg[$i];
+				}
+			}
+			else
+				$paras[$key] .= $arg[$i];
+		}
+		return $paras;
+	}
 	private function check_flow() {
 		$f = $this->curr('flowo');
 		switch($f['type']) {
@@ -852,127 +950,23 @@ abstract class ExecuteHandler {
 			$argument = $arg;
 		}
 		else {
-			/* First, initialize variables */
-			// handle output redirection
-			$outputredir = $outputredirvar = $returnredir = $returnredirvar = false;
-			$paras = array(); // parameters to be sent to command
-			$argument = ''; // argument to be sent to command
-			$argarray = array(); // array of argument for docurr commands
-			/* Lambda function to do the work */
-			$divide_cmd = function($arg) use($in, &$redirection, &$argument, &$argarray, &$paras) {
-			// divides a string into pieces at each space, and keeps strings in ''/"" together
-				$len = strlen($arg);
-				$next = false;
-				$key = 0; // array key, either 0 for the argument or a para name
-				// initialize
-				$paras[0] = '';
-				for($i = 0; $i < $len; $i++) {
-					if($arg[$i] === ' ' and ($i === 0 or $arg[$i-1] !== '\\')) {
-						// add space to separate parts of $argument
-						if($key === 0)
-							$paras[0] .= ' ';
-						$key = 0;
-					}
-					// handle parameter names
-					else if($arg[$i] === '-' and ($i === 0 or $arg[$i-1] === ' ')) {
-						// short-form or long-form?
-						if(!isset($arg[$i++])) {
-							throw new EHException(
-								"Unexpected -",
-								EHException::E_RECOVERABLE);
-						}
-						// long form
-						if($arg[$i] === '-') {
-							$i++;
-							$key = '';
-							for( ; $arg[$i] !== '='; $i++) {
-								if($i === $len) {
-									throw new EHException(
-										"Unexpected end of command while in parameter name",
-										EHException::E_RECOVERABLE
-									);
-								}
-								$key .= $arg[$i];
-							}
-							$paras[$key] = '';
-						}
-						// short form
-						else {
-							for( ; $arg[$i] !== ' ' and $i < $len; $i++) {
-								if(in_array($arg[$i], array('=', '"', "'"))) {
-									throw new EHException(
-										"Unexpected {$arg[$i]}",
-										EHException::E_RECOVERABLE);
-								}
-								$paras[$arg[$i]] = true;
-							}
-						}
-					}
-					// output and return redirection (handled as special key)
-					else if(($arg[$i] === '>' or $arg[$i] === '}') and ($i === 0 or $arg[$i-1] === ' ')) {
-						$var = $arg[$i];
-						if($arg[$i+1] === '$') {
-							$i++;
-							$key = $var . '$';
-						}
-						else {
-							$key = $var;
-						}
-						// ignore space
-						if($arg[$i+1] === ' ')
-							$i++;
-					}
-					else if($arg[$i] === "'" and ($i === 0 or $arg[$i-1] !== '\\')) {
-						// consume characters until end of quoted string
-						$i++;
-						for( ; ; $i++) {
-							if($i === $len) {
-								throw new EHException(
-									"Unexpected end of command while in single-quoted string",
-									EHException::E_RECOVERABLE
-								);
-							}
-							if($arg[$i] === "'" and $arg[$i-1] !== '\\')
-								break;
-							$paras[$key] .= $arg[$i];
-						}
-					}
-					else if($arg[$i] === '"' and ($i === 0 or $arg[$i-1] !== '\\')) {
-						// consume characters until end of quoted string
-						$i++;
-						for( ; ; $i++) {
-							if($i === $len) {
-								throw new EHException(
-									"Unexpected end of command while in double-quoted string",
-									EHException::E_RECOVERABLE
-								);
-							}
-							if($arg[$i] === '"' and $arg[$i-1] !== '\\')
-								break;
-							$paras[$key] .= $arg[$i];
-						}
-					}
-					else
-						$paras[$key] .= $arg[$i];
-				}
-				// separate argument from paras
-				$argument = trim($paras[0]);
-				unset($paras[0]);
-				// separate output redirection and friends
-				foreach($redirection as $key => $var) {
-					if(isset($paras[$key])) {
-						$redirection[$key] = $paras[$key];
-						unset($paras[$key]);
-					}
-				}
-				// handle shortcut
-				if($argument === '*')
-					$argarray = $this->current;
-				else
-					$argarray = array($argument);
-			};
 			// split command into pieces
-			$divide_cmd($arg);
+			$paras = $this->divide_cmd($arg);
+			// separate argument from paras
+			$argument = trim($paras[0]);
+			unset($paras[0]);
+			// separate output redirection and friends
+			foreach($redirection as $key => $var) {
+				if(isset($paras[$key])) {
+					$redirection[$key] = $paras[$key];
+					unset($paras[$key]);
+				}
+			}
+			// handle shortcut
+			if($argument === '*')
+				$argarray = $this->current;
+			else
+				$argarray = array($argument);
 		}
 		// output redirection
 		if(($redirection['>'] !== false or $redirection['>$'] !== false) and $cmd['execute'] !== 'quit') {
@@ -1724,7 +1718,7 @@ abstract class ExecuteHandler {
 	public function test() {
 	// Test function that might do anything I currently want to test
 	// Currently, testing what arguments it is getting
-		echo "a\033[2K"; fgetc(STDIN);
+		var_dump(func_get_args());
 	}
 }
 ?>

@@ -520,7 +520,7 @@ abstract class ExecuteHandler {
 		return 0;
 	}
 	public function execute($in = NULL) {
-	// functions as an interpreter of the byfile() "command line"
+	// execute a single command
 		// by default, take current value of PC
 		if($in === NULL) {
 			$in = $this->curr('pcres');

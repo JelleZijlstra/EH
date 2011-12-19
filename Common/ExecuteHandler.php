@@ -567,371 +567,372 @@ abstract class ExecuteHandler {
 		}
 		// substitute variables in argument
 		$arg = $this->substitutevars($rawarg);
-		if($this->config['debug']) echo 'Executing command: ' . $rawcmd . PHP_EOL;
-		if(array_key_exists($rawcmd, self::$constructs)) {
-			// execute language construct
-			switch($rawcmd) {
-				case '$': // variable assignment
-					if(preg_match('/^([a-zA-Z]+)\s*=\s*(.*)$/u', $arg, $matches)) {
-						$var = $matches[1];
-						if(!preg_match("/^[a-zA-Z]+$/u", $var)) {
-							echo "Syntax error: Invalid variable name: $var" . PHP_EOL;
-							return self::EXECUTE_SYNTAX_ERROR;
-						}
-						$rawassigned = $matches[2];
-						$rawassigned = $this->evaluate($rawassigned);
-						if($this->evaluate_ret === self::EVALUATE_FUNCTION_CALL)
-							return self::EXECUTE_PC;
-						if(preg_match("/^(\"|').*(\"|')$/u", $rawassigned, $matches)) {
-							// string assignment
-							$rawassigned = substr($rawassigned, 1, -1);
-							// remove quote escapes
-							$regex = "/\\\\(?=" . $matches[1] . ")/u";
-							$assigned = preg_replace($regex, '', $rawassigned);
-						}
-						else if(preg_match("/^-?(\d+|\d+\.\d+|0x\d+)$/u", $rawassigned)) {
-							// number
-							$assigned = $rawassigned;
-						}
-						else {
-							echo "Syntax error: Unrecognized assignment value: $rawassigned" . PHP_EOL;
-							return self::EXECUTE_SYNTAX_ERROR;
-						}
-						$this->setvar($var, $assigned);
-						return self::EXECUTE_NEXT;
-					}
-					else if(preg_match('/^([a-zA-Z]+)(\+\+|\-\-)$/u', $arg, $matches)) {
-						$varname = $matches[1];
-						$var = $this->getvar($varname);
-						if($var === NULL) {
-							echo 'Notice: Unrecognized variable ' . $varname;
-							return self::EXECUTE_NEXT;
-						}
-						switch($matches[2]) {
-							case '++': $var++; break;
-							case '--': $var--; break;
-						}
-						$this->setvar($varname, $var);
-						return self::EXECUTE_NEXT;
-					}
-					else {
-						echo "Syntax error: In line: " . $in . PHP_EOL;
+		if($this->config['debug']) 
+			echo 'Executing command: ' . $rawcmd . PHP_EOL;
+		// execute language construct
+		switch($rawcmd) {
+			case '$': // variable assignment
+				if(preg_match('/^([a-zA-Z]+)\s*=\s*(.*)$/u', $arg, $matches)) {
+					$var = $matches[1];
+					if(!preg_match("/^[a-zA-Z]+$/u", $var)) {
+						echo "Syntax error: Invalid variable name: $var" . PHP_EOL;
 						return self::EXECUTE_SYNTAX_ERROR;
 					}
-				case 'if':
-					// evaluate condition
-					$condition = (bool) $this->evaluate($arg);
-					switch($this->evaluate_ret) {
-						case self::EVALUATE_FUNCTION_CALL:
-							return self::EXECUTE_PC;
-						case self::EVALUATE_ERROR:
-							return self::EXECUTE_SYNTAX_ERROR;
+					$rawassigned = $matches[2];
+					$rawassigned = $this->evaluate($rawassigned);
+					if($this->evaluate_ret === self::EVALUATE_FUNCTION_CALL)
+						return self::EXECUTE_PC;
+					if(preg_match("/^(\"|').*(\"|')$/u", $rawassigned, $matches)) {
+						// string assignment
+						$rawassigned = substr($rawassigned, 1, -1);
+						// remove quote escapes
+						$regex = "/\\\\(?=" . $matches[1] . ")/u";
+						$assigned = preg_replace($regex, '', $rawassigned);
 					}
-					// execute?
-					// this gets set when we're in a non-executing part of an if
-					// statement that is getting evaluated
-					if($inif)
-						// not executing code we're in, so not executing this if either
+					else if(preg_match("/^-?(\d+|\d+\.\d+|0x\d+)$/u", $rawassigned)) {
+						// number
+						$assigned = $rawassigned;
+					}
+					else {
+						echo "Syntax error: Unrecognized assignment value: $rawassigned" . PHP_EOL;
+						return self::EXECUTE_SYNTAX_ERROR;
+					}
+					$this->setvar($var, $assigned);
+					return self::EXECUTE_NEXT;
+				}
+				else if(preg_match('/^([a-zA-Z]+)(\+\+|\-\-)$/u', $arg, $matches)) {
+					$varname = $matches[1];
+					$var = $this->getvar($varname);
+					if($var === NULL) {
+						echo 'Notice: Unrecognized variable ' . $varname;
+						return self::EXECUTE_NEXT;
+					}
+					switch($matches[2]) {
+						case '++': $var++; break;
+						case '--': $var--; break;
+					}
+					$this->setvar($varname, $var);
+					return self::EXECUTE_NEXT;
+				}
+				else {
+					echo "Syntax error: In line: " . $in . PHP_EOL;
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+			case 'if':
+				// evaluate condition
+				$condition = (bool) $this->evaluate($arg);
+				switch($this->evaluate_ret) {
+					case self::EVALUATE_FUNCTION_CALL:
+						return self::EXECUTE_PC;
+					case self::EVALUATE_ERROR:
+						return self::EXECUTE_SYNTAX_ERROR;
+				}
+				// execute?
+				// this gets set when we're in a non-executing part of an if
+				// statement that is getting evaluated
+				if($inif)
+					// not executing code we're in, so not executing this if either
+					$execute = false;
+				else {
+					// are we executing the outer flow object?
+					$f = $this->curr('flowo');
+					$execute = $f['execute'];
+				}
+				$this->curr('flowctr', '++');
+				$this->curr('flowo', array(
+					'type' => 'if',
+					'part' => 'then',
+					'condition' => $condition,
+					'line' => $this->curr('pc'),
+					'execute' => $execute,
+				));
+				return self::EXECUTE_NEXT;
+			case 'else':
+				$f =& $this->curr('flowo');
+				if($f['type'] !== 'if') {
+					echo 'Unexpected "else"' . PHP_EOL;
+					$this->pcinc();
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+				$f['part'] = 'else';
+				return self::EXECUTE_NEXT;
+			case 'endif':
+				$f =& $this->curr('flowo');
+				if($f['type'] !== 'if') {
+					echo 'Unexpected "endif"' . PHP_EOL;
+					$this->pcinc();
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+				$this->curr('flowctr', '--');
+				return self::EXECUTE_NEXT;
+			case 'for':
+				if(preg_match("/^(\d+)\s+count\s+(.*)$/u", $arg, $matches)) {
+					$max = (int) $matches[1];
+					$var = $matches[2];
+					if($max < 1)
 						$execute = false;
 					else {
-						// are we executing the outer flow object?
+						$f = $this->curr('flowo');
+						$execute = $f['execute'];
+					}
+					$this->setvar($var, 0);
+					$this->curr('flowctr', '++');
+					$this->pcinc();
+					$this->curr('flowo', array(
+						'type' => 'for',
+						'subtype' => 'count',
+						'counter' => 0,
+						'max' => $max,
+						'countervar' => $var,
+						'line' => $this->curr('pc'),
+						'execute' => $execute,
+					));
+					return self::EXECUTE_PC;
+				}
+				else if(preg_match("/^(\d+)$/u", $arg, $matches)) {
+					$max = (int) $matches[1];
+					if($max < 1)
+						$execute = false;
+					else {
 						$f = $this->curr('flowo');
 						$execute = $f['execute'];
 					}
 					$this->curr('flowctr', '++');
-					$this->curr('flowo', array(
-						'type' => 'if',
-						'part' => 'then',
-						'condition' => $condition,
-						'line' => $this->curr('pc'),
-						'execute' => $execute,
-					));
-					return self::EXECUTE_NEXT;
-				case 'else':
-					$f =& $this->curr('flowo');
-					if($f['type'] !== 'if') {
-						echo 'Unexpected "else"' . PHP_EOL;
-						$this->pcinc();
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					$f['part'] = 'else';
-					return self::EXECUTE_NEXT;
-				case 'endif':
-					$f =& $this->curr('flowo');
-					if($f['type'] !== 'if') {
-						echo 'Unexpected "endif"' . PHP_EOL;
-						$this->pcinc();
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					$this->curr('flowctr', '--');
-					return self::EXECUTE_NEXT;
-				case 'for':
-					if(preg_match("/^(\d+)\s+count\s+(.*)$/u", $arg, $matches)) {
-						$max = (int) $matches[1];
-						$var = $matches[2];
-						if($max < 1)
-							$execute = false;
-						else {
-							$f = $this->curr('flowo');
-							$execute = $f['execute'];
-						}
-						$this->setvar($var, 0);
-						$this->curr('flowctr', '++');
-						$this->pcinc();
-						$this->curr('flowo', array(
-							'type' => 'for',
-							'subtype' => 'count',
-							'counter' => 0,
-							'max' => $max,
-							'countervar' => $var,
-							'line' => $this->curr('pc'),
-							'execute' => $execute,
-						));
-						return self::EXECUTE_PC;
-					}
-					else if(preg_match("/^(\d+)$/u", $arg, $matches)) {
-						$max = (int) $matches[1];
-						if($max < 1)
-							$execute = false;
-						else {
-							$f = $this->curr('flowo');
-							$execute = $f['execute'];
-						}
-						$this->curr('flowctr', '++');
-						$this->pcinc();
-						$this->curr('flowo', array(
-							'type' => 'for',
-							'subtype' => 'barecount',
-							'counter' => 0,
-							'max' => $max,
-							'line' => $this->curr('pc'),
-							'execute' => $execute,
-						));
-						return self::EXECUTE_PC;
-					}
-					else {
-						echo 'Syntax error: In line: ' . $in . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-				case 'endfor':
-					$f =& $this->curr('flowo');
-					if($f['type'] !== 'for') {
-						echo 'Syntax error: Unexpected "endfor"' . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					// if we're not executing this, no point in looping
-					if(!$f['execute']) {
-						$this->curr('flowctr', '--');
-						return self::EXECUTE_NEXT;
-					}
-					if($f['subtype'] === 'count') {
-						$ctr = $this->getvar($f['countervar']);
-						$ctr++;
-						if($ctr < $f['max']) {
-							$this->curr('pc', $f['line']);
-							$this->setvar($f['countervar'], $ctr);
-						}
-						else {
-							$this->curr('flowctr', '--');
-							$this->pcinc();
-						}
-						return self::EXECUTE_PC;
-					}
-					else if($f['subtype'] === 'barecount') {
-						$f['counter']++;
-						if($f['counter'] < $f['max']) {
-							$this->curr('pc', $f['line']);
-						}
-						else {
-							$this->curr('flowctr', '--');
-							$this->pcinc();
-						}
-						return self::EXECUTE_PC;
-					}
-					else {
-						echo 'Unrecognized subtype: ' . $f['subtype'] . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-				case '//': // comment, ignored
-					return self::EXECUTE_NEXT;
-				case 'while':
-					$condition = $rawarg;
-					$execute = (bool) $this->evaluate($this->substitutevars($condition));
-					switch($this->evaluate_ret) {
-						case self::EVALUATE_FUNCTION_CALL:
-							return self::EXECUTE_PC;
-						case self::EVALUATE_ERROR:
-							return self::EXECUTE_SYNTAX_ERROR;
-					}
-					// check whether we're executing this area at all
-					if($execute) {
-						$f = $this->curr('flowo');
-						if(!$f['execute'])
-							$execute = false;
-					}
 					$this->pcinc();
-					$this->curr('flowctr', '++');
 					$this->curr('flowo', array(
-						'type' => 'while',
-						'condition' => $condition,
-						'execute' => $execute,
+						'type' => 'for',
+						'subtype' => 'barecount',
+						'counter' => 0,
+						'max' => $max,
 						'line' => $this->curr('pc'),
+						'execute' => $execute,
 					));
 					return self::EXECUTE_PC;
-				case 'endwhile':
-					$f =& $this->curr('flowo');
-					if($f['type'] !== 'while') {
-						echo 'Syntax error: Unexpected "endwhile"' . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					// if we're not executing this, no point in looping
-					if(!$f['execute']) {
-						$this->curr('flowctr', '--');
-						return self::EXECUTE_NEXT;
-					}
-					$f['execute'] = (bool) $this->evaluate($this->substitutevars($f['condition']));
-					if($this->evaluate_ret === self::EVALUATE_FUNCTION_CALL)
-						return self::EXECUTE_PC;
-					if($f['execute']) {
-						$this->curr('pc', $f['line']);
-						return self::EXECUTE_PC;
-					}
-					else {
-						$this->curr('flowctr', '--');
-						return self::EXECUTE_NEXT;
-					}
-				case 'func': // function introduction
-					// compile function definition
-					if(!preg_match(
-						"/^([a-zA-Z]+):\s+(([a-zA-Z]+,\s+)*[a-zA-Z]+)\$/u", 
-						$arg, 
-						$matches)) {
-						echo "Syntax error: In line: $in" . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					$name = $matches[1];
-					$vars = preg_split("/,\s+/", $matches[2]);
-					// functions get their own scope
-					$this->curr('currscope', '++');
-					$this->curr('vars', array());
-					// increment flowcounter so we can edit its variables
-					$this->curr('flowctr', '++');
-					$f = $this->funcs[$name];
-					if($f) {
-						// function already exists; call it
-						if($this->retline < 0) {
-							echo "Syntax error: Redefinition of function $name" . PHP_EOL;
-							return self::EXECUTE_SYNTAX_ERROR;
-						}
-						foreach($f['args'] as $key => $value) {
-							$this->setvar($value, $this->funcargs[$key]);
-						}
-						$flow = array(
-							'type' => 'func',
-							// we're assuming that we'll only get here when we're actually executing the code
-							'execute' => true,
-							'ret' => $this->retline,
-						);
-						// reset variables
-						$this->retline = -1;
-						$this->funcargs = array();
-					}
-					else {
-						// create new function
-						$func = array(
-							'name' => $name,
-							'args' => $vars,
-							'line' => $this->curr('pc'),
-							'argcount' => count($vars),
-						);
-						$this->funcs[$name] = $func;
-						$flow = array(
-							'type' => 'func',
-							// don't execute while we're loading function
-							'execute' => false, 
-							'line' => $this->curr('pc'),
-							'function' => $name,
-						);
-					}
-					// note that flowctr has already been incremented
-					$this->curr('flowo', $flow); 
+				}
+				else {
+					echo 'Syntax error: In line: ' . $in . PHP_EOL;
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+			case 'endfor':
+				$f =& $this->curr('flowo');
+				if($f['type'] !== 'for') {
+					echo 'Syntax error: Unexpected "endfor"' . PHP_EOL;
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+				// if we're not executing this, no point in looping
+				if(!$f['execute']) {
+					$this->curr('flowctr', '--');
 					return self::EXECUTE_NEXT;
-				case 'ret':
-					// loop through inner control flow structures until we find
-					// our function
-					$flow = $this->curr('flowctr');
-					do {
-						$f = $this->flow[$this->currhist][$flow];
-						if(!$f['execute'])
-							return self::EXECUTE_NEXT;
-						$flow--;
-						if($flow < 0) {
-							echo 'Syntax error: Unexpected "ret"' . PHP_EOL;
-							return self::EXECUTE_SYNTAX_ERROR;
-						}
-					} while($f['type'] !== 'func');
-					// return value is the same as the argument; does not get evaluated. If there is no argument, we return NULL.
-					$this->eax = $arg;
+				}
+				if($f['subtype'] === 'count') {
+					$ctr = $this->getvar($f['countervar']);
+					$ctr++;
+					if($ctr < $f['max']) {
+						$this->curr('pc', $f['line']);
+						$this->setvar($f['countervar'], $ctr);
+					}
+					else {
+						$this->curr('flowctr', '--');
+						$this->pcinc();
+					}
+					return self::EXECUTE_PC;
+				}
+				else if($f['subtype'] === 'barecount') {
+					$f['counter']++;
+					if($f['counter'] < $f['max']) {
+						$this->curr('pc', $f['line']);
+					}
+					else {
+						$this->curr('flowctr', '--');
+						$this->pcinc();
+					}
+					return self::EXECUTE_PC;
+				}
+				else {
+					echo 'Unrecognized subtype: ' . $f['subtype'] . PHP_EOL;
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+			case '//': // comment, ignored
+				return self::EXECUTE_NEXT;
+			case 'while':
+				$condition = $rawarg;
+				$execute = (bool) $this->evaluate($this->substitutevars($condition));
+				switch($this->evaluate_ret) {
+					case self::EVALUATE_FUNCTION_CALL:
+						return self::EXECUTE_PC;
+					case self::EVALUATE_ERROR:
+						return self::EXECUTE_SYNTAX_ERROR;
+				}
+				// check whether we're executing this area at all
+				if($execute) {
+					$f = $this->curr('flowo');
+					if(!$f['execute'])
+						$execute = false;
+				}
+				$this->pcinc();
+				$this->curr('flowctr', '++');
+				$this->curr('flowo', array(
+					'type' => 'while',
+					'condition' => $condition,
+					'execute' => $execute,
+					'line' => $this->curr('pc'),
+				));
+				return self::EXECUTE_PC;
+			case 'endwhile':
+				$f =& $this->curr('flowo');
+				if($f['type'] !== 'while') {
+					echo 'Syntax error: Unexpected "endwhile"' . PHP_EOL;
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+				// if we're not executing this, no point in looping
+				if(!$f['execute']) {
+					$this->curr('flowctr', '--');
+					return self::EXECUTE_NEXT;
+				}
+				$f['execute'] = (bool) $this->evaluate($this->substitutevars($f['condition']));
+				if($this->evaluate_ret === self::EVALUATE_FUNCTION_CALL)
+					return self::EXECUTE_PC;
+				if($f['execute']) {
+					$this->curr('pc', $f['line']);
+					return self::EXECUTE_PC;
+				}
+				else {
+					$this->curr('flowctr', '--');
+					return self::EXECUTE_NEXT;
+				}
+			case 'func': // function introduction
+				// compile function definition
+				if(!preg_match(
+					"/^([a-zA-Z]+):\s+(([a-zA-Z]+,\s+)*[a-zA-Z]+)\$/u", 
+					$arg, 
+					$matches)) {
+					echo "Syntax error: In line: $in" . PHP_EOL;
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+				$name = $matches[1];
+				$vars = preg_split("/,\s+/", $matches[2]);
+				// functions get their own scope
+				$this->curr('currscope', '++');
+				$this->curr('vars', array());
+				// increment flowcounter so we can edit its variables
+				$this->curr('flowctr', '++');
+				$f = $this->funcs[$name];
+				if($f) {
+					// function already exists; call it
+					if($this->retline < 0) {
+						echo "Syntax error: Redefinition of function $name" . PHP_EOL;
+						return self::EXECUTE_SYNTAX_ERROR;
+					}
+					foreach($f['args'] as $key => $value) {
+						$this->setvar($value, $this->funcargs[$key]);
+					}
+					$flow = array(
+						'type' => 'func',
+						// we're assuming that we'll only get here when we're actually executing the code
+						'execute' => true,
+						'ret' => $this->retline,
+					);
+					// reset variables
+					$this->retline = -1;
+					$this->funcargs = array();
+				}
+				else {
+					// create new function
+					$func = array(
+						'name' => $name,
+						'args' => $vars,
+						'line' => $this->curr('pc'),
+						'argcount' => count($vars),
+					);
+					$this->funcs[$name] = $func;
+					$flow = array(
+						'type' => 'func',
+						// don't execute while we're loading function
+						'execute' => false, 
+						'line' => $this->curr('pc'),
+						'function' => $name,
+					);
+				}
+				// note that flowctr has already been incremented
+				$this->curr('flowo', $flow); 
+				return self::EXECUTE_NEXT;
+			case 'ret':
+				// loop through inner control flow structures until we find
+				// our function
+				$flow = $this->curr('flowctr');
+				do {
+					$f = $this->flow[$this->currhist][$flow];
+					if(!$f['execute'])
+						return self::EXECUTE_NEXT;
+					$flow--;
+					if($flow < 0) {
+						echo 'Syntax error: Unexpected "ret"' . PHP_EOL;
+						return self::EXECUTE_SYNTAX_ERROR;
+					}
+				} while($f['type'] !== 'func');
+				// return value is the same as the argument; does not get 
+				// evaluated. If there is no argument, we return NULL.
+				$this->eax = $arg;
+				$this->curr('pc', $f['ret']);
+				$this->funcexecuted = true;
+				$this->curr('flowctr', $flow);
+				$this->curr('currscope', '--');
+				return self::EXECUTE_PC;
+			case 'endfunc':
+				$f = $this->curr('flowo');
+				if($f['type'] !== 'func') {
+					echo 'Syntax error: Unexpected "endfunc"' . PHP_EOL;
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+				if($f['execute']) {
+					// we reached end of an executing function, so return 
+					// NULL
+					$this->eax = NULL;
 					$this->curr('pc', $f['ret']);
 					$this->funcexecuted = true;
-					$this->curr('flowctr', $flow);
-					$this->curr('currscope', '--');
-					return self::EXECUTE_PC;
-				case 'endfunc':
-					$f = $this->curr('flowo');
-					if($f['type'] !== 'func') {
-						echo 'Syntax error: Unexpected "endfunc"' . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					if($f['execute']) {
-						// we reached end of an executing function, so return NULL
-						$this->eax = NULL;
-						$this->curr('pc', $f['ret']);
-						$this->funcexecuted = true;
-						$this->curr('flowctr', '--');
-						$this->curr('currscope', '--');
-						return self::EXECUTE_PC;
-					}
 					$this->curr('flowctr', '--');
 					$this->curr('currscope', '--');
-					return self::EXECUTE_NEXT;
-				case 'call':
-					// call makes no sense without an argument
-					if($arg === NULL) {
-						echo 'Syntax error: In line: ' . $in . PHP_EOL;
+					return self::EXECUTE_PC;
+				}
+				$this->curr('flowctr', '--');
+				$this->curr('currscope', '--');
+				return self::EXECUTE_NEXT;
+			case 'call':
+				// call makes no sense without an argument
+				if($arg === NULL) {
+					echo 'Syntax error: In line: ' . $in . PHP_EOL;
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+				// return value gets discarded; just evaluate argument
+				$this->evaluate($arg);
+				switch($this->evaluate_ret) {
+					case self::EVALUATE_FUNCTION_CALL:
+						return self::EXECUTE_PC;
+					case self::EVALUATE_ERROR:
 						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					// return value gets discarded; just evaluate argument
-					$this->evaluate($arg);
-					switch($this->evaluate_ret) {
-						case self::EVALUATE_FUNCTION_CALL:
-							return self::EXECUTE_PC;
-						case self::EVALUATE_ERROR:
-							return self::EXECUTE_SYNTAX_ERROR;
-					}
+				}
+				return self::EXECUTE_NEXT;
+			case 'global':
+				if(!preg_match("/^([a-zA-Z]+)\$/u", $arg, $matches)) {
+					echo 'Syntax error: In line: ' . $in . PHP_EOL;
+					return self::EXECUTE_SYNTAX_ERROR;
+				}
+				if($this->flowctr == 0) {
 					return self::EXECUTE_NEXT;
-				case 'global':
-					if(!preg_match("/^([a-zA-Z]+)\$/u", $arg, $matches)) {
-						echo 'Syntax error: In line: ' . $in . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					if($this->flowctr == 0) {
-						return self::EXECUTE_NEXT;
-					}
-					$var = $arg;
-					if($this->getvar($var) !== NULL) {
-						echo 'Notice: attempted global variable ' . $var . ' already exists locally' . PHP_EOL;
-						return self::EXECUTE_NEXT;
-					}
-					if(!isset($this->vars[$this->currhist][0][$var])) {
-						echo 'Notice: there is no global variable ' . $var . PHP_EOL;
-						$this->setvar($var, NULL);
-						return self::EXECUTE_NEXT;
-					}
-					// alias local variable to global
-					$this->vars[$this->currhist][$this->curr('currscope')][$var] =& $this->vars[$this->currhist][0][$var];
+				}
+				$var = $arg;
+				if($this->getvar($var) !== NULL) {
+					echo 'Notice: attempted global variable ' . $var . ' already exists locally' . PHP_EOL;
 					return self::EXECUTE_NEXT;
-			}
+				}
+				if(!isset($this->vars[$this->currhist][0][$var])) {
+					echo 'Notice: there is no global variable ' . $var . PHP_EOL;
+					$this->setvar($var, NULL);
+					return self::EXECUTE_NEXT;
+				}
+				// alias local variable to global
+				$this->vars[$this->currhist][$this->curr('currscope')][$var] =& $this->vars[$this->currhist][0][$var];
+				return self::EXECUTE_NEXT;
 		}
 		// now we're looking only at EH-defined commands, not language constructs
 		$cmd = $this->expand_cmd($rawcmd);
@@ -969,7 +970,8 @@ abstract class ExecuteHandler {
 				$argarray = array($argument);
 		}
 		// output redirection
-		if(($redirection['>'] !== false or $redirection['>$'] !== false) and $cmd['execute'] !== 'quit') {
+		if(($redirection['>'] !== false or $redirection['>$'] !== false) and 
+			$cmd['execute'] !== 'quit') {
 			ob_start();
 		}
 		// return value of executed command
@@ -979,7 +981,8 @@ abstract class ExecuteHandler {
 			case 'doallorcurr':
 				if($argarray) {
 					foreach($argarray as $file)
-						if(!($ret = $this->{$cmd['name']}($file, $paras))) break;
+						if(!($ret = $this->{$cmd['name']}($file, $paras))) 
+							break;
 				}
 				else
 					$ret = $this->doall($cmd['name'], $paras);

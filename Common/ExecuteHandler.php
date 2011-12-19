@@ -384,6 +384,14 @@ abstract class ExecuteHandler {
 	}
 	private function divide_cmd($arg) {
 	// transforms an argument string into a $paras array, taking care of quoted strings and output redirection
+		$endcmd = function($context) use(&$i, &$len) {
+			if($i === $len) {
+				throw new EHException(
+					"Unexpected end of command while in " . $context,
+					EHException::E_RECOVERABLE
+				);
+			}		
+		};
 		$len = strlen($arg);
 		$next = false;
 		$key = 0; // array key, either 0 for the argument or a para name
@@ -398,23 +406,15 @@ abstract class ExecuteHandler {
 			}
 			// handle parameter names
 			else if($arg[$i] === '-' and ($i === 0 or $arg[$i-1] === ' ')) {
+				$i++;
+				$endcmd("parameter definition");
 				// short-form or long-form?
-				if(!isset($arg[$i++])) {
-					throw new EHException(
-						"Unexpected -",
-						EHException::E_RECOVERABLE);
-				}
 				// long form
 				if($arg[$i] === '-') {
 					$i++;
 					$key = '';
 					for( ; $arg[$i] !== '='; $i++) {
-						if($i === $len) {
-							throw new EHException(
-								"Unexpected end of command while in parameter name",
-								EHException::E_RECOVERABLE
-							);
-						}
+						$endcmd("parameter name");
 						$key .= $arg[$i];
 					}
 					$paras[$key] = '';
@@ -449,12 +449,7 @@ abstract class ExecuteHandler {
 				// consume characters until end of quoted string
 				$i++;
 				for( ; ; $i++) {
-					if($i === $len) {
-						throw new EHException(
-							"Unexpected end of command while in single-quoted string",
-							EHException::E_RECOVERABLE
-						);
-					}
+					$endcmd("single-quoted string");
 					if($arg[$i] === "'" and $arg[$i-1] !== '\\')
 						break;
 					$paras[$key] .= $arg[$i];
@@ -464,12 +459,7 @@ abstract class ExecuteHandler {
 				// consume characters until end of quoted string
 				$i++;
 				for( ; ; $i++) {
-					if($i === $len) {
-						throw new EHException(
-							"Unexpected end of command while in double-quoted string",
-							EHException::E_RECOVERABLE
-						);
-					}
+					$endcmd("double-quoted string");
 					if($arg[$i] === '"' and $arg[$i-1] !== '\\')
 						break;
 					$paras[$key] .= $arg[$i];

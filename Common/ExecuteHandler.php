@@ -1529,7 +1529,10 @@ abstract class ExecuteHandler {
 					if($histptr > 0)
 						$histptr--;
 					// get new command
-					$cmd = mb_str_split($paras['lines'][$histptr]);
+					if(!isset($paras['lines'][$histptr]))
+						$cmd = array();
+					else
+						$cmd = mb_str_split($paras['lines'][$histptr]);
 					$cmdlen = count($cmd);
 					$keypos = $cmdlen;
 					break;

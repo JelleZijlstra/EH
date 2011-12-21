@@ -1068,7 +1068,10 @@ class FullFile extends ListEntry {
 	// cites according to normal WP citation style
 	// if $mw = false, no MediaWiki markup is used
 		// this is going to be the citation
-		if($mw) $out = '*';
+		if($mw) 
+			$out = '*';
+		else
+			$out = '';
 		// replace last ; with ", and"; others with ","
 		$out .= preg_replace(array("/;(?=.*;)/", "/;/", "/\\\\/"), array(",", " and", "\\"), $this->authors);
 		$out .= " $this->year. ";
@@ -1086,7 +1089,7 @@ class FullFile extends ListEntry {
 		// journals (most common case)
 		if($this->journal) {
 			$out .= $this->journal . " ";
-			if($series)
+			if($this->series)
 				// need to catch "double series"
 				$out .= "(" . preg_replace("/;/", ") (", $this->series) . ")";
 			$out .= $this->volume;

@@ -786,10 +786,16 @@ abstract class FileList extends ExecuteHandler {
 		$results = array();
 		foreach($this->c as $file) {
 			foreach($file as $key => $property) {
-				if($property) $results[$key]++;
+				if($property) {
+					if(!isset($results[$key])) $results[$key] = 0;
+					$results[$key]++;
+				}
 				if(is_array($property)) {
 					foreach($property as $key => $prop) {
-						if($prop) $results[$key]++;
+						if($prop) {
+							if(!isset($results[$key])) $results[$key] = 0;
+							$results[$key]++;
+						}
 					}
 				}
 			}

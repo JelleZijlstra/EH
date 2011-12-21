@@ -49,16 +49,22 @@ class TaxonList extends FileList {
 		// initial settings
 		$this->extantonly = true;
 	}
-	public function add_entry($file, $paras = '') {
-	// Adds a FullFile to this CsvList object
-	// $paras has the following members:
-	// - string ['name'] - filename to write under (if different from $file->name)
-	// - bool ['isnew'] - whether we need to do things we do for new files (as opposed to old ones merely loaded into the catalog)
+	public function add_entry(ListEntry $file, array $paras = array()) {
+	// Adds a FullFile to this object
+		if(self::process_paras($paras, array(
+			'checklist' => array(
+				'name', //filename to write under (if different from $file->name)
+				'isnew', //whether we need to do things we do for new files (as opposed to old ones merely loaded into the catalog)
+			),
+			'default' => array(
+				'name' => $file->name,
+				'isnew' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if($file->discardthis) {
 			unset($file);
 			return false;
 		}
-		if(!$paras['name']) $paras['name'] = $file->name;
 		while($this->has($paras['name'])) {
 			$cmd = $this->menu(array(
 				'head' => "File " . $paras['name'] . " already exists.",

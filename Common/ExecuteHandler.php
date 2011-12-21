@@ -1077,7 +1077,7 @@ abstract class ExecuteHandler {
 	}
 	static protected function setifneeded(&$paras, $field) {
 	// deprecated; use process_paras instead
-		if($paras[$field]) 
+		if(isset($paras[$field]))
 			return;
 		$paras[$field] = getinput_label(ucfirst($field));
 	}

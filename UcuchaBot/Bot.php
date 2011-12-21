@@ -335,99 +335,105 @@ class Bot extends Snoopy {
 		file_put_contents($datefile, $date->format(self::stddate));
 		// HANDLE EACH PAGE
 		foreach($pages as $page) {
-			echo "Notifying contributors for page " . $page['name'] . PHP_EOL;
-			$notifiedusers = array(); // users to notify
-			//edit TFA talk page
-			$talkpage = $this->fetchwp('Talk:' . $page['name']);
-			if(preg_match('/\|\s*maindate\s*=/u', $talkpage))
-				echo 'Maindate already exists on talkpage of page ' . 
-					$page['name'] . PHP_EOL;
-			else {
-				$text = preg_replace('/(\|\s*currentstatus\s*=\s*FA\s*)/u',
-					"$1|maindate=" . $page['date'] . "\n",
-					$talkpage,
-					-1,
-					$count);
-				if($count !== 1) {
-					echo 'Adding maindate failed for page ' . $page['name'] .
-						PHP_EOL;
-					var_dump($text, $count);
-					// tell me that it failed
-					$this->writewp('User talk: Ucucha', array(
-						'kind' => 'appendtext',
-						'summary' => 'Failed to write maindate: ' . 
-							$page['name'],
-						'text' => 'I was unable to insert a ' .
-							'<code>|maindate=</code> on the page [[Talk:' .
-							$page['name'] . '. It is TFA on ' .
-							$page['date'] . '. Thank you! ~~~~',
-						'donotmarkasbot' => true,
-					));
-				}
-				else
-					$this->writewp('Talk:' . $page['name'], array(
-						'text' => $text,
-						'summary' => 'Bot edit: This page will appear as ' . 
-							'today\'s featured article in the near future',
-					));
+			if(!$this->mp_notice_page($page)) {
+				echo 'Error notifying contributors for page: ' . $page . PHP_EOL;
 			}
-			// get noms
-			$ahparas = $this->parse_ah(array('text' => $talkpage));
-			$fac = '';
-			for($i = 1; $i < 50; $i++) {
-				if(!isset($ahparas['action' . $i])) 
-					break;
-				if($ahparas['action' . $i] !== 'FAC')
-					continue;
-				if($ahparas['action' . $i . 'result'] !== 'promoted')
-					continue;
-				$fac = $ahparas['action' . $i . 'link'];
-			}
-			$this->setup_facs();
-			$facobj = new FacsEntry(array('name' => $fac), 'n');
-			$facobj->addnoms();
-			foreach($facobj->nominators as $nom) {
-				$notifiedusers[$nom] = true;
-			}
-			// get top users
-			$paras = array(
-				'action' => 'query',
-				'prop' => 'revisions',
-				'titles' => $page['name'],
-				'rvprop' => 'user',
-				'rvlimit' => 5000,
-			);
-			$api = $this->fetchapi($paras);
-			// array key here is page ID, so unpredictable
-			$apipage = array_pop($api['query']['pages']);
-			$users = array();
-			foreach($apipage['revisions'] as $rev) {
-				if(!isset($users[$rev['user']])) 
-					$users[$rev['user']] = 0;
-				$users[$rev['user']]++;
-			}
-			foreach($users as $user => $number) {
-				if($number > $revnotifylimit)
-					$notifiedusers[$user] = true;
-			}
-			//notify users
-			foreach($notifiedusers as $user => $bool) {
-				if(!$bool) continue;
-				echo "Notifying user: " . $user . PHP_EOL;
-				$this->writewp('User talk:' . $user, array(
-					'text' => '{{subst:User:UcuchaBot/TFA notice' .
-						'|page=' . $page['name'] .
-						'|date=' . $page['date'] .
-						'|blurb=' . $page['blurb'] .
-						'}}',
-					'summary' => 'Bot edit: Notice that [[' . $page['name'] . 
-						']] will appear as today\'s featured article in the ' .
-						'near future',
+		}
+	}
+	private function mp_notice_page($page) {
+		echo "Notifying contributors for page " . $page['name'] . PHP_EOL;
+		$notifiedusers = array(); // users to notify
+		//edit TFA talk page
+		$talkpage = $this->fetchwp('Talk:' . $page['name']);
+		if(preg_match('/\|\s*maindate\s*=/u', $talkpage))
+			echo 'Maindate already exists on talkpage of page ' . 
+				$page['name'] . PHP_EOL;
+		else {
+			$text = preg_replace('/(\|\s*currentstatus\s*=\s*FA\s*)/u',
+				"$1|maindate=" . $page['date'] . "\n",
+				$talkpage,
+				-1,
+				$count);
+			if($count !== 1) {
+				echo 'Adding maindate failed for page ' . $page['name'] .
+					PHP_EOL;
+				var_dump($text, $count);
+				// tell me that it failed
+				$this->writewp('User talk: Ucucha', array(
 					'kind' => 'appendtext',
+					'summary' => 'Failed to write maindate: ' . 
+						$page['name'],
+					'text' => 'I was unable to insert a ' .
+						'<code>|maindate=</code> on the page [[Talk:' .
+						$page['name'] . '. It is TFA on ' .
+						$page['date'] . '. Thank you! ~~~~',
 					'donotmarkasbot' => true,
 				));
 			}
+			else
+				$this->writewp('Talk:' . $page['name'], array(
+					'text' => $text,
+					'summary' => 'Bot edit: This page will appear as ' . 
+						'today\'s featured article in the near future',
+				));
 		}
+		// get noms
+		$ahparas = $this->parse_ah(array('text' => $talkpage));
+		$fac = '';
+		for($i = 1; $i < 50; $i++) {
+			if(!isset($ahparas['action' . $i])) 
+				break;
+			if($ahparas['action' . $i] !== 'FAC')
+				continue;
+			if($ahparas['action' . $i . 'result'] !== 'promoted')
+				continue;
+			$fac = $ahparas['action' . $i . 'link'];
+		}
+		$this->setup_facs();
+		$facobj = new FacsEntry(array('name' => $fac), 'n');
+		$facobj->addnoms();
+		foreach($facobj->nominators as $nom) {
+			$notifiedusers[$nom] = true;
+		}
+		// get top users
+		$paras = array(
+			'action' => 'query',
+			'prop' => 'revisions',
+			'titles' => $page['name'],
+			'rvprop' => 'user',
+			'rvlimit' => 5000,
+		);
+		$api = $this->fetchapi($paras);
+		// array key here is page ID, so unpredictable
+		$apipage = array_pop($api['query']['pages']);
+		$users = array();
+		foreach($apipage['revisions'] as $rev) {
+			if(!isset($users[$rev['user']])) 
+				$users[$rev['user']] = 0;
+			$users[$rev['user']]++;
+		}
+		foreach($users as $user => $number) {
+			if($number > $revnotifylimit)
+				$notifiedusers[$user] = true;
+		}
+		//notify users
+		foreach($notifiedusers as $user => $bool) {
+			if(!$bool) continue;
+			echo "Notifying user: " . $user . PHP_EOL;
+			$this->writewp('User talk:' . $user, array(
+				'text' => '{{subst:User:UcuchaBot/TFA notice' .
+					'|page=' . $page['name'] .
+					'|date=' . $page['date'] .
+					'|blurb=' . $page['blurb'] .
+					'}}',
+				'summary' => 'Bot edit: Notice that [[' . $page['name'] . 
+					']] will appear as today\'s featured article in the ' .
+					'near future',
+				'kind' => 'appendtext',
+				'donotmarkasbot' => true,
+			));
+		}
+		return true;
 	}
 	public function do_fanmp_update() {
 	// update [[WP:FANMP]].

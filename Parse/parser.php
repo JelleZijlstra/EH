@@ -196,7 +196,7 @@ class Parser {
 			case 'refend':
 				$this->replacement = 2;
 				$this->reflistbegin = PHP_EOL . "\tReferences:" . PHP_EOL;
-				$this->reflistatend = true;
+				$this->usereflist = true;
 				$this->needsort = true;
 				$this->liststyle = 2;
 				$csvlist->citetype = 'paper';
@@ -279,12 +279,12 @@ class Parser {
 			if($ref->long) echo $ref->url . PHP_EOL . $ref->long . PHP_EOL;
 		}
 	}
-	public $usereflist; // bool: whether or not to place references in a list at the end
-	public $reflistbegin; // string: gets inserted at beginning of reflist;
-	public $reflistend; // string: same, at end
+	public $usereflist = false; // bool: whether or not to place references in a list at the end
+	public $reflistbegin = ''; // string: gets inserted at beginning of reflist
+	public $reflistend = ''; // string: same, at end
 	public $liststyle; // list style to use: 0 = html; 1 = wiki; 2 = text
 	function makereflist() {
-		if(!$this->usereflist and !$this->reflistatend) return;
+		if(!$this->usereflist) return;
 		global $csvlist;
 		$replacement = $this->reflistbegin;
 		// weed out duplicates called with different Sfns

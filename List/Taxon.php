@@ -108,6 +108,12 @@ class Taxon extends ListEntry {
 			$this->warn('No content for species', 'status');
 	}
 	public function set($paras) {
+		if(self::process_paras($paras, array(
+			'default' => array(
+				'easy' => false,
+				'verbose' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		foreach($paras as $field => $content) {
 			if(self::hasproperty($field)) {
 				if($paras['easy'])
@@ -143,21 +149,8 @@ class Taxon extends ListEntry {
 				$this->p->needsave();
 			}
 		}
-		return $returnfalse ? false : true;
+		return true;
 	}
-/*	static protected function findarray($property) {
-	// used in overloading methods
-		if(in_array($property, self::$n_ids))
-			return 'ids';
-		else if(in_array($property, self::$n_endemic))
-			return 'endemic';
-		else if(in_array($property, self::$n_misc))
-			return 'misc';
-		else if(is_array($this->props) and array_key_exists($property, $this->props))
-			return 'props';
-		else
-			return false;
-	}*/
 	public function getchildren() {
 		return $this->p->par[$this->name];
 	}

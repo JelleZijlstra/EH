@@ -231,13 +231,21 @@ class Parser {
 			$text = $tmp;
 		if($this->resolveredirects and $csvlist->isredirect($cite)) {
 			$replace = '{' . $csvlist->gettruename($c['main']);
-			if($c['p']) $replace .= '|p=' . $c['p'];
-			if($c['pp']) $replace .= '|pp=' . $c['pp'];
-			if($c['loc']) $replace .= '|loc=' . $c['loc'];
+			if(isset($c['p'])) $replace .= '|p=' . $c['p'];
+			if(isset($c['pp'])) $replace .= '|pp=' . $c['pp'];
+			if(isset($c['loc'])) $replace .= '|loc=' . $c['loc'];
 			$replace .= '}';
 			$this->input = str_replace('{' . $cite . '}', $replace, $this->input);
 		}
-		return new Citation($text, array('handle' => $c['main'], 'long' => $long, 'url' => $url, 'sfn' => $sfn, 'p' => $c['p'], 'pp' => $c['pp'], 'loc' => $c['loc']));
+		$citearray = array();
+		if(isset($c['main'])) $citearray['handle'] = $c['main'];
+		if(isset($c['p'])) $citearray['p'] = $c['p'];
+		if(isset($c['pp'])) $citearray['pp'] = $c['pp'];
+		if(isset($c['loc'])) $citearray['loc'] = $c['loc'];
+		if(isset($long)) $citearray['long'] = $long; 
+		if(isset($url)) $citearray['url'] = $url; 
+		if(isset($sfn)) $citearray['sfn'] = $sfn; 
+		return new Citation($text, $citearray);
 	}
 	public $replacement; // int: what {cites} get replaced with. 1 = do nothing, leave them as they are; 2 = nothing; 3 = full ref; 4 = Sfn; 5 = just the ref text
 	function replacecites() {

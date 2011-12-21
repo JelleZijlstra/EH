@@ -2675,6 +2675,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$booktitle = (string)$result->volume_title;
 		$isbn = (string)$result->isbn;
 		$authorsraw = $result->contributors->children();
+		$authors = '';
 		if($authorsraw) foreach($authorsraw as $author) {
 			if((string)$author->attributes() !== "first")
 				$authors .= "; ";

@@ -4,7 +4,7 @@
  * Author: Smith609
  * License: PHP license
  */
-define(DEBUG, 1);
+define('DEBUG', 0);
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/List.php');
 require_once(BPATH . '/UcuchaBot/Snoopy.class.php');
@@ -144,12 +144,14 @@ class Bot extends Snoopy {
 				'kind' => 'text',
 				'abortifexists' => false,
 				'donotmarkasbot' => false,
+				'text' => false,
+				'file' => false,
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!$this->check_login()) return false;
-		if(is_string($paras['text']))
+		if($paras['text'])
 			$data = $paras['text'];
-		else if(is_string($paras['file']))
+		else if($paras['file'])
 			$data = file_get_contents($paras['file']);
 		else {
 			echo 'No text to write to ' . $page . PHP_EOL;

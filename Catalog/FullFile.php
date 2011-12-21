@@ -2108,6 +2108,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				echo "Error: could not find title." . PHP_EOL;
 				return false;
 			}
+			if($jvp || $jparas || $wnanat || $swnat || $mammstudy || $jpaleont || $jmamm) 
+				$title .= " site:bioone.org";
+			else if($mammalia) 
+				$title .= " site:reference-global.com";
+			else if($bioljlinnsoc || $bioljlinnsoc2 || $mammreview || $jbiogeogr || $ajpa || $zooljlinnsoc) 
+				$title .= " site:wiley.com";
 			return $title;
 		}
 		return false;
@@ -2360,12 +2366,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		 */
 		// construct url
 		$search = self::googletitle($title);
-		if($jvp || $jparas || $wnanat || $swnat || $mammstudy || $jpaleont || $jmamm) 
-			$search .= urlencode(" site:bioone.org");
-		else if($mammalia) 
-			$search .= urlencode(" site:reference-global.com");
-		else if($bioljlinnsoc || $bioljlinnsoc2 || $mammreview || $jbiogeogr || $ajpa || $zooljlinnsoc) 
-			$search .= urlencode(" site:wiley.com");
 		// fetch data
 		$cjson = self::fetchgoogle($search);
 		if($cjson === false) {

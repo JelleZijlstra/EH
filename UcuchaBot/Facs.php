@@ -133,8 +133,12 @@ class FacsEntry extends ListEntry {
 	// add or overwrite nominators
 		// get noms
 		$factext = $this->p->bot->fetchwp($this->name);
-		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator\(s\): (.*)(?=\n)/u', $factext, $nomstext);
-		$nomstext = $nomstext[0];
+		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator\(s\): (.*)(?=\n)/u', $factext, $matches);
+		if(!isset($matches[0])) {
+			echo 'Unable to retrieve nominators for page ' . $this->name . PHP_EOL;
+			return false;
+		}
+		$nomstext = $matches[0];
 		preg_match_all('/\[\[\s*[uU]ser:\s*([^\|\]]+)(\||\]\])/u', $nomstext, $matches, PREG_PATTERN_ORDER);
 		$noms = array();
 		foreach($matches[1] as $nom) {
@@ -145,5 +149,6 @@ class FacsEntry extends ListEntry {
 			$noms[] = $cd;
 		}
 		$this->nominators = $noms;
+		return true;
 	}
 }

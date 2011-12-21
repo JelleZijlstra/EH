@@ -421,7 +421,7 @@ abstract class ExecuteHandler {
 				}
 				// short form
 				else {
-					for( ; $arg[$i] !== ' ' and $i < $len; $i++) {
+					for( ; $i < $len and $arg[$i] !== ' '; $i++) {
 						if(in_array($arg[$i], array('=', '"', "'"))) {
 							throw new EHException(
 								"Unexpected {$arg[$i]}",
@@ -1076,6 +1076,7 @@ abstract class ExecuteHandler {
 		}
 	}
 	static protected function setifneeded(&$paras, $field) {
+	// deprecated; use process_paras instead
 		if($paras[$field]) 
 			return;
 		$paras[$field] = getinput_label(ucfirst($field));
@@ -1100,8 +1101,10 @@ abstract class ExecuteHandler {
 						break;
 					}
 					foreach($pp_value as $key => $result) {
-						if(isset($paras[$key]) and !isset($paras[$result]))
+						if(isset($paras[$key]) and !isset($paras[$result])) {
 							$paras[$result] = $paras[$key];
+							unset($paras[$key]);
+						}
 					}
 					break;
 				case 'askifempty':

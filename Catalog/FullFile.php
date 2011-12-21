@@ -2401,7 +2401,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$doi = preg_replace(array("/^.*\/doi\/(abs|pdf|full|url|pdfplusdirect)?\/?/", "/(\?.*|\/(abstract|full|pdf))$/"), array("", ""), $result->link);
 					if($doi === $result->link) {
 						$this->url = $result->link;
-						return true;
+						// return false, not true, because this doesn't mean we don't have to do manual input for other stuff
+						return false;
 					}
 					else {
 						$this->doi = trim($doi);

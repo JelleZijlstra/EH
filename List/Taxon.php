@@ -154,14 +154,14 @@ class Taxon extends ListEntry {
 	public function getchildren() {
 		return $this->p->par[$this->name];
 	}
-	private function call_children($func, $paras) {
+	private function call_children($func, array $paras) {
 		$children = $this->p->par[$this->name];
 		if(!$children) return;
 		foreach($children as $child) {
 			$this->p->$func($child, $paras);
 		}
 	}
-	public function html($paras = array()) {
+	public function html(array $paras = array()) {
 	// print taxon
 		// output file stream; should be set before calling this function
 		$out = $this->p->html_out;
@@ -558,7 +558,7 @@ class Taxon extends ListEntry {
 		if ($this->rank === 'species' and $this->status !== 'FO') return true;
 		return false;
 	}
-	public function merge($paras = '') {
+	public function merge(array $paras = array()) {
 		while(!$this->has($paras['into'])) {
 			$paras['into'] = $this->getline('Taxon to be merged into: ');
 			if($paras['into'] === 'q') return false;

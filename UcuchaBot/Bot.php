@@ -228,7 +228,7 @@ class Bot extends Snoopy {
 			echo 'Unsuccessful: ' . $result->edit->result . PHP_EOL;
 			return false;
 		}
-		else if($result->error->code) {
+		else if(isset($result->error) and $result->error->code) {
 			// Return error code
 			echo 'Error code: ' . $result->error->code . ": " .  $result->error->info . PHP_EOL;
 			return false;

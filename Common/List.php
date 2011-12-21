@@ -394,7 +394,10 @@ abstract class FileList extends ExecuteHandler {
 		// fill array
 		foreach($files as $file) {
 			$value = $paras['isfunc'] ? $file->$field() : $file->$field;
-			if($paras['function']) $value = $paras['function']($value);
+			if($paras['function']) 
+				$value = $paras['function']($value);
+			if(!isset($values[$value])) 
+				$values[$value] = 0;
 			$values[$value]++;
 		}
 		// sort (arsort to list by number, ksort to list alphabetically)

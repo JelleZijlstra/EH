@@ -846,6 +846,7 @@ abstract class ListEntry extends ExecuteHandler {
 	protected function getarray($var, $paras = array()) {
 	// helper for toarray(), to prepare array variables for storage
 		if(!is_array($this->$var)) return NULL;
+		$out = array();
 		foreach($this->$var as $key => &$value) {
 			if($value)
 				$out[$key] = $value;
@@ -854,7 +855,7 @@ abstract class ListEntry extends ExecuteHandler {
 			$func = $paras['func'];
 		else
 			$func = 'json_encode';
-		return $out ? $func($this->$var) : NULL;
+		return (count($out) > 0) ? $func($this->$var) : NULL;
 	}
 	protected function warn($text, $field) {
 		echo 'Warning (entry: ' . $this->name . '): ' . $text . ' in field ' . $field . ': ' . $this->$field . PHP_EOL;

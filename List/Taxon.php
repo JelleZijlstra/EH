@@ -158,8 +158,8 @@ class Taxon extends ListEntry {
 			return $this->p->par[$this->name];
 	}
 	private function call_children($func, array $paras) {
+		if(!isset($this->p->par[$this->name])) return;
 		$children = $this->p->par[$this->name];
-		if(!$children) return;
 		foreach($children as $child) {
 			$this->p->$func($child, $paras);
 		}

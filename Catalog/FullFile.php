@@ -612,7 +612,7 @@ class FullFile extends ListEntry {
 		// TODO: cap after apostrophes (D'elia)
 		// get rid of fancy apostrophes and quotes
 		foreach($this as $key => $field) {
-			if(is_array($property)) continue;
+			if(is_array($field)) continue;
 			if(is_string($field)) $this->$key = preg_replace(array("/([`’‘]|&apos;)/u", '/[“”]/u'), array("'", '"'), $this->$key);
 			if(($key !== 'pdfcontent') and preg_match("/(\n|\r)/", $property))
 				$this->warn('line break', $key);

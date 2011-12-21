@@ -4,7 +4,7 @@
  * Author: Smith609
  * License: PHP license
  */
-define(DEBUG, 0);
+define(DEBUG, 1);
 error_reporting(E_ALL);
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/List.php');
@@ -113,7 +113,7 @@ class Bot extends Snoopy {
 			return false;
 		}
 	}
-	public function writewp($page, $paras = '') {
+	public function writewp($page, array $paras = array()) {
 	// write to a page
 	// @para $page String page to write to
 	// @para $paras Array parameters
@@ -198,7 +198,7 @@ class Bot extends Snoopy {
 		}
 		else {
 			$debuginfo = '';
-			$debuginfo .= 'Editing to:' . PHP_EOL . api . PHP_EOL . PHP_EOL . 'VARIABLES' . PHP_EOL . PHP_EOL;
+			$debuginfo .= 'Editing to:' . PHP_EOL . self::api . PHP_EOL . PHP_EOL . 'VARIABLES' . PHP_EOL . PHP_EOL;
 			foreach($submit_vars as $key => $value)
 				if($key !== 'token') $debuginfo .= $key . ':' . PHP_EOL . '<nowiki>' . $value . '</nowiki>' . PHP_EOL . PHP_EOL;
 			$debuginfo .= '------------' . PHP_EOL . PHP_EOL;
@@ -215,10 +215,10 @@ class Bot extends Snoopy {
 		}
 		// handle result
 		$result = json_decode($this->results);
-		if($result->edit->result == "Success") {
+		if(isset($result->edit) and $result->edit->result == "Success") {
 			return true;
 		}
-		else if($result->edit->result) {
+		else if(isset($result->edit) and $result->edit->result) {
 			echo 'Unsuccessful: ' . $result->edit->result . PHP_EOL;
 			return false;
 		}

@@ -253,7 +253,7 @@ class Taxon extends ListEntry {
 			return false;
 		}
 		$pname = $mode . '_p';
-		if(!$this->p->$pname)
+		if(!isset($this->p->$pname))
 			$this->p->$pname = new Parser($mode);
 		return $this->p->{$pname}->__invoke($this->$para) ?: false;
 	}

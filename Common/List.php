@@ -93,7 +93,7 @@ abstract class FileList extends ExecuteHandler {
 		$this->saveifneeded();
 	}
 	protected static $resolve_redirects;
-	public function add_entry($file, $paras = array()) {
+	public function add_entry(ListEntry $file, array $paras = array()) {
 	// very basic add_entry function. Possibly some of the complex stuff that TaxonList and CsvList have should be moved to FileList somehow.
 		if($this->has($file->name))
 			return false;
@@ -778,7 +778,7 @@ abstract class FileList extends ExecuteHandler {
 				ob_end_clean();
 		}
 	}
-	public function stats($paras = '') {
+	public function stats(array $paras = array()) {
 		$results = array();
 		foreach($this->c as $file) {
 			foreach($file as $key => $property) {

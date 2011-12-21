@@ -5,7 +5,7 @@ if(!isset($argv[1])) {
 	require_once(BPATH . '/List/load.php');
 	$taxonlist->cli();
 }
-switch($argv[1]) {
+else switch($argv[1]) {
 	// edit data
 	case 'edit': 
 		require_once('load.php');
@@ -22,6 +22,4 @@ switch($argv[1]) {
 	// die
 	default: mydie("Invalid argument");
 }
-if($taxonlist) $taxonlist->saveifneeded();
-if($csvlist) $csvlist->saveifneeded();
 ?>

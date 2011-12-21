@@ -614,9 +614,9 @@ class FullFile extends ListEntry {
 		foreach($this as $key => $field) {
 			if(is_array($field)) continue;
 			if(is_string($field)) $this->$key = preg_replace(array("/([`’‘]|&apos;)/u", '/[“”]/u'), array("'", '"'), $this->$key);
-			if(($key !== 'pdfcontent') and preg_match("/(\n|\r)/", $property))
+			if(($key !== 'pdfcontent') and preg_match("/(\n|\r)/", $field))
 				$this->warn('line break', $key);
-			if(strpos($property, '??') !== false)
+			if(strpos($field, '??') !== false)
 				$this->warn('double question mark', $key);
 		}
 

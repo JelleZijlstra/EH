@@ -232,12 +232,19 @@ class CsvList extends FileList {
 		echo "done" . PHP_EOL;
 	}
 	/* adding stuff to the list */
-	public function add_entry($file, $paras = '') {
+	public function add_entry(ListEntry $file, array $paras = array()) {
 	// Adds a FullFile to this CsvList object
-	// $paras has the following members:
-	// - string ['name'] - filename to write under (if different from $file->name)
-	// - bool ['isnew'] - whether we need to do things we do for new files (as opposed to old ones merely loaded into the catalog)
-		if(!$paras['name']) $paras['name'] = $file->name;
+	// Type hint is ListEntry instead of FullFile to keep E_STRICT happy
+		if(self::process_paras($paras, array(
+			'checklist' => array(
+				'name', // filename to write under (if different from $file->name)
+				'isnew', // whether we need to do things we do for new files (as opposed to old ones merely loaded into the catalog)
+			),
+			'default' => array(
+				'name' => $file->name,
+				'isnew' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		while($this->has($paras['name'])) {
 			echo "File " . $paras['name'] . " already exists.";
 			if($this->isredirect($file->name)) echo ' The existing file is a redirect.';
@@ -609,15 +616,22 @@ class CsvList extends FileList {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$results = array();
+		$nredirects = $nnonfiles = 0;
 		foreach($this->c as $file) {
 			if($file->isredirect())
 				$nredirects++;
 			else {
 				foreach($file as $key => $property) {
-					if($property) $results[$key]++;
+					if($property) {
+						if(!isset($results[$key])) $results[$key] = 0;
+						$results[$key]++;
+					}
 					if(is_array($property)) {
 						foreach($property as $key => $prop) {
-							if($prop) $results[$key]++;
+							if($prop) {
+								if(!isset($results[$key])) $results[$key] = 0;
+								$results[$key]++;
+							}
 						}
 					}
 				}
@@ -707,27 +721,24 @@ class CsvList extends FileList {
 			$f = $file->folder;
 			$sf = $file->sfolder;
 			$ssf = $file->ssfolder;
-			if(!$this->foldertree_n[$f]) {
-				$this->foldertree_n[$f] = array();
+			if(!isset($this->foldertree_n[$f])) {
+				$this->foldertree_n[$f] = array(0 => 0);
 				if(!$sf) $this->foldertree_n[$f][0] = 1;
 			}
 			else if(!$sf)
 				$this->foldertree_n[$f][0]++;
-			if(!$this->foldertree_n[$f][$sf] and $sf) {
-				$this->foldertree_n[$f][$sf] = array();
+			if(!isset($this->foldertree_n[$f][$sf]) and $sf) {
+				$this->foldertree_n[$f][$sf] = array(0 => 0);
 				if(!$ssf) $this->foldertree_n[$f][$sf][0] = 1;
 			}
 			else if($sf && !$ssf)
 				$this->foldertree_n[$f][$sf][0]++;
-			if($ssf)
+			if($ssf) {
+				if(!isset($this->foldertree_n[$f][$sf][$ssf]))
+					$this->foldertree_n[$f][$sf][$ssf] = 0;
 				$this->foldertree_n[$f][$sf][$ssf]++;
-/*			if(!$this->foldertree_n[$f][$sf][$ssf] and $ssf) {
-				$this->foldertree_n[$f][$sf][$ssf] = array();
-				$this->foldertree_n[$f][$sf][$ssf][0] = 1;
 			}
-			else if($ssf)
-				$this->foldertree_n[$f][$sf][$ssf][0]++;
-*/		}
+		}
 	}
 	/* URL magic */
 	private $urls_by_journal;

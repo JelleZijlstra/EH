@@ -232,7 +232,7 @@ class Taxon extends ListEntry {
 			fwrite($this->p->wiki_out[$paras['taxon']], $tmp . "See [[/$this->name]] for this large $this->rank." . PHP_EOL);
 		}
 		else {
-			if($tmp) {
+			if(isset($tmp)) {
 				if($this->comments) {
 					$tmp .= ':::<small>Comments: ';
 					$tmp .= $this->parse('comments', 'wref');

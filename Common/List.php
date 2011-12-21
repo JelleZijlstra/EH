@@ -374,6 +374,7 @@ abstract class FileList extends ExecuteHandler {
 			return false;
 		}
 		// test whether we need bfind
+		$dobfind = false;
 		foreach($paras as $para => $content) {
 			if($childclass::hasproperty($para)) {
 				$dobfind = true;

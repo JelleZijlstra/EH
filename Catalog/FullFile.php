@@ -1133,6 +1133,7 @@ class FullFile extends ListEntry {
 		if($this->doi)
 			// to fix bug 28212
 			$doi = str_replace(array('<', '>'), array('.3C', '.3E'), $this->doi);
+		$out1 = '';
 		if(!$this->parturl) {
 			// {{cite doi}}
 			if($this->doi)
@@ -1161,12 +1162,16 @@ class FullFile extends ListEntry {
 			// templates only support up to 9 authors
 				$author = explode(", ", $author);
 				$paras['last' . ($key + 1)] = $author[0];
-				$paras['first' . ($key + 1)] = $author[1];
+				if(isset($author[1]))
+					$paras['first' . ($key + 1)] = $author[1];
 			}
-			else
+			else {
+				if(!isset($paras['coauthors'])) 
+					$paras['coauthors'] = '';
 				$paras['coauthors'] .= $author . '; ';
+			}
 		}
-		if($paras['coauthors']) 
+		if(isset($paras['coauthors']))
 			$paras['coauthors'] = preg_replace('/; $/u', '', $paras['coauthors']);
 		// easy stuff we need in all classes
 		$paras['year'] = $this->year;
@@ -1217,7 +1222,7 @@ class FullFile extends ListEntry {
 					}
 				}
 				// double period bug
-				if(strpos($paras['editor4-last'], ';') !== false)
+				if(isset($paras['editor4-last']) and strpos($paras['editor4-last'], ';') !== false)
 					$paras['editor4-last'] = preg_replace(array('/; $/u', '/\.$/u'), array('', ''), $paras['editor4-last']);
 				else
 					$paras['editor' . count($bauthors) . '-first'] = preg_replace('/\.$/u', '', $paras['editor' . ($key + 1) . '-first']);

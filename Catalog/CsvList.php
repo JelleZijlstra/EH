@@ -193,7 +193,10 @@ class CsvList extends FileList {
 		$list = preg_split("/\n" . PHP_EOL . $escapelibrary . "/", $list);
 		foreach($list as $folder) {
 			$folder = preg_split("/:\n/", $folder);
+			if(!isset($folder[1])) continue;
 			$path = preg_split("/\//", $folder[0]);
+			if(!isset($path[2])) $path[2] = '';
+			if(!isset($path[3])) $path[3] = '';
 			$filelist = preg_split("/\n/", $folder[1]);
 			foreach($filelist as $file) {
 				// do not handle directories
@@ -386,7 +389,8 @@ class CsvList extends FileList {
 	 */
 		echo 'checking whether cataloged articles are in library... ';
 		foreach($this->c as $file) {
-			if($found = $this->lslist[$file->name]) {
+			if(isset($this->lslist[$file->name])) {
+				$found = $this->lslist[$file->name];
 				// update path
 				if(($file->folder != $found->folder) or
 					($file->sfolder != $found->sfolder) or
@@ -691,7 +695,7 @@ class CsvList extends FileList {
 			$folders = $file->folderstr();
 			$key = $file->getkey();
 			// if there is already a Suggester for this object, add the current folderstr to it
-			if($this->sugglist[$key])
+			if(isset($this->sugglist[$key]))
 				$this->sugglist[$key]->add($folders);
 			// else, make a new Suggester
 			else
@@ -704,11 +708,11 @@ class CsvList extends FileList {
 		foreach($this->c as $file) {
 			//exclude non-files and redirects
 			if($file->isor('nofile', 'redirect')) continue;
-			if(!$this->foldertree[$file->folder])
+			if(!isset($this->foldertree[$file->folder]))
 				$this->foldertree[$file->folder] = array();
-			if(!$this->foldertree[$file->folder][$file->sfolder] and $file->sfolder)
+			if(!isset($this->foldertree[$file->folder][$file->sfolder]) and $file->sfolder)
 				$this->foldertree[$file->folder][$file->sfolder] = array();
-			if(!$this->foldertree[$file->folder][$file->sfolder][$file->ssfolder] and $file->ssfolder)
+			if(!isset($this->foldertree[$file->folder][$file->sfolder][$file->ssfolder]) and $file->ssfolder)
 				$this->foldertree[$file->folder][$file->sfolder][$file->ssfolder] = array();
 		}
 	}
@@ -818,6 +822,8 @@ class Suggester {
 		$this->suggestions[$folders] = 1;
 	}
 	function add($folders) {
+		if(!isset($this->suggestions[$folders])) 
+			$this->suggestions[$folders] = 0;
 		$this->suggestions[$folders]++;
 	}
 	function sort() {

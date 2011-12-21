@@ -188,31 +188,37 @@ class FullFile extends ListEntry {
 		$this->inform();
 		if($this->isfile()) echo shell_exec('ls -l ' . $this->path()) . PHP_EOL;
 	}
-	public function path($paras = array()) {
+	public function path(array $paras = array()) {
 	// returns path to file
 		$this->process_paras($paras, array(
-			'checklist' => array('type', 'folder'),
+			'checklist' => array(
+				'type', // type of path: shell, url, or none (no processing)
+				'folder', // whether we want the folder only
+			),
 			'default' => array(
 				'type' => 'shell',
-				'folder' => '',
+				'folder' => false,
 			),
 		));
 		if(!$this->isfile()) {
 			return false;
 		}
 		switch($paras['type']) {
-			case 'shell': $process = function($in) {
-				return escape_shell($in);
-			};
-			break;
-			case 'url': $process = function($in) {
-				return str_replace('%2F', '/', rawurlencode($in));
-			};
-			break;
-			case 'none': $process = function($in) {
-				return $in;
-			};
-			break;
+			case 'shell': 
+				$process = function($in) {
+					return escape_shell($in);
+				};
+				break;
+			case 'url': 
+				$process = function($in) {
+					return str_replace('%2F', '/', rawurlencode($in));
+				};
+				break;
+			case 'none': 
+				$process = function($in) {
+					return $in;
+				};
+				break;
 		}
 		// if there is no folder, just return filename and hope for the best
 		if($this->folder === NULL)

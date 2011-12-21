@@ -1279,9 +1279,9 @@ abstract class ExecuteHandler {
 			echo "\t" . $from . ' -> ' . $to . PHP_EOL;
 	}
 	protected function hascommand($cmd) {
-		if($this->commands[$cmd])
+		if(isset($this->commands[$cmd]))
 			return true;
-		if($this->synonyms[$cmd])
+		if(isset($this->synonyms[$cmd]))
 			return true;
 		return false;
 	}

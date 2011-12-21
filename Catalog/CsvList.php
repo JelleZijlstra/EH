@@ -596,9 +596,18 @@ class CsvList extends FileList {
 			}
 		}
 	}
-	public function stats($paras = '') {
-	// bool ['includefoldertree'] : whether we need to print the foldertree
-		$this->expandargs($paras, array('f' => 'includefoldertree'));
+	public function stats(array $paras = array()) {
+		if(self::process_paras($paras, array(
+			'synonyms' => array(
+				'f' => 'includefoldertree',
+			),
+			'checklist' => array(
+				'includefoldertree', // whether we need to print the foldertree
+			),
+			'default' => array(
+				'includefoldertree' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$results = array();
 		foreach($this->c as $file) {
 			if($file->isredirect())

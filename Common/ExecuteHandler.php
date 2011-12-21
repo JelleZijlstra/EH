@@ -1541,7 +1541,7 @@ abstract class ExecuteHandler {
 					if($histptr < $this->curr('histlen'))
 						$histptr++;
 					// get new command
-					if($histpr < $this->curr('histlen')) {
+					if($histptr < $this->curr('histlen')) {
 						// TODO: get a $this->curr() method for this
 						$cmd = mb_str_split($paras['lines'][$histptr]);
 						$cmdlen = count($cmd);

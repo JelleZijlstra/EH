@@ -1,6 +1,10 @@
 #!/usr/bin/php
 <?
 require_once(__DIR__ . "/../Common/common.php");
+if(!isset($argv[1])) {
+	require_once(BPATH . '/List/load.php');
+	$taxonlist->cli();
+}
 switch($argv[1]) {
 	// edit data
 	case 'edit': 

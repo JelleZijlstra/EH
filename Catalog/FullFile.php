@@ -806,6 +806,8 @@ class FullFile extends ListEntry {
 		return ($this->start === 'in press');
 	}
 	public function issupplement() {
+		// some pieces have no title
+		if(!isset($this->title[0])) return false;
 		return ($this->title[0] === '/');
 	}
 	public function isamnh() {

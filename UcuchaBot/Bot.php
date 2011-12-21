@@ -62,6 +62,10 @@ class Bot extends Snoopy {
 			'desc' => 'Create monthly FA logs',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
+		'report_debug' => array('name' => 'report_debug',
+			'desc' => 'Report current debug level',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
 	);
 	/* Basic functionality */
 	function __construct() {
@@ -798,5 +802,9 @@ class Bot extends Snoopy {
 			$FacsList = new FacsList();
 			$FacsList->update();
 		}
+	}
+	public function report_debug($paras = array()) {
+		echo DEBUG . PHP_EOL;
+		return DEBUG;
 	}
 }

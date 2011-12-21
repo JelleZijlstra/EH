@@ -1174,7 +1174,7 @@ class FullFile extends ListEntry {
 		$paras['jstor'] = $this->jstor;
 		$paras['pmid'] = $this->pmid;
 		$paras['url'] = $this->url;
-		$paras['doi'] = $doi;
+		$paras['doi'] = isset($doi) ? $doi : '';
 		$paras['pmc'] = $this->pmc;
 		$paras['publisher'] = $this->publisher;
 		$paras['location'] = $this->location;
@@ -1236,9 +1236,9 @@ class FullFile extends ListEntry {
 		}
 		if($this->p->includerefharv)
 			$paras['ref'] = 'harv';
+		$out = $sfn = '';
 		if($this->p->includesfn) 
 			$out = $sfn = '<!--' . $this->getsfn() . '-->';
-		if(!$out) $out = '';
 		$out .= '{{cite ' . $temp;
 		foreach($paras as $key => $value) {
 			if($value) $out .= ' | ' . $key . ' = ' . $value;

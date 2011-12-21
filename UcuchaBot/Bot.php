@@ -251,7 +251,7 @@ class Bot extends Snoopy {
 		}
 		return true;
 	}
-	public function fetchwp($page, $paras = array()) {
+	public function fetchwp($page, array $paras = array()) {
 	// fetch a page from WP
 	// @para $page String page to fetch
 	// @para ['action'] String action to fetch. Defaults to "raw"
@@ -264,7 +264,7 @@ class Bot extends Snoopy {
 			return false;
 		return $this->results ?: false;
 	}
-	public function fetchapi($apiparas, $paras = array()) {
+	public function fetchapi(array $apiparas, array $paras = array()) {
 		if(self::process_paras($paras, array(
 			'checklist' => array('pageonly'),
 			'default' => array('pageonly' => false),
@@ -344,7 +344,7 @@ class Bot extends Snoopy {
 			}
 		}
 	}
-	private function mp_notice_page($page) {
+	private function mp_notice_page(array $page) {
 		echo "Notifying contributors for page " . $page['name'] . PHP_EOL;
 		$notifiedusers = array(); // users to notify
 		//edit TFA talk page
@@ -711,7 +711,7 @@ class Bot extends Snoopy {
 		echo $newtext . PHP_EOL;
 	}
 	/* Helper methods */
-	private function parse_ah($paras = array()) {
+	private function parse_ah(array $paras = array()) {
 	// parse an article's ArticleHistory template
 		//@para ['text'] text of article talk page
 		//@para ['page'] page to be checked. If ['text'] is given, this is disregarded, to avoid an unnecessary API call.
@@ -740,7 +740,7 @@ class Bot extends Snoopy {
 		}
 		return $ahparas;
 	}
-	private function gettfa($paras = array()) {
+	private function gettfa(array $paras = array()) {
 	// get information about a TFA for a day
 	// @return Array with keys
 	// 'page' String page where the TFA is located
@@ -803,7 +803,7 @@ class Bot extends Snoopy {
 			$FacsList->update();
 		}
 	}
-	public function report_debug($paras = array()) {
+	public function report_debug(array $paras = array()) {
 		echo DEBUG . PHP_EOL;
 		return DEBUG;
 	}

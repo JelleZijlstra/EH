@@ -192,7 +192,10 @@ class FullFile extends ListEntry {
 	// returns path to file
 		$this->process_paras($paras, array(
 			'checklist' => array('type', 'folder'),
-			'default' => array('type' => 'shell'),
+			'default' => array(
+				'type' => 'shell',
+				'folder' => '',
+			),
 		));
 		if(!$this->isfile()) {
 			return false;
@@ -1630,8 +1633,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		/*
 		 * get data
 		 */
-		$oldname = $this->name;	
-		while($this->p->lslist[$this->name]) {
+		$oldname = $this->name;
+		// loop until the value of $this->name doesn't exist yet
+		while(isset($this->p->lslist[$this->name])) {
 			makemenu(array('r' => 'move over the existing file',
 					'd' => 'delete the new file',
 					'o' => 'open the new and existing files',
@@ -1643,7 +1647,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$this->p->lslist[$this->name]->openf();
 						break;
 					case 'r':
-						$cmd = 'mv ' . TEMPPATH . '/' . escape_shell($this->name) . ' ' . $this->p->lslist[$this->name]->path();
+						$cmd = 'mv ' . TEMPPATH . '/' . 
+							escape_shell($this->name) . ' ' . 
+							$this->p->lslist[$this->name]->path();
 						if(!exec_catch($cmd)) echo "Error moving file" . PHP_EOL;
 						$this->p->edit($this->name);
 						return 1;
@@ -1661,7 +1667,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		while(true) {
 			if(!$this->p->sugglist) $this->p->build_sugglist();
 			$key = $this->getkey();
-			if($this->p->sugglist[$key]) {
+			if(isset($this->p->sugglist[$key])) {
 				$suggs = $this->p->sugglist[$key]->getsugg();
 				foreach($suggs as $sugg) {
 					echo 'Suggested placement. Folder: ' . $sugg[0];

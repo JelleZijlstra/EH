@@ -411,9 +411,9 @@ class Bot extends Snoopy {
 					$notifiedusers[$user] = true;
 			}
 			//notify users
-			echo "Notifying " . count($notifiedusers) . " users: " . implode(' ', $notifiedusers) . PHP_EOL;
 			foreach($notifiedusers as $user => $bool) {
 				if(!$bool) continue;
+				echo "Notifying user: " . $user . PHP_EOL;
 				$this->writewp('User talk:' . $user, array(
 					'text' => '{{subst:User:UcuchaBot/TFA notice' .
 						'|page=' . $page['name'] .

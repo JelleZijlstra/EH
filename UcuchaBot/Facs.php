@@ -133,22 +133,29 @@ class FacsEntry extends ListEntry {
 	// add or overwrite nominators
 		// get noms
 		$factext = $this->p->bot->fetchwp($this->name);
-		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator\(s\): (.*)(?=\n)/u', $factext, $matches);
+		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator\(s\): (.*)(?=\n)/u', 
+			$factext, 
+			$matches
+		);
 		if(!isset($matches[0])) {
 			echo 'Unable to retrieve nominators for page ' . $this->name . PHP_EOL;
 			return false;
 		}
 		$nomstext = $matches[0];
-		preg_match_all('/\[\[\s*[uU]ser:\s*([^\|\]]+)(\||\]\])/u', $nomstext, $matches, PREG_PATTERN_ORDER);
-		$noms = array();
-		foreach($matches[1] as $nom) {
-			$cd = trim($nom);
-			// some people link subpages
-			if(strpos($cd, '/') !== false)
-				continue;
-			$noms[] = $cd;
+		preg_match_all('/\[\[\s*[uU]ser( talk)?:\s*([^\|\]\/]+)/u', 
+			$nomstext, 
+			$matches, 
+			PREG_PATTERN_ORDER
+		);
+		if(!isset($matches[2])) {
+			echo 'Unable to retrieve nominators for page ' . $this->name . PHP_EOL;
+			return false;
 		}
-		$this->nominators = $noms;
+		$noms = array();
+		foreach($matches[2] as $nom)
+			$noms[trim($nom)] = true;
+		foreach($noms as $key => $value)
+			$this->nominators[] = $key;
 		return true;
 	}
 }

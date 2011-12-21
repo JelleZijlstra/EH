@@ -1049,7 +1049,7 @@ abstract class ExecuteHandler {
 		if(!$in) {
 			echo 'In command line, various options can be used to manipulate the list or its files. The following commands are available:' . PHP_EOL;
 			$this->listcommands();
-			echo 'Type "help <command>" to get more information about that commmand. Commands will sometimes take an argument, usually a filename. Arguments are always optional; if they are not given, you may be prompted to give a filename or other information.' . PHP_EOL;
+			echo 'Type "help <command>" to get more information about that commmand. Commands will sometimes take an argument, often a filename.' . PHP_EOL;
 			return true;
 		}
 		$in = $this->expand_cmd($in);

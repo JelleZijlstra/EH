@@ -888,8 +888,13 @@ abstract class ListEntry extends ExecuteHandler {
 			}
 		}
 		switch($arr = $this->findarray_dyn($property)) {
-			case false: return NULL;
-			default: return $this->{$arr}[$property];
+			case false: 
+				return NULL;
+			default: 
+				if(isset($this->{$arr}[$property]))
+					return $this->{$arr}[$property];
+				else
+					return NULL;
 		}
 	}
 	public function __isset($property) {

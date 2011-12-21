@@ -905,8 +905,11 @@ abstract class ListEntry extends ExecuteHandler {
 	}
 	public function __unset($property) {
 		switch($arr = $this->findarray_dyn($property)) {
-			case false: return;
-			default: unset($this->{$arr}[$property]);
+			case false: 
+				return;
+			default: 
+				if(!isset($this->{$arr}[$property])) return;
+				unset($this->{$arr}[$property]);
 		}
 	}
 	static public function hasproperty($property) {

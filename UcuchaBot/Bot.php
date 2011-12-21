@@ -22,6 +22,7 @@ class Bot extends Snoopy {
 	const api = 'http://en.wikipedia.org/w/api.php';
 	const stddate = 'F j, Y'; // standard date format string for TFA/TFL
 	const stdmonth = 'F Y';
+	const mp_notice_limit = 90; // minimum number of edits for user to get notified of TFA
 	static $Bot_commands = array(
 		'writewp' => array('name' => 'writewp',
 			'aka' => array('write'),
@@ -317,7 +318,6 @@ class Bot extends Snoopy {
 		return true;
 	}
 	public function do_mp_notice() {
-		$revnotifylimit = 90;
 		// GET PAGES TO HANDLE
 		$datefile = 'do_tfa_notice_mp.txt';
 		$currdate = file_get_contents($datefile); // stored date of last TFA
@@ -413,7 +413,7 @@ class Bot extends Snoopy {
 			$users[$rev['user']]++;
 		}
 		foreach($users as $user => $number) {
-			if($number > $revnotifylimit)
+			if($number > self::mp_notice_limit)
 				$notifiedusers[$user] = true;
 		}
 		//notify users

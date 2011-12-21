@@ -33,8 +33,8 @@ class TaxonList extends FileList {
 		'newtaxon' => array('name' => 'newtaxon',
 			'aka' => array('add', 'new'),
 			'desc' => 'Adds a taxon to the list',
-			'arg' => 'None',
-			'execute' => 'callmethod'),
+			'arg' => 'Taxon name',
+			'execute' => 'callmethodarg'),
 		'remove' => array('name' => 'remove',
 			'desc' => 'Removes a taxon',
 			'arg' => 'Taxon name',
@@ -207,14 +207,12 @@ class TaxonList extends FileList {
 	public function cli() {
 		$this->setup_commandline('list');
 	}
-	public function newtaxon($paras = '') {
-		self::expandargs($paras, array(0 => 'name'));
-		self::setifneeded($paras, 'name');
-		while($this->has($paras['name'])) {
+	public function newtaxon($name, array $paras = array()) {
+		while($this->has($name)) {
 			echo 'A taxon with this name already exists.' . PHP_EOL;
-			$paras['name'] = $this->getline('Enter a new name: ');
+			$name = $this->getline('Enter a new name: ');
 		}
-		return $this->add_entry(new Taxon($paras['name'], 'n'), array('isnew' => true));
+		return $this->add_entry(new Taxon($name, 'n'), array('isnew' => true));
 	}
 	public function remove($name) {
 		if(!$this->has($name)) return false;

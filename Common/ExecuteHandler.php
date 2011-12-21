@@ -1055,7 +1055,7 @@ abstract class ExecuteHandler {
 		$in = $this->expand_cmd($in);
 		if($in) {
 			echo PHP_EOL . 'Function: ' . $in['name'] . PHP_EOL;
-			if($in['aka']) 
+			if(isset($in['aka']))
 				echo 'Aliases: ' . implode(', ', $in['aka']) . PHP_EOL;
 			echo 'Description: ' . $in['desc'] . PHP_EOL;
 			echo 'Arguments: ' . $in['arg'] . PHP_EOL;

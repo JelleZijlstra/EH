@@ -1593,16 +1593,20 @@ abstract class ExecuteHandler {
 				case "\005": // Ctrl+E
 				case "\006": // Ctrl+F
 				case "\007": // Ctrl+G
-				case "\008": // Ctrl+H
-				case "\009": // Ctrl+I
-				case "\011": // Ctrl+K
-				case "\012": // Ctrl+L
-				case "\014": // Ctrl+N
-				case "\016": // Ctrl+P
-				case "\022": // Ctrl+V
-				case "\024": // Ctrl+Z
-				case "\027": // Ctrl+[
-				case "\029": // Ctrl+]
+				case "\010": // Ctrl+H
+				case "\011": // Ctrl+I
+				case "\013": // Ctrl+K
+				case "\014": // Ctrl+L
+				case "\016": // Ctrl+N
+				case "\020": // Ctrl+P
+				case "\022": // Ctrl+R
+				case "\024": // Ctrl+T
+				case "\025": // Ctrl+U
+				case "\026": // Ctrl+V
+				case "\027": // Ctrl+W
+				case "\030": // Ctrl+X
+				case "\033": // Ctrl+[
+				case "\035": // Ctrl+]
 					break;
 				default: // other characters: add to command
 					// temporary array to hold characters to be moved over
@@ -1717,6 +1721,13 @@ abstract class ExecuteHandler {
 	public function test() {
 	// Test function that might do anything I currently want to test
 	// Currently, testing what arguments it is getting
+		$this->stty('cbreak iutf8');
+		while(1) {
+			$char = ord(fgetc(STDIN));
+			echo PHP_EOL;
+			echo $char . ' : ' . base_convert($char, 10, 8) . PHP_EOL;
+			if($char === 4) break;
+		}
 		var_dump(func_get_args());
 	}
 }

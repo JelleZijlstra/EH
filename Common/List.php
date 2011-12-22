@@ -507,7 +507,7 @@ abstract class FileList extends ExecuteHandler {
 		}
 		if(count($queries) === 0) {
 			if($paras['printresult']) echo 'Invalid query' . PHP_EOL;
-			if(DEBUG > 0) print_r($paras);
+			if($this->config['debug']) print_r($paras);
 			return false;
 		}
 		// do the search

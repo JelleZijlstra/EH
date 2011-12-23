@@ -19,7 +19,7 @@ abstract class ExecuteHandler {
 	/* Private properties */
 	private $commands;
 	private $synonyms;
-	private $config = array(
+	protected $config = array(
 		'debug' => false,
 	);
 	/* command history */

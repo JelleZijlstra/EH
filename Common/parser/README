@@ -2,3 +2,11 @@ The files in this directory provide a rudimentary parser for a subset of the EH 
 $ yacc -d eh.y
 $ lex eh.l
 $ gcc lex.yy.c y.tab.c eh_tree.c eh_interpreter.c -o eh
+
+To use the compiler instead of the interpreter version, use
+$ gcc lex.yy.c y.tab.c eh_tree.c eh_compiler.c -o eh
+
+To compile a file called "compile.eh"
+$ ./eh < compile.eh
+$ gcc tmp.s -gstabs -o a.out
+$ ./a.out

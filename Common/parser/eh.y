@@ -45,7 +45,6 @@ statement:
 							{ $$ = operate('$', 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = operate(T_IF, 2, $2, $4); }
-	| T_SEPARATOR			{ $$ = 0; }
 	;
 
 expression:

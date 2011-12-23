@@ -1,0 +1,4 @@
+The files in this directory provide a rudimentary parser for a subset of the EH scripting language. To compile:
+$ yacc -d eh.y;
+$ lex eh.l;
+$ gcc lex.yy.c y.tab.c -o eh

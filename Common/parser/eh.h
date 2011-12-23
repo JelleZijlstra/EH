@@ -1,3 +1,9 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+#include "y.tab.h"
+
 typedef enum {
 	idnode_enum,
 	connode_enum,

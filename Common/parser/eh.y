@@ -19,6 +19,8 @@
 %token T_SEPARATOR
 %token <sValue> T_STRING
 %left '='
+%left '+' '-'
+%left '*' '/'
 
 %type<ehNode> statement expression statement_list string
 %%
@@ -53,6 +55,14 @@ expression:
 	T_INTEGER				{ $$ = get_constant($1); }
 	| expression '=' expression 
 							{ $$ = operate('=', 2, $1, $3); }
+	| expression '+' expression 
+							{ $$ = operate('+', 2, $1, $3); }
+	| expression '-' expression 
+							{ $$ = operate('-', 2, $1, $3); }
+	| expression '*' expression 
+							{ $$ = operate('*', 2, $1, $3); }
+	| expression '/' expression 
+							{ $$ = operate('/', 2, $1, $3); }
 	;
 
 string:
@@ -136,6 +146,18 @@ int execute(ehnode_t *node) {
 					return 0;
 				case '=':
 					return execute(node->op.paras[0]) == 
+						execute(node->op.paras[1]);
+				case '+':
+					return execute(node->op.paras[0]) + 
+						execute(node->op.paras[1]);
+				case '-':
+					return execute(node->op.paras[0]) - 
+						execute(node->op.paras[1]);
+				case '*':
+					return execute(node->op.paras[0]) * 
+						execute(node->op.paras[1]);
+				case '/':
+					return execute(node->op.paras[0]) / 
 						execute(node->op.paras[1]);
 				default:
 					printf("Unexpected opcode %d\n", node->op.op);

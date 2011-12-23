@@ -18,7 +18,7 @@
 "endif"		return T_ENDIF;
 "//".*[;\n]	; /* Ignore comment */
 [;\n]+		return T_SEPARATOR;
-[=$]		{ return *yytext; }
+[=$+\-*/]	return *yytext;
 [ \t]+		; /* Ignore whitespace */
 .			{ 
 				char message[100]; 

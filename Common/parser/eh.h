@@ -34,7 +34,7 @@ typedef struct ehnode_t {
 void yyerror(char *s);
 
 void *Malloc(size_t size);
-
+void free_node(ehnode_t *in);
 ehnode_t *get_constant(int value);
 ehnode_t *get_identifier(char *value);
 ehnode_t *operate(int operations, int noperations, ...);

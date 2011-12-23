@@ -18,14 +18,15 @@
 %token T_ECHO
 %token T_SEPARATOR
 %token <sValue> T_STRING
-%left '='
+%left '=' '>' '<' T_GE T_LE T_NE
 %left '+' '-'
 %left '*' '/'
+%nonassoc '(' ')'
 
 %type<ehNode> statement expression statement_list string
 %%
 program:
-	statement_list			{ execute($1); exit(0); }
+	statement_list			{ execute($1); free_node($1); exit(0); }
 	| /* NULL */			{ 
 								fprintf(stderr, "No input");
 								exit(1);
@@ -53,8 +54,19 @@ statement:
 
 expression:
 	T_INTEGER				{ $$ = get_constant($1); }
+	| '(' expression ')'	{ $$ = $2; }
 	| expression '=' expression 
 							{ $$ = operate('=', 2, $1, $3); }
+	| expression '>' expression 
+							{ $$ = operate('>', 2, $1, $3); }
+	| expression '<' expression 
+							{ $$ = operate('<', 2, $1, $3); }
+	| expression T_GE expression 
+							{ $$ = operate(T_GE, 2, $1, $3); }
+	| expression T_LE expression 
+							{ $$ = operate(T_LE, 2, $1, $3); }
+	| expression T_NE expression 
+							{ $$ = operate(T_NE, 2, $1, $3); }
 	| expression '+' expression 
 							{ $$ = operate('+', 2, $1, $3); }
 	| expression '-' expression 
@@ -69,6 +81,25 @@ string:
 	T_STRING				{ $$ = get_identifier($1); }
 	;
 %%
+void free_node(ehnode_t *in) {
+	if(in == NULL)
+		return;
+	int i;
+	switch(in->type) {
+		case idnode_enum:
+			free(in->id.name);
+			break;
+		case connode_enum:
+			// nothing to free
+			break;
+		case opnode_enum:
+			for(i = 0; i < in->op.nparas; i++) {
+				free_node(in->op.paras[i]);
+			}
+			break;
+	}
+	free(in);
+}
 ehnode_t *get_constant(int value) {
 	ehnode_t *ret;
 	ret = Malloc(sizeof(ehnode_t));
@@ -146,6 +177,21 @@ int execute(ehnode_t *node) {
 					return 0;
 				case '=':
 					return execute(node->op.paras[0]) == 
+						execute(node->op.paras[1]);
+				case '>':
+					return execute(node->op.paras[0]) >
+						execute(node->op.paras[1]);
+				case '<':
+					return execute(node->op.paras[0]) <
+						execute(node->op.paras[1]);
+				case T_GE:
+					return execute(node->op.paras[0]) >= 
+						execute(node->op.paras[1]);
+				case T_LE:
+					return execute(node->op.paras[0]) <=
+						execute(node->op.paras[1]);
+				case T_NE:
+					return execute(node->op.paras[0]) != 
 						execute(node->op.paras[1]);
 				case '+':
 					return execute(node->op.paras[0]) + 

@@ -1,3 +1,4 @@
+/* This code was inspired by Tom Niemann's "A Compact Guide to Lex & Yacc", available at http://epaperpress.com/lexandyacc/ */
 %{
 #include <stdlib.h>
 #include <stdio.h>

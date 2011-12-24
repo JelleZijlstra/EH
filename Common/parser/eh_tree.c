@@ -34,8 +34,7 @@ ehnode_t *get_identifier(char *value) {
 	ret = Malloc(sizeof(ehnode_t));
 	
 	ret->type = idnode_enum;
-	ret->id.name = Malloc(strlen(value) + 1);
-	strcpy(ret->id.name, value);
+	ret->id.name = value;
 	
 	//printf("Returning identifier %s\n", ret->id.name);
 	return ret;

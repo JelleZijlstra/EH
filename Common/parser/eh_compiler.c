@@ -90,21 +90,66 @@ static int compile(ehnode_t *node) {
 					fprintf(outfile, "cmove %%edx, %%eax\n");
 					fprintf(outfile, "pushl %%eax\n");
 					break;
-/*				case '>':
-					return execute(node->op.paras[0]) >
-						execute(node->op.paras[1]);
+				case '>':
+					compile(node->op.paras[0]);
+					compile(node->op.paras[1]);
+					fprintf(outfile, "popl %%ecx\n");
+					fprintf(outfile, "popl %%ebx\n");
+					fprintf(outfile, "xorl %%eax, %%eax\n");
+					// apparently, cmove can't have an immediate as its source
+					fprintf(outfile, "movl $1, %%edx\n");
+					fprintf(outfile, "cmpl %%ecx, %%ebx\n");
+					fprintf(outfile, "cmovg %%edx, %%eax\n");
+					fprintf(outfile, "pushl %%eax\n");
+					break;
 				case '<':
-					return execute(node->op.paras[0]) <
-						execute(node->op.paras[1]);
+					compile(node->op.paras[0]);
+					compile(node->op.paras[1]);
+					fprintf(outfile, "popl %%ecx\n");
+					fprintf(outfile, "popl %%ebx\n");
+					fprintf(outfile, "xorl %%eax, %%eax\n");
+					// apparently, cmove can't have an immediate as its source
+					fprintf(outfile, "movl $1, %%edx\n");
+					fprintf(outfile, "cmpl %%ecx, %%ebx\n");
+					fprintf(outfile, "cmovl %%edx, %%eax\n");
+					fprintf(outfile, "pushl %%eax\n");
+					break;
 				case T_GE:
-					return execute(node->op.paras[0]) >= 
-						execute(node->op.paras[1]);
+					compile(node->op.paras[0]);
+					compile(node->op.paras[1]);
+					fprintf(outfile, "popl %%ecx\n");
+					fprintf(outfile, "popl %%ebx\n");
+					fprintf(outfile, "xorl %%eax, %%eax\n");
+					// apparently, cmove can't have an immediate as its source
+					fprintf(outfile, "movl $1, %%edx\n");
+					fprintf(outfile, "cmpl %%ecx, %%ebx\n");
+					fprintf(outfile, "cmovge %%edx, %%eax\n");
+					fprintf(outfile, "pushl %%eax\n");
+					break;
 				case T_LE:
-					return execute(node->op.paras[0]) <=
-						execute(node->op.paras[1]);
+					compile(node->op.paras[0]);
+					compile(node->op.paras[1]);
+					fprintf(outfile, "popl %%ecx\n");
+					fprintf(outfile, "popl %%ebx\n");
+					fprintf(outfile, "xorl %%eax, %%eax\n");
+					// apparently, cmove can't have an immediate as its source
+					fprintf(outfile, "movl $1, %%edx\n");
+					fprintf(outfile, "cmpl %%ecx, %%ebx\n");
+					fprintf(outfile, "cmovle %%edx, %%eax\n");
+					fprintf(outfile, "pushl %%eax\n");
+					break;
 				case T_NE:
-					return execute(node->op.paras[0]) != 
-						execute(node->op.paras[1]);*/
+					compile(node->op.paras[0]);
+					compile(node->op.paras[1]);
+					fprintf(outfile, "popl %%ecx\n");
+					fprintf(outfile, "popl %%ebx\n");
+					fprintf(outfile, "xorl %%eax, %%eax\n");
+					// apparently, cmove can't have an immediate as its source
+					fprintf(outfile, "movl $1, %%edx\n");
+					fprintf(outfile, "cmpl %%ecx, %%ebx\n");
+					fprintf(outfile, "cmovne %%edx, %%eax\n");
+					fprintf(outfile, "pushl %%eax\n");
+					break;
 				case '+':
 					compile(node->op.paras[0]);
 					compile(node->op.paras[1]);

@@ -50,7 +50,7 @@ int execute(ehnode_t *node) {
 						if(returning)
 							return ret;
 					}
-					else if(node->op.nparas == 2)
+					else if(node->op.nparas == 3)
 						ret = execute(node->op.paras[2]);
 					return ret;
 				case T_WHILE:

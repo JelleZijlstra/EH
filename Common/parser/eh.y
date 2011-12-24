@@ -33,7 +33,12 @@
 %type<ehNode> statement expression statement_list string bareword arglist parglist
 %%
 program:
-	statement_list			{ execute($1); free_node($1); exit(0); }
+	statement_list			{ 
+								//print_tree($1, 0); 
+								execute($1); 
+								free_node($1); 
+								exit(0); 
+							}
 	| /* NULL */			{ 
 								fprintf(stderr, "No input");
 								exit(1);

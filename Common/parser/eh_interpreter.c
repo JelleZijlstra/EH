@@ -4,14 +4,9 @@
 ehvar_t *vartable[VARTABLE_S];
 ehfunc_t *functable[VARTABLE_S];
 
-// argument stack for functions
-#define STACKSIZE 64
-ehnode_t *stack[STACKSIZE];
-// stack pointer. esp != 0 also indicates that we want to execute a function
-int esp = 0;
-
 bool insert_variable(ehvar_t *var);
 ehvar_t *get_variable(char *name);
+void remove_variable(char *name);
 bool insert_function(ehfunc_t *func);
 ehfunc_t *get_function(char *name);
 void push_stack(ehnode_t *in);
@@ -101,7 +96,7 @@ int execute(ehnode_t *node) {
 				case '$': // variable dereference
 					var = get_variable(node->op.paras[0]->id.name);
 					if(var == NULL) {
-						printf("Unknown variable %s\n", node->op.paras[0]->id.name);
+						fprintf(stderr, "Unknown variable %s\n", node->op.paras[0]->id.name);
 						return 0;
 					}
 					return var->intval;
@@ -111,19 +106,97 @@ int execute(ehnode_t *node) {
 				case ':': // function
 					func = get_function(node->op.paras[0]->id.name);
 					if(func == NULL) {
-						printf("Unknown function %s\n", node->op.paras[0]->id.name);
-						printf("%d\n", esp);
+						fprintf(stderr, "Unknown function %s\n", node->op.paras[0]->id.name);
 						return 0;						
 					}
-					if(node->op.paras[0] == NULL) {
-						// no parameters
-						esp = 1;
+					int i = 0;
+					ehvar_t *tmpvar;
+					ehnode_t *in = node->op.paras[1];
+					while(1) {
+						tmpvar = Malloc(sizeof(ehvar_t));
+						tmpvar->name = func->args[i]->id.name;
+						tmpvar->type = int_enum;
+						insert_variable(tmpvar);
+						i++;
+						if(i > func->argcount) {
+							fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
+							return 0;
+						}
+						if(in->type == opnode_enum && in->op.op == ',') {
+							tmpvar->intval = execute(in->op.paras[0]);
+							in = in->op.paras[1];
+						}
+						else {
+							tmpvar->intval = execute(in);
+							break;
+						}
 					}
-					else
-						push_stack(node->op.paras[1]);
-					return execute(func->code);
+					if(func->argcount != i) {
+						fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
+						return 0;
+					}
+					int ret;
+					ret = execute(func->code);
+					for(i = 0; i < func->argcount; i++) {
+						remove_variable(func->args[i]->id.name);
+					}
+					return ret;
+				case T_FUNC: // function definition
+					//printf("Defining function %s with %d paras\n", node->op.paras[0]->id.name, node->op.nparas);
+					func = get_function(node->op.paras[0]->id.name);
+					// function definition
+					if(func != NULL) {
+						fprintf(stderr, "Attempt to redefine function %s\n", node->op.paras[0]->id.name);
+						return 0;
+					}
+					func = Malloc(sizeof(ehfunc_t));
+					func->name = node->op.paras[0]->id.name;
+					// determine argcount
+					if(node->op.nparas == 2) {
+						func->argcount = 0;
+						func->args = NULL;
+						func->code = node->op.paras[1];
+					}
+					else {
+						func->argcount = 0;
+						// traverse linked list to determine argument count
+						ehnode_t *tmp;
+						int currarg = 0;
+
+						tmp = node->op.paras[1];
+						while(1) {
+							if(tmp->type == opnode_enum && tmp->op.op == ',') {
+								currarg++;
+								tmp = tmp->op.paras[1];
+							}
+							else {
+								currarg++;
+								break;
+							}
+						}
+						func->argcount = currarg;
+						func->args = Malloc(currarg * sizeof(char *));
+						// add arguments to arglist
+						tmp = node->op.paras[1];
+						currarg = 0;
+						while(1) {
+							if(tmp->type == opnode_enum && tmp->op.op == ',') {
+								func->args[currarg] = tmp->op.paras[0];
+								currarg++;
+								tmp = tmp->op.paras[1];
+							}
+							else {
+								func->args[currarg] = tmp;
+								break;
+							}								
+						}
+						int j;
+						func->code = node->op.paras[2];
+					}
+					insert_function(func);
+					return 0;
 				default:
-					printf("Unexpected opcode %d\n", node->op.op);
+					fprintf(stderr, "Unexpected opcode %d\n", node->op.op);
 					exit(0);
 			}
 	}
@@ -135,7 +208,7 @@ int execute(ehnode_t *node) {
  */
 bool insert_variable(ehvar_t *var) {
 	unsigned int vhash;
-	
+	//printf("Inserting variable %s with value %d\n", var->name, var->intval);
 	vhash = hash(var->name);
 	if(vartable[vhash] == NULL) {
 		vartable[vhash] = var;
@@ -161,7 +234,25 @@ ehvar_t *get_variable(char *name) {
 	}
 	return NULL;
 }
-
+void remove_variable(char *name) {
+	unsigned int vhash;
+	ehvar_t *currvar;
+	ehvar_t **prevvar;
+	
+	vhash = hash(name);
+	currvar = vartable[vhash];
+	prevvar = &currvar;
+	while(currvar != NULL) {
+		if(strcmp(currvar->name, name) == 0) {
+			*prevvar = currvar->next;
+			free(currvar);
+			return;
+		}
+		currvar = currvar->next;
+		prevvar = &currvar;
+	}
+	return;
+}
 /*
  * Functions
  */
@@ -192,15 +283,6 @@ ehfunc_t *get_function(char *name) {
 		currfunc = currfunc->next;
 	}
 	return NULL;
-}
-void push_stack(ehnode_t *in) {
-	esp++;
-	if(in->type == opnode_enum && in->op.op == ',') {
-		stack[esp] = in->op.paras[0];
-		push_stack(in->op.paras[1]);
-	}
-	else
-		stack[esp] = in;
 }
 /* Hash function */
 // from http://azillionmonkeys.com/qed/hash.html

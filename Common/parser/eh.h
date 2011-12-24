@@ -58,6 +58,7 @@ typedef struct ehvar_t {
 typedef struct ehfunc_t {
 	char *name;
 	int argcount;
+	ehnode_t **args;
 	ehnode_t *code;
 	struct ehfunc_t *next;
 } ehfunc_t;

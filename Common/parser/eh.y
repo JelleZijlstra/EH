@@ -13,6 +13,8 @@
 %token T_ENDIF
 %token T_WHILE
 %token T_ENDWHILE
+%token T_FUNC
+%token T_ENDFUNC
 %token T_ECHO
 %token T_SEPARATOR
 %token T_SET
@@ -26,7 +28,7 @@
 %left '*' '/'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list string bareword arglist
+%type<ehNode> statement expression statement_list string bareword arglist parglist
 %%
 program:
 	statement_list			{ execute($1); free_node($1); exit(0); }
@@ -56,6 +58,10 @@ statement:
 							{ $$ = operate(T_WHILE, 2, $2, $4); }
 	| T_CALL expression T_SEPARATOR	
 							{ $$ = operate(T_CALL, 1, $2); }
+	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
+							{ $$ = operate(T_FUNC, 3, $2, $4, $6); }
+	| T_FUNC bareword ':' T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
+							{ $$ = operate(T_FUNC, 2, $2, $5); }
 	;
 
 expression:
@@ -96,6 +102,13 @@ bareword:
 arglist:
 	expression				{ $$ = $1; }
 	| expression ',' arglist
+							{ $$ = operate(',', 2, $1, $3); }
+	| /* NULL */			{ $$ = 0; }
+	;
+
+parglist:
+	bareword				{ $$ = $1; }
+	| bareword ',' parglist
 							{ $$ = operate(',', 2, $1, $3); }
 	| /* NULL */			{ $$ = 0; }
 	;

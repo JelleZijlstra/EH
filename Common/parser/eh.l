@@ -12,7 +12,7 @@
 				yylval.sValue[len - 2] = '\0';
 				return T_STRING; 
 			}
-[1-9][0-9]*	{ yylval.iValue = atoi(yytext); return T_INTEGER; }
+[0-9]*	{ yylval.iValue = atoi(yytext); return T_INTEGER; }
 "echo"		return T_ECHO;
 "if"		return T_IF;
 "endif"		return T_ENDIF;

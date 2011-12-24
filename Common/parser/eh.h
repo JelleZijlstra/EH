@@ -48,6 +48,7 @@ typedef struct ehnode_t {
 typedef struct ehvar_t {
 	type_enum type;
 	char *name;
+	int scope;
 	union {
 		int intval;
 		char *strval;

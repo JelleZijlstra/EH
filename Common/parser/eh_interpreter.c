@@ -1,18 +1,21 @@
 #include "eh.h"
 // symbol table for variables and functions
 #define VARTABLE_S 1024
-ehvar_t *vartable[VARTABLE_S];
-ehfunc_t *functable[VARTABLE_S];
+static ehvar_t *vartable[VARTABLE_S];
+static ehfunc_t *functable[VARTABLE_S];
 
 // indicate that we're returning
-bool returning = false;
+static bool returning = false;
+// current variable scope
+static int scope = 0;
 
-bool insert_variable(ehvar_t *var);
-ehvar_t *get_variable(char *name);
-void remove_variable(char *name);
-bool insert_function(ehfunc_t *func);
-ehfunc_t *get_function(char *name);
-void push_stack(ehnode_t *in);
+static bool insert_variable(ehvar_t *var);
+static ehvar_t *get_variable(char *name, int scope);
+static void remove_variable(char *name, int scope);
+static void list_variables(void);
+static bool insert_function(ehfunc_t *func);
+static ehfunc_t *get_function(char *name);
+static void push_stack(ehnode_t *in);
 static unsigned int hash(char *data);
 
 int execute(ehnode_t *node) {
@@ -97,18 +100,19 @@ int execute(ehnode_t *node) {
 					return execute(node->op.paras[0]) / 
 						execute(node->op.paras[1]);
 				case T_SET:
-					var = get_variable(node->op.paras[0]->id.name);
+					var = get_variable(node->op.paras[0]->id.name, scope);
 					if(var == NULL) {
-						var = Malloc(sizeof(ehnode_t));
+						var = Malloc(sizeof(ehvar_t));
 						var->name = node->op.paras[0]->id.name;
 						// only supporting integer variables at present
 						var->type = int_enum;
+						var->scope = scope;
 						insert_variable(var);
 					}
 					var->intval = execute(node->op.paras[1]);
 					return 0;
 				case '$': // variable dereference
-					var = get_variable(node->op.paras[0]->id.name);
+					var = get_variable(node->op.paras[0]->id.name, scope);
 					if(var == NULL) {
 						fprintf(stderr, "Unknown variable %s\n", node->op.paras[0]->id.name);
 						return 0;
@@ -119,6 +123,7 @@ int execute(ehnode_t *node) {
 					return 0;
 				case ':': // function
 					func = get_function(node->op.paras[0]->id.name);
+					//printf("Calling function %s at scope %d\n", node->op.paras[0]->id.name, scope);
 					if(func == NULL) {
 						fprintf(stderr, "Unknown function %s\n", node->op.paras[0]->id.name);
 						return 0;						
@@ -130,6 +135,7 @@ int execute(ehnode_t *node) {
 						tmpvar = Malloc(sizeof(ehvar_t));
 						tmpvar->name = func->args[i]->id.name;
 						tmpvar->type = int_enum;
+						tmpvar->scope = scope + 1;
 						insert_variable(tmpvar);
 						i++;
 						if(i > func->argcount) {
@@ -145,6 +151,8 @@ int execute(ehnode_t *node) {
 							break;
 						}
 					}
+					// functions get their own scope (not decremented before because execution of arguments needs parent scope)
+					scope++;
 					if(func->argcount != i) {
 						fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
 						return 0;
@@ -152,8 +160,9 @@ int execute(ehnode_t *node) {
 					ret = execute(func->code);
 					returning = false;
 					for(i = 0; i < func->argcount; i++) {
-						remove_variable(func->args[i]->id.name);
+						remove_variable(func->args[i]->id.name, scope);
 					}
+					scope--;
 					return ret;
 				case T_RET:
 					returning = true;
@@ -223,9 +232,9 @@ int execute(ehnode_t *node) {
 /*
  * Variables
  */
-bool insert_variable(ehvar_t *var) {
+static bool insert_variable(ehvar_t *var) {
 	unsigned int vhash;
-	//printf("Inserting variable %s with value %d\n", var->name, var->intval);
+	//printf("Inserting variable %s with value %d at scope %d\n", var->name, var->intval, var->scope);
 	vhash = hash(var->name);
 	if(vartable[vhash] == NULL) {
 		vartable[vhash] = var;
@@ -237,43 +246,61 @@ bool insert_variable(ehvar_t *var) {
 	}
 	return true;
 }
-ehvar_t *get_variable(char *name) {
+static ehvar_t *get_variable(char *name, int scope) {
 	unsigned int vhash;
 	ehvar_t *currvar;
 	
 	vhash = hash(name);
 	currvar = vartable[vhash];
 	while(currvar != NULL) {
-		if(strcmp(currvar->name, name) == 0) {
+		//printf("name: %x, currvar->name, %x\n", name, currvar->name);
+		if(strcmp(currvar->name, name) == 0 && currvar->scope == scope) {
 			return currvar;
 		}
 		currvar = currvar->next;
 	}
 	return NULL;
 }
-void remove_variable(char *name) {
+static void remove_variable(char *name, int scope) {
+	//printf("Removing variable %s of scope %d\n", name, scope);
+	//list_variables();
 	unsigned int vhash;
 	ehvar_t *currvar;
-	ehvar_t **prevvar;
+	ehvar_t *prevvar;
 	
 	vhash = hash(name);
 	currvar = vartable[vhash];
-	prevvar = &currvar;
+	prevvar = NULL;
 	while(currvar != NULL) {
-		if(strcmp(currvar->name, name) == 0) {
-			*prevvar = currvar->next;
+		if(strcmp(currvar->name, name) == 0 && currvar->scope == scope) {
+			if(prevvar == NULL)
+				vartable[vhash] = currvar->next;
+			else
+				prevvar->next = currvar->next;
 			free(currvar);
+			//list_variables();
 			return;
 		}
+		prevvar = currvar;
 		currvar = currvar->next;
-		prevvar = &currvar;
 	}
 	return;
+}
+static void list_variables(void) {
+	int i;
+	ehvar_t *tmp;
+	for(i = 0; i < VARTABLE_S; i++) {
+		tmp = vartable[i];
+		while(tmp != NULL) {
+			printf("Variable %s of type %d at scope %d in hash %d at address %x\n", tmp->name, tmp->type, tmp->scope, i, tmp);
+			tmp = tmp->next;
+		}
+	}
 }
 /*
  * Functions
  */
-bool insert_function(ehfunc_t *func) {
+static bool insert_function(ehfunc_t *func) {
 	unsigned int vhash;
 	
 	vhash = hash(func->name);
@@ -287,7 +314,7 @@ bool insert_function(ehfunc_t *func) {
 	}
 	return true;
 }
-ehfunc_t *get_function(char *name) {
+static ehfunc_t *get_function(char *name) {
 	unsigned int vhash;
 	ehfunc_t *currfunc;
 

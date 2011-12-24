@@ -1,8 +1,8 @@
 // Implementation of the McCarthy function in EH
 func mccarthy: n
 	if $n > 100
-		$ ret = $n - 10
-		ret $ret
+		$ retv = $n - 10
+		ret $retv
 	else
 		$ arg = $n + 11
 		$ arg = mccarthy: $arg

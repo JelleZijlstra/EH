@@ -11,6 +11,6 @@ func mccarthy: n
 	endif
 endfunc
 
-$ input = getinput:
+$ input = 5
 $ res = mccarthy: $input
 echo $res

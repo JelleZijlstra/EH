@@ -15,6 +15,7 @@
 %token T_ENDWHILE
 %token T_FUNC
 %token T_ENDFUNC
+%token T_RET
 %token T_ECHO
 %token T_SEPARATOR
 %token T_SET
@@ -62,6 +63,8 @@ statement:
 							{ $$ = operate(T_FUNC, 3, $2, $4, $6); }
 	| T_FUNC bareword ':' T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
 							{ $$ = operate(T_FUNC, 2, $2, $5); }
+	| T_RET expression T_SEPARATOR
+							{ $$ = operate(T_RET, 1, $2); }
 	;
 
 expression:

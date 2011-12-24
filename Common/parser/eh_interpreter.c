@@ -4,6 +4,9 @@
 ehvar_t *vartable[VARTABLE_S];
 ehfunc_t *functable[VARTABLE_S];
 
+// indicate that we're returning
+bool returning = false;
+
 bool insert_variable(ehvar_t *var);
 ehvar_t *get_variable(char *name);
 void remove_variable(char *name);
@@ -16,6 +19,7 @@ int execute(ehnode_t *node) {
 	// variable used
 	ehvar_t *var;
 	ehfunc_t *func;
+	int ret;
 
 	if(node == NULL)
 		return 0;
@@ -42,16 +46,21 @@ int execute(ehnode_t *node) {
 					return 0;
 				case T_IF:
 					if(execute(node->op.paras[0]))
-						execute(node->op.paras[1]);
-					return 0;
+						ret = execute(node->op.paras[1]);
+					return ret;
 				case T_WHILE:
-					while(execute(node->op.paras[0]))
-						execute(node->op.paras[1]);
-					return 0;
+					while(execute(node->op.paras[0])) {
+						ret = execute(node->op.paras[1]);
+						if(returning)
+							return ret;
+					}
+					return ret;
 				case T_SEPARATOR:
-					execute(node->op.paras[0]);
-					execute(node->op.paras[1]);
-					return 0;
+					ret = execute(node->op.paras[0]);
+					if(returning)
+						return ret;
+					ret = execute(node->op.paras[1]);
+					return ret;
 				case '=':
 					return execute(node->op.paras[0]) == 
 						execute(node->op.paras[1]);
@@ -135,12 +144,15 @@ int execute(ehnode_t *node) {
 						fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
 						return 0;
 					}
-					int ret;
 					ret = execute(func->code);
+					returning = false;
 					for(i = 0; i < func->argcount; i++) {
 						remove_variable(func->args[i]->id.name);
 					}
 					return ret;
+				case T_RET:
+					returning = true;
+					return execute(node->op.paras[0]);
 				case T_FUNC: // function definition
 					//printf("Defining function %s with %d paras\n", node->op.paras[0]->id.name, node->op.nparas);
 					func = get_function(node->op.paras[0]->id.name);

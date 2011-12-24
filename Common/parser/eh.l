@@ -22,6 +22,7 @@
 "call"		return T_CALL;
 "func"		return T_FUNC;
 "endfunc"	return T_ENDFUNC;
+"ret"		return T_RET;
 "$ "		return T_SET;
 "//".*[;\n]	; /* Ignore comment */
 [;\n]+		return T_SEPARATOR;

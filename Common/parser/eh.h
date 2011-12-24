@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include "y.tab.h"
 
@@ -9,6 +11,11 @@ typedef enum {
 	connode_enum,
 	opnode_enum
 } node_enum;
+
+typedef enum {
+	string_enum,
+	int_enum
+} type_enum;
 
 // Identifier
 typedef struct idnode_t {
@@ -37,8 +44,18 @@ typedef struct ehnode_t {
 	};
 } ehnode_t;
 
-void yyerror(char *s);
+// EH variable
+typedef struct ehvar_t {
+	type_enum type;
+	char *name;
+	union {
+		int intval;
+		char *strval;
+	};
+	struct ehvar_t *next;
+} ehvar_t;
 
+void yyerror(char *s);
 void *Malloc(size_t size);
 void free_node(ehnode_t *in);
 ehnode_t *get_constant(int value);

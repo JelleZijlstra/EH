@@ -15,7 +15,7 @@
 %token T_ENDWHILE
 %token T_ECHO
 %token T_SEPARATOR
-%token T_DECLARATION
+%token T_SET
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %left '=' '>' '<' T_GE T_LE T_NE
@@ -23,7 +23,7 @@
 %left '*' '/'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list string
+%type<ehNode> statement expression statement_list string bareword
 %%
 program:
 	statement_list			{ execute($1); free_node($1); exit(0); }
@@ -45,8 +45,8 @@ statement:
 							{ $$ = operate(T_ECHO, 1, $2); }
 	| T_ECHO expression T_SEPARATOR	
 							{ $$ = operate(T_ECHO, 1, $2); }
-	| '$' T_VARIABLE '=' expression T_SEPARATOR
-							{ $$ = operate(T_DECLARATION, 2, $2, $4); }
+	| '$' bareword '=' expression T_SEPARATOR
+							{ $$ = operate(T_SET, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = operate(T_IF, 2, $2, $4); }
 	| T_WHILE expression T_SEPARATOR statement_list T_ENDWHILE T_SEPARATOR
@@ -81,6 +81,9 @@ expression:
 string:
 	T_STRING				{ $$ = get_identifier($1); }
 	;
+
+bareword:
+	T_VARIABLE				{ $$ = get_identifier($1); }
 %%
 void yyerror(char *s) {
 	fprintf(stderr, "%s\n", s);

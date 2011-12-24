@@ -4,7 +4,7 @@
 
 %}
 %union {
-	char sValue[100];
+	char *sValue;
 	int iValue;
 	struct ehnode_t *ehNode;
 };
@@ -15,6 +15,8 @@
 %token T_ENDWHILE
 %token T_ECHO
 %token T_SEPARATOR
+%token T_DECLARATION
+%token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %left '=' '>' '<' T_GE T_LE T_NE
 %left '+' '-'
@@ -43,8 +45,8 @@ statement:
 							{ $$ = operate(T_ECHO, 1, $2); }
 	| T_ECHO expression T_SEPARATOR	
 							{ $$ = operate(T_ECHO, 1, $2); }
-	| '$' string '=' expression T_SEPARATOR
-							{ $$ = operate('$', 2, $2, $4); }
+	| '$' T_VARIABLE '=' expression T_SEPARATOR
+							{ $$ = operate(T_DECLARATION, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = operate(T_IF, 2, $2, $4); }
 	| T_WHILE expression T_SEPARATOR statement_list T_ENDWHILE T_SEPARATOR

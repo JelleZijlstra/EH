@@ -71,6 +71,22 @@ static int compile(ehnode_t *node) {
 					compile(node->op.paras[1]);
 					fprintf(outfile, "L%03d:\n", label);
 					return 0;
+				case T_WHILE:
+					// we'll need two labels
+					label++;
+					label++;
+					// first label
+					fprintf(outfile, "L%03d:\n", label - 1);
+					fprintf(outfile, "popl %%eax\n");
+					fprintf(outfile, "cmpl $0, %%eax\n");
+					fprintf(outfile, "jne L%03d\n", label);
+					// compile the then
+					compile(node->op.paras[1]);
+					// jump back to condition
+					fprintf(outfile, "jmp L%03d\n", label - 1);
+					fprintf(outfile, "L%03d:\n", label);
+					compile(node->op.paras[0]);
+					break;
 				case T_SEPARATOR:
 					compile(node->op.paras[0]);
 					// discard return value

@@ -8,6 +8,7 @@
 ['].*[']	{ 
 				int len;
 				len = strlen(yytext);
+				yylval.sValue = Malloc(len - 1);
 				strncpy(yylval.sValue, yytext + 1, len - 2);
 				yylval.sValue[len - 2] = '\0';
 				return T_STRING; 
@@ -20,7 +21,15 @@
 "endwhile"	return T_ENDWHILE;
 "//".*[;\n]	; /* Ignore comment */
 [;\n]+		return T_SEPARATOR;
-[=$+\-*/<>()]	return *yytext;
+[a-zA-Z][a-zA-Z0-9]*	{ 
+				int len;
+				len = strlen(yytext);
+				yylval.sValue = Malloc(len + 1);
+				strncpy(yylval.sValue, yytext, len);
+				yylval.sValue[len] = '\0';
+				return T_VARIABLE; 
+			}
+[=$+\-*/<>()]	return *yytext; /* Single character tokens */
 ">="		return T_GE;
 "<="		return T_LE;
 "!="		return T_NE;

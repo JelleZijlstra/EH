@@ -1,15 +1,22 @@
 <?php
 // driver.php: Script to compare performance for EH scripting, PHP, and C using the McCarthy function
 define(COUNT, 100);
-echo 'Testing EH...' . PHP_EOL;
 
+echo 'Testing EH...' . PHP_EOL;
 $beforeeh = microtime(true);
 for($i = 1; $i < COUNT; $i++)
 	shell_exec("echo '$i' > input; /Users/jellezijlstra/Dropbox/git/Common/eh.php mccarthy.eh < input > /dev/null");
 $aftereh = microtime(true);
 echo "Time for EH: " . ($aftereh - $beforeeh) . PHP_EOL;
-echo 'Testing PHP...' . PHP_EOL;
 
+echo 'Testing the EH interpreter...' . PHP_EOL;
+$beforeehi = microtime(true);
+for($i = 1; $i < COUNT; $i++)
+	shell_exec("echo '$i' > input; /Users/jellezijlstra/Dropbox/git/Common/parser/ehi < mccarthy.eh < input > /dev/null");
+$afterehi = microtime(true);
+echo "Time for EH: " . ($aftereh - $beforeeh) . PHP_EOL;
+
+echo 'Testing PHP...' . PHP_EOL;
 $beforephp = microtime(true);
 for($i = 1; $i < COUNT; $i++)
 	shell_exec("echo '$i' > input; php mccarthy.php < input > /dev/null");

@@ -55,6 +55,13 @@ typedef struct ehvar_t {
 	struct ehvar_t *next;
 } ehvar_t;
 
+typedef struct ehfunc_t {
+	char *name;
+	int argcount;
+	ehnode_t *code;
+	struct ehfunc_t *next;
+} ehfunc_t;
+
 void yyerror(char *s);
 void *Malloc(size_t size);
 void free_node(ehnode_t *in);
@@ -62,3 +69,4 @@ ehnode_t *get_constant(int value);
 ehnode_t *get_identifier(char *value);
 ehnode_t *operate(int operations, int noperations, ...);
 int execute(ehnode_t *node);
+void print_tree(ehnode_t *in, int n);

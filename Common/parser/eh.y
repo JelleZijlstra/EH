@@ -16,14 +16,17 @@
 %token T_ECHO
 %token T_SEPARATOR
 %token T_SET
+%token T_CALL
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
+%nonassoc ':'
+%left ','
 %left '=' '>' '<' T_GE T_LE T_NE
 %left '+' '-'
 %left '*' '/'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list string bareword
+%type<ehNode> statement expression statement_list string bareword arglist
 %%
 program:
 	statement_list			{ execute($1); free_node($1); exit(0); }
@@ -51,12 +54,15 @@ statement:
 							{ $$ = operate(T_IF, 2, $2, $4); }
 	| T_WHILE expression T_SEPARATOR statement_list T_ENDWHILE T_SEPARATOR
 							{ $$ = operate(T_WHILE, 2, $2, $4); }
+	| T_CALL expression T_SEPARATOR	
+							{ $$ = operate(T_CALL, 1, $2); }
 	;
 
 expression:
 	T_INTEGER				{ $$ = get_constant($1); }
 	| '(' expression ')'	{ $$ = $2; }
 	| '$' bareword			{ $$ = operate('$', 1, $2); }
+	| bareword ':' arglist	{ $$ = operate(':', 2, $1, $3); }
 	| expression '=' expression 
 							{ $$ = operate('=', 2, $1, $3); }
 	| expression '>' expression 
@@ -85,6 +91,14 @@ string:
 
 bareword:
 	T_VARIABLE				{ $$ = get_identifier($1); }
+	;
+
+arglist:
+	expression				{ $$ = $1; }
+	| expression ',' arglist
+							{ $$ = operate(',', 2, $1, $3); }
+	| /* NULL */			{ $$ = 0; }
+	;
 %%
 void yyerror(char *s) {
 	fprintf(stderr, "%s\n", s);

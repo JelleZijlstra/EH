@@ -69,3 +69,32 @@ void *Malloc(size_t size) {
 		exit(1);
 	}
 }
+
+static void printntabs(int n) {
+	int i;
+	for(i = 0; i < n; i++) {
+		printf("\t");
+	}
+}
+// print the abstract syntax tree
+void print_tree(ehnode_t *in, int n) {
+	int i;
+
+	switch(in->type) {
+		case idnode_enum:
+			printntabs(n); printf("Type: idnode\n");
+			printntabs(n); printf("Value: %s\n", in->id.name);
+			break;
+		case connode_enum:
+			printntabs(n); printf("Type: connode\n");
+			printntabs(n); printf("Value: %d\n", in->con.value);
+			break;
+		case opnode_enum:
+			printntabs(n); printf("Type: opnode\n");
+			printntabs(n); printf("Opcode: %d\n", in->op.op);
+			for(i = 0; i < in->op.nparas; i++) {
+				print_tree(in->op.paras[i], n + 1);
+			}
+			break;
+	}
+}

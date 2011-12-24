@@ -1,16 +1,26 @@
 #include "eh.h"
-// symbol table for variables
+// symbol table for variables and functions
 #define VARTABLE_S 1024
 ehvar_t *vartable[VARTABLE_S];
+ehfunc_t *functable[VARTABLE_S];
+
+// argument stack for functions
+#define STACKSIZE 64
+ehnode_t *stack[STACKSIZE];
+// stack pointer. esp != 0 also indicates that we want to execute a function
+int esp = 0;
 
 bool insert_variable(ehvar_t *var);
 ehvar_t *get_variable(char *name);
-bool has_variable(char *name );
+bool insert_function(ehfunc_t *func);
+ehfunc_t *get_function(char *name);
+void push_stack(ehnode_t *in);
 static unsigned int hash(char *data);
 
 int execute(ehnode_t *node) {
 	// variable used
 	ehvar_t *var;
+	ehfunc_t *func;
 
 	if(node == NULL)
 		return 0;
@@ -90,7 +100,28 @@ int execute(ehnode_t *node) {
 					return 0;
 				case '$': // variable dereference
 					var = get_variable(node->op.paras[0]->id.name);
+					if(var == NULL) {
+						printf("Unknown variable %s\n", node->op.paras[0]->id.name);
+						return 0;
+					}
 					return var->intval;
+				case T_CALL: // call: execute argument and discard it
+					execute(node->op.paras[0]);
+					return 0;
+				case ':': // function
+					func = get_function(node->op.paras[0]->id.name);
+					if(func == NULL) {
+						printf("Unknown function %s\n", node->op.paras[0]->id.name);
+						printf("%d\n", esp);
+						return 0;						
+					}
+					if(node->op.paras[0] == NULL) {
+						// no parameters
+						esp = 1;
+					}
+					else
+						push_stack(node->op.paras[1]);
+					return execute(func->code);
 				default:
 					printf("Unexpected opcode %d\n", node->op.op);
 					exit(0);
@@ -99,6 +130,9 @@ int execute(ehnode_t *node) {
 	return 0;
 }
 
+/*
+ * Variables
+ */
 bool insert_variable(ehvar_t *var) {
 	unsigned int vhash;
 	
@@ -113,7 +147,6 @@ bool insert_variable(ehvar_t *var) {
 	}
 	return true;
 }
-
 ehvar_t *get_variable(char *name) {
 	unsigned int vhash;
 	ehvar_t *currvar;
@@ -128,21 +161,47 @@ ehvar_t *get_variable(char *name) {
 	}
 	return NULL;
 }
-bool has_variable(char *name ) {
-	unsigned int vhash;
-	ehvar_t *currvar;
-	
-	vhash = hash(name);
-	currvar = vartable[vhash];
-	while(currvar != NULL) {
-		if(strcmp(currvar->name, name) == 0) {
-			return true;
-		}
-		currvar = currvar->next;
-	}
-	return false;
-}
 
+/*
+ * Functions
+ */
+bool insert_function(ehfunc_t *func) {
+	unsigned int vhash;
+	
+	vhash = hash(func->name);
+	if(functable[vhash] == NULL) {
+		functable[vhash] = func;
+		func->next = NULL;
+	}
+	else {
+		func->next = functable[vhash];
+		functable[vhash] = func;
+	}
+	return true;
+}
+ehfunc_t *get_function(char *name) {
+	unsigned int vhash;
+	ehfunc_t *currfunc;
+
+	vhash = hash(name);
+	currfunc = functable[vhash];
+	while(currfunc != NULL) {
+		if(strcmp(currfunc->name, name) == 0) {
+			return currfunc;
+		}
+		currfunc = currfunc->next;
+	}
+	return NULL;
+}
+void push_stack(ehnode_t *in) {
+	esp++;
+	if(in->type == opnode_enum && in->op.op == ',') {
+		stack[esp] = in->op.paras[0];
+		push_stack(in->op.paras[1]);
+	}
+	else
+		stack[esp] = in;
+}
 /* Hash function */
 // from http://azillionmonkeys.com/qed/hash.html
 #undef get16bits

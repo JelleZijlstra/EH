@@ -4,9 +4,14 @@
 ehvar_t *vartable[VARTABLE_S];
 
 bool insert_variable(ehvar_t *var);
+ehvar_t *get_variable(char *name);
+bool has_variable(char *name );
 static unsigned int hash(char *data);
 
 int execute(ehnode_t *node) {
+	// variable used
+	ehvar_t *var;
+
 	if(node == NULL)
 		return 0;
 	//printf("Executing nodetype %d\n", node->type);
@@ -73,14 +78,19 @@ int execute(ehnode_t *node) {
 					return execute(node->op.paras[0]) / 
 						execute(node->op.paras[1]);
 				case T_SET:
-					;
-					ehvar_t *var = Malloc(sizeof(ehnode_t));
-					var->name = node->op.paras[0]->id.name;
-					// only supporting integer variables at present
-					var->type = int_enum;
+					var = get_variable(node->op.paras[0]->id.name);
+					if(var == NULL) {
+						var = Malloc(sizeof(ehnode_t));
+						var->name = node->op.paras[0]->id.name;
+						// only supporting integer variables at present
+						var->type = int_enum;
+						insert_variable(var);
+					}
 					var->intval = execute(node->op.paras[1]);
-					insert_variable(var);
 					return 0;
+				case '$': // variable dereference
+					var = get_variable(node->op.paras[0]->id.name);
+					return var->intval;
 				default:
 					printf("Unexpected opcode %d\n", node->op.op);
 					exit(0);
@@ -102,6 +112,35 @@ bool insert_variable(ehvar_t *var) {
 		vartable[vhash] = var;
 	}
 	return true;
+}
+
+ehvar_t *get_variable(char *name) {
+	unsigned int vhash;
+	ehvar_t *currvar;
+	
+	vhash = hash(name);
+	currvar = vartable[vhash];
+	while(currvar != NULL) {
+		if(strcmp(currvar->name, name) == 0) {
+			return currvar;
+		}
+		currvar = currvar->next;
+	}
+	return NULL;
+}
+bool has_variable(char *name ) {
+	unsigned int vhash;
+	ehvar_t *currvar;
+	
+	vhash = hash(name);
+	currvar = vartable[vhash];
+	while(currvar != NULL) {
+		if(strcmp(currvar->name, name) == 0) {
+			return true;
+		}
+		currvar = currvar->next;
+	}
+	return false;
 }
 
 /* Hash function */

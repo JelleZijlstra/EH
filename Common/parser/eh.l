@@ -19,6 +19,7 @@
 "endif"		return T_ENDIF;
 "while"		return T_WHILE;
 "endwhile"	return T_ENDWHILE;
+"$ "		return T_SET;
 "//".*[;\n]	; /* Ignore comment */
 [;\n]+		return T_SEPARATOR;
 [a-zA-Z][a-zA-Z0-9]*	{ 

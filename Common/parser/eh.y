@@ -45,7 +45,7 @@ statement:
 							{ $$ = operate(T_ECHO, 1, $2); }
 	| T_ECHO expression T_SEPARATOR	
 							{ $$ = operate(T_ECHO, 1, $2); }
-	| '$' bareword '=' expression T_SEPARATOR
+	| T_SET bareword '=' expression T_SEPARATOR
 							{ $$ = operate(T_SET, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = operate(T_IF, 2, $2, $4); }
@@ -56,6 +56,7 @@ statement:
 expression:
 	T_INTEGER				{ $$ = get_constant($1); }
 	| '(' expression ')'	{ $$ = $2; }
+	| '$' bareword			{ $$ = operate('$', 1, $2); }
 	| expression '=' expression 
 							{ $$ = operate('=', 2, $1, $3); }
 	| expression '>' expression 

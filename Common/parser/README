@@ -1,10 +1,8 @@
 The files in this directory provide a rudimentary parser for a subset of the EH scripting language. To compile:
-$ yacc -d eh.y
-$ lex eh.l
-$ gcc lex.yy.c y.tab.c eh_tree.c eh_interpreter.c -o eh
+$ make interpreter
 
 To use the compiler instead of the interpreter version, use
-$ gcc lex.yy.c y.tab.c eh_tree.c eh_compiler.c -o eh
+$ make compiler
 
 To compile a file called "compile.eh"
 $ ./eh < compile.eh

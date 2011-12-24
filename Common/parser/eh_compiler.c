@@ -43,7 +43,7 @@ static int compile(ehnode_t *node) {
 			switch(node->op.op) {
 				case T_ECHO:
 					switch(node->op.paras[0]->type) {
-						case idnode_enum:
+						case connode_enum:
 						case opnode_enum:
 							// make sure stack is aligned
 							fprintf(outfile, "subl $4, %%esp\n");
@@ -53,8 +53,8 @@ static int compile(ehnode_t *node) {
 							fprintf(outfile, "call _printf\n");
 							fprintf(outfile, "addl $8, %%esp\n");
 							return 0;
-						case connode_enum:
-							printf("%d\n", node->op.paras[0]->con.value);
+						case idnode_enum:
+							printf("Constant %d\n", node->op.paras[0]->con.value);
 							return 0;
 					}
 					

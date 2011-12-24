@@ -16,6 +16,7 @@
 [0-9]*	{ yylval.iValue = atoi(yytext); return T_INTEGER; }
 "echo"		return T_ECHO;
 "if"		return T_IF;
+"else"		return T_ELSE;
 "endif"		return T_ENDIF;
 "while"		return T_WHILE;
 "endwhile"	return T_ENDWHILE;

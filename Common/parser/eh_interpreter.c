@@ -45,8 +45,13 @@ int execute(ehnode_t *node) {
 					}
 					return 0;
 				case T_IF:
-					if(execute(node->op.paras[0]))
+					if(execute(node->op.paras[0])) {
 						ret = execute(node->op.paras[1]);
+						if(returning)
+							return ret;
+					}
+					else if(node->op.nparas == 2)
+						ret = execute(node->op.paras[2]);
 					return ret;
 				case T_WHILE:
 					while(execute(node->op.paras[0])) {

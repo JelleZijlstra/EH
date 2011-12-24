@@ -16,6 +16,8 @@
 "echo"		return T_ECHO;
 "if"		return T_IF;
 "endif"		return T_ENDIF;
+"while"		return T_WHILE;
+"endwhile"	return T_ENDWHILE;
 "//".*[;\n]	; /* Ignore comment */
 [;\n]+		return T_SEPARATOR;
 [=$+\-*/<>()]	return *yytext;

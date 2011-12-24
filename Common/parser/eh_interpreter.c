@@ -29,6 +29,10 @@ int execute(ehnode_t *node) {
 					if(execute(node->op.paras[0]))
 						execute(node->op.paras[1]);
 					return 0;
+				case T_WHILE:
+					while(execute(node->op.paras[0]))
+						execute(node->op.paras[1]);
+					return 0;
 				case T_SEPARATOR:
 					execute(node->op.paras[0]);
 					execute(node->op.paras[1]);

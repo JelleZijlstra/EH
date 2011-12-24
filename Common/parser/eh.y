@@ -11,6 +11,8 @@
 %token <iValue> T_INTEGER
 %token T_IF
 %token T_ENDIF
+%token T_WHILE
+%token T_ENDWHILE
 %token T_ECHO
 %token T_SEPARATOR
 %token <sValue> T_STRING
@@ -45,6 +47,8 @@ statement:
 							{ $$ = operate('$', 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = operate(T_IF, 2, $2, $4); }
+	| T_WHILE expression T_SEPARATOR statement_list T_ENDWHILE T_SEPARATOR
+							{ $$ = operate(T_WHILE, 2, $2, $4); }
 	;
 
 expression:

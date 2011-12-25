@@ -12,9 +12,9 @@ echo "Time for EH: " . ($aftereh - $beforeeh) . PHP_EOL;
 echo 'Testing the EH interpreter...' . PHP_EOL;
 $beforeehi = microtime(true);
 for($i = 1; $i < COUNT; $i++)
-	shell_exec("echo '$i' > input; /Users/jellezijlstra/Dropbox/git/Common/parser/ehi < mccarthy.eh < input > /dev/null");
+	shell_exec("echo '$i' > input; /Users/jellezijlstra/Dropbox/git/Common/parser/ehi mccarthy.eh < input > /dev/null");
 $afterehi = microtime(true);
-echo "Time for EH: " . ($aftereh - $beforeeh) . PHP_EOL;
+echo "Time for C-interpreted EH: " . ($afterehi - $beforeehi) . PHP_EOL;
 
 echo 'Testing PHP...' . PHP_EOL;
 $beforephp = microtime(true);

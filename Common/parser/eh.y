@@ -2,6 +2,7 @@
 %{
 #include "eh.h"
 extern FILE *yyin;
+#define YYERROR_VERBOSE
 %}
 %union {
 	char *sValue;

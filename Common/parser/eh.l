@@ -25,7 +25,7 @@
 "endfunc"	return T_ENDFUNC;
 "ret"		return T_RET;
 "$ "		return T_SET;
-"//".*[;\n]	; /* Ignore comment */
+("//"|#).*[;\n]	; /* Ignore comment */
 [;\n]+		return T_SEPARATOR;
 [a-zA-Z][a-zA-Z0-9]*	{ 
 				int len;

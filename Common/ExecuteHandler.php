@@ -806,8 +806,8 @@ abstract class ExecuteHandler {
 				$this->curr('vars', array());
 				// increment flowcounter so we can edit its variables
 				$this->curr('flowctr', '++');
-				$f = $this->funcs[$name];
-				if($f) {
+				if(isset($this->funcs[$name])) {
+					$f = $this->funcs[$name];
 					// function already exists; call it
 					if($this->retline < 0) {
 						echo "Syntax error: Redefinition of function $name" . PHP_EOL;

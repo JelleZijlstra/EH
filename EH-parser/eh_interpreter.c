@@ -200,6 +200,9 @@ ehretval_t execute(ehnode_t *node) {
 								case string_e:
 									ret.intval = eh_strtoi(ret.strval);
 									break;
+								default:
+									fprintf(stderr, "Unsupported typecast\n");
+									break;
 							}
 							ret.type = int_e;
 							break;
@@ -211,8 +214,14 @@ ehretval_t execute(ehnode_t *node) {
 								case string_e:
 									// nothing to do
 									break;
+								default:
+									fprintf(stderr, "Unsupported typecast\n");
+									break;
 							}
 							ret.type = string_e;
+							break;
+						default:
+							fprintf(stderr, "Unsupported typecast\n");
 							break;
 					}
 					break;

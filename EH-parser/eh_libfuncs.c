@@ -7,6 +7,7 @@
 #include "eh.h"
 
 EHLIBFUNC(getinput) {
-	fscanf(stdin, "%d", retval);
+	retval->type = int_enum;
+	fscanf(stdin, "%d", &retval->intval);
 	return;
 }

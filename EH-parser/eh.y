@@ -34,7 +34,7 @@ extern FILE *yyin;
 %left '*' '/'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list string bareword arglist parglist
+%type<ehNode> statement expression statement_list bareword arglist parglist
 %%
 program:
 	statement_list			{ 
@@ -59,8 +59,8 @@ statement_list:
 
 statement:
 	expression T_SEPARATOR	{ $$ = $1; }
-	| T_ECHO string T_SEPARATOR	
-							{ $$ = operate(T_ECHO, 1, $2); }
+	| T_ECHO T_STRING T_SEPARATOR	
+							{ $$ = operate(T_ECHO, 1, get_identifier($2)); }
 	| T_ECHO expression T_SEPARATOR	
 							{ $$ = operate(T_ECHO, 1, $2); }
 	| T_SET bareword '=' expression T_SEPARATOR
@@ -87,6 +87,7 @@ statement:
 
 expression:
 	T_INTEGER				{ $$ = get_constant($1); }
+	| T_STRING				{ $$ = get_identifier($1); }
 	| '(' expression ')'	{ $$ = $2; }
 	| '$' bareword			{ $$ = operate('$', 1, $2); }
 	| bareword ':' arglist	{ $$ = operate(':', 2, $1, $3); }
@@ -110,10 +111,6 @@ expression:
 							{ $$ = operate('*', 2, $1, $3); }
 	| expression '/' expression 
 							{ $$ = operate('/', 2, $1, $3); }
-	;
-
-string:
-	T_STRING				{ $$ = get_identifier($1); }
 	;
 
 bareword:

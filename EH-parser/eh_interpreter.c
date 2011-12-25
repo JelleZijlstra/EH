@@ -26,6 +26,35 @@ static bool insert_function(ehfunc_t *func);
 static ehfunc_t *get_function(char *name);
 static void push_stack(ehnode_t *in);
 static unsigned int hash(char *data);
+static int eh_strtoi(char *in);
+
+// macro for interpreter behavior
+#define EH_INT_CASE(token, operator) case token: \
+	operand1 = execute(node->op.paras[0]); \
+	operand2 = execute(node->op.paras[1]); \
+	if(IS_INT(operand1) && IS_INT(operand2)) { \
+		ret.intval = (operand1.intval operator operand2.intval); \
+	} \
+	else if(IS_STRING(operand1) && IS_STRING(operand2)) { \
+		ret.intval = (eh_strtoi(operand1.strval) operator eh_strtoi(operand2.strval)); \
+	} \
+	else if(IS_STRING(operand1)) { \
+		i = eh_strtoi(operand1.strval); \
+		ret.intval = (i operator operand2.intval); \
+	} \
+	else { \
+		i = eh_strtoi(operand2.strval); \
+		ret.intval = (i operator operand1.intval); \
+	} \
+	break;
+#define SETRETFROMVAR(var) ret.type = var->type; switch(ret.type) { \
+	case int_enum: ret.intval = var->intval; break; \
+	case string_enum: ret.strval = var->strval; break; \
+}
+#define SETVARFROMRET(var) var->type = ret.type; switch(ret.type) { \
+	case int_enum: var->intval = ret.intval; break; \
+	case string_enum: var->strval = ret.strval; break; \
+}
 
 ehlibfunc_t libfuncs[] = {
 	{getinput, "getinput"},
@@ -50,21 +79,28 @@ void eh_exit(void) {
 	return;
 }
 
-int execute(ehnode_t *node) {
+ehretval_t execute(ehnode_t *node) {
 	// variable used
 	ehvar_t *var;
 	ehfunc_t *func;
-	int ret, i, count;
+	int i, count;
 	char *name;
+	ehretval_t ret, operand1, operand2;
+	// default
+	ret.type = int_enum;
+	ret.intval = 0;
 
 	if(node == NULL)
-		return 0;
+		return ret;
 	//printf("Executing nodetype %d\n", node->type);
 	switch(node->type) {
 		case idnode_enum:
-			return (int) node->id.name;
+			ret.type = string_enum;
+			ret.strval = node->id.name;
+			break;
 		case connode_enum:
-			return node->con.value;
+			ret.intval = node->con.value;
+			break;
 		case opnode_enum:
 			//printf("Executing opcode: %d\n", node->op.op);
 			switch(node->op.op) {
@@ -72,33 +108,45 @@ int execute(ehnode_t *node) {
 					switch(node->op.paras[0]->type) {
 						case idnode_enum:
 							printf("%s\n", node->op.paras[0]->id.name);
-							return 0;
+							break;
 						case connode_enum:
 							printf("%d\n", node->op.paras[0]->con.value);
-							return 0;
+							break;
 						case opnode_enum:
-							printf("%d\n", execute(node->op.paras[0]));
+							ret = execute(node->op.paras[0]);
+							switch(ret.type) {
+								case string_enum:
+									printf("%s\n", ret.strval);
+									break;
+								case int_enum:
+									printf("%d\n", ret.intval);
+									break;
+							}
+							break;
+						default:
+							fprintf(stderr, "Illegal argument for echo\n");
+							break;
 					}
-					return 0;
+					break;
 				case T_IF:
-					if(execute(node->op.paras[0])) {
+					if(execute(node->op.paras[0]).intval) {
 						ret = execute(node->op.paras[1]);
 						if(returning)
 							return ret;
 					}
 					else if(node->op.nparas == 3)
 						ret = execute(node->op.paras[2]);
-					return ret;
+					break;
 				case T_WHILE:
-					while(execute(node->op.paras[0])) {
+					while(execute(node->op.paras[0]).intval) {
 						ret = execute(node->op.paras[1]);
 						if(returning)
 							return ret;
 					}
-					return ret;
+					break;
 				case T_FOR:
 					// get the count
-					count = execute(node->op.paras[0]);
+					count = execute(node->op.paras[0]).intval;
 					if(node->op.nparas == 2) {
 						// "for 5; do stuff; endfor" construct
 						for(i = 0; i < count; i++) {
@@ -118,6 +166,7 @@ int execute(ehnode_t *node) {
 							var->scope = scope;
 							insert_variable(var);
 						}
+						// count variable always gets to be an int
 						var->type = int_enum;
 						for(var->intval = 0; var->intval < count; var->intval++) {
 							ret = execute(node->op.paras[2]);
@@ -125,43 +174,67 @@ int execute(ehnode_t *node) {
 								return ret;						
 						}
 					}
-					return ret;
+					break;
 				case T_SEPARATOR:
 					ret = execute(node->op.paras[0]);
 					if(returning)
 						return ret;
 					ret = execute(node->op.paras[1]);
-					return ret;
+					break;
 				case '=':
-					return execute(node->op.paras[0]) == 
-						execute(node->op.paras[1]);
-				case '>':
-					return execute(node->op.paras[0]) >
-						execute(node->op.paras[1]);
-				case '<':
-					return execute(node->op.paras[0]) <
-						execute(node->op.paras[1]);
-				case T_GE:
-					return execute(node->op.paras[0]) >= 
-						execute(node->op.paras[1]);
-				case T_LE:
-					return execute(node->op.paras[0]) <=
-						execute(node->op.paras[1]);
-				case T_NE:
-					return execute(node->op.paras[0]) != 
-						execute(node->op.paras[1]);
+					operand1 = execute(node->op.paras[0]);
+					operand2 = execute(node->op.paras[1]);
+					if(IS_INT(operand1) && IS_INT(operand2)) {
+						ret.intval = (operand1.intval == operand2.intval);
+					}
+					else if(IS_STRING(operand1) && IS_STRING(operand2)) {
+						ret.intval = !strcmp(operand1.strval, operand2.strval);
+					}
+					else if(IS_STRING(operand1)) {
+						// type-juggle operand1
+						i = eh_strtoi(operand1.strval);
+						ret.intval = (i == operand2.intval);
+					}
+					else {
+						i = eh_strtoi(operand2.strval);
+						ret.intval = (i == operand1.intval);
+					}
+					break;
+				EH_INT_CASE('>', <)
+				EH_INT_CASE('<', <)
+				EH_INT_CASE(T_GE, >=)
+				EH_INT_CASE(T_LE, <=)
+				EH_INT_CASE(T_NE, !=)
+				// doing addition on two strings performs concatenation
 				case '+':
-					return execute(node->op.paras[0]) + 
-						execute(node->op.paras[1]);
-				case '-':
-					return execute(node->op.paras[0]) - 
-						execute(node->op.paras[1]);
-				case '*':
-					return execute(node->op.paras[0]) * 
-						execute(node->op.paras[1]);
-				case '/':
-					return execute(node->op.paras[0]) / 
-						execute(node->op.paras[1]);
+					operand1 = execute(node->op.paras[0]);
+					operand2 = execute(node->op.paras[1]);
+					if(IS_INT(operand1) && IS_INT(operand2)) {
+						ret.intval = (operand1.intval + operand2.intval);
+					}
+					else if(IS_STRING(operand1) && IS_STRING(operand2)) {
+						// concatenate them
+						ret.type = string_enum;
+						size_t len1, len2;
+						len1 = strlen(operand1.strval);
+						len2 = strlen(operand2.strval);
+						ret.strval = Malloc(len1 + len2 + 1);
+						strcpy(ret.strval, operand1.strval);
+						strcpy(ret.strval + len1, operand2.strval);
+					}
+					else if(IS_STRING(operand1)) {
+						// type-juggle operand1
+						i = eh_strtoi(operand1.strval);
+						ret.intval = (i + operand2.intval);
+					}
+					else {
+						i = eh_strtoi(operand2.strval);
+						ret.intval = (i + operand1.intval);
+					}
+					break;
+				EH_INT_CASE('-', -)
+				EH_INT_CASE('*', *)
+				EH_INT_CASE('/', /)
 				case T_SET:
 					name = node->op.paras[0]->id.name;
 					var = get_variable(name, scope);
@@ -169,30 +242,31 @@ int execute(ehnode_t *node) {
 						var = Malloc(sizeof(ehvar_t));
 						var->name = name;
 						// only supporting integer variables at present
-						var->type = int_enum;
 						var->scope = scope;
 						insert_variable(var);
 					}
-					var->intval = execute(node->op.paras[1]);
-					return 0;
+					ret = execute(node->op.paras[1]);
+					SETVARFROMRET(var);
+					break;
 				case '$': // variable dereference
 					name = node->op.paras[0]->id.name;
 					var = get_variable(name, scope);
 					if(var == NULL) {
 						fprintf(stderr, "Unknown variable %s\n", name);
-						return 0;
+						return ret;
 					}
-					return var->intval;
+					SETRETFROMVAR(var);
+					break;
 				case T_CALL: // call: execute argument and discard it
-					execute(node->op.paras[0]);
-					return 0;
+					ret = execute(node->op.paras[0]);
+					break;
 				case ':': // function call
 					name = node->op.paras[0]->id.name;
 					func = get_function(name);
 					//printf("Calling function %s at scope %d\n", node->op.paras[0]->id.name, scope);
 					if(func == NULL) {
 						fprintf(stderr, "Unknown function %s\n", name);
-						return 0;						
+						return ret;						
 					}
 					if(func->type == lib_enum) {
 						// library function
@@ -204,20 +278,21 @@ int execute(ehnode_t *node) {
 					while(1) {
 						var = Malloc(sizeof(ehvar_t));
 						var->name = func->args[i]->id.name;
-						var->type = int_enum;
 						var->scope = scope + 1;
 						insert_variable(var);
 						i++;
 						if(i > func->argcount) {
 							fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
-							return 0;
+							return ret;
 						}
 						if(in->type == opnode_enum && in->op.op == ',') {
-							var->intval = execute(in->op.paras[0]);
+							ret = execute(in->op.paras[0]);
+							SETVARFROMRET(var);
 							in = in->op.paras[1];
 						}
 						else {
-							var->intval = execute(in);
+							ret = execute(in);
+							SETVARFROMRET(var);
 							break;
 						}
 					}
@@ -225,7 +300,7 @@ int execute(ehnode_t *node) {
 					scope++;
 					if(func->argcount != i) {
 						fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", name, func->argcount, i);
-						return 0;
+						return ret;
 					}
 					ret = execute(func->code);
 					returning = false;
@@ -233,7 +308,7 @@ int execute(ehnode_t *node) {
 						remove_variable(func->args[i]->id.name, scope);
 					}
 					scope--;
-					return ret;
+					break;
 				case T_RET:
 					returning = true;
 					return execute(node->op.paras[0]);
@@ -244,7 +319,7 @@ int execute(ehnode_t *node) {
 					// function definition
 					if(func != NULL) {
 						fprintf(stderr, "Attempt to redefine function %s\n", name);
-						return 0;
+						return ret;
 					}
 					func = Malloc(sizeof(ehfunc_t));
 					func->name = name;
@@ -292,13 +367,13 @@ int execute(ehnode_t *node) {
 					}
 					func->type = user_enum;
 					insert_function(func);
-					return 0;
+					break;
 				default:
 					fprintf(stderr, "Unexpected opcode %d\n", node->op.op);
 					exit(0);
 			}
 	}
-	return 0;
+	return ret;
 }
 
 /*
@@ -400,6 +475,15 @@ static ehfunc_t *get_function(char *name) {
 	}
 	return NULL;
 }
+
+static int eh_strtoi(char *in) {
+	int ret;
+	ret = strtol(in, NULL, 0);
+	if(ret == 0 && errno == EINVAL)
+		fprintf(stderr, "Unable to perform type juggling\n");
+	return ret;
+}
+
 /* Hash function */
 // from http://azillionmonkeys.com/qed/hash.html
 #undef get16bits

@@ -54,7 +54,8 @@ int execute(ehnode_t *node) {
 	// variable used
 	ehvar_t *var;
 	ehfunc_t *func;
-	int ret;
+	int ret, i, count;
+	char *name;
 
 	if(node == NULL)
 		return 0;
@@ -95,6 +96,36 @@ int execute(ehnode_t *node) {
 							return ret;
 					}
 					return ret;
+				case T_FOR:
+					// get the count
+					count = execute(node->op.paras[0]);
+					if(node->op.nparas == 2) {
+						// "for 5; do stuff; endfor" construct
+						for(i = 0; i < count; i++) {
+							ret = execute(node->op.paras[1]);
+							if(returning)
+								return ret;
+						}
+					}
+					else {
+						// "for 5 count i; do stuff; endfor" construct
+						name = node->op.paras[1]->id.name;
+						var = get_variable(name, scope);
+						// variable is not yet set, so set it
+						if(var == NULL) {
+							var = Malloc(sizeof(ehvar_t));
+							var->name = node->op.paras[1]->id.name;
+							var->scope = scope;
+							insert_variable(var);
+						}
+						var->type = int_enum;
+						for(var->intval = 0; var->intval < count; var->intval++) {
+							ret = execute(node->op.paras[2]);
+							if(returning)
+								return ret;						
+						}
+					}
+					return ret;
 				case T_SEPARATOR:
 					ret = execute(node->op.paras[0]);
 					if(returning)
@@ -132,10 +163,11 @@ int execute(ehnode_t *node) {
 					return execute(node->op.paras[0]) / 
 						execute(node->op.paras[1]);
 				case T_SET:
-					var = get_variable(node->op.paras[0]->id.name, scope);
+					name = node->op.paras[0]->id.name;
+					var = get_variable(name, scope);
 					if(var == NULL) {
 						var = Malloc(sizeof(ehvar_t));
-						var->name = node->op.paras[0]->id.name;
+						var->name = name;
 						// only supporting integer variables at present
 						var->type = int_enum;
 						var->scope = scope;
@@ -144,9 +176,10 @@ int execute(ehnode_t *node) {
 					var->intval = execute(node->op.paras[1]);
 					return 0;
 				case '$': // variable dereference
-					var = get_variable(node->op.paras[0]->id.name, scope);
+					name = node->op.paras[0]->id.name;
+					var = get_variable(name, scope);
 					if(var == NULL) {
-						fprintf(stderr, "Unknown variable %s\n", node->op.paras[0]->id.name);
+						fprintf(stderr, "Unknown variable %s\n", name);
 						return 0;
 					}
 					return var->intval;
@@ -154,10 +187,11 @@ int execute(ehnode_t *node) {
 					execute(node->op.paras[0]);
 					return 0;
 				case ':': // function call
-					func = get_function(node->op.paras[0]->id.name);
+					name = node->op.paras[0]->id.name;
+					func = get_function(name);
 					//printf("Calling function %s at scope %d\n", node->op.paras[0]->id.name, scope);
 					if(func == NULL) {
-						fprintf(stderr, "Unknown function %s\n", node->op.paras[0]->id.name);
+						fprintf(stderr, "Unknown function %s\n", name);
 						return 0;						
 					}
 					if(func->type == lib_enum) {
@@ -191,7 +225,7 @@ int execute(ehnode_t *node) {
 					// functions get their own scope (not decremented before because execution of arguments needs parent scope)
 					scope++;
 					if(func->argcount != i) {
-						fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
+						fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", name, func->argcount, i);
 						return 0;
 					}
 					ret = execute(func->code);
@@ -205,15 +239,16 @@ int execute(ehnode_t *node) {
 					returning = true;
 					return execute(node->op.paras[0]);
 				case T_FUNC: // function definition
+					name = node->op.paras[0]->id.name;
 					//printf("Defining function %s with %d paras\n", node->op.paras[0]->id.name, node->op.nparas);
-					func = get_function(node->op.paras[0]->id.name);
+					func = get_function(name);
 					// function definition
 					if(func != NULL) {
-						fprintf(stderr, "Attempt to redefine function %s\n", node->op.paras[0]->id.name);
+						fprintf(stderr, "Attempt to redefine function %s\n", name);
 						return 0;
 					}
 					func = Malloc(sizeof(ehfunc_t));
-					func->name = node->op.paras[0]->id.name;
+					func->name = name;
 					// determine argcount
 					if(node->op.nparas == 2) {
 						func->argcount = 0;

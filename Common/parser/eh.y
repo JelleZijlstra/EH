@@ -15,6 +15,9 @@ extern FILE *yyin;
 %token T_ENDIF
 %token T_WHILE
 %token T_ENDWHILE
+%token T_FOR
+%token T_COUNT
+%token T_ENDFOR
 %token T_FUNC
 %token T_ENDFUNC
 %token T_RET
@@ -68,6 +71,10 @@ statement:
 							{ $$ = operate(T_IF, 3, $2, $4, $7); }
 	| T_WHILE expression T_SEPARATOR statement_list T_ENDWHILE T_SEPARATOR
 							{ $$ = operate(T_WHILE, 2, $2, $4); }
+	| T_FOR expression T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
+							{ $$ = operate(T_FOR, 2, $2, $4); }
+	| T_FOR expression T_COUNT bareword T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
+							{ $$ = operate(T_FOR, 3, $2, $4, $6); }
 	| T_CALL expression T_SEPARATOR	
 							{ $$ = operate(T_CALL, 1, $2); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR

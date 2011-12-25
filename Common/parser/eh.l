@@ -18,6 +18,9 @@
 "if"		return T_IF;
 "else"		return T_ELSE;
 "endif"		return T_ENDIF;
+"for"		return T_FOR;
+"endfor"	return T_ENDFOR;
+"count"		return T_COUNT;
 "while"		return T_WHILE;
 "endwhile"	return T_ENDWHILE;
 "call"		return T_CALL;

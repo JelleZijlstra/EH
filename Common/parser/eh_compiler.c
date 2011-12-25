@@ -6,6 +6,13 @@ FILE *outfile;
 unsigned int label = 0;
 static int compile(ehnode_t *node);
 
+void eh_init(void) {
+	return;
+}
+void eh_exit(void) {
+	return;
+}
+
 int execute(ehnode_t *node) {
 	outfile = fopen("tmp.s", "w");
 	if(outfile == NULL) {

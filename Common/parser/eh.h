@@ -64,6 +64,9 @@ typedef struct ehfunc_t {
 	struct ehfunc_t *next;
 } ehfunc_t;
 
+void eh_init(void);
+void eh_exit(void);
+
 void yyerror(char *s);
 void *Malloc(size_t size);
 void free_node(ehnode_t *in);

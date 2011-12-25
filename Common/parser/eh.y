@@ -34,9 +34,11 @@
 %%
 program:
 	statement_list			{ 
-								//print_tree($1, 0); 
-								execute($1); 
-								free_node($1); 
+								//print_tree($1, 0);
+								eh_init();
+								execute($1);
+								free_node($1);
+								eh_exit();
 								exit(0); 
 							}
 	| /* NULL */			{ 

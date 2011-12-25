@@ -18,6 +18,13 @@ static ehfunc_t *get_function(char *name);
 static void push_stack(ehnode_t *in);
 static unsigned int hash(char *data);
 
+void eh_init(void) {
+	return;
+}
+void eh_exit(void) {
+	return;
+}
+
 int execute(ehnode_t *node) {
 	// variable used
 	ehvar_t *var;

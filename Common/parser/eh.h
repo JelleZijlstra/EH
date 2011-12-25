@@ -1,3 +1,9 @@
+/*
+ * eh.h
+ * Jelle Zijlstra, December 2011
+ *
+ * Main header file for the EH scripting language
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -16,6 +22,11 @@ typedef enum {
 	string_enum,
 	int_enum
 } type_enum;
+
+typedef enum {
+	user_enum = 0,
+	lib_enum = 1,
+} functype_enum;
 
 // Identifier
 typedef struct idnode_t {
@@ -58,11 +69,20 @@ typedef struct ehvar_t {
 
 typedef struct ehfunc_t {
 	char *name;
-	int argcount;
+	functype_enum type: 1;
+	int argcount: 31;
 	ehnode_t **args;
-	ehnode_t *code;
+	union {
+		ehnode_t *code;
+		void (*ptr)(ehnode_t *, int *);
+	};
 	struct ehfunc_t *next;
 } ehfunc_t;
+
+typedef struct ehlibfunc_t {
+	void (*code)(ehnode_t *, int *);
+	char *name;
+} ehlibfunc_t;
 
 void eh_init(void);
 void eh_exit(void);
@@ -75,3 +95,5 @@ ehnode_t *get_identifier(char *value);
 ehnode_t *operate(int operations, int noperations, ...);
 int execute(ehnode_t *node);
 void print_tree(ehnode_t *in, int n);
+
+#include "eh_libfuncs.h"

@@ -1,7 +1,7 @@
 /* This code was inspired by Tom Niemann's "A Compact Guide to Lex & Yacc", available at http://epaperpress.com/lexandyacc/ */
 %{
 #include "eh.h"
-
+extern FILE *yyin;
 %}
 %union {
 	char *sValue;
@@ -129,7 +129,18 @@ parglist:
 void yyerror(char *s) {
 	fprintf(stderr, "%s\n", s);
 }
-int main(void) {
+int main(int argc, char **argv) {
+	if(argc != 2) {
+		printf("Usage: %s file\n", argv[0]);
+		exit(1);
+	}
+	FILE *infile = fopen(argv[1], "r");
+	if(!infile) {
+		printf("Unable to open input file\n");
+		exit(2);
+	}
+	// set input
+	yyin = infile;
 	yyparse();
 	return 0;
 }

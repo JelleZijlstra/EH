@@ -1,3 +1,11 @@
+/*
+ * eh_interpreter.c
+ * Jelle Zijlstra, December 2011
+ *
+ * Implements a Lex- and Yacc-based interpreter for the EH scripting language.
+ * Currently, does not yet support non-integer variables or library function
+ * calls.
+ */
 #include "eh.h"
 // symbol table for variables and functions
 #define VARTABLE_S 1024
@@ -9,6 +17,7 @@ static bool returning = false;
 // current variable scope
 static int scope = 0;
 
+// prototypes
 static bool insert_variable(ehvar_t *var);
 static ehvar_t *get_variable(char *name, int scope);
 static void remove_variable(char *name, int scope);
@@ -18,7 +27,23 @@ static ehfunc_t *get_function(char *name);
 static void push_stack(ehnode_t *in);
 static unsigned int hash(char *data);
 
+ehlibfunc_t libfuncs[] = {
+	{getinput, "getinput"},
+	{NULL, NULL}
+};
+
 void eh_init(void) {
+	int i;
+	ehfunc_t *func;
+
+	for(i = 0; libfuncs[i].code != NULL; i++) {
+		func = Malloc(sizeof(ehfunc_t));
+		func->name = libfuncs[i].name;
+		func->type = lib_enum;
+		func->ptr = libfuncs[i].code;
+		// other fields are irrelevant
+		insert_function(func);
+	}
 	return;
 }
 void eh_exit(void) {
@@ -128,12 +153,17 @@ int execute(ehnode_t *node) {
 				case T_CALL: // call: execute argument and discard it
 					execute(node->op.paras[0]);
 					return 0;
-				case ':': // function
+				case ':': // function call
 					func = get_function(node->op.paras[0]->id.name);
 					//printf("Calling function %s at scope %d\n", node->op.paras[0]->id.name, scope);
 					if(func == NULL) {
 						fprintf(stderr, "Unknown function %s\n", node->op.paras[0]->id.name);
 						return 0;						
+					}
+					if(func->type == lib_enum) {
+						// library function
+						func->ptr(node->op.paras[1], &ret);
+						return ret;
 					}
 					int i = 0;
 					ehvar_t *tmpvar;
@@ -226,6 +256,7 @@ int execute(ehnode_t *node) {
 						int j;
 						func->code = node->op.paras[2];
 					}
+					func->type = user_enum;
 					insert_function(func);
 					return 0;
 				default:

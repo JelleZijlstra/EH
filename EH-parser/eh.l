@@ -15,11 +15,11 @@
 			}
 [0-9]*	{ yylval.iValue = atoi(yytext); return T_INTEGER; }
 "int"		{
-				yylval.tValue = int_enum;
+				yylval.tValue = int_e;
 				return T_TYPE;
 			}
 "string"	{
-				yylval.tValue = string_enum;
+				yylval.tValue = string_e;
 				return T_TYPE;
 			}
 "echo"		return T_ECHO;

@@ -49,12 +49,12 @@ static int eh_strtoi(char *in);
 	} \
 	break;
 #define SETRETFROMVAR(var) ret.type = var->type; switch(ret.type) { \
-	case int_enum: ret.intval = var->intval; break; \
-	case string_enum: ret.strval = var->strval; break; \
+	case int_e: ret.intval = var->intval; break; \
+	case string_e: ret.strval = var->strval; break; \
 }
 #define SETVARFROMRET(var) var->type = ret.type; switch(ret.type) { \
-	case int_enum: var->intval = ret.intval; break; \
-	case string_enum: var->strval = ret.strval; break; \
+	case int_e: var->intval = ret.intval; break; \
+	case string_e: var->strval = ret.strval; break; \
 }
 
 ehlibfunc_t libfuncs[] = {
@@ -69,7 +69,7 @@ void eh_init(void) {
 	for(i = 0; libfuncs[i].code != NULL; i++) {
 		func = Malloc(sizeof(ehfunc_t));
 		func->name = libfuncs[i].name;
-		func->type = lib_enum;
+		func->type = lib_e;
 		func->ptr = libfuncs[i].code;
 		// other fields are irrelevant
 		insert_function(func);
@@ -88,38 +88,42 @@ ehretval_t execute(ehnode_t *node) {
 	char *name;
 	ehretval_t ret, operand1, operand2;
 	// default
-	ret.type = int_enum;
+	ret.type = int_e;
 	ret.intval = 0;
 
 	if(node == NULL)
 		return ret;
 	//printf("Executing nodetype %d\n", node->type);
 	switch(node->type) {
-		case idnode_enum:
-			ret.type = string_enum;
+		case idnode_e:
+			ret.type = string_e;
 			ret.strval = node->id.name;
 			break;
-		case connode_enum:
+		case connode_e:
 			ret.intval = node->con.value;
 			break;
-		case opnode_enum:
+		case typenode_e:
+			ret.type = type_e;
+			ret.typeval = node->typev;
+			break;
+		case opnode_e:
 			//printf("Executing opcode: %d\n", node->op.op);
 			switch(node->op.op) {
 				case T_ECHO:
 					switch(node->op.paras[0]->type) {
-						case idnode_enum:
+						case idnode_e:
 							printf("%s\n", node->op.paras[0]->id.name);
 							break;
-						case connode_enum:
+						case connode_e:
 							printf("%d\n", node->op.paras[0]->con.value);
 							break;
-						case opnode_enum:
+						case opnode_e:
 							ret = execute(node->op.paras[0]);
 							switch(ret.type) {
-								case string_enum:
+								case string_e:
 									printf("%s\n", ret.strval);
 									break;
-								case int_enum:
+								case int_e:
 									printf("%d\n", ret.intval);
 									break;
 							}
@@ -168,7 +172,7 @@ ehretval_t execute(ehnode_t *node) {
 							insert_variable(var);
 						}
 						// count variable always gets to be an int
-						var->type = int_enum;
+						var->type = int_e;
 						for(var->intval = 0; var->intval < count; var->intval++) {
 							ret = execute(node->op.paras[2]);
 							if(returning)
@@ -181,6 +185,9 @@ ehretval_t execute(ehnode_t *node) {
 					if(returning)
 						return ret;
 					ret = execute(node->op.paras[1]);
+					break;
+				case '@': // type casting
+					
 					break;
 				case '=':
 					operand1 = execute(node->op.paras[0]);
@@ -215,7 +222,7 @@ ehretval_t execute(ehnode_t *node) {
 					}
 					else if(IS_STRING(operand1) && IS_STRING(operand2)) {
 						// concatenate them
-						ret.type = string_enum;
+						ret.type = string_e;
 						size_t len1, len2;
 						len1 = strlen(operand1.strval);
 						len2 = strlen(operand2.strval);
@@ -269,7 +276,7 @@ ehretval_t execute(ehnode_t *node) {
 						fprintf(stderr, "Unknown function %s\n", name);
 						return ret;						
 					}
-					if(func->type == lib_enum) {
+					if(func->type == lib_e) {
 						// library function
 						func->ptr(node->op.paras[1], &ret);
 						return ret;
@@ -286,7 +293,7 @@ ehretval_t execute(ehnode_t *node) {
 							fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
 							return ret;
 						}
-						if(in->type == opnode_enum && in->op.op == ',') {
+						if(in->type == opnode_e && in->op.op == ',') {
 							ret = execute(in->op.paras[0]);
 							SETVARFROMRET(var);
 							in = in->op.paras[1];
@@ -338,7 +345,7 @@ ehretval_t execute(ehnode_t *node) {
 
 						tmp = node->op.paras[1];
 						while(1) {
-							if(tmp->type == opnode_enum && tmp->op.op == ',') {
+							if(tmp->type == opnode_e && tmp->op.op == ',') {
 								currarg++;
 								tmp = tmp->op.paras[1];
 							}
@@ -353,7 +360,7 @@ ehretval_t execute(ehnode_t *node) {
 						tmp = node->op.paras[1];
 						currarg = 0;
 						while(1) {
-							if(tmp->type == opnode_enum && tmp->op.op == ',') {
+							if(tmp->type == opnode_e && tmp->op.op == ',') {
 								func->args[currarg] = tmp->op.paras[0];
 								currarg++;
 								tmp = tmp->op.paras[1];
@@ -366,7 +373,7 @@ ehretval_t execute(ehnode_t *node) {
 						int j;
 						func->code = node->op.paras[2];
 					}
-					func->type = user_enum;
+					func->type = user_e;
 					insert_function(func);
 					break;
 				default:

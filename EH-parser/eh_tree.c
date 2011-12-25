@@ -5,13 +5,13 @@ void free_node(ehnode_t *in) {
 		return;
 	int i;
 	switch(in->type) {
-		case idnode_enum:
+		case idnode_e:
 			free(in->id.name);
 			break;
-		case connode_enum:
+		case connode_e:
 			// nothing to free
 			break;
-		case opnode_enum:
+		case opnode_e:
 			for(i = 0; i < in->op.nparas; i++) {
 				free_node(in->op.paras[i]);
 			}
@@ -23,7 +23,7 @@ ehnode_t *get_constant(int value) {
 	ehnode_t *ret;
 	ret = Malloc(sizeof(ehnode_t));
 
-	ret->type = connode_enum;
+	ret->type = connode_e;
 	ret->con.value = value;
 	
 	//printf("Returning constant %d\n", ret->con.value);
@@ -33,10 +33,19 @@ ehnode_t *get_identifier(char *value) {
 	ehnode_t *ret;
 	ret = Malloc(sizeof(ehnode_t));
 	
-	ret->type = idnode_enum;
+	ret->type = idnode_e;
 	ret->id.name = value;
 	
 	//printf("Returning identifier %s\n", ret->id.name);
+	return ret;
+}
+ehnode_t *get_type(type_enum value) {
+	ehnode_t *ret;
+	ret = Malloc(sizeof(ehnode_t));
+	
+	ret->type = typenode_e;
+	ret->typev = value;
+	
 	return ret;
 }
 ehnode_t *operate(int operation, int nparas, ...) {
@@ -47,7 +56,7 @@ ehnode_t *operate(int operation, int nparas, ...) {
 	ret = Malloc(sizeof(ehnode_t));
 	ret->op.paras = Malloc(nparas * sizeof(ehnode_t *));
 	
-	ret->type = opnode_enum;
+	ret->type = opnode_e;
 	ret->op.op = operation;
 	ret->op.nparas = nparas;
 	//printf("Adding operation %d with %d paras\n", ret->op.op, ret->op.nparas);
@@ -81,15 +90,15 @@ void print_tree(ehnode_t *in, int n) {
 	int i;
 
 	switch(in->type) {
-		case idnode_enum:
+		case idnode_e:
 			printntabs(n); printf("Type: idnode\n");
 			printntabs(n); printf("Value: %s\n", in->id.name);
 			break;
-		case connode_enum:
+		case connode_e:
 			printntabs(n); printf("Type: connode\n");
 			printntabs(n); printf("Value: %d\n", in->con.value);
 			break;
-		case opnode_enum:
+		case opnode_e:
 			printntabs(n); printf("Type: opnode\n");
 			printntabs(n); printf("Opcode: %d\n", in->op.op);
 			for(i = 0; i < in->op.nparas; i++) {

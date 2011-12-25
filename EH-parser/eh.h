@@ -13,19 +13,21 @@
 #include <errno.h>
 
 typedef enum {
-	idnode_enum,
-	connode_enum,
-	opnode_enum
+	idnode_e,
+	connode_e,
+	opnode_e,
+	typenode_e
 } node_enum;
 
 typedef enum {
-	string_enum,
-	int_enum
+	string_e,
+	int_e,
+	type_e
 } type_enum;
 
 typedef enum {
-	user_enum = 0,
-	lib_enum = 1,
+	user_e = 0,
+	lib_e = 1,
 } functype_enum;
 
 // Identifier
@@ -52,6 +54,7 @@ typedef struct ehnode_t {
 		idnode_t id;
 		connode_t con;
 		opnode_t op;
+		type_enum typev;
 	};
 } ehnode_t;
 
@@ -72,12 +75,13 @@ typedef struct ehretval_t {
 	union {
 		int intval;
 		char *strval;
+		type_enum typeval;
 	};
 } ehretval_t;
 
 // type checking
-#define IS_INT(var) (var.type == int_enum)
-#define IS_STRING(var) (var.type == string_enum)
+#define IS_INT(var) (var.type == int_e)
+#define IS_STRING(var) (var.type == string_e)
 
 typedef struct ehfunc_t {
 	char *name;
@@ -104,6 +108,7 @@ void *Malloc(size_t size);
 void free_node(ehnode_t *in);
 ehnode_t *get_constant(int value);
 ehnode_t *get_identifier(char *value);
+ehnode_t *get_type(type_enum value);
 ehnode_t *operate(int operations, int noperations, ...);
 ehretval_t execute(ehnode_t *node);
 void print_tree(ehnode_t *in, int n);

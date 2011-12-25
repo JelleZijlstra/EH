@@ -28,6 +28,7 @@ static ehfunc_t *get_function(char *name);
 static void push_stack(ehnode_t *in);
 static unsigned int hash(char *data);
 static int eh_strtoi(char *in);
+static char *eh_itostr(int in);
 
 // macro for interpreter behavior
 #define EH_INT_CASE(token, operator) case token: \
@@ -187,7 +188,33 @@ ehretval_t execute(ehnode_t *node) {
 					ret = execute(node->op.paras[1]);
 					break;
 				case '@': // type casting
-					
+					ret = execute(node->op.paras[0]);
+					type_enum castto = ret.typeval;
+					ret = execute(node->op.paras[1]);
+					switch(castto) {
+						case int_e:
+							switch(ret.type) {
+								case int_e:
+									// nothing to cast
+									break;
+								case string_e:
+									ret.intval = eh_strtoi(ret.strval);
+									break;
+							}
+							ret.type = int_e;
+							break;
+						case string_e:
+							switch(ret.type) {
+								case int_e:
+									ret.strval = eh_itostr(ret.intval);
+									break;
+								case string_e:
+									// nothing to do
+									break;
+							}
+							ret.type = string_e;
+							break;
+					}
 					break;
 				case '=':
 					operand1 = execute(node->op.paras[0]);
@@ -490,6 +517,16 @@ static int eh_strtoi(char *in) {
 	if(ret == 0 && errno == EINVAL)
 		fprintf(stderr, "Unable to perform type juggling\n");
 	return ret;
+}
+static char *eh_itostr(int in) {
+	char *buffer;
+	int len;
+	
+	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and null terminator) should suffice for the result string
+	buffer = Malloc(12);
+	sprintf(buffer, "%d", in);
+	
+	return buffer;
 }
 
 /* Hash function */

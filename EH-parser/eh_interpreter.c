@@ -200,25 +200,24 @@ int execute(ehnode_t *node) {
 						return ret;
 					}
 					int i = 0;
-					ehvar_t *tmpvar;
 					ehnode_t *in = node->op.paras[1];
 					while(1) {
-						tmpvar = Malloc(sizeof(ehvar_t));
-						tmpvar->name = func->args[i]->id.name;
-						tmpvar->type = int_enum;
-						tmpvar->scope = scope + 1;
-						insert_variable(tmpvar);
+						var = Malloc(sizeof(ehvar_t));
+						var->name = func->args[i]->id.name;
+						var->type = int_enum;
+						var->scope = scope + 1;
+						insert_variable(var);
 						i++;
 						if(i > func->argcount) {
 							fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
 							return 0;
 						}
 						if(in->type == opnode_enum && in->op.op == ',') {
-							tmpvar->intval = execute(in->op.paras[0]);
+							var->intval = execute(in->op.paras[0]);
 							in = in->op.paras[1];
 						}
 						else {
-							tmpvar->intval = execute(in);
+							var->intval = execute(in);
 							break;
 						}
 					}

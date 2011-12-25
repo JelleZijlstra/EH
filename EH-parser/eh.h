@@ -11,7 +11,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
-#include "y.tab.h"
 
 typedef enum {
 	idnode_enum,

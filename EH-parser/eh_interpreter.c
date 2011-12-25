@@ -7,6 +7,7 @@
  * calls.
  */
 #include "eh.h"
+#include "y.tab.h"
 // symbol table for variables and functions
 #define VARTABLE_S 1024
 static ehvar_t *vartable[VARTABLE_S];

@@ -7,9 +7,11 @@ extern FILE *yyin;
 %union {
 	char *sValue;
 	int iValue;
+	type_enum tValue;
 	struct ehnode_t *ehNode;
 };
 %token <iValue> T_INTEGER
+%token <tValue> T_TYPE
 %token T_IF
 %token T_ELSE
 %token T_ENDIF
@@ -90,6 +92,7 @@ expression:
 	| T_STRING				{ $$ = get_identifier($1); }
 	| '(' expression ')'	{ $$ = $2; }
 	| '$' bareword			{ $$ = operate('$', 1, $2); }
+	| '@' T_TYPE expression	{ $$ = operate('@', 2, $2, $3); }
 	| bareword ':' arglist	{ $$ = operate(':', 2, $1, $3); }
 	| expression '=' expression 
 							{ $$ = operate('=', 2, $1, $3); }

@@ -1,8 +1,8 @@
 %{
 #include <stdlib.h>
 #include <stdio.h>
-#include "y.tab.h"
 #include "eh.h"
+#include "y.tab.h"
 %}
 %%
 ['].*[']	{ 
@@ -14,6 +14,14 @@
 				return T_STRING; 
 			}
 [0-9]*	{ yylval.iValue = atoi(yytext); return T_INTEGER; }
+"int"		{
+				yylval.tValue = int_enum;
+				return T_TYPE;
+			}
+"string"	{
+				yylval.tValue = string_enum;
+				return T_TYPE;
+			}
 "echo"		return T_ECHO;
 "if"		return T_IF;
 "else"		return T_ELSE;
@@ -38,7 +46,7 @@
 				yylval.sValue[len] = '\0';
 				return T_VARIABLE; 
 			}
-[=$+\-*/<>(),:]	return *yytext; /* Single character tokens */
+[@=$+\-*/<>(),:]	return *yytext; /* Single character tokens */
 ">="		return T_GE;
 "<="		return T_LE;
 "!="		return T_NE;

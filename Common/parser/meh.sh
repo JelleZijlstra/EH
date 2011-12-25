@@ -9,4 +9,4 @@ if [ $PARDIR = '.' ]; then
 	PARDIR=$(pwd)
 fi
 ${PARDIR}/ehc < $1.eh
-gcc -gstabs ${PARDIR}/tmp.s -o $1
+gcc ${PARDIR}/tmp.s -o $1

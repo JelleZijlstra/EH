@@ -31,7 +31,7 @@ extern FILE *yyin;
 %token <sValue> T_STRING
 %nonassoc ':'
 %left ','
-%left '=' '>' '<' T_GE T_LE T_NE
+%left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '+' '-'
 %left '*' '/'
 %nonassoc '(' ')'
@@ -100,6 +100,8 @@ expression:
 							{ $$ = operate('>', 2, $1, $3); }
 	| expression '<' expression 
 							{ $$ = operate('<', 2, $1, $3); }
+	| expression T_SE expression
+							{ $$ = operate(T_SE, 2, $1, $3); }
 	| expression T_GE expression 
 							{ $$ = operate(T_GE, 2, $1, $3); }
 	| expression T_LE expression 

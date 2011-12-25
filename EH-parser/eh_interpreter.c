@@ -244,6 +244,19 @@ ehretval_t execute(ehnode_t *node) {
 						ret.intval = (i == operand1.intval);
 					}
 					break;
+				case T_SE:
+					operand1 = execute(node->op.paras[0]);
+					operand2 = execute(node->op.paras[1]);
+					if(IS_INT(operand1) && IS_INT(operand2)) {
+						ret.intval = (operand1.intval == operand2.intval);
+					}
+					else if(IS_STRING(operand1) && IS_STRING(operand2)) {
+						ret.intval = !strcmp(operand1.strval, operand2.strval);
+					}
+					else {
+						// do nothing. Strict comparison between different types should return @int 0, which is the default return value.
+					}
+					break;					
 				EH_INT_CASE('>', <)
 				EH_INT_CASE('<', <)
 				EH_INT_CASE(T_GE, >=)

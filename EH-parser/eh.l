@@ -46,10 +46,11 @@
 				yylval.sValue[len] = '\0';
 				return T_VARIABLE; 
 			}
-[@=$+\-*/<>(),:]	return *yytext; /* Single character tokens */
 ">="		return T_GE;
 "<="		return T_LE;
 "!="		return T_NE;
+"=="		return T_SE;
+[@=$+\-*/<>(),:]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{ 
 				char message[100]; 

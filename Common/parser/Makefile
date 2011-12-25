@@ -4,8 +4,8 @@ YACCLEX = \
 
 compiler: eh_compiler.c
 	${YACCLEX}
-	gcc lex.yy.c y.tab.c eh_tree.c eh_compiler.c -o ehc
+	gcc -O3 lex.yy.c y.tab.c eh_tree.c eh_compiler.c -o ehc
 
 interpreter: eh_interpreter.c
 	${YACCLEX}
-	gcc lex.yy.c y.tab.c eh_tree.c eh_libfuncs.c eh_interpreter.c -o ehi
+	gcc -O3 lex.yy.c y.tab.c eh_tree.c eh_libfuncs.c eh_interpreter.c -o ehi

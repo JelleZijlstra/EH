@@ -1,5 +1,5 @@
 <?php
-require_once("../Common/common.php");
+require_once(__DIR__ . "/../Common/common.php");
 require_once(BPATH . "/Common/ExecuteHandler.php");
 require_once(BPATH . "/MySQL/Database.settings.php");
 class Database extends ExecuteHandler {

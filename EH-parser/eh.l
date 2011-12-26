@@ -5,7 +5,7 @@
 #include "y.tab.h"
 %}
 %%
-['].*[']	{ 
+['][^']*[']	{ 
 				int len;
 				len = strlen(yytext);
 				yylval.sValue = Malloc(len - 1);

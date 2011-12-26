@@ -251,7 +251,7 @@ ehretval_t execute(ehnode_t *node) {
 					i = 0;
 					node = node->op.paras[0];
 					while(1) {
-						array_insert(ret.arrval, node->op.paras[0], ++i);
+						array_insert(ret.arrval, node->op.paras[0], i++);
 						if(node->type == opnode_e && node->op.op == ',')
 							node = node->op.paras[1];
 						else

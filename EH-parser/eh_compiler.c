@@ -1,4 +1,5 @@
 #include "eh.h"
+#include "y.tab.h"
 
 // file to write to
 FILE *outfile;
@@ -13,7 +14,7 @@ void eh_exit(void) {
 	return;
 }
 
-int execute(ehnode_t *node) {
+ehretval_t execute(ehnode_t *node) {
 	outfile = fopen("tmp.s", "w");
 	if(outfile == NULL) {
 		fprintf(stderr, "Unable to create output file");
@@ -30,6 +31,12 @@ int execute(ehnode_t *node) {
 	// need to pad stack so esp is 16-byte aligned
 	fprintf(outfile, "movl $0xbffff770, %%esp\n");
 	fprintf(outfile, "call _exit\n");
+	
+	// we need to return a retval_t, so do it
+	ehretval_t ret;
+	ret.type = int_e;
+	ret.intval = 0;
+	return ret;
 }
 
 static int compile(ehnode_t *node) {
@@ -38,20 +45,20 @@ static int compile(ehnode_t *node) {
 	//printf("Executing nodetype %d\n", node->type);
 	switch(node->type) {
 		/* Not sure yet how to handle strings
-		case idnode_enum:
+		case idnode_e:
 			fprintf(outfile, 
 			return node->id.name;
 		*/
-		case connode_enum:
+		case connode_e:
 			fprintf(outfile, "pushl $%d\n", node->con.value);
 			return 0;
-		case opnode_enum:
+		case opnode_e:
 			//printf("Executing opcode: %d\n", node->op.op);
 			switch(node->op.op) {
 				case T_ECHO:
 					switch(node->op.paras[0]->type) {
-						case connode_enum:
-						case opnode_enum:
+						case connode_e:
+						case opnode_e:
 							// make sure stack is aligned
 							fprintf(outfile, "subl $4, %%esp\n");
 							compile(node->op.paras[0]);
@@ -60,7 +67,7 @@ static int compile(ehnode_t *node) {
 							fprintf(outfile, "call _printf\n");
 							fprintf(outfile, "addl $8, %%esp\n");
 							return 0;
-						case idnode_enum:
+						case idnode_e:
 							printf("Constant %d\n", node->op.paras[0]->con.value);
 							return 0;
 					}

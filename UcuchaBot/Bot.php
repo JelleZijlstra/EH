@@ -397,7 +397,7 @@ class Bot extends Snoopy {
 		$this->setup_facs();
 		$facobj = new FacsEntry(array('name' => $fac), 'n');
 		$facobj->addnoms();
-		foreach($facobj->nominators as $nom) {
+		if(is_array($facobj->nominators)) foreach($facobj->nominators as $nom) {
 			$notifiedusers[$nom] = true;
 		}
 		// get top users

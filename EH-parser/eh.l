@@ -22,6 +22,10 @@
 				yylval.tValue = string_e;
 				return T_TYPE;
 			}
+"array"		{
+				yylval.tValue = array_e;
+				return T_TYPE;
+			}
 "echo"		return T_ECHO;
 "if"		return T_IF;
 "else"		return T_ELSE;
@@ -50,7 +54,8 @@
 "<="		return T_LE;
 "!="		return T_NE;
 "=="		return T_SE;
-[@=$+\-*/<>(),:]	return *yytext; /* Single character tokens */
+"->"		return T_ARROW;
+[@=$+\-*/<>(),:\[\]]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{ 
 				char message[100]; 

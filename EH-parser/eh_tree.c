@@ -78,6 +78,14 @@ void *Malloc(size_t size) {
 		exit(1);
 	}
 }
+void *Calloc(size_t count, size_t size) {
+	void *ret;
+	ret = calloc(count, size);
+	if(ret == NULL) {
+		yyerror("Unable to allocate memory");
+		exit(1);
+	}
+}
 
 static void printntabs(int n) {
 	int i;

@@ -20,8 +20,10 @@ typedef enum {
 } node_enum;
 
 typedef enum {
+	null_e,
 	string_e,
 	int_e,
+	array_e,
 	type_e
 } type_enum;
 
@@ -61,11 +63,20 @@ typedef struct ehnode_t {
 // EH variable
 typedef struct ehvar_t {
 	type_enum type;
-	char *name;
-	int scope;
+	// union: either the name of a variable or a numeric array index
+	union {
+		char *name;
+		int index;
+	};
+	// either the scope of a variable or the index-type of an array member
+	union {
+		int scope;
+		type_enum indextype;
+	};
 	union {
 		int intval;
 		char *strval;
+		struct ehvar_t **arrval;
 	};
 	struct ehvar_t *next;
 } ehvar_t;
@@ -75,6 +86,7 @@ typedef struct ehretval_t {
 	union {
 		int intval;
 		char *strval;
+		ehvar_t **arrval;
 		type_enum typeval;
 	};
 } ehretval_t;
@@ -82,6 +94,7 @@ typedef struct ehretval_t {
 // type checking
 #define IS_INT(var) (var.type == int_e)
 #define IS_STRING(var) (var.type == string_e)
+#define IS_ARRAY(var) (var.type == array_e)
 
 typedef struct ehfunc_t {
 	char *name;
@@ -105,6 +118,7 @@ void eh_exit(void);
 
 void yyerror(char *s);
 void *Malloc(size_t size);
+void *Calloc(size_t count, size_t size);
 void free_node(ehnode_t *in);
 ehnode_t *get_constant(int value);
 ehnode_t *get_identifier(char *value);

@@ -25,8 +25,14 @@ static void remove_variable(char *name, int scope);
 static void list_variables(void);
 static bool insert_function(ehfunc_t *func);
 static ehfunc_t *get_function(char *name);
-static void push_stack(ehnode_t *in);
-static unsigned int hash(char *data);
+static void array_insert(ehvar_t **array, ehnode_t *in, int place);
+static ehretval_t array_get(ehvar_t **array, ehretval_t index);
+
+// generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
+#define HASH_INITVAL 234092
+static unsigned int hash(char *data, int scope);
+
+// type casting
 static int eh_strtoi(char *in);
 static char *eh_itostr(int in);
 
@@ -40,24 +46,32 @@ static char *eh_itostr(int in);
 	else if(IS_STRING(operand1) && IS_STRING(operand2)) { \
 		ret.intval = (eh_strtoi(operand1.strval) operator eh_strtoi(operand2.strval)); \
 	} \
-	else if(IS_STRING(operand1)) { \
+	else if(IS_STRING(operand1) && IS_INT(operand2)) { \
 		i = eh_strtoi(operand1.strval); \
 		ret.intval = (i operator operand2.intval); \
 	} \
-	else { \
+	else if(IS_INT(operand1) && IS_STRING(operand2)) { \
 		i = eh_strtoi(operand2.strval); \
 		ret.intval = (i operator operand1.intval); \
 	} \
+	else { \
+		fprintf(stderr, "Incompatible operands\n"); \
+	} \
 	break;
+
 #define SETRETFROMVAR(var) ret.type = var->type; switch(ret.type) { \
 	case int_e: ret.intval = var->intval; break; \
 	case string_e: ret.strval = var->strval; break; \
+	case array_e: ret.arrval = var->arrval; break; \
 }
+
 #define SETVARFROMRET(var) var->type = ret.type; switch(ret.type) { \
 	case int_e: var->intval = ret.intval; break; \
 	case string_e: var->strval = ret.strval; break; \
+	case array_e: var->arrval = ret.arrval; break; \
 }
 
+// library functions supported by ehi
 ehlibfunc_t libfuncs[] = {
 	{getinput, "getinput"},
 	{NULL, NULL}
@@ -187,6 +201,63 @@ ehretval_t execute(ehnode_t *node) {
 						return ret;
 					ret = execute(node->op.paras[1]);
 					break;
+				case T_ARROW: // array access, and similar stuff for other types
+					operand1 = execute(node->op.paras[0]);
+					operand2 = execute(node->op.paras[1]);
+					switch(operand1.type) {
+						case int_e:
+							// "array" access to integer returns the nth bit of the integer; for example (assuming sizeof(int) == 32), (2 -> 30) == 1, (2 -> 31) == 0
+							if(operand2.type != int_e) {
+								fprintf(stderr, "Bitwise acess to an integer must use an integer identifier\n");
+								return ret;
+							}
+							if(operand2.intval >= sizeof(int)) {
+								fprintf(stderr, "Identifier too large\n");
+								return ret;
+							}
+							// get mask
+							i = 1 << (sizeof(int) - 1);
+							i >>= operand2.intval;
+							// apply mask
+							ret.intval = (operand1.intval & i) >> (sizeof(int)  - 1 - i);
+							break;
+						case string_e:
+							// "array" access to a string returns an integer representing the nth character.
+							// In the future, perhaps replace this with a char datatype or with a "shortstring" datatype representing strings up to 3 or even 4 characters long
+							if(operand2.type != string_e) {
+								fprintf(stderr, "Character acess to a string must use an integer identifier\n");
+								return ret;
+							}
+							count = strlen(operand1.strval);
+							if(operand2.intval >= count) {
+								fprintf(stderr, "Identifier too large\n");
+								return ret;							
+							}
+							// get the nth character
+							ret.intval = operand1.strval[operand2.intval];
+							break;
+						case array_e:
+							// array access to an array works as expected.
+							ret = array_get(operand1.arrval, operand2);
+							break;
+						default:
+							fprintf(stderr, "Array access from unsupported type\n");
+							break;
+					}
+					break;
+				case '[': // array declaration
+					ret.type = array_e;
+					ret.arrval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
+					i = 0;
+					node = node->op.paras[0];
+					while(1) {
+						array_insert(ret.arrval, node->op.paras[0], ++i);
+						if(node->type == opnode_e && node->op.op == ',')
+							node = node->op.paras[1];
+						else
+							break;
+					}
+					break;
 				case '@': // type casting
 					ret = execute(node->op.paras[0]);
 					type_enum castto = ret.typeval;
@@ -225,6 +296,8 @@ ehretval_t execute(ehnode_t *node) {
 							break;
 					}
 					break;
+				case T_EXPRESSION: // wrapper for special case
+					return execute(node->op.paras[0]);
 				case '=':
 					operand1 = execute(node->op.paras[0]);
 					operand2 = execute(node->op.paras[1]);
@@ -439,7 +512,7 @@ ehretval_t execute(ehnode_t *node) {
 static bool insert_variable(ehvar_t *var) {
 	unsigned int vhash;
 	//printf("Inserting variable %s with value %d at scope %d\n", var->name, var->intval, var->scope);
-	vhash = hash(var->name);
+	vhash = hash(var->name, var->scope);
 	if(vartable[vhash] == NULL) {
 		vartable[vhash] = var;
 		var->next = NULL;
@@ -454,7 +527,7 @@ static ehvar_t *get_variable(char *name, int scope) {
 	unsigned int vhash;
 	ehvar_t *currvar;
 	
-	vhash = hash(name);
+	vhash = hash(name, scope);
 	currvar = vartable[vhash];
 	while(currvar != NULL) {
 		//printf("name: %x, currvar->name, %x\n", name, currvar->name);
@@ -472,7 +545,7 @@ static void remove_variable(char *name, int scope) {
 	ehvar_t *currvar;
 	ehvar_t *prevvar;
 	
-	vhash = hash(name);
+	vhash = hash(name, scope);
 	currvar = vartable[vhash];
 	prevvar = NULL;
 	while(currvar != NULL) {
@@ -507,7 +580,7 @@ static void list_variables(void) {
 static bool insert_function(ehfunc_t *func) {
 	unsigned int vhash;
 	
-	vhash = hash(func->name);
+	vhash = hash(func->name, HASH_INITVAL);
 	if(functable[vhash] == NULL) {
 		functable[vhash] = func;
 		func->next = NULL;
@@ -522,7 +595,7 @@ static ehfunc_t *get_function(char *name) {
 	unsigned int vhash;
 	ehfunc_t *currfunc;
 
-	vhash = hash(name);
+	vhash = hash(name, HASH_INITVAL);
 	currfunc = functable[vhash];
 	while(currfunc != NULL) {
 		if(strcmp(currfunc->name, name) == 0) {
@@ -532,7 +605,9 @@ static ehfunc_t *get_function(char *name) {
 	}
 	return NULL;
 }
-
+/*
+ * Type casting
+ */
 static int eh_strtoi(char *in) {
 	int ret;
 	ret = strtol(in, NULL, 0);
@@ -550,62 +625,211 @@ static char *eh_itostr(int in) {
 	
 	return buffer;
 }
+/*
+ * Arrays
+ */
+static void array_insert(ehvar_t **array, ehnode_t *in, int place) {
+	unsigned int vhash;
+	ehretval_t var;
+	ehretval_t label;
+
+	// new array member
+	ehvar_t *member = Malloc(sizeof(ehvar_t));
+
+	/*
+	 * We'll assume we're always getting a correct ehnode_t *, referring to a 
+	 * T_ARRAYMEMBER token. If there is 1 parameter, that means it's a 
+	 * non-labeled array member, which we'll give an integer array index; if
+	 * there are 2, we'll either use the integer array index or a hash of the
+	 * string index.
+	 */
+	if(in->op.nparas == 1) {
+		// if there is no explicit key, simply use the place argument
+		vhash = place % VARTABLE_S;
+		var = execute(in->op.paras[0]);
+		member->indextype = int_e;
+		member->index = place;
+	}
+	else {
+		label = execute(in->op.paras[0]);
+		switch(label.type) {
+			case int_e:
+				vhash = label.intval % VARTABLE_S;
+				member->indextype = int_e;
+				member->index = label.intval;
+				break;
+			case string_e:
+				vhash = hash(label.strval, 0);
+				member->indextype = string_e;
+				member->name = label.strval;
+				break;
+			default:
+				fprintf(stderr, "Unsupported label type\n");
+				free(member);
+				return;
+		}
+		var = execute(in->op.paras[1]);
+	}
+	
+	// create array member
+	member->type = var.type;
+	switch(var.type) {
+		case int_e:
+			member->intval = var.intval;
+			break;
+		case string_e:
+			member->strval = var.strval;
+			break;
+		case array_e:
+			member->arrval = var.arrval;
+			break;
+		default:
+			fprintf(stderr, "Unsupported type for an array member\n");
+			free(member);
+			return;
+	}
+
+	// insert it into the hashtable
+	ehvar_t **currptr = &array[vhash];
+	switch(member->indextype) {
+		case int_e:
+			while(*currptr != NULL) {
+				if((*currptr)->indextype == int_e && (*currptr)->index == member->index) {
+					// replace this array member. I suppose this will break if we somehow enable references.
+					member->next = (*currptr)->next;
+					free(*currptr);
+					*currptr = member;
+					return;
+				}
+				currptr = &(*currptr)->next;
+			}
+			break;
+		case string_e:
+			while(*currptr != NULL) {
+				if((*currptr)->indextype == string_e && !strcmp((*currptr)->name, member->name)) {
+					member->next = (*currptr)->next;
+					free(*currptr);
+					*currptr = member;
+					return;
+				}
+				currptr = &(*currptr)->next;
+			}
+			break;
+	}
+	*currptr = member;
+	return;
+}
+static ehretval_t array_get(ehvar_t **array, ehretval_t index) {
+	ehretval_t ret;
+	ehvar_t *curr;
+	unsigned int vhash;
+
+	switch(index.type) {
+		case int_e:
+			vhash = index.intval % VARTABLE_S;
+			break;
+		case string_e:
+			vhash = hash(index.strval, 0);
+			break;
+		default:
+			fprintf(stderr, "Unsupported array index type\n");
+			break;
+	}
+	curr = array[vhash];
+	switch(index.type) {
+		case int_e:
+			while(curr != NULL) {
+				if(curr->indextype == int_e && curr->index == index.intval) {
+					SETRETFROMVAR(curr);
+					return ret;
+				}
+			}
+			break;
+		case string_e:
+			while(curr != NULL) {
+				if(curr->indextype == string_e && curr->name == index.strval) {
+					SETRETFROMVAR(curr);
+					return ret;
+				}
+			}
+			break;
+	}
+	ret.type = null_e;
+	return ret;
+}
 
 /* Hash function */
-// from http://azillionmonkeys.com/qed/hash.html
-#undef get16bits
-#if (defined(__GNUC__) && defined(__i386__)) || defined(__WATCOMC__) \
-  || defined(_MSC_VER) || defined (__BORLANDC__) || defined (__TURBOC__)
-#define get16bits(d) (*((const uint16_t *) (d)))
-#endif
+// This hash function is used because it allows scope to be taken into account for the hash, improving performance for recursive functions. (Otherwise, variables in each function call, with the same names, would get the same hash for every case.)
+// The EH interpreter is not dependent on any particular hash implementation
 
-#if !defined (get16bits)
-#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)\
-                       +(uint32_t)(((const uint8_t *)(d))[0]) )
-#endif
+// Bob Jenkins' hash
+typedef  unsigned  int  ub4;   /* unsigned 4-byte quantities */
+typedef  unsigned       char ub1;   /* unsigned 1-byte quantities */
 
-static unsigned int hash(char *data) {
-    unsigned int hash, tmp, len;
-    int rem;
-    
-    len = strlen(data);
-    hash = len;
+#define hashsize(n) ((ub4)1<<(n))
+#define hashmask(n) (hashsize(n)-1)
 
-    rem = len & 3;
-    len >>= 2;
+#define mix(a,b,c) \
+{ \
+  a -= b; a -= c; a ^= (c>>13); \
+  b -= c; b -= a; b ^= (a<<8); \
+  c -= a; c -= b; c ^= (b>>13); \
+  a -= b; a -= c; a ^= (c>>12);  \
+  b -= c; b -= a; b ^= (a<<16); \
+  c -= a; c -= b; c ^= (b>>5); \
+  a -= b; a -= c; a ^= (c>>3);  \
+  b -= c; b -= a; b ^= (a<<10); \
+  c -= a; c -= b; c ^= (b>>15); \
+}
 
-    /* Main loop */
-    for (;len > 0; len--) {
-        hash  += get16bits (data);
-        tmp    = (get16bits (data+2) << 11) ^ hash;
-        hash   = (hash << 16) ^ tmp;
-        data  += 2*sizeof (uint16_t);
-        hash  += hash >> 11;
-    }
+/*
 
-    /* Handle end cases */
-    switch (rem) {
-        case 3: hash += get16bits (data);
-                hash ^= hash << 16;
-                hash ^= data[sizeof (uint16_t)] << 18;
-                hash += hash >> 11;
-                break;
-        case 2: hash += get16bits (data);
-                hash ^= hash << 11;
-                hash += hash >> 17;
-                break;
-        case 1: hash += *data;
-                hash ^= hash << 10;
-                hash += hash >> 1;
-    }
+By Bob Jenkins, 1996.  bob_jenkins@burtleburtle.net.
+See http://burtleburtle.net/bob/hash/evahash.html
+--------------------------------------------------------------------
+*/
 
-    /* Force "avalanching" of final 127 bits */
-    hash ^= hash << 3;
-    hash += hash >> 5;
-    hash ^= hash << 4;
-    hash += hash >> 17;
-    hash ^= hash << 25;
-    hash += hash >> 6;
+static unsigned int hash(char *k, int scope)
+{
+	ub4 initval = (ub4) scope;
+	size_t len = strlen(k);
+   register ub4 a,b,c;
+   register ub4 len2;
 
-    return hash % VARTABLE_S;
+   /* Set up the internal state */
+   len2 = len;
+   a = b = 0x9e3779b9;  /* the golden ratio; an arbitrary value */
+   c = initval;         /* the previous hash value */
+
+   /*-------------------------------- handle most of the key */
+   while (len2 >= 12)
+   {
+      a += (k[0] +((ub4)k[1]<<8) +((ub4)k[2]<<16) +((ub4)k[3]<<24));
+      b += (k[4] +((ub4)k[5]<<8) +((ub4)k[6]<<16) +((ub4)k[7]<<24));
+      c += (k[8] +((ub4)k[9]<<8) +((ub4)k[10]<<16)+((ub4)k[11]<<24));
+      mix(a,b,c);
+      k += 12; len2 -= 12;
+   }
+
+   /*--------------------------------- handle the last 11 bytes */
+   c += len;
+   switch(len2)          /* all the case statements fall through */
+   {
+   case 11: c+=((ub4)k[10]<<24);
+   case 10: c+=((ub4)k[9]<<16);
+   case 9 : c+=((ub4)k[8]<<8);
+      /* the first byte of c is reserved for the length */
+   case 8 : b+=((ub4)k[7]<<24);
+   case 7 : b+=((ub4)k[6]<<16);
+   case 6 : b+=((ub4)k[5]<<8);
+   case 5 : b+=k[4];
+   case 4 : a+=((ub4)k[3]<<24);
+   case 3 : a+=((ub4)k[2]<<16);
+   case 2 : a+=((ub4)k[1]<<8);
+   case 1 : a+=k[0];
+     /* case 0: nothing left to add */
+   }
+   mix(a,b,c);
+   /*--------------------------------------- report the result */
+   return c % VARTABLE_S;
 }

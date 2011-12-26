@@ -27,16 +27,20 @@ extern FILE *yyin;
 %token T_SEPARATOR
 %token T_SET
 %token T_CALL
+%token T_ARRAYMEMBER
+%token T_EXPRESSION
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
+%left T_ARROW
 %nonassoc ':'
 %left ','
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '+' '-'
 %left '*' '/'
 %nonassoc '(' ')'
+%nonassoc '[' ']'
 
-%type<ehNode> statement expression statement_list bareword arglist parglist
+%type<ehNode> statement expression statement_list bareword arglist parglist arraylist arraymember expressionwrap
 %%
 program:
 	statement_list			{ 
@@ -116,6 +120,9 @@ expression:
 							{ $$ = operate('*', 2, $1, $3); }
 	| expression '/' expression 
 							{ $$ = operate('/', 2, $1, $3); }
+	| expression T_ARROW expression
+							{ $$ = operate(T_ARROW, 2, $1, $3); }
+	| '[' arraylist ']'		{ $$ = operate('[', 1, $2); }
 	;
 
 bareword:
@@ -134,6 +141,23 @@ parglist:
 	| bareword ',' parglist
 							{ $$ = operate(',', 2, $1, $3); }
 	| /* NULL */			{ $$ = 0; }
+	;
+
+arraylist:
+	arraymember				{ $$ = $1; }
+	| arraymember ',' arraylist
+							{ $$ = operate(',', 2, $1, $3); }
+	| /* NULL */			{ $$ = 0; }
+	;
+
+arraymember:
+	expressionwrap ':' expressionwrap
+							{ $$ = operate(T_ARRAYMEMBER, 2, $1, $3); }
+	| expressionwrap		{ $$ = operate(T_ARRAYMEMBER, 1, $1); }
+	;
+
+expressionwrap:
+	expression				{ $$ = operate(T_EXPRESSION, 1, $1); }
 	;
 %%
 void yyerror(char *s) {

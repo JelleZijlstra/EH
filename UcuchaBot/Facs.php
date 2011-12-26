@@ -64,10 +64,10 @@ class FacsEntry extends ListEntry {
 	// stuff that is standard across GeneralList outputs
 	protected static $parentlist = 'FacsList';
 	protected static $FacsEntry_commands = array(
-	
+
 	);
 	protected static $FacsEntry_synonyms = array(
-	
+
 	);
 	public $name; // String name of FAC page
 	public $nominators; // Array noms
@@ -133,8 +133,8 @@ class FacsEntry extends ListEntry {
 	// add or overwrite nominators
 		// get noms
 		$factext = $this->p->bot->fetchwp($this->name);
-		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator\(s\): (.*)(?=\n)/u', 
-			$factext, 
+		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator\(s\): (.*)(?=\n)/u',
+			$factext,
 			$matches
 		);
 		if(!isset($matches[0])) {
@@ -142,9 +142,9 @@ class FacsEntry extends ListEntry {
 			return false;
 		}
 		$nomstext = $matches[0];
-		preg_match_all('/\[\[\s*[uU]ser( talk)?:\s*([^\|\]\/]+)/u', 
-			$nomstext, 
-			$matches, 
+		preg_match_all('/\[\[\s*[uU]ser( talk)?:\s*([^\|\]\/]+)/u',
+			$nomstext,
+			$matches,
 			PREG_PATTERN_ORDER
 		);
 		if(!isset($matches[2])) {

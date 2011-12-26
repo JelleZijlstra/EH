@@ -5,13 +5,13 @@
 #include "y.tab.h"
 %}
 %%
-['][^']*[']	{ 
+['][^']*[']	{
 				int len;
 				len = strlen(yytext);
 				yylval.sValue = Malloc(len - 1);
 				strncpy(yylval.sValue, yytext + 1, len - 2);
 				yylval.sValue[len - 2] = '\0';
-				return T_STRING; 
+				return T_STRING;
 			}
 [0-9]*	{ yylval.iValue = atoi(yytext); return T_INTEGER; }
 "int"		{
@@ -43,13 +43,13 @@
 "$ "		return T_SET;
 ("//"|#).*[;\n]	; /* Ignore comment */
 [;\n]+		return T_SEPARATOR;
-[a-zA-Z][a-zA-Z0-9]*	{ 
+[a-zA-Z][a-zA-Z0-9]*	{
 				int len;
 				len = strlen(yytext);
 				yylval.sValue = Malloc(len + 1);
 				strncpy(yylval.sValue, yytext, len);
 				yylval.sValue[len] = '\0';
-				return T_VARIABLE; 
+				return T_VARIABLE;
 			}
 ">="		return T_GE;
 "<="		return T_LE;
@@ -58,10 +58,10 @@
 "->"		return T_ARROW;
 [@=$+\-*/<>(),:\[\]]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
-.			{ 
-				char message[100]; 
+.			{
+				char message[100];
 				sprintf(message, "Unexpected character %s", yytext);
-				yyerror(message); 
+				yyerror(message);
 			}
 %%
 int yywrap(void) {

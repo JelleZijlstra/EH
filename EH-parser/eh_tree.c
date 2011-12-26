@@ -25,45 +25,45 @@ ehnode_t *get_constant(int value) {
 
 	ret->type = intnode_e;
 	ret->con.value = value;
-	
+
 	//printf("Returning constant %d\n", ret->con.value);
 	return ret;
 }
 ehnode_t *get_identifier(char *value) {
 	ehnode_t *ret;
 	ret = Malloc(sizeof(ehnode_t));
-	
+
 	ret->type = stringnode_e;
 	ret->id.name = value;
-	
+
 	//printf("Returning identifier %s\n", ret->id.name);
 	return ret;
 }
 ehnode_t *get_null(void) {
 	ehnode_t *ret;
 	ret = Malloc(sizeof(ehnode_t));
-	
+
 	ret->type = nullnode_e;
-	
+
 	return ret;
 }
 ehnode_t *get_type(type_enum value) {
 	ehnode_t *ret;
 	ret = Malloc(sizeof(ehnode_t));
-	
+
 	ret->type = typenode_e;
 	ret->typev = value;
-	
+
 	return ret;
 }
 ehnode_t *operate(int operation, int nparas, ...) {
 	va_list args;
 	ehnode_t *ret;
 	int i;
-	
+
 	ret = Malloc(sizeof(ehnode_t));
 	ret->op.paras = Malloc(nparas * sizeof(ehnode_t *));
-	
+
 	ret->type = opnode_e;
 	ret->op.op = operation;
 	ret->op.nparas = nparas;
@@ -74,7 +74,7 @@ ehnode_t *operate(int operation, int nparas, ...) {
 		//printf("Para %d is of type %d\n", i, ret->op.paras[i]->type);
 	}
 	va_end(args);
-	
+
 	return ret;
 }
 

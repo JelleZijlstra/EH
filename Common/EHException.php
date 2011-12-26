@@ -9,16 +9,16 @@ class EHException extends Exception {
 	}
 	public function handle() {
 		switch($this->code) {
-			case self::E_USER: 
+			case self::E_USER:
 				return $this->handle_user();
-			case self::E_RECOVERABLE: 
+			case self::E_RECOVERABLE:
 				return $this->handle_recoverable();
-			case self::E_FATAL: 
+			case self::E_FATAL:
 				return $this->handle_fatal();
-			default: 
+			default:
 				throw new EHException(
-					"Unknown exception code", 
-					self::E_FATAL, 
+					"Unknown exception code",
+					self::E_FATAL,
 					$this
 				);
 		}

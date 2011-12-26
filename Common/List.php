@@ -34,7 +34,7 @@ abstract class FileList extends ExecuteHandler {
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 		'find_cmd' => array('name' => 'find_cmd',
-			'aka' => array('f', 'find'), 
+			'aka' => array('f', 'find'),
 			'desc' => "Find files that fulfil the condition given in the argument. An argument consists of a field name plus a text or regex pattern (separated by slashes) the field name should fulfil. Examples:\n\tfind_cmd year 1984\nwill find all files published in 1984\n\tfind_cmd title /Sudamerica/\nwill find all files with \"Sudamerica\" in the title",
 			'arg' => 'Field plus pattern; see description',
 			'execute' => 'callmethodarg'),
@@ -194,7 +194,7 @@ abstract class FileList extends ExecuteHandler {
 	// This could be converted to menu() when we can use $this-> in lambda functions. Or it could be scrapped, because it is apparently unused.
 		while(true) {
 			$file = $this->getline();
-			if(in_array($file, $cmds)) 
+			if(in_array($file, $cmds))
 				return $file;
 			if($this->has($file))
 				return self::$resolve_redirects ? $this->c[$file]->gettruename() : $this->c[$file]->name;
@@ -395,9 +395,9 @@ abstract class FileList extends ExecuteHandler {
 		// fill array
 		foreach($files as $file) {
 			$value = $paras['isfunc'] ? $file->$field() : $file->$field;
-			if($paras['function']) 
+			if($paras['function'])
 				$value = $paras['function']($value);
-			if(!isset($values[$value])) 
+			if(!isset($values[$value]))
 				$values[$value] = 0;
 			$values[$value]++;
 		}
@@ -436,7 +436,7 @@ abstract class FileList extends ExecuteHandler {
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
 		$childclass = static::$childclass;
-		if($paras['openfiles'] and !method_exists($childclass, 'openf')) 
+		if($paras['openfiles'] and !method_exists($childclass, 'openf'))
 			$paras['openfiles'] = false;
 		// allow searching different arrays than $this->c;
 		$arr = $paras['array'] ?: 'c';
@@ -516,7 +516,7 @@ abstract class FileList extends ExecuteHandler {
 			if($file->isredirect()) continue;
 			foreach($queries as $query) {
 				$hay = isset($query['func'])
-					? $file->{$query['field']}() 
+					? $file->{$query['field']}()
 					: $file->{$query['field']};
 				// apply function
 				if($paras['function'])
@@ -660,7 +660,7 @@ abstract class FileList extends ExecuteHandler {
 		$out = 0;
 		foreach($files as $file) {
 			if(!$this->has($file->name) or !is_numeric($file->$field)) continue;
-			if($i == 0) 
+			if($i == 0)
 				$out = $file;
 			else if($file->$field < $out->$field)
 				$out = $file;
@@ -685,7 +685,7 @@ abstract class FileList extends ExecuteHandler {
 		$out = 0;
 		foreach($files as $file) {
 			if(!$this->has($file->name) or !is_numeric($file->$field)) continue;
-			if($i == 0) 
+			if($i == 0)
 				$out = $file;
 			else if($file->$field > $out->$field)
 				$out = $file;
@@ -719,7 +719,7 @@ abstract class FileList extends ExecuteHandler {
 		$out['count'] = count($files);
 		foreach(array('average', 'stdev', 'smallest', 'largest') as $var) {
 			$out[$var] = $this->$var($files, $field);
-			if($print) echo ucfirst($var) . ': ' . round($out[$var], 3) . PHP_EOL;		
+			if($print) echo ucfirst($var) . ': ' . round($out[$var], 3) . PHP_EOL;
 		}
 		if($paras['includefiles']) $out['files'] = $files;
 		return $out;
@@ -881,7 +881,7 @@ abstract class ListEntry extends ExecuteHandler {
 		if($arr and $arr !== 'props')
 			$this->{$arr}[$property] = $value;
 		else
-			$this->props[$property] = $value; 
+			$this->props[$property] = $value;
 	}
 	public function __get($property) {
 		if($property === 'p') {
@@ -898,9 +898,9 @@ abstract class ListEntry extends ExecuteHandler {
 			}
 		}
 		switch($arr = $this->findarray_dyn($property)) {
-			case false: 
+			case false:
 				return NULL;
-			default: 
+			default:
 				if(isset($this->{$arr}[$property]))
 					return $this->{$arr}[$property];
 				else
@@ -915,9 +915,9 @@ abstract class ListEntry extends ExecuteHandler {
 	}
 	public function __unset($property) {
 		switch($arr = $this->findarray_dyn($property)) {
-			case false: 
+			case false:
 				return;
-			default: 
+			default:
 				if(!isset($this->{$arr}[$property])) return;
 				unset($this->{$arr}[$property]);
 		}
@@ -938,7 +938,7 @@ abstract class ListEntry extends ExecuteHandler {
 		else if(is_array($this->props) and array_key_exists($property, $this->props))
 			return 'props';
 		else
-			return false;		
+			return false;
 	}
 	static protected function findarray($property) {
 	// used in overloading methods
@@ -955,7 +955,7 @@ abstract class ListEntry extends ExecuteHandler {
 			if(in_array($key, static::$inform_exclude))
 				continue;
 			switch(gettype($value)) {
-				case 'array': 
+				case 'array':
 					foreach($value as $akey => $prop)
 						if($prop and !is_array($prop) and !is_object($prop))
 							echo $akey . ': ' . $prop . PHP_EOL;

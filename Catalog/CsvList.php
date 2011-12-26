@@ -287,7 +287,7 @@ class CsvList extends FileList {
 			$handle = $this->menu(array(
 				'head' => 'Type the handle for the new reference',
 				'options' => array('q' => 'quit'),
-				'validfunction' => function() { return true; },			
+				'validfunction' => function() { return true; },
 			));
 			if($handle === 'q') return false;
 			if($this->has($handle) or strpos($handle, '.') !== false)
@@ -306,7 +306,7 @@ class CsvList extends FileList {
 			$handle = $this->menu(array(
 				'head' => 'Type the handle for the new redirect',
 				'options' => array('q' => 'quit'),
-				'validfunction' => function() { return true; },			
+				'validfunction' => function() { return true; },
 			));
 			if($handle === 'q') return false;
 			if($this->has($handle) or strpos($handle, '.') !== false)
@@ -322,7 +322,7 @@ class CsvList extends FileList {
 			$target = $this->menu(array(
 				'head' => 'Type the target for the new redirect',
 				'options' => array('q' => 'quit'),
-				'validfunction' => function() { return true; },			
+				'validfunction' => function() { return true; },
 			));
 			if($target === 'q') return false;
 			if(!$this->has($target))
@@ -335,7 +335,7 @@ class CsvList extends FileList {
 			return false;
 		}
 		return $this->add_entry(new FullFile(array($handle, $target), 'r'), array('isnew' => true));
-	}	
+	}
 	/* do things with files */
 	protected function parse_wtext($rawarg) {
 		if($rawarg) {
@@ -413,7 +413,7 @@ class CsvList extends FileList {
 				$cmd = $this->menu(array(
 					'options' => array(
 						'i' => 'give information about this file',
-						'l' => 'file has been renamed', 
+						'l' => 'file has been renamed',
 						'r' => 'remove this file from the catalog',
 						'm' => 'move to the next component',
 						's' => 'skip this file',
@@ -421,8 +421,8 @@ class CsvList extends FileList {
 					),
 					'head' => 'Could not find file ' . $file->name,
 					'process' => array(
-						'i' => function() use($file) { 
-							$file->my_inform(); 
+						'i' => function() use($file) {
+							$file->my_inform();
 						},
 					),
 				));
@@ -466,7 +466,7 @@ class CsvList extends FileList {
 					case 'm': return true;
 					case 'l': $lsfile->rename('ls'); break;
 					case 's': break;
-					case 'a': 
+					case 'a':
 						$lsfile->add();
 						$this->add_entry($lsfile, array('isnew' => true));
 						break;
@@ -506,7 +506,7 @@ class CsvList extends FileList {
 		if(!isset($paras['printresult'])) $paras['printresult'] = false;
 		$paras[$key] = $needle;
 		$files = $this->bfind($paras);
-		if(($files === false) or (count($files) === 0)) 
+		if(($files === false) or (count($files) === 0))
 			return false;
 		foreach($files as $file)
 			echo $file->name . PHP_EOL . $file->citepaper() . PHP_EOL;
@@ -534,9 +534,9 @@ class CsvList extends FileList {
 			if($n > 1 && $title) {
 				echo "Found $n instances of title $title" . PHP_EOL;
 				$files = $this->find_dups('getsimpletitle()', $title);
-				if($files === false) 
+				if($files === false)
 					continue;
-				if(!$this->dups_core($files)) 
+				if(!$this->dups_core($files))
 					return;
 			}
 		}
@@ -576,10 +576,10 @@ class CsvList extends FileList {
 					$this->needsave = true;
 					break;
 				case 'o':
-					foreach($files as $fileo) 
+					foreach($files as $fileo)
 						$fileo->openf();
 					break;
-				case 'r': 
+				case 'r':
 					$this->remove($file);
 					// add redirect from old file
 					$targets = array();
@@ -774,8 +774,8 @@ class CsvList extends FileList {
 			}
 			$rectitle = $child->getsimpletitle();
 			$dettitle = $child->getsimpletitle($pdftitle);
-			if(($dettitle != $rectitle) and 
-				($rectitle ? (strpos($dettitle, $rectitle) === false) : true) and 
+			if(($dettitle != $rectitle) and
+				($rectitle ? (strpos($dettitle, $rectitle) === false) : true) and
 				($dettitle ? (strpos($rectitle, $dettitle) === false) : true)
 			) {
 				echo 'Title mismatch for file ' . $child->name . PHP_EOL;
@@ -809,7 +809,7 @@ class CsvList extends FileList {
 		// only save if we've actually retrieved the cache
 		if(count($this->pdfcontentcache) > 0) {
 			file_put_contents(
-				PDFCONTENTCACHE, 
+				PDFCONTENTCACHE,
 				json_encode($this->pdfcontentcache)
 			);
 		}
@@ -822,7 +822,7 @@ class Suggester {
 		$this->suggestions[$folders] = 1;
 	}
 	function add($folders) {
-		if(!isset($this->suggestions[$folders])) 
+		if(!isset($this->suggestions[$folders]))
 			$this->suggestions[$folders] = 0;
 		$this->suggestions[$folders]++;
 	}

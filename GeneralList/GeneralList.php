@@ -89,10 +89,10 @@ class {$classname}Entry extends ListEntry {
 	protected static \$parentlist = '{$classname}List';
 	protected static \$arrays_to_check = array();
 	protected static \${$classname}Entry_commands = array(
-	
+
 	);
 	protected static \${$classname}Entry_synonyms = array(
-	
+
 	);
 	// complex stuff
 ");
@@ -110,19 +110,19 @@ class {$classname}Entry extends ListEntry {
 ");
 		foreach($fields as $i => $field) {
 			switch($field['type']) {
-				case 'json': fwrite($outclass, 
+				case 'json': fwrite($outclass,
 "				if(\$in[$i]) \$this->{$field['name']} = json_decode(\$in[$i], true);
 "); break;
-				case 'serialize': fwrite($outclass, 
+				case 'serialize': fwrite($outclass,
 "				if(\$in[$i]) \$this->{$field['name']} = unserialize(\$in[$i], true);
 "); break;
-				default: fwrite($outclass, 
+				default: fwrite($outclass,
 "				\$this->{$field['name']} = \$in[$i];
 "); break;
 			}
 		}
 		// close __construct(), start toarray()
-		fwrite($outclass, 
+		fwrite($outclass,
 "				break;
 			case 'n': // associative array
 				if(!\$in['name']) {
@@ -144,19 +144,19 @@ class {$classname}Entry extends ListEntry {
 ");
 		foreach($fields as $field) {
 			switch($field['type']) {
-				case 'json': fwrite($outclass, 
+				case 'json': fwrite($outclass,
 "		\$out[] = \$this->getarray('{$field['name']}');
 "); break;
-				case 'serialize': fwrite($outclass, 
+				case 'serialize': fwrite($outclass,
 "		\$out[] = \$this->getarray('{$field['name']}', array('func' => 'serialize'));
 "); break;
-				default: fwrite($outclass, 
+				default: fwrite($outclass,
 "		\$out[] = \$this->{$field['name']};
 "); break;
 			}
 		}
 		// close toarray(), start format()
-		fwrite($outclass, 
+		fwrite($outclass,
 "		return \$out;
 	}
 	function format() {
@@ -164,13 +164,13 @@ class {$classname}Entry extends ListEntry {
 ");
 		foreach($fields as $field) {
 			if($field['type'] === 'bool') {
-				fwrite($outclass, 
+				fwrite($outclass,
 "		\$bools[] = '{$field['name']}';
 ");
 			}
 		}
 		// close format(), end the file
-		fwrite($outclass, 
+		fwrite($outclass,
 "		foreach(\$bools as \$bool) {
 			\$this->\$bool = \$this->\$bool ? 1 : NULL;
 		}

@@ -71,9 +71,9 @@ class Database extends ExecuteHandler {
 		$out = 'WHERE ';
 		foreach($paras as $key => $value) {
 			if(in_array($key, $this->columns)) {
-				$out .= mysql_real_escape_string($key) . 
-					' = ' . 
-					mysql_real_escape_string($value) . 
+				$out .= mysql_real_escape_string($key) .
+					' = ' .
+					mysql_real_escape_string($value) .
 					' AND ';
 			}
 		}

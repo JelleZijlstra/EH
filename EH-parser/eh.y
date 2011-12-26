@@ -44,15 +44,15 @@ extern FILE *yyin;
 %type<ehNode> statement expression statement_list bareword arglist parglist arraylist arraymember expressionwrap
 %%
 program:
-	statement_list			{ 
+	statement_list			{
 								//print_tree($1, 0);
 								eh_init();
 								execute($1);
 								free_node($1);
 								eh_exit();
-								exit(0); 
+								exit(0);
 							}
-	| /* NULL */			{ 
+	| /* NULL */			{
 								fprintf(stderr, "No input");
 								exit(1);
 							}
@@ -66,9 +66,9 @@ statement_list:
 
 statement:
 	expression T_SEPARATOR	{ $$ = $1; }
-	| T_ECHO T_STRING T_SEPARATOR	
+	| T_ECHO T_STRING T_SEPARATOR
 							{ $$ = operate(T_ECHO, 1, get_identifier($2)); }
-	| T_ECHO expression T_SEPARATOR	
+	| T_ECHO expression T_SEPARATOR
 							{ $$ = operate(T_ECHO, 1, $2); }
 	| T_SET bareword '=' expression T_SEPARATOR
 							{ $$ = operate(T_SET, 2, $2, $4); }
@@ -84,7 +84,7 @@ statement:
 							{ $$ = operate(T_FOR, 2, $2, $4); }
 	| T_FOR expression T_COUNT bareword T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
 							{ $$ = operate(T_FOR, 3, $2, $4, $6); }
-	| T_CALL expression T_SEPARATOR	
+	| T_CALL expression T_SEPARATOR
 							{ $$ = operate(T_CALL, 1, $2); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
 							{ $$ = operate(T_FUNC, 3, $2, $4, $6); }
@@ -102,27 +102,27 @@ expression:
 	| '$' bareword			{ $$ = operate('$', 1, $2); }
 	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }
 	| bareword ':' arglist	{ $$ = operate(':', 2, $1, $3); }
-	| expression '=' expression 
+	| expression '=' expression
 							{ $$ = operate('=', 2, $1, $3); }
-	| expression '>' expression 
+	| expression '>' expression
 							{ $$ = operate('>', 2, $1, $3); }
-	| expression '<' expression 
+	| expression '<' expression
 							{ $$ = operate('<', 2, $1, $3); }
 	| expression T_SE expression
 							{ $$ = operate(T_SE, 2, $1, $3); }
-	| expression T_GE expression 
+	| expression T_GE expression
 							{ $$ = operate(T_GE, 2, $1, $3); }
-	| expression T_LE expression 
+	| expression T_LE expression
 							{ $$ = operate(T_LE, 2, $1, $3); }
-	| expression T_NE expression 
+	| expression T_NE expression
 							{ $$ = operate(T_NE, 2, $1, $3); }
-	| expression '+' expression 
+	| expression '+' expression
 							{ $$ = operate('+', 2, $1, $3); }
-	| expression '-' expression 
+	| expression '-' expression
 							{ $$ = operate('-', 2, $1, $3); }
-	| expression '*' expression 
+	| expression '*' expression
 							{ $$ = operate('*', 2, $1, $3); }
-	| expression '/' expression 
+	| expression '/' expression
 							{ $$ = operate('/', 2, $1, $3); }
 	| expression T_ARROW expression
 							{ $$ = operate(T_ARROW, 2, $1, $3); }

@@ -139,7 +139,7 @@ ehretval_t execute(ehnode_t *node) {
 						for(var->intval = 0; var->intval < count; var->intval++) {
 							ret = execute(node->op.paras[2]);
 							if(returning)
-								return ret;						
+								return ret;
 						}
 					}
 					break;
@@ -180,7 +180,7 @@ ehretval_t execute(ehnode_t *node) {
 							count = strlen(operand1.strval);
 							if(operand2.intval >= count) {
 								fprintf(stderr, "Identifier too large\n");
-								return ret;							
+								return ret;
 							}
 							// get the nth character
 							ret.intval = operand1.strval[operand2.intval];
@@ -290,7 +290,7 @@ ehretval_t execute(ehnode_t *node) {
 					else {
 						// do nothing. Strict comparison between different types should return null, which is the default return value.
 					}
-					break;					
+					break;
 				EH_INT_CASE('>', <)
 				EH_INT_CASE('<', <)
 				EH_INT_CASE(T_GE, >=)
@@ -380,7 +380,7 @@ ehretval_t execute(ehnode_t *node) {
 								count = strlen(var->strval);
 								if(operand2.intval >= count) {
 									fprintf(stderr, "Identifier too large\n");
-									return ret;							
+									return ret;
 								}
 								// get the nth character
 								var->strval[operand2.intval] = ret.intval;
@@ -418,7 +418,7 @@ ehretval_t execute(ehnode_t *node) {
 					//printf("Calling function %s at scope %d\n", node->op.paras[0]->id.name, scope);
 					if(func == NULL) {
 						fprintf(stderr, "Unknown function %s\n", name);
-						return ret;						
+						return ret;
 					}
 					if(func->type == lib_e) {
 						// library function
@@ -530,7 +530,7 @@ ehretval_t execute(ehnode_t *node) {
 							else {
 								func->args[currarg] = tmp;
 								break;
-							}								
+							}
 						}
 						int j;
 						func->code = node->op.paras[2];
@@ -566,7 +566,7 @@ static bool insert_variable(ehvar_t *var) {
 static ehvar_t *get_variable(char *name, int scope) {
 	unsigned int vhash;
 	ehvar_t *currvar;
-	
+
 	vhash = hash(name, scope);
 	currvar = vartable[vhash];
 	while(currvar != NULL) {
@@ -584,7 +584,7 @@ static void remove_variable(char *name, int scope) {
 	unsigned int vhash;
 	ehvar_t *currvar;
 	ehvar_t *prevvar;
-	
+
 	vhash = hash(name, scope);
 	currvar = vartable[vhash];
 	prevvar = NULL;
@@ -619,7 +619,7 @@ static void list_variables(void) {
  */
 static bool insert_function(ehfunc_t *func) {
 	unsigned int vhash;
-	
+
 	vhash = hash(func->name, HASH_INITVAL);
 	if(functable[vhash] == NULL) {
 		functable[vhash] = func;
@@ -658,7 +658,7 @@ static int eh_strtoi(char *in) {
 static char *eh_itostr(int in) {
 	char *buffer;
 	int len;
-	
+
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and null terminator) should suffice for the result string
 	buffer = Malloc(12);
 	sprintf(buffer, "%d", in);
@@ -698,8 +698,8 @@ static void array_insert(ehvar_t **array, ehnode_t *in, int place) {
 	ehvar_t *member = Malloc(sizeof(ehvar_t));
 
 	/*
-	 * We'll assume we're always getting a correct ehnode_t *, referring to a 
-	 * T_ARRAYMEMBER token. If there is 1 parameter, that means it's a 
+	 * We'll assume we're always getting a correct ehnode_t *, referring to a
+	 * T_ARRAYMEMBER token. If there is 1 parameter, that means it's a
 	 * non-labeled array member, which we'll give an integer array index; if
 	 * there are 2, we'll either use the integer array index or a hash of the
 	 * string index.
@@ -731,7 +731,7 @@ static void array_insert(ehvar_t **array, ehnode_t *in, int place) {
 		}
 		var = execute(in->op.paras[1]);
 	}
-	
+
 	// create array member
 	member->type = var.type;
 	switch(var.type) {

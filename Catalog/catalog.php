@@ -9,9 +9,9 @@ else
 if(!isset($argv[1]))
 	$csvlist->cli();
 else switch($argv[1]) {
-	case 'byfile': 
+	case 'byfile':
 		// enter main CLI
-		$csvlist->cli(); 
+		$csvlist->cli();
 		break;
 	case 'backup': // backup catalog
 		catalog_backup();

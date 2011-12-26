@@ -223,7 +223,7 @@ class TaxonList extends FileList {
 	public function remove($name) {
 		if(!$this->has($name)) return false;
 		unset($this->par[$this->c[$name]->parent][$name]);
-		unset($this->c[$name]);	
+		unset($this->c[$name]);
 	}
 	public function sortchildren($name) {
 		if(!$this->par[$name]) return false;

@@ -23,7 +23,7 @@ class Taxon extends ListEntry {
 	public $nspec;
 	public $isextant;
 	protected static $Taxon_commands = array(
-	
+
 	);
 	protected static $Taxon_synonyms = array();
 	function __construct($in, $code) {
@@ -79,11 +79,11 @@ class Taxon extends ListEntry {
 		$out[] = $this->comments;
 		$out[] = $this->status;
 		$out[] = $this->getarray('endemic');
-		if($this->range) 
+		if($this->range)
 			$out[] = serialize($this->range);
 		else
 			$out[] = NULL;
-		if($this->temprange) 
+		if($this->temprange)
 			$out[] = serialize($this->temprange);
 		else
 			$out[] = NULL;
@@ -152,7 +152,7 @@ class Taxon extends ListEntry {
 		return true;
 	}
 	public function getchildren() {
-		if(!isset($this->p->par[$this->name])) 
+		if(!isset($this->p->par[$this->name]))
 			return NULL;
 		else
 			return $this->p->par[$this->name];
@@ -203,9 +203,9 @@ class Taxon extends ListEntry {
 			$pre = "\t";
 		$out .= PHP_EOL . $pre . ucfirst($this->rank) . ': ' . $this->name . PHP_EOL;
 		$out .= $pre . 'Authority: ' . $this->constructauthority() . PHP_EOL;
-		if($this->originalref) 
+		if($this->originalref)
 			$out .= $pre . 'Original reference: ' . $this->parse('originalref', 'simple') . PHP_EOL;
-		if($this->comments) 
+		if($this->comments)
 			$out .= $pre . 'Comments: ' . $this->parse('comments', 'refend');
 		else
 			$out .= PHP_EOL;
@@ -238,9 +238,9 @@ class Taxon extends ListEntry {
 					$tmp .= $this->parse('comments', 'wref');
 					$tmp .= '</small>' . PHP_EOL;
 				}
-				if($this->ngen and ($this->rank !== 'genus')) 
+				if($this->ngen and ($this->rank !== 'genus'))
 					$tmp .= ':::<small>Genera: ' . $this->ngen . '</small>' . PHP_EOL;
-				if($this->nspec) 
+				if($this->nspec)
 					$tmp .= ':::<small>Species: ' . $this->nspec . '</small>' . PHP_EOL;
 				fwrite($this->p->wiki_out[$paras['taxon']], $tmp);
 			}
@@ -269,7 +269,7 @@ class Taxon extends ListEntry {
 			case "genus":
 				$this->ngen = 1;
 				$children = $this->getchildren();
-				if(!$children) break; 
+				if(!$children) break;
 				$this->sortchildren();
 				foreach($children as $child) {
 					if($this->p->get($child, 'status') !== 'FO') {
@@ -358,7 +358,7 @@ class Taxon extends ListEntry {
 	}
 	function editcomments() {
 		if($this->comments)
-			echo "Current value of comments field: " . 
+			echo "Current value of comments field: " .
 				$this->comments . PHP_EOL;
 		$add = $this->getline(
 			"Text to be added (type 'e' to edit the entire text): "
@@ -516,7 +516,7 @@ class Taxon extends ListEntry {
 			$nrank = $this->p->get($sister, 'rank');
 			if(!$nrank)
 				return false;
-			if(!$rank) 
+			if(!$rank)
 				$rank = $nrank;
 			else if($rank !== $nrank)
 				return false;

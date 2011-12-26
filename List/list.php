@@ -7,7 +7,7 @@ if(!isset($argv[1])) {
 }
 else switch($argv[1]) {
 	// edit data
-	case 'edit': 
+	case 'edit':
 		require_once('load.php');
 		$taxonlist->cli(); break;
 	case 'backup':
@@ -16,7 +16,7 @@ else switch($argv[1]) {
 		break;
 	case 'revert': revert($list); break;
 	// edit all comments
-	case 'wikipublish': 
+	case 'wikipublish':
 		require_once('TaxonList.php');
 		TaxonList::wikipublish(); break;
 	// die

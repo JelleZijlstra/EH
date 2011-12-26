@@ -10,7 +10,7 @@ $ ff = getinput:
 
 echo
 echo Who is spotting Whom
-echo 
+echo
 
 echo M spotting M
 for $mm

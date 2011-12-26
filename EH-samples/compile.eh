@@ -1,4 +1,4 @@
-// Example of an EH input file accepted by the compiler (which does not 
+// Example of an EH input file accepted by the compiler (which does not
 // currently accept variables, function calls, or for loops, and even for things
 // that it does accept generates spectacularly inefficient assembly code).
 // $ a = 3

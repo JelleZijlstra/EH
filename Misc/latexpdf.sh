@@ -12,7 +12,7 @@ latex $texfile
 auxfile=${texfile/.tex/.aux}
 bibtex $plainfile
 latex $texfile
-latex $texfile 
+latex $texfile
 dvifile=${texfile/.tex/.dvi}
 dvipdfm $dvifile
 pdffile=${texfile/.tex/.pdf}

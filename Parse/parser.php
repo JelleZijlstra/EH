@@ -102,7 +102,7 @@ class Parser {
 				switch(getinput()) {
 					case 'q': $this->shutdown();
 					case 'r':
-						if(!$csvlist->add_redirect($citename)) 
+						if(!$csvlist->add_redirect($citename))
 							$this->shutdown();
 						$this->refs[$cite] = $this->cite($target);
 						break;
@@ -111,7 +111,7 @@ class Parser {
 							$this->refs[$cite] = $this->cite($cite);
 							break;
 						}
-						else 
+						else
 							echo 'Could not resolve source: ' . $citename . PHP_EOL;
 					case 'i': continue 2;
 				}
@@ -208,7 +208,7 @@ class Parser {
 				echo 'Unrecognized mode: ' . $mode . PHP_EOL;
 				break;
 		}
-		if(!isset($this->liststyle)) switch($csvlist->citetype) { 
+		if(!isset($this->liststyle)) switch($csvlist->citetype) {
 			case 'wp': case 'normal': $this->liststyle = 1; break;
 			default: $this->liststyle = 0; break;
 		}
@@ -242,9 +242,9 @@ class Parser {
 		if(isset($c['p'])) $citearray['p'] = $c['p'];
 		if(isset($c['pp'])) $citearray['pp'] = $c['pp'];
 		if(isset($c['loc'])) $citearray['loc'] = $c['loc'];
-		if(isset($long)) $citearray['long'] = $long; 
-		if(isset($url)) $citearray['url'] = $url; 
-		if(isset($sfn)) $citearray['sfn'] = $sfn; 
+		if(isset($long)) $citearray['long'] = $long;
+		if(isset($url)) $citearray['url'] = $url;
+		if(isset($sfn)) $citearray['sfn'] = $sfn;
 		return new Citation($text, $citearray);
 	}
 	public $replacement; // int: what {cites} get replaced with. 1 = do nothing, leave them as they are; 2 = nothing; 3 = full ref; 4 = Sfn; 5 = just the ref text
@@ -310,7 +310,7 @@ class Parser {
 		$this->result = preg_replace($toreplace, $replacement, $this->result, 1);
 	}
 	function applysfnm() {
-		$this->result = preg_replace_callback('/(\{\{Sfn\|[^}]*?\}\}){2,}/u', array($this, 'applysfnm_cb'), $this->result);	
+		$this->result = preg_replace_callback('/(\{\{Sfn\|[^}]*?\}\}){2,}/u', array($this, 'applysfnm_cb'), $this->result);
 	}
 	function applysfnm_cb($matches) {
 		$sfns = preg_split('/(?<=\}\})(?=\{\{)/u', $matches[0]);

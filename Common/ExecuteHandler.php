@@ -35,7 +35,7 @@ abstract class ExecuteHandler {
 	private $pc = array(
 		0 => 0,
 	);
-	// array of variables defined internally. Three-dimensional, indexed by 
+	// array of variables defined internally. Three-dimensional, indexed by
 	// currhist, currscope, var name.
 	private $vars = array(
 		0 => array(
@@ -70,8 +70,8 @@ abstract class ExecuteHandler {
 	// return code of $this->evaluate()
 	private $evaluate_ret = 0;
 	// currently handled files
-	protected $current; 
-	// array of codes that can be given in the 'execute' field of a command, and 
+	protected $current;
+	// array of codes that can be given in the 'execute' field of a command, and
 	// descriptions
 	private static $handlers = array(
 		'doallorcurr' => 'Execute a function for the argument only if there is one, and else for all entries. Users that use this handler must implement the doall() method and the method defined by the command\'s name.',
@@ -211,7 +211,7 @@ abstract class ExecuteHandler {
 				if(isset($this->synonyms[$command['aka']]))
 					trigger_error('Error: ' . $aka . ' already exists as a synonym for ' . $this->synonyms[$aka], E_USER_NOTICE);
 				else
-					$this->synonyms[$command['aka']] = $command['name'];			
+					$this->synonyms[$command['aka']] = $command['name'];
 			}
 			else foreach($command['aka'] as $aka) {
 				if(isset($this->synonyms[$aka]))
@@ -245,7 +245,7 @@ abstract class ExecuteHandler {
 		if(!isset($command['arg'])) {
 			trigger_error('No listing of arguments given for new command ' . $command['name'], E_USER_NOTICE);
 		}
-		return true;	
+		return true;
 	}
 	private function setvar($var, $value) {
 	// set a variable in the internal language
@@ -263,10 +263,10 @@ abstract class ExecuteHandler {
 		$this->evaluate_ret = 0;
 		// function calls
 		if(preg_match(
-			"/^([a-zA-Z]+):\s+((.+,\s+)*.+)\$/u", 
-			$in, 
+			"/^([a-zA-Z]+):\s+((.+,\s+)*.+)\$/u",
+			$in,
 			$matches)) {
-			if($this->funcexecuted) { 
+			if($this->funcexecuted) {
 			// we already executed the program
 				$this->funcexecuted = false;
 				return $this->eax;
@@ -303,7 +303,7 @@ abstract class ExecuteHandler {
 		}
 		// function call without argument
 		else if(preg_match("/^([a-zA-Z]+):\s*\$/u", $in, $matches)) {
-			if($this->funcexecuted) { 
+			if($this->funcexecuted) {
 			// we already executed the program
 				$this->funcexecuted = false;
 				return $this->eax;
@@ -330,8 +330,8 @@ abstract class ExecuteHandler {
 		}
 		// math
 		else if(preg_match(
-			"/^(?![\"'])([^\s]*)\s*([+\-*\/=><]|!=|>=|<=)\s*([^\s]*)(?<![\"'])$/u", 
-			$in, 
+			"/^(?![\"'])([^\s]*)\s*([+\-*\/=><]|!=|>=|<=)\s*([^\s]*)(?<![\"'])$/u",
+			$in,
 			$matches)) {
 			$lval = (float) trim($matches[1]);
 			$rval = (float) trim($matches[3]);
@@ -356,7 +356,7 @@ abstract class ExecuteHandler {
 		if(preg_match_all("/\\\$(\{[a-zA-Z]+\}|[a-zA-Z]+)/u", $in, $matches)) {
 			foreach($matches[1] as $reference) {
 				// check for ${varname} syntax
-				if($reference[0] === '{') 
+				if($reference[0] === '{')
 					$fmreference = substr($reference, 1, -1);
 				else
 					$fmreference = $reference;
@@ -372,15 +372,15 @@ abstract class ExecuteHandler {
 					);
 				}
 				else {
-					echo "Notice: unrecognized variable " . 
-						$fmreference . 
-						" (in scope " . 
-						$this->curr('currscope') . 
+					echo "Notice: unrecognized variable " .
+						$fmreference .
+						" (in scope " .
+						$this->curr('currscope') .
 						")" . PHP_EOL;
 				}
 			}
 		}
-		return $in;	
+		return $in;
 	}
 	private function divide_cmd($arg) {
 	// transforms an argument string into a $paras array, taking care of quoted strings and output redirection
@@ -390,7 +390,7 @@ abstract class ExecuteHandler {
 					"Unexpected end of command while in " . $context,
 					EHException::E_RECOVERABLE
 				);
-			}		
+			}
 		};
 		$len = strlen($arg);
 		$next = false;
@@ -528,7 +528,7 @@ abstract class ExecuteHandler {
 		// handle control flow, and exit if we are not executing this code
 		switch($this->check_flow()) {
 			case 0: break;
-			case self::CHECK_FLOW_IN_IF: 
+			case self::CHECK_FLOW_IN_IF:
 				$inif = true;
 				if(in_array($rawcmd, array('if', 'else', 'endif')))
 					break;
@@ -539,12 +539,12 @@ abstract class ExecuteHandler {
 					break;
 				else
 					return self::EXECUTE_NEXT;
-			case self::CHECK_FLOW_IN_FOR: 
+			case self::CHECK_FLOW_IN_FOR:
 				if(in_array($rawcmd, array('for', 'endfor')))
 					break;
 				else
 					return self::EXECUTE_NEXT;
-			case self::CHECK_FLOW_IN_FUNC: 
+			case self::CHECK_FLOW_IN_FUNC:
 				if(in_array($rawcmd, array('func', 'endfunc')))
 					break;
 				else
@@ -557,7 +557,7 @@ abstract class ExecuteHandler {
 		}
 		// substitute variables in argument
 		$arg = $this->substitutevars($rawarg);
-		if($this->config['debug']) 
+		if($this->config['debug'])
 			echo 'Executing command: ' . $rawcmd . PHP_EOL;
 		// execute language construct
 		switch($rawcmd) {
@@ -793,8 +793,8 @@ abstract class ExecuteHandler {
 			case 'func': // function introduction
 				// compile function definition
 				if(!preg_match(
-					"/^([a-zA-Z]+):\s+(([a-zA-Z]+,\s+)*[a-zA-Z]+)\$/u", 
-					$arg, 
+					"/^([a-zA-Z]+):\s+(([a-zA-Z]+,\s+)*[a-zA-Z]+)\$/u",
+					$arg,
 					$matches)) {
 					echo "Syntax error: In line: $in" . PHP_EOL;
 					return self::EXECUTE_SYNTAX_ERROR;
@@ -838,13 +838,13 @@ abstract class ExecuteHandler {
 					$flow = array(
 						'type' => 'func',
 						// don't execute while we're loading function
-						'execute' => false, 
+						'execute' => false,
 						'line' => $this->curr('pc'),
 						'function' => $name,
 					);
 				}
 				// note that flowctr has already been incremented
-				$this->curr('flowo', $flow); 
+				$this->curr('flowo', $flow);
 				return self::EXECUTE_NEXT;
 			case 'ret':
 				// loop through inner control flow structures until we find
@@ -860,7 +860,7 @@ abstract class ExecuteHandler {
 						return self::EXECUTE_SYNTAX_ERROR;
 					}
 				} while($f['type'] !== 'func');
-				// return value is the same as the argument; does not get 
+				// return value is the same as the argument; does not get
 				// evaluated. If there is no argument, we return NULL.
 				$this->eax = $arg;
 				$this->curr('pc', $f['ret']);
@@ -875,7 +875,7 @@ abstract class ExecuteHandler {
 					return self::EXECUTE_SYNTAX_ERROR;
 				}
 				if($f['execute']) {
-					// we reached end of an executing function, so return 
+					// we reached end of an executing function, so return
 					// NULL
 					$this->eax = NULL;
 					$this->curr('pc', $f['ret']);
@@ -960,7 +960,7 @@ abstract class ExecuteHandler {
 				$argarray = array($argument);
 		}
 		// output redirection
-		if(($redirection['>'] !== false or $redirection['>$'] !== false) and 
+		if(($redirection['>'] !== false or $redirection['>$'] !== false) and
 			$cmd['execute'] !== 'quit') {
 			ob_start();
 		}
@@ -971,7 +971,7 @@ abstract class ExecuteHandler {
 			case 'doallorcurr':
 				if(count($argarray) > 0 and $argarray[0] !== '') {
 					foreach($argarray as $file)
-						if(!($ret = $this->{$cmd['name']}($file, $paras))) 
+						if(!($ret = $this->{$cmd['name']}($file, $paras)))
 							break;
 				}
 				else
@@ -993,11 +993,11 @@ abstract class ExecuteHandler {
 				break;
 			case 'callfuncarg':
 				$ret = $cmd['name']($argument, $paras);
-				break;			
+				break;
 			case 'quit':
 				return self::EXECUTE_QUIT;
 			default:
-				trigger_error('Unrecognized execution mode', E_USER_NOTICE); 
+				trigger_error('Unrecognized execution mode', E_USER_NOTICE);
 				break;
 		}
 		if($cmd['setcurrent'] and (count($argarray) !== 0))
@@ -1044,7 +1044,7 @@ abstract class ExecuteHandler {
 		else
 			return false;
 	}
-	private function execute_help($in) {	
+	private function execute_help($in) {
 		// array of functions with info
 		if(!$in) {
 			echo 'In command line, various options can be used to manipulate the list or its files. The following commands are available:' . PHP_EOL;
@@ -1228,7 +1228,7 @@ abstract class ExecuteHandler {
 		while(true) {
 			// get input
 			$cmd = $this->getline(array(
-				'lines' => $this->history[$this->currhist], 
+				'lines' => $this->history[$this->currhist],
 				'prompt' => $name . '> ')
 			);
 			if($cmd === false)
@@ -1324,8 +1324,8 @@ abstract class ExecuteHandler {
 		$this->curr('histlen', '++');
 		// continue executing as long as PC is below length of program
 		while($this->curr('pc') < $this->curr('histlen')) {
-			if($this->config['debug']) 
-				echo "Feeding command (" . $this->curr('pc') . "): " . 
+			if($this->config['debug'])
+				echo "Feeding command (" . $this->curr('pc') . "): " .
 					$this->curr('pcres') . PHP_EOL;
 			try {
 				$ret = $this->execute();
@@ -1334,10 +1334,10 @@ abstract class ExecuteHandler {
 				echo "Error '" . $e->getMessage() . "' occurred while executing command '" . $in . "'" . PHP_EOL;
 			}
 			switch($ret) {
-				case self::EXECUTE_NEXT: 
-					$this->pcinc(); 
+				case self::EXECUTE_NEXT:
+					$this->pcinc();
 					break;
-				case self::EXECUTE_PC: 
+				case self::EXECUTE_PC:
 					break;
 				case self::EXECUTE_SYNTAX_ERROR:
 				case self::EXECUTE_QUIT:
@@ -1349,25 +1349,25 @@ abstract class ExecuteHandler {
 	private function &curr($var, $set = NULL) {
 		$ret = NULL;
 		switch($var) {
-			case 'pc': 
+			case 'pc':
 				$ret =& $this->pc[$this->currhist];
 				break;
-			case 'histlen': 
+			case 'histlen':
 				$ret =& $this->histlen[$this->currhist];
 				break;
-			case 'history': 
+			case 'history':
 				$ret =& $this->history[$this->currhist];
 				break;
-			case 'flow': 
+			case 'flow':
 				$ret =& $this->flow[$this->currhist];
 				break;
 			case 'flowo': // object pointing to current control flow block
 				$ret =& $this->flow[$this->currhist][$this->flowctr[$this->currhist]];
 				break;
-			case 'flowctr': 
+			case 'flowctr':
 				$ret =& $this->flowctr[$this->currhist];
 				break;
-			case 'pco': case 'pcres': 
+			case 'pco': case 'pcres':
 				$ret =& $this->history[$this->currhist][$this->pc[$this->currhist]];
 				break;
 			case 'currscope':
@@ -1382,7 +1382,7 @@ abstract class ExecuteHandler {
 		if($set === '++')
 			$ret++;
 		else if($set === '--')
-			$ret--; 
+			$ret--;
 		else
 			$ret = $set;
 		return $ret;
@@ -1508,7 +1508,7 @@ abstract class ExecuteHandler {
 			echo $getcmd();
 			// put the cursor in the right position
 			if($cmdlen > $keypos)
-				echo "\033[" . ($cmdlen - $keypos) . "D";	
+				echo "\033[" . ($cmdlen - $keypos) . "D";
 		};
 		// set our settings
 		$this->stty('cbreak iutf8');
@@ -1521,7 +1521,7 @@ abstract class ExecuteHandler {
 			// get input
 			$c = $this->fgetc(STDIN);
 			if($c === false) {
-			// if we encounter EOF or invalid UTF-8, which causes fgetc to 
+			// if we encounter EOF or invalid UTF-8, which causes fgetc to
 			// return false, also return false
 				echo PHP_EOL;
 				return false;

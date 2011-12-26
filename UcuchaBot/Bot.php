@@ -94,7 +94,7 @@ class Bot extends Snoopy {
 				foreach($cookies as $oCook) {
 					$cookie = explode("=", $oCook);
 					// ignore non-cookies
-					if(count($cookie) !== 2) 
+					if(count($cookie) !== 2)
 						continue;
 					$this->cookies[trim($cookie[0])] = $cookie[1];
 				}
@@ -313,9 +313,9 @@ class Bot extends Snoopy {
 		$wpfa = $this->fetchwp($writepage);
 		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?)/";
 		$wpfa = preg_replace($pattern, "{{FA/BeenOnMainPage|$1}}", $wpfa);
-		$this->writewp($writepage, 
+		$this->writewp($writepage,
 			array(
-				'text' => $wpfa, 
+				'text' => $wpfa,
 				'summary' => "Bot: bolding today's featured article"
 			)
 		);
@@ -351,7 +351,7 @@ class Bot extends Snoopy {
 		//edit TFA talk page
 		$talkpage = $this->fetchwp('Talk:' . $page['name']);
 		if(preg_match('/\|\s*maindate\s*=/u', $talkpage))
-			echo 'Maindate already exists on talkpage of page ' . 
+			echo 'Maindate already exists on talkpage of page ' .
 				$page['name'] . PHP_EOL;
 		else {
 			$text = preg_replace('/(\|\s*currentstatus\s*=\s*FA\s*)/u',
@@ -366,7 +366,7 @@ class Bot extends Snoopy {
 				// tell me that it failed
 				$this->writewp('User talk: Ucucha', array(
 					'kind' => 'appendtext',
-					'summary' => 'Failed to write maindate: ' . 
+					'summary' => 'Failed to write maindate: ' .
 						$page['name'],
 					'text' => 'I was unable to insert a ' .
 						'<code>|maindate=</code> on the page [[Talk:' .
@@ -378,7 +378,7 @@ class Bot extends Snoopy {
 			else
 				$this->writewp('Talk:' . $page['name'], array(
 					'text' => $text,
-					'summary' => 'Bot edit: This page will appear as ' . 
+					'summary' => 'Bot edit: This page will appear as ' .
 						'today\'s featured article in the near future',
 				));
 		}
@@ -386,7 +386,7 @@ class Bot extends Snoopy {
 		$ahparas = $this->parse_ah(array('text' => $talkpage));
 		$fac = '';
 		for($i = 1; $i < 50; $i++) {
-			if(!isset($ahparas['action' . $i])) 
+			if(!isset($ahparas['action' . $i]))
 				break;
 			if($ahparas['action' . $i] !== 'FAC')
 				continue;
@@ -413,7 +413,7 @@ class Bot extends Snoopy {
 		$apipage = array_pop($api['query']['pages']);
 		$users = array();
 		foreach($apipage['revisions'] as $rev) {
-			if(!isset($users[$rev['user']])) 
+			if(!isset($users[$rev['user']]))
 				$users[$rev['user']] = 0;
 			$users[$rev['user']]++;
 		}
@@ -431,7 +431,7 @@ class Bot extends Snoopy {
 					'|date=' . $page['date'] .
 					'|blurb=' . $page['blurb'] .
 					'}}',
-				'summary' => 'Bot edit: Notice that [[' . $page['name'] . 
+				'summary' => 'Bot edit: Notice that [[' . $page['name'] .
 					']] will appear as today\'s featured article in the ' .
 					'near future',
 				'kind' => 'appendtext',
@@ -478,14 +478,14 @@ class Bot extends Snoopy {
 				break;
 			}
 			// ignore once that have been on the MP
-			if(strpos($line, 'FA/BeenOnMainPage') !== false) 
+			if(strpos($line, 'FA/BeenOnMainPage') !== false)
 				continue;
 			// if we're in the FA list and get a link, it's an FA
 			if(strpos($line, '[[') !== false)
 				$currlist++;
 			// section headers
 			if($line[0] === '=') {
-				if($inheader) 
+				if($inheader)
 					$inheader = false;
 				else
 					$printnumber();
@@ -531,9 +531,9 @@ class Bot extends Snoopy {
 		$wpfa = $this->fetchwp($writepage);
 		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?)/";
 		$wpfa = preg_replace($pattern, "{{FA/BeenOnMainPage|$1}}", $wpfa);
-		$this->writewp($writepage, 
+		$this->writewp($writepage,
 			array(
-				'text' => $wpfa, 
+				'text' => $wpfa,
 				'summary' => "Bot: bolding today's featured list"
 			));
 		echo "Done" . PHP_EOL;
@@ -651,7 +651,7 @@ class Bot extends Snoopy {
 		$this->writewp('Wikipedia:Featured list candidates/Featured log/' . $month, $writeparas);
 		$this->writewp('Wikipedia:Featured list candidates/Failed log/' . $month, $writeparas);
 		$writeparas['text'] = "{{Featured list log}}\n\n==Kept==\n\n==Delisted==";
-		$this->writewp('Wikipedia:Featured list removal candidates/log/' . $month, $writeparas);		
+		$this->writewp('Wikipedia:Featured list removal candidates/log/' . $month, $writeparas);
 		return true;
 	}
 	public function do_add_fa_stats() {
@@ -764,11 +764,11 @@ class Bot extends Snoopy {
 		if($paras['rawdate']) {
 			$paras['date'] = new DateTime($paras['rawdate']);
 		}
-		if(!isset($paras['date'])) 
+		if(!isset($paras['date']))
 			$paras['date'] = new DateTime();
 		else if(!$paras['date'] instanceof DateTime) {
 			echo __METHOD__ . ': date parameter is invalid' . PHP_EOL;
-			$paras['date'] = new DateTime();			
+			$paras['date'] = new DateTime();
 		}
 		$newpage = array();
 		$newpage['page'] = $paras['base'] . '/' . $paras['date']->format(self::stddate);
@@ -777,8 +777,8 @@ class Bot extends Snoopy {
 			return false;
 		if(!preg_match(
 			// this regex based on the code for Anomiebot II
-			"/(?:'''|<b>)\s*\[\[\s*([^|\]]+?)\s*(?:\|[^]]+)?\]\]\s*('''|<\/b>)/u", 
-			$tfatext, 
+			"/(?:'''|<b>)\s*\[\[\s*([^|\]]+?)\s*(?:\|[^]]+)?\]\]\s*('''|<\/b>)/u",
+			$tfatext,
 			$matches)) {
 			echo 'Error: could not retrieve TFA name from page ' . $tfapage . PHP_EOL;
 			$newpage['name'] = false;

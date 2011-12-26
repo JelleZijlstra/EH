@@ -143,13 +143,13 @@ class FullFile extends ListEntry {
 				$this->folder = $in[1];
 				$this->sfolder = $in[2];
 				$this->ssfolder = $in[3];
-				if($code === 'l') 
+				if($code === 'l')
 					return;
-				else 
+				else
 					break;
 		}
 		// add additional data
-		$this->add();		
+		$this->add();
 	}
 	public function toarray() {
 		$out = array();
@@ -204,17 +204,17 @@ class FullFile extends ListEntry {
 			return false;
 		}
 		switch($paras['type']) {
-			case 'shell': 
+			case 'shell':
 				$process = function($in) {
 					return escape_shell($in);
 				};
 				break;
-			case 'url': 
+			case 'url':
 				$process = function($in) {
 					return str_replace('%2F', '/', rawurlencode($in));
 				};
 				break;
-			case 'none': 
+			case 'none':
 				$process = function($in) {
 					return $in;
 				};
@@ -236,14 +236,14 @@ class FullFile extends ListEntry {
 	public function openf($paras = '') {
 		if(!isset($paras['place'])) $paras['place'] = 'catalog';
 		if($this->isfile()) {
-			if($paras['place'] === 'catalog') 
+			if($paras['place'] === 'catalog')
 				exec_catch('open ' . $this->path());
 			else if($paras['place'] === 'temp')
 				exec_catch("open " . TEMPPATH . "/" . escape_shell($this->name));
-			else 
+			else
 				echo 'Unrecognized place: ' . $paras['place'] . PHP_EOL;
 		}
-		else 
+		else
 			echo 'Not a file; cannot open' . PHP_EOL;
 		return true;
 	}
@@ -312,13 +312,13 @@ class FullFile extends ListEntry {
 	// function edits the library and/or renames the file to correct them
 	// @param mode: may be either "ls" (called during lscheck, renames actual file) or "csv" (called during csvcheck, renames file in catalog)
 		switch($mode) {
-			case 'ls': 
-				$elist = $this->p->lslist; 
-				$searchlist = $this->p->c; 
+			case 'ls':
+				$elist = $this->p->lslist;
+				$searchlist = $this->p->c;
 				break;
-			case 'csv': 
-				$elist = $this->p->c; 
-				$searchlist = $this->p->lslist; 
+			case 'csv':
+				$elist = $this->p->c;
+				$searchlist = $this->p->lslist;
 				break;
 			default: echo "Unrecognized mode"; return false;
 		}
@@ -329,7 +329,7 @@ class FullFile extends ListEntry {
 			// get a way to escape
 			if($newname === "q")
 				return false;
-			if($newname === "i") 
+			if($newname === "i")
 				$this->my_inform();
 			else {
 				$searchres = $searchlist[$newname];
@@ -434,7 +434,7 @@ class FullFile extends ListEntry {
 			// resolve redirect
 			if($this->p->isredirect($target))
 				$this->title = preg_replace('@^/([^/]+)/.*$@', '/$1/' . $this->p->gettruename($target), $this->title);
-		
+
 		}
 		if($this->parturl)
 			$this->parturl = 1;
@@ -473,7 +473,7 @@ class FullFile extends ListEntry {
 			$this->volume = $this->issue;
 			$this->issue = NULL;
 		}
-		$this->booktitle = preg_replace('/\.$/u', '', $this->booktitle); 
+		$this->booktitle = preg_replace('/\.$/u', '', $this->booktitle);
 		// clean up titles a little: space before and after parentheses, but not in e.g. "origin(s)" (hidden as this is buggy)
 		//$this->title = trim(preg_replace(array("/(?<!\s|^)\((?!s\))/u", "/\)(?!\s|$|,|\.|:|<)/u"), array(" (", ") "), $this->title));
 		//$this->title = preg_replace("/(?<!\s|\(|-|^)([A-Z])/u", " $1", $this->title);
@@ -486,7 +486,7 @@ class FullFile extends ListEntry {
 		// and HDL
 			$this->hdl = substr($this->url, 22);
 			$this->url = NULL;
-		}		
+		}
 		if(preg_match("/^http:\/\/dx\.doi\.org\//", $this->url)) {
 		// put DOI in and remove redundant URL
 			$this->doi = preg_replace("/^http:\/\/dx\.doi\.org\//", "", $this->url);
@@ -515,8 +515,8 @@ class FullFile extends ListEntry {
 		$this->title = preg_replace(
 		// remove final period and curly quotes, italicize cyt b, other stuff
 			array(
-				'/(?<!\\\\)\.$|^\s+|\s+$|(?<=^<i>)\s+|<i><\/i>|☆/u', 
-				'/<\/i>\s+<i>|\s+/u', 
+				'/(?<!\\\\)\.$|^\s+|\s+$|(?<=^<i>)\s+|<i><\/i>|☆/u',
+				'/<\/i>\s+<i>|\s+/u',
 				'/^" |(?<= )" |&quot;/u',
 				'/([,:();]+)<\/i>/u',
 				'/<i>([,:();]+)/u',
@@ -740,8 +740,8 @@ class FullFile extends ListEntry {
 	}
 	public function isnopagenumberjournal() {
 	// these journals don't have page numbers, only "volume" and "issue". They should get rid of their failure to implement standard practices, but in the meantime we have to handle them.
-		return in_array($this->journal, 
-			array('Palaeontologia Electronica', 
+		return in_array($this->journal,
+			array('Palaeontologia Electronica',
 				'BMC Biology',
 				'BMC Evolutionary Biology',
 				'PLoS ONE',
@@ -777,10 +777,10 @@ class FullFile extends ListEntry {
 			$function = $backtrace[1]['function'];
 			$truename = substr($this->folder, 4);
 			if(!$this->p->has($truename)) {
-				echo 'Invalid redirect target: ' . $truename . PHP_EOL; 
+				echo 'Invalid redirect target: ' . $truename . PHP_EOL;
 				return false;
 			}
-			if($backtrace[1]['args']) 
+			if($backtrace[1]['args'])
 				return $truename;
 			$this->truename_return = $this->p->{$function}($truename);
 			return true;
@@ -812,11 +812,11 @@ class FullFile extends ListEntry {
 	}
 	public function isamnh() {
 		return in_array(
-			$this->journal, 
+			$this->journal,
 			array(
-				'American Museum Novitates', 
-				'Bulletin of the American Museum of Natural History', 
-				'Anthropological Papers of the American Museum of the Natural History', 
+				'American Museum Novitates',
+				'Bulletin of the American Museum of Natural History',
+				'Anthropological Papers of the American Museum of the Natural History',
 				'Memoirs of the American Museum of Natural History',
 				)
 			);
@@ -830,7 +830,7 @@ class FullFile extends ListEntry {
 	}
 	public function supp_getbasic() {
 		$out = preg_replace('/^.*\//u', '', $this->title);
-		if($this->p->has($out)) 
+		if($this->p->has($out))
 			return $out;
 		else {
 			$this->warn('unknown supplement target', 'title');
@@ -844,7 +844,7 @@ class FullFile extends ListEntry {
 	/* MANUAL EDITING */
 	public function editalltitles() {
 	// wrapper function for use in the edittitlesall command
-		if($this->editedtitle == 1 or $this->isor('redirect', 'supplement')) 
+		if($this->editedtitle == 1 or $this->isor('redirect', 'supplement'))
 			return true;
 		else {
 			echo 'Editing title of file ' . $this->name . PHP_EOL;
@@ -900,13 +900,13 @@ class FullFile extends ListEntry {
 				}
 			}
 			switch($cmd[0]) {
-				case 'l': 
+				case 'l':
 					if(isset($nbeg)) {
 						for($i = $nbeg; $i <= $nend; $i++)
 							$splittitle[$i] = mb_strtolower($splittitle[$i]);
 					}
 					else if(isset($n))
-						$splittitle[$n] = mb_strtolower($splittitle[$n]); 
+						$splittitle[$n] = mb_strtolower($splittitle[$n]);
 					break;
 				case 'u':
 					if(isset($nbeg)) {
@@ -914,24 +914,24 @@ class FullFile extends ListEntry {
 							$splittitle[$i] = mb_ucfirst($splittitle[$i]);
 					}
 					else if(isset($n))
-						$splittitle[$n] = mb_ucfirst($splittitle[$n]); 
+						$splittitle[$n] = mb_ucfirst($splittitle[$n]);
 					break;
-				case 'i': 
+				case 'i':
 					if(isset($nbeg)) {
 						$splittitle[$nbeg] = '<i>' . $splittitle[$nbeg];
 						$splittitle[$nend] .= '</i>';
 					}
 					else if(isset($n))
-						$splittitle[$n] = '<i>' . $splittitle[$n] . '</i>'; 
+						$splittitle[$n] = '<i>' . $splittitle[$n] . '</i>';
 					break;
-				case 'o': 
-					$this->openf(); 
+				case 'o':
+					$this->openf();
 					break;
-				case 'f': 
-					$this->edit(); 
+				case 'f':
+					$this->edit();
 					break;
-				case 'p': 
-					echo $unite() . PHP_EOL; 
+				case 'p':
+					echo $unite() . PHP_EOL;
 					break;
 				case 'c':
 					$newtitle = $unite();
@@ -956,9 +956,9 @@ class FullFile extends ListEntry {
 							$splittitle[$i] = '';
 					}
 					else if(isset($n))
-						$splittitle[$n] = ''; 
+						$splittitle[$n] = '';
 					break;
-				case 's': 
+				case 's':
 					$this->title = $unite();
 					$this->format();
 					echo 'New title: ' . $this->title . PHP_EOL;
@@ -985,12 +985,12 @@ class FullFile extends ListEntry {
 							if(strlen($cmd2) > 1) $newtitle = $cmd2;
 							else switch($cmd2) {
 								case 'q': return false;
-								case 's': 
+								case 's':
 									$this->title = $newtitle;
 									$this->log('Edited title');
-								case 'a': 
-									$this->editedtitle = 1; 
-									$this->p->needsave(); 
+								case 'a':
+									$this->editedtitle = 1;
+									$this->p->needsave();
 									return true;
 								case 'r':
 									if(!$newtitle) break 2;
@@ -1068,7 +1068,7 @@ class FullFile extends ListEntry {
 	// cites according to normal WP citation style
 	// if $mw = false, no MediaWiki markup is used
 		// this is going to be the citation
-		if($mw) 
+		if($mw)
 			$out = '*';
 		else
 			$out = '';
@@ -1166,7 +1166,7 @@ class FullFile extends ListEntry {
 					$paras['first' . ($key + 1)] = $author[1];
 			}
 			else {
-				if(!isset($paras['coauthors'])) 
+				if(!isset($paras['coauthors']))
 					$paras['coauthors'] = '';
 				$paras['coauthors'] .= $author . '; ';
 			}
@@ -1242,7 +1242,7 @@ class FullFile extends ListEntry {
 		if($this->p->includerefharv)
 			$paras['ref'] = 'harv';
 		$out = $sfn = '';
-		if($this->p->includesfn) 
+		if($this->p->includesfn)
 			$out = $sfn = '<!--' . $this->getsfn() . '-->';
 		$out .= '{{cite ' . $temp;
 		foreach($paras as $key => $value) {
@@ -1262,7 +1262,7 @@ class FullFile extends ListEntry {
 				$sfn .= $sp[0] . '|';
 			}
 		}
-		$sfn .= $this->year . '}}';	
+		$sfn .= $this->year . '}}';
 		return $sfn;
 	}
 	public function citelemurnews() {
@@ -1345,8 +1345,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$pa_out = mb_strtoupper($in);
 			// replace last ; with ", and"; others with ","; space initials
 			$pa_out = preg_replace(
-				array("/(?<=\.)(?!;)/u", "/;(?=.*;)/u", "/;/u", "/\\\\/u"), 
-				array(" ", ",", " and", "\\"), 
+				array("/(?<=\.)(?!;)/u", "/;(?=.*;)/u", "/;/u", "/\\\\/u"),
+				array(" ", ",", " and", "\\"),
 				$pa_out);
 			return $pa_out;
 		};
@@ -1407,7 +1407,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$pa_out = '';
 			foreach($in as $key => $aut) {
 				// put initials before last name
-				$paut = preg_replace('/^(.*?), (.*)$/u', '$2 $1', $aut); 
+				$paut = preg_replace('/^(.*?), (.*)$/u', '$2 $1', $aut);
 				// if type == normal, first author should not be paut
 				if($key === 0 and $type === 'normal') {
 					$pa_out .= $aut;
@@ -1454,7 +1454,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			default:
 				$out .= "$this->title. ";
 				$out .= "<!--Unknown citation type; fallback citation-->";
-				break;				
+				break;
 		}
 		// final cleanup
 		$out .= ".";
@@ -1495,16 +1495,16 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		$out .= '{' . $this->getrefname() . ",\n";
 		$authors = preg_replace(
-			array("/\./u", "/;/u", "/\s+/u", "/\s\$/u"), 
-			array(". ", " and", " ", ""), 
+			array("/\./u", "/;/u", "/\s+/u", "/\s\$/u"),
+			array(". ", " and", " ", ""),
 			$this->authors
 		);
 		// stuff that goes in every citation type
 		$add('author', $authors, true);
 		$add('year', $this->year, true);
 		$title = str_replace(
-			array('<i>', '</i>'), 
-			array('\textit{', '}'), 
+			array('<i>', '</i>'),
+			array('\textit{', '}'),
 			$this->title
 		);
 		$add('title', $title, true);
@@ -1534,7 +1534,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		else
 			$func = '__invoke';
 		if(!method_exists($this, $func)) {
-			echo __METHOD__ . ': invalid method' . PHP_EOL; 
+			echo __METHOD__ . ': invalid method' . PHP_EOL;
 			return false;
 		}
 		if(is_array($cite = $this->$func()))
@@ -1590,7 +1590,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$naut = count($splitauthors);
 		$out = '';
 		switch($naut) {
-			case 0: 
+			case 0:
 				return ''; //incomplete info
 			case 1:
 				$out .= $lastname($splitauthors[0]);
@@ -1641,7 +1641,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				break;
 			case 'n':
 				$cmd = 'mv ' . TEMPPATH . '/' . escape_shell($this->name) . ' ' . TEMPPATH . '/Not\ to\ be\ cataloged/' . escape_shell($this->name);
-				if(!exec_catch($cmd)) 
+				if(!exec_catch($cmd))
 					echo "Error moving file" . PHP_EOL;
 				return 1;
 			case '': break 2;
@@ -1663,8 +1663,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$this->p->lslist[$this->name]->openf();
 						break;
 					case 'r':
-						$cmd = 'mv ' . TEMPPATH . '/' . 
-							escape_shell($this->name) . ' ' . 
+						$cmd = 'mv ' . TEMPPATH . '/' .
+							escape_shell($this->name) . ' ' .
 							$this->p->lslist[$this->name]->path();
 						if(!exec_catch($cmd)) echo "Error moving file" . PHP_EOL;
 						$this->p->edit($this->name);
@@ -1701,7 +1701,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						),
 					));
 					switch($cmd) {
-						case 'y': 
+						case 'y':
 							$this->folder = $sugg[0];
 							$this->sfolder = $sugg[1];
 							$this->ssfolder = $sugg[2];
@@ -1715,7 +1715,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			if(!$this->folder) {
 				if(!$this->p->foldertree) $this->p->build_foldertree();
 				/* folder */
-				echo 'Suggestions: '; 
+				echo 'Suggestions: ';
 				$suggs = $this->sugg_helper($this->p->foldertree);
 				$cmd = $this->getline('Folder: ');
 				if($cmd === 'q') continue 2;
@@ -1723,7 +1723,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				else $this->folder = $cmd;
 				/* subfolder */
 				if(count($this->p->foldertree[$this->folder]) !== 0) {
-					echo 'Suggestions: '; 
+					echo 'Suggestions: ';
 					$suggs = $this->sugg_helper($this->p->foldertree[$this->folder]);
 					$cmd = $this->getline('Subfolder: ');
 					if($cmd === 'q') continue 2;
@@ -1731,7 +1731,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					else $this->sfolder = $cmd;
 				/* sub-subfolder */
 					if(count($this->p->foldertree[$this->folder][$this->sfolder]) !== 0) {
-						echo 'Suggestions: '; 
+						echo 'Suggestions: ';
 						$suggs = $this->sugg_helper($this->p->foldertree[$this->folder][$this->sfolder]);
 						$cmd = $this->getline(array(
 							'prompt' => 'Sub-subfolder: ',
@@ -1801,7 +1801,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return $successful;
 	}
 	public function adddata() {
-		if($this->isor('redirect', 'supplement') or $this->triedadddata) 
+		if($this->isor('redirect', 'supplement') or $this->triedadddata)
 			return true;
 		if(!$this->needsdata()) {
 			if(!$this->triedfinddoi and !$this->doi)
@@ -1821,7 +1821,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			return true;
 		}
 		else if($this->hasid()) {
-			if(!$this->triedfinddoi) 
+			if(!$this->triedfinddoi)
 				$this->finddoi();
 			return true;
 		}
@@ -1838,11 +1838,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$this->p->needsave();
 			echo "data added" . PHP_EOL;
 		}
-		if($this->hasid()) 
+		if($this->hasid())
 			return true;
-		if(!$this->triedfinddoi) 
+		if(!$this->triedfinddoi)
 			$this->finddoi();
-		if(!$this->triedfindurl) 
+		if(!$this->triedfindurl)
 			$this->findurl();
 		return $this->adddata_return ? false : true;
 	}
@@ -1890,15 +1890,15 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$this->url = $result->link;
 						echo 'data added' . PHP_EOL;
 						return true;
-					case 'q': 
-						echo 'nothing found' . PHP_EOL; 
+					case 'q':
+						echo 'nothing found' . PHP_EOL;
 						$this->triedfindurl = true;
 						return false;
-					case 'o': 
-						exec_catch("open '" . str_replace("'", "\'", $result->link) . "'"); 
+					case 'o':
+						exec_catch("open '" . str_replace("'", "\'", $result->link) . "'");
 						break;
-					case 'i': 
-						$this->my_inform(); 
+					case 'i':
+						$this->my_inform();
 						break;
 					case 'n':
 						break 2;
@@ -1908,8 +1908,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						echo 'data added' . PHP_EOL;
 						return true;
 					case 'r':
-						$this->adddata_return = true; 
-						echo 'nothing found' . PHP_EOL; 
+						$this->adddata_return = true;
+						echo 'nothing found' . PHP_EOL;
 						return false;
 					case 'e':
 						$this->edit();
@@ -1943,22 +1943,22 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	public function findhdl() {
 		if(!$this->isamnh()) return true;
 		if($this->hdl) return true;
-		echo 'Finding HDL for file ' . $this->name . 
+		echo 'Finding HDL for file ' . $this->name .
 			' (' . $this->journal . ' ' . $this->volume . ')' . PHP_EOL;
 		switch($this->journal) {
-			case 'American Museum Novitates': 
-				$journalhdl = '2246/9'; 
+			case 'American Museum Novitates':
+				$journalhdl = '2246/9';
 				break;
 			case 'Bulletin of the American Museum of Natural History':
-				$journalhdl = '2246/7'; 
+				$journalhdl = '2246/7';
 				break;
-			case 'Anthropological Papers of the American Museum of Natural History': 
-				$journalhdl = '2246/6'; 
+			case 'Anthropological Papers of the American Museum of Natural History':
+				$journalhdl = '2246/6';
 				break;
 		}
 		// construct search URL
 		$url = 'http://digitallibrary.amnh.org/dspace/handle/' .
-			$journalhdl . 
+			$journalhdl .
 			'/simple-search?query=series:' .
 			$this->volume;
 		$html = @file_get_contents($url);
@@ -2118,11 +2118,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				echo "Error: could not find title." . PHP_EOL;
 				return false;
 			}
-			if($jvp || $jparas || $wnanat || $swnat || $mammstudy || $jpaleont || $jmamm) 
+			if($jvp || $jparas || $wnanat || $swnat || $mammstudy || $jpaleont || $jmamm)
 				$title .= " site:bioone.org";
-			else if($mammalia) 
+			else if($mammalia)
 				$title .= " site:reference-global.com";
-			else if($bioljlinnsoc || $bioljlinnsoc2 || $mammreview || $jbiogeogr || $ajpa || $zooljlinnsoc) 
+			else if($bioljlinnsoc || $bioljlinnsoc2 || $mammreview || $jbiogeogr || $ajpa || $zooljlinnsoc)
 				$title .= " site:wiley.com";
 			return $title;
 		}
@@ -2301,11 +2301,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$out .= '; ';
 				}
 			}
-			return preg_replace('/; $/u', '', $out);		
+			return preg_replace('/; $/u', '', $out);
 		};
 		if(preg_match(
-			"/^(.*?), (\d{4})\. (.*?), Palaeontologia Electronica Vol\. (\d+), Issue (\d+); ([\dA-Z]+):(\d+)p, [\dA-Za-z]+; ([^\s]*)\$/u", 
-			$citation, 
+			"/^(.*?), (\d{4})\. (.*?), Palaeontologia Electronica Vol\. (\d+), Issue (\d+); ([\dA-Z]+):(\d+)p, [\dA-Za-z]+; ([^\s]*)\$/u",
+			$citation,
 			$matches
 		)) {
 			$this->authors = $processauthors($matches[1]);
@@ -2320,7 +2320,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			return true;
 		}
 		else if(preg_match(
-			"/^(.*?) (\d{4})\. (.*?). Palaeontologia Electronica Vol\. (\d+), Issue (\d+); ([\dA-Z]+):(\d+)p; ([^\s]*)\$/u",			
+			"/^(.*?) (\d{4})\. (.*?). Palaeontologia Electronica Vol\. (\d+), Issue (\d+); ([\dA-Z]+):(\d+)p; ([^\s]*)\$/u",
 			$citation,
 			$matches
 		)) {
@@ -2366,7 +2366,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	private function trygoogle() {
 		// find title
-		($title = $this->findtitle_specifics()) or 
+		($title = $this->findtitle_specifics()) or
 			($title = $this->findtitle_pdfcontent());
 		if($title === false) return false;
 		// show title so it's possible to confirm it's right
@@ -2400,7 +2400,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				),
 				'process' => array(
 					'o' => function() use(&$url) {
-						exec_catch("open '" . str_replace("'", "\'", $url) . "'"); 
+						exec_catch("open '" . str_replace("'", "\'", $url) . "'");
 					},
 				),
 			));
@@ -2416,12 +2416,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$this->doi = trim($doi);
 						return $this->expanddoi();
 					}
-				case 'q': 
+				case 'q':
 					return false;
-				case 'n': 
+				case 'n':
 					break;
-				case 'r': 
-					$this->adddata_return = true; 
+				case 'r':
+					$this->adddata_return = true;
 					return false;
 			}
 		}
@@ -2457,7 +2457,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$name = $this->name;
 		$that = $this;
 		$doi = $this->menu(array(
-			'head' => 'If this file has a DOI or AMNH handle, please enter it.', 
+			'head' => 'If this file has a DOI or AMNH handle, please enter it.',
 			'options' => array(
 				'c' => "continue to direct input of data",
 				'o' => "open the file",
@@ -2488,7 +2488,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				while(true) {
 					$handle = $this->getline();
 					if($handle === 'q') break 2;
-					if($this->p->has($handle)) 
+					if($this->p->has($handle))
 						break;
 					else
 						echo 'Could not find handle' . PHP_EOL;
@@ -2531,10 +2531,10 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		// apply global setting
 		if(!$this->p->addmanual)
 			return false;
-		echo "Please enter data for this file" . PHP_EOL . 
-		"'q' in any place: quit and move to the next file" . PHP_EOL . 
-		"'s': save the file" . PHP_EOL . 
-		"'e': edit all information" . PHP_EOL . 
+		echo "Please enter data for this file" . PHP_EOL .
+		"'q' in any place: quit and move to the next file" . PHP_EOL .
+		"'s': save the file" . PHP_EOL .
+		"'e': edit all information" . PHP_EOL .
 		"'d': try entering a DOI again" . PHP_EOL .
 		"'o': open the file" . PHP_EOL;
 		$params = array("authors", "year", "title", "journal", "volume", "issue", "start", "end", "pages", "url", "bookauthors", "booktitle", "publisher", "bookpages", "isbn", "location", "parturl");
@@ -2727,11 +2727,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$cmd = 'open \'' . BURSTPATH . '/' . $this->name . '\'';
 		exec_catch($cmd);
 		makemenu(array('q' => 'quit',
-			'c' => 'continue with the next file'), 
+			'c' => 'continue with the next file'),
 			'Enter file names and page ranges');
 		while(true) {
 			switch($name = $this->getline('File name: ')) {
-				case 'c': 
+				case 'c':
 					$cmd = 'mv -n \'' . BURSTPATH . '/' . $this->name . '\' \'' . BURSTPATH . '/Old/' . $this->name . '\'';
 					if(!exec_catch($cmd))
 						echo 'Error moving file ' . $this->name . ' to Old' . PHP_EOL;
@@ -2777,7 +2777,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		switch($cmd) {
 			case 'y':
 				return exec_catch("mv $tmppath {$this->path()}");
-			case 'n': 
+			case 'n':
 				exec_catch('rm ' . $tmppath);
 				return false;
 		}
@@ -2837,7 +2837,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return $title;
 	}
 	function openurl() {
-		if($this->url) 
+		if($this->url)
 			$url = $this->url;
 		else if($this->doi)
 			$url = 'http://dx.doi.org.ezp-prod1.hul.harvard.edu/' . $this->doi;
@@ -2899,9 +2899,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		// generate boundary hash
 		$boundary_hash = md5(date('r', time()));
-		$headers = "From: " . FROMADDRESS . 
+		$headers = "From: " . FROMADDRESS .
 			"\r\nReply-To: " . FROMADDRESS .
-			"\r\nContent-Type: multipart/mixed; boundary=\"PHP-mixed-" . 
+			"\r\nContent-Type: multipart/mixed; boundary=\"PHP-mixed-" .
 			$boundary_hash . "\"";
 		$message = '
 --PHP-mixed-' . $boundary_hash . '
@@ -2916,9 +2916,9 @@ Content-Transfer-Encoding: 7bit
 --PHP-alt-' . $boundary_hash . '--
 
 --PHP-mixed-' . $boundary_hash . '
-Content-Type: application/zip; name="' . $this->name . '" 
-Content-Transfer-Encoding: base64 
-Content-Disposition: attachment 
+Content-Type: application/zip; name="' . $this->name . '"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment
 
 ' . chunk_split(base64_encode(file_get_contents($this->path(array('type' => 'none'))))) . '
 --PHP-mixed-' . $boundary_hash . '--

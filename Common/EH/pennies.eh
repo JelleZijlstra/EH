@@ -1,11 +1,11 @@
 // CS50 Problem Set 1: pennies
 
-// loop to get days of month. 
+// loop to get days of month.
 // Need complicated condition because we don't have "and"
 $ goin = 1
-while $goin 
+while $goin
 	put 'Days in month: '
-	$ days = getinput: 
+	$ days = getinput:
 	if $days < 28
 		$ goin = 1
 	else

@@ -39,6 +39,7 @@
 "func"		return T_FUNC;
 "endfunc"	return T_ENDFUNC;
 "ret"		return T_RET;
+"null"		return T_NULL;
 "$ "		return T_SET;
 ("//"|#).*[;\n]	; /* Ignore comment */
 [;\n]+		return T_SEPARATOR;

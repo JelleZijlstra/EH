@@ -117,11 +117,11 @@ ehretval_t execute(ehnode_t *node) {
 		return ret;
 	//printf("Executing nodetype %d\n", node->type);
 	switch(node->type) {
-		case idnode_e:
+		case stringnode_e:
 			ret.type = string_e;
 			ret.strval = node->id.name;
 			break;
-		case connode_e:
+		case intnode_e:
 			ret.type = int_e;
 			ret.intval = node->con.value;
 			break;
@@ -129,16 +129,21 @@ ehretval_t execute(ehnode_t *node) {
 			ret.type = type_e;
 			ret.typeval = node->typev;
 			break;
+		case nullnode_e:
+			break;
 		case opnode_e:
 			//printf("Executing opcode: %d\n", node->op.op);
 			switch(node->op.op) {
 				case T_ECHO:
 					switch(node->op.paras[0]->type) {
-						case idnode_e:
+						case stringnode_e:
 							printf("%s\n", node->op.paras[0]->id.name);
 							break;
-						case connode_e:
+						case intnode_e:
 							printf("%d\n", node->op.paras[0]->con.value);
+							break;
+						case nullnode_e:
+							printf("(null)\n");
 							break;
 						case opnode_e:
 							ret = execute(node->op.paras[0]);
@@ -286,6 +291,9 @@ ehretval_t execute(ehnode_t *node) {
 								case string_e:
 									ret.intval = eh_strtoi(ret.strval);
 									break;
+								case null_e:
+									ret.intval = 0;
+									break;
 								default:
 									fprintf(stderr, "Unsupported typecast\n");
 									break;
@@ -299,6 +307,11 @@ ehretval_t execute(ehnode_t *node) {
 									break;
 								case string_e:
 									// nothing to do
+									break;
+								case null_e:
+									// casting null to a string gives an empty string
+									ret.strval = Malloc(1);
+									ret.strval[0] = '\0';
 									break;
 								default:
 									fprintf(stderr, "Unsupported typecast\n");
@@ -800,6 +813,8 @@ static void array_insert(ehvar_t **array, ehnode_t *in, int place) {
 			break;
 		case array_e:
 			member->arrval = var.arrval;
+			break;
+		case null_e:
 			break;
 		default:
 			fprintf(stderr, "Unsupported type for an array member\n");

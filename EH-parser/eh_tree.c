@@ -5,10 +5,10 @@ void free_node(ehnode_t *in) {
 		return;
 	int i;
 	switch(in->type) {
-		case idnode_e:
+		case stringnode_e:
 			free(in->id.name);
 			break;
-		case connode_e:
+		case intnode_e:
 			// nothing to free
 			break;
 		case opnode_e:
@@ -23,7 +23,7 @@ ehnode_t *get_constant(int value) {
 	ehnode_t *ret;
 	ret = Malloc(sizeof(ehnode_t));
 
-	ret->type = connode_e;
+	ret->type = intnode_e;
 	ret->con.value = value;
 	
 	//printf("Returning constant %d\n", ret->con.value);
@@ -33,10 +33,18 @@ ehnode_t *get_identifier(char *value) {
 	ehnode_t *ret;
 	ret = Malloc(sizeof(ehnode_t));
 	
-	ret->type = idnode_e;
+	ret->type = stringnode_e;
 	ret->id.name = value;
 	
 	//printf("Returning identifier %s\n", ret->id.name);
+	return ret;
+}
+ehnode_t *get_null(void) {
+	ehnode_t *ret;
+	ret = Malloc(sizeof(ehnode_t));
+	
+	ret->type = nullnode_e;
+	
 	return ret;
 }
 ehnode_t *get_type(type_enum value) {
@@ -98,12 +106,12 @@ void print_tree(ehnode_t *in, int n) {
 	int i;
 
 	switch(in->type) {
-		case idnode_e:
-			printntabs(n); printf("Type: idnode\n");
+		case stringnode_e:
+			printntabs(n); printf("Type: stringnode\n");
 			printntabs(n); printf("Value: %s\n", in->id.name);
 			break;
-		case connode_e:
-			printntabs(n); printf("Type: connode\n");
+		case intnode_e:
+			printntabs(n); printf("Type: intnode\n");
 			printntabs(n); printf("Value: %d\n", in->con.value);
 			break;
 		case opnode_e:

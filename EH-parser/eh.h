@@ -13,8 +13,9 @@
 #include <errno.h>
 
 typedef enum {
-	idnode_e,
-	connode_e,
+	nullnode_e,
+	stringnode_e,
+	intnode_e,
 	opnode_e,
 	typenode_e
 } node_enum;
@@ -122,6 +123,7 @@ void *Calloc(size_t count, size_t size);
 void free_node(ehnode_t *in);
 ehnode_t *get_constant(int value);
 ehnode_t *get_identifier(char *value);
+ehnode_t *get_null(void);
 ehnode_t *get_type(type_enum value);
 ehnode_t *operate(int operations, int noperations, ...);
 ehretval_t execute(ehnode_t *node);

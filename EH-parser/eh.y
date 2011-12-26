@@ -27,6 +27,7 @@ extern FILE *yyin;
 %token T_SEPARATOR
 %token T_SET
 %token T_CALL
+%token T_NULL
 %token T_ARRAYMEMBER
 %token T_EXPRESSION
 %token <sValue> T_VARIABLE
@@ -96,6 +97,7 @@ statement:
 expression:
 	T_INTEGER				{ $$ = get_constant($1); }
 	| T_STRING				{ $$ = get_identifier($1); }
+	| T_NULL				{ $$ = get_null(); }
 	| '(' expression ')'	{ $$ = $2; }
 	| '$' bareword			{ $$ = operate('$', 1, $2); }
 	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }

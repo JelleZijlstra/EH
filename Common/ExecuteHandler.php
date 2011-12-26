@@ -274,8 +274,7 @@ abstract class ExecuteHandler {
 			else {
 				$funcname = $matches[1];
 				$vars = preg_split("/,\s+/u", $matches[2]);
-				$func = $this->funcs[$funcname];
-				if(!$func) {
+				if(!isset($this->funcs[$funcname])) {
 					// use inbuilt PHP functions
 					// TODO: add argcount checking here
 					if(in_array($funcname, self::$php_funcs)) {
@@ -288,6 +287,7 @@ abstract class ExecuteHandler {
 					$this->evaluate_ret = self::EVALUATE_ERROR;
 					return NULL;
 				}
+				$func = $this->funcs[$funcname];
 				$argcount = count($vars);
 				if($argcount != $func['argcount']) {
 					echo "Error: incorrect variable number for function  $funcname (expected {$func['argcount']}, got $argcount)\n";
@@ -515,8 +515,8 @@ abstract class ExecuteHandler {
 		if($in === NULL) {
 			$in = $this->curr('pcres');
 		}
-		// handle empty commands (do nothing)
-		if($in === '') {
+		// handle empty commands and ehi-style comments (do nothing)
+		if($in === '' or $in[0] === '#') {
 			return self::EXECUTE_NEXT;
 		}
 		// divide input into keyword and argument

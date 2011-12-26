@@ -1,7 +1,8 @@
+#!/usr/bin/ehi
 // CS50 Problem Set 1: greedy
 $ money = 0
 while $money <= 0
-	echo How much change is owed?
+	echo 'How much change is owed?'
 	$ money = getinput: 10
 endwhile
 

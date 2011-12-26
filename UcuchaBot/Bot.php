@@ -77,7 +77,7 @@ class Bot extends Snoopy {
 	}
 	/* Bot library */
 	private function login() {
-		require_once(BPATH . '/UcuchaBot/onkiro.php');
+		require_once(BPATH . '/UcuchaBot/data/onkiro.php');
 		// Set POST variables to retrieve a token
 		$submit_vars["format"] = "json";
 		$submit_vars["action"] = "login";
@@ -324,7 +324,7 @@ class Bot extends Snoopy {
 	}
 	public function do_mp_notice() {
 		// GET PAGES TO HANDLE
-		$datefile = 'do_tfa_notice_mp.txt';
+		$datefile = BPATH . '/UcuchaBot/data/do_tfa_notice_mp.txt';
 		$currdate = file_get_contents($datefile); // stored date of last TFA
 		$date = new DateTime($currdate);
 		$pages = array(); // pages that we are handling

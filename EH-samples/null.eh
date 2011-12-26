@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-# Illustrates the use of null variables
+# Illustrates the use of null variables and the printvar: library function
 $ bar = null
 echo $bar
 $ foo = ['foo', null, 'test']
@@ -10,3 +10,5 @@ echo $baz
 # Casting null to an int gives 0
 $ ban = @int $bar
 echo $ban
+call printvar: $ban
+call printvar: $foo

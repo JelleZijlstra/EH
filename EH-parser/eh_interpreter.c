@@ -219,15 +219,15 @@ ehretval_t execute(ehnode_t *node) {
 								fprintf(stderr, "Bitwise acess to an integer must use an integer identifier\n");
 								return ret;
 							}
-							if(operand2.intval >= sizeof(int)) {
+							if(operand2.intval >= sizeof(int) * 8) {
 								fprintf(stderr, "Identifier too large\n");
 								return ret;
 							}
 							// get mask
-							i = 1 << (sizeof(int) - 1);
+							i = 1 << (sizeof(int) * 8 - 1);
 							i >>= operand2.intval;
 							// apply mask
-							ret.intval = (operand1.intval & i) >> (sizeof(int)  - 1 - i);
+							ret.intval = (operand1.intval & i) >> (sizeof(int) * 8 - 1 - i);
 							break;
 						case string_e:
 							// "array" access to a string returns an integer representing the nth character.
@@ -402,12 +402,12 @@ ehretval_t execute(ehnode_t *node) {
 									fprintf(stderr, "Bitwise acess to an integer must use an integer identifier\n");
 									return ret;
 								}
-								if(operand2.intval >= sizeof(int)) {
+								if(operand2.intval >= sizeof(int) * 8) {
 									fprintf(stderr, "Identifier too large\n");
 									return ret;
 								}
 								// get mask
-								i = (1 << (sizeof(int)-1)) >> operand2.intval;
+								i = (1 << (sizeof(int) * 8 - 1)) >> operand2.intval;
 								if(xtobool(ret))
 									var->intval |= i;
 								else {
@@ -690,7 +690,7 @@ static char *eh_itostr(int in) {
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and null terminator) should suffice for the result string
 	buffer = Malloc(12);
 	sprintf(buffer, "%d", in);
-	
+
 	return buffer;
 }
 static bool xtobool(ehretval_t in) {

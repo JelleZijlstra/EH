@@ -45,5 +45,7 @@ for($i = 1; $i < COUNT; $i++)
 $afternull = microtime(true);
 echo "Time for program that does nothing: " . ($afternull - $beforenull) . PHP_EOL;
 
+shell_exec("rm input");
+
 exit(0);
 ?>

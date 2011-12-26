@@ -12,7 +12,7 @@ else switch($argv[1]) {
 		$taxonlist->cli(); break;
 	case 'backup':
 		$date = new DateTime();
-		exec_catch('cp ' . __DIR__ . '/list.csv' . ' ' . BPATH . '/List/Backup/list.csv.' . $date->format('YmdHis'));
+		exec_catch('cp ' . __DIR__ . '/data/list.csv' . ' ' . BPATH . '/List/Backup/list.csv.' . $date->format('YmdHis'));
 		break;
 	case 'revert': revert($list); break;
 	// edit all comments

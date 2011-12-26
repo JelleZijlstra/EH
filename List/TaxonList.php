@@ -178,7 +178,7 @@ class TaxonList extends FileList {
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		global $csvlist;
 		$csvlist->citetype = 'wp';
-		$this->wiki_out[$paras['taxon']] = fopen(BPATH . '/List/Output/' . $paras['taxon'] . '.mw', "w");
+		$this->wiki_out[$paras['taxon']] = fopen(BPATH . '/List/data/' . $paras['taxon'] . '.mw', "w");
 		fwrite($this->wiki_out[$paras['taxon']], self::$start_wiki);
 		if($paras['taxon'] === 'list') {
 			$this->call_root('completedata');
@@ -195,7 +195,7 @@ class TaxonList extends FileList {
 		require_once(BPATH . '/UcuchaBot/Bot.php');
 		$bot = getbot();
 		// get pagename
-		foreach(glob(BPATH. "/List/Output/*.mw") as $file) {
+		foreach(glob(BPATH. "/List/data/*.mw") as $file) {
 			$filename = preg_replace("/.*\//u", "", $file);
 			if($filename === 'list.mw')
 				$pagename = 'User:Ucucha/List_of_mammals';

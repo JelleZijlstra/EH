@@ -19,3 +19,6 @@ $ baz = 1
 echo $baz -> 0
 # prints 1
 echo $baz -> 31
+echo count $baz
+echo count ($bar -> 3)
+echo count $bar

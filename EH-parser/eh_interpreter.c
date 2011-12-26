@@ -29,6 +29,7 @@ static void array_insert(ehvar_t **array, ehnode_t *in, int place);
 static void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
 static ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
 static ehretval_t array_get(ehvar_t **array, ehretval_t index);
+static int array_count(ehvar_t **array);
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
 #define HASH_INITVAL 234092
@@ -510,6 +511,24 @@ ehretval_t execute(ehnode_t *node) {
 				case T_RET:
 					returning = true;
 					return execute(node->op.paras[0]);
+				case T_COUNT:
+					operand1 = execute(node->op.paras[0]);
+					ret.type = int_e;
+					switch(operand1.type) {
+						case int_e:
+							ret.intval = sizeof(int) * 8;
+							break;
+						case string_e:
+							ret.intval = strlen(operand1.strval);
+							break;
+						case array_e:
+							ret.intval = array_count(operand1.arrval);
+							break;
+						case null_e:
+							ret.intval = 0;
+							break;
+					}
+					return ret;
 				case T_FUNC: // function definition
 					name = node->op.paras[0]->id.name;
 					//printf("Defining function %s with %d paras\n", node->op.paras[0]->id.name, node->op.nparas);
@@ -878,6 +897,20 @@ static ehretval_t array_get(ehvar_t **array, ehretval_t index) {
 		SETRETFROMVAR(curr);
 	}
 	return ret;
+}
+static int array_count(ehvar_t **array) {
+	// count the members of an array
+	ehvar_t *curr;
+	int i, count = 0;
+
+	for(i = 0; i < VARTABLE_S; i++) {
+		curr = array[i];
+		while(curr != NULL) {
+			count++;
+			curr = curr->next;
+		}
+	}
+	return count;
 }
 
 /* Hash function */

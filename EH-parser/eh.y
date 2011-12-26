@@ -37,8 +37,8 @@ extern FILE *yyin;
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '+' '-'
 %left '*' '/'
-%nonassoc '(' ')'
 %nonassoc '[' ']'
+%nonassoc '(' ')'
 
 %type<ehNode> statement expression statement_list bareword arglist parglist arraylist arraymember expressionwrap
 %%
@@ -125,6 +125,7 @@ expression:
 	| expression T_ARROW expression
 							{ $$ = operate(T_ARROW, 2, $1, $3); }
 	| '[' arraylist ']'		{ $$ = operate('[', 1, $2); }
+	| T_COUNT expression	{ $$ = operate(T_COUNT, 1, $2); }
 	;
 
 bareword:

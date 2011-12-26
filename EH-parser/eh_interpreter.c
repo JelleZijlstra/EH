@@ -45,16 +45,20 @@ static bool xtobool(ehretval_t in);
 	operand1 = execute(node->op.paras[0]); \
 	operand2 = execute(node->op.paras[1]); \
 	if(IS_INT(operand1) && IS_INT(operand2)) { \
+		ret.type = int_e; \
 		ret.intval = (operand1.intval operator operand2.intval); \
 	} \
 	else if(IS_STRING(operand1) && IS_STRING(operand2)) { \
+		ret.type = int_e; \
 		ret.intval = (eh_strtoi(operand1.strval) operator eh_strtoi(operand2.strval)); \
 	} \
 	else if(IS_STRING(operand1) && IS_INT(operand2)) { \
+		ret.type = int_e; \
 		i = eh_strtoi(operand1.strval); \
 		ret.intval = (i operator operand2.intval); \
 	} \
 	else if(IS_INT(operand1) && IS_STRING(operand2)) { \
+		ret.type = int_e; \
 		i = eh_strtoi(operand2.strval); \
 		ret.intval = (i operator operand1.intval); \
 	} \
@@ -63,17 +67,17 @@ static bool xtobool(ehretval_t in);
 	} \
 	break;
 
-#define SETRETFROMVAR(var) ret.type = var->type; switch(ret.type) { \
+#define SETRETFROMVAR(var) { ret.type = var->type; switch(ret.type) { \
 	case int_e: ret.intval = var->intval; break; \
 	case string_e: ret.strval = var->strval; break; \
 	case array_e: ret.arrval = var->arrval; break; \
-}
+} }
 
-#define SETVARFROMRET(var) var->type = ret.type; switch(ret.type) { \
+#define SETVARFROMRET(var) { var->type = ret.type; switch(ret.type) { \
 	case int_e: var->intval = ret.intval; break; \
 	case string_e: var->strval = ret.strval; break; \
 	case array_e: var->arrval = ret.arrval; break; \
-}
+} }
 
 // library functions supported by ehi
 ehlibfunc_t libfuncs[] = {
@@ -107,8 +111,7 @@ ehretval_t execute(ehnode_t *node) {
 	char *name;
 	ehretval_t ret, operand1, operand2;
 	// default
-	ret.type = int_e;
-	ret.intval = 0;
+	ret.type = null_e;
 
 	if(node == NULL)
 		return ret;
@@ -119,6 +122,7 @@ ehretval_t execute(ehnode_t *node) {
 			ret.strval = node->id.name;
 			break;
 		case connode_e:
+			ret.type = int_e;
 			ret.intval = node->con.value;
 			break;
 		case typenode_e:
@@ -229,6 +233,7 @@ ehretval_t execute(ehnode_t *node) {
 							i >>= operand2.intval;
 							// apply mask
 							ret.intval = (operand1.intval & i) >> (sizeof(int) * 8 - 1 - i);
+							ret.type = int_e;
 							break;
 						case string_e:
 							// "array" access to a string returns an integer representing the nth character.
@@ -244,6 +249,7 @@ ehretval_t execute(ehnode_t *node) {
 							}
 							// get the nth character
 							ret.intval = operand1.strval[operand2.intval];
+							ret.type = int_e;
 							break;
 						case array_e:
 							// array access to an array works as expected.
@@ -310,6 +316,7 @@ ehretval_t execute(ehnode_t *node) {
 				case '=':
 					operand1 = execute(node->op.paras[0]);
 					operand2 = execute(node->op.paras[1]);
+					ret.type = int_e;
 					if(IS_INT(operand1) && IS_INT(operand2)) {
 						ret.intval = (operand1.intval == operand2.intval);
 					}
@@ -331,12 +338,14 @@ ehretval_t execute(ehnode_t *node) {
 					operand2 = execute(node->op.paras[1]);
 					if(IS_INT(operand1) && IS_INT(operand2)) {
 						ret.intval = (operand1.intval == operand2.intval);
+						ret.type = int_e;
 					}
 					else if(IS_STRING(operand1) && IS_STRING(operand2)) {
 						ret.intval = !strcmp(operand1.strval, operand2.strval);
+						ret.type = int_e;
 					}
 					else {
-						// do nothing. Strict comparison between different types should return @int 0, which is the default return value.
+						// do nothing. Strict comparison between different types should return null, which is the default return value.
 					}
 					break;					
 				EH_INT_CASE('>', <)
@@ -348,6 +357,7 @@ ehretval_t execute(ehnode_t *node) {
 				case '+':
 					operand1 = execute(node->op.paras[0]);
 					operand2 = execute(node->op.paras[1]);
+					ret.type = int_e;
 					if(IS_INT(operand1) && IS_INT(operand2)) {
 						ret.intval = (operand1.intval + operand2.intval);
 					}
@@ -457,7 +467,7 @@ ehretval_t execute(ehnode_t *node) {
 					SETRETFROMVAR(var);
 					break;
 				case T_CALL: // call: execute argument and discard it
-					ret = execute(node->op.paras[0]);
+					execute(node->op.paras[0]);
 					break;
 				case ':': // function call
 					name = node->op.paras[0]->id.name;

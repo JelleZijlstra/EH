@@ -71,6 +71,8 @@ statement:
 							{ $$ = operate(T_ECHO, 1, $2); }
 	| T_SET bareword '=' expression T_SEPARATOR
 							{ $$ = operate(T_SET, 2, $2, $4); }
+	| T_SET bareword T_ARROW expression '=' expression T_SEPARATOR
+							{ $$ = operate(T_SET, 3, $2, $4, $6); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = operate(T_IF, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_ENDIF T_SEPARATOR

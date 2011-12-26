@@ -26,6 +26,8 @@ static void list_variables(void);
 static bool insert_function(ehfunc_t *func);
 static ehfunc_t *get_function(char *name);
 static void array_insert(ehvar_t **array, ehnode_t *in, int place);
+static void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
+static ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
 static ehretval_t array_get(ehvar_t **array, ehretval_t index);
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
@@ -35,6 +37,7 @@ static unsigned int hash(char *data, int scope);
 // type casting
 static int eh_strtoi(char *in);
 static char *eh_itostr(int in);
+static bool xtobool(ehretval_t in);
 
 // macro for interpreter behavior
 #define EH_INT_CASE(token, operator) case token: \
@@ -141,6 +144,11 @@ ehretval_t execute(ehnode_t *node) {
 								case int_e:
 									printf("%d\n", ret.intval);
 									break;
+								case null_e:
+									printf("(null)\n");
+									break;
+								default:
+									fprintf(stderr, "Cannot print this type\n");
 							}
 							break;
 						default:
@@ -224,7 +232,7 @@ ehretval_t execute(ehnode_t *node) {
 						case string_e:
 							// "array" access to a string returns an integer representing the nth character.
 							// In the future, perhaps replace this with a char datatype or with a "shortstring" datatype representing strings up to 3 or even 4 characters long
-							if(operand2.type != string_e) {
+							if(operand2.type != int_e) {
 								fprintf(stderr, "Character acess to a string must use an integer identifier\n");
 								return ret;
 							}
@@ -368,15 +376,75 @@ ehretval_t execute(ehnode_t *node) {
 				case T_SET:
 					name = node->op.paras[0]->id.name;
 					var = get_variable(name, scope);
-					if(var == NULL) {
-						var = Malloc(sizeof(ehvar_t));
-						var->name = name;
-						// only supporting integer variables at present
-						var->scope = scope;
-						insert_variable(var);
+					if(node->op.nparas == 2) {
+						// simple variable setting
+						if(var == NULL) {
+							var = Malloc(sizeof(ehvar_t));
+							var->name = name;
+							// only supporting integer variables at present
+							var->scope = scope;
+							insert_variable(var);
+						}
+						ret = execute(node->op.paras[1]);
+						SETVARFROMRET(var);
 					}
-					ret = execute(node->op.paras[1]);
-					SETVARFROMRET(var);
+					else {
+						// array member setting
+						if(var == NULL) {
+							fprintf(stderr, "Cannot set member of null variable\n");
+							return ret;
+						}
+						ret = execute(node->op.paras[2]);
+						operand2 = execute(node->op.paras[1]);
+						switch(var->type) {
+							case int_e:
+								if(operand2.type != int_e) {
+									fprintf(stderr, "Bitwise acess to an integer must use an integer identifier\n");
+									return ret;
+								}
+								if(operand2.intval >= sizeof(int)) {
+									fprintf(stderr, "Identifier too large\n");
+									return ret;
+								}
+								// get mask
+								i = (1 << (sizeof(int)-1)) >> operand2.intval;
+								if(xtobool(ret))
+									var->intval |= i;
+								else {
+									i = ~i;
+									var->intval &= i;
+								}
+								break;
+							case string_e:
+								if(operand2.type != int_e) {
+									fprintf(stderr, "Character acess to a string must use an integer identifier\n");
+									return ret;
+								}
+								if(ret.type != int_e) {
+									fprintf(stderr, "Character access to a string must use an integer to set\n");
+								}
+								count = strlen(var->strval);
+								if(operand2.intval >= count) {
+									fprintf(stderr, "Identifier too large\n");
+									return ret;							
+								}
+								// get the nth character
+								var->strval[operand2.intval] = ret.intval;
+								break;
+							case array_e:
+								;
+								ehvar_t *member = array_getmember(var->arrval, operand2);
+								if(member == NULL)
+									array_insert_retval(var->arrval, operand2, ret);
+								else {
+									SETVARFROMRET(member);
+								}
+								break;
+							default:
+								fprintf(stderr, "Cannot set member of variable of this type\n");
+								break;
+						}
+					}
 					break;
 				case '$': // variable dereference
 					name = node->op.paras[0]->id.name;
@@ -625,6 +693,27 @@ static char *eh_itostr(int in) {
 	
 	return buffer;
 }
+static bool xtobool(ehretval_t in) {
+	// convert an arbitrary variable to a bool
+	switch(in.type) {
+		case int_e:
+			if(in.intval == 0)
+				return false;
+			else
+				return true;
+		case string_e:
+			if(strlen(in.strval) == 0)
+				return false;
+			else
+				return true;
+		case array_e:
+			// ultimately, empty arrays should return false
+			return true;
+		default:
+			// other types are always false
+			return false;
+	}
+}
 /*
  * Arrays
  */
@@ -719,8 +808,32 @@ static void array_insert(ehvar_t **array, ehnode_t *in, int place) {
 	*currptr = member;
 	return;
 }
-static ehretval_t array_get(ehvar_t **array, ehretval_t index) {
-	ehretval_t ret;
+static void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) {
+	// Inserts a member into an array. Assumes that the member is not yet present in the array.
+	ehvar_t *new;
+	unsigned int vhash;
+
+	new = Malloc(sizeof(ehvar_t));
+	new->indextype = index.type;
+	switch(index.type) {
+		case int_e:
+			vhash = index.intval % VARTABLE_S;
+			new->index = index.intval;
+			break;
+		case string_e:
+			vhash = hash(index.strval, 0);
+			new->name = index.strval;
+			break;
+		default:
+			fprintf(stderr, "Unsupported array index type\n");
+			break;
+	}
+	new->next = array[vhash];
+	array[vhash] = new;
+	SETVARFROMRET(new);
+	return;
+}
+static ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
 	ehvar_t *curr;
 	unsigned int vhash;
 
@@ -739,22 +852,31 @@ static ehretval_t array_get(ehvar_t **array, ehretval_t index) {
 	switch(index.type) {
 		case int_e:
 			while(curr != NULL) {
-				if(curr->indextype == int_e && curr->index == index.intval) {
-					SETRETFROMVAR(curr);
-					return ret;
-				}
+				if(curr->indextype == int_e && curr->index == index.intval)
+					return curr;
+				curr = curr->next;
 			}
 			break;
 		case string_e:
 			while(curr != NULL) {
-				if(curr->indextype == string_e && curr->name == index.strval) {
-					SETRETFROMVAR(curr);
-					return ret;
-				}
+				if(curr->indextype == string_e && !strcmp(curr->name, index.strval))
+					return curr;
+				curr = curr->next;
 			}
 			break;
 	}
-	ret.type = null_e;
+	return NULL;
+}
+static ehretval_t array_get(ehvar_t **array, ehretval_t index) {
+	ehvar_t *curr;
+	ehretval_t ret;
+
+	curr = array_getmember(array, index);
+	if(curr == NULL)
+		ret.type = null_e;
+	else {
+		SETRETFROMVAR(curr);
+	}
 	return ret;
 }
 

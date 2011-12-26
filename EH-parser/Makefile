@@ -8,4 +8,4 @@ compiler: eh_compiler.c
 
 interpreter: eh_interpreter.c
 	${YACCLEX}
-	gcc -O3 lex.yy.c y.tab.c eh_tree.c eh_libfuncs.c eh_interpreter.c -o ehi
+	gcc -ggdb lex.yy.c y.tab.c eh_tree.c eh_libfuncs.c eh_interpreter.c -o ehi

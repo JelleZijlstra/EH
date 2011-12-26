@@ -6,14 +6,14 @@ define('COUNT', 100);
 echo 'Testing EH...' . PHP_EOL;
 $beforeeh = microtime(true);
 for($i = 1; $i < COUNT; $i++)
-	shell_exec("echo '$i' > input; " . BPATH . "/Common/eh.php mccarthy.eh < input > /dev/null");
+	shell_exec("echo '$i' > input; " . BPATH . "/Common/eh.php " . BPATH . "/EH-samples/mccarthy.eh < input > /dev/null");
 $aftereh = microtime(true);
 echo "Time for EH: " . ($aftereh - $beforeeh) . PHP_EOL;
 
 echo 'Testing the EH interpreter...' . PHP_EOL;
 $beforeehi = microtime(true);
 for($i = 1; $i < COUNT; $i++)
-	shell_exec("echo '$i' > input; /usr/bin/ehi mccarthy.eh < input > /dev/null");
+	shell_exec("echo '$i' > input; /usr/bin/ehi " . BPATH . "/EH-samples/mccarthy.eh < input > /dev/null");
 $afterehi = microtime(true);
 echo "Time for C-interpreted EH: " . ($afterehi - $beforeehi) . PHP_EOL;
 

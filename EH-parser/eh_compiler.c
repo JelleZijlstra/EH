@@ -70,6 +70,9 @@ static int compile(ehnode_t *node) {
 						case intnode_e:
 							printf("Constant %d\n", node->op.paras[0]->con.value);
 							return 0;
+						default:
+							fprintf(stderr, "Unsupported argument for echo\n");
+							break;
 					}
 
 					return 0;
@@ -218,6 +221,14 @@ static int compile(ehnode_t *node) {
 					printf("Unexpected opcode %d\n", node->op.op);
 					exit(0);
 			}
+		default:
+			fprintf(stderr, "I'm too stupid a compiler; I can't handle this\n");
+			break;
 	}
 	return 0;
+}
+
+void eh_setarg(int argc, char **argv) {
+	// how should we do this?
+	return;
 }

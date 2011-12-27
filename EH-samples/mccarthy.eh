@@ -1,4 +1,5 @@
-// Implementation of the McCarthy function in EH
+#!/usr/bin/ehi
+# Implementation of the McCarthy function in EH
 func mccarthy: n
 	if $n > 100
 		$ retv = $n - 10
@@ -11,6 +12,15 @@ func mccarthy: n
 	endif
 endfunc
 
-$ input = 5
+# Use $argv[1] if available
+if $argc > 2
+	echo 'Usage: ./mccarthy.eh [n]'
+	ret 1
+endif
+if $argc = 2
+	$ input = @int $argv->1
+else
+	$ input = getinput:
+endif
 $ res = mccarthy: $input
 echo $res

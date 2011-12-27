@@ -41,6 +41,8 @@
 "ret"		return T_RET;
 "null"		return T_NULL;
 "$ "		return T_SET;
+"++"		return T_PLUSPLUS;
+"--"		return T_MINMIN;
 ("//"|#).*[;\n]	; /* Ignore comment */
 [;\n]+		return T_SEPARATOR;
 [a-zA-Z][a-zA-Z0-9]*	{

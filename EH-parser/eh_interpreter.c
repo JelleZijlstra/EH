@@ -400,6 +400,38 @@ ehretval_t execute(ehnode_t *node) {
 						}
 					}
 					break;
+				case T_MINMIN:
+					name = node->op.paras[0]->id.name;
+					var = get_variable(name, scope);
+					if(var == NULL) {
+						fprintf(stderr, "Unknown variable %s\n", name);
+						return ret;
+					}
+					switch(var->type) {
+						case int_e:
+							var->intval--;
+							break;
+						default:
+							fprintf(stderr, "Unsupported type for ++ operator\n");
+							break;
+					}
+					break;
+				case T_PLUSPLUS:
+					name = node->op.paras[0]->id.name;
+					var = get_variable(name, scope);
+					if(var == NULL) {
+						fprintf(stderr, "Unknown variable %s\n", name);
+						return ret;
+					}
+					switch(var->type) {
+						case int_e:
+							var->intval++;
+							break;
+						default:
+							fprintf(stderr, "Unsupported type for ++ operator\n");
+							break;
+					}
+					break;
 				case '$': // variable dereference
 					name = node->op.paras[0]->id.name;
 					var = get_variable(name, scope);

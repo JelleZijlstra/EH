@@ -38,6 +38,7 @@ extern FILE *yyin;
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '+' '-'
 %left '*' '/'
+%left T_PLUSPLUS T_MINMIN
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
@@ -74,6 +75,10 @@ statement:
 							{ $$ = operate(T_SET, 2, $2, $4); }
 	| T_SET bareword T_ARROW expression '=' expression T_SEPARATOR
 							{ $$ = operate(T_SET, 3, $2, $4, $6); }
+	| T_SET bareword T_PLUSPLUS T_SEPARATOR
+							{ $$ = operate(T_PLUSPLUS, 1, $2); }
+	| T_SET bareword T_MINMIN T_SEPARATOR
+							{ $$ = operate(T_MINMIN, 1, $2); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = operate(T_IF, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_ENDIF T_SEPARATOR

@@ -46,7 +46,7 @@ extern FILE *yyin;
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '*' '/'
 %left T_PLUSPLUS T_MINMIN
-%left T_ARROW
+%left T_ARROW '.'
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
@@ -66,7 +66,7 @@ program:
 									exit(0);
 							}
 	| /* NULL */			{
-								fprintf(stderr, "No input");
+								fprintf(stderr, "No input\n");
 								exit(1);
 							}
 	;
@@ -145,6 +145,10 @@ expression:
 							{ $$ = operate('/', 2, $1, $3); }
 	| expression T_ARROW expression
 							{ $$ = operate(T_ARROW, 2, $1, $3); }
+	| expression '.' bareword
+							{ $$ = operate('.', 2, $1, $3); }
+	| expression '.' bareword ':' arglist
+							{ $$ = operate('.', 3, $1, $3, $5); }
 	| '[' arraylist ']'		{ $$ = operate('[', 1, $2); }
 	| T_COUNT expression	{ $$ = operate(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = operate(T_NEW, 1, $2); }

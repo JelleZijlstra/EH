@@ -616,6 +616,20 @@ ehretval_t execute(ehnode_t *node) {
 							break;
 					}
 					return ret;
+				case '.': // object access
+					operand1 = execute(node->op.paras[0]);
+					if(operand1.type != object_e) {
+						fprintf(stderr, "Access to variable that is not an object\n");
+						break;
+					}
+					name = execute(node->op.paras[1]).strval;
+					// TODO: make this support protected
+					ret = class_get(operand1.objval, name);
+					// method; nothing else to do for properties
+					if(node->op.nparas == 3) {
+						// split off a function from ':'?
+					}
+					break;
 				case T_FUNC: // function definition
 					name = node->op.paras[0]->id.name;
 					//printf("Defining function %s with %d paras\n", node->op.paras[0]->id.name, node->op.nparas);
@@ -651,7 +665,6 @@ ehretval_t execute(ehnode_t *node) {
 	}
 	return ret;
 }
-
 /*
  * Variables
  */
@@ -845,6 +858,30 @@ void class_insert(ehclassmember_t **class, ehnode_t *in) {
 	vhash = hash(member->name, 0);	
 	member->next = class[vhash];
 	class[vhash] = member;
+}
+ehclassmember_t *class_getmember(ehclassmember_t **class, char *name) {
+	ehclassmember_t *curr;
+	unsigned int vhash;
+	
+	vhash = hash(name, 0);
+	curr = class[vhash];
+	while(curr != NULL) {
+		if(!strcmp(curr->name, name))
+			break;
+		curr = curr->next;
+	}
+	return curr;
+}
+ehretval_t class_get(ehclassmember_t **class, char *name) {
+	ehclassmember_t *curr;
+	ehretval_t ret;
+	
+	curr = class_getmember(class, name);
+	if(curr == NULL)
+		ret.type = null_e;
+	else
+		ret = curr->value;
+	return ret;
 }
 /*
  * Type casting

@@ -16,4 +16,6 @@ class Foo
 endclass
 $ bar = new Foo
 call printvar: $bar
-echo 3
+echo $bar.bar
+$ foo = $bar.meh
+call printvar: $foo

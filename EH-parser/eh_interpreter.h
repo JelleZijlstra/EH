@@ -30,6 +30,8 @@ int array_count(ehvar_t **array);
 void insert_class(ehclass_t *class);
 ehclass_t *get_class(char *name);
 void class_insert(ehclassmember_t **class, ehnode_t *in);
+ehclassmember_t *class_getmember(ehclassmember_t **class, char *name);
+ehretval_t class_get(ehclassmember_t **class, char *name);
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
 #define HASH_INITVAL 234092

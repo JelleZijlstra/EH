@@ -81,7 +81,7 @@
 "!="		return T_NE;
 "=="		return T_SE;
 "->"		return T_ARROW;
-[@=$+\-*/<>(),:\[\]]	return *yytext; /* Single character tokens */
+[@=$+\-*/<>(),:\[\]\.]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{
 				char message[100];

@@ -7,3 +7,4 @@ meh <public>: @function
 baz <private>: null
 ]
 3
+@function

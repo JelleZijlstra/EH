@@ -10,6 +10,7 @@
 #define VARTABLE_S 1024
 ehvar_t *vartable[VARTABLE_S];
 ehfunc_t *functable[VARTABLE_S];
+ehclass_t *classtable[VARTABLE_S];
 
 // current variable scope
 extern int scope;
@@ -26,6 +27,9 @@ void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
 ehretval_t array_get(ehvar_t **array, ehretval_t index);
 int array_count(ehvar_t **array);
+void insert_class(ehclass_t *class);
+ehclass_t *get_class(char *name);
+void class_insert(ehclassmember_t **class, ehnode_t *in);
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
 #define HASH_INITVAL 234092

@@ -44,6 +44,16 @@
 "endfunc"	return T_ENDFUNC;
 "ret"		return T_RET;
 "null"		return T_NULL;
+"class"		return T_CLASS;
+"endclass"	return T_ENDCLASS;
+"public"	{
+				yylval.vValue = public_e;
+				return T_VISIBILITY;
+			}
+"private"	{
+				yylval.vValue = private_e;
+				return T_VISIBILITY;
+			}
 "true"		{
 				yylval.bValue = true;
 				return T_BOOL;

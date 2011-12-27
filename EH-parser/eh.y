@@ -8,6 +8,7 @@ extern FILE *yyin;
 	char *sValue;
 	int iValue;
 	type_enum tValue;
+	visibility_enum vValue;
 	bool bValue;
 	struct ehnode_t *ehNode;
 };
@@ -30,6 +31,9 @@ extern FILE *yyin;
 %token T_SET
 %token T_CALL
 %token T_NULL
+%token T_CLASS
+%token T_ENDCLASS
+%token <vValue> T_VISIBILITY
 %token T_ARRAYMEMBER
 %token T_EXPRESSION
 %token <sValue> T_VARIABLE
@@ -44,11 +48,11 @@ extern FILE *yyin;
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list bareword arglist parglist arraylist arraymember expressionwrap
+%type<ehNode> statement expression statement_list bareword arglist parglist arraylist arraymember expressionwrap classlist classmember
 %%
 program:
 	statement_list			{
-								//print_tree($1, 0);
+								print_tree($1, 0);
 								eh_init();
 								execute($1);
 								free_node($1);
@@ -103,6 +107,8 @@ statement:
 							{ $$ = operate(T_FUNC, 2, $2, $5); }
 	| T_RET expression T_SEPARATOR
 							{ $$ = operate(T_RET, 1, $2); }
+	| T_CLASS bareword T_SEPARATOR classlist T_ENDCLASS T_SEPARATOR
+							{ $$ = operate(T_CLASS, 2, $2, $4); }
 	;
 
 expression:
@@ -176,6 +182,28 @@ arraymember:
 
 expressionwrap:
 	expression				{ $$ = operate(T_EXPRESSION, 1, $1); }
+	;
+
+classlist:
+	classmember				{ $$ = $1; }
+	| classmember classlist
+							{ $$ = operate(',', 2, $1, $2); }
+	| /* NULL */			{ $$ = 0; }
+	;
+
+classmember:
+	T_VISIBILITY bareword T_SEPARATOR
+							{ /* property declaration */
+								$$ = operate(T_VISIBILITY, 2, get_visibility($1), $2);
+							}
+	| T_VISIBILITY bareword '=' expression T_SEPARATOR
+							{ 
+								$$ = operate(T_VISIBILITY, 3, get_visibility($1), $2, $4); 
+							}
+	| T_VISIBILITY bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
+							{ 
+								$$ = operate(T_VISIBILITY, 4, get_visibility($1), $2, $4, $6); 
+							}
 	;
 %%
 void yyerror(char *s) {

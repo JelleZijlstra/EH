@@ -33,6 +33,7 @@ extern FILE *yyin;
 %token T_NULL
 %token T_CLASS
 %token T_ENDCLASS
+%token T_LVALUE
 %token <vValue> T_VISIBILITY
 %token T_ARRAYMEMBER
 %token T_EXPRESSION
@@ -48,11 +49,11 @@ extern FILE *yyin;
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list bareword arglist parglist arraylist arraymember expressionwrap classlist classmember
+%type<ehNode> statement expression statement_list bareword arglist parglist arraylist arraymember expressionwrap classlist classmember lvalue
 %%
 program:
 	statement_list			{
-								print_tree($1, 0);
+								//print_tree($1, 0);
 								eh_init();
 								execute($1);
 								free_node($1);
@@ -77,18 +78,12 @@ statement:
 							{ $$ = operate(T_ECHO, 1, get_identifier($2)); }
 	| T_ECHO expression T_SEPARATOR
 							{ $$ = operate(T_ECHO, 1, $2); }
-	| T_SET bareword '=' expression T_SEPARATOR
+	| T_SET lvalue '=' expression T_SEPARATOR
 							{ $$ = operate(T_SET, 2, $2, $4); }
-	| T_SET bareword T_ARROW expression '=' expression T_SEPARATOR
-							{ $$ = operate(T_SET, 3, $2, $4, $6); }
-	| T_SET bareword T_PLUSPLUS T_SEPARATOR
+	| T_SET lvalue T_PLUSPLUS T_SEPARATOR
 							{ $$ = operate(T_PLUSPLUS, 1, $2); }
-	| T_SET bareword T_MINMIN T_SEPARATOR
+	| T_SET lvalue T_MINMIN T_SEPARATOR
 							{ $$ = operate(T_MINMIN, 1, $2); }
-	| T_SET bareword T_ARROW expression T_PLUSPLUS T_SEPARATOR
-							{ $$ = operate(T_PLUSPLUS, 2, $2, $4); }
-	| T_SET bareword T_ARROW expression T_MINMIN T_SEPARATOR
-							{ $$ = operate(T_MINMIN, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = operate(T_IF, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
@@ -189,6 +184,12 @@ classlist:
 	| classmember classlist
 							{ $$ = operate(',', 2, $1, $2); }
 	| /* NULL */			{ $$ = 0; }
+	;
+
+lvalue:
+	bareword				{ $$ = operate(T_LVALUE, 1, $1); }
+	| bareword T_ARROW expression
+							{ $$ = operate(T_LVALUE, 2, $1, $3); }
 	;
 
 classmember:

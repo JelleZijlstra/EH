@@ -27,9 +27,10 @@ typedef enum {
 	string_e,
 	int_e,
 	array_e,
-	type_e,
+	type_e, // for internal use with type casting
 	bool_e,
-	func_e
+	func_e, // for internal use with methods; might become a real user type in the future
+	retvalptr_e, // for internal use with lvalues
 } type_enum;
 
 typedef enum {
@@ -78,8 +79,19 @@ typedef struct ehnode_t {
 } ehnode_t;
 
 // EH variable
-typedef struct ehvar_t {
+typedef struct ehretval_t {
 	type_enum type;
+	union {
+		int intval;
+		char *strval;
+		struct ehvar_t **arrval;
+		type_enum typeval;
+		bool boolval;
+		struct ehretval_t *ptrval;
+	};
+} ehretval_t;
+
+typedef struct ehvar_t {
 	// union: either the name of a variable or a numeric array index
 	union {
 		char *name;
@@ -90,25 +102,9 @@ typedef struct ehvar_t {
 		int scope;
 		type_enum indextype;
 	};
-	union {
-		int intval;
-		char *strval;
-		struct ehvar_t **arrval;
-		bool boolval;
-	};
+	struct ehretval_t value;
 	struct ehvar_t *next;
 } ehvar_t;
-
-typedef struct ehretval_t {
-	type_enum type;
-	union {
-		int intval;
-		char *strval;
-		ehvar_t **arrval;
-		type_enum typeval;
-		bool boolval;
-	};
-} ehretval_t;
 
 // type checking
 #define IS_INT(var) (var.type == int_e)

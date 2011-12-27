@@ -57,25 +57,25 @@ static void printvar_retval(ehretval_t in) {
 	return;
 }
 static void printvar_var(ehvar_t *in) {
-	switch(in->type) {
+	switch(in->value.type) {
 		case null_e:
 			printf("null\n");
 			break;
 		case int_e:
-			printf("@int %d\n", in->intval);
+			printf("@int %d\n", in->value.intval);
 			break;
 		case string_e:
-			printf("@string '%s'\n", in->strval);
+			printf("@string '%s'\n", in->value.strval);
 			break;
 		case bool_e:
-			if(in->boolval)
+			if(in->value.boolval)
 				printf("@bool true\n");
 			else
 				printf("@bool false\n");
 			break;
 		case array_e:
 			printf("@array [\n");
-			printvar_array(in->arrval);
+			printvar_array(in->value.arrval);
 			printf("]\n");
 			break;
 		default:

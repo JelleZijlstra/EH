@@ -45,7 +45,7 @@ ehretval_t execute(ehnode_t *node) {
 	ehclass_t *class;
 	int i, count;
 	char *name;
-	ehretval_t ret, operand1, operand2;
+	ehretval_t ret, operand1, operand2, operand3;
 	// default
 	ret.type = null_e;
 
@@ -157,8 +157,8 @@ ehretval_t execute(ehnode_t *node) {
 							insert_variable(var);
 						}
 						// count variable always gets to be an int
-						var->type = int_e;
-						for(var->intval = 0; var->intval < count; var->intval++) {
+						var->value.type = int_e;
+						for(var->value.intval = 0; var->value.intval < count; var->value.intval++) {
 							ret = execute(node->op.paras[2]);
 							if(returning)
 								return ret;
@@ -343,152 +343,155 @@ ehretval_t execute(ehnode_t *node) {
 				EH_INT_CASE('-', -)
 				EH_INT_CASE('*', *)
 				EH_INT_CASE('/', /)
-				case T_SET:
+				case T_LVALUE:
+					/*
+					 * Get an lvalue. This case normally returns an
+					 * ehretval_t of type retvalptr_e: a pointer to an
+					 * ehretval_t that can be modified by the calling code.
+					 *
+					 * Because of special needs of calling code, this case
+					 * actually returns useful data in the second field of the
+					 * ehretval_t struct if its type is null_e. This is going to
+					 * be a pointer to the ehretval_t of the variable referred 
+					 * to, so that T_SET can do its bitwise magic with ints and 
+					 * similar stuff. The second member can also have the 
+					 * special values NULL (if referring to a non-existing 
+					 * variable) and 0x1 (if referring to a member of a non-
+					 * existing variable).
+					 */
 					name = node->op.paras[0]->id.name;
 					var = get_variable(name, scope);
-					if(node->op.nparas == 2) {
-						// simple variable setting
-						if(var == NULL) {
+					switch(node->op.nparas) {
+						case 1:
+							if(var == NULL) {
+								/*
+								 * There is no variable of this name, and it is
+								 * a simple access. In that case, we use NULL
+								 * as the ptrval.
+								 */
+								ret.ptrval = NULL;
+							}
+							else {
+								ret.type = retvalptr_e;
+								ret.ptrval = &var->value;
+							}
+							break;
+						case 2:
+							if(var == NULL) {
+								fprintf(stderr, "Cannot access member of non-existing variable\n");
+								ret.ptrval = (ehretval_t *) 0x1;
+							}
+							else switch(var->value.type) {
+								case array_e:
+									operand1 = execute(node->op.paras[1]);							
+									member = array_getmember(var->value.arrval, operand1);
+									// if there is no member yet, insert it with a null value
+									if(member == NULL) {
+										member = array_insert_retval(var->value.arrval, operand1, ret);
+									}
+									ret.type = retvalptr_e;
+									ret.ptrval = &member->value;
+									break;
+								default:
+									ret.ptrval = &var->value;
+									break;
+							}
+							break;
+					}
+					break;
+				case T_SET:
+					operand1 = execute(node->op.paras[0]);
+					operand2 = execute(node->op.paras[1]);
+					if(operand1.type == retvalptr_e) {
+						// set variable
+						*(operand1.ptrval) = operand2;
+					}
+					else if(operand1.type == null_e) {
+						if(operand1.ptrval == NULL) {
+							// set new variable
 							var = Malloc(sizeof(ehvar_t));
-							var->name = name;
+							var->name = node->op.paras[0]->op.paras[0]->id.name;
 							var->scope = scope;
+							var->value = operand2;
 							insert_variable(var);
 						}
-						ret = execute(node->op.paras[1]);
-						SETVARFROMRET(var);
-					}
-					else {
-						// array member setting
-						if(var == NULL) {
-							fprintf(stderr, "Cannot set member of null variable\n");
-							return ret;
+						else if(operand1.ptrval == (ehretval_t *) 0x1) {
+							// do nothing; T_LVALUE will already have complained
 						}
-						ret = execute(node->op.paras[2]);
-						operand2 = execute(node->op.paras[1]);
-						switch(var->type) {
-							case int_e:
-								if(operand2.type != int_e) {
-									fprintf(stderr, "Bitwise acess to an integer must use an integer identifier\n");
-									return ret;
-								}
-								if(operand2.intval >= sizeof(int) * 8) {
-									fprintf(stderr, "Identifier too large\n");
-									return ret;
-								}
-								// get mask
-								i = (1 << (sizeof(int) * 8 - 1)) >> operand2.intval;
-								if(eh_xtobool(ret).boolval)
-									var->intval |= i;
-								else {
-									i = ~i;
-									var->intval &= i;
-								}
-								break;
-							case string_e:
-								if(operand2.type != int_e) {
-									fprintf(stderr, "Character acess to a string must use an integer identifier\n");
-									return ret;
-								}
-								if(ret.type != int_e) {
-									fprintf(stderr, "Character access to a string must use an integer to set\n");
-								}
-								count = strlen(var->strval);
-								if(operand2.intval >= count) {
-									fprintf(stderr, "Identifier too large\n");
-									return ret;
-								}
-								// get the nth character
-								var->strval[operand2.intval] = ret.intval;
-								break;
-							case array_e:
-								;
-								ehvar_t *member = array_getmember(var->arrval, operand2);
-								if(member == NULL)
-									array_insert_retval(var->arrval, operand2, ret);
-								else {
-									SETVARFROMRET(member);
-								}
-								break;
-							default:
-								fprintf(stderr, "Cannot set member of variable of this type\n");
-								break;
+						else {
+							// operand 1 is the variable modified, operand 2 is the value set to, operand 3 is the index
+							operand3 = execute(node->op.paras[0]->op.paras[1]);
+							switch(operand1.ptrval->type) {
+								case int_e:
+									if(operand3.type != int_e) {
+										fprintf(stderr, "Bitwise acess to an integer must use an integer identifier\n");
+										return ret;
+									}
+									if(operand3.intval >= sizeof(int) * 8) {
+										fprintf(stderr, "Identifier too large\n");
+										return ret;
+									}
+									// get mask
+									i = (1 << (sizeof(int) * 8 - 1)) >> operand3.intval;
+									if(eh_xtobool(operand2).boolval)
+										operand1.ptrval->intval |= i;
+									else {
+										i = ~i;
+										operand1.ptrval->intval &= i;
+									}
+									break;
+								case string_e:
+									if(operand3.type != int_e) {
+										fprintf(stderr, "Character acess to a string must use an integer identifier\n");
+										return ret;
+									}
+									if(operand2.type != int_e) {
+										fprintf(stderr, "Character access to a string must use an integer to set\n");
+										return ret;
+									}
+									count = strlen(operand1.ptrval->strval);
+									if(operand3.intval >= count) {
+										fprintf(stderr, "Identifier too large\n");
+										return ret;
+									}
+									// get the nth character
+									operand1.ptrval->strval[operand3.intval] = operand2.intval;
+									break;
+								default:
+									fprintf(stderr, "Cannot set member of variable of this type\n");
+									break;
+							}
 						}
 					}
 					break;
 				case T_MINMIN:
-					name = node->op.paras[0]->id.name;
-					var = get_variable(name, scope);
-					if(var == NULL) {
-						fprintf(stderr, "Unknown variable %s\n", name);
-						return ret;
+					operand1 = execute(node->op.paras[0]);
+					if(operand1.type == null_e) {
+						fprintf(stderr, "Cannot set with -- operator\n");
+						break;
 					}
-					if(node->op.nparas == 1) {
-						switch(var->type) {
-							case int_e:
-								var->intval--;
-								break;
-							default:
-								fprintf(stderr, "Unsupported type for one-operand -- operator\n");
-								break;
-						}
-					}
-					else {
-						// no minmin/plusplus for other stuff than arrays now
-						if(var->type != array_e) {
-							fprintf(stderr, "Unsupported type for two-operand -- operator\n");
-							return ret;
-						}
-						operand2 = execute(node->op.paras[1]);
-						member = array_getmember(var->arrval, operand2);
-						if(member == NULL) {
-							fprintf(stderr, "Array member does not exist\n");
-						}
-						else switch(member->type) {
-							case int_e:
-								member->intval--;
-								break;
-							default:
-								fprintf(stderr, "Unsupported type for array-member -- operator\n");
-								break;
-						}
+					switch(operand1.ptrval->type) {
+						case int_e:
+							operand1.ptrval->intval--;
+							break;
+						default:
+							fprintf(stderr, "Unsupported type for -- operator\n");
+							break;
 					}
 					break;
 				case T_PLUSPLUS:
-					name = node->op.paras[0]->id.name;
-					var = get_variable(name, scope);
-					if(var == NULL) {
-						fprintf(stderr, "Unknown variable %s\n", name);
-						return ret;
+					operand1 = execute(node->op.paras[0]);
+					if(operand1.type == null_e) {
+						fprintf(stderr, "Cannot set with ++ operator\n");
+						break;
 					}
-					if(node->op.nparas == 1) {
-						switch(var->type) {
-							case int_e:
-								var->intval++;
-								break;
-							default:
-								fprintf(stderr, "Unsupported type for one-operand ++ operator\n");
-								break;
-						}
-					}
-					else {
-						// no minmin/plusplus for other stuff than arrays now
-						if(var->type != array_e) {
-							fprintf(stderr, "Unsupported type for two-operand ++ operator\n");
-							return ret;
-						}
-						operand2 = execute(node->op.paras[1]);
-						member = array_getmember(var->arrval, operand2);
-						if(member == NULL) {
-							fprintf(stderr, "Array member does not exist\n");
-						}
-						else switch(member->type) {
-							case int_e:
-								member->intval++;
-								break;
-							default:
-								fprintf(stderr, "Unsupported type for array-member ++ operator\n");
-								break;
-						}
+					switch(operand1.ptrval->type) {
+						case int_e:
+							operand1.ptrval->intval++;
+							break;
+						default:
+							fprintf(stderr, "Unsupported type for ++ operator\n");
+							break;
 					}
 					break;
 				case '$': // variable dereference
@@ -686,7 +689,7 @@ void list_variables(void) {
 	for(i = 0; i < VARTABLE_S; i++) {
 		tmp = vartable[i];
 		while(tmp != NULL) {
-			printf("Variable %s of type %d at scope %d in hash %d at address %x\n", tmp->name, tmp->type, tmp->scope, i, (int) tmp);
+			printf("Variable %s of type %d at scope %d in hash %d at address %x\n", tmp->name, tmp->value.type, tmp->scope, i, (int) tmp);
 			tmp = tmp->next;
 		}
 	}
@@ -977,24 +980,7 @@ void array_insert(ehvar_t **array, ehnode_t *in, int place) {
 	}
 
 	// create array member
-	member->type = var.type;
-	switch(var.type) {
-		case int_e:
-			member->intval = var.intval;
-			break;
-		case string_e:
-			member->strval = var.strval;
-			break;
-		case array_e:
-			member->arrval = var.arrval;
-			break;
-		case null_e:
-			break;
-		default:
-			fprintf(stderr, "Unsupported type for an array member\n");
-			free(member);
-			return;
-	}
+	member->value = var;
 
 	// insert it into the hashtable
 	ehvar_t **currptr = &array[vhash];
@@ -1029,7 +1015,7 @@ void array_insert(ehvar_t **array, ehnode_t *in, int place) {
 	*currptr = member;
 	return;
 }
-void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) {
+ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) {
 	// Inserts a member into an array. Assumes that the member is not yet present in the array.
 	ehvar_t *new;
 	unsigned int vhash;
@@ -1052,7 +1038,7 @@ void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) {
 	new->next = array[vhash];
 	array[vhash] = new;
 	SETVARFROMRET(new);
-	return;
+	return new;
 }
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
 	ehvar_t *curr;
@@ -1128,20 +1114,20 @@ void eh_setarg(int argc, char **argv) {
 
 	// insert argc
 	argc_v = Malloc(sizeof(ehvar_t));
-	argc_v->type = int_e;
+	argc_v->value.type = int_e;
 	// global scope
 	argc_v->scope = 0;
 	argc_v->name = "argc";
 	// argc - 1, because argv[0] is ehi itself
-	argc_v->intval = argc - 1;
+	argc_v->value.intval = argc - 1;
 	insert_variable(argc_v);
 
 	// insert argv
 	argv_v = Malloc(sizeof(ehvar_t));
-	argv_v->type = array_e;
+	argv_v->value.type = array_e;
 	argv_v->scope = 0;
 	argv_v->name = "argv";
-	argv_v->arrval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	argv_v->value.arrval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
 
 	// all members of argv are strings
 	ret.type = string_e;
@@ -1149,7 +1135,7 @@ void eh_setarg(int argc, char **argv) {
 	for(i = 1; i < argc; i++) {
 		index.intval = i - 1;
 		ret.strval = argv[i];
-		array_insert_retval(argv_v->arrval, index, ret);
+		array_insert_retval(argv_v->value.arrval, index, ret);
 	}
 	insert_variable(argv_v);
 }

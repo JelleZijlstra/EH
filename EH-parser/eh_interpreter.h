@@ -23,7 +23,7 @@ void list_variables(void);
 bool insert_function(ehfunc_t *func);
 ehfunc_t *get_function(char *name);
 void array_insert(ehvar_t **array, ehnode_t *in, int place);
-void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
+ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
 ehretval_t array_get(ehvar_t **array, ehretval_t index);
 int array_count(ehvar_t **array);
@@ -80,21 +80,7 @@ ehretval_t eh_xtobool(ehretval_t in);
 /*
  * Macros for converting between ehretval_t and ehvar_t
  */
-#define SETRETFROMVAR(var) { ret.type = var->type; switch(ret.type) { \
-	case int_e: ret.intval = var->intval; break; \
-	case string_e: ret.strval = var->strval; break; \
-	case array_e: ret.arrval = var->arrval; break; \
-	case bool_e: ret.boolval = var->boolval; break; \
-	case null_e: break; \
-	default: fprintf(stderr, "Unsupported type\n"); break; \
-} }
+#define SETRETFROMVAR(var) { ret = var->value; }
 
-#define SETVARFROMRET(var) { var->type = ret.type; switch(ret.type) { \
-	case int_e: var->intval = ret.intval; break; \
-	case string_e: var->strval = ret.strval; break; \
-	case array_e: var->arrval = ret.arrval; break; \
-	case bool_e: var->boolval = ret.boolval; break; \
-	case null_e: break; \
-	default: fprintf(stderr, "Unsupported type\n"); break; \
-} }
+#define SETVARFROMRET(var) { var->value = ret; }
 

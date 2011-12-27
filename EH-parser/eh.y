@@ -8,10 +8,12 @@ extern FILE *yyin;
 	char *sValue;
 	int iValue;
 	type_enum tValue;
+	bool bValue;
 	struct ehnode_t *ehNode;
 };
 %token <iValue> T_INTEGER
 %token <tValue> T_TYPE
+%token <bValue> T_BOOL
 %token T_IF
 %token T_ELSE
 %token T_ENDIF
@@ -107,6 +109,7 @@ expression:
 	T_INTEGER				{ $$ = get_constant($1); }
 	| T_STRING				{ $$ = get_identifier($1); }
 	| T_NULL				{ $$ = get_null(); }
+	| T_BOOL				{ $$ = get_bool($1); }
 	| '(' expression ')'	{ $$ = $2; }
 	| '$' bareword			{ $$ = operate('$', 1, $2); }
 	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }

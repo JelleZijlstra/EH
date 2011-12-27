@@ -59,6 +59,10 @@ ehretval_t execute(ehnode_t *node) {
 			ret.type = type_e;
 			ret.typeval = node->typev;
 			break;
+		case boolnode_e:
+			ret.type = bool_e;
+			ret.boolval = node->boolv;
+			break;
 		case nullnode_e:
 			break;
 		case opnode_e:
@@ -75,6 +79,12 @@ ehretval_t execute(ehnode_t *node) {
 						case nullnode_e:
 							printf("(null)\n");
 							break;
+						case boolnode_e:
+							if(node->op.paras[0]->boolv)
+								printf("(true)\n");
+							else
+								printf("(false)\n");
+							break;
 						case opnode_e:
 							ret = execute(node->op.paras[0]);
 							switch(ret.type) {
@@ -83,6 +93,12 @@ ehretval_t execute(ehnode_t *node) {
 									break;
 								case int_e:
 									printf("%d\n", ret.intval);
+									break;
+								case bool_e:
+									if(ret.boolval)
+										printf("(true)\n");
+									else
+										printf("(false)\n");
 									break;
 								case null_e:
 									printf("(null)\n");
@@ -209,45 +225,18 @@ ehretval_t execute(ehnode_t *node) {
 					}
 					break;
 				case '@': // type casting
-					ret = execute(node->op.paras[0]);
-					type_enum castto = ret.typeval;
-					ret = execute(node->op.paras[1]);
+					operand1 = execute(node->op.paras[0]);
+					type_enum castto = operand1.typeval;
+					operand2 = execute(node->op.paras[1]);
 					switch(castto) {
 						case int_e:
-							switch(ret.type) {
-								case int_e:
-									// nothing to cast
-									break;
-								case string_e:
-									ret.intval = eh_strtoi(ret.strval);
-									break;
-								case null_e:
-									ret.intval = 0;
-									break;
-								default:
-									fprintf(stderr, "Unsupported typecast\n");
-									break;
-							}
-							ret.type = int_e;
+							ret = eh_xtoi(operand2);
 							break;
 						case string_e:
-							switch(ret.type) {
-								case int_e:
-									ret.strval = eh_itostr(ret.intval);
-									break;
-								case string_e:
-									// nothing to do
-									break;
-								case null_e:
-									// casting null to a string gives an empty string
-									ret.strval = Malloc(1);
-									ret.strval[0] = '\0';
-									break;
-								default:
-									fprintf(stderr, "Unsupported typecast\n");
-									break;
-							}
-							ret.type = string_e;
+							ret = eh_xtostr(operand2);
+							break;
+						case bool_e:
+							ret = eh_xtobool(operand2);
 							break;
 						default:
 							fprintf(stderr, "Unsupported typecast\n");
@@ -259,52 +248,56 @@ ehretval_t execute(ehnode_t *node) {
 				case '=':
 					operand1 = execute(node->op.paras[0]);
 					operand2 = execute(node->op.paras[1]);
-					ret.type = int_e;
+					ret.type = bool_e;
 					if(IS_INT(operand1) && IS_INT(operand2)) {
-						ret.intval = (operand1.intval == operand2.intval);
+						ret.boolval = (operand1.intval == operand2.intval);
 					}
 					else if(IS_STRING(operand1) && IS_STRING(operand2)) {
-						ret.intval = !strcmp(operand1.strval, operand2.strval);
-					}
-					else if(IS_STRING(operand1)) {
-						// type-juggle operand1
-						i = eh_strtoi(operand1.strval);
-						ret.intval = (i == operand2.intval);
+						ret.boolval = !strcmp(operand1.strval, operand2.strval);
 					}
 					else {
-						i = eh_strtoi(operand2.strval);
-						ret.intval = (i == operand1.intval);
+						operand1 = eh_xtoi(operand1);
+						operand2 = eh_xtoi(operand2);
+						if(IS_INT(operand1) && IS_INT(operand2)) {
+							ret.boolval = (operand1.intval == operand2.intval);
+						}
+						else
+							ret.type = null_e;
 					}
 					break;
 				case T_SE:
 					operand1 = execute(node->op.paras[0]);
 					operand2 = execute(node->op.paras[1]);
+					ret.type = bool_e;
 					if(IS_INT(operand1) && IS_INT(operand2)) {
-						ret.intval = (operand1.intval == operand2.intval);
-						ret.type = int_e;
+						ret.boolval = (operand1.intval == operand2.intval);
 					}
 					else if(IS_STRING(operand1) && IS_STRING(operand2)) {
-						ret.intval = !strcmp(operand1.strval, operand2.strval);
-						ret.type = int_e;
+						ret.boolval = !strcmp(operand1.strval, operand2.strval);
+					}
+					else if(IS_BOOL(operand1) && IS_BOOL(operand2)) {
+						ret.boolval = (operand1.boolval == operand2.boolval);
+					}
+					else if(IS_NULL(operand1) && IS_NULL(operand2)) {
+						// null always equals null
+						ret.boolval = true;
 					}
 					else {
+						ret.type = null_e;
 						// do nothing. Strict comparison between different types should return null, which is the default return value.
+						// TODO: array comparison
 					}
 					break;
-				EH_INT_CASE('>', <)
-				EH_INT_CASE('<', <)
-				EH_INT_CASE(T_GE, >=)
-				EH_INT_CASE(T_LE, <=)
-				EH_INT_CASE(T_NE, !=)
+				EH_INTBOOL_CASE('>', <)
+				EH_INTBOOL_CASE('<', <)
+				EH_INTBOOL_CASE(T_GE, >=)
+				EH_INTBOOL_CASE(T_LE, <=)
+				EH_INTBOOL_CASE(T_NE, !=)
 				// doing addition on two strings performs concatenation
 				case '+':
 					operand1 = execute(node->op.paras[0]);
 					operand2 = execute(node->op.paras[1]);
-					ret.type = int_e;
-					if(IS_INT(operand1) && IS_INT(operand2)) {
-						ret.intval = (operand1.intval + operand2.intval);
-					}
-					else if(IS_STRING(operand1) && IS_STRING(operand2)) {
+					if(IS_STRING(operand1) && IS_STRING(operand2)) {
 						// concatenate them
 						ret.type = string_e;
 						size_t len1, len2;
@@ -314,14 +307,13 @@ ehretval_t execute(ehnode_t *node) {
 						strcpy(ret.strval, operand1.strval);
 						strcpy(ret.strval + len1, operand2.strval);
 					}
-					else if(IS_STRING(operand1)) {
-						// type-juggle operand1
-						i = eh_strtoi(operand1.strval);
-						ret.intval = (i + operand2.intval);
-					}
 					else {
-						i = eh_strtoi(operand2.strval);
-						ret.intval = (i + operand1.intval);
+						operand1 = eh_xtoi(operand1);
+						operand2 = eh_xtoi(operand2);
+						if(IS_INT(operand1) && IS_INT(operand2)) {
+							ret.type = int_e;
+							ret.intval = (operand1.intval + operand2.intval);
+						}
 					}
 					break;
 				EH_INT_CASE('-', -)
@@ -335,7 +327,6 @@ ehretval_t execute(ehnode_t *node) {
 						if(var == NULL) {
 							var = Malloc(sizeof(ehvar_t));
 							var->name = name;
-							// only supporting integer variables at present
 							var->scope = scope;
 							insert_variable(var);
 						}
@@ -362,7 +353,7 @@ ehretval_t execute(ehnode_t *node) {
 								}
 								// get mask
 								i = (1 << (sizeof(int) * 8 - 1)) >> operand2.intval;
-								if(xtobool(ret))
+								if(eh_xtobool(ret).boolval)
 									var->intval |= i;
 								else {
 									i = ~i;
@@ -724,16 +715,18 @@ static ehfunc_t *get_function(char *name) {
 /*
  * Type casting
  */
-static int eh_strtoi(char *in) {
-	int ret;
-	ret = strtol(in, NULL, 0);
-	if(ret == 0 && errno == EINVAL)
+static ehretval_t eh_strtoi(char *in) {
+	ehretval_t ret;
+	ret.type = int_e;
+	ret.intval = strtol(in, NULL, 0);
+	if(ret.intval == 0 && errno == EINVAL) {
+		ret.type = null_e;
 		fprintf(stderr, "Unable to perform type juggling\n");
+	}
 	return ret;
 }
 static char *eh_itostr(int in) {
 	char *buffer;
-	int len;
 
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and null terminator) should suffice for the result string
 	buffer = Malloc(12);
@@ -741,26 +734,93 @@ static char *eh_itostr(int in) {
 
 	return buffer;
 }
-static bool xtobool(ehretval_t in) {
+static ehretval_t eh_xtoi(ehretval_t in) {
+	ehretval_t ret;
+	ret.type = int_e;
+	switch(in.type) {
+		case int_e:
+			ret.intval = in.intval;
+			break;
+		case string_e:
+			ret = eh_strtoi(in.strval);
+			break;
+		case bool_e:
+			if(in.boolval)
+				ret.intval = 1;
+			else
+				ret.intval = 0;
+			break;
+		case null_e:
+			ret.intval = 0;
+			break;
+		default:
+			fprintf(stderr, "Unsupported typecast to integer\n");
+			ret.type = null_e;
+			break;
+	}
+	return ret;
+}
+static ehretval_t eh_xtostr(ehretval_t in) {
+	ehretval_t ret;
+	ret.type = string_e;
+	switch(in.type) {
+		case string_e:
+			ret.strval = in.strval;
+			break;
+		case int_e:
+			ret.strval = eh_itostr(in.intval);
+			break;
+		case null_e:
+			// empty string
+			ret.strval = Malloc(1);
+			ret.strval[0] = '\0';
+			break;
+		case bool_e:
+			if(in.boolval) {
+				ret.strval = Malloc(5);
+				strcpy(ret.strval, "true");
+			}
+			else {
+				ret.strval = Malloc(6);
+				strcpy(ret.strval, "false");
+			}
+			break;
+		default:
+			fprintf(stderr, "Unsupported typecast to string\n");
+			ret.type = null_e;
+			break;
+	}
+}
+static ehretval_t eh_xtobool(ehretval_t in) {
+	ehretval_t ret;
+	ret.type = bool_e;
 	// convert an arbitrary variable to a bool
 	switch(in.type) {
 		case int_e:
 			if(in.intval == 0)
-				return false;
+				ret.boolval = false;
 			else
-				return true;
+				ret.boolval = true;
+			break;
 		case string_e:
 			if(strlen(in.strval) == 0)
-				return false;
+				ret.boolval = false;
 			else
-				return true;
+				ret.boolval = true;
+			break;
+		case bool_e:
+			ret.boolval = in.boolval;
+			break;
 		case array_e:
 			// ultimately, empty arrays should return false
-			return true;
+			ret.boolval = true;
+			break;
 		default:
 			// other types are always false
-			return false;
+			ret.boolval = false;
+			break;
 	}
+	return ret;
 }
 /*
  * Arrays

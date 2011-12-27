@@ -26,6 +26,10 @@
 				yylval.tValue = array_e;
 				return T_TYPE;
 			}
+"bool"		{
+				yylval.tValue = bool_e;
+				return T_TYPE;
+			}
 "echo"		return T_ECHO;
 "if"		return T_IF;
 "else"		return T_ELSE;
@@ -40,6 +44,14 @@
 "endfunc"	return T_ENDFUNC;
 "ret"		return T_RET;
 "null"		return T_NULL;
+"true"		{
+				yylval.bValue = true;
+				return T_BOOL;
+			}
+"false"		{
+				yylval.bValue = false;
+				return T_BOOL;
+			}
 "$ "		return T_SET;
 "++"		return T_PLUSPLUS;
 "--"		return T_MINMIN;

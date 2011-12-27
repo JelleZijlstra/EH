@@ -17,7 +17,8 @@ typedef enum {
 	stringnode_e,
 	intnode_e,
 	opnode_e,
-	typenode_e
+	typenode_e,
+	boolnode_e
 } node_enum;
 
 typedef enum {
@@ -25,7 +26,8 @@ typedef enum {
 	string_e,
 	int_e,
 	array_e,
-	type_e
+	type_e,
+	bool_e
 } type_enum;
 
 typedef enum {
@@ -58,6 +60,7 @@ typedef struct ehnode_t {
 		connode_t con;
 		opnode_t op;
 		type_enum typev;
+		bool boolv;
 	};
 } ehnode_t;
 
@@ -78,6 +81,7 @@ typedef struct ehvar_t {
 		int intval;
 		char *strval;
 		struct ehvar_t **arrval;
+		bool boolval;
 	};
 	struct ehvar_t *next;
 } ehvar_t;
@@ -89,6 +93,7 @@ typedef struct ehretval_t {
 		char *strval;
 		ehvar_t **arrval;
 		type_enum typeval;
+		bool boolval;
 	};
 } ehretval_t;
 
@@ -96,6 +101,8 @@ typedef struct ehretval_t {
 #define IS_INT(var) (var.type == int_e)
 #define IS_STRING(var) (var.type == string_e)
 #define IS_ARRAY(var) (var.type == array_e)
+#define IS_BOOL(var) (var.type == bool_e)
+#define IS_NULL(var) (var.type == null_e)
 
 typedef struct ehfunc_t {
 	char *name;
@@ -125,6 +132,7 @@ ehnode_t *get_constant(int value);
 ehnode_t *get_identifier(char *value);
 ehnode_t *get_null(void);
 ehnode_t *get_type(type_enum value);
+ehnode_t *get_bool(bool value);
 ehnode_t *operate(int operations, int noperations, ...);
 ehretval_t execute(ehnode_t *node);
 void print_tree(ehnode_t *in, int n);

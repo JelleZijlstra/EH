@@ -34,46 +34,65 @@ static int array_count(ehvar_t **array);
 static unsigned int hash(char *data, int scope);
 
 // type casting
-static int eh_strtoi(char *in);
+static ehretval_t eh_strtoi(char *in);
 static char *eh_itostr(int in);
-static bool xtobool(ehretval_t in);
+static ehretval_t eh_xtoi(ehretval_t in);
+static ehretval_t eh_xtostr(ehretval_t in);
+static ehretval_t eh_xtobool(ehretval_t in);
 
-// macro for interpreter behavior
+/*
+ * macros for interpreter behavior
+ */
+// take ints, returns an int
 #define EH_INT_CASE(token, operator) case token: \
-	operand1 = execute(node->op.paras[0]); \
-	operand2 = execute(node->op.paras[1]); \
+	operand1 = eh_xtoi(execute(node->op.paras[0])); \
+	operand2 = eh_xtoi(execute(node->op.paras[1])); \
 	if(IS_INT(operand1) && IS_INT(operand2)) { \
 		ret.type = int_e; \
 		ret.intval = (operand1.intval operator operand2.intval); \
-	} \
-	else if(IS_STRING(operand1) && IS_STRING(operand2)) { \
-		ret.type = int_e; \
-		ret.intval = (eh_strtoi(operand1.strval) operator eh_strtoi(operand2.strval)); \
-	} \
-	else if(IS_STRING(operand1) && IS_INT(operand2)) { \
-		ret.type = int_e; \
-		i = eh_strtoi(operand1.strval); \
-		ret.intval = (i operator operand2.intval); \
-	} \
-	else if(IS_INT(operand1) && IS_STRING(operand2)) { \
-		ret.type = int_e; \
-		i = eh_strtoi(operand2.strval); \
-		ret.intval = (i operator operand1.intval); \
 	} \
 	else { \
 		fprintf(stderr, "Incompatible operands\n"); \
 	} \
 	break;
+// take ints, return a bool
+#define EH_INTBOOL_CASE(token, operator) case token: \
+	operand1 = eh_xtoi(execute(node->op.paras[0])); \
+	operand2 = eh_xtoi(execute(node->op.paras[1])); \
+	if(IS_INT(operand1) && IS_INT(operand2)) { \
+		ret.type = bool_e; \
+		ret.boolval = (operand1.intval operator operand2.intval); \
+	} \
+	else { \
+		fprintf(stderr, "Incompatible operands\n"); \
+	} \
+	break;
+// take bools, return a bool
+#define EH_BOOL_CASE(token, operator) case token: \
+	operand1 = eh_xtobool(execute(node->op.paras[0])); \
+	operand2 = eh_xtobool(execute(node->op.paras[1])); \
+	ret.type = bool_e; \
+	ret.boolval = (operand1.intval operator operand2.intval); \
+	break;
 
+/*
+ * Macros for converting between ehretval_t and ehvar_t
+ */
 #define SETRETFROMVAR(var) { ret.type = var->type; switch(ret.type) { \
 	case int_e: ret.intval = var->intval; break; \
 	case string_e: ret.strval = var->strval; break; \
 	case array_e: ret.arrval = var->arrval; break; \
+	case bool_e: ret.boolval = var->boolval; break; \
+	case null_e: break; \
+	default: fprintf(stderr, "Unsupported type\n"); break; \
 } }
 
 #define SETVARFROMRET(var) { var->type = ret.type; switch(ret.type) { \
 	case int_e: var->intval = ret.intval; break; \
 	case string_e: var->strval = ret.strval; break; \
 	case array_e: var->arrval = ret.arrval; break; \
+	case bool_e: var->boolval = ret.boolval; break; \
+	case null_e: break; \
+	default: fprintf(stderr, "Unsupported type\n"); break; \
 } }
 

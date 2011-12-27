@@ -56,6 +56,15 @@ ehnode_t *get_type(type_enum value) {
 
 	return ret;
 }
+ehnode_t *get_bool(bool value) {
+	ehnode_t *ret;
+	ret = Malloc(sizeof(ehnode_t));
+	
+	ret->type = boolnode_e;
+	ret->boolv = value;
+	
+	return ret;
+}
 ehnode_t *operate(int operation, int nparas, ...) {
 	va_list args;
 	ehnode_t *ret;

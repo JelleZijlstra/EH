@@ -44,6 +44,12 @@ static void printvar_retval(ehretval_t in) {
 			printvar_array(in.arrval);
 			printf("]\n");
 			break;
+		case bool_e:
+			if(in.boolval)
+				printf("@bool true\n");
+			else
+				printf("@bool false\n");
+			break;
 		default:
 			fprintf(stderr, "Unsupported data type\n");
 			break;
@@ -60,6 +66,12 @@ static void printvar_var(ehvar_t *in) {
 			break;
 		case string_e:
 			printf("@string '%s'\n", in->strval);
+			break;
+		case bool_e:
+			if(in->boolval)
+				printf("@bool true\n");
+			else
+				printf("@bool false\n");
 			break;
 		case array_e:
 			printf("@array [\n");

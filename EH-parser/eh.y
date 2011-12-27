@@ -114,6 +114,7 @@ expression:
 	| '$' bareword			{ $$ = operate('$', 1, $2); }
 	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }
 	| bareword ':' arglist	{ $$ = operate(':', 2, $1, $3); }
+	| bareword ':'			{ $$ = operate(':', 1, $1); }
 	| expression '=' expression
 							{ $$ = operate('=', 2, $1, $3); }
 	| expression '>' expression

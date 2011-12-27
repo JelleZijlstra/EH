@@ -113,7 +113,7 @@ ehretval_t execute(ehnode_t *node) {
 					}
 					break;
 				case T_IF:
-					if(execute(node->op.paras[0]).intval) {
+					if(eh_xtobool(execute(node->op.paras[0])).boolval) {
 						ret = execute(node->op.paras[1]);
 						if(returning)
 							return ret;
@@ -122,7 +122,7 @@ ehretval_t execute(ehnode_t *node) {
 						ret = execute(node->op.paras[2]);
 					break;
 				case T_WHILE:
-					while(execute(node->op.paras[0]).intval) {
+					while(eh_xtobool(execute(node->op.paras[0])).boolval) {
 						ret = execute(node->op.paras[1]);
 						if(returning)
 							return ret;
@@ -226,9 +226,8 @@ ehretval_t execute(ehnode_t *node) {
 					break;
 				case '@': // type casting
 					operand1 = execute(node->op.paras[0]);
-					type_enum castto = operand1.typeval;
 					operand2 = execute(node->op.paras[1]);
-					switch(castto) {
+					switch(operand1.typeval) {
 						case int_e:
 							ret = eh_xtoi(operand2);
 							break;
@@ -283,8 +282,8 @@ ehretval_t execute(ehnode_t *node) {
 						ret.boolval = true;
 					}
 					else {
-						ret.type = null_e;
-						// do nothing. Strict comparison between different types should return null, which is the default return value.
+						// strict comparison between different types always returns false
+						ret.boolval = false;
 						// TODO: array comparison
 					}
 					break;
@@ -489,30 +488,36 @@ ehretval_t execute(ehnode_t *node) {
 					}
 					if(func->type == lib_e) {
 						// library function
-						func->ptr(node->op.paras[1], &ret);
+						if(node->op.nparas == 1)
+							func->ptr(NULL, &ret);
+						else
+							func->ptr(node->op.paras[1], &ret);
 						return ret;
 					}
 					int i = 0;
-					ehnode_t *in = node->op.paras[1];
-					while(1) {
-						var = Malloc(sizeof(ehvar_t));
-						var->name = func->args[i]->id.name;
-						var->scope = scope + 1;
-						insert_variable(var);
-						i++;
-						if(i > func->argcount) {
-							fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
-							return ret;
-						}
-						if(in->type == opnode_e && in->op.op == ',') {
-							ret = execute(in->op.paras[0]);
-							SETVARFROMRET(var);
-							in = in->op.paras[1];
-						}
-						else {
-							ret = execute(in);
-							SETVARFROMRET(var);
-							break;
+					// set parameters as necessary
+					if(node->op.nparas == 2) {
+						ehnode_t *in = node->op.paras[1];
+						while(1) {
+							var = Malloc(sizeof(ehvar_t));
+							var->name = func->args[i]->id.name;
+							var->scope = scope + 1;
+							insert_variable(var);
+							i++;
+							if(i > func->argcount) {
+								fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
+								return ret;
+							}
+							if(in->type == opnode_e && in->op.op == ',') {
+								ret = execute(in->op.paras[0]);
+								SETVARFROMRET(var);
+								in = in->op.paras[1];
+							}
+							else {
+								ret = execute(in);
+								SETVARFROMRET(var);
+								break;
+							}
 						}
 					}
 					// functions get their own scope (not decremented before because execution of arguments needs parent scope)
@@ -523,8 +528,10 @@ ehretval_t execute(ehnode_t *node) {
 					}
 					ret = execute(func->code);
 					returning = false;
-					for(i = 0; i < func->argcount; i++) {
-						remove_variable(func->args[i]->id.name, scope);
+					if(node->op.nparas == 2) {
+						for(i = 0; i < func->argcount; i++) {
+							remove_variable(func->args[i]->id.name, scope);
+						}
 					}
 					scope--;
 					break;
@@ -609,6 +616,10 @@ ehretval_t execute(ehnode_t *node) {
 					fprintf(stderr, "Unexpected opcode %d\n", node->op.op);
 					exit(0);
 			}
+			break;
+		default:
+			fprintf(stderr, "Unsupported node type\n");
+			break;
 	}
 	return ret;
 }
@@ -790,6 +801,7 @@ static ehretval_t eh_xtostr(ehretval_t in) {
 			ret.type = null_e;
 			break;
 	}
+	return ret;
 }
 static ehretval_t eh_xtobool(ehretval_t in) {
 	ehretval_t ret;

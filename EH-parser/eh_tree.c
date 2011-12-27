@@ -126,6 +126,7 @@ void print_tree(ehnode_t *in, int n) {
 		case opnode_e:
 			printntabs(n); printf("Type: opnode\n");
 			printntabs(n); printf("Opcode: %d\n", in->op.op);
+			printntabs(n); printf("Nparas: %d\n", in->op.nparas);
 			for(i = 0; i < in->op.nparas; i++) {
 				print_tree(in->op.paras[i], n + 1);
 			}

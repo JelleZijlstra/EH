@@ -7,7 +7,6 @@
 #include "eh_interpreter.h"
 
 static void printvar_retval(ehretval_t in);
-static void printvar_var(ehvar_t *in);
 static void printvar_array(ehvar_t **in);
 
 EHLIBFUNC(getinput) {
@@ -56,34 +55,6 @@ static void printvar_retval(ehretval_t in) {
 	}
 	return;
 }
-static void printvar_var(ehvar_t *in) {
-	switch(in->value.type) {
-		case null_e:
-			printf("null\n");
-			break;
-		case int_e:
-			printf("@int %d\n", in->value.intval);
-			break;
-		case string_e:
-			printf("@string '%s'\n", in->value.strval);
-			break;
-		case bool_e:
-			if(in->value.boolval)
-				printf("@bool true\n");
-			else
-				printf("@bool false\n");
-			break;
-		case array_e:
-			printf("@array [\n");
-			printvar_array(in->value.arrval);
-			printf("]\n");
-			break;
-		default:
-			fprintf(stderr, "Unsupported data type\n");
-			break;
-	}
-	return;
-}
 static void printvar_array(ehvar_t **in) {
 	int i;
 	ehvar_t *curr;
@@ -102,7 +73,7 @@ static void printvar_array(ehvar_t **in) {
 					fprintf(stderr, "Unsupported indextype\n");
 					break;
 			}
-			printvar_var(curr);
+			printvar_retval(curr->value);
 			curr = curr->next;
 		}
 	}

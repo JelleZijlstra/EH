@@ -1003,6 +1003,42 @@ static int array_count(ehvar_t **array) {
 	}
 	return count;
 }
+/*
+ * Command line arguments
+ */
+void eh_setarg(int argc, char **argv) {
+	ehvar_t *argc_v;
+	ehvar_t *argv_v;
+	int i;
+	ehretval_t ret, index;
+
+	// insert argc
+	argc_v = Malloc(sizeof(ehvar_t));
+	argc_v->type = int_e;
+	// global scope
+	argc_v->scope = 0;
+	argc_v->name = "argc";
+	// argc - 1, because argv[0] is ehi itself
+	argc_v->intval = argc - 1;
+	insert_variable(argc_v);
+
+	// insert argv
+	argv_v = Malloc(sizeof(ehvar_t));
+	argv_v->type = array_e;
+	argv_v->scope = 0;
+	argv_v->name = "argv";
+	argv_v->arrval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
+
+	// all members of argv are strings
+	ret.type = string_e;
+	index.type = int_e;
+	for(i = 1; i < argc; i++) {
+		index.intval = i - 1;
+		ret.strval = argv[i];
+		array_insert_retval(argv_v->arrval, index, ret);
+	}
+	insert_variable(argv_v);
+}
 
 /* Hash function */
 // This hash function is used because it allows scope to be taken into account for the hash, improving performance for recursive functions. (Otherwise, variables in each function call, with the same names, would get the same hash for every case.)

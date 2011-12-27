@@ -137,4 +137,6 @@ ehnode_t *operate(int operations, int noperations, ...);
 ehretval_t execute(ehnode_t *node);
 void print_tree(ehnode_t *in, int n);
 
+void eh_setarg(int argc, char **argv);
+
 #include "eh_libfuncs.h"

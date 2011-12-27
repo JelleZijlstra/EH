@@ -18,7 +18,8 @@ typedef enum {
 	intnode_e,
 	opnode_e,
 	typenode_e,
-	boolnode_e
+	boolnode_e,
+	visibilitynode_e
 } node_enum;
 
 typedef enum {
@@ -27,13 +28,24 @@ typedef enum {
 	int_e,
 	array_e,
 	type_e,
-	bool_e
+	bool_e,
+	func_e
 } type_enum;
+
+typedef enum {
+	public_e,
+	private_e
+} visibility_enum;
 
 typedef enum {
 	user_e = 0,
 	lib_e = 1,
 } functype_enum;
+
+typedef enum {
+	property_e,
+	method_e
+} membertype_enum;
 
 // Identifier
 typedef struct idnode_t {
@@ -60,6 +72,7 @@ typedef struct ehnode_t {
 		connode_t con;
 		opnode_t op;
 		type_enum typev;
+		visibility_enum visibilityv;
 		bool boolv;
 	};
 } ehnode_t;
@@ -104,17 +117,40 @@ typedef struct ehretval_t {
 #define IS_BOOL(var) (var.type == bool_e)
 #define IS_NULL(var) (var.type == null_e)
 
+// in future, add type for type checking
+typedef struct eharg_t {
+	char *name;
+} eharg_t;
+
 typedef struct ehfunc_t {
 	char *name;
 	functype_enum type: 1;
 	int argcount: 31;
-	ehnode_t **args;
+	eharg_t *args;
 	union {
 		ehnode_t *code;
 		void (*ptr)(ehnode_t *, ehretval_t *);
 	};
 	struct ehfunc_t *next;
 } ehfunc_t;
+
+typedef struct ehclassmember_t {
+	visibility_enum visibility;
+	char *name;
+	membertype_enum type;
+	eharg_t *args;
+	int argcount;
+	union {
+		ehretval_t value;
+		ehnode_t *code;
+	};
+} ehclassmember_t;
+
+typedef struct ehclass_t {
+	char *name;
+	ehclassmember_t **members;
+	struct ehclass_t *next;
+} ehclass_t;
 
 typedef struct ehlibfunc_t {
 	void (*code)(ehnode_t *, ehretval_t *);

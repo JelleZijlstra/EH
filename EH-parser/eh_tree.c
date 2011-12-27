@@ -11,6 +11,7 @@ void free_node(ehnode_t *in) {
 		case intnode_e:
 		case nullnode_e:
 		case boolnode_e:
+		case visibilitynode_e:
 		case typenode_e:
 			// nothing to free
 			break;
@@ -68,6 +69,16 @@ ehnode_t *get_bool(bool value) {
 	
 	return ret;
 }
+ehnode_t *get_visibility(visibility_enum value) {
+	ehnode_t *ret;
+	ret = Malloc(sizeof(ehnode_t));
+
+	ret->type = visibilitynode_e;
+	ret->visibilityv = value;
+	
+	return ret;
+}
+
 ehnode_t *operate(int operation, int nparas, ...) {
 	va_list args;
 	ehnode_t *ret;
@@ -146,6 +157,10 @@ void print_tree(ehnode_t *in, int n) {
 		case boolnode_e:
 			printntabs(n); printf("Type: boolnode\n");
 			printntabs(n); printf("Value: %u\n", in->boolv);
+			break;
+		case visibilitynode_e:
+			printntabs(n); printf("Type: visibilitynode\n");
+			printntabs(n); printf("Value: %d\n", in->visibilityv);
 			break;
 	}
 }

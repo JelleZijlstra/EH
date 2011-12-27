@@ -41,6 +41,7 @@ ehretval_t execute(ehnode_t *node) {
 	// variable used
 	ehvar_t *var, *member;
 	ehfunc_t *func;
+	ehclass_t *class;
 	int i, count;
 	char *name;
 	ehretval_t ret, operand1, operand2;
@@ -215,6 +216,22 @@ ehretval_t execute(ehnode_t *node) {
 							break;
 					}
 					break;
+				case T_CLASS:
+					class = Malloc(sizeof(ehclass_t));
+					operand1 = execute(node->op.paras[0]);
+					class->name = operand1.strval;
+					class->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+					// insert class members
+					node = node->op.paras[1];
+					if(node != NULL) while(1) {
+						class_insert(class->members, node->op.paras[0]);
+						if(node->type == opnode_e && node->op.op == ',')
+							node = node->op.paras[1];
+						else
+							break;
+					}
+					insert_class(class);
+					break;
 				case '[': // array declaration
 					ret.type = array_e;
 					ret.arrval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
@@ -291,7 +308,7 @@ ehretval_t execute(ehnode_t *node) {
 						// TODO: array comparison
 					}
 					break;
-				EH_INTBOOL_CASE('>', <)
+				EH_INTBOOL_CASE('>', >)
 				EH_INTBOOL_CASE('<', <)
 				EH_INTBOOL_CASE(T_GE, >=)
 				EH_INTBOOL_CASE(T_LE, <=)
@@ -504,7 +521,7 @@ ehretval_t execute(ehnode_t *node) {
 						ehnode_t *in = node->op.paras[1];
 						while(1) {
 							var = Malloc(sizeof(ehvar_t));
-							var->name = func->args[i]->id.name;
+							var->name = func->args[i].name;
 							var->scope = scope + 1;
 							insert_variable(var);
 							i++;
@@ -534,7 +551,7 @@ ehretval_t execute(ehnode_t *node) {
 					returning = false;
 					if(node->op.nparas == 2) {
 						for(i = 0; i < func->argcount; i++) {
-							remove_variable(func->args[i]->id.name, scope);
+							remove_variable(func->args[i].name, scope);
 						}
 					}
 					scope--;
@@ -601,18 +618,18 @@ ehretval_t execute(ehnode_t *node) {
 							}
 						}
 						func->argcount = currarg;
-						func->args = Malloc(currarg * sizeof(char *));
+						func->args = Malloc(currarg * sizeof(eharg_t));
 						// add arguments to arglist
 						tmp = node->op.paras[1];
 						currarg = 0;
 						while(1) {
 							if(tmp->type == opnode_e && tmp->op.op == ',') {
-								func->args[currarg] = tmp->op.paras[0];
+								func->args[currarg].name = tmp->op.paras[0]->id.name;
 								currarg++;
 								tmp = tmp->op.paras[1];
 							}
 							else {
-								func->args[currarg] = tmp;
+								func->args[currarg].name = tmp->id.name;
 								break;
 							}
 						}
@@ -731,6 +748,62 @@ ehfunc_t *get_function(char *name) {
 		currfunc = currfunc->next;
 	}
 	return NULL;
+}
+/*
+ * Classes
+ */
+void insert_class(ehclass_t *class) {
+	unsigned int vhash;
+
+	vhash = hash(class->name, HASH_INITVAL);
+	if(classtable[vhash] == NULL) {
+		classtable[vhash] = class;
+		class->next = NULL;
+	}
+	else {
+		class->next = classtable[vhash];
+		classtable[vhash] = class;
+	}
+	return;
+}
+ehclass_t *get_class(char *name) {
+	unsigned int vhash;
+	ehclass_t *currclass;
+
+	vhash = hash(name, HASH_INITVAL);
+	currclass = classtable[vhash];
+	while(currclass != NULL) {
+		if(strcmp(currclass->name, name) == 0) {
+			return currclass;
+		}
+		currclass = currclass->next;
+	}
+	return NULL;
+}
+void class_insert(ehclassmember_t **class, ehnode_t *in) {
+	unsigned int vhash;
+	ehclassmember_t *member;
+	
+	member = Malloc(sizeof(ehclassmember_t));
+	// rely on standard layout of the input ehnode_t
+	member->visibility = in->op.paras[0]->visibilityv;
+	member->name = in->op.paras[1]->id.name;
+
+	switch(in->op.nparas) {
+		case 2: // non-set property: null
+			member->type = property_e;
+			member->value.type = null_e;
+			break;
+		case 3: // set property
+			member->type = property_e;
+			member->value = execute(in->op.paras[1]);
+			break;
+		case 4: // method
+			member->type = method_e;
+			member->code = in->op.paras[3];
+			break;
+	}
+	vhash = hash(member->name, 0);
 }
 /*
  * Type casting

@@ -1,5 +1,6 @@
 argv.eh
 arrays.eh
+associative.eh
 bool.eh
 class.eh
 compile.eh

@@ -1,0 +1,9 @@
+foo
+@array [
+'test': @string 'foo'
+]
+@array [
+'foo': @string 'bar'
+'baz': @string 'bah'
+]
+2

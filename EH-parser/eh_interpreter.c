@@ -242,11 +242,14 @@ ehretval_t execute(ehnode_t *node) {
 					i = 0;
 					node = node->op.paras[0];
 					while(1) {
-						array_insert(ret.arrval, node->op.paras[0], i++);
-						if(node->type == opnode_e && node->op.op == ',')
+						if(node->type == opnode_e && node->op.op == ',') {
+							array_insert(ret.arrval, node->op.paras[0], i++);
 							node = node->op.paras[1];
-						else
+						}
+						else {
+							array_insert(ret.arrval, node, i++);
 							break;
+						}
 					}
 					break;
 				case '@': // type casting

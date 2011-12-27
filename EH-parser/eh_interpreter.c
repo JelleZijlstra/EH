@@ -8,6 +8,9 @@
  */
 #include "eh_interpreter.h"
 
+// indicate that we're returning
+static bool returning = false;
+
 // library functions supported by ehi
 ehlibfunc_t libfuncs[] = {
 	{getinput, "getinput"},
@@ -554,6 +557,12 @@ ehretval_t execute(ehnode_t *node) {
 						case null_e:
 							ret.intval = 0;
 							break;
+						case bool_e:
+							ret.intval = 0;
+							break;
+						default:
+							fprintf(stderr, "Unsupported datatype for count\n");
+							break;
 					}
 					return ret;
 				case T_FUNC: // function definition
@@ -606,7 +615,6 @@ ehretval_t execute(ehnode_t *node) {
 								break;
 							}
 						}
-						int j;
 						func->code = node->op.paras[2];
 					}
 					func->type = user_e;
@@ -627,7 +635,7 @@ ehretval_t execute(ehnode_t *node) {
 /*
  * Variables
  */
-static bool insert_variable(ehvar_t *var) {
+bool insert_variable(ehvar_t *var) {
 	unsigned int vhash;
 	//printf("Inserting variable %s with value %d at scope %d\n", var->name, var->intval, var->scope);
 	vhash = hash(var->name, var->scope);
@@ -641,7 +649,7 @@ static bool insert_variable(ehvar_t *var) {
 	}
 	return true;
 }
-static ehvar_t *get_variable(char *name, int scope) {
+ehvar_t *get_variable(char *name, int scope) {
 	unsigned int vhash;
 	ehvar_t *currvar;
 
@@ -656,7 +664,7 @@ static ehvar_t *get_variable(char *name, int scope) {
 	}
 	return NULL;
 }
-static void remove_variable(char *name, int scope) {
+void remove_variable(char *name, int scope) {
 	//printf("Removing variable %s of scope %d\n", name, scope);
 	//list_variables();
 	unsigned int vhash;
@@ -681,13 +689,13 @@ static void remove_variable(char *name, int scope) {
 	}
 	return;
 }
-static void list_variables(void) {
+void list_variables(void) {
 	int i;
 	ehvar_t *tmp;
 	for(i = 0; i < VARTABLE_S; i++) {
 		tmp = vartable[i];
 		while(tmp != NULL) {
-			printf("Variable %s of type %d at scope %d in hash %d at address %x\n", tmp->name, tmp->type, tmp->scope, i, tmp);
+			printf("Variable %s of type %d at scope %d in hash %d at address %x\n", tmp->name, tmp->type, tmp->scope, i, (int) tmp);
 			tmp = tmp->next;
 		}
 	}
@@ -695,7 +703,7 @@ static void list_variables(void) {
 /*
  * Functions
  */
-static bool insert_function(ehfunc_t *func) {
+bool insert_function(ehfunc_t *func) {
 	unsigned int vhash;
 
 	vhash = hash(func->name, HASH_INITVAL);
@@ -709,7 +717,7 @@ static bool insert_function(ehfunc_t *func) {
 	}
 	return true;
 }
-static ehfunc_t *get_function(char *name) {
+ehfunc_t *get_function(char *name) {
 	unsigned int vhash;
 	ehfunc_t *currfunc;
 
@@ -726,7 +734,7 @@ static ehfunc_t *get_function(char *name) {
 /*
  * Type casting
  */
-static ehretval_t eh_strtoi(char *in) {
+ehretval_t eh_strtoi(char *in) {
 	ehretval_t ret;
 	ret.type = int_e;
 	ret.intval = strtol(in, NULL, 0);
@@ -736,7 +744,7 @@ static ehretval_t eh_strtoi(char *in) {
 	}
 	return ret;
 }
-static char *eh_itostr(int in) {
+char *eh_itostr(int in) {
 	char *buffer;
 
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and null terminator) should suffice for the result string
@@ -745,7 +753,7 @@ static char *eh_itostr(int in) {
 
 	return buffer;
 }
-static ehretval_t eh_xtoi(ehretval_t in) {
+ehretval_t eh_xtoi(ehretval_t in) {
 	ehretval_t ret;
 	ret.type = int_e;
 	switch(in.type) {
@@ -771,7 +779,7 @@ static ehretval_t eh_xtoi(ehretval_t in) {
 	}
 	return ret;
 }
-static ehretval_t eh_xtostr(ehretval_t in) {
+ehretval_t eh_xtostr(ehretval_t in) {
 	ehretval_t ret;
 	ret.type = string_e;
 	switch(in.type) {
@@ -803,7 +811,7 @@ static ehretval_t eh_xtostr(ehretval_t in) {
 	}
 	return ret;
 }
-static ehretval_t eh_xtobool(ehretval_t in) {
+ehretval_t eh_xtobool(ehretval_t in) {
 	ehretval_t ret;
 	ret.type = bool_e;
 	// convert an arbitrary variable to a bool
@@ -837,7 +845,7 @@ static ehretval_t eh_xtobool(ehretval_t in) {
 /*
  * Arrays
  */
-static void array_insert(ehvar_t **array, ehnode_t *in, int place) {
+void array_insert(ehvar_t **array, ehnode_t *in, int place) {
 	unsigned int vhash;
 	ehretval_t var;
 	ehretval_t label;
@@ -926,11 +934,14 @@ static void array_insert(ehvar_t **array, ehnode_t *in, int place) {
 				currptr = &(*currptr)->next;
 			}
 			break;
+		default:
+			fprintf(stderr, "Unsupported index type\n");
+			break;
 	}
 	*currptr = member;
 	return;
 }
-static void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) {
+void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) {
 	// Inserts a member into an array. Assumes that the member is not yet present in the array.
 	ehvar_t *new;
 	unsigned int vhash;
@@ -955,7 +966,7 @@ static void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t re
 	SETVARFROMRET(new);
 	return;
 }
-static ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
+ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
 	ehvar_t *curr;
 	unsigned int vhash;
 
@@ -968,7 +979,7 @@ static ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
 			break;
 		default:
 			fprintf(stderr, "Unsupported array index type\n");
-			break;
+			return NULL;
 	}
 	curr = array[vhash];
 	switch(index.type) {
@@ -986,10 +997,13 @@ static ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
 				curr = curr->next;
 			}
 			break;
+		default:
+			// to keep the compiler happy; this will already be caught by previous switch
+			break;
 	}
 	return NULL;
 }
-static ehretval_t array_get(ehvar_t **array, ehretval_t index) {
+ehretval_t array_get(ehvar_t **array, ehretval_t index) {
 	ehvar_t *curr;
 	ehretval_t ret;
 
@@ -1001,7 +1015,7 @@ static ehretval_t array_get(ehvar_t **array, ehretval_t index) {
 	}
 	return ret;
 }
-static int array_count(ehvar_t **array) {
+int array_count(ehvar_t **array) {
 	// count the members of an array
 	ehvar_t *curr;
 	int i, count = 0;
@@ -1083,7 +1097,7 @@ See http://burtleburtle.net/bob/hash/evahash.html
 --------------------------------------------------------------------
 */
 
-static unsigned int hash(char *k, int scope)
+unsigned int hash(char *k, int scope)
 {
 	ub4 initval = (ub4) scope;
 	size_t len = strlen(k);

@@ -8,37 +8,35 @@
 #include "y.tab.h"
 // symbol table for variables and functions
 #define VARTABLE_S 1024
-static ehvar_t *vartable[VARTABLE_S];
-static ehfunc_t *functable[VARTABLE_S];
+ehvar_t *vartable[VARTABLE_S];
+ehfunc_t *functable[VARTABLE_S];
 
-// indicate that we're returning
-static bool returning = false;
 // current variable scope
-static int scope = 0;
+int scope;
 
 // prototypes
-static bool insert_variable(ehvar_t *var);
-static ehvar_t *get_variable(char *name, int scope);
-static void remove_variable(char *name, int scope);
-static void list_variables(void);
-static bool insert_function(ehfunc_t *func);
-static ehfunc_t *get_function(char *name);
-static void array_insert(ehvar_t **array, ehnode_t *in, int place);
-static void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
-static ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
-static ehretval_t array_get(ehvar_t **array, ehretval_t index);
-static int array_count(ehvar_t **array);
+bool insert_variable(ehvar_t *var);
+ehvar_t *get_variable(char *name, int scope);
+void remove_variable(char *name, int scope);
+void list_variables(void);
+bool insert_function(ehfunc_t *func);
+ehfunc_t *get_function(char *name);
+void array_insert(ehvar_t **array, ehnode_t *in, int place);
+void array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
+ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
+ehretval_t array_get(ehvar_t **array, ehretval_t index);
+int array_count(ehvar_t **array);
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
 #define HASH_INITVAL 234092
-static unsigned int hash(char *data, int scope);
+unsigned int hash(char *data, int scope);
 
 // type casting
-static ehretval_t eh_strtoi(char *in);
-static char *eh_itostr(int in);
-static ehretval_t eh_xtoi(ehretval_t in);
-static ehretval_t eh_xtostr(ehretval_t in);
-static ehretval_t eh_xtobool(ehretval_t in);
+ehretval_t eh_strtoi(char *in);
+char *eh_itostr(int in);
+ehretval_t eh_xtoi(ehretval_t in);
+ehretval_t eh_xtostr(ehretval_t in);
+ehretval_t eh_xtobool(ehretval_t in);
 
 /*
  * macros for interpreter behavior

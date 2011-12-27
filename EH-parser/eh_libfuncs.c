@@ -98,6 +98,9 @@ static void printvar_array(ehvar_t **in) {
 				case string_e:
 					printf("'%s': ", curr->name);
 					break;
+				default:
+					fprintf(stderr, "Unsupported indextype\n");
+					break;
 			}
 			printvar_var(curr);
 			curr = curr->next;

@@ -9,6 +9,9 @@ void free_node(ehnode_t *in) {
 			free(in->id.name);
 			break;
 		case intnode_e:
+		case nullnode_e:
+		case boolnode_e:
+		case typenode_e:
 			// nothing to free
 			break;
 		case opnode_e:
@@ -94,6 +97,7 @@ void *Malloc(size_t size) {
 		yyerror("Unable to allocate memory");
 		exit(1);
 	}
+	return ret;
 }
 void *Calloc(size_t count, size_t size) {
 	void *ret;
@@ -102,6 +106,7 @@ void *Calloc(size_t count, size_t size) {
 		yyerror("Unable to allocate memory");
 		exit(1);
 	}
+	return ret;
 }
 
 static void printntabs(int n) {
@@ -130,6 +135,17 @@ void print_tree(ehnode_t *in, int n) {
 			for(i = 0; i < in->op.nparas; i++) {
 				print_tree(in->op.paras[i], n + 1);
 			}
+			break;
+		case nullnode_e:
+			printntabs(n); printf("Type: nullnode\n");
+			break;
+		case typenode_e:
+			printntabs(n); printf("Type: typenode\n");
+			printntabs(n); printf("Value: %d\n", in->typev);
+			break;
+		case boolnode_e:
+			printntabs(n); printf("Type: boolnode\n");
+			printntabs(n); printf("Value: %u\n", in->boolv);
 			break;
 	}
 }

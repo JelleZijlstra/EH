@@ -45,11 +45,11 @@ static int compile(ehnode_t *node) {
 	//printf("Executing nodetype %d\n", node->type);
 	switch(node->type) {
 		/* Not sure yet how to handle strings
-		case idnode_e:
+		case stringnode_e:
 			fprintf(outfile,
 			return node->id.name;
 		*/
-		case connode_e:
+		case intnode_e:
 			fprintf(outfile, "pushl $%d\n", node->con.value);
 			return 0;
 		case opnode_e:
@@ -57,7 +57,7 @@ static int compile(ehnode_t *node) {
 			switch(node->op.op) {
 				case T_ECHO:
 					switch(node->op.paras[0]->type) {
-						case connode_e:
+						case stringnode_e:
 						case opnode_e:
 							// make sure stack is aligned
 							fprintf(outfile, "subl $4, %%esp\n");
@@ -67,7 +67,7 @@ static int compile(ehnode_t *node) {
 							fprintf(outfile, "call _printf\n");
 							fprintf(outfile, "addl $8, %%esp\n");
 							return 0;
-						case idnode_e:
+						case intnode_e:
 							printf("Constant %d\n", node->op.paras[0]->con.value);
 							return 0;
 					}

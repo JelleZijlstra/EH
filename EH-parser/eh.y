@@ -79,6 +79,10 @@ statement:
 							{ $$ = operate(T_PLUSPLUS, 1, $2); }
 	| T_SET bareword T_MINMIN T_SEPARATOR
 							{ $$ = operate(T_MINMIN, 1, $2); }
+	| T_SET bareword T_ARROW expression T_PLUSPLUS T_SEPARATOR
+							{ $$ = operate(T_PLUSPLUS, 2, $2, $4); }
+	| T_SET bareword T_ARROW expression T_MINMIN T_SEPARATOR
+							{ $$ = operate(T_MINMIN, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = operate(T_IF, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_ENDIF T_SEPARATOR

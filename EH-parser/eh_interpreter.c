@@ -35,7 +35,7 @@ void eh_exit(void) {
 
 ehretval_t execute(ehnode_t *node) {
 	// variable used
-	ehvar_t *var;
+	ehvar_t *var, *member;
 	ehfunc_t *func;
 	int i, count;
 	char *name;
@@ -407,13 +407,35 @@ ehretval_t execute(ehnode_t *node) {
 						fprintf(stderr, "Unknown variable %s\n", name);
 						return ret;
 					}
-					switch(var->type) {
-						case int_e:
-							var->intval--;
-							break;
-						default:
-							fprintf(stderr, "Unsupported type for ++ operator\n");
-							break;
+					if(node->op.nparas == 1) {
+						switch(var->type) {
+							case int_e:
+								var->intval--;
+								break;
+							default:
+								fprintf(stderr, "Unsupported type for one-operand -- operator\n");
+								break;
+						}
+					}
+					else {
+						// no minmin/plusplus for other stuff than arrays now
+						if(var->type != array_e) {
+							fprintf(stderr, "Unsupported type for two-operand -- operator\n");
+							return ret;
+						}
+						operand2 = execute(node->op.paras[1]);
+						member = array_getmember(var->arrval, operand2);
+						if(member == NULL) {
+							fprintf(stderr, "Array member does not exist\n");
+						}
+						else switch(member->type) {
+							case int_e:
+								member->intval--;
+								break;
+							default:
+								fprintf(stderr, "Unsupported type for array-member -- operator\n");
+								break;
+						}
 					}
 					break;
 				case T_PLUSPLUS:
@@ -423,13 +445,35 @@ ehretval_t execute(ehnode_t *node) {
 						fprintf(stderr, "Unknown variable %s\n", name);
 						return ret;
 					}
-					switch(var->type) {
-						case int_e:
-							var->intval++;
-							break;
-						default:
-							fprintf(stderr, "Unsupported type for ++ operator\n");
-							break;
+					if(node->op.nparas == 1) {
+						switch(var->type) {
+							case int_e:
+								var->intval++;
+								break;
+							default:
+								fprintf(stderr, "Unsupported type for one-operand ++ operator\n");
+								break;
+						}
+					}
+					else {
+						// no minmin/plusplus for other stuff than arrays now
+						if(var->type != array_e) {
+							fprintf(stderr, "Unsupported type for two-operand ++ operator\n");
+							return ret;
+						}
+						operand2 = execute(node->op.paras[1]);
+						member = array_getmember(var->arrval, operand2);
+						if(member == NULL) {
+							fprintf(stderr, "Array member does not exist\n");
+						}
+						else switch(member->type) {
+							case int_e:
+								member->intval++;
+								break;
+							default:
+								fprintf(stderr, "Unsupported type for array-member ++ operator\n");
+								break;
+						}
 					}
 					break;
 				case '$': // variable dereference

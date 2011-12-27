@@ -16,3 +16,4 @@ while($file = trim(fgets($testfiles))) {
 	`diff '$expected' '$output'`;
 	`rm '$output'`;
 }
+fclose($testfiles);

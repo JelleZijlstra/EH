@@ -24,3 +24,4 @@ else
 endif
 $ res = mccarthy: $input
 echo $res
+ret 0

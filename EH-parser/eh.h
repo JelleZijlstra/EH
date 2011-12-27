@@ -123,6 +123,7 @@ typedef struct ehlibfunc_t {
 
 void eh_init(void);
 void eh_exit(void);
+int yylex (void);
 
 void yyerror(char *s);
 void *Malloc(size_t size);

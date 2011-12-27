@@ -12,7 +12,7 @@ ehvar_t *vartable[VARTABLE_S];
 ehfunc_t *functable[VARTABLE_S];
 
 // current variable scope
-int scope;
+extern int scope;
 
 // prototypes
 bool insert_variable(ehvar_t *var);

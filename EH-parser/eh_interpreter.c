@@ -10,6 +10,7 @@
 
 // indicate that we're returning
 static bool returning = false;
+int scope = 0;
 
 // library functions supported by ehi
 ehlibfunc_t libfuncs[] = {

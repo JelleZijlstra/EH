@@ -33,6 +33,7 @@ extern FILE *yyin;
 %token T_NULL
 %token T_CLASS
 %token T_ENDCLASS
+%token T_NEW
 %token T_LVALUE
 %token <vValue> T_VISIBILITY
 %token T_ARRAYMEMBER
@@ -146,6 +147,7 @@ expression:
 							{ $$ = operate(T_ARROW, 2, $1, $3); }
 	| '[' arraylist ']'		{ $$ = operate('[', 1, $2); }
 	| T_COUNT expression	{ $$ = operate(T_COUNT, 1, $2); }
+	| T_NEW bareword		{ $$ = operate(T_NEW, 1, $2); }
 	;
 
 bareword:

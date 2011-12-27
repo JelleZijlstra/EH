@@ -39,10 +39,11 @@ void eh_exit(void) {
 }
 
 ehretval_t execute(ehnode_t *node) {
-	// variable used
+	// variables used
 	ehvar_t *var, *member;
 	ehfunc_t *func;
 	ehclass_t *class;
+	ehclassmember_t *classmember;
 	int i, count;
 	char *name;
 	ehretval_t ret, operand1, operand2, operand3;
@@ -272,6 +273,28 @@ ehretval_t execute(ehnode_t *node) {
 					break;
 				case T_EXPRESSION: // wrapper for special case
 					return execute(node->op.paras[0]);
+				case T_NEW:
+					name = execute(node->op.paras[0]).strval;
+					class = get_class(name);
+					if(class == NULL) {
+						fprintf(stderr, "No such class: %s\n", name);
+						break;
+					}
+					ret.type = object_e;
+					ret.objval = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+					ehclassmember_t *newmember;
+					for(i = 0; i < VARTABLE_S; i++) {
+						classmember = class->members[i];
+						while(classmember != NULL) {
+							newmember = Malloc(sizeof(ehclassmember_t));
+							// copy the whole thing over
+							*newmember = *classmember;
+							newmember->next = ret.objval[i];
+							ret.objval[i] = newmember;
+							classmember = classmember->next;
+						}
+					}
+					break;
 				case '=':
 					operand1 = execute(node->op.paras[0]);
 					operand2 = execute(node->op.paras[1]);
@@ -806,16 +829,14 @@ void class_insert(ehclassmember_t **class, ehnode_t *in) {
 	// decide what we got
 	switch(in->op.nparas) {
 		case 2: // non-set property: null
-			member->type = property_e;
 			member->value.type = null_e;
 			break;
 		case 3: // set property
-			member->type = property_e;
-			member->value = execute(in->op.paras[1]);
+			member->value = execute(in->op.paras[2]);
 			break;
 		case 4: // method
-			member->type = method_e;
-			member->code = in->op.paras[3];
+			member->value.type = func_e;
+			member->value.funcval = in->op.paras[3];
 			make_arglist(&member->argcount, &member->args, in->op.paras[2]);
 			break;
 	}

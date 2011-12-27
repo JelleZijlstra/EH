@@ -8,6 +8,7 @@
 
 static void printvar_retval(ehretval_t in);
 static void printvar_array(ehvar_t **in);
+static void printvar_object(ehclassmember_t **in);
 
 EHLIBFUNC(getinput) {
 	retval->type = int_e;
@@ -49,11 +50,40 @@ static void printvar_retval(ehretval_t in) {
 			else
 				printf("@bool false\n");
 			break;
+		case object_e:
+			printf("@object [\n");
+			printvar_object(in.objval);
+			printf("]\n");
+			break;
+		case func_e:
+			printf("@function\n");
+			break;
 		default:
 			fprintf(stderr, "Unsupported data type\n");
 			break;
 	}
 	return;
+}
+static void printvar_object(ehclassmember_t **in) {
+	int i;
+	ehclassmember_t * curr;
+	for(i = 0; i < VARTABLE_S; i++) {
+		curr = in[i];
+		while(curr != NULL) {
+			printf("%s <", curr->name);
+			switch(curr->visibility) {
+				case public_e:
+					printf("public");
+					break;
+				case private_e:
+					printf("private");
+					break;
+			}
+			printf(">: ");
+			printvar_retval(curr->value);
+			curr = curr->next;
+		}
+	}
 }
 static void printvar_array(ehvar_t **in) {
 	int i;

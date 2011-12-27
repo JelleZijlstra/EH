@@ -31,6 +31,7 @@ typedef enum {
 	bool_e,
 	func_e, // for internal use with methods; might become a real user type in the future
 	retvalptr_e, // for internal use with lvalues
+	object_e,
 } type_enum;
 
 typedef enum {
@@ -42,11 +43,6 @@ typedef enum {
 	user_e = 0,
 	lib_e = 1,
 } functype_enum;
-
-typedef enum {
-	property_e,
-	method_e
-} membertype_enum;
 
 // Identifier
 typedef struct idnode_t {
@@ -85,9 +81,12 @@ typedef struct ehretval_t {
 		int intval;
 		char *strval;
 		struct ehvar_t **arrval;
+		// I suppose we need to store the class name somewhere too
+		struct ehclassmember_t **objval;
 		type_enum typeval;
 		bool boolval;
 		struct ehretval_t *ptrval;
+		ehnode_t *funcval;
 	};
 } ehretval_t;
 
@@ -133,13 +132,9 @@ typedef struct ehfunc_t {
 typedef struct ehclassmember_t {
 	visibility_enum visibility;
 	char *name;
-	membertype_enum type;
 	eharg_t *args;
 	int argcount;
-	union {
-		ehretval_t value;
-		ehnode_t *code;
-	};
+	ehretval_t value;
 	struct ehclassmember_t *next;
 } ehclassmember_t;
 

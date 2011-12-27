@@ -1,3 +1,9 @@
 2
 meh
+@object [
+bar <public>: @int 3
+mah <private>: @function
+meh <public>: @function
+baz <private>: null
+]
 3

@@ -39,13 +39,13 @@ extern FILE *yyin;
 %token T_EXPRESSION
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
-%left T_ARROW
 %nonassoc ':'
 %left ','
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '+' '-'
 %left '*' '/'
 %left T_PLUSPLUS T_MINMIN
+%left T_ARROW
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 

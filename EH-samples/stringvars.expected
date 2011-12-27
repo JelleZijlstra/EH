@@ -1,0 +1,6 @@
+It works!
+There should have been several error messages on the lines before this one
+test
+test
+This should print "testtest":
+testtest

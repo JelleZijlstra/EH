@@ -1,7 +1,8 @@
-// Basic EH loop
-// set input
+#!/usr/bin/ehi
+# Basic EH loop
+# set input
 $ in = 10
-// counter variable
+# counter variable
 $ total = 1
 for $in count i
 	$ total = $total * $in

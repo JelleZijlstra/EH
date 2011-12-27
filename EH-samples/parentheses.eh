@@ -9,4 +9,6 @@ echo 2 + (1 * 2) + 3
 # Should print 3
 echo [ 1 * 2, 3, 1 + 2] -> 1
 # Should print 1 (2 > 2 is false)
-echo 2 > 2 + 1
+echo 2 < 2 + 1
+# Should print true
+echo 2 < (2 + 1)

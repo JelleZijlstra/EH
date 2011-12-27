@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-# To illustrate EH array syntax
+# To illustrate EH array syntax and the count operator
 $ foo = [ 4, 3, 2 ]
 $ bar = [ 'test', 'foo', 'bar']
 echo $foo -> 0

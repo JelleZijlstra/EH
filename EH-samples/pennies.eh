@@ -1,5 +1,6 @@
+#!/usr/bin/ehi
+# Not yet compatible with ehi
 // CS50 Problem Set 1: pennies
-
 // loop to get days of month.
 // Need complicated condition because we don't have "and"
 $ goin = 1

@@ -1,6 +1,10 @@
 #!/usr/bin/ehi
 // CS50 Problem Set 1: greedy
-$ money = 0
+if $argc = 2
+	$ money = @int $argv->1
+else
+	$ money = 0
+endif
 while $money <= 0
 	echo 'How much change is owed?'
 	$ money = getinput: 10

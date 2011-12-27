@@ -8,7 +8,9 @@ else
 	echo 'This should not be happening'
 endif
 if $foo >= $bar
-	echo 'There should have been two error messages on the lines before this one'
+	echo 'Wrong!'
+else
+	echo 'There should have been several error messages on the lines before this one'
 endif
 echo $foo
 echo $bar

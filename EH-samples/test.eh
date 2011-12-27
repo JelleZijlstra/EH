@@ -3,8 +3,8 @@
 // This is a comment
 # This is another
 echo 2
-func var: a, b
-	echo 'This is function var'
+func sum: a, b
+	echo 'This is function sum'
 	echo $a
 	echo $b
 	ret $a + $b
@@ -14,14 +14,14 @@ echo $bar
 echo 'test'
 if 2 = 2
 	echo 2
-	$ bar = var: 1, 3
+	$ bar = sum: 1, 3
 	echo $bar
 else
 	echo 'This is false'
 endif
-call var: 2, 3
+call sum: 2, 3
 echo 'bar'
-$ bar = var: 1, 5
+$ bar = sum: 1, 5
 if 2 = 2
 	echo 'hi'
 	echo 'a'

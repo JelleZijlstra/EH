@@ -55,10 +55,14 @@ program:
 	statement_list			{
 								//print_tree($1, 0);
 								eh_init();
-								execute($1);
+								ehretval_t ret = execute($1);
 								free_node($1);
 								eh_exit();
-								exit(0);
+								// use exit value if possible
+								if(ret.type == int_e)
+									exit(ret.intval);
+								else
+									exit(0);
 							}
 	| /* NULL */			{
 								fprintf(stderr, "No input");

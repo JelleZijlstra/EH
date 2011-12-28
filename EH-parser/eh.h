@@ -86,7 +86,7 @@ typedef struct ehretval_t {
 		type_enum typeval;
 		bool boolval;
 		struct ehretval_t *ptrval;
-		ehnode_t *funcval;
+		struct ehfm_t *funcval;
 	};
 } ehretval_t;
 
@@ -117,8 +117,8 @@ typedef struct eharg_t {
 	char *name;
 } eharg_t;
 
-typedef struct ehfunc_t {
-	char *name;
+// struct with common infrastructure for procedures and methods
+typedef struct ehfm_t {
 	functype_enum type;
 	int argcount;
 	eharg_t *args;
@@ -126,14 +126,19 @@ typedef struct ehfunc_t {
 		ehnode_t *code;
 		void (*ptr)(ehnode_t *, ehretval_t *);
 	};
+} ehfm_t;
+
+// EH procedure
+typedef struct ehfunc_t {
+	char *name;
+	struct ehfm_t f;
 	struct ehfunc_t *next;
 } ehfunc_t;
 
+// Properties and methods of a class
 typedef struct ehclassmember_t {
 	visibility_enum visibility;
 	char *name;
-	eharg_t *args;
-	int argcount;
 	ehretval_t value;
 	struct ehclassmember_t *next;
 } ehclassmember_t;

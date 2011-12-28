@@ -103,8 +103,6 @@ statement:
 							{ $$ = operate(T_CALL, 1, $2); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
 							{ $$ = operate(T_FUNC, 3, $2, $4, $6); }
-	| T_FUNC bareword ':' T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
-							{ $$ = operate(T_FUNC, 2, $2, $5); }
 	| T_RET expression T_SEPARATOR
 							{ $$ = operate(T_RET, 1, $2); }
 	| T_CLASS bareword T_SEPARATOR classlist T_ENDCLASS T_SEPARATOR
@@ -120,7 +118,6 @@ expression:
 	| '$' bareword			{ $$ = operate('$', 1, $2); }
 	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }
 	| bareword ':' arglist	{ $$ = operate(':', 2, $1, $3); }
-	| bareword ':'			{ $$ = operate(':', 1, $1); }
 	| expression '=' expression
 							{ $$ = operate('=', 2, $1, $3); }
 	| expression '>' expression

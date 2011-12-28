@@ -27,8 +27,8 @@ void eh_init(void) {
 	for(i = 0; libfuncs[i].code != NULL; i++) {
 		func = Malloc(sizeof(ehfunc_t));
 		func->name = libfuncs[i].name;
-		func->type = lib_e;
-		func->ptr = libfuncs[i].code;
+		func->f.type = lib_e;
+		func->f.ptr = libfuncs[i].code;
 		// other fields are irrelevant
 		insert_function(func);
 	}
@@ -540,26 +540,26 @@ ehretval_t execute(ehnode_t *node) {
 						fprintf(stderr, "Unknown function %s\n", name);
 						return ret;
 					}
-					if(func->type == lib_e) {
+					if(func->f.type == lib_e) {
 						// library function
 						if(node->op.nparas == 1)
-							func->ptr(NULL, &ret);
+							func->f.ptr(NULL, &ret);
 						else
-							func->ptr(node->op.paras[1], &ret);
+							func->f.ptr(node->op.paras[1], &ret);
 						return ret;
 					}
 					int i = 0;
 					// set parameters as necessary
 					if(node->op.nparas == 2) {
 						ehnode_t *in = node->op.paras[1];
-						while(1) {
+						while(in != NULL) {
 							var = Malloc(sizeof(ehvar_t));
-							var->name = func->args[i].name;
+							var->name = func->f.args[i].name;
 							var->scope = scope + 1;
 							insert_variable(var);
 							i++;
-							if(i > func->argcount) {
-								fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->argcount, i);
+							if(i > func->f.argcount) {
+								fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->f.argcount, i);
 								return ret;
 							}
 							if(in->type == opnode_e && in->op.op == ',') {
@@ -576,15 +576,15 @@ ehretval_t execute(ehnode_t *node) {
 					}
 					// functions get their own scope (not decremented before because execution of arguments needs parent scope)
 					scope++;
-					if(func->argcount != i) {
-						fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", name, func->argcount, i);
+					if(func->f.argcount != i) {
+						fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", name, func->f.argcount, i);
 						return ret;
 					}
-					ret = execute(func->code);
+					ret = execute(func->f.code);
 					returning = false;
 					if(node->op.nparas == 2) {
-						for(i = 0; i < func->argcount; i++) {
-							remove_variable(func->args[i].name, scope);
+						for(i = 0; i < func->f.argcount; i++) {
+							remove_variable(func->f.args[i].name, scope);
 						}
 					}
 					scope--;
@@ -643,15 +643,15 @@ ehretval_t execute(ehnode_t *node) {
 					func->name = name;
 					// determine argcount
 					if(node->op.nparas == 2) {
-						func->argcount = 0;
-						func->args = NULL;
-						func->code = node->op.paras[1];
+						func->f.argcount = 0;
+						func->f.args = NULL;
+						func->f.code = node->op.paras[1];
 					}
 					else {
-						make_arglist(&func->argcount, &func->args, node->op.paras[1]);
-						func->code = node->op.paras[2];
+						make_arglist(&func->f.argcount, &func->f.args, node->op.paras[1]);
+						func->f.code = node->op.paras[2];
 					}
-					func->type = user_e;
+					func->f.type = user_e;
 					insert_function(func);
 					break;
 				default:
@@ -771,7 +771,7 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
 	int currarg = 0;
 
 	tmp = node;
-	while(1) {
+	while(tmp != NULL) {
 		if(tmp->type == opnode_e && tmp->op.op == ',') {
 			currarg++;
 			tmp = tmp->op.paras[1];
@@ -786,7 +786,7 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
 	// add arguments to arglist
 	tmp = node;
 	currarg = 0;
-	while(1) {
+	while(tmp != NULL) {
 		if(tmp->type == opnode_e && tmp->op.op == ',') {
 			(*arglist)[currarg].name = tmp->op.paras[0]->id.name;
 			currarg++;
@@ -849,8 +849,9 @@ void class_insert(ehclassmember_t **class, ehnode_t *in) {
 			break;
 		case 4: // method
 			member->value.type = func_e;
-			member->value.funcval = in->op.paras[3];
-			make_arglist(&member->argcount, &member->args, in->op.paras[2]);
+			member->value.funcval = Malloc(sizeof(ehfm_t));
+			member->value.funcval->code = in->op.paras[3];
+			make_arglist(&member->value.funcval->argcount, &member->value.funcval->args, in->op.paras[2]);
 			break;
 	}
 

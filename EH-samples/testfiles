@@ -11,6 +11,7 @@ greedy.eh 45
 loop.eh
 mccarthy.eh 45
 mccarthy2.eh 45
+noargfunc.eh
 null.eh
 parentheses.eh
 plusplus.eh

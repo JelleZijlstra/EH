@@ -29,6 +29,7 @@ EHLIBFUNC(printvar) {
 }
 
 static void printvar_retval(ehretval_t in) {
+	int i;
 	switch(in.type) {
 		case null_e:
 			printf("null\n");
@@ -56,7 +57,22 @@ static void printvar_retval(ehretval_t in) {
 			printf("]\n");
 			break;
 		case func_e:
-			printf("@function\n");
+			printf("@function <");
+			switch(in.funcval->type) {
+				case user_e:
+					printf("user");
+					break;
+				case lib_e:
+					printf("library");
+					break;
+			}
+			printf(">: ");
+			for(i = 0; i < in.funcval->argcount; i++) {
+				printf("%s", in.funcval->args[i].name);
+				if(i + 1 < in.funcval->argcount)
+					printf(", ");
+			}
+			printf("\n");
 			break;
 		default:
 			fprintf(stderr, "Unsupported data type\n");

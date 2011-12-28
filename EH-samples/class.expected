@@ -2,10 +2,10 @@
 meh
 @object [
 bar <public>: @int 3
-mah <private>: @function
-meh <public>: @function
+mah <private>: @function <user>: n
+meh <public>: @function <user>: n
 baz <private>: null
 ]
 3
-@function
+@function <user>: n
 42

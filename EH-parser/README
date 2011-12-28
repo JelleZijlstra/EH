@@ -24,6 +24,12 @@ interpreter:
   > bfind --variables=[year: 2003, authors: '/Musser/'] --print=false
   The PHP implementation does not support parameters that are arrays.
 - Integrate ehi into PHP using SWIG.
+- Less haphazard error handling.
+- Still missing some operators: unary minus, and, or, bitwise operators. 
+  Possibly the ternary operator too.
+- Switch statements?
+- Breaking out of loops.
+- Foreach-like loops for objects and arrays.
 
 To compile the interpreter (ehi), write:
 $ make interpreter

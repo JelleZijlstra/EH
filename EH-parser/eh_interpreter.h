@@ -22,17 +22,17 @@ void remove_variable(char *name, int scope);
 void list_variables(void);
 bool insert_function(ehfunc_t *func);
 ehfunc_t *get_function(char *name);
-ehretval_t call_function(ehfm_t *f, ehnode_t *args, char *context, char *newcontext);
-void array_insert(ehvar_t **array, ehnode_t *in, int place, char *context);
+ehretval_t call_function(ehfm_t *f, ehnode_t *args, ehcontext_t context, ehcontext_t newcontext);
+void array_insert(ehvar_t **array, ehnode_t *in, int place, ehcontext_t context);
 ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
 ehretval_t array_get(ehvar_t **array, ehretval_t index);
 int array_count(ehvar_t **array);
 void insert_class(ehclass_t *class);
 ehclass_t *get_class(char *name);
-void class_insert(ehclassmember_t **class, ehnode_t *in, char *context);
-ehclassmember_t *class_getmember(ehobj_t *class, char *name, char *context);
-ehretval_t class_get(ehobj_t *class, char *name, char *context);
+void class_insert(ehclassmember_t **class, ehnode_t *in, ehcontext_t context);
+ehclassmember_t *class_getmember(ehobj_t *class, char *name, ehcontext_t context);
+ehretval_t class_get(ehobj_t *class, char *name, ehcontext_t context);
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
 #define HASH_INITVAL 234092
@@ -77,7 +77,7 @@ ehretval_t eh_xtobool(ehretval_t in);
 	operand1 = eh_xtobool(execute(node->op.paras[0], context)); \
 	operand2 = eh_xtobool(execute(node->op.paras[1], context)); \
 	ret.type = bool_e; \
-	ret.boolval = (operand1.intval operator operand2.intval); \
+	ret.boolval = (operand1.boolval operator operand2.boolval); \
 	break;
 
 /*

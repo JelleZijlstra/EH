@@ -44,7 +44,7 @@ void eh_exit(void) {
 	return;
 }
 
-ehretval_t execute(ehnode_t *node, char *context) {
+ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 	// variables used
 	ehvar_t *var, *member;
 	ehfunc_t *func;
@@ -471,6 +471,20 @@ ehretval_t execute(ehnode_t *node, char *context) {
 				EH_INT_CASE('-', -)
 				EH_INT_CASE('*', *)
 				EH_INT_CASE('/', /)
+				case T_AND: // AND; use short-circuit operation
+					operand1 = eh_xtobool(execute(node->op.paras[0], context));
+					if(!operand1.boolval)
+						ret = operand1;
+					else
+						ret = eh_xtobool(execute(node->op.paras[1], context));
+					break;
+				case T_OR: // OR; use short-circuit operation
+					operand1 = eh_xtobool(execute(node->op.paras[0], context));
+					if(operand1.boolval)
+						ret = operand1;
+					else
+						ret = eh_xtobool(execute(node->op.paras[1], context));
+					break;
 			/*
 			 * Variable manipulation
 			 */
@@ -803,7 +817,7 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
 		}
 	}
 }
-ehretval_t call_function(ehfm_t *f, ehnode_t *args, char *context, char *newcontext) {
+ehretval_t call_function(ehfm_t *f, ehnode_t *args, ehcontext_t context, ehcontext_t newcontext) {
 	ehretval_t ret;
 	ehvar_t *var;
 
@@ -882,7 +896,7 @@ ehclass_t *get_class(char *name) {
 	}
 	return NULL;
 }
-void class_insert(ehclassmember_t **class, ehnode_t *in, char *context) {
+void class_insert(ehclassmember_t **class, ehnode_t *in, ehcontext_t context) {
 	// insert a member into a class
 	unsigned int vhash;
 	ehclassmember_t *member;
@@ -913,7 +927,7 @@ void class_insert(ehclassmember_t **class, ehnode_t *in, char *context) {
 	member->next = class[vhash];
 	class[vhash] = member;
 }
-ehclassmember_t *class_getmember(ehobj_t *class, char *name, char *context) {
+ehclassmember_t *class_getmember(ehobj_t *class, char *name, ehcontext_t context) {
 	ehclassmember_t *curr;
 	unsigned int vhash;
 	
@@ -940,7 +954,7 @@ ehclassmember_t *class_getmember(ehobj_t *class, char *name, char *context) {
 	}
 	return curr;
 }
-ehretval_t class_get(ehobj_t *class, char *name, char *context) {
+ehretval_t class_get(ehobj_t *class, char *name, ehcontext_t context) {
 	ehclassmember_t *curr;
 	ehretval_t ret;
 	
@@ -1065,7 +1079,7 @@ ehretval_t eh_xtobool(ehretval_t in) {
 /*
  * Arrays
  */
-void array_insert(ehvar_t **array, ehnode_t *in, int place, char *context) {
+void array_insert(ehvar_t **array, ehnode_t *in, int place, ehcontext_t context) {
 	unsigned int vhash;
 	ehretval_t var;
 	ehretval_t label;

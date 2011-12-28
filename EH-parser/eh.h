@@ -184,7 +184,11 @@ ehnode_t *get_type(type_enum value);
 ehnode_t *get_bool(bool value);
 ehnode_t *get_visibility(visibility_enum value);
 ehnode_t *operate(int operations, int noperations, ...);
-ehretval_t execute(ehnode_t *node, char *context);
+
+// context
+typedef char *ehcontext_t;
+
+ehretval_t execute(ehnode_t *node, ehcontext_t context);
 void print_tree(ehnode_t *in, int n);
 
 void eh_setarg(int argc, char **argv);

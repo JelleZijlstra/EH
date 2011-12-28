@@ -8,3 +8,7 @@ This is a function 3
 @bool true
 @bool false
 @bool false
+@int 0
+@int 1
+@int 1
+@int 0

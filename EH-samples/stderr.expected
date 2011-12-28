@@ -30,3 +30,4 @@ Incompatible operands
 @while.eh:
 @closure.eh:
 @andor.eh:
+@unary.eh:

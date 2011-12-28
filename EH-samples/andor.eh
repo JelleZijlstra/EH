@@ -20,3 +20,8 @@ printvar: $foo xor $bar
 printvar: $bar xor $bar
 # false
 printvar: $foo xor 0
+# This also illustrates a parser deficiency: the following lines generate a parser error without the semicolon, because the comment eats the following newline and thus there is no T_SEPARATOR.
+printvar: 0 & 1; # 0
+printvar: 0 | 1; # 1
+printvar: 0 ^ 1; # 1
+printvar: 4 % 2; # 0

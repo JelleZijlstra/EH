@@ -47,13 +47,14 @@ extern int yylineno;
 %token <sValue> T_STRING
 %left ','
 %left T_AND T_OR T_XOR
+%left '|' '^' '&'
 %left '+' '-'
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
-%left '*' '/'
+%left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
 %left ':'
 %right <aValue> T_ACCESSOR
-%nonassoc '$' '&'
+%nonassoc '$' T_REFERENCE '~' '!' T_NEGATIVE
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
@@ -125,10 +126,15 @@ expression:
 	| T_BOOL				{ $$ = get_bool($1); }
 	| bareword				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
+	| '~' expression		{ $$ = operate('~', 1, $2); }
+	| '!' expression		{ $$ = operate('!', 1, $2); }
+	| '-' expression %prec T_NEGATIVE
+							{ $$ = operate(T_NEGATIVE, 1, $2); }
 	| expression T_ACCESSOR expression
 							{ $$ = operate(T_ACCESSOR, 3, $1, get_accessor($2), $3); }
 	| '$' lvalue			{ $$ = operate('$', 1, $2); }
-	| '&' lvalue			{ $$ = operate('&', 1, $2); }
+	| '&' lvalue %prec T_REFERENCE
+							{ $$ = operate(T_REFERENCE, 1, $2); }
 	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }
 	| expression ':' arglist
 							{ $$ = operate(':', 2, $1, $3); }
@@ -154,6 +160,14 @@ expression:
 							{ $$ = operate('*', 2, $1, $3); }
 	| expression '/' expression
 							{ $$ = operate('/', 2, $1, $3); }
+	| expression '%' expression
+							{ $$ = operate('%', 2, $1, $3); }
+	| expression '^' expression
+							{ $$ = operate('^', 2, $1, $3); }
+	| expression '|' expression
+							{ $$ = operate('|', 2, $1, $3); }
+	| expression '&' expression
+							{ $$ = operate('&', 2, $1, $3); }
 	| expression T_AND expression
 							{ $$ = operate(T_AND, 2, $1, $3); }
 	| expression T_OR expression

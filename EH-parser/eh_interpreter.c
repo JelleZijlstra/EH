@@ -174,6 +174,30 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 							break;
 					}
 					break;
+				case '~': // bitwise negation
+					operand1 = eh_xtoi(execute(node->op.paras[0], context));
+					if(operand1.type != int_e) {
+						fprintf(stderr, "Bitwise negation on unsupported datatype\n");
+					}
+					else {
+						ret.type = int_e;
+						ret.intval = ~operand1.intval;
+					}
+					break;
+				case T_NEGATIVE: // sign change
+					operand1 = eh_xtoi(execute(node->op.paras[0], context));
+					if(operand1.type != int_e) {
+						fprintf(stderr, "Negation on unsupported datatype\n");
+					}
+					else {
+						ret.type = int_e;
+						ret.intval = -operand1.intval;
+					}
+					break;
+				case '!': // Boolean not
+					ret = eh_xtobool(execute(node->op.paras[0], context));
+					ret.boolval = !ret.boolval;
+					break;
 				case T_GLOBAL: // global variable declaration
 					name = node->op.paras[0]->id.name;
 					var = get_variable(name, 0);
@@ -440,11 +464,11 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 						// TODO: array comparison
 					}
 					break;
-				EH_INTBOOL_CASE('>', >)
-				EH_INTBOOL_CASE('<', <)
-				EH_INTBOOL_CASE(T_GE, >=)
-				EH_INTBOOL_CASE(T_LE, <=)
-				EH_INTBOOL_CASE(T_NE, !=)
+				EH_INTBOOL_CASE('>', >) // greater-than
+				EH_INTBOOL_CASE('<', <) // lesser-than
+				EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
+				EH_INTBOOL_CASE(T_LE, <=) // lesser-than or equal
+				EH_INTBOOL_CASE(T_NE, !=) // not equal
 				// doing addition on two strings performs concatenation
 				case '+':
 					operand1 = execute(node->op.paras[0], context);
@@ -468,9 +492,13 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 						}
 					}
 					break;
-				EH_INT_CASE('-', -)
-				EH_INT_CASE('*', *)
-				EH_INT_CASE('/', /)
+				EH_INT_CASE('-', -) // subtraction
+				EH_INT_CASE('*', *) // multiplication
+				EH_INT_CASE('/', /) // division
+				EH_INT_CASE('%', %) // modulo
+				EH_INT_CASE('&', &) // bitwise AND
+				EH_INT_CASE('^', ^) // bitwise XOR
+				EH_INT_CASE('|', |) // bitwise OR
 				case T_AND: // AND; use short-circuit operation
 					operand1 = eh_xtobool(execute(node->op.paras[0], context));
 					if(!operand1.boolval)
@@ -648,7 +676,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 							break;
 					}
 					break;
-				case '&': // reference declaration
+				case T_REFERENCE: // reference declaration
 					ret = execute(node->op.paras[0], context);
 					if(ret.type != reference_e) {
 						fprintf(stderr, "Unable to create reference\n");

@@ -41,6 +41,7 @@
 "while"		return T_WHILE;
 "endwhile"	return T_ENDWHILE;
 "break"		return T_BREAK;
+"continue"	return T_CONTINUE;
 "call"		return T_CALL;
 "func"		return T_FUNC;
 "endfunc"	return T_ENDFUNC;

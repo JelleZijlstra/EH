@@ -26,6 +26,7 @@ extern int yylineno;
 %token T_COUNT
 %token T_ENDFOR
 %token T_BREAK
+%token T_CONTINUE
 %token T_FUNC
 %token T_ENDFUNC
 %token T_RET
@@ -118,6 +119,10 @@ statement:
 							{ $$ = operate(T_CLASS, 2, $2, $4); }
 	| T_GLOBAL bareword	T_SEPARATOR
 							{ $$ = operate(T_GLOBAL, 1, $2); }
+	| T_CONTINUE T_SEPARATOR
+							{ $$ = operate(T_CONTINUE, 0); }
+	| T_CONTINUE expression T_SEPARATOR
+							{ $$ = operate(T_CONTINUE, 1, $2); }
 	| T_BREAK T_SEPARATOR	{ $$ = operate(T_BREAK, 0); }
 	| T_BREAK expression T_SEPARATOR
 							{ $$ = operate(T_BREAK, 1, $2); }

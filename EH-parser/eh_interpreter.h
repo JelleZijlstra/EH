@@ -81,6 +81,25 @@ ehretval_t eh_xtobool(ehretval_t in);
 	break;
 
 /*
+ * Stuff to be done in a loop
+ */
+#define LOOPCHECKS { \
+	if(returning) break; \
+	if(breaking) { \
+		breaking--; \
+		break; \
+	} \
+	if(continuing > 1) { \
+		continuing--; \
+		break; \
+	} \
+	else if(continuing) { \
+		continuing = 0; \
+		continue; \
+	} \
+	}
+
+/*
  * Macros for converting between ehretval_t and ehvar_t
  */
 #define SETRETFROMVAR(var) { ret = var->value; }

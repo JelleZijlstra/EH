@@ -10,7 +10,11 @@
 
 // indicate that we're returning
 static bool returning = false;
+// number of loops we're currently in
+static int inloop = 0;
 static int breaking = 0;
+static bool continuing = 0;
+
 // current object, gets passed around
 static char *newcontext = NULL;
 int scope = 0;
@@ -226,31 +230,30 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 						ret = execute(node->op.paras[2], context);
 					break;
 				case T_WHILE:
+					inloop++;
 					breaking = 0;
 					while(eh_xtobool(execute(node->op.paras[0], context)).boolval) {
 						ret = execute(node->op.paras[1], context);
-						if(returning)
-							return ret;
-						if(breaking) {
-							breaking--;
-							return ret;
-						}
+						LOOPCHECKS;
 					}
+					inloop--;
 					break;
 				case T_FOR:
+					inloop++;
 					breaking = 0;
 					// get the count
-					count = execute(node->op.paras[0], context).intval;
+					operand1 = eh_xtoi(execute(node->op.paras[0], context));
+					if(operand1.type == int_e)
+						count = operand1.intval;
+					else {
+						fprintf(stderr, "Unsupported count\n");
+						break;
+					}
 					if(node->op.nparas == 2) {
 						// "for 5; do stuff; endfor" construct
 						for(i = 0; i < count; i++) {
 							ret = execute(node->op.paras[1], context);
-							if(returning)
-								return ret;
-							if(breaking) {
-								breaking--;
-								return ret;
-							}
+							LOOPCHECKS;
 						}
 					}
 					else {
@@ -268,17 +271,17 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 						var->value.type = int_e;
 						for(var->value.intval = 0; var->value.intval < count; var->value.intval++) {
 							ret = execute(node->op.paras[2], context);
-							if(returning)
-								return ret;
+							LOOPCHECKS;
 						}
 					}
+					inloop--;
 					break;
 			/*
 			 * Miscellaneous
 			 */
 				case T_SEPARATOR:
 					ret = execute(node->op.paras[0], context);
-					if(returning || breaking)
+					if(returning || breaking || continuing)
 						return ret;
 					ret = execute(node->op.paras[1], context);
 					break;
@@ -293,16 +296,32 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					ret = execute(node->op.paras[0], context);
 					break;
 				case T_BREAK: // break out of a loop
-					// Breaking with an argument greater than the number of loops we're currently in exits the program. Whether that's a feature or a bug, I'm not sure.
 					if(node->op.nparas == 0)
-						breaking = 1;
-					else {
+						operand1 = (ehretval_t){int_e, {1}};
+					else
 						operand1 = eh_xtoi(execute(node->op.paras[0], context));
-						if(operand1.type != int_e)
-							break;
-						// break as many levels as specified by the argument
-						breaking = operand1.intval;
+					if(operand1.type != int_e)
+						break;
+					// break as many levels as specified by the argument
+					if(operand1.intval > inloop) {
+						fprintf(stderr, "Cannot break %d levels\n", operand1.intval);
+						break;
 					}
+					breaking = operand1.intval;
+					break;
+				case T_CONTINUE: // continue in a loop
+					if(node->op.nparas == 0)
+						operand1 = (ehretval_t){int_e, {1}};
+					else
+						operand1 = eh_xtoi(execute(node->op.paras[0], context));
+					if(operand1.type != int_e)
+						break;
+					// break as many levels as specified by the argument
+					if(operand1.intval > inloop) {
+						fprintf(stderr, "Cannot continue %d levels\n", operand1.intval);
+						break;
+					}
+					continuing = operand1.intval;
 					break;
 			/*
 			 * Object access

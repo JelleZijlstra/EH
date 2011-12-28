@@ -550,28 +550,26 @@ ehretval_t execute(ehnode_t *node) {
 					}
 					int i = 0;
 					// set parameters as necessary
-					if(node->op.nparas == 2) {
-						ehnode_t *in = node->op.paras[1];
-						while(in != NULL) {
-							var = Malloc(sizeof(ehvar_t));
-							var->name = func->f.args[i].name;
-							var->scope = scope + 1;
-							insert_variable(var);
-							i++;
-							if(i > func->f.argcount) {
-								fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->f.argcount, i);
-								return ret;
-							}
-							if(in->type == opnode_e && in->op.op == ',') {
-								ret = execute(in->op.paras[0]);
-								SETVARFROMRET(var);
-								in = in->op.paras[1];
-							}
-							else {
-								ret = execute(in);
-								SETVARFROMRET(var);
-								break;
-							}
+					ehnode_t *in = node->op.paras[1];
+					while(in != NULL) {
+						var = Malloc(sizeof(ehvar_t));
+						var->name = func->f.args[i].name;
+						var->scope = scope + 1;
+						insert_variable(var);
+						i++;
+						if(i > func->f.argcount) {
+							fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->f.argcount, i);
+							return ret;
+						}
+						if(in->type == opnode_e && in->op.op == ',') {
+							ret = execute(in->op.paras[0]);
+							SETVARFROMRET(var);
+							in = in->op.paras[1];
+						}
+						else {
+							ret = execute(in);
+							SETVARFROMRET(var);
+							break;
 						}
 					}
 					// functions get their own scope (not decremented before because execution of arguments needs parent scope)
@@ -642,15 +640,8 @@ ehretval_t execute(ehnode_t *node) {
 					func = Malloc(sizeof(ehfunc_t));
 					func->name = name;
 					// determine argcount
-					if(node->op.nparas == 2) {
-						func->f.argcount = 0;
-						func->f.args = NULL;
-						func->f.code = node->op.paras[1];
-					}
-					else {
-						make_arglist(&func->f.argcount, &func->f.args, node->op.paras[1]);
-						func->f.code = node->op.paras[2];
-					}
+					make_arglist(&func->f.argcount, &func->f.args, node->op.paras[1]);
+					func->f.code = node->op.paras[2];
 					func->f.type = user_e;
 					insert_function(func);
 					break;
@@ -782,7 +773,11 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
 		}
 	}
 	*argcount = currarg;
-	*arglist = Malloc(currarg * sizeof(eharg_t));
+	// if there are no arguments, the arglist can be NULL
+	if(currarg)
+		*arglist = Malloc(currarg * sizeof(eharg_t));
+	else
+		*arglist = NULL;
 	// add arguments to arglist
 	tmp = node;
 	currarg = 0;

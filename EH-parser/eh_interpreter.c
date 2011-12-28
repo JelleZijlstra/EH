@@ -580,7 +580,11 @@ ehretval_t execute(ehnode_t *node) {
 					ret = class_get(operand1.objval, name);
 					// method; nothing else to do for properties
 					if(node->op.nparas == 3) {
-						// split off a function from ':'?
+						if(ret.type != func_e) {
+							fprintf(stderr, "Call to object member that is not a method\n");
+							break;
+						}
+						ret = call_function(ret.funcval, node->op.paras[2]);
 					}
 					break;
 				case T_FUNC: // function definition
@@ -752,6 +756,7 @@ ehretval_t call_function(ehfm_t *f, ehnode_t *args) {
 	ehretval_t ret;
 	ehvar_t *var;
 
+	ret.type = null_e;
 	if(f->type == lib_e) {
 		// library function
 		f->ptr(args, &ret);

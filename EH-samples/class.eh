@@ -19,3 +19,4 @@ call printvar: $bar
 echo $bar.bar
 $ foo = $bar.meh
 call printvar: $foo
+call $bar . meh : 42

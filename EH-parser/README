@@ -8,14 +8,7 @@ The following are some bugs and missing features still existing in the
 interpreter:
 - Massive memory leakage. It's hard to keep track of all malloc'ed memory within
   the interpreter, but we can do better than the current situation.
-- Missing the global keyword. This could be implemented using a new reference_e 
-  type, with its value of type ehretval_t *. Any operation involving a 
-  reference_e would manipulate its pointee instead. We'd introduce a new detach
-  keyword to set a reference_e variable to null.
 - Complete object-oriented support.
-- Make the call keyword optional. This was not feasible in the PHP interpreter
-  because of the way that was designed, but it should be possible to do so in 
-  the parser by simply making an expression an acceptable statement.
 - Enable execution from a command line. That is probably doable by having eh.y
   execute statements after calling operate on them if we're in scope 0.
 - Parse EH.php-style commands into arrays. This would work similar to the PHP

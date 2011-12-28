@@ -11,3 +11,4 @@ call printvar: $foo
 $ baz = $foo.bar
 call printvar: $baz
 call $baz: 2
+printvar: $baz

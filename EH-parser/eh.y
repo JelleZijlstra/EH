@@ -36,6 +36,7 @@ extern int yylineno;
 %token T_CLASS
 %token T_ENDCLASS
 %token T_NEW
+%token T_GLOBAL
 %token T_LVALUE
 %token T_LVALUE_OBJECT
 %token <vValue> T_VISIBILITY
@@ -112,6 +113,8 @@ statement:
 							{ $$ = operate(T_RET, 1, $2); }
 	| T_CLASS bareword T_SEPARATOR classlist T_ENDCLASS T_SEPARATOR
 							{ $$ = operate(T_CLASS, 2, $2, $4); }
+	| T_GLOBAL bareword	T_SEPARATOR
+							{ $$ = operate(T_GLOBAL, 1, $2); }
 	;
 
 expression:

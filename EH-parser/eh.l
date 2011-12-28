@@ -48,6 +48,7 @@
 "class"		return T_CLASS;
 "endclass"	return T_ENDCLASS;
 "new"		return T_NEW;
+"global"	return T_GLOBAL;
 "public"	{
 				yylval.vValue = public_e;
 				return T_VISIBILITY;

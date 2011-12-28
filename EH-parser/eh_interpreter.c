@@ -174,6 +174,20 @@ ehretval_t execute(ehnode_t *node, char *context) {
 							break;
 					}
 					break;
+				case T_GLOBAL: // global variable declaration
+					name = node->op.paras[0]->id.name;
+					var = get_variable(name, 0);
+					if(var == NULL) {
+						fprintf(stderr, "No such global variable\n");
+						break;
+					}
+					member = Malloc(sizeof(ehvar_t));
+					member->name = name;
+					member->scope = scope;
+					member->value.type = reference_e;
+					member->value.referenceval = &var->value;
+					insert_variable(member);
+					break;
 			/*
 			 * Control flow
 			 */

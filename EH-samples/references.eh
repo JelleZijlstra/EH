@@ -15,3 +15,9 @@ func baz: n
 endfunc
 call baz: &foo
 echo $foo
+func meh: n
+	echo $n
+	global foo
+	echo $foo
+endfunc
+call meh: 1

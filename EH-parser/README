@@ -10,11 +10,11 @@ interpreter:
   the interpreter, but we can do better than the current situation.
 - Complete object-oriented support.
 - Enable execution from a command line. That is probably doable by having eh.y
-  execute statements after calling operate on them if we're in scope 0.
+  execute() statements after calling operate() on them if we're in scope 0.
 - Parse EH.php-style commands into arrays. This would work similar to the PHP
   implementation, but would also use native EH expressions, so you can do stuff
   like this:
-  > bfind --variables=[year: 2003, authors: '/Musser/'] --print=false
+  > bfind --variables=[year => 2003, authors => '/Musser/'] --print=false
   The PHP implementation does not support parameters that are arrays.
 - Integrate ehi into PHP using SWIG.
 - Less haphazard error handling.

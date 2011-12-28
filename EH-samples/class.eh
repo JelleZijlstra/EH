@@ -25,3 +25,5 @@ call printvar: $foo
 call $bar . meh : 42
 # Error: method is private
 call ($bar . mah) : 'Calling a private method'
+$ bar.bar = 2
+echo $bar.bar

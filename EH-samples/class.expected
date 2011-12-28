@@ -10,3 +10,4 @@ baz <private>: null
 @function <user>: n
 42
 Calling a private method
+2

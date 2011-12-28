@@ -48,10 +48,10 @@ extern int yylineno;
 %left '+' '-'
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '*' '/'
-%left T_PLUSPLUS T_MINMIN
-%nonassoc ':'
-%left <aValue> T_ACCESSOR
-%left '$'
+%nonassoc T_PLUSPLUS T_MINMIN
+%left ':'
+%right <aValue> T_ACCESSOR
+%nonassoc '$' '&'
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
@@ -123,7 +123,8 @@ expression:
 	| '(' expression ')'	{ $$ = $2; }
 	| expression T_ACCESSOR expression
 							{ $$ = operate(T_ACCESSOR, 3, $1, get_accessor($2), $3); }
-	| '$' lvalue				{ $$ = operate('$', 1, $2); }
+	| '$' lvalue			{ $$ = operate('$', 1, $2); }
+	| '&' lvalue			{ $$ = operate('&', 1, $2); }
 	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }
 	| expression ':' arglist
 							{ $$ = operate(':', 2, $1, $3); }

@@ -32,7 +32,7 @@ typedef enum {
 	type_e = 5, // for internal use with type casting
 	array_e,
 	func_e, // for internal use with methods; might become a real user type in the future
-	retvalptr_e, // for internal use with lvalues
+	reference_e, // for internal use with lvalues, and as a value for references
 	object_e,
 } type_enum;
 
@@ -92,7 +92,7 @@ typedef struct ehretval_t {
 		struct ehobj_t *objval;
 		type_enum typeval;
 		bool boolval;
-		struct ehretval_t *ptrval;
+		struct ehretval_t *referenceval;
 		struct ehfm_t *funcval;
 		accessor_enum accessorval;
 	};

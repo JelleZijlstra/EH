@@ -90,7 +90,7 @@
 				yylval.aValue = dot_e;
 				return T_ACCESSOR;
 			}
-[@=$+\-*/<>(),:\[\]]	return *yytext; /* Single character tokens */
+[@=$+\-*/<>(),:\[\]&]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{
 				char message[100];

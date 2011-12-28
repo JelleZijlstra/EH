@@ -56,6 +56,12 @@ static void printvar_retval(ehretval_t in) {
 			printvar_object(in.objval->members);
 			printf("]\n");
 			break;
+		case reference_e:
+			// this probably won't be executed; ehi is very good at pretending 
+			// that a reference is simply its referee
+			printf("@reference -> ");
+			printvar_retval(*in.referenceval);
+			break;
 		case func_e:
 			printf("@function <");
 			switch(in.funcval->type) {

@@ -16,6 +16,7 @@ noargfunc.eh
 null.eh
 parentheses.eh
 plusplus.eh
+references.eh
 simpleclass.eh
 stringvars.eh
 test.eh

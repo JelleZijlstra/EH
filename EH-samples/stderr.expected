@@ -18,6 +18,8 @@ In line 7: syntax error, unexpected $end
 @null.eh:
 @parentheses.eh:
 @plusplus.eh:
+@references.eh:
+@simpleclass.eh:
 @stringvars.eh:
 Unable to perform type juggling
 Unable to perform type juggling

@@ -463,7 +463,7 @@ ehretval_t execute(ehnode_t *node, char *context) {
 				case T_LVALUE:
 					/*
 					 * Get an lvalue. This case normally returns an
-					 * ehretval_t of type retvalptr_e: a pointer to an
+					 * ehretval_t of type reference_e: a pointer to an
 					 * ehretval_t that can be modified by the calling code.
 					 *
 					 * Because of special needs of calling code, this case
@@ -478,25 +478,25 @@ ehretval_t execute(ehnode_t *node, char *context) {
 					 */
 					name = node->op.paras[0]->id.name;
 					var = get_variable(name, scope);
-					ret.ptrval = NULL;
+					ret.referenceval = NULL;
 					switch(node->op.nparas) {
 						case 1:
 							if(var == NULL) {
 								/*
 								 * There is no variable of this name, and it is
 								 * a simple access. In that case, we use NULL
-								 * as the ptrval.
+								 * as the referenceval.
 								 */
 							}
 							else {
-								ret.type = retvalptr_e;
-								ret.ptrval = &var->value;
+								ret.type = reference_e;
+								ret.referenceval = &var->value;
 							}
 							break;
 						case 3:
 							if(var == NULL) {
 								fprintf(stderr, "Cannot access member of non-existing variable\n");
-								ret.ptrval = (ehretval_t *) 0x1;
+								ret.referenceval = (ehretval_t *) 0x1;
 							}
 							else if(node->op.paras[1]->accessorv == arrow_e) {							
 								switch(var->value.type) {
@@ -507,11 +507,11 @@ ehretval_t execute(ehnode_t *node, char *context) {
 										if(member == NULL) {
 											member = array_insert_retval(var->value.arrval, operand1, ret);
 										}
-										ret.type = retvalptr_e;
-										ret.ptrval = &member->value;
+										ret.type = reference_e;
+										ret.referenceval = &member->value;
 										break;
 									default:
-										ret.ptrval = &var->value;
+										ret.referenceval = &var->value;
 										break;
 								}
 							} else if(node->op.paras[1]->accessorv == dot_e) {
@@ -527,8 +527,8 @@ ehretval_t execute(ehnode_t *node, char *context) {
 											fprintf(stderr, "Access to non-existent object member\n");
 											return ret;
 										}
-										ret.type = retvalptr_e;
-										ret.ptrval = &classmember->value;
+										ret.type = reference_e;
+										ret.referenceval = &classmember->value;
 										newcontext = var->value.objval->class;
 										break;
 									default:
@@ -545,12 +545,8 @@ ehretval_t execute(ehnode_t *node, char *context) {
 				case T_SET:
 					operand1 = execute(node->op.paras[0], context);
 					operand2 = execute(node->op.paras[1], context);
-					if(operand1.type == retvalptr_e) {
-						// set variable
-						*(operand1.ptrval) = operand2;
-					}
-					else if(operand1.type == null_e) {
-						if(operand1.ptrval == NULL || operand1.ptrval == (ehretval_t *) 0x1) {
+					if(operand1.type == null_e) {
+						if(operand1.referenceval == NULL || operand1.referenceval == (ehretval_t *) 0x1) {
 							// set new variable
 							var = Malloc(sizeof(ehvar_t));
 							var->name = node->op.paras[0]->op.paras[0]->id.name;
@@ -558,13 +554,13 @@ ehretval_t execute(ehnode_t *node, char *context) {
 							var->value = operand2;
 							insert_variable(var);
 						}
-						else if(operand1.ptrval == (ehretval_t *) 0x1) {
+						else if(operand1.referenceval == (ehretval_t *) 0x1) {
 							// do nothing; T_LVALUE will already have complained
 						}
 						else {
 							// operand 1 is a pointer to the variable modified, operand 2 is the value set to, operand 3 is the index
 							operand3 = execute(node->op.paras[0]->op.paras[2], context);
-							switch(operand1.ptrval->type) {
+							switch(operand1.referenceval->type) {
 								case int_e:
 									int_arrow_set(operand1, operand3, operand2);
 									break;
@@ -577,6 +573,13 @@ ehretval_t execute(ehnode_t *node, char *context) {
 							}
 						}
 					}
+					else {
+						while(operand1.type == reference_e && operand1.referenceval->type == reference_e) {
+							// set variable
+							operand1 = *(operand1.referenceval);
+						}
+						*operand1.referenceval = operand2;
+					}
 					break;
 				case T_MINMIN:
 					operand1 = execute(node->op.paras[0], context);
@@ -584,9 +587,9 @@ ehretval_t execute(ehnode_t *node, char *context) {
 						fprintf(stderr, "Cannot set with -- operator\n");
 						break;
 					}
-					switch(operand1.ptrval->type) {
+					switch(operand1.referenceval->type) {
 						case int_e:
-							operand1.ptrval->intval--;
+							operand1.referenceval->intval--;
 							break;
 						default:
 							fprintf(stderr, "Unsupported type for -- operator\n");
@@ -599,38 +602,44 @@ ehretval_t execute(ehnode_t *node, char *context) {
 						fprintf(stderr, "Cannot set with ++ operator\n");
 						break;
 					}
-					switch(operand1.ptrval->type) {
+					switch(operand1.referenceval->type) {
 						case int_e:
-							operand1.ptrval->intval++;
+							operand1.referenceval->intval++;
 							break;
 						default:
 							fprintf(stderr, "Unsupported type for ++ operator\n");
 							break;
 					}
 					break;
+				case '&': // reference declaration
+					ret = execute(node->op.paras[0], context);
+					if(ret.type != reference_e) {
+						fprintf(stderr, "Unable to create reference\n");
+					}
+					break;
 				case '$': // variable dereference
 					ret = execute(node->op.paras[0], context);
-					if(ret.type == retvalptr_e)
-						ret = *ret.ptrval;
-					else if(ret.type == null_e) {
-						if(ret.ptrval == NULL || ret.ptrval == (ehretval_t *) 0x1)
+					if(ret.type == null_e) {
+						if(ret.referenceval == NULL || ret.referenceval == (ehretval_t *) 0x1)
 							break;
 						// get operands
 						operand2 = execute(node->op.paras[0]->op.paras[2], context);
-						if(operand2.type == retvalptr_e)
-							ret = *ret.ptrval;
-						switch(ret.ptrval->type) {
+						if(operand2.type == reference_e)
+							ret = *ret.referenceval;
+						switch(ret.referenceval->type) {
 							case int_e:
-								ret = int_arrow_get(*ret.ptrval, operand2);
+								ret = int_arrow_get(*ret.referenceval, operand2);
 								break;
 							case string_e:
-								ret = string_arrow_get(*ret.ptrval, operand2);
+								ret = string_arrow_get(*ret.referenceval, operand2);
 								break;
 							default:
 								fprintf(stderr, "Unsupported type for dereference\n");
 								break;
 						}
 					}
+					else while(ret.type == reference_e)
+						ret = *ret.referenceval;
 					break;
 				default:
 					fprintf(stderr, "Unexpected opcode %d\n", node->op.op);
@@ -1271,10 +1280,10 @@ static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue)
 	// get mask
 	mask = (1 << (sizeof(int) * 8 - 1)) >> index.intval;
 	if(eh_xtobool(rvalue).boolval)
-		input.ptrval->intval |= mask;
+		input.referenceval->intval |= mask;
 	else {
 		mask = ~mask;
-		input.ptrval->intval &= mask;
+		input.referenceval->intval &= mask;
 	}
 	return;
 }
@@ -1289,13 +1298,13 @@ static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rval
 		fprintf(stderr, "Character access to a string must use an integer to set\n");
 		return;
 	}
-	count = strlen(input.ptrval->strval);
+	count = strlen(input.referenceval->strval);
 	if(index.intval >= count) {
 		fprintf(stderr, "Identifier too large\n");
 		return;
 	}
 	// get the nth character
-	input.ptrval->strval[index.intval] = rvalue.intval;
+	input.referenceval->strval[index.intval] = rvalue.intval;
 	return;
 }
 

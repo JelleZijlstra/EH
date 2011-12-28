@@ -24,7 +24,7 @@ EHLIBFUNC(printvar) {
 		fprintf(stderr, "Incorrect argument count for function printvar\n");
 		return;
 	}
-	printvar_retval(execute(&paras[0]));
+	printvar_retval(execute(&paras[0], context));
 	return;
 }
 

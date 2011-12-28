@@ -56,7 +56,7 @@ program:
 	statement_list			{
 								//print_tree($1, 0);
 								eh_init();
-								ehretval_t ret = execute($1);
+								ehretval_t ret = execute($1, NULL);
 								free_node($1);
 								eh_exit();
 								// use exit value if possible

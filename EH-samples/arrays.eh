@@ -22,3 +22,5 @@ echo $baz -> 31
 echo count $baz
 echo count ($bar -> 3)
 echo count $bar
+$ empty = []
+call printvar: $empty

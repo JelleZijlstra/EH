@@ -22,15 +22,15 @@ void remove_variable(char *name, int scope);
 void list_variables(void);
 bool insert_function(ehfunc_t *func);
 ehfunc_t *get_function(char *name);
-ehretval_t call_function(ehfm_t *f, ehnode_t *args);
-void array_insert(ehvar_t **array, ehnode_t *in, int place);
+ehretval_t call_function(ehfm_t *f, ehnode_t *args, char *context);
+void array_insert(ehvar_t **array, ehnode_t *in, int place, char *context);
 ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
 ehretval_t array_get(ehvar_t **array, ehretval_t index);
 int array_count(ehvar_t **array);
 void insert_class(ehclass_t *class);
 ehclass_t *get_class(char *name);
-void class_insert(ehclassmember_t **class, ehnode_t *in);
+void class_insert(ehclassmember_t **class, ehnode_t *in, char *context);
 ehclassmember_t *class_getmember(ehclassmember_t **class, char *name);
 ehretval_t class_get(ehclassmember_t **class, char *name);
 
@@ -50,8 +50,8 @@ ehretval_t eh_xtobool(ehretval_t in);
  */
 // take ints, returns an int
 #define EH_INT_CASE(token, operator) case token: \
-	operand1 = eh_xtoi(execute(node->op.paras[0])); \
-	operand2 = eh_xtoi(execute(node->op.paras[1])); \
+	operand1 = eh_xtoi(execute(node->op.paras[0], context)); \
+	operand2 = eh_xtoi(execute(node->op.paras[1], context)); \
 	if(IS_INT(operand1) && IS_INT(operand2)) { \
 		ret.type = int_e; \
 		ret.intval = (operand1.intval operator operand2.intval); \
@@ -62,8 +62,8 @@ ehretval_t eh_xtobool(ehretval_t in);
 	break;
 // take ints, return a bool
 #define EH_INTBOOL_CASE(token, operator) case token: \
-	operand1 = eh_xtoi(execute(node->op.paras[0])); \
-	operand2 = eh_xtoi(execute(node->op.paras[1])); \
+	operand1 = eh_xtoi(execute(node->op.paras[0], context)); \
+	operand2 = eh_xtoi(execute(node->op.paras[1], context)); \
 	if(IS_INT(operand1) && IS_INT(operand2)) { \
 		ret.type = bool_e; \
 		ret.boolval = (operand1.intval operator operand2.intval); \
@@ -74,8 +74,8 @@ ehretval_t eh_xtobool(ehretval_t in);
 	break;
 // take bools, return a bool
 #define EH_BOOL_CASE(token, operator) case token: \
-	operand1 = eh_xtobool(execute(node->op.paras[0])); \
-	operand2 = eh_xtobool(execute(node->op.paras[1])); \
+	operand1 = eh_xtobool(execute(node->op.paras[0], context)); \
+	operand2 = eh_xtobool(execute(node->op.paras[1], context)); \
 	ret.type = bool_e; \
 	ret.boolval = (operand1.intval operator operand2.intval); \
 	break;
@@ -86,4 +86,3 @@ ehretval_t eh_xtobool(ehretval_t in);
 #define SETRETFROMVAR(var) { ret = var->value; }
 
 #define SETVARFROMRET(var) { var->value = ret; }
-

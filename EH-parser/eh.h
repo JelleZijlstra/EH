@@ -124,7 +124,7 @@ typedef struct ehfm_t {
 	eharg_t *args;
 	union {
 		ehnode_t *code;
-		void (*ptr)(ehnode_t *, ehretval_t *);
+		void (*ptr)(ehnode_t *, ehretval_t *, char *);
 	};
 } ehfm_t;
 
@@ -150,7 +150,7 @@ typedef struct ehclass_t {
 } ehclass_t;
 
 typedef struct ehlibfunc_t {
-	void (*code)(ehnode_t *, ehretval_t *);
+	void (*code)(ehnode_t *, ehretval_t *, char *);
 	char *name;
 } ehlibfunc_t;
 
@@ -169,7 +169,7 @@ ehnode_t *get_type(type_enum value);
 ehnode_t *get_bool(bool value);
 ehnode_t *get_visibility(visibility_enum value);
 ehnode_t *operate(int operations, int noperations, ...);
-ehretval_t execute(ehnode_t *node);
+ehretval_t execute(ehnode_t *node, char *context);
 void print_tree(ehnode_t *in, int n);
 
 void eh_setarg(int argc, char **argv);

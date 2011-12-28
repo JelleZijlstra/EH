@@ -22,6 +22,7 @@ void remove_variable(char *name, int scope);
 void list_variables(void);
 bool insert_function(ehfunc_t *func);
 ehfunc_t *get_function(char *name);
+ehretval_t call_function(ehfm_t *f, ehnode_t *args);
 void array_insert(ehvar_t **array, ehnode_t *in, int place);
 ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);

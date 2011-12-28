@@ -540,52 +540,7 @@ ehretval_t execute(ehnode_t *node) {
 						fprintf(stderr, "Unknown function %s\n", name);
 						return ret;
 					}
-					if(func->f.type == lib_e) {
-						// library function
-						if(node->op.nparas == 1)
-							func->f.ptr(NULL, &ret);
-						else
-							func->f.ptr(node->op.paras[1], &ret);
-						return ret;
-					}
-					int i = 0;
-					// set parameters as necessary
-					ehnode_t *in = node->op.paras[1];
-					while(in != NULL) {
-						var = Malloc(sizeof(ehvar_t));
-						var->name = func->f.args[i].name;
-						var->scope = scope + 1;
-						insert_variable(var);
-						i++;
-						if(i > func->f.argcount) {
-							fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", func->name, func->f.argcount, i);
-							return ret;
-						}
-						if(in->type == opnode_e && in->op.op == ',') {
-							ret = execute(in->op.paras[0]);
-							SETVARFROMRET(var);
-							in = in->op.paras[1];
-						}
-						else {
-							ret = execute(in);
-							SETVARFROMRET(var);
-							break;
-						}
-					}
-					// functions get their own scope (not decremented before because execution of arguments needs parent scope)
-					scope++;
-					if(func->f.argcount != i) {
-						fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d\n", name, func->f.argcount, i);
-						return ret;
-					}
-					ret = execute(func->f.code);
-					returning = false;
-					if(node->op.nparas == 2) {
-						for(i = 0; i < func->f.argcount; i++) {
-							remove_variable(func->f.args[i].name, scope);
-						}
-					}
-					scope--;
+					ret = call_function(&func->f, node->op.paras[1]);
 					break;
 				case T_RET:
 					returning = true;
@@ -792,6 +747,52 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
 			break;
 		}
 	}
+}
+ehretval_t call_function(ehfm_t *f, ehnode_t *args) {
+	ehretval_t ret;
+	ehvar_t *var;
+
+	if(f->type == lib_e) {
+		// library function
+		f->ptr(args, &ret);
+		return ret;
+	}
+	int i = 0;
+	// set parameters as necessary
+	while(args != NULL) {
+		var = Malloc(sizeof(ehvar_t));
+		var->name = f->args[i].name;
+		var->scope = scope + 1;
+		insert_variable(var);
+		i++;
+		if(i > f->argcount) {
+			fprintf(stderr, "Incorrect argument count for function: expected %d, got %d\n", f->argcount, i);
+			return ret;
+		}
+		if(args->type == opnode_e && args->op.op == ',') {
+			ret = execute(args->op.paras[0]);
+			SETVARFROMRET(var);
+			args = args->op.paras[1];
+		}
+		else {
+			ret = execute(args);
+			SETVARFROMRET(var);
+			break;
+		}
+	}
+	// functions get their own scope (not decremented before because execution of arguments needs parent scope)
+	scope++;
+	if(f->argcount != i) {
+		fprintf(stderr, "Incorrect argument count for function: expected %d, got %d\n", f->argcount, i);
+		return ret;
+	}
+	ret = execute(f->code);
+	returning = false;
+	for(i = 0; i < f->argcount; i++) {
+		remove_variable(f->args[i].name, scope);
+	}
+	scope--;
+	return ret;
 }
 /*
  * Classes

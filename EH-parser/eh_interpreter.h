@@ -22,7 +22,7 @@ void remove_variable(char *name, int scope);
 void list_variables(void);
 bool insert_function(ehfunc_t *func);
 ehfunc_t *get_function(char *name);
-ehretval_t call_function(ehfm_t *f, ehnode_t *args, char *context);
+ehretval_t call_function(ehfm_t *f, ehnode_t *args, char *context, char *newcontext);
 void array_insert(ehvar_t **array, ehnode_t *in, int place, char *context);
 ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
@@ -31,8 +31,8 @@ int array_count(ehvar_t **array);
 void insert_class(ehclass_t *class);
 ehclass_t *get_class(char *name);
 void class_insert(ehclassmember_t **class, ehnode_t *in, char *context);
-ehclassmember_t *class_getmember(ehclassmember_t **class, char *name);
-ehretval_t class_get(ehclassmember_t **class, char *name);
+ehclassmember_t *class_getmember(ehobj_t *class, char *name, char *context);
+ehretval_t class_get(ehobj_t *class, char *name, char *context);
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
 #define HASH_INITVAL 234092

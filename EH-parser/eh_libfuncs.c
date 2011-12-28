@@ -52,8 +52,8 @@ static void printvar_retval(ehretval_t in) {
 				printf("@bool false\n");
 			break;
 		case object_e:
-			printf("@object [\n");
-			printvar_object(in.objval);
+			printf("@object <%s> [\n", in.objval->class);
+			printvar_object(in.objval->members);
 			printf("]\n");
 			break;
 		case func_e:

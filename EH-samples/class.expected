@@ -1,6 +1,6 @@
 2
 meh
-@object [
+@object <Foo> [
 bar <public>: @int 3
 mah <private>: @function <user>: n
 meh <public>: @function <user>: n
@@ -9,3 +9,4 @@ baz <private>: null
 3
 @function <user>: n
 42
+Calling a private method

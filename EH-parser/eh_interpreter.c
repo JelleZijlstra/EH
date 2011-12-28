@@ -281,7 +281,9 @@ ehretval_t execute(ehnode_t *node, char *context) {
 						break;
 					}
 					ret.type = object_e;
-					ret.objval = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+					ret.objval = Malloc(sizeof(ehobj_t));
+					ret.objval->class = name;
+					ret.objval->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
 					ehclassmember_t *newmember;
 					for(i = 0; i < VARTABLE_S; i++) {
 						classmember = class->members[i];
@@ -289,8 +291,8 @@ ehretval_t execute(ehnode_t *node, char *context) {
 							newmember = Malloc(sizeof(ehclassmember_t));
 							// copy the whole thing over
 							*newmember = *classmember;
-							newmember->next = ret.objval[i];
-							ret.objval[i] = newmember;
+							newmember->next = ret.objval->members[i];
+							ret.objval->members[i] = newmember;
 							classmember = classmember->next;
 						}
 					}
@@ -540,7 +542,7 @@ ehretval_t execute(ehnode_t *node, char *context) {
 						fprintf(stderr, "Unknown function %s\n", name);
 						return ret;
 					}
-					ret = call_function(&func->f, node->op.paras[1], context);
+					ret = call_function(&func->f, node->op.paras[1], context, context);
 					break;
 				case T_RET:
 					returning = true;
@@ -576,15 +578,18 @@ ehretval_t execute(ehnode_t *node, char *context) {
 						break;
 					}
 					name = execute(node->op.paras[1], context).strval;
-					// TODO: make this support protected
-					ret = class_get(operand1.objval, name);
+					ret = class_get(operand1.objval, name, context);
+					if(ret.type == null_e) {
+						fprintf(stderr, "No such object member\n");
+						break;
+					}
 					// method; nothing else to do for properties
 					if(node->op.nparas == 3) {
 						if(ret.type != func_e) {
 							fprintf(stderr, "Call to object member that is not a method\n");
 							break;
 						}
-						ret = call_function(ret.funcval, node->op.paras[2], context);
+						ret = call_function(ret.funcval, node->op.paras[2], context, operand1.objval->class);
 					}
 					break;
 				case T_FUNC: // function definition
@@ -752,7 +757,7 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
 		}
 	}
 }
-ehretval_t call_function(ehfm_t *f, ehnode_t *args, char *context) {
+ehretval_t call_function(ehfm_t *f, ehnode_t *args, char *context, char *newcontext) {
 	ehretval_t ret;
 	ehvar_t *var;
 
@@ -785,13 +790,14 @@ ehretval_t call_function(ehfm_t *f, ehnode_t *args, char *context) {
 			break;
 		}
 	}
-	// functions get their own scope (not decremented before because execution of arguments needs parent scope)
+	// functions get their own scope (not incremented before because execution of arguments needs parent scope)
 	scope++;
 	if(f->argcount != i) {
 		fprintf(stderr, "Incorrect argument count for function: expected %d, got %d\n", f->argcount, i);
 		return ret;
 	}
-	ret = execute(f->code, context);
+	// set new context (only useful for methods)
+	ret = execute(f->code, newcontext);
 	returning = false;
 	for(i = 0; i < f->argcount; i++) {
 		remove_variable(f->args[i].name, scope);
@@ -861,24 +867,38 @@ void class_insert(ehclassmember_t **class, ehnode_t *in, char *context) {
 	member->next = class[vhash];
 	class[vhash] = member;
 }
-ehclassmember_t *class_getmember(ehclassmember_t **class, char *name) {
+ehclassmember_t *class_getmember(ehobj_t *class, char *name, char *context) {
 	ehclassmember_t *curr;
 	unsigned int vhash;
 	
 	vhash = hash(name, 0);
-	curr = class[vhash];
+	curr = class->members[vhash];
 	while(curr != NULL) {
-		if(!strcmp(curr->name, name))
-			break;
+		if(!strcmp(curr->name, name)) {
+			// we found it; now check visibility
+			switch(curr->visibility) {
+				case public_e:
+					return curr;
+				case private_e:
+					// if context is NULL, we're never going to get private stuff
+					if(context == NULL)
+						return NULL;
+					// compare class name to context given
+					if(!strcmp(class->class, context))
+						return curr;
+					else
+						return NULL;
+			}
+		}
 		curr = curr->next;
 	}
 	return curr;
 }
-ehretval_t class_get(ehclassmember_t **class, char *name) {
+ehretval_t class_get(ehobj_t *class, char *name, char *context) {
 	ehclassmember_t *curr;
 	ehretval_t ret;
 	
-	curr = class_getmember(class, name);
+	curr = class_getmember(class, name, context);
 	if(curr == NULL)
 		ret.type = null_e;
 	else

@@ -81,8 +81,7 @@ typedef struct ehretval_t {
 		int intval;
 		char *strval;
 		struct ehvar_t **arrval;
-		// I suppose we need to store the class name somewhere too
-		struct ehclassmember_t **objval;
+		struct ehobj_t *objval;
 		type_enum typeval;
 		bool boolval;
 		struct ehretval_t *ptrval;
@@ -127,6 +126,12 @@ typedef struct ehfm_t {
 		void (*ptr)(ehnode_t *, ehretval_t *, char *);
 	};
 } ehfm_t;
+
+// EH object
+typedef struct ehobj_t {
+	struct ehclassmember_t **members;
+	char *class;
+} ehobj_t;
 
 // EH procedure
 typedef struct ehfunc_t {

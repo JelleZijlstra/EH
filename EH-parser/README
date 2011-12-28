@@ -18,16 +18,13 @@ interpreter:
   The PHP implementation does not support parameters that are arrays.
 - Integrate ehi into PHP using SWIG.
 - Less haphazard error handling.
-- Still missing some operators: unary minus, and, or, bitwise operators. 
-  Possibly the ternary operator too.
 - Switch statements?
-- Breaking out of loops.
 - Foreach-like loops for objects and arrays.
 
 To compile the interpreter (ehi), write:
 $ make interpreter
 
-To use the compiler (ehc) instead, use:
+To use the compiler (ehc) instead, write:
 $ make compiler
 
 To compile and run a file called "compile.eh" with ehc:

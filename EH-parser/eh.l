@@ -40,6 +40,7 @@
 "count"		return T_COUNT;
 "while"		return T_WHILE;
 "endwhile"	return T_ENDWHILE;
+"break"		return T_BREAK;
 "call"		return T_CALL;
 "func"		return T_FUNC;
 "endfunc"	return T_ENDFUNC;

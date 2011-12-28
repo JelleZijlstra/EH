@@ -10,6 +10,7 @@
 
 // indicate that we're returning
 static bool returning = false;
+static int breaking = 0;
 // current object, gets passed around
 static char *newcontext = NULL;
 int scope = 0;
@@ -225,13 +226,19 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 						ret = execute(node->op.paras[2], context);
 					break;
 				case T_WHILE:
+					breaking = 0;
 					while(eh_xtobool(execute(node->op.paras[0], context)).boolval) {
 						ret = execute(node->op.paras[1], context);
 						if(returning)
 							return ret;
+						if(breaking) {
+							breaking--;
+							return ret;
+						}
 					}
 					break;
 				case T_FOR:
+					breaking = 0;
 					// get the count
 					count = execute(node->op.paras[0], context).intval;
 					if(node->op.nparas == 2) {
@@ -240,6 +247,10 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 							ret = execute(node->op.paras[1], context);
 							if(returning)
 								return ret;
+							if(breaking) {
+								breaking--;
+								return ret;
+							}
 						}
 					}
 					else {
@@ -267,7 +278,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 			 */
 				case T_SEPARATOR:
 					ret = execute(node->op.paras[0], context);
-					if(returning)
+					if(returning || breaking)
 						return ret;
 					ret = execute(node->op.paras[1], context);
 					break;
@@ -277,9 +288,21 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 				case T_CALL: // call: execute argument and discard it
 					execute(node->op.paras[0], context);
 					break;
-				case T_RET:
+				case T_RET: // return from a function or the program
 					returning = true;
 					ret = execute(node->op.paras[0], context);
+					break;
+				case T_BREAK: // break out of a loop
+					// Breaking with an argument greater than the number of loops we're currently in exits the program. Whether that's a feature or a bug, I'm not sure.
+					if(node->op.nparas == 0)
+						breaking = 1;
+					else {
+						operand1 = eh_xtoi(execute(node->op.paras[0], context));
+						if(operand1.type != int_e)
+							break;
+						// break as many levels as specified by the argument
+						breaking = operand1.intval;
+					}
 					break;
 			/*
 			 * Object access

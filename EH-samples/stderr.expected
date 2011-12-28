@@ -1,5 +1,28 @@
-No such object member
-syntax error, unexpected $end
+@argv.eh:
+@arrays.eh:
+@associative.eh:
+@bool.eh:
+@class.eh:
+Access to non-existent object member
+@compile.eh:
+@error.eh:
+In line 7: syntax error, unexpected $end
+@fibonacci.eh:
+@for.eh:
+@greedy.eh 45:
+@intaccess.eh:
+@loop.eh:
+@mccarthy.eh 45:
+@mccarthy2.eh 45:
+@noargfunc.eh:
+@null.eh:
+@parentheses.eh:
+@plusplus.eh:
+@stringvars.eh:
 Unable to perform type juggling
 Unable to perform type juggling
 Incompatible operands
+@test.eh:
+@testfunc.eh:
+@typecast.eh:
+@while.eh:

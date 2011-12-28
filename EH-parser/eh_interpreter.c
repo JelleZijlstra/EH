@@ -10,8 +10,14 @@
 
 // indicate that we're returning
 static bool returning = false;
+// current object, gets passed around
+static char *newcontext = NULL;
 int scope = 0;
 static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node);
+static ehretval_t int_arrow_get(ehretval_t operand1, ehretval_t operand2);
+static ehretval_t string_arrow_get(ehretval_t operand1, ehretval_t operand2);
+static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
+static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
 
 // library functions supported by ehi
 ehlibfunc_t libfuncs[] = {
@@ -70,11 +76,18 @@ ehretval_t execute(ehnode_t *node, char *context) {
 			ret.type = bool_e;
 			ret.boolval = node->boolv;
 			break;
+		case accessornode_e:
+			ret.type = accessor_e;
+			ret.accessorval = node->accessorv;
+			break;
 		case nullnode_e:
 			break;
 		case opnode_e:
 			//printf("Executing opcode: %d\n", node->op.op);
 			switch(node->op.op) {
+			/*
+			 * Unary operators
+			 */
 				case T_ECHO:
 					switch(node->op.paras[0]->type) {
 						case stringnode_e:
@@ -111,7 +124,7 @@ ehretval_t execute(ehnode_t *node, char *context) {
 									printf("(null)\n");
 									break;
 								default:
-									fprintf(stderr, "Cannot print this type\n");
+									fprintf(stderr, "Cannot print this type: %d\n", ret.type);
 							}
 							break;
 						default:
@@ -119,6 +132,51 @@ ehretval_t execute(ehnode_t *node, char *context) {
 							break;
 					}
 					break;
+				case '@': // type casting
+					operand1 = execute(node->op.paras[0], context);
+					operand2 = execute(node->op.paras[1], context);
+					switch(operand1.typeval) {
+						case int_e:
+							ret = eh_xtoi(operand2);
+							break;
+						case string_e:
+							ret = eh_xtostr(operand2);
+							break;
+						case bool_e:
+							ret = eh_xtobool(operand2);
+							break;
+						default:
+							fprintf(stderr, "Unsupported typecast\n");
+							break;
+					}
+					break;
+				case T_COUNT:
+					operand1 = execute(node->op.paras[0], context);
+					ret.type = int_e;
+					switch(operand1.type) {
+						case int_e:
+							ret.intval = sizeof(int) * 8;
+							break;
+						case string_e:
+							ret.intval = strlen(operand1.strval);
+							break;
+						case array_e:
+							ret.intval = array_count(operand1.arrval);
+							break;
+						case null_e:
+							ret.intval = 0;
+							break;
+						case bool_e:
+							ret.intval = 0;
+							break;
+						default:
+							fprintf(stderr, "Unsupported datatype for count\n");
+							break;
+					}
+					break;
+			/*
+			 * Control flow
+			 */
 				case T_IF:
 					if(eh_xtobool(execute(node->op.paras[0], context)).boolval) {
 						ret = execute(node->op.paras[1], context);
@@ -166,59 +224,128 @@ ehretval_t execute(ehnode_t *node, char *context) {
 						}
 					}
 					break;
+			/*
+			 * Miscellaneous
+			 */
 				case T_SEPARATOR:
 					ret = execute(node->op.paras[0], context);
 					if(returning)
 						return ret;
 					ret = execute(node->op.paras[1], context);
 					break;
-				case T_ARROW: // array access, and similar stuff for other types
+				case T_EXPRESSION: // wrapper for special case
+					ret = execute(node->op.paras[0], context);
+					break;
+				case T_CALL: // call: execute argument and discard it
+					execute(node->op.paras[0], context);
+					break;
+				case T_RET:
+					returning = true;
+					ret = execute(node->op.paras[0], context);
+					break;
+			/*
+			 * Object access
+			 */
+				case ':': // function call
 					operand1 = execute(node->op.paras[0], context);
-					operand2 = execute(node->op.paras[1], context);
-					switch(operand1.type) {
-						case int_e:
-							// "array" access to integer returns the nth bit of the integer; for example (assuming sizeof(int) == 32), (2 -> 30) == 1, (2 -> 31) == 0
-							if(operand2.type != int_e) {
-								fprintf(stderr, "Bitwise acess to an integer must use an integer identifier\n");
-								return ret;
-							}
-							if(operand2.intval >= sizeof(int) * 8) {
-								fprintf(stderr, "Identifier too large\n");
-								return ret;
-							}
-							// get mask
-							i = 1 << (sizeof(int) * 8 - 1);
-							i >>= operand2.intval;
-							// apply mask
-							ret.intval = (operand1.intval & i) >> (sizeof(int) * 8 - 1 - i);
-							ret.type = int_e;
-							break;
-						case string_e:
-							// "array" access to a string returns an integer representing the nth character.
-							// In the future, perhaps replace this with a char datatype or with a "shortstring" datatype representing strings up to 3 or even 4 characters long
-							if(operand2.type != int_e) {
-								fprintf(stderr, "Character acess to a string must use an integer identifier\n");
-								return ret;
-							}
-							count = strlen(operand1.strval);
-							if(operand2.intval >= count) {
-								fprintf(stderr, "Identifier too large\n");
-								return ret;
-							}
-							// get the nth character
-							ret.intval = operand1.strval[operand2.intval];
-							ret.type = int_e;
-							break;
-						case array_e:
-							// array access to an array works as expected.
-							ret = array_get(operand1.arrval, operand2);
-							break;
-						default:
-							fprintf(stderr, "Array access from unsupported type\n");
-							break;
+					// operand1 will be either a string (indicating a normal function call) or a func_e (indicating a method or closure call)
+					if(operand1.type == string_e) {
+						name = operand1.strval;
+						func = get_function(name);
+						//printf("Calling function %s at scope %d\n", node->op.paras[0]->id.name, scope);
+						if(func == NULL) {
+							fprintf(stderr, "Unknown function %s\n", name);
+							return ret;
+						}
+						ret = call_function(&func->f, node->op.paras[1], context, context);
+					}
+					else if(operand1.type == func_e) {
+						ret = call_function(operand1.funcval, node->op.paras[1], context, newcontext);
 					}
 					break;
-				case T_CLASS:
+				case T_ACCESSOR: // array access, and similar stuff for other types
+					operand1 = execute(node->op.paras[0], context);
+					if(node->op.paras[1]->accessorv == dot_e) {
+						// object access
+						if(operand1.type != object_e) {
+							fprintf(stderr, "Access to variable that is not an object\n");
+							break;
+						}
+						name = execute(node->op.paras[0], context).strval;
+						ret = class_get(operand1.objval, name, context);
+						if(ret.type == null_e) {
+							fprintf(stderr, "No such object member\n");
+							break;
+						}
+						newcontext = operand1.objval->class;
+					} else if(node->op.paras[1]->accessorv == arrow_e) {
+						// "array" access
+						operand2 = execute(node->op.paras[2], context);
+						switch(operand1.type) {
+							case int_e:
+								ret = int_arrow_get(operand1, operand2);
+								break;
+							case string_e:
+								ret = string_arrow_get(operand1, operand2);
+								break;
+							case array_e:
+								// array access to an array works as expected.
+								ret = array_get(operand1.arrval, operand2);
+								break;
+							default:
+								fprintf(stderr, "Array access from unsupported type\n");
+								break;
+						}
+					}
+					else {
+						fprintf(stderr, "Unsupported accessor\n");
+					}
+					break;
+				case T_NEW: // object declaration
+					name = execute(node->op.paras[0], context).strval;
+					class = get_class(name);
+					if(class == NULL) {
+						fprintf(stderr, "No such class: %s\n", name);
+						break;
+					}
+					ret.type = object_e;
+					ret.objval = Malloc(sizeof(ehobj_t));
+					ret.objval->class = name;
+					ret.objval->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+					ehclassmember_t *newmember;
+					for(i = 0; i < VARTABLE_S; i++) {
+						classmember = class->members[i];
+						while(classmember != NULL) {
+							newmember = Malloc(sizeof(ehclassmember_t));
+							// copy the whole thing over
+							*newmember = *classmember;
+							newmember->next = ret.objval->members[i];
+							ret.objval->members[i] = newmember;
+							classmember = classmember->next;
+						}
+					}
+					break;
+			/*
+			 * Object definitions
+			 */
+				case T_FUNC: // function definition
+					name = node->op.paras[0]->id.name;
+					//printf("Defining function %s with %d paras\n", node->op.paras[0]->id.name, node->op.nparas);
+					func = get_function(name);
+					// function definition
+					if(func != NULL) {
+						fprintf(stderr, "Attempt to redefine function %s\n", name);
+						return ret;
+					}
+					func = Malloc(sizeof(ehfunc_t));
+					func->name = name;
+					// determine argcount
+					make_arglist(&func->f.argcount, &func->f.args, node->op.paras[1]);
+					func->f.code = node->op.paras[2];
+					func->f.type = user_e;
+					insert_function(func);
+					break;
+				case T_CLASS: // class declaration
 					class = Malloc(sizeof(ehclass_t));
 					operand1 = execute(node->op.paras[0], context);
 					class->name = operand1.strval;
@@ -253,51 +380,10 @@ ehretval_t execute(ehnode_t *node, char *context) {
 						}
 					}
 					break;
-				case '@': // type casting
-					operand1 = execute(node->op.paras[0], context);
-					operand2 = execute(node->op.paras[1], context);
-					switch(operand1.typeval) {
-						case int_e:
-							ret = eh_xtoi(operand2);
-							break;
-						case string_e:
-							ret = eh_xtostr(operand2);
-							break;
-						case bool_e:
-							ret = eh_xtobool(operand2);
-							break;
-						default:
-							fprintf(stderr, "Unsupported typecast\n");
-							break;
-					}
-					break;
-				case T_EXPRESSION: // wrapper for special case
-					return execute(node->op.paras[0], context);
-				case T_NEW:
-					name = execute(node->op.paras[0], context).strval;
-					class = get_class(name);
-					if(class == NULL) {
-						fprintf(stderr, "No such class: %s\n", name);
-						break;
-					}
-					ret.type = object_e;
-					ret.objval = Malloc(sizeof(ehobj_t));
-					ret.objval->class = name;
-					ret.objval->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
-					ehclassmember_t *newmember;
-					for(i = 0; i < VARTABLE_S; i++) {
-						classmember = class->members[i];
-						while(classmember != NULL) {
-							newmember = Malloc(sizeof(ehclassmember_t));
-							// copy the whole thing over
-							*newmember = *classmember;
-							newmember->next = ret.objval->members[i];
-							ret.objval->members[i] = newmember;
-							classmember = classmember->next;
-						}
-					}
-					break;
-				case '=':
+			/*
+			 * Binary operators
+			 */
+				case '=': // equality
 					operand1 = execute(node->op.paras[0], context);
 					operand2 = execute(node->op.paras[1], context);
 					ret.type = bool_e;
@@ -317,7 +403,7 @@ ehretval_t execute(ehnode_t *node, char *context) {
 							ret.type = null_e;
 					}
 					break;
-				case T_SE:
+				case T_SE: // strict equality
 					operand1 = execute(node->op.paras[0], context);
 					operand2 = execute(node->op.paras[1], context);
 					ret.type = bool_e;
@@ -371,6 +457,9 @@ ehretval_t execute(ehnode_t *node, char *context) {
 				EH_INT_CASE('-', -)
 				EH_INT_CASE('*', *)
 				EH_INT_CASE('/', /)
+			/*
+			 * Variable manipulation
+			 */
 				case T_LVALUE:
 					/*
 					 * Get an lvalue. This case normally returns an
@@ -389,6 +478,7 @@ ehretval_t execute(ehnode_t *node, char *context) {
 					 */
 					name = node->op.paras[0]->id.name;
 					var = get_variable(name, scope);
+					ret.ptrval = NULL;
 					switch(node->op.nparas) {
 						case 1:
 							if(var == NULL) {
@@ -397,32 +487,57 @@ ehretval_t execute(ehnode_t *node, char *context) {
 								 * a simple access. In that case, we use NULL
 								 * as the ptrval.
 								 */
-								ret.ptrval = NULL;
 							}
 							else {
 								ret.type = retvalptr_e;
 								ret.ptrval = &var->value;
 							}
 							break;
-						case 2:
+						case 3:
 							if(var == NULL) {
 								fprintf(stderr, "Cannot access member of non-existing variable\n");
 								ret.ptrval = (ehretval_t *) 0x1;
 							}
-							else switch(var->value.type) {
-								case array_e:
-									operand1 = execute(node->op.paras[1], context);							
-									member = array_getmember(var->value.arrval, operand1);
-									// if there is no member yet, insert it with a null value
-									if(member == NULL) {
-										member = array_insert_retval(var->value.arrval, operand1, ret);
-									}
-									ret.type = retvalptr_e;
-									ret.ptrval = &member->value;
-									break;
-								default:
-									ret.ptrval = &var->value;
-									break;
+							else if(node->op.paras[1]->accessorv == arrow_e) {							
+								switch(var->value.type) {
+									case array_e:
+										operand1 = execute(node->op.paras[2], context);							
+										member = array_getmember(var->value.arrval, operand1);
+										// if there is no member yet, insert it with a null value
+										if(member == NULL) {
+											member = array_insert_retval(var->value.arrval, operand1, ret);
+										}
+										ret.type = retvalptr_e;
+										ret.ptrval = &member->value;
+										break;
+									default:
+										ret.ptrval = &var->value;
+										break;
+								}
+							} else if(node->op.paras[1]->accessorv == dot_e) {
+								switch(var->value.type) {
+									case object_e:
+										operand1 = execute(node->op.paras[2], context);
+										if(operand1.type != string_e) {
+											fprintf(stderr, "Object member label must be a string\n");
+											return ret;
+										}
+										classmember = class_getmember(var->value.objval, operand1.strval, context);
+										if(classmember == NULL) {
+											fprintf(stderr, "Access to non-existent object member\n");
+											return ret;
+										}
+										ret.type = retvalptr_e;
+										ret.ptrval = &classmember->value;
+										newcontext = var->value.objval->class;
+										break;
+									default:
+										fprintf(stderr, "Object access to variable that is not an object\n");
+										break;
+								}
+							}
+							else {
+								fprintf(stderr, "Unsupported accessor\n");
 							}
 							break;
 					}
@@ -435,7 +550,7 @@ ehretval_t execute(ehnode_t *node, char *context) {
 						*(operand1.ptrval) = operand2;
 					}
 					else if(operand1.type == null_e) {
-						if(operand1.ptrval == NULL) {
+						if(operand1.ptrval == NULL || operand1.ptrval == (ehretval_t *) 0x1) {
 							// set new variable
 							var = Malloc(sizeof(ehvar_t));
 							var->name = node->op.paras[0]->op.paras[0]->id.name;
@@ -447,43 +562,14 @@ ehretval_t execute(ehnode_t *node, char *context) {
 							// do nothing; T_LVALUE will already have complained
 						}
 						else {
-							// operand 1 is the variable modified, operand 2 is the value set to, operand 3 is the index
-							operand3 = execute(node->op.paras[0]->op.paras[1], context);
+							// operand 1 is a pointer to the variable modified, operand 2 is the value set to, operand 3 is the index
+							operand3 = execute(node->op.paras[0]->op.paras[2], context);
 							switch(operand1.ptrval->type) {
 								case int_e:
-									if(operand3.type != int_e) {
-										fprintf(stderr, "Bitwise acess to an integer must use an integer identifier\n");
-										return ret;
-									}
-									if(operand3.intval >= sizeof(int) * 8) {
-										fprintf(stderr, "Identifier too large\n");
-										return ret;
-									}
-									// get mask
-									i = (1 << (sizeof(int) * 8 - 1)) >> operand3.intval;
-									if(eh_xtobool(operand2).boolval)
-										operand1.ptrval->intval |= i;
-									else {
-										i = ~i;
-										operand1.ptrval->intval &= i;
-									}
+									int_arrow_set(operand1, operand3, operand2);
 									break;
 								case string_e:
-									if(operand3.type != int_e) {
-										fprintf(stderr, "Character acess to a string must use an integer identifier\n");
-										return ret;
-									}
-									if(operand2.type != int_e) {
-										fprintf(stderr, "Character access to a string must use an integer to set\n");
-										return ret;
-									}
-									count = strlen(operand1.ptrval->strval);
-									if(operand3.intval >= count) {
-										fprintf(stderr, "Identifier too large\n");
-										return ret;
-									}
-									// get the nth character
-									operand1.ptrval->strval[operand3.intval] = operand2.intval;
+									string_arrow_set(operand1, operand3, operand2);
 									break;
 								default:
 									fprintf(stderr, "Cannot set member of variable of this type\n");
@@ -523,95 +609,32 @@ ehretval_t execute(ehnode_t *node, char *context) {
 					}
 					break;
 				case '$': // variable dereference
-					name = node->op.paras[0]->id.name;
-					var = get_variable(name, scope);
-					if(var == NULL) {
-						fprintf(stderr, "Unknown variable %s\n", name);
-						return ret;
-					}
-					SETRETFROMVAR(var);
-					break;
-				case T_CALL: // call: execute argument and discard it
-					execute(node->op.paras[0], context);
-					break;
-				case ':': // function call
-					name = node->op.paras[0]->id.name;
-					func = get_function(name);
-					//printf("Calling function %s at scope %d\n", node->op.paras[0]->id.name, scope);
-					if(func == NULL) {
-						fprintf(stderr, "Unknown function %s\n", name);
-						return ret;
-					}
-					ret = call_function(&func->f, node->op.paras[1], context, context);
-					break;
-				case T_RET:
-					returning = true;
-					return execute(node->op.paras[0], context);
-				case T_COUNT:
-					operand1 = execute(node->op.paras[0], context);
-					ret.type = int_e;
-					switch(operand1.type) {
-						case int_e:
-							ret.intval = sizeof(int) * 8;
+					ret = execute(node->op.paras[0], context);
+					if(ret.type == retvalptr_e)
+						ret = *ret.ptrval;
+					else if(ret.type == null_e) {
+						if(ret.ptrval == NULL || ret.ptrval == (ehretval_t *) 0x1)
 							break;
-						case string_e:
-							ret.intval = strlen(operand1.strval);
-							break;
-						case array_e:
-							ret.intval = array_count(operand1.arrval);
-							break;
-						case null_e:
-							ret.intval = 0;
-							break;
-						case bool_e:
-							ret.intval = 0;
-							break;
-						default:
-							fprintf(stderr, "Unsupported datatype for count\n");
-							break;
-					}
-					return ret;
-				case '.': // object access
-					operand1 = execute(node->op.paras[0], context);
-					if(operand1.type != object_e) {
-						fprintf(stderr, "Access to variable that is not an object\n");
-						break;
-					}
-					name = execute(node->op.paras[1], context).strval;
-					ret = class_get(operand1.objval, name, context);
-					if(ret.type == null_e) {
-						fprintf(stderr, "No such object member\n");
-						break;
-					}
-					// method; nothing else to do for properties
-					if(node->op.nparas == 3) {
-						if(ret.type != func_e) {
-							fprintf(stderr, "Call to object member that is not a method\n");
-							break;
+						// get operands
+						operand2 = execute(node->op.paras[0]->op.paras[2], context);
+						if(operand2.type == retvalptr_e)
+							ret = *ret.ptrval;
+						switch(ret.ptrval->type) {
+							case int_e:
+								ret = int_arrow_get(*ret.ptrval, operand2);
+								break;
+							case string_e:
+								ret = string_arrow_get(*ret.ptrval, operand2);
+								break;
+							default:
+								fprintf(stderr, "Unsupported type for dereference\n");
+								break;
 						}
-						ret = call_function(ret.funcval, node->op.paras[2], context, operand1.objval->class);
 					}
-					break;
-				case T_FUNC: // function definition
-					name = node->op.paras[0]->id.name;
-					//printf("Defining function %s with %d paras\n", node->op.paras[0]->id.name, node->op.nparas);
-					func = get_function(name);
-					// function definition
-					if(func != NULL) {
-						fprintf(stderr, "Attempt to redefine function %s\n", name);
-						return ret;
-					}
-					func = Malloc(sizeof(ehfunc_t));
-					func->name = name;
-					// determine argcount
-					make_arglist(&func->f.argcount, &func->f.args, node->op.paras[1]);
-					func->f.code = node->op.paras[2];
-					func->f.type = user_e;
-					insert_function(func);
 					break;
 				default:
 					fprintf(stderr, "Unexpected opcode %d\n", node->op.op);
-					exit(0);
+					break;
 			}
 			break;
 		default:
@@ -1115,7 +1138,7 @@ ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) 
 			new->name = index.strval;
 			break;
 		default:
-			fprintf(stderr, "Unsupported array index type\n");
+			fprintf(stderr, "Unsupported array index type %d\n", index.type);
 			break;
 	}
 	new->next = array[vhash];
@@ -1135,7 +1158,7 @@ ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
 			vhash = hash(index.strval, 0);
 			break;
 		default:
-			fprintf(stderr, "Unsupported array index type\n");
+			fprintf(stderr, "Unsupported array index type %d\n", index.type);
 			return NULL;
 	}
 	curr = array[vhash];
@@ -1180,12 +1203,102 @@ int array_count(ehvar_t **array) {
 	for(i = 0; i < VARTABLE_S; i++) {
 		curr = array[i];
 		while(curr != NULL) {
-			count++;
+			if(curr->value.type != null_e)
+				count++;
 			curr = curr->next;
 		}
 	}
 	return count;
 }
+/*
+ * Variants of array access
+ */
+static ehretval_t int_arrow_get(ehretval_t operand1, ehretval_t operand2) {
+	ehretval_t ret;
+	int mask;
+
+	ret.type = null_e;
+	// "array" access to integer returns the nth bit of the integer; for example (assuming sizeof(int) == 32), (2 -> 30) == 1, (2 -> 31) == 0
+	if(operand2.type != int_e) {
+		fprintf(stderr, "Bitwise access to an integer must use an integer identifier\n");
+		return ret;
+	}
+	if(operand2.intval >= sizeof(int) * 8) {
+		fprintf(stderr, "Identifier too large\n");
+		return ret;
+	}
+	// get mask
+	mask = 1 << (sizeof(int) * 8 - 1);
+	mask >>= operand2.intval;
+	// apply mask
+	ret.intval = (operand1.intval & mask) >> (sizeof(int) * 8 - 1 - mask);
+	ret.type = int_e;
+	return ret;
+}
+static ehretval_t string_arrow_get(ehretval_t operand1, ehretval_t operand2) {
+	ehretval_t ret;
+	int count;
+
+	ret.type = null_e;
+
+	// "array" access to a string returns an integer representing the nth character.
+	// In the future, perhaps replace this with a char datatype or with a "shortstring" datatype representing strings up to 3 or even 4 characters long
+	if(operand2.type != int_e) {
+		fprintf(stderr, "Character acess to a string must use an integer identifier\n");
+		return ret;
+	}
+	count = strlen(operand1.strval);
+	if(operand2.intval >= count) {
+		fprintf(stderr, "Identifier too large\n");
+		return ret;
+	}
+	// get the nth character
+	ret.intval = operand1.strval[operand2.intval];
+	ret.type = int_e;
+	return ret;
+}
+static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue) {
+	int mask;
+
+	if(index.type != int_e) {
+		fprintf(stderr, "Bitwise acess to an integer must use an integer identifier\n");
+		return;
+	}
+	if(index.intval >= sizeof(int) * 8) {
+		fprintf(stderr, "Identifier too large\n");
+		return;
+	}
+	// get mask
+	mask = (1 << (sizeof(int) * 8 - 1)) >> index.intval;
+	if(eh_xtobool(rvalue).boolval)
+		input.ptrval->intval |= mask;
+	else {
+		mask = ~mask;
+		input.ptrval->intval &= mask;
+	}
+	return;
+}
+static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue) {
+	int count;
+
+	if(rvalue.type != int_e) {
+		fprintf(stderr, "Character acess to a string must use an integer identifier\n");
+		return;
+	}
+	if(index.type != int_e) {
+		fprintf(stderr, "Character access to a string must use an integer to set\n");
+		return;
+	}
+	count = strlen(input.ptrval->strval);
+	if(index.intval >= count) {
+		fprintf(stderr, "Identifier too large\n");
+		return;
+	}
+	// get the nth character
+	input.ptrval->strval[index.intval] = rvalue.intval;
+	return;
+}
+
 /*
  * Command line arguments
  */

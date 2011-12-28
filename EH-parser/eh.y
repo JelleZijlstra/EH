@@ -3,6 +3,7 @@
 #include "eh.h"
 extern FILE *yyin;
 #define YYERROR_VERBOSE
+extern int yylineno;
 %}
 %union {
 	char *sValue;
@@ -11,6 +12,7 @@ extern FILE *yyin;
 	visibility_enum vValue;
 	bool bValue;
 	struct ehnode_t *ehNode;
+	accessor_enum aValue;
 };
 %token <iValue> T_INTEGER
 %token <tValue> T_TYPE
@@ -35,9 +37,11 @@ extern FILE *yyin;
 %token T_ENDCLASS
 %token T_NEW
 %token T_LVALUE
+%token T_LVALUE_OBJECT
 %token <vValue> T_VISIBILITY
 %token T_ARRAYMEMBER
 %token T_EXPRESSION
+%token T_DOUBLEARROW
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %left ','
@@ -45,8 +49,9 @@ extern FILE *yyin;
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '*' '/'
 %left T_PLUSPLUS T_MINMIN
-%left T_ARROW '.'
 %nonassoc ':'
+%left <aValue> T_ACCESSOR
+%left '$'
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
@@ -114,10 +119,14 @@ expression:
 	| T_STRING				{ $$ = get_identifier($1); }
 	| T_NULL				{ $$ = get_null(); }
 	| T_BOOL				{ $$ = get_bool($1); }
+	| bareword				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
-	| '$' bareword			{ $$ = operate('$', 1, $2); }
+	| expression T_ACCESSOR expression
+							{ $$ = operate(T_ACCESSOR, 3, $1, get_accessor($2), $3); }
+	| '$' lvalue				{ $$ = operate('$', 1, $2); }
 	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }
-	| bareword ':' arglist	{ $$ = operate(':', 2, $1, $3); }
+	| expression ':' arglist
+							{ $$ = operate(':', 2, $1, $3); }
 	| expression '=' expression
 							{ $$ = operate('=', 2, $1, $3); }
 	| expression '>' expression
@@ -140,12 +149,6 @@ expression:
 							{ $$ = operate('*', 2, $1, $3); }
 	| expression '/' expression
 							{ $$ = operate('/', 2, $1, $3); }
-	| expression T_ARROW expression
-							{ $$ = operate(T_ARROW, 2, $1, $3); }
-	| expression '.' bareword
-							{ $$ = operate('.', 2, $1, $3); }
-	| expression '.' bareword ':' arglist
-							{ $$ = operate('.', 3, $1, $3, $5); }
 	| '[' arraylist ']'		{ $$ = operate('[', 1, $2); }
 	| T_COUNT expression	{ $$ = operate(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = operate(T_NEW, 1, $2); }
@@ -153,6 +156,19 @@ expression:
 
 bareword:
 	T_VARIABLE				{ $$ = get_identifier($1); }
+	;
+
+arraylist:
+	arraymember				{ $$ = $1; }
+	| arraymember ',' arraylist
+							{ $$ = operate(',', 2, $1, $3); }
+	| /* NULL */			{ $$ = 0; }
+	;
+
+arraymember:
+	expressionwrap T_DOUBLEARROW expressionwrap
+							{ $$ = operate(T_ARRAYMEMBER, 2, $1, $3); }
+	| expressionwrap		{ $$ = operate(T_ARRAYMEMBER, 1, $1); }
 	;
 
 arglist:
@@ -169,19 +185,6 @@ parglist:
 	| /* NULL */			{ $$ = 0; }
 	;
 
-arraylist:
-	arraymember				{ $$ = $1; }
-	| arraymember ',' arraylist
-							{ $$ = operate(',', 2, $1, $3); }
-	| /* NULL */			{ $$ = 0; }
-	;
-
-arraymember:
-	expressionwrap ':' expressionwrap
-							{ $$ = operate(T_ARRAYMEMBER, 2, $1, $3); }
-	| expressionwrap		{ $$ = operate(T_ARRAYMEMBER, 1, $1); }
-	;
-
 expressionwrap:
 	expression				{ $$ = operate(T_EXPRESSION, 1, $1); }
 	;
@@ -195,8 +198,8 @@ classlist:
 
 lvalue:
 	bareword				{ $$ = operate(T_LVALUE, 1, $1); }
-	| bareword T_ARROW expression
-							{ $$ = operate(T_LVALUE, 2, $1, $3); }
+	| bareword T_ACCESSOR expression
+							{ $$ = operate(T_LVALUE, 3, $1, get_accessor($2), $3); }
 	;
 
 classmember:
@@ -215,7 +218,7 @@ classmember:
 	;
 %%
 void yyerror(char *s) {
-	fprintf(stderr, "%s\n", s);
+	fprintf(stderr, "In line %d: %s\n", yylineno, s);
 }
 int main(int argc, char **argv) {
 	if(argc < 2) {

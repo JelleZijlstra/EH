@@ -8,6 +8,7 @@ error.eh
 fibonacci.eh
 for.eh
 greedy.eh 45
+intaccess.eh
 loop.eh
 mccarthy.eh 45
 mccarthy2.eh 45
@@ -15,6 +16,7 @@ noargfunc.eh
 null.eh
 parentheses.eh
 plusplus.eh
+simpleclass.eh
 stringvars.eh
 test.eh
 testfunc.eh

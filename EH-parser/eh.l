@@ -4,6 +4,7 @@
 #include "eh.h"
 #include "y.tab.h"
 %}
+%option yylineno
 %%
 ['][^']*[']	{
 				int len;
@@ -80,8 +81,16 @@
 "<="		return T_LE;
 "!="		return T_NE;
 "=="		return T_SE;
-"->"		return T_ARROW;
-[@=$+\-*/<>(),:\[\]\.]	return *yytext; /* Single character tokens */
+"=>"		return T_DOUBLEARROW;
+"->"		{
+				yylval.aValue = arrow_e;
+				return T_ACCESSOR;
+			}
+"\."		{
+				yylval.aValue = dot_e;
+				return T_ACCESSOR;
+			}
+[@=$+\-*/<>(),:\[\]]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{
 				char message[100];

@@ -24,4 +24,4 @@ $ foo = $bar.meh
 call printvar: $foo
 call $bar . meh : 42
 # Error: method is private
-call $bar . mah : 'Calling a private method'
+call ($bar . mah) : 'Calling a private method'

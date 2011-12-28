@@ -12,6 +12,7 @@ void free_node(ehnode_t *in) {
 		case nullnode_e:
 		case boolnode_e:
 		case visibilitynode_e:
+		case accessornode_e:
 		case typenode_e:
 			// nothing to free
 			break;
@@ -58,6 +59,15 @@ ehnode_t *get_type(type_enum value) {
 	ret->type = typenode_e;
 	ret->typev = value;
 
+	return ret;
+}
+ehnode_t *get_accessor(accessor_enum value) {
+	ehnode_t *ret;
+	ret = Malloc(sizeof(ehnode_t));
+	
+	ret->type = accessornode_e;
+	ret->accessorv = value;
+	
 	return ret;
 }
 ehnode_t *get_bool(bool value) {
@@ -149,6 +159,10 @@ void print_tree(ehnode_t *in, int n) {
 			break;
 		case nullnode_e:
 			printntabs(n); printf("Type: nullnode\n");
+			break;
+		case accessornode_e:
+			printntabs(n); printf("Type: accessornode\n");
+			printntabs(n); printf("Value: %d\n", in->accessorv);
 			break;
 		case typenode_e:
 			printntabs(n); printf("Type: typenode\n");

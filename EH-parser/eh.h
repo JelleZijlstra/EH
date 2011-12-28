@@ -13,22 +13,24 @@
 #include <errno.h>
 
 typedef enum {
-	nullnode_e,
-	stringnode_e,
-	intnode_e,
+	nullnode_e = 0,
+	stringnode_e = 1,
+	intnode_e = 2,
+	boolnode_e = 3,
+	accessornode_e = 4,
+	typenode_e = 5,
 	opnode_e,
-	typenode_e,
-	boolnode_e,
-	visibilitynode_e
+	visibilitynode_e,
 } node_enum;
 
 typedef enum {
-	null_e,
-	string_e,
-	int_e,
+	null_e = 0,
+	string_e = 1,
+	int_e = 2,
+	bool_e = 3,
+	accessor_e = 4, // for internal use with array/object accessors
+	type_e = 5, // for internal use with type casting
 	array_e,
-	type_e, // for internal use with type casting
-	bool_e,
 	func_e, // for internal use with methods; might become a real user type in the future
 	retvalptr_e, // for internal use with lvalues
 	object_e,
@@ -43,6 +45,11 @@ typedef enum {
 	user_e = 0,
 	lib_e = 1,
 } functype_enum;
+
+typedef enum {
+	arrow_e,
+	dot_e,
+} accessor_enum;
 
 // Identifier
 typedef struct idnode_t {
@@ -71,6 +78,7 @@ typedef struct ehnode_t {
 		type_enum typev;
 		visibility_enum visibilityv;
 		bool boolv;
+		accessor_enum accessorv;
 	};
 } ehnode_t;
 
@@ -86,6 +94,7 @@ typedef struct ehretval_t {
 		bool boolval;
 		struct ehretval_t *ptrval;
 		struct ehfm_t *funcval;
+		accessor_enum accessorval;
 	};
 } ehretval_t;
 
@@ -170,6 +179,7 @@ void free_node(ehnode_t *in);
 ehnode_t *get_constant(int value);
 ehnode_t *get_identifier(char *value);
 ehnode_t *get_null(void);
+ehnode_t *get_accessor(accessor_enum value);
 ehnode_t *get_type(type_enum value);
 ehnode_t *get_bool(bool value);
 ehnode_t *get_visibility(visibility_enum value);

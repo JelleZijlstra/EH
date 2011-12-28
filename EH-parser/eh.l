@@ -53,6 +53,7 @@
 "and"		return T_AND;
 "||"		return T_OR;
 "or"		return T_OR;
+"xor"		return T_XOR;
 "public"	{
 				yylval.vValue = public_e;
 				return T_VISIBILITY;

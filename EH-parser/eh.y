@@ -46,7 +46,7 @@ extern int yylineno;
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %left ','
-%left T_AND T_OR
+%left T_AND T_OR T_XOR
 %left '+' '-'
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '*' '/'
@@ -158,6 +158,8 @@ expression:
 							{ $$ = operate(T_AND, 2, $1, $3); }
 	| expression T_OR expression
 							{ $$ = operate(T_OR, 2, $1, $3); }
+	| expression T_XOR expression
+							{ $$ = operate(T_XOR, 2, $1, $3); }
 	| '[' arraylist ']'		{ $$ = operate('[', 1, $2); }
 	| T_COUNT expression	{ $$ = operate(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = operate(T_NEW, 1, $2); }

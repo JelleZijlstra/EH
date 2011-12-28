@@ -485,6 +485,15 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					else
 						ret = eh_xtobool(execute(node->op.paras[1], context));
 					break;
+				case T_XOR:
+					operand1 = eh_xtobool(execute(node->op.paras[0], context));
+					operand2 = eh_xtobool(execute(node->op.paras[1], context));
+					ret.type = bool_e;
+					if((operand1.boolval && operand2.boolval) || (!operand1.boolval && !operand2.boolval))
+						ret.boolval = false;
+					else
+						ret.boolval = true;
+					break;
 			/*
 			 * Variable manipulation
 			 */

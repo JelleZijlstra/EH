@@ -14,3 +14,9 @@ false and test: 1
 true and test: 2
 false or test: 3
 true or test: 4
+# true
+printvar: $foo xor $bar
+# false
+printvar: $bar xor $bar
+# false
+printvar: $foo xor 0

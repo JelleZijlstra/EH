@@ -86,6 +86,9 @@ static void printvar_retval(ehretval_t in) {
 		case type_e:
 			printf("@type %s", get_typestring(in.typeval));
 			break;
+		case magicvar_e:
+			printf("@magicvar %d", in.magicvarval);
+			break;
 	}
 	return;
 }

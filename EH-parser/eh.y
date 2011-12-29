@@ -13,6 +13,7 @@ extern int yylineno;
 	bool bValue;
 	struct ehnode_t *ehNode;
 	accessor_enum aValue;
+	magicvar_enum mValue;
 };
 %token <iValue> T_INTEGER
 %token <tValue> T_TYPE
@@ -45,6 +46,7 @@ extern int yylineno;
 %token T_EXPRESSION
 %token T_DOUBLEARROW
 %token <sValue> T_VARIABLE
+%token <mValue> T_MAGICVAR
 %token <sValue> T_STRING
 %left ','
 %left T_AND T_OR T_XOR
@@ -127,8 +129,8 @@ statement:
 	;
 
 expression:
-	T_INTEGER				{ $$ = get_constant($1); }
-	| T_STRING				{ $$ = get_identifier($1); }
+	T_INTEGER				{ $$ = get_int($1); }
+	| T_STRING				{ $$ = get_string($1); }
 	| T_NULL				{ $$ = get_null(); }
 	| T_BOOL				{ $$ = get_bool($1); }
 	| bareword				{ $$ = $1; }
@@ -187,7 +189,7 @@ expression:
 	;
 
 bareword:
-	T_VARIABLE				{ $$ = get_identifier($1); }
+	T_VARIABLE				{ $$ = get_string($1); }
 	;
 
 arraylist:
@@ -240,6 +242,8 @@ lvalue:
 	bareword				{ $$ = operate(T_LVALUE, 1, $1); }
 	| bareword T_ACCESSOR expression
 							{ $$ = operate(T_LVALUE, 3, $1, get_accessor($2), $3); }
+	| T_MAGICVAR T_ACCESSOR expression
+							{ $$ = operate(T_LVALUE, 3, get_magicvar($1), get_accessor($2), $3); }
 	;
 
 classmember:

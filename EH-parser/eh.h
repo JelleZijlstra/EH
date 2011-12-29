@@ -21,7 +21,12 @@ typedef enum {
 	typenode_e = 5,
 	opnode_e,
 	visibilitynode_e,
+	magicvarnode_e,
 } node_enum;
+
+typedef enum {
+	this_e,
+} magicvar_enum;
 
 typedef enum {
 	null_e = 0,
@@ -34,6 +39,7 @@ typedef enum {
 	func_e, // for internal use with methods; might become a real user type in the future
 	reference_e, // for internal use with lvalues, and as a value for references
 	object_e,
+	magicvar_e,
 } type_enum;
 
 typedef enum {
@@ -51,16 +57,6 @@ typedef enum {
 	dot_e,
 } accessor_enum;
 
-// Identifier
-typedef struct idnode_t {
-	char *name;
-} idnode_t;
-
-// Constant
-typedef struct connode_t {
-	int value;
-} connode_t;
-
 // Operator
 typedef struct opnode_t {
 	int op; // Type of operator
@@ -72,13 +68,14 @@ typedef struct opnode_t {
 typedef struct ehnode_t {
 	node_enum type;
 	union {
-		idnode_t id;
-		connode_t con;
+		char *stringv;
+		int intv;
 		opnode_t op;
 		type_enum typev;
 		visibility_enum visibilityv;
 		bool boolv;
 		accessor_enum accessorv;
+		magicvar_enum magicvarv;
 	};
 } ehnode_t;
 
@@ -95,6 +92,7 @@ typedef struct ehretval_t {
 		struct ehretval_t *referenceval;
 		struct ehfm_t *funcval;
 		accessor_enum accessorval;
+		magicvar_enum magicvarval;
 	};
 } ehretval_t;
 
@@ -176,13 +174,19 @@ void yyerror(char *s);
 void *Malloc(size_t size);
 void *Calloc(size_t count, size_t size);
 void free_node(ehnode_t *in);
+
+#define GETFUNCPROTO(name, vtype) ehnode_t *get_ ## name(vtype value);
 ehnode_t *get_constant(int value);
 ehnode_t *get_identifier(char *value);
 ehnode_t *get_null(void);
-ehnode_t *get_accessor(accessor_enum value);
-ehnode_t *get_type(type_enum value);
-ehnode_t *get_bool(bool value);
-ehnode_t *get_visibility(visibility_enum value);
+GETFUNCPROTO(int, int)
+GETFUNCPROTO(string, char *)
+GETFUNCPROTO(accessor, accessor_enum)
+GETFUNCPROTO(type, type_enum)
+GETFUNCPROTO(bool, bool)
+GETFUNCPROTO(visibility, visibility_enum)
+GETFUNCPROTO(magicvar, magicvar_enum)
+
 ehnode_t *operate(int operations, int noperations, ...);
 
 // context

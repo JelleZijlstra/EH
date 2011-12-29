@@ -23,7 +23,7 @@ In line 7: syntax error, unexpected $end: EH fatal parsing error
 @stringvars.eh:
 Unable to perform type juggling to int: EH notice
 Unable to perform type juggling to int: EH notice
-Unsupported types null and null for operator 296: EH runtime error
+Unsupported types null and null for operator 297: EH runtime error
 @test.eh:
 @testfunc.eh:
 @typecast.eh:
@@ -38,3 +38,5 @@ Unsupported types null and null for operator 296: EH runtime error
 Incorrect argument count for function: expected 0, got 1: EH fatal error
 @simplearr.eh:
 @comma.eh:
+@bareword.eh:
+No such function: baz: EH fatal error

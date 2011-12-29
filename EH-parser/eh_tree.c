@@ -6,13 +6,14 @@ void free_node(ehnode_t *in) {
 	int i;
 	switch(in->type) {
 		case stringnode_e:
-			free(in->id.name);
+			free(in->stringv);
 			break;
 		case intnode_e:
 		case nullnode_e:
 		case boolnode_e:
 		case visibilitynode_e:
 		case accessornode_e:
+		case magicvarnode_e:
 		case typenode_e:
 			// nothing to free
 			break;
@@ -24,26 +25,16 @@ void free_node(ehnode_t *in) {
 	}
 	free(in);
 }
-ehnode_t *get_constant(int value) {
-	ehnode_t *ret;
-	ret = Malloc(sizeof(ehnode_t));
 
-	ret->type = intnode_e;
-	ret->con.value = value;
-
-	//printf("Returning constant %d\n", ret->con.value);
-	return ret;
+#define GETFUNC(name, vtype) ehnode_t *get_ ## name (vtype value) { \
+	ehnode_t *ret; \
+	ret = Malloc(sizeof(ehnode_t)); \
+	ret->type = name ## node_e; \
+	ret-> name ## v = value; \
+	return ret; \
 }
-ehnode_t *get_identifier(char *value) {
-	ehnode_t *ret;
-	ret = Malloc(sizeof(ehnode_t));
-
-	ret->type = stringnode_e;
-	ret->id.name = value;
-
-	//printf("Returning identifier %s\n", ret->id.name);
-	return ret;
-}
+GETFUNC(int, int)
+GETFUNC(string, char *)
 ehnode_t *get_null(void) {
 	ehnode_t *ret;
 	ret = Malloc(sizeof(ehnode_t));
@@ -52,42 +43,11 @@ ehnode_t *get_null(void) {
 
 	return ret;
 }
-ehnode_t *get_type(type_enum value) {
-	ehnode_t *ret;
-	ret = Malloc(sizeof(ehnode_t));
-
-	ret->type = typenode_e;
-	ret->typev = value;
-
-	return ret;
-}
-ehnode_t *get_accessor(accessor_enum value) {
-	ehnode_t *ret;
-	ret = Malloc(sizeof(ehnode_t));
-	
-	ret->type = accessornode_e;
-	ret->accessorv = value;
-	
-	return ret;
-}
-ehnode_t *get_bool(bool value) {
-	ehnode_t *ret;
-	ret = Malloc(sizeof(ehnode_t));
-	
-	ret->type = boolnode_e;
-	ret->boolv = value;
-	
-	return ret;
-}
-ehnode_t *get_visibility(visibility_enum value) {
-	ehnode_t *ret;
-	ret = Malloc(sizeof(ehnode_t));
-
-	ret->type = visibilitynode_e;
-	ret->visibilityv = value;
-
-	return ret;
-}
+GETFUNC(type, type_enum)
+GETFUNC(accessor, accessor_enum)
+GETFUNC(bool, bool)
+GETFUNC(visibility, visibility_enum)
+GETFUNC(magicvar, magicvar_enum)
 
 ehnode_t *operate(int operation, int nparas, ...) {
 	va_list args;
@@ -146,11 +106,11 @@ void print_tree(ehnode_t *in, int n) {
 	switch(in->type) {
 		case stringnode_e:
 			printntabs(n); printf("Type: stringnode\n");
-			printntabs(n); printf("Value: %s\n", in->id.name);
+			printntabs(n); printf("Value: %s\n", in->stringv);
 			break;
 		case intnode_e:
 			printntabs(n); printf("Type: intnode\n");
-			printntabs(n); printf("Value: %d\n", in->con.value);
+			printntabs(n); printf("Value: %d\n", in->intv);
 			break;
 		case opnode_e:
 			printntabs(n); printf("Type: opnode\n");
@@ -179,6 +139,10 @@ void print_tree(ehnode_t *in, int n) {
 			printntabs(n); printf("Type: visibilitynode\n");
 			printntabs(n); printf("Value: %d\n", in->visibilityv);
 			break;
+		case magicvarnode_e:
+			printntabs(n); printf("Type: magicvarnode\n");
+			printntabs(n); printf("Value: %d\n", in->magicvarv);
+			break;
 	}
 }
 
@@ -194,6 +158,7 @@ const char *get_typestring(type_enum type) {
 		case array_e: return "array";
 		case func_e: return "function";
 		case object_e: return "object";
+		case magicvar_e: return "magicvar";
 	}
 	// to keep the compiler happy
 	return "null";

@@ -50,7 +50,10 @@
 "null"		return T_NULL;
 "class"		return T_CLASS;
 "endclass"	return T_ENDCLASS;
-"this"		return T_THIS;
+"this"		{
+				yylval.mValue = this_e;
+				return T_MAGICVAR;
+			}
 "new"		return T_NEW;
 "global"	return T_GLOBAL;
 "&&"		return T_AND;

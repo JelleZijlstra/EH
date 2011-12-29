@@ -33,6 +33,7 @@ ehclass_t *get_class(char *name);
 void class_insert(ehclassmember_t **class, ehnode_t *in, ehcontext_t context);
 ehclassmember_t *class_getmember(ehobj_t *class, char *name, ehcontext_t context);
 ehretval_t class_get(ehobj_t *class, char *name, ehcontext_t context);
+ehretval_t object_access(ehretval_t name, ehnode_t *index, ehcontext_t context);
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
 #define HASH_INITVAL 234092

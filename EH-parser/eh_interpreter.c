@@ -68,11 +68,11 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 	switch(node->type) {
 		case stringnode_e:
 			ret.type = string_e;
-			ret.strval = node->id.name;
+			ret.strval = node->stringv;
 			break;
 		case intnode_e:
 			ret.type = int_e;
-			ret.intval = node->con.value;
+			ret.intval = node->intv;
 			break;
 		case typenode_e:
 			ret.type = type_e;
@@ -182,7 +182,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					ret.boolval = !ret.boolval;
 					break;
 				case T_GLOBAL: // global variable declaration
-					name = node->op.paras[0]->id.name;
+					name = node->op.paras[0]->stringv;
 					var = get_variable(name, 0);
 					if(var == NULL) {
 						eh_error_unknown("global variable", name, enotice_e);
@@ -235,12 +235,12 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					}
 					else {
 						// "for 5 count i; do stuff; endfor" construct
-						name = node->op.paras[1]->id.name;
+						name = node->op.paras[1]->stringv;
 						var = get_variable(name, scope);
 						// variable is not yet set, so set it
 						if(var == NULL) {
 							var = Malloc(sizeof(ehvar_t));
-							var->name = node->op.paras[1]->id.name;
+							var->name = node->op.paras[1]->stringv;
 							var->scope = scope;
 							insert_variable(var);
 						}
@@ -385,7 +385,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 			 * Object definitions
 			 */
 				case T_FUNC: // function definition
-					name = node->op.paras[0]->id.name;
+					name = node->op.paras[0]->stringv;
 					//printf("Defining function %s with %d paras\n", node->op.paras[0]->id.name, node->op.nparas);
 					func = get_function(name);
 					// function definition
@@ -532,29 +532,28 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					 * variable) and 0x1 (if referring to a member of a non-
 					 * existing variable).
 					 */
-					name = node->op.paras[0]->id.name;
-					var = get_variable(name, scope);
+					operand1 = execute(node->op.paras[0], context);
 					ret.referenceval = NULL;
 					switch(node->op.nparas) {
 						case 1:
-							if(var == NULL) {
-								/*
-								 * There is no variable of this name, and it is
-								 * a simple access. In that case, we use NULL
-								 * as the referenceval.
-								 */
-							}
-							else {
+							var = get_variable(operand1.strval, scope);
+							// dereference variable
+							if(var != NULL) {
 								ret.type = reference_e;
 								ret.referenceval = &var->value;
 							}
+							/*
+							 * If there is no variable of this name, and it is a 
+							 * simple access, we use NULL as the referenceval.
+							 */
 							break;
 						case 3:
-							if(var == NULL) {
-								eh_error("Cannot access member of non-existing variable", eerror_e);
-								ret.referenceval = (ehretval_t *) 0x1;
-							}
-							else if(node->op.paras[1]->accessorv == arrow_e) {							
+							if(node->op.paras[1]->accessorv == arrow_e) {							
+								var = get_variable(operand1.strval, scope);
+								if(var == NULL) {
+									eh_error("Cannot access member of non-existing variable", eerror_e);
+									ret.referenceval = (ehretval_t *) 0x1;
+								}
 								switch(var->value.type) {
 									case array_e:
 										operand1 = execute(node->op.paras[2], context);							
@@ -570,28 +569,9 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 										ret.referenceval = &var->value;
 										break;
 								}
-							} else if(node->op.paras[1]->accessorv == dot_e) {
-								switch(var->value.type) {
-									case object_e:
-										operand1 = execute(node->op.paras[2], context);
-										if(operand1.type != string_e) {
-											eh_error_type("object member label", operand1.type, eerror_e);
-											return ret;
-										}
-										classmember = class_getmember(var->value.objval, operand1.strval, context);
-										if(classmember == NULL) {
-											eh_error_unknown("object member", operand1.strval, eerror_e);
-											return ret;
-										}
-										ret.type = reference_e;
-										ret.referenceval = &classmember->value;
-										newcontext = var->value.objval->class;
-										break;
-									default:
-										eh_error_type("object access", var->value.type, eerror_e);
-										break;
-								}
-							}
+							} 
+							else if(node->op.paras[1]->accessorv == dot_e)
+								ret = object_access(operand1, node->op.paras[2], context);
 							else
 								eh_error("Unsupported accessor", efatal_e);
 							break;
@@ -604,7 +584,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 						if(operand1.referenceval == NULL || operand1.referenceval == (ehretval_t *) 0x1) {
 							// set new variable
 							var = Malloc(sizeof(ehvar_t));
-							var->name = node->op.paras[0]->op.paras[0]->id.name;
+							var->name = node->op.paras[0]->op.paras[0]->stringv;
 							var->scope = scope;
 							var->value = operand2;
 							insert_variable(var);
@@ -821,7 +801,7 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
 	tmp = node;
 	currarg = 0;
 	while(tmp->op.nparas != 0) {
-		(*arglist)[currarg].name = tmp->op.paras[1]->id.name;
+		(*arglist)[currarg].name = tmp->op.paras[1]->stringv;
 		currarg++;
 		tmp = tmp->op.paras[0];
 	}
@@ -911,7 +891,7 @@ void class_insert(ehclassmember_t **class, ehnode_t *in, ehcontext_t context) {
 	member = Malloc(sizeof(ehclassmember_t));
 	// rely on standard layout of the input ehnode_t
 	member->visibility = in->op.paras[0]->visibilityv;
-	member->name = in->op.paras[1]->id.name;
+	member->name = in->op.paras[1]->stringv;
 
 	// decide what we got
 	switch(in->op.nparas) {
@@ -970,6 +950,34 @@ ehretval_t class_get(ehobj_t *class, char *name, ehcontext_t context) {
 		ret.type = null_e;
 	else
 		ret = curr->value;
+	return ret;
+}
+ehretval_t object_access(ehretval_t operand1, ehnode_t *index, ehcontext_t context) {
+	ehretval_t label, ret;
+	ehvar_t *var;
+	ehclassmember_t *classmember;
+	
+	ret.type = null_e;
+	ret.referenceval = NULL;
+
+	var = get_variable(operand1.strval, scope);
+	if(var->value.type != object_e) {
+		eh_error_type("object access", var->value.type, eerror_e);
+		return ret;
+	}
+	label = execute(index, context);
+	if(label.type != string_e) {
+		eh_error_type("object member label", label.type, eerror_e);
+		return ret;
+	}
+	classmember = class_getmember(var->value.objval, label.strval, context);
+	if(classmember == NULL) {
+		eh_error_unknown("object member", label.strval, eerror_e);
+		return ret;
+	}
+	ret.type = reference_e;
+	ret.referenceval = &classmember->value;
+	newcontext = var->value.objval->class;
 	return ret;
 }
 /*

@@ -403,9 +403,9 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					break;
 				case T_CLASS: // class declaration
 					operand1 = execute(node->op.paras[0], context);
-					class = get_class(name);
+					class = get_class(operand1.strval);
 					if(class != NULL) {
-						eh_error_redefine("class", name, efatal_e);
+						eh_error_redefine("class", operand1.strval, efatal_e);
 						break;
 					}
 					class = Malloc(sizeof(ehclass_t));
@@ -1200,7 +1200,7 @@ void array_insert(ehvar_t **array, ehnode_t *in, int place, ehcontext_t context)
 ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) {
 	// Inserts a member into an array. Assumes that the member is not yet present in the array.
 	ehvar_t *new;
-	unsigned int vhash;
+	unsigned int vhash = 0;
 
 	new = Malloc(sizeof(ehvar_t));
 	new->indextype = index.type;
@@ -1215,7 +1215,8 @@ ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) 
 			break;
 		default:
 			eh_error_type("array index", index.type, enotice_e);
-			break;
+			free(new);
+			return NULL;
 	}
 	new->next = array[vhash];
 	array[vhash] = new;

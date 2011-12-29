@@ -1,4 +1,10 @@
 %{
+/*
+ * eh.l
+ * Jelle Zijlstra, December 2011
+ *
+ * Lex input specification for the EH grammar.
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include "eh.h"

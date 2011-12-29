@@ -3,8 +3,6 @@
  * Jelle Zijlstra, December 2011
  *
  * Implements a Lex- and Yacc-based interpreter for the EH scripting language.
- * Currently, does not yet support non-integer variables or library function
- * calls.
  */
 #include "eh_interpreter.h"
 

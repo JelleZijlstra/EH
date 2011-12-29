@@ -1,3 +1,9 @@
+/*
+ * eh_tree.c
+ * Jelle Zijlstra, December 2011
+ *
+ * Functionality to create and show the EH abstract syntax tree.
+ */
 #include "eh.h"
 
 void free_node(ehnode_t *in) {

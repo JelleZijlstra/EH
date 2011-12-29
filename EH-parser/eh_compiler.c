@@ -1,3 +1,10 @@
+/*
+ * eh_compiler.c
+ * Jelle Zijlstra, December 2011
+ *
+ * A minimal compiler for the EH language. Does not support any useful feature
+ * of the language, really.
+ */
 #include "eh.h"
 #include "y.tab.h"
 

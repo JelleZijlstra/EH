@@ -1,5 +1,12 @@
-/* This code was inspired by Tom Niemann's "A Compact Guide to Lex & Yacc", available at http://epaperpress.com/lexandyacc/ */
 %{
+/*
+ * eh.y
+ * Jelle Zijlstra, December 2011
+ *
+ * Yacc grammar specification for the EH scripting language. The first versions
+ * of this code were inspired by Tom Niemann's "A Compact Guide to Lex & Yacc", 
+ * available at http://epaperpress.com/lexandyacc/
+ */
 #include "eh_error.h"
 extern FILE *yyin;
 #define YYERROR_VERBOSE

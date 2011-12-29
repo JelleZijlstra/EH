@@ -231,8 +231,8 @@ expressionwrap:
 	;
 
 classlist:
-	classmember classlist
-							{ $$ = operate(',', 2, $1, $2); }
+	classmember T_SEPARATOR classlist
+							{ $$ = operate(',', 2, $1, $3); }
 	| /* NULL */			{ $$ = 0; }
 	;
 
@@ -243,15 +243,15 @@ lvalue:
 	;
 
 classmember:
-	T_VISIBILITY bareword T_SEPARATOR
+	T_VISIBILITY bareword
 							{ /* property declaration */
 								$$ = operate(T_VISIBILITY, 2, get_visibility($1), $2);
 							}
-	| T_VISIBILITY bareword '=' expression T_SEPARATOR
+	| T_VISIBILITY bareword '=' expression
 							{ 
 								$$ = operate(T_VISIBILITY, 3, get_visibility($1), $2, $4); 
 							}
-	| T_VISIBILITY bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
+	| T_VISIBILITY bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC
 							{ 
 								$$ = operate(T_VISIBILITY, 4, get_visibility($1), $2, $4, $6); 
 							}

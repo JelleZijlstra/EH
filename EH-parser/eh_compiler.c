@@ -14,7 +14,7 @@ void eh_exit(void) {
 	return;
 }
 
-ehretval_t execute(ehnode_t *node) {
+ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 	outfile = fopen("tmp.s", "w");
 	if(outfile == NULL) {
 		fprintf(stderr, "Unable to create output file");

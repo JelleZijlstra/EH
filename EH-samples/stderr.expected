@@ -40,3 +40,4 @@ Incorrect argument count for function: expected 0, got 1: EH fatal error
 @comma.eh:
 @bareword.eh:
 No such function: baz: EH fatal error
+@this.eh:

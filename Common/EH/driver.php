@@ -17,6 +17,13 @@ for($i = 1; $i < COUNT; $i++)
 $afterehi = microtime(true);
 echo "Time for C-interpreted EH: " . ($afterehi - $beforeehi) . PHP_EOL;
 
+echo 'Testing the EH interpreter (2)...' . PHP_EOL;
+$beforeehi = microtime(true);
+for($i = 1; $i < COUNT; $i++)
+	shell_exec("echo '$i' > input; /usr/bin/ehi " . BPATH . "/EH-samples/mccarthy2.eh < input > /dev/null");
+$afterehi = microtime(true);
+echo "Time for C-interpreted EH (2): " . ($afterehi - $beforeehi) . PHP_EOL;
+
 echo 'Testing PHP...' . PHP_EOL;
 $beforephp = microtime(true);
 for($i = 1; $i < COUNT; $i++)

@@ -977,7 +977,7 @@ ehretval_t object_access(ehretval_t operand1, ehretval_t *index, ehcontext_t con
 
 	// this dereference
 	if(operand1.type == magicvar_e) {
-		if(var->value.magicvarval == this_e) {
+		if(operand1.magicvarval == this_e) {
 			if(context == NULL) {
 				eh_error("Use of $this outside an object", eerror_e);
 				return ret;

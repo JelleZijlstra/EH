@@ -61,6 +61,10 @@
 				return T_MAGICVAR;
 			}
 "new"		return T_NEW;
+"::"		{
+				yylval.aValue = doublecolon_e;
+				return T_ACCESSOR;
+			}
 "global"	return T_GLOBAL;
 "&&"		return T_AND;
 "and"		return T_AND;

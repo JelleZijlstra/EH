@@ -45,6 +45,7 @@ typedef enum {
 typedef enum {
 	arrow_e,
 	dot_e,
+	doublecolon_e
 } accessor_enum;
 
 // Operator
@@ -105,12 +106,18 @@ typedef struct eharg_t {
 
 // EH object
 typedef struct ehobj_t {
-	struct ehclassmember_t **members;
 	char *class;
+	struct ehclassmember_t **members;
 } ehobj_t;
 
 // context
 typedef ehobj_t *ehcontext_t;
+
+// class
+typedef struct ehclass_t {
+	ehobj_t obj;
+	struct ehclass_t *next;
+} ehclass_t;
 
 // struct with common infrastructure for procedures and methods
 typedef struct ehfm_t {
@@ -137,12 +144,6 @@ typedef struct ehclassmember_t {
 	ehretval_t value;
 	struct ehclassmember_t *next;
 } ehclassmember_t;
-
-typedef struct ehclass_t {
-	char *name;
-	ehclassmember_t **members;
-	struct ehclass_t *next;
-} ehclass_t;
 
 typedef struct ehlibfunc_t {
 	void (*code)(ehretval_t *, ehretval_t *, ehcontext_t);

@@ -372,7 +372,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 					ret.objectval->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
 					ehclassmember_t *newmember;
 					for(i = 0; i < VARTABLE_S; i++) {
-						classmember = class->members[i];
+						classmember = class->obj.members[i];
 						while(classmember != NULL) {
 							newmember = Malloc(sizeof(ehclassmember_t));
 							// copy the whole thing over
@@ -411,17 +411,17 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 						break;
 					}
 					class = Malloc(sizeof(ehclass_t));
-					class->name = operand1.stringval;
-					class->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+					class->obj.class = operand1.stringval;
+					class->obj.members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
 					// insert class members
 					node = node->opval->paras[1];
 					while(node != NULL) {
 						if(node->type == op_e && node->opval->op == ',') {
-							class_insert(class->members, node->opval->paras[0], context);						
+							class_insert(class->obj.members, node->opval->paras[0], context);						
 							node = node->opval->paras[1];
 						}
 						else {
-							class_insert(class->members, node, context);
+							class_insert(class->obj.members, node, context);
 							break;
 						}
 					}
@@ -554,34 +554,40 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 							 */
 							break;
 						case 3:
-							if(node->opval->paras[1]->accessorval == arrow_e) {										
-								if(operand1.type == magicvar_e) {
-									eh_error("Cannot use magic variable in array context", eerror_e);
-									break;
-								}
-								var = get_variable(operand1.stringval, scope);
-								if(var == NULL) {
-									eh_error("Cannot access member of non-existing variable", eerror_e);
-									ret.referenceval = (ehretval_t *) 0x1;
-								}
-								if(var->value.type == array_e) {
-									operand1 = execute(node->opval->paras[2], context);							
-									member = array_getmember(var->value.arrayval, operand1);
-									// if there is no member yet, insert it with a null value
-									if(member == NULL) {
-										member = array_insert_retval(var->value.arrayval, operand1, ret);
+							switch(node->opval->paras[1]->accessorval) {
+								case arrow_e:
+									if(operand1.type == magicvar_e) {
+										eh_error("Cannot use magic variable in array context", eerror_e);
+										break;
 									}
-									ret.type = reference_e;
-									ret.referenceval = &member->value;
-								}
-								else
-									ret.referenceval = &var->value;
-							} 
-							else if(node->opval->paras[1]->accessorval == dot_e)
-								ret = object_access(operand1, node->opval->paras[2], context);
-							else
-								eh_error("Unsupported accessor", efatal_e);
-							break;
+									var = get_variable(operand1.stringval, scope);
+									if(var == NULL) {
+										eh_error("Cannot access member of non-existing variable", eerror_e);
+										ret.referenceval = (ehretval_t *) 0x1;
+									}
+									if(var->value.type == array_e) {
+										operand1 = execute(node->opval->paras[2], context);							
+										member = array_getmember(var->value.arrayval, operand1);
+										// if there is no member yet, insert it with a null value
+										if(member == NULL) {
+											member = array_insert_retval(var->value.arrayval, operand1, ret);
+										}
+										ret.type = reference_e;
+										ret.referenceval = &member->value;
+									}
+									else
+										ret.referenceval = &var->value;
+									break;
+								case dot_e:
+									ret = object_access(operand1, node->opval->paras[2], context);
+									break;
+								case doublecolon_e:
+									ret = colon_access(operand1, node->opval->paras[2], context);
+									break;
+								default:
+									eh_error("Unsupported accessor", efatal_e);
+								break;
+							}
 					}
 					break;
 				case T_SET:
@@ -865,7 +871,7 @@ ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcon
 void insert_class(ehclass_t *class) {
 	unsigned int vhash;
 
-	vhash = hash(class->name, HASH_INITVAL);
+	vhash = hash(class->obj.class, HASH_INITVAL);
 	if(classtable[vhash] == NULL) {
 		classtable[vhash] = class;
 		class->next = NULL;
@@ -883,7 +889,7 @@ ehclass_t *get_class(char *name) {
 	vhash = hash(name, HASH_INITVAL);
 	currclass = classtable[vhash];
 	while(currclass != NULL) {
-		if(strcmp(currclass->name, name) == 0) {
+		if(strcmp(currclass->obj.class, name) == 0) {
 			return currclass;
 		}
 		currclass = currclass->next;
@@ -1005,6 +1011,38 @@ ehretval_t object_access(ehretval_t operand1, ehretval_t *index, ehcontext_t con
 	ret.type = reference_e;
 	ret.referenceval = &classmember->value;
 	newcontext = object;
+	return ret;
+}
+ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context) {
+	ehretval_t ret, label;
+	ehclass_t *class;
+	ehclassmember_t *member;
+	ret.type = null_e;
+	ret.referenceval = NULL;
+	
+	label = execute(index, context);
+	if(label.type != string_e) {
+		eh_error_type("object member label", label.type, eerror_e);
+		return ret;
+	}
+
+	if(operand1.type != string_e) {
+		eh_error_type("class access", operand1.type, efatal_e);
+		return ret;
+	}
+	class = get_class(operand1.stringval);
+	if(!class) {
+		eh_error_unknown("class", operand1.stringval, efatal_e);
+		return ret;
+	}
+	member = class_getmember(&class->obj, label.stringval, context);
+	if(!member) {
+		eh_error_unknown("class member", label.stringval, eerror_e);
+		return ret;
+	}
+	ret.type = reference_e;
+	ret.referenceval = &member->value;
+	newcontext = &class->obj;
 	return ret;
 }
 bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {

@@ -20,11 +20,11 @@ EHLIBFUNC(printvar) {
 	// this function always returns NULL
 	retval->type = null_e;
 
-	if(paras->op.paras[0]->op.nparas != 0) {
+	if(paras->opval->paras[0]->opval->nparas != 0) {
 		eh_error_argcount_lib("printvar", 1, 2);
 		return;
 	}
-	printvar_retval(execute(paras[0].op.paras[1], context));
+	printvar_retval(execute(paras->opval->paras[1], context));
 	return;
 }
 
@@ -32,29 +32,29 @@ static void printvar_retval(ehretval_t in) {
 	int i;
 	switch(in.type) {
 		case null_e:
-			printf("null\n");
+			printf("null");
 			break;
 		case int_e:
-			printf("@int %d\n", in.intval);
+			printf("@int %d", in.intval);
 			break;
 		case string_e:
-			printf("@string '%s'\n", in.strval);
+			printf("@string '%s'", in.stringval);
 			break;
 		case array_e:
 			printf("@array [\n");
-			printvar_array(in.arrval);
-			printf("]\n");
+			printvar_array(in.arrayval);
+			printf("]");
 			break;
 		case bool_e:
 			if(in.boolval)
-				printf("@bool true\n");
+				printf("@bool true");
 			else
-				printf("@bool false\n");
+				printf("@bool false");
 			break;
 		case object_e:
-			printf("@object <%s> [\n", in.objval->class);
-			printvar_object(in.objval->members);
-			printf("]\n");
+			printf("@object <%s> [\n", in.objectval->class);
+			printvar_object(in.objectval->members);
+			printf("]");
 			break;
 		case reference_e:
 			// this probably won't be executed; ehi is very good at pretending 
@@ -78,7 +78,6 @@ static void printvar_retval(ehretval_t in) {
 				if(i + 1 < in.funcval->argcount)
 					printf(", ");
 			}
-			printf("\n");
 			break;
 		case accessor_e:
 			printf("@accesor %d", in.accessorval);
@@ -89,7 +88,14 @@ static void printvar_retval(ehretval_t in) {
 		case magicvar_e:
 			printf("@magicvar %d", in.magicvarval);
 			break;
+		case op_e:
+			printf("@op %d", in.opval->op);
+			break;
+		case visibility_e:
+			printf("@visibility %d", in.visibilityval);
+			break;
 	}
+	printf("\n");
 	return;
 }
 static void printvar_object(ehclassmember_t **in) {

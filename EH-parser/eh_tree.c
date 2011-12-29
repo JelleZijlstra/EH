@@ -6,46 +6,52 @@
  */
 #include "eh.h"
 
-void free_node(ehnode_t *in) {
+void free_node(ehretval_t *in) {
 	if(in == NULL)
 		return;
 	int i;
 	switch(in->type) {
-		case stringnode_e:
-			free(in->stringv);
+		case string_e:
+			free(in->stringval);
 			break;
-		case intnode_e:
-		case nullnode_e:
-		case boolnode_e:
-		case visibilitynode_e:
-		case accessornode_e:
-		case magicvarnode_e:
-		case typenode_e:
-			// nothing to free
+		case int_e:
+		case null_e:
+		case bool_e:
+		case visibility_e:
+		case accessor_e:
+		case magicvar_e:
+		case type_e:
+		case array_e:
+		case func_e:
+		case reference_e:
+		case object_e:
+			// nothing to free (even for the last few ones; even though they
+			// always occupy malloc'ed memory, this function merely frees
+			// memory allocated by the parser)
 			break;
-		case opnode_e:
-			for(i = 0; i < in->op.nparas; i++) {
-				free_node(in->op.paras[i]);
+		case op_e:
+			for(i = 0; i < in->opval->nparas; i++) {
+				free_node(in->opval->paras[i]);
 			}
 			break;
 	}
 	free(in);
 }
 
-#define GETFUNC(name, vtype) ehnode_t *get_ ## name (vtype value) { \
-	ehnode_t *ret; \
-	ret = Malloc(sizeof(ehnode_t)); \
-	ret->type = name ## node_e; \
-	ret-> name ## v = value; \
+#define GETFUNC(name, vtype) ehretval_t *get_ ## name (vtype value) { \
+	ehretval_t *ret; \
+	ret = Malloc(sizeof(ehretval_t)); \
+	ret->type = name ## _e; \
+	ret-> name ## val = value; \
 	return ret; \
 }
 GETFUNC(int, int)
 GETFUNC(string, char *)
-ehnode_t *get_null(void) {
-	ehnode_t *ret;
-	ret = Malloc(sizeof(ehnode_t));
+ehretval_t *get_null(void) {
+	ehretval_t *ret;
+	ret = Malloc(sizeof(ehretval_t));
 
-	ret->type = nullnode_e;
+	ret->type = null_e;
 
 	return ret;
 }
@@ -55,25 +61,26 @@ GETFUNC(bool, bool)
 GETFUNC(visibility, visibility_enum)
 GETFUNC(magicvar, magicvar_enum)
 
-ehnode_t *operate(int operation, int nparas, ...) {
+ehretval_t *operate(int operation, int nparas, ...) {
 	va_list args;
-	ehnode_t *ret;
+	ehretval_t *ret;
 	int i;
 
-	ret = Malloc(sizeof(ehnode_t));
+	ret = Malloc(sizeof(ehretval_t));
+	ret->opval = Malloc(sizeof(opnode_t));
 	if(nparas)
-		ret->op.paras = Malloc(nparas * sizeof(ehnode_t *));
+		ret->opval->paras = Malloc(nparas * sizeof(ehretval_t *));
 	else
-		ret->op.paras = NULL;
+		ret->opval->paras = NULL;
 
-	ret->type = opnode_e;
-	ret->op.op = operation;
-	ret->op.nparas = nparas;
-	//printf("Adding operation %d with %d paras\n", ret->op.op, ret->op.nparas);
+	ret->type = op_e;
+	ret->opval->op = operation;
+	ret->opval->nparas = nparas;
+	//printf("Adding operation %d with %d paras\n", ret->opval->op, ret->opval->nparas);
 	va_start(args, nparas);
 	for(i = 0; i < nparas; i++) {
-		ret->op.paras[i] = va_arg(args, ehnode_t *);
-		//printf("Para %d is of type %d\n", i, ret->op.paras[i]->type);
+		ret->opval->paras[i] = va_arg(args, ehretval_t *);
+		//printf("Para %d is of type %d\n", i, ret->opval->paras[i]->type);
 	}
 	va_end(args);
 
@@ -106,48 +113,45 @@ static void printntabs(int n) {
 	}
 }
 // print the abstract syntax tree
-void print_tree(ehnode_t *in, int n) {
+void print_tree(ehretval_t *in, int n) {
 	int i;
-
+	printntabs(n); printf("Type: %s\n", get_typestring(in->type));
 	switch(in->type) {
-		case stringnode_e:
-			printntabs(n); printf("Type: stringnode\n");
-			printntabs(n); printf("Value: %s\n", in->stringv);
+		case string_e:
+			printntabs(n); printf("Value: %s\n", in->stringval);
 			break;
-		case intnode_e:
-			printntabs(n); printf("Type: intnode\n");
-			printntabs(n); printf("Value: %d\n", in->intv);
+		case int_e:
+			printntabs(n); printf("Value: %d\n", in->intval);
 			break;
-		case opnode_e:
-			printntabs(n); printf("Type: opnode\n");
-			printntabs(n); printf("Opcode: %d\n", in->op.op);
-			printntabs(n); printf("Nparas: %d\n", in->op.nparas);
-			for(i = 0; i < in->op.nparas; i++) {
-				print_tree(in->op.paras[i], n + 1);
+		case op_e:
+			printntabs(n); printf("Opcode: %d\n", in->opval->op);
+			printntabs(n); printf("Nparas: %d\n", in->opval->nparas);
+			for(i = 0; i < in->opval->nparas; i++) {
+				print_tree(in->opval->paras[i], n + 1);
 			}
 			break;
-		case nullnode_e:
-			printntabs(n); printf("Type: nullnode\n");
+		case null_e:
 			break;
-		case accessornode_e:
-			printntabs(n); printf("Type: accessornode\n");
-			printntabs(n); printf("Value: %d\n", in->accessorv);
+		case accessor_e:
+			printntabs(n); printf("Value: %d\n", in->accessorval);
 			break;
-		case typenode_e:
-			printntabs(n); printf("Type: typenode\n");
-			printntabs(n); printf("Value: %d\n", in->typev);
+		case type_e:
+			printntabs(n); printf("Value: %d\n", in->typeval);
 			break;
-		case boolnode_e:
-			printntabs(n); printf("Type: boolnode\n");
-			printntabs(n); printf("Value: %u\n", in->boolv);
+		case bool_e:
+			printntabs(n); printf("Value: %u\n", in->boolval);
 			break;
-		case visibilitynode_e:
-			printntabs(n); printf("Type: visibilitynode\n");
-			printntabs(n); printf("Value: %d\n", in->visibilityv);
+		case visibility_e:
+			printntabs(n); printf("Value: %d\n", in->visibilityval);
 			break;
-		case magicvarnode_e:
-			printntabs(n); printf("Type: magicvarnode\n");
-			printntabs(n); printf("Value: %d\n", in->magicvarv);
+		case magicvar_e:
+			printntabs(n); printf("Value: %d\n", in->magicvarval);
+			break;
+		case array_e:
+		case func_e:
+		case reference_e:
+		case object_e:
+			// don't appear in AST
 			break;
 	}
 }
@@ -165,6 +169,8 @@ const char *get_typestring(type_enum type) {
 		case func_e: return "function";
 		case object_e: return "object";
 		case magicvar_e: return "magicvar";
+		case op_e: return "op";
+		case visibility_e: return "visibility";
 	}
 	// to keep the compiler happy
 	return "null";

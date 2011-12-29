@@ -18,7 +18,7 @@ extern int yylineno;
 	type_enum tValue;
 	visibility_enum vValue;
 	bool bValue;
-	struct ehnode_t *ehNode;
+	struct ehretval_t *ehNode;
 	accessor_enum aValue;
 	magicvar_enum mValue;
 };

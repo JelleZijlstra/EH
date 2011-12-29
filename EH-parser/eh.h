@@ -13,18 +13,6 @@
 #include <errno.h>
 
 typedef enum {
-	nullnode_e = 0,
-	stringnode_e = 1,
-	intnode_e = 2,
-	boolnode_e = 3,
-	accessornode_e = 4,
-	typenode_e = 5,
-	opnode_e,
-	visibilitynode_e,
-	magicvarnode_e,
-} node_enum;
-
-typedef enum {
 	this_e,
 } magicvar_enum;
 
@@ -40,6 +28,8 @@ typedef enum {
 	reference_e, // for internal use with lvalues, and as a value for references
 	object_e,
 	magicvar_e,
+	op_e,
+	visibility_e,
 } type_enum;
 
 typedef enum {
@@ -61,36 +51,26 @@ typedef enum {
 typedef struct opnode_t {
 	int op; // Type of operator
 	int nparas; // Number of parameters
-	struct ehnode_t **paras; // Parameters
+	struct ehretval_t **paras; // Parameters
 } opnode_t;
 
-// Generic node
-typedef struct ehnode_t {
-	node_enum type;
-	union {
-		char *stringv;
-		int intv;
-		opnode_t op;
-		type_enum typev;
-		visibility_enum visibilityv;
-		bool boolv;
-		accessor_enum accessorv;
-		magicvar_enum magicvarv;
-	};
-} ehnode_t;
-
-// EH variable
+// EH variable, and generic node
 typedef struct ehretval_t {
 	type_enum type;
 	union {
+		// simple EH variable type
 		int intval;
-		char *strval;
-		struct ehvar_t **arrval;
-		struct ehobj_t *objval;
-		type_enum typeval;
+		char *stringval;
 		bool boolval;
+		// complex types
+		struct ehvar_t **arrayval;
+		struct ehobj_t *objectval;
 		struct ehretval_t *referenceval;
 		struct ehfm_t *funcval;
+		// pseudo-types for internal use
+		opnode_t *opval;
+		type_enum typeval;
+		visibility_enum visibilityval;
 		accessor_enum accessorval;
 		magicvar_enum magicvarval;
 	};
@@ -138,8 +118,8 @@ typedef struct ehfm_t {
 	int argcount;
 	eharg_t *args;
 	union {
-		ehnode_t *code;
-		void (*ptr)(ehnode_t *, ehretval_t *, ehcontext_t);
+		ehretval_t *code;
+		void (*ptr)(ehretval_t *, ehretval_t *, ehcontext_t);
 	};
 } ehfm_t;
 
@@ -165,7 +145,7 @@ typedef struct ehclass_t {
 } ehclass_t;
 
 typedef struct ehlibfunc_t {
-	void (*code)(ehnode_t *, ehretval_t *, ehcontext_t);
+	void (*code)(ehretval_t *, ehretval_t *, ehcontext_t);
 	char *name;
 } ehlibfunc_t;
 
@@ -176,12 +156,12 @@ int yylex (void);
 void yyerror(char *s);
 void *Malloc(size_t size);
 void *Calloc(size_t count, size_t size);
-void free_node(ehnode_t *in);
+void free_node(ehretval_t *in);
 
-#define GETFUNCPROTO(name, vtype) ehnode_t *get_ ## name(vtype value);
-ehnode_t *get_constant(int value);
-ehnode_t *get_identifier(char *value);
-ehnode_t *get_null(void);
+#define GETFUNCPROTO(name, vtype) ehretval_t *get_ ## name(vtype value);
+ehretval_t *get_constant(int value);
+ehretval_t *get_identifier(char *value);
+ehretval_t *get_null(void);
 GETFUNCPROTO(int, int)
 GETFUNCPROTO(string, char *)
 GETFUNCPROTO(accessor, accessor_enum)
@@ -190,10 +170,10 @@ GETFUNCPROTO(bool, bool)
 GETFUNCPROTO(visibility, visibility_enum)
 GETFUNCPROTO(magicvar, magicvar_enum)
 
-ehnode_t *operate(int operations, int noperations, ...);
+ehretval_t *operate(int operations, int noperations, ...);
 
-ehretval_t execute(ehnode_t *node, ehcontext_t context);
-void print_tree(ehnode_t *in, int n);
+ehretval_t execute(ehretval_t *node, ehcontext_t context);
+void print_tree(ehretval_t *in, int n);
 const char *get_typestring(type_enum type);
 
 void eh_setarg(int argc, char **argv);

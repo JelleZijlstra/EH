@@ -22,18 +22,18 @@ void remove_variable(char *name, int scope);
 void list_variables(void);
 bool insert_function(ehfunc_t *func);
 ehfunc_t *get_function(char *name);
-ehretval_t call_function(ehfm_t *f, ehnode_t *args, ehcontext_t context, ehcontext_t newcontext);
-void array_insert(ehvar_t **array, ehnode_t *in, int place, ehcontext_t context);
+ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext);
+void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t context);
 ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
 ehretval_t array_get(ehvar_t **array, ehretval_t index);
 int array_count(ehvar_t **array);
 void insert_class(ehclass_t *class);
 ehclass_t *get_class(char *name);
-void class_insert(ehclassmember_t **class, ehnode_t *in, ehcontext_t context);
+void class_insert(ehclassmember_t **class, ehretval_t *in, ehcontext_t context);
 ehclassmember_t *class_getmember(ehobj_t *class, char *name, ehcontext_t context);
 ehretval_t class_get(ehobj_t *class, char *name, ehcontext_t context);
-ehretval_t object_access(ehretval_t name, ehnode_t *index, ehcontext_t context);
+ehretval_t object_access(ehretval_t name, ehretval_t *index, ehcontext_t context);
 bool ehcontext_compare(ehcontext_t lock, ehcontext_t key);
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
@@ -54,8 +54,8 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
  */
 // take ints, returns an int
 #define EH_INT_CASE(token, operator) case token: \
-	operand1 = eh_xtoi(execute(node->op.paras[0], context)); \
-	operand2 = eh_xtoi(execute(node->op.paras[1], context)); \
+	operand1 = eh_xtoi(execute(node->opval->paras[0], context)); \
+	operand2 = eh_xtoi(execute(node->opval->paras[1], context)); \
 	if(IS_INT(operand1) && IS_INT(operand2)) { \
 		ret.type = int_e; \
 		ret.intval = (operand1.intval operator operand2.intval); \
@@ -65,8 +65,8 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 	break;
 // take ints, return a bool
 #define EH_INTBOOL_CASE(token, operator) case token: \
-	operand1 = eh_xtoi(execute(node->op.paras[0], context)); \
-	operand2 = eh_xtoi(execute(node->op.paras[1], context)); \
+	operand1 = eh_xtoi(execute(node->opval->paras[0], context)); \
+	operand2 = eh_xtoi(execute(node->opval->paras[1], context)); \
 	if(IS_INT(operand1) && IS_INT(operand2)) { \
 		ret.type = bool_e; \
 		ret.boolval = (operand1.intval operator operand2.intval); \
@@ -77,8 +77,8 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 	break;
 // take bools, return a bool
 #define EH_BOOL_CASE(token, operator) case token: \
-	operand1 = eh_xtobool(execute(node->op.paras[0], context)); \
-	operand2 = eh_xtobool(execute(node->op.paras[1], context)); \
+	operand1 = eh_xtobool(execute(node->opval->paras[0], context)); \
+	operand2 = eh_xtobool(execute(node->opval->paras[1], context)); \
 	ret.type = bool_e; \
 	ret.boolval = (operand1.boolval operator operand2.boolval); \
 	break;

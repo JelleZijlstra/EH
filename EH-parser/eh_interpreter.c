@@ -16,7 +16,7 @@ static bool continuing = 0;
 // current object, gets passed around
 static ehcontext_t newcontext = NULL;
 int scope = 0;
-static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node);
+static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node);
 static ehretval_t int_arrow_get(ehretval_t operand1, ehretval_t operand2);
 static ehretval_t string_arrow_get(ehretval_t operand1, ehretval_t operand2);
 static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
@@ -47,9 +47,9 @@ void eh_exit(void) {
 	return;
 }
 
-ehretval_t execute(ehnode_t *node, ehcontext_t context) {
+ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 	// variables used
-	ehnode_t *node2;
+	ehretval_t *node2;
 	ehvar_t *var, *member;
 	ehfunc_t *func;
 	ehclass_t *class;
@@ -64,39 +64,43 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 		return ret;
 	//printf("Executing nodetype %d\n", node->type);
 	switch(node->type) {
-		case stringnode_e:
+		case string_e:
 			ret.type = string_e;
-			ret.strval = node->stringv;
+			ret.stringval = node->stringval;
 			break;
-		case intnode_e:
+		case int_e:
 			ret.type = int_e;
-			ret.intval = node->intv;
+			ret.intval = node->intval;
 			break;
-		case typenode_e:
+		case type_e:
 			ret.type = type_e;
-			ret.typeval = node->typev;
+			ret.typeval = node->typeval;
 			break;
-		case boolnode_e:
+		case bool_e:
 			ret.type = bool_e;
-			ret.boolval = node->boolv;
+			ret.boolval = node->boolval;
 			break;
-		case accessornode_e:
+		case accessor_e:
 			ret.type = accessor_e;
-			ret.accessorval = node->accessorv;
+			ret.accessorval = node->accessorval;
 			break;
-		case nullnode_e:
+		case magicvar_e:
+			ret.type = magicvar_e;
+			ret.magicvarval = node->magicvarval;
 			break;
-		case opnode_e:
-			//printf("Executing opcode: %d\n", node->op.op);
-			switch(node->op.op) {
+		case null_e:
+			break;
+		case op_e:
+			//printf("Executing opcode: %d\n", node->opval->op);
+			switch(node->opval->op) {
 			/*
 			 * Unary operators
 			 */
 				case T_ECHO:
-					ret = execute(node->op.paras[0], context);
+					ret = execute(node->opval->paras[0], context);
 					switch(ret.type) {
 						case string_e:
-							printf("%s\n", ret.strval);
+							printf("%s\n", ret.stringval);
 							break;
 						case int_e:
 							printf("%d\n", ret.intval);
@@ -116,8 +120,8 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					}
 					break;
 				case '@': // type casting
-					operand1 = execute(node->op.paras[0], context);
-					operand2 = execute(node->op.paras[1], context);
+					operand1 = execute(node->opval->paras[0], context);
+					operand2 = execute(node->opval->paras[1], context);
 					switch(operand1.typeval) {
 						case int_e:
 							ret = eh_xtoi(operand2);
@@ -134,17 +138,17 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					}
 					break;
 				case T_COUNT:
-					operand1 = execute(node->op.paras[0], context);
+					operand1 = execute(node->opval->paras[0], context);
 					ret.type = int_e;
 					switch(operand1.type) {
 						case int_e:
 							ret.intval = sizeof(int) * 8;
 							break;
 						case string_e:
-							ret.intval = strlen(operand1.strval);
+							ret.intval = strlen(operand1.stringval);
 							break;
 						case array_e:
-							ret.intval = array_count(operand1.arrval);
+							ret.intval = array_count(operand1.arrayval);
 							break;
 						case null_e:
 							ret.intval = 0;
@@ -158,7 +162,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					}
 					break;
 				case '~': // bitwise negation
-					operand1 = eh_xtoi(execute(node->op.paras[0], context));
+					operand1 = eh_xtoi(execute(node->opval->paras[0], context));
 					if(operand1.type != int_e)
 						eh_error_type("bitwise negation", operand1.type, eerror_e);
 					else {
@@ -167,7 +171,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					}
 					break;
 				case T_NEGATIVE: // sign change
-					operand1 = eh_xtoi(execute(node->op.paras[0], context));
+					operand1 = eh_xtoi(execute(node->opval->paras[0], context));
 					if(operand1.type != int_e)
 						eh_error_type("negation", operand1.type, eerror_e);
 					else {
@@ -176,11 +180,11 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					}
 					break;
 				case '!': // Boolean not
-					ret = eh_xtobool(execute(node->op.paras[0], context));
+					ret = eh_xtobool(execute(node->opval->paras[0], context));
 					ret.boolval = !ret.boolval;
 					break;
 				case T_GLOBAL: // global variable declaration
-					name = node->op.paras[0]->stringv;
+					name = node->opval->paras[0]->stringval;
 					var = get_variable(name, 0);
 					if(var == NULL) {
 						eh_error_unknown("global variable", name, enotice_e);
@@ -197,19 +201,19 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 			 * Control flow
 			 */
 				case T_IF:
-					if(eh_xtobool(execute(node->op.paras[0], context)).boolval) {
-						ret = execute(node->op.paras[1], context);
+					if(eh_xtobool(execute(node->opval->paras[0], context)).boolval) {
+						ret = execute(node->opval->paras[1], context);
 						if(returning)
 							return ret;
 					}
-					else if(node->op.nparas == 3)
-						ret = execute(node->op.paras[2], context);
+					else if(node->opval->nparas == 3)
+						ret = execute(node->opval->paras[2], context);
 					break;
 				case T_WHILE:
 					inloop++;
 					breaking = 0;
-					while(eh_xtobool(execute(node->op.paras[0], context)).boolval) {
-						ret = execute(node->op.paras[1], context);
+					while(eh_xtobool(execute(node->opval->paras[0], context)).boolval) {
+						ret = execute(node->opval->paras[1], context);
 						LOOPCHECKS;
 					}
 					inloop--;
@@ -218,34 +222,34 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					inloop++;
 					breaking = 0;
 					// get the count
-					operand1 = eh_xtoi(execute(node->op.paras[0], context));
+					operand1 = eh_xtoi(execute(node->opval->paras[0], context));
 					if(operand1.type != int_e) {
 						eh_error_type("count", operand1.type, eerror_e);
 						break;
 					}
 					count = operand1.intval;
-					if(node->op.nparas == 2) {
+					if(node->opval->nparas == 2) {
 						// "for 5; do stuff; endfor" construct
 						for(i = 0; i < count; i++) {
-							ret = execute(node->op.paras[1], context);
+							ret = execute(node->opval->paras[1], context);
 							LOOPCHECKS;
 						}
 					}
 					else {
 						// "for 5 count i; do stuff; endfor" construct
-						name = node->op.paras[1]->stringv;
+						name = node->opval->paras[1]->stringval;
 						var = get_variable(name, scope);
 						// variable is not yet set, so set it
 						if(var == NULL) {
 							var = Malloc(sizeof(ehvar_t));
-							var->name = node->op.paras[1]->stringv;
+							var->name = node->opval->paras[1]->stringval;
 							var->scope = scope;
 							insert_variable(var);
 						}
 						// count variable always gets to be an int
 						var->value.type = int_e;
 						for(var->value.intval = 0; var->value.intval < count; var->value.intval++) {
-							ret = execute(node->op.paras[2], context);
+							ret = execute(node->opval->paras[2], context);
 							LOOPCHECKS;
 						}
 					}
@@ -255,26 +259,26 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 			 * Miscellaneous
 			 */
 				case T_SEPARATOR:
-					ret = execute(node->op.paras[0], context);
+					ret = execute(node->opval->paras[0], context);
 					if(returning || breaking || continuing)
 						return ret;
-					ret = execute(node->op.paras[1], context);
+					ret = execute(node->opval->paras[1], context);
 					break;
 				case T_EXPRESSION: // wrapper for special case
-					ret = execute(node->op.paras[0], context);
+					ret = execute(node->opval->paras[0], context);
 					break;
 				case T_CALL: // call: execute argument and discard it
-					execute(node->op.paras[0], context);
+					execute(node->opval->paras[0], context);
 					break;
 				case T_RET: // return from a function or the program
 					returning = true;
-					ret = execute(node->op.paras[0], context);
+					ret = execute(node->opval->paras[0], context);
 					break;
 				case T_BREAK: // break out of a loop
-					if(node->op.nparas == 0)
+					if(node->opval->nparas == 0)
 						operand1 = (ehretval_t){int_e, {1}};
 					else
-						operand1 = eh_xtoi(execute(node->op.paras[0], context));
+						operand1 = eh_xtoi(execute(node->opval->paras[0], context));
 					if(operand1.type != int_e)
 						break;
 					// break as many levels as specified by the argument
@@ -285,10 +289,10 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					breaking = operand1.intval;
 					break;
 				case T_CONTINUE: // continue in a loop
-					if(node->op.nparas == 0)
+					if(node->opval->nparas == 0)
 						operand1 = (ehretval_t){int_e, {1}};
 					else
-						operand1 = eh_xtoi(execute(node->op.paras[0], context));
+						operand1 = eh_xtoi(execute(node->opval->paras[0], context));
 					if(operand1.type != int_e)
 						break;
 					// break as many levels as specified by the argument
@@ -302,40 +306,40 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 			 * Object access
 			 */
 				case ':': // function call
-					operand1 = execute(node->op.paras[0], context);
+					operand1 = execute(node->opval->paras[0], context);
 					// operand1 will be either a string (indicating a normal function call) or a func_e (indicating a method or closure call)
 					if(operand1.type == string_e) {
-						name = operand1.strval;
+						name = operand1.stringval;
 						func = get_function(name);
-						//printf("Calling function %s at scope %d\n", node->op.paras[0]->id.name, scope);
+						//printf("Calling function %s at scope %d\n", node->opval->paras[0]->id.name, scope);
 						if(func == NULL) {
 							eh_error_unknown("function", name, efatal_e);
 							break;
 						}
-						ret = call_function(&func->f, node->op.paras[1], context, context);
+						ret = call_function(&func->f, node->opval->paras[1], context, context);
 					}
 					else if(operand1.type == func_e) {
-						ret = call_function(operand1.funcval, node->op.paras[1], context, newcontext);
+						ret = call_function(operand1.funcval, node->opval->paras[1], context, newcontext);
 					}
 					break;
 				case T_ACCESSOR: // array access, and similar stuff for other types
-					operand1 = execute(node->op.paras[0], context);
-					if(node->op.paras[1]->accessorv == dot_e) {
+					operand1 = execute(node->opval->paras[0], context);
+					if(node->opval->paras[1]->accessorval == dot_e) {
 						// object access
 						if(operand1.type != object_e) {
 							eh_error_type("object access", operand1.type, eerror_e);
 							break;
 						}
-						name = execute(node->op.paras[0], context).strval;
-						ret = class_get(operand1.objval, name, context);
+						name = execute(node->opval->paras[0], context).stringval;
+						ret = class_get(operand1.objectval, name, context);
 						if(ret.type == null_e) {
 							eh_error_unknown("object member", name, eerror_e);
 							break;
 						}
-						newcontext = operand1.objval;
-					} else if(node->op.paras[1]->accessorv == arrow_e) {
+						newcontext = operand1.objectval;
+					} else if(node->opval->paras[1]->accessorval == arrow_e) {
 						// "array" access
-						operand2 = execute(node->op.paras[2], context);
+						operand2 = execute(node->opval->paras[2], context);
 						switch(operand1.type) {
 							case int_e:
 								ret = int_arrow_get(operand1, operand2);
@@ -345,7 +349,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 								break;
 							case array_e:
 								// array access to an array works as expected.
-								ret = array_get(operand1.arrval, operand2);
+								ret = array_get(operand1.arrayval, operand2);
 								break;
 							default:
 								eh_error_type("array access", operand1.type, eerror_e);
@@ -356,16 +360,16 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 						eh_error("Unsupported accessor", efatal_e);
 					break;
 				case T_NEW: // object declaration
-					name = execute(node->op.paras[0], context).strval;
+					name = execute(node->opval->paras[0], context).stringval;
 					class = get_class(name);
 					if(class == NULL) {
 						eh_error_unknown("class", name, efatal_e);
 						break;
 					}
 					ret.type = object_e;
-					ret.objval = Malloc(sizeof(ehobj_t));
-					ret.objval->class = name;
-					ret.objval->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+					ret.objectval = Malloc(sizeof(ehobj_t));
+					ret.objectval->class = name;
+					ret.objectval->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
 					ehclassmember_t *newmember;
 					for(i = 0; i < VARTABLE_S; i++) {
 						classmember = class->members[i];
@@ -373,8 +377,8 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 							newmember = Malloc(sizeof(ehclassmember_t));
 							// copy the whole thing over
 							*newmember = *classmember;
-							newmember->next = ret.objval->members[i];
-							ret.objval->members[i] = newmember;
+							newmember->next = ret.objectval->members[i];
+							ret.objectval->members[i] = newmember;
 							classmember = classmember->next;
 						}
 					}
@@ -383,8 +387,8 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 			 * Object definitions
 			 */
 				case T_FUNC: // function definition
-					name = node->op.paras[0]->stringv;
-					//printf("Defining function %s with %d paras\n", node->op.paras[0]->id.name, node->op.nparas);
+					name = node->opval->paras[0]->stringval;
+					//printf("Defining function %s with %d paras\n", node->opval->paras[0]->id.name, node->opval->nparas);
 					func = get_function(name);
 					// function definition
 					if(func != NULL) {
@@ -394,27 +398,27 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					func = Malloc(sizeof(ehfunc_t));
 					func->name = name;
 					// determine argcount
-					make_arglist(&func->f.argcount, &func->f.args, node->op.paras[1]);
-					func->f.code = node->op.paras[2];
+					make_arglist(&func->f.argcount, &func->f.args, node->opval->paras[1]);
+					func->f.code = node->opval->paras[2];
 					func->f.type = user_e;
 					insert_function(func);
 					break;
 				case T_CLASS: // class declaration
-					operand1 = execute(node->op.paras[0], context);
-					class = get_class(operand1.strval);
+					operand1 = execute(node->opval->paras[0], context);
+					class = get_class(operand1.stringval);
 					if(class != NULL) {
-						eh_error_redefine("class", operand1.strval, efatal_e);
+						eh_error_redefine("class", operand1.stringval, efatal_e);
 						break;
 					}
 					class = Malloc(sizeof(ehclass_t));
-					class->name = operand1.strval;
+					class->name = operand1.stringval;
 					class->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
 					// insert class members
-					node = node->op.paras[1];
+					node = node->opval->paras[1];
 					while(node != NULL) {
-						if(node->type == opnode_e && node->op.op == ',') {
-							class_insert(class->members, node->op.paras[0], context);						
-							node = node->op.paras[1];
+						if(node->type == op_e && node->opval->op == ',') {
+							class_insert(class->members, node->opval->paras[0], context);						
+							node = node->opval->paras[1];
 						}
 						else {
 							class_insert(class->members, node, context);
@@ -425,32 +429,32 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					break;
 				case '[': // array declaration
 					ret.type = array_e;
-					ret.arrval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
+					ret.arrayval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
 					// need to count array members first, because they are reversed in our node.
 					// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
-					node2 = node->op.paras[0];
+					node2 = node->opval->paras[0];
 					count = 0;
-					while(node2->op.nparas != 0) {
+					while(node2->opval->nparas != 0) {
 						count++;
-						node2 = node2->op.paras[0];
+						node2 = node2->opval->paras[0];
 					}
-					node2 = node->op.paras[0];
-					while(node2->op.nparas != 0) {
-						array_insert(ret.arrval, node2->op.paras[1], --count, context);
-						node2 = node2->op.paras[0];
+					node2 = node->opval->paras[0];
+					while(node2->opval->nparas != 0) {
+						array_insert(ret.arrayval, node2->opval->paras[1], --count, context);
+						node2 = node2->opval->paras[0];
 					}
 					break;
 			/*
 			 * Binary operators
 			 */
 				case '=': // equality
-					operand1 = execute(node->op.paras[0], context);
-					operand2 = execute(node->op.paras[1], context);
+					operand1 = execute(node->opval->paras[0], context);
+					operand2 = execute(node->opval->paras[1], context);
 					ret = eh_looseequals(operand1, operand2);
 					break;
 				case T_SE: // strict equality
-					operand1 = execute(node->op.paras[0], context);
-					operand2 = execute(node->op.paras[1], context);
+					operand1 = execute(node->opval->paras[0], context);
+					operand2 = execute(node->opval->paras[1], context);
 					ret = eh_strictequals(operand1, operand2);
 					break;
 				EH_INTBOOL_CASE('>', >) // greater-than
@@ -460,17 +464,17 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 				EH_INTBOOL_CASE(T_NE, !=) // not equal
 				// doing addition on two strings performs concatenation
 				case '+':
-					operand1 = execute(node->op.paras[0], context);
-					operand2 = execute(node->op.paras[1], context);
+					operand1 = execute(node->opval->paras[0], context);
+					operand2 = execute(node->opval->paras[1], context);
 					if(IS_STRING(operand1) && IS_STRING(operand2)) {
 						// concatenate them
 						ret.type = string_e;
 						size_t len1, len2;
-						len1 = strlen(operand1.strval);
-						len2 = strlen(operand2.strval);
-						ret.strval = Malloc(len1 + len2 + 1);
-						strcpy(ret.strval, operand1.strval);
-						strcpy(ret.strval + len1, operand2.strval);
+						len1 = strlen(operand1.stringval);
+						len2 = strlen(operand2.stringval);
+						ret.stringval = Malloc(len1 + len2 + 1);
+						strcpy(ret.stringval, operand1.stringval);
+						strcpy(ret.stringval + len1, operand2.stringval);
 					}
 					else {
 						operand1 = eh_xtoi(operand1);
@@ -489,22 +493,22 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 				EH_INT_CASE('^', ^) // bitwise XOR
 				EH_INT_CASE('|', |) // bitwise OR
 				case T_AND: // AND; use short-circuit operation
-					operand1 = eh_xtobool(execute(node->op.paras[0], context));
+					operand1 = eh_xtobool(execute(node->opval->paras[0], context));
 					if(!operand1.boolval)
 						ret = operand1;
 					else
-						ret = eh_xtobool(execute(node->op.paras[1], context));
+						ret = eh_xtobool(execute(node->opval->paras[1], context));
 					break;
 				case T_OR: // OR; use short-circuit operation
-					operand1 = eh_xtobool(execute(node->op.paras[0], context));
+					operand1 = eh_xtobool(execute(node->opval->paras[0], context));
 					if(operand1.boolval)
 						ret = operand1;
 					else
-						ret = eh_xtobool(execute(node->op.paras[1], context));
+						ret = eh_xtobool(execute(node->opval->paras[1], context));
 					break;
 				case T_XOR:
-					operand1 = eh_xtobool(execute(node->op.paras[0], context));
-					operand2 = eh_xtobool(execute(node->op.paras[1], context));
+					operand1 = eh_xtobool(execute(node->opval->paras[0], context));
+					operand2 = eh_xtobool(execute(node->opval->paras[1], context));
 					ret.type = bool_e;
 					if((operand1.boolval && operand2.boolval) || (!operand1.boolval && !operand2.boolval))
 						ret.boolval = false;
@@ -530,15 +534,15 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					 * variable) and 0x1 (if referring to a member of a non-
 					 * existing variable).
 					 */
-					operand1 = execute(node->op.paras[0], context);
+					operand1 = execute(node->opval->paras[0], context);
 					ret.referenceval = NULL;
-					switch(node->op.nparas) {
+					switch(node->opval->nparas) {
 						case 1:
 							if(operand1.type == magicvar_e) {
 								eh_error("Cannot use magic variable in scalar context", eerror_e);
 								break;
 							}
-							var = get_variable(operand1.strval, scope);
+							var = get_variable(operand1.stringval, scope);
 							// dereference variable
 							if(var != NULL) {
 								ret.type = reference_e;
@@ -550,22 +554,22 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 							 */
 							break;
 						case 3:
-							if(node->op.paras[1]->accessorv == arrow_e) {										
+							if(node->opval->paras[1]->accessorval == arrow_e) {										
 								if(operand1.type == magicvar_e) {
 									eh_error("Cannot use magic variable in array context", eerror_e);
 									break;
 								}
-								var = get_variable(operand1.strval, scope);
+								var = get_variable(operand1.stringval, scope);
 								if(var == NULL) {
 									eh_error("Cannot access member of non-existing variable", eerror_e);
 									ret.referenceval = (ehretval_t *) 0x1;
 								}
 								if(var->value.type == array_e) {
-									operand1 = execute(node->op.paras[2], context);							
-									member = array_getmember(var->value.arrval, operand1);
+									operand1 = execute(node->opval->paras[2], context);							
+									member = array_getmember(var->value.arrayval, operand1);
 									// if there is no member yet, insert it with a null value
 									if(member == NULL) {
-										member = array_insert_retval(var->value.arrval, operand1, ret);
+										member = array_insert_retval(var->value.arrayval, operand1, ret);
 									}
 									ret.type = reference_e;
 									ret.referenceval = &member->value;
@@ -573,21 +577,21 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 								else
 									ret.referenceval = &var->value;
 							} 
-							else if(node->op.paras[1]->accessorv == dot_e)
-								ret = object_access(operand1, node->op.paras[2], context);
+							else if(node->opval->paras[1]->accessorval == dot_e)
+								ret = object_access(operand1, node->opval->paras[2], context);
 							else
 								eh_error("Unsupported accessor", efatal_e);
 							break;
 					}
 					break;
 				case T_SET:
-					operand1 = execute(node->op.paras[0], context);
-					operand2 = execute(node->op.paras[1], context);
+					operand1 = execute(node->opval->paras[0], context);
+					operand2 = execute(node->opval->paras[1], context);
 					if(operand1.type == null_e) {
 						if(operand1.referenceval == NULL || operand1.referenceval == (ehretval_t *) 0x1) {
 							// set new variable
 							var = Malloc(sizeof(ehvar_t));
-							var->name = node->op.paras[0]->op.paras[0]->stringv;
+							var->name = node->opval->paras[0]->opval->paras[0]->stringval;
 							var->scope = scope;
 							var->value = operand2;
 							insert_variable(var);
@@ -597,7 +601,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 						}
 						else {
 							// operand 1 is a pointer to the variable modified, operand 2 is the value set to, operand 3 is the index
-							operand3 = execute(node->op.paras[0]->op.paras[2], context);
+							operand3 = execute(node->opval->paras[0]->opval->paras[2], context);
 							switch(operand1.referenceval->type) {
 								case int_e:
 									int_arrow_set(operand1, operand3, operand2);
@@ -619,7 +623,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					}
 					break;
 				case T_MINMIN:
-					operand1 = execute(node->op.paras[0], context);
+					operand1 = execute(node->opval->paras[0], context);
 					if(operand1.type == null_e)
 						eh_error("Cannot set with -- operator", eerror_e);
 					else switch(operand1.referenceval->type) {
@@ -632,7 +636,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					}
 					break;
 				case T_PLUSPLUS:
-					operand1 = execute(node->op.paras[0], context);
+					operand1 = execute(node->opval->paras[0], context);
 					if(operand1.type == null_e)
 						eh_error("Cannot set with ++ operator", eerror_e);
 					else switch(operand1.referenceval->type) {
@@ -645,17 +649,17 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					}
 					break;
 				case T_REFERENCE: // reference declaration
-					ret = execute(node->op.paras[0], context);
+					ret = execute(node->opval->paras[0], context);
 					if(ret.type != reference_e)
 						eh_error("Unable to create reference", eerror_e);
 					break;
 				case '$': // variable dereference
-					ret = execute(node->op.paras[0], context);
+					ret = execute(node->opval->paras[0], context);
 					if(ret.type == null_e) {
 						if(ret.referenceval == NULL || ret.referenceval == (ehretval_t *) 0x1)
 							break;
 						// get operands
-						operand2 = execute(node->op.paras[0]->op.paras[2], context);
+						operand2 = execute(node->opval->paras[0]->opval->paras[2], context);
 						if(operand2.type == reference_e)
 							ret = *ret.referenceval;
 						switch(ret.referenceval->type) {
@@ -674,12 +678,12 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 						ret = *ret.referenceval;
 					break;
 				default:
-					eh_error_int("Unexpected opcode", node->op.op, efatal_e);
+					eh_error_int("Unexpected opcode", node->opval->op, efatal_e);
 					break;
 			}
 			break;
 		default:
-			eh_error("Unsupported node type", efatal_e);
+			eh_error_int("Unsupported node type", node->type, efatal_e);
 			break;
 	}
 	return ret;
@@ -783,16 +787,16 @@ ehfunc_t *get_function(char *name) {
 	}
 	return NULL;
 }
-static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
+static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node) {
 	*argcount = 0;
 	// traverse linked list to determine argument count
-	ehnode_t *tmp;
+	ehretval_t *tmp;
 	int currarg = 0;
 
 	tmp = node;
-	while(tmp->op.nparas != 0) {
+	while(tmp->opval->nparas != 0) {
 		currarg++;
-		tmp = tmp->op.paras[0];
+		tmp = tmp->opval->paras[0];
 	}
 	*argcount = currarg;
 	// if there are no arguments, the arglist can be NULL
@@ -803,13 +807,13 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
 	// add arguments to arglist
 	tmp = node;
 	currarg = 0;
-	while(tmp->op.nparas != 0) {
-		(*arglist)[currarg].name = tmp->op.paras[1]->stringv;
+	while(tmp->opval->nparas != 0) {
+		(*arglist)[currarg].name = tmp->opval->paras[1]->stringval;
 		currarg++;
-		tmp = tmp->op.paras[0];
+		tmp = tmp->opval->paras[0];
 	}
 }
-ehretval_t call_function(ehfm_t *f, ehnode_t *args, ehcontext_t context, ehcontext_t newcontext) {
+ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext) {
 	ehretval_t ret;
 	ehvar_t *var;
 
@@ -822,12 +826,12 @@ ehretval_t call_function(ehfm_t *f, ehnode_t *args, ehcontext_t context, ehconte
 	int i = 0;
 	// set parameters as necessary
 	if(f->args == NULL) {
-		if(args->op.nparas != 0) {
+		if(args->opval->nparas != 0) {
 			eh_error_argcount(f->argcount, 1);
 			return ret;
 		}
 	}
-	else while(args->op.nparas != 0) {
+	else while(args->opval->nparas != 0) {
 		var = Malloc(sizeof(ehvar_t));
 		var->name = f->args[i].name;
 		var->scope = scope + 1;
@@ -837,8 +841,8 @@ ehretval_t call_function(ehfm_t *f, ehnode_t *args, ehcontext_t context, ehconte
 			eh_error_argcount(f->argcount, i);
 			return ret;
 		}
-		var->value = execute(args->op.paras[1], context);;
-		args = args->op.paras[0];
+		var->value = execute(args->opval->paras[1], context);;
+		args = args->opval->paras[0];
 	}
 	// functions get their own scope (not incremented before because execution of arguments needs parent scope)
 	scope++;
@@ -886,29 +890,29 @@ ehclass_t *get_class(char *name) {
 	}
 	return NULL;
 }
-void class_insert(ehclassmember_t **class, ehnode_t *in, ehcontext_t context) {
+void class_insert(ehclassmember_t **class, ehretval_t *in, ehcontext_t context) {
 	// insert a member into a class
 	unsigned int vhash;
 	ehclassmember_t *member;
 	
 	member = Malloc(sizeof(ehclassmember_t));
-	// rely on standard layout of the input ehnode_t
-	member->visibility = in->op.paras[0]->visibilityv;
-	member->name = in->op.paras[1]->stringv;
+	// rely on standard layout of the input ehretval_t
+	member->visibility = in->opval->paras[0]->visibilityval;
+	member->name = in->opval->paras[1]->stringval;
 
 	// decide what we got
-	switch(in->op.nparas) {
+	switch(in->opval->nparas) {
 		case 2: // non-set property: null
 			member->value.type = null_e;
 			break;
 		case 3: // set property
-			member->value = execute(in->op.paras[2], context);
+			member->value = execute(in->opval->paras[2], context);
 			break;
 		case 4: // method
 			member->value.type = func_e;
 			member->value.funcval = Malloc(sizeof(ehfm_t));
-			member->value.funcval->code = in->op.paras[3];
-			make_arglist(&member->value.funcval->argcount, &member->value.funcval->args, in->op.paras[2]);
+			member->value.funcval->code = in->opval->paras[3];
+			make_arglist(&member->value.funcval->argcount, &member->value.funcval->args, in->opval->paras[2]);
 			break;
 	}
 
@@ -955,40 +959,52 @@ ehretval_t class_get(ehobj_t *class, char *name, ehcontext_t context) {
 		ret = curr->value;
 	return ret;
 }
-ehretval_t object_access(ehretval_t operand1, ehnode_t *index, ehcontext_t context) {
+ehretval_t object_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context) {
 	ehretval_t label, ret;
 	ehvar_t *var;
 	ehclassmember_t *classmember;
+	ehobj_t *object;
 
 	// default value. Set the referenceval explicitly because of T_LVALUE special conventions
 	ret.type = null_e;
 	ret.referenceval = NULL;
 	
-	// this dereference
-	if(var->value.type == magicvar_e) {
-		if(var->value.magicvarval == this_e) {
-			
-		}
-	}
-
-	var = get_variable(operand1.strval, scope);
-	if(var->value.type != object_e) {
-		eh_error_type("object access", var->value.type, eerror_e);
-		return ret;
-	}
 	label = execute(index, context);
 	if(label.type != string_e) {
 		eh_error_type("object member label", label.type, eerror_e);
 		return ret;
 	}
-	classmember = class_getmember(var->value.objval, label.strval, context);
+
+	// this dereference
+	if(operand1.type == magicvar_e) {
+		if(var->value.magicvarval == this_e) {
+			if(context == NULL) {
+				eh_error("Use of $this outside an object", eerror_e);
+				return ret;
+			}
+			object = context;
+		}
+		else {
+			eh_error_int("Unsupported magicvar", var->value.magicvarval, efatal_e);
+			return ret;
+		}
+	}
+	else {
+		var = get_variable(operand1.stringval, scope);
+		if(var->value.type != object_e) {
+			eh_error_type("object access", var->value.type, eerror_e);
+			return ret;
+		}
+		object = var->value.objectval;
+	}
+	classmember = class_getmember(object, label.stringval, context);
 	if(classmember == NULL) {
-		eh_error_unknown("object member", label.strval, eerror_e);
+		eh_error_unknown("object member", label.stringval, eerror_e);
 		return ret;
 	}
 	ret.type = reference_e;
 	ret.referenceval = &classmember->value;
-	newcontext = var->value.objval;
+	newcontext = object;
 	return ret;
 }
 bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {
@@ -1024,7 +1040,7 @@ ehretval_t eh_xtoi(ehretval_t in) {
 			ret.intval = in.intval;
 			break;
 		case string_e:
-			ret = eh_strtoi(in.strval);
+			ret = eh_strtoi(in.stringval);
 			break;
 		case bool_e:
 			if(in.boolval)
@@ -1047,24 +1063,24 @@ ehretval_t eh_xtostr(ehretval_t in) {
 	ret.type = string_e;
 	switch(in.type) {
 		case string_e:
-			ret.strval = in.strval;
+			ret.stringval = in.stringval;
 			break;
 		case int_e:
-			ret.strval = eh_itostr(in.intval);
+			ret.stringval = eh_itostr(in.intval);
 			break;
 		case null_e:
 			// empty string
-			ret.strval = Malloc(1);
-			ret.strval[0] = '\0';
+			ret.stringval = Malloc(1);
+			ret.stringval[0] = '\0';
 			break;
 		case bool_e:
 			if(in.boolval) {
-				ret.strval = Malloc(5);
-				strcpy(ret.strval, "true");
+				ret.stringval = Malloc(5);
+				strcpy(ret.stringval, "true");
 			}
 			else {
-				ret.strval = Malloc(6);
-				strcpy(ret.strval, "false");
+				ret.stringval = Malloc(6);
+				strcpy(ret.stringval, "false");
 			}
 			break;
 		default:
@@ -1086,7 +1102,7 @@ ehretval_t eh_xtobool(ehretval_t in) {
 				ret.boolval = true;
 			break;
 		case string_e:
-			if(strlen(in.strval) == 0)
+			if(strlen(in.stringval) == 0)
 				ret.boolval = false;
 			else
 				ret.boolval = true;
@@ -1113,7 +1129,7 @@ ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2) {
 		ret.boolval = (operand1.intval == operand2.intval);
 	}
 	else if(IS_STRING(operand1) && IS_STRING(operand2)) {
-		ret.boolval = !strcmp(operand1.strval, operand2.strval);
+		ret.boolval = !strcmp(operand1.stringval, operand2.stringval);
 	}
 	else {
 		operand1 = eh_xtoi(operand1);
@@ -1134,7 +1150,7 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2) {
 		ret.boolval = (operand1.intval == operand2.intval);
 	}
 	else if(IS_STRING(operand1) && IS_STRING(operand2)) {
-		ret.boolval = !strcmp(operand1.strval, operand2.strval);
+		ret.boolval = !strcmp(operand1.stringval, operand2.stringval);
 	}
 	else if(IS_BOOL(operand1) && IS_BOOL(operand2)) {
 		ret.boolval = (operand1.boolval == operand2.boolval);
@@ -1153,7 +1169,7 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2) {
 /*
  * Arrays
  */
-void array_insert(ehvar_t **array, ehnode_t *in, int place, ehcontext_t context) {
+void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t context) {
 	unsigned int vhash;
 	ehretval_t var;
 	ehretval_t label;
@@ -1162,21 +1178,21 @@ void array_insert(ehvar_t **array, ehnode_t *in, int place, ehcontext_t context)
 	ehvar_t *member = Malloc(sizeof(ehvar_t));
 
 	/*
-	 * We'll assume we're always getting a correct ehnode_t *, referring to a
+	 * We'll assume we're always getting a correct ehretval_t *, referring to a
 	 * T_ARRAYMEMBER token. If there is 1 parameter, that means it's a
 	 * non-labeled array member, which we'll give an integer array index; if
 	 * there are 2, we'll either use the integer array index or a hash of the
 	 * string index.
 	 */
-	if(in->op.nparas == 1) {
+	if(in->opval->nparas == 1) {
 		// if there is no explicit key, simply use the place argument
 		vhash = place % VARTABLE_S;
-		var = execute(in->op.paras[0], context);
+		var = execute(in->opval->paras[0], context);
 		member->indextype = int_e;
 		member->index = place;
 	}
 	else {
-		label = execute(in->op.paras[0], context);
+		label = execute(in->opval->paras[0], context);
 		switch(label.type) {
 			case int_e:
 				vhash = label.intval % VARTABLE_S;
@@ -1184,16 +1200,16 @@ void array_insert(ehvar_t **array, ehnode_t *in, int place, ehcontext_t context)
 				member->index = label.intval;
 				break;
 			case string_e:
-				vhash = hash(label.strval, 0);
+				vhash = hash(label.stringval, 0);
 				member->indextype = string_e;
-				member->name = label.strval;
+				member->name = label.stringval;
 				break;
 			default:
 				eh_error_type("array member label", label.type, enotice_e);
 				free(member);
 				return;
 		}
-		var = execute(in->op.paras[1], context);
+		var = execute(in->opval->paras[1], context);
 	}
 
 	// create array member
@@ -1244,8 +1260,8 @@ ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) 
 			new->index = index.intval;
 			break;
 		case string_e:
-			vhash = hash(index.strval, 0);
-			new->name = index.strval;
+			vhash = hash(index.stringval, 0);
+			new->name = index.stringval;
 			break;
 		default:
 			eh_error_type("array index", index.type, enotice_e);
@@ -1266,7 +1282,7 @@ ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
 			vhash = index.intval % VARTABLE_S;
 			break;
 		case string_e:
-			vhash = hash(index.strval, 0);
+			vhash = hash(index.stringval, 0);
 			break;
 		default:
 			eh_error_type("array index", index.type, enotice_e);
@@ -1283,7 +1299,7 @@ ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
 			break;
 		case string_e:
 			while(curr != NULL) {
-				if(curr->indextype == string_e && !strcmp(curr->name, index.strval))
+				if(curr->indextype == string_e && !strcmp(curr->name, index.stringval))
 					return curr;
 				curr = curr->next;
 			}
@@ -1358,13 +1374,13 @@ static ehretval_t string_arrow_get(ehretval_t operand1, ehretval_t operand2) {
 		eh_error_type("character access to string", operand2.type, enotice_e);
 		return ret;
 	}
-	count = strlen(operand1.strval);
+	count = strlen(operand1.stringval);
 	if(operand2.intval >= count) {
 		eh_error_int("Identifier too large for character access to string", operand2.intval, enotice_e);
 		return ret;
 	}
 	// get the nth character
-	ret.intval = operand1.strval[operand2.intval];
+	ret.intval = operand1.stringval[operand2.intval];
 	ret.type = int_e;
 	return ret;
 }
@@ -1400,13 +1416,13 @@ static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rval
 		eh_error_type("setting a character in a string", index.type, enotice_e);
 		return;
 	}
-	count = strlen(input.referenceval->strval);
+	count = strlen(input.referenceval->stringval);
 	if(index.intval >= count) {
 		eh_error_int("Identifier too large for character access to string", index.intval, enotice_e);
 		return;
 	}
 	// get the nth character
-	input.referenceval->strval[index.intval] = rvalue.intval;
+	input.referenceval->stringval[index.intval] = rvalue.intval;
 	return;
 }
 
@@ -1434,15 +1450,15 @@ void eh_setarg(int argc, char **argv) {
 	argv_v->value.type = array_e;
 	argv_v->scope = 0;
 	argv_v->name = "argv";
-	argv_v->value.arrval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	argv_v->value.arrayval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
 
 	// all members of argv are strings
 	ret.type = string_e;
 	index.type = int_e;
 	for(i = 1; i < argc; i++) {
 		index.intval = i - 1;
-		ret.strval = argv[i];
-		array_insert_retval(argv_v->value.arrval, index, ret);
+		ret.stringval = argv[i];
+		array_insert_retval(argv_v->value.arrayval, index, ret);
 	}
 	insert_variable(argv_v);
 }

@@ -448,45 +448,12 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 				case '=': // equality
 					operand1 = execute(node->op.paras[0], context);
 					operand2 = execute(node->op.paras[1], context);
-					ret.type = bool_e;
-					if(IS_INT(operand1) && IS_INT(operand2)) {
-						ret.boolval = (operand1.intval == operand2.intval);
-					}
-					else if(IS_STRING(operand1) && IS_STRING(operand2)) {
-						ret.boolval = !strcmp(operand1.strval, operand2.strval);
-					}
-					else {
-						operand1 = eh_xtoi(operand1);
-						operand2 = eh_xtoi(operand2);
-						if(IS_INT(operand1) && IS_INT(operand2)) {
-							ret.boolval = (operand1.intval == operand2.intval);
-						}
-						else
-							ret.type = null_e;
-					}
+					ret = eh_looseequals(operand1, operand2);
 					break;
 				case T_SE: // strict equality
 					operand1 = execute(node->op.paras[0], context);
 					operand2 = execute(node->op.paras[1], context);
-					ret.type = bool_e;
-					if(IS_INT(operand1) && IS_INT(operand2)) {
-						ret.boolval = (operand1.intval == operand2.intval);
-					}
-					else if(IS_STRING(operand1) && IS_STRING(operand2)) {
-						ret.boolval = !strcmp(operand1.strval, operand2.strval);
-					}
-					else if(IS_BOOL(operand1) && IS_BOOL(operand2)) {
-						ret.boolval = (operand1.boolval == operand2.boolval);
-					}
-					else if(IS_NULL(operand1) && IS_NULL(operand2)) {
-						// null always equals null
-						ret.boolval = true;
-					}
-					else {
-						// strict comparison between different types always returns false
-						ret.boolval = false;
-						// TODO: array comparison
-					}
+					ret = eh_strictequals(operand1, operand2);
 					break;
 				EH_INTBOOL_CASE('>', >) // greater-than
 				EH_INTBOOL_CASE('<', <) // lesser-than
@@ -1113,6 +1080,51 @@ ehretval_t eh_xtobool(ehretval_t in) {
 			// other types are always false
 			ret.boolval = false;
 			break;
+	}
+	return ret;
+}
+ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2) {
+	ehretval_t ret;
+	ret.type = bool_e;
+
+	if(IS_INT(operand1) && IS_INT(operand2)) {
+		ret.boolval = (operand1.intval == operand2.intval);
+	}
+	else if(IS_STRING(operand1) && IS_STRING(operand2)) {
+		ret.boolval = !strcmp(operand1.strval, operand2.strval);
+	}
+	else {
+		operand1 = eh_xtoi(operand1);
+		operand2 = eh_xtoi(operand2);
+		if(IS_INT(operand1) && IS_INT(operand2)) {
+			ret.boolval = (operand1.intval == operand2.intval);
+		}
+		else
+			ret.type = null_e;
+	}
+	return ret;
+}
+ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2) {
+	ehretval_t ret;
+	ret.type = bool_e;
+
+	if(IS_INT(operand1) && IS_INT(operand2)) {
+		ret.boolval = (operand1.intval == operand2.intval);
+	}
+	else if(IS_STRING(operand1) && IS_STRING(operand2)) {
+		ret.boolval = !strcmp(operand1.strval, operand2.strval);
+	}
+	else if(IS_BOOL(operand1) && IS_BOOL(operand2)) {
+		ret.boolval = (operand1.boolval == operand2.boolval);
+	}
+	else if(IS_NULL(operand1) && IS_NULL(operand2)) {
+		// null always equals null
+		ret.boolval = true;
+	}
+	else {
+		// strict comparison between different types always returns false
+		ret.boolval = false;
+		// TODO: array comparison
 	}
 	return ret;
 }

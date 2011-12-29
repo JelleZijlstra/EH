@@ -44,6 +44,8 @@ char *eh_itostr(int in);
 ehretval_t eh_xtoi(ehretval_t in);
 ehretval_t eh_xtostr(ehretval_t in);
 ehretval_t eh_xtobool(ehretval_t in);
+ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2);
+ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 
 /*
  * macros for interpreter behavior

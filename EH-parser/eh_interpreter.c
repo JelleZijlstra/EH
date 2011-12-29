@@ -51,6 +51,7 @@ void eh_exit(void) {
 
 ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 	// variables used
+	ehnode_t *node2;
 	ehvar_t *var, *member;
 	ehfunc_t *func;
 	ehclass_t *class;
@@ -427,17 +428,18 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 				case '[': // array declaration
 					ret.type = array_e;
 					ret.arrval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
-					i = 0;
-					node = node->op.paras[0];
-					while(node != NULL) {
-						if(node->type == opnode_e && node->op.op == ',') {
-							array_insert(ret.arrval, node->op.paras[0], i++, context);
-							node = node->op.paras[1];
-						}
-						else {
-							array_insert(ret.arrval, node, i++, context);
-							break;
-						}
+					// need to count array members first, because they are reversed in our node.
+					// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
+					node2 = node->op.paras[0];
+					count = 0;
+					while(node2->op.nparas != 0) {
+						count++;
+						node2 = node2->op.paras[0];
+					}
+					node2 = node->op.paras[0];
+					while(node2->op.nparas != 0) {
+						array_insert(ret.arrval, node2->op.paras[1], --count, context);
+						node2 = node2->op.paras[0];
 					}
 					break;
 			/*
@@ -838,15 +840,9 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
 	int currarg = 0;
 
 	tmp = node;
-	while(tmp != NULL) {
-		if(tmp->type == opnode_e && tmp->op.op == ',') {
-			currarg++;
-			tmp = tmp->op.paras[1];
-		}
-		else {
-			currarg++;
-			break;
-		}
+	while(tmp->op.nparas != 0) {
+		currarg++;
+		tmp = tmp->op.paras[0];
 	}
 	*argcount = currarg;
 	// if there are no arguments, the arglist can be NULL
@@ -857,16 +853,10 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node) {
 	// add arguments to arglist
 	tmp = node;
 	currarg = 0;
-	while(tmp != NULL) {
-		if(tmp->type == opnode_e && tmp->op.op == ',') {
-			(*arglist)[currarg].name = tmp->op.paras[0]->id.name;
-			currarg++;
-			tmp = tmp->op.paras[1];
-		}
-		else {
-			(*arglist)[currarg].name = tmp->id.name;
-			break;
-		}
+	while(tmp->op.nparas != 0) {
+		(*arglist)[currarg].name = tmp->op.paras[1]->id.name;
+		currarg++;
+		tmp = tmp->op.paras[0];
 	}
 }
 ehretval_t call_function(ehfm_t *f, ehnode_t *args, ehcontext_t context, ehcontext_t newcontext) {
@@ -881,7 +871,13 @@ ehretval_t call_function(ehfm_t *f, ehnode_t *args, ehcontext_t context, ehconte
 	}
 	int i = 0;
 	// set parameters as necessary
-	while(args != NULL) {
+	if(f->args == NULL) {
+		if(args->op.nparas != 0) {
+			eh_error_argcount(f->argcount, 1);
+			return ret;
+		}
+	}
+	else while(args->op.nparas != 0) {
 		var = Malloc(sizeof(ehvar_t));
 		var->name = f->args[i].name;
 		var->scope = scope + 1;
@@ -891,16 +887,8 @@ ehretval_t call_function(ehfm_t *f, ehnode_t *args, ehcontext_t context, ehconte
 			eh_error_argcount(f->argcount, i);
 			return ret;
 		}
-		if(args->type == opnode_e && args->op.op == ',') {
-			ret = execute(args->op.paras[0], context);
-			SETVARFROMRET(var);
-			args = args->op.paras[1];
-		}
-		else {
-			ret = execute(args, context);
-			SETVARFROMRET(var);
-			break;
-		}
+		var->value = execute(args->op.paras[1], context);;
+		args = args->op.paras[0];
 	}
 	// functions get their own scope (not incremented before because execution of arguments needs parent scope)
 	scope++;

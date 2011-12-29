@@ -20,11 +20,11 @@ EHLIBFUNC(printvar) {
 	// this function always returns NULL
 	retval->type = null_e;
 
-	if(paras[0].type == opnode_e && paras[0].op.op == ',') {
+	if(paras->op.paras[0]->op.nparas != 0) {
 		eh_error_argcount_lib("printvar", 1, 2);
 		return;
 	}
-	printvar_retval(execute(&paras[0], context));
+	printvar_retval(execute(paras[0].op.paras[1], context));
 	return;
 }
 

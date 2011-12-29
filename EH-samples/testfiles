@@ -27,3 +27,8 @@ closure.eh
 andor.eh
 unary.eh
 break.eh
+set.eh
+args.eh
+ref.eh
+simplearr.eh
+comma.eh

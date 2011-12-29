@@ -2,7 +2,7 @@ The files in this directory provide a parser as well as a compiler and
 interpreter for the EH scripting language. The parser provided here includes 
 numerous features not supported by the PHP-based interpreter in 
 ExecuteHandler.php, but is also missing some features (most notably PHP method 
-calls in command form, but also the global keyword).
+calls in command form).
 
 The following are some bugs and missing features still existing in the 
 interpreter:
@@ -17,7 +17,6 @@ interpreter:
   > bfind --variables=[year => 2003, authors => '/Musser/'] --print=false
   The PHP implementation does not support parameters that are arrays.
 - Integrate ehi into PHP using SWIG.
-- Less haphazard error handling.
 - Switch statements?
 - Foreach-like loops for objects and arrays.
 

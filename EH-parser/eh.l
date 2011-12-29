@@ -34,6 +34,7 @@
 "echo"		return T_ECHO;
 "if"		return T_IF;
 "else"		return T_ELSE;
+"set"		return T_SET;
 "endif"		return T_ENDIF;
 "for"		return T_FOR;
 "endfor"	return T_ENDFOR;
@@ -49,6 +50,7 @@
 "null"		return T_NULL;
 "class"		return T_CLASS;
 "endclass"	return T_ENDCLASS;
+"this"		return T_THIS;
 "new"		return T_NEW;
 "global"	return T_GLOBAL;
 "&&"		return T_AND;

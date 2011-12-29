@@ -23,7 +23,6 @@ extern int yylineno;
 %token T_WHILE
 %token T_ENDWHILE
 %token T_FOR
-%token T_COUNT
 %token T_ENDFOR
 %token T_BREAK
 %token T_CONTINUE
@@ -37,7 +36,7 @@ extern int yylineno;
 %token T_NULL
 %token T_CLASS
 %token T_ENDCLASS
-%token T_NEW
+%token T_THIS
 %token T_GLOBAL
 %token T_LVALUE
 %token T_LVALUE_OBJECT
@@ -49,18 +48,19 @@ extern int yylineno;
 %token <sValue> T_STRING
 %left ','
 %left T_AND T_OR T_XOR
+%left ':'
 %left '|' '^' '&'
 %left '+' '-'
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
-%left ':'
 %right <aValue> T_ACCESSOR
-%nonassoc '$' T_REFERENCE '~' '!' T_NEGATIVE
+%nonassoc '$' T_REFERENCE '~' '!' T_NEGATIVE T_COUNT
+%nonassoc T_NEW
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list bareword arglist parglist arraylist arraymember expressionwrap classlist classmember lvalue
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg
 %%
 program:
 	statement_list			{
@@ -89,8 +89,6 @@ statement_list:
 
 statement:
 	expression T_SEPARATOR	{ $$ = $1; }
-	| T_ECHO T_STRING T_SEPARATOR
-							{ $$ = operate(T_ECHO, 1, get_identifier($2)); }
 	| T_ECHO expression T_SEPARATOR
 							{ $$ = operate(T_ECHO, 1, $2); }
 	| T_SET lvalue '=' expression T_SEPARATOR
@@ -193,10 +191,14 @@ bareword:
 	;
 
 arraylist:
+	arraylist arraymemberwrap
+							{ $$ = operate(',', 2, $1, $2); }
+	| /* NULL */			{ $$ = operate(',', 0); }
+	;
+
+arraymemberwrap:
 	arraymember				{ $$ = $1; }
-	| arraymember ',' arraylist
-							{ $$ = operate(',', 2, $1, $3); }
-	| /* NULL */			{ $$ = 0; }
+	| arraymember ','		{ $$ = $1; }
 	;
 
 arraymember:
@@ -206,26 +208,30 @@ arraymember:
 	;
 
 arglist:
+	arglist arg				{ $$ = operate(',', 2, $1, $2); }
+	| /* NULL */			{ $$ = operate(',', 0); }
+	;
+
+arg:
 	expression				{ $$ = $1; }
-	| expression ',' arglist
-							{ $$ = operate(',', 2, $1, $3); }
-	| /* NULL */			{ $$ = 0; }
+	| expression ','		{ $$ = $1; }
 	;
 
 parglist:
-	bareword				{ $$ = $1; }
-	| bareword ',' parglist
-							{ $$ = operate(',', 2, $1, $3); }
-	| /* NULL */			{ $$ = 0; }
+	parglist parg			{ $$ = operate(',', 2, $1, $2); }
+	| /* NULL */			{ $$ = operate(',', 0); }
 	;
+
+parg:
+	bareword				{ $$ = $1; }
+	| bareword ','			{ $$ = $1; }
 
 expressionwrap:
 	expression				{ $$ = operate(T_EXPRESSION, 1, $1); }
 	;
 
 classlist:
-	classmember				{ $$ = $1; }
-	| classmember classlist
+	classmember classlist
 							{ $$ = operate(',', 2, $1, $2); }
 	| /* NULL */			{ $$ = 0; }
 	;

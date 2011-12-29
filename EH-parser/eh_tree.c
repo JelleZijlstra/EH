@@ -95,7 +95,10 @@ ehnode_t *operate(int operation, int nparas, ...) {
 	int i;
 
 	ret = Malloc(sizeof(ehnode_t));
-	ret->op.paras = Malloc(nparas * sizeof(ehnode_t *));
+	if(nparas)
+		ret->op.paras = Malloc(nparas * sizeof(ehnode_t *));
+	else
+		ret->op.paras = NULL;
 
 	ret->type = opnode_e;
 	ret->op.op = operation;

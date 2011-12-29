@@ -123,6 +123,15 @@ typedef struct eharg_t {
 	char *name;
 } eharg_t;
 
+// EH object
+typedef struct ehobj_t {
+	struct ehclassmember_t **members;
+	char *class;
+} ehobj_t;
+
+// context
+typedef ehobj_t *ehcontext_t;
+
 // struct with common infrastructure for procedures and methods
 typedef struct ehfm_t {
 	functype_enum type;
@@ -130,15 +139,9 @@ typedef struct ehfm_t {
 	eharg_t *args;
 	union {
 		ehnode_t *code;
-		void (*ptr)(ehnode_t *, ehretval_t *, char *);
+		void (*ptr)(ehnode_t *, ehretval_t *, ehcontext_t);
 	};
 } ehfm_t;
-
-// EH object
-typedef struct ehobj_t {
-	struct ehclassmember_t **members;
-	char *class;
-} ehobj_t;
 
 // EH procedure
 typedef struct ehfunc_t {
@@ -162,7 +165,7 @@ typedef struct ehclass_t {
 } ehclass_t;
 
 typedef struct ehlibfunc_t {
-	void (*code)(ehnode_t *, ehretval_t *, char *);
+	void (*code)(ehnode_t *, ehretval_t *, ehcontext_t);
 	char *name;
 } ehlibfunc_t;
 
@@ -188,9 +191,6 @@ GETFUNCPROTO(visibility, visibility_enum)
 GETFUNCPROTO(magicvar, magicvar_enum)
 
 ehnode_t *operate(int operations, int noperations, ...);
-
-// context
-typedef char *ehcontext_t;
 
 ehretval_t execute(ehnode_t *node, ehcontext_t context);
 void print_tree(ehnode_t *in, int n);

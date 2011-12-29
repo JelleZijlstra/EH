@@ -16,7 +16,7 @@ static int breaking = 0;
 static bool continuing = 0;
 
 // current object, gets passed around
-static char *newcontext = NULL;
+static ehcontext_t newcontext = NULL;
 int scope = 0;
 static void make_arglist(int *argcount, eharg_t **arglist, ehnode_t *node);
 static ehretval_t int_arrow_get(ehretval_t operand1, ehretval_t operand2);
@@ -334,7 +334,7 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 							eh_error_unknown("object member", name, eerror_e);
 							break;
 						}
-						newcontext = operand1.objval->class;
+						newcontext = operand1.objval;
 					} else if(node->op.paras[1]->accessorv == arrow_e) {
 						// "array" access
 						operand2 = execute(node->op.paras[2], context);
@@ -536,6 +536,10 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 					ret.referenceval = NULL;
 					switch(node->op.nparas) {
 						case 1:
+							if(operand1.type == magicvar_e) {
+								eh_error("Cannot use magic variable in scalar context", eerror_e);
+								break;
+							}
 							var = get_variable(operand1.strval, scope);
 							// dereference variable
 							if(var != NULL) {
@@ -548,27 +552,28 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 							 */
 							break;
 						case 3:
-							if(node->op.paras[1]->accessorv == arrow_e) {							
+							if(node->op.paras[1]->accessorv == arrow_e) {										
+								if(operand1.type == magicvar_e) {
+									eh_error("Cannot use magic variable in array context", eerror_e);
+									break;
+								}
 								var = get_variable(operand1.strval, scope);
 								if(var == NULL) {
 									eh_error("Cannot access member of non-existing variable", eerror_e);
 									ret.referenceval = (ehretval_t *) 0x1;
 								}
-								switch(var->value.type) {
-									case array_e:
-										operand1 = execute(node->op.paras[2], context);							
-										member = array_getmember(var->value.arrval, operand1);
-										// if there is no member yet, insert it with a null value
-										if(member == NULL) {
-											member = array_insert_retval(var->value.arrval, operand1, ret);
-										}
-										ret.type = reference_e;
-										ret.referenceval = &member->value;
-										break;
-									default:
-										ret.referenceval = &var->value;
-										break;
+								if(var->value.type == array_e) {
+									operand1 = execute(node->op.paras[2], context);							
+									member = array_getmember(var->value.arrval, operand1);
+									// if there is no member yet, insert it with a null value
+									if(member == NULL) {
+										member = array_insert_retval(var->value.arrval, operand1, ret);
+									}
+									ret.type = reference_e;
+									ret.referenceval = &member->value;
 								}
+								else
+									ret.referenceval = &var->value;
 							} 
 							else if(node->op.paras[1]->accessorv == dot_e)
 								ret = object_access(operand1, node->op.paras[2], context);
@@ -930,8 +935,8 @@ ehclassmember_t *class_getmember(ehobj_t *class, char *name, ehcontext_t context
 					// if context is NULL, we're never going to get private stuff
 					if(context == NULL)
 						return NULL;
-					// compare class name to context given
-					if(!strcmp(class->class, context))
+					// check context
+					if(ehcontext_compare(class, context))
 						return curr;
 					else
 						return NULL;
@@ -956,9 +961,17 @@ ehretval_t object_access(ehretval_t operand1, ehnode_t *index, ehcontext_t conte
 	ehretval_t label, ret;
 	ehvar_t *var;
 	ehclassmember_t *classmember;
-	
+
+	// default value. Set the referenceval explicitly because of T_LVALUE special conventions
 	ret.type = null_e;
 	ret.referenceval = NULL;
+	
+	// this dereference
+	if(var->value.type == magicvar_e) {
+		if(var->value.magicvarval == this_e) {
+			
+		}
+	}
 
 	var = get_variable(operand1.strval, scope);
 	if(var->value.type != object_e) {
@@ -977,8 +990,11 @@ ehretval_t object_access(ehretval_t operand1, ehnode_t *index, ehcontext_t conte
 	}
 	ret.type = reference_e;
 	ret.referenceval = &classmember->value;
-	newcontext = var->value.objval->class;
+	newcontext = var->value.objval;
 	return ret;
+}
+bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {
+	return !strcmp(lock->class, key->class);
 }
 /*
  * Type casting

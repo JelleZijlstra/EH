@@ -310,8 +310,7 @@ abstract class ExecuteHandler {
 			}
 			else {
 				$funcname = $matches[1];
-				$func = $this->funcs[$funcname];
-				if(!$func) {
+				if(!isset($this->funcs[$funcname])) {
 					if(in_array($funcname, self::$php_funcs)) {
 						$ret = call_user_func($funcname);
 						if(is_string($ret))
@@ -322,10 +321,13 @@ abstract class ExecuteHandler {
 					$this->evaluate_ret = self::EVALUATE_ERROR;
 					return NULL;
 				}
-				$this->retline = $this->curr('pc');
-				$this->evaluate_ret = self::EVALUATE_FUNCTION_CALL;
-				$this->curr('pc', $func['line']);
-				return NULL;
+				else {
+					$func = $this->funcs[$funcname];
+					$this->retline = $this->curr('pc');
+					$this->evaluate_ret = self::EVALUATE_FUNCTION_CALL;
+					$this->curr('pc', $func['line']);
+					return NULL;
+				}
 			}
 		}
 		// math

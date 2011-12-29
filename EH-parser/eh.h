@@ -190,6 +190,7 @@ typedef char *ehcontext_t;
 
 ehretval_t execute(ehnode_t *node, ehcontext_t context);
 void print_tree(ehnode_t *in, int n);
+const char *get_typestring(type_enum type);
 
 void eh_setarg(int argc, char **argv);
 

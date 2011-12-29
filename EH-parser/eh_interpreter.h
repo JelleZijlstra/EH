@@ -4,7 +4,7 @@
  *
  * Header file for the EH interpreter
  */
-#include "eh.h"
+#include "eh_error.h"
 #include "y.tab.h"
 // symbol table for variables and functions
 #define VARTABLE_S 1024
@@ -56,9 +56,8 @@ ehretval_t eh_xtobool(ehretval_t in);
 		ret.type = int_e; \
 		ret.intval = (operand1.intval operator operand2.intval); \
 	} \
-	else { \
-		fprintf(stderr, "Incompatible operands\n"); \
-	} \
+	else \
+		eh_error_types(token, operand1.type, operand2.type, eerror_e); \
 	break;
 // take ints, return a bool
 #define EH_INTBOOL_CASE(token, operator) case token: \
@@ -69,7 +68,7 @@ ehretval_t eh_xtobool(ehretval_t in);
 		ret.boolval = (operand1.intval operator operand2.intval); \
 	} \
 	else { \
-		fprintf(stderr, "Incompatible operands\n"); \
+		eh_error_types(token, operand1.type, operand2.type, eerror_e); \
 	} \
 	break;
 // take bools, return a bool

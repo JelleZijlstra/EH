@@ -9,4 +9,4 @@ compiler: eh_compiler.c
 
 interpreter: eh_interpreter.c
 	${YACCLEX}
-	gcc $(CCFLAGS) lex.yy.c y.tab.c eh_tree.c eh_libfuncs.c eh_interpreter.c -o ehi
+	gcc $(CCFLAGS) lex.yy.c y.tab.c eh_tree.c eh_libfuncs.c eh_error.c eh_interpreter.c -o ehi

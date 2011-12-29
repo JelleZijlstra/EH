@@ -1,6 +1,6 @@
 /* This code was inspired by Tom Niemann's "A Compact Guide to Lex & Yacc", available at http://epaperpress.com/lexandyacc/ */
 %{
-#include "eh.h"
+#include "eh_error.h"
 extern FILE *yyin;
 #define YYERROR_VERBOSE
 extern int yylineno;
@@ -252,18 +252,16 @@ classmember:
 	;
 %%
 void yyerror(char *s) {
-	fprintf(stderr, "In line %d: %s\n", yylineno, s);
+	eh_error_line(yylineno, s);
 }
 int main(int argc, char **argv) {
 	if(argc < 2) {
-		printf("Usage: %s file\n", argv[0]);
-		exit(1);
+		fprintf(stderr, "Usage: %s file\n", argv[0]);
+		eh_error(NULL, efatal_e);
 	}
 	FILE *infile = fopen(argv[1], "r");
-	if(!infile) {
-		printf("Unable to open input file\n");
-		exit(2);
-	}
+	if(!infile)
+		eh_error("Unable to open input file", efatal_e);
 	eh_setarg(argc, argv);
 	// set input
 	yyin = infile;

@@ -21,7 +21,7 @@ EHLIBFUNC(printvar) {
 	retval->type = null_e;
 
 	if(paras[0].type == opnode_e && paras[0].op.op == ',') {
-		fprintf(stderr, "Incorrect argument count for function printvar\n");
+		eh_error_argcount_lib("printvar", 1, 2);
 		return;
 	}
 	printvar_retval(execute(&paras[0], context));
@@ -80,8 +80,11 @@ static void printvar_retval(ehretval_t in) {
 			}
 			printf("\n");
 			break;
-		default:
-			fprintf(stderr, "Unsupported data type\n");
+		case accessor_e:
+			printf("@accesor %d", in.accessorval);
+			break;
+		case type_e:
+			printf("@type %s", get_typestring(in.typeval));
 			break;
 	}
 	return;
@@ -122,7 +125,7 @@ static void printvar_array(ehvar_t **in) {
 					printf("'%s': ", curr->name);
 					break;
 				default:
-					fprintf(stderr, "Unsupported indextype\n");
+					eh_error_type("array index", curr->indextype, eerror_e);
 					break;
 			}
 			printvar_retval(curr->value);

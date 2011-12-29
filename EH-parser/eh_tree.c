@@ -178,3 +178,20 @@ void print_tree(ehnode_t *in, int n) {
 			break;
 	}
 }
+
+const char *get_typestring(type_enum type) {
+	switch(type) {
+		case int_e: return "int";
+		case string_e: return "string";
+		case bool_e: return "bool";
+		case reference_e: return "reference";
+		case null_e: return "null";
+		case accessor_e: return "accessor";
+		case type_e: return "type";
+		case array_e: return "array";
+		case func_e: return "function";
+		case object_e: return "object";
+	}
+	// to keep the compiler happy
+	return "null";
+}

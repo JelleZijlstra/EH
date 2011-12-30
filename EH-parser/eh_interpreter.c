@@ -377,6 +377,11 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 							newmember = Malloc(sizeof(ehclassmember_t));
 							// copy the whole thing over
 							*newmember = *classmember;
+							// handle static
+							if(classmember->attribute.isstatic == static_e) {
+								newmember->value.type = reference_e;
+								newmember->value.referenceval = &classmember->value;
+							}
 							newmember->next = ret.objectval->members[i];
 							ret.objectval->members[i] = newmember;
 							classmember = classmember->next;

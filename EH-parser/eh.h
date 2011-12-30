@@ -196,6 +196,7 @@ GETFUNCPROTO(type, type_enum)
 GETFUNCPROTO(bool, bool)
 GETFUNCPROTO(visibility, visibility_enum)
 GETFUNCPROTO(magicvar, magicvar_enum)
+GETFUNCPROTO(attribute, attribute_enum)
 
 ehretval_t *operate(int operations, int noperations, ...);
 

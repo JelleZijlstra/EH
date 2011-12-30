@@ -32,34 +32,31 @@ static void printvar_retval(ehretval_t in) {
 	int i;
 	switch(in.type) {
 		case null_e:
-			printf("null");
+			printf("null\n");
 			break;
 		case int_e:
-			printf("@int %d", in.intval);
+			printf("@int %d\n", in.intval);
 			break;
 		case string_e:
-			printf("@string '%s'", in.stringval);
+			printf("@string '%s'\n", in.stringval);
 			break;
 		case array_e:
 			printf("@array [\n");
 			printvar_array(in.arrayval);
-			printf("]");
+			printf("]\n");
 			break;
 		case bool_e:
 			if(in.boolval)
-				printf("@bool true");
+				printf("@bool true\n");
 			else
-				printf("@bool false");
+				printf("@bool false\n");
 			break;
 		case object_e:
 			printf("@object <%s> [\n", in.objectval->class);
 			printvar_object(in.objectval->members);
-			printf("]");
+			printf("]\n");
 			break;
 		case reference_e:
-			// this probably won't be executed; ehi is very good at pretending 
-			// that a reference is simply its referee
-			printf("@reference -> ");
 			printvar_retval(*in.referenceval);
 			break;
 		case func_e:
@@ -78,27 +75,27 @@ static void printvar_retval(ehretval_t in) {
 				if(i + 1 < in.funcval->argcount)
 					printf(", ");
 			}
+			printf("\n");
 			break;
 		case accessor_e:
-			printf("@accesor %d", in.accessorval);
+			printf("@accesor %d\n", in.accessorval);
 			break;
 		case type_e:
-			printf("@type %s", get_typestring(in.typeval));
+			printf("@type %s\n", get_typestring(in.typeval));
 			break;
 		case magicvar_e:
-			printf("@magicvar %d", in.magicvarval);
+			printf("@magicvar %d\n", in.magicvarval);
 			break;
 		case op_e:
-			printf("@op %d", in.opval->op);
+			printf("@op %d\n", in.opval->op);
 			break;
 		case attribute_e:
-			printf("@attribute %d", in.attributeval);
+			printf("@attribute %d\n", in.attributeval);
 			break;
 		case attributestr_e:
-			printf("@attributestr");
+			printf("@attributestr\n");
 			break;
 	}
-	printf("\n");
 	return;
 }
 static void printvar_object(ehclassmember_t **in) {

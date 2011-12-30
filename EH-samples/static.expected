@@ -4,3 +4,5 @@ mah <public,non-static,non-constant>: null
 meh <public,non-static,constant>: @function <user>: n
 baz <public,non-static,non-constant>: null
 ]
+2
+3

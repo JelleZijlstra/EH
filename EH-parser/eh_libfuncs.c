@@ -52,7 +52,7 @@ void printvar_retval(ehretval_t in) {
 				printf("@bool false\n");
 			break;
 		case object_e:
-			printf("@object <%s> [\n", in.objectval->class);
+			printf("@object <%s> [\n", in.objectval->classname);
 			printvar_object(in.objectval->members);
 			printf("]\n");
 			break;

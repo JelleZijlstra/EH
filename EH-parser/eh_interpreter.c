@@ -373,7 +373,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 				}
 				ret.type = object_e;
 				ret.objectval = Malloc(sizeof(ehobj_t));
-				ret.objectval->class = name;
+				ret.objectval->classname = name;
 				ret.objectval->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
 				ehclassmember_t *newmember;
 				for(i = 0; i < VARTABLE_S; i++) {
@@ -430,7 +430,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 					break;
 				}
 				class = Malloc(sizeof(ehclass_t));
-				class->obj.class = operand1.stringval;
+				class->obj.classname = operand1.stringval;
 				class->obj.members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
 				// insert class members
 				node = node->opval->paras[1];
@@ -969,7 +969,7 @@ ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcon
 void insert_class(ehclass_t *class) {
 	unsigned int vhash;
 
-	vhash = hash(class->obj.class, HASH_INITVAL);
+	vhash = hash(class->obj.classname, HASH_INITVAL);
 	if(classtable[vhash] == NULL) {
 		classtable[vhash] = class;
 		class->next = NULL;
@@ -987,7 +987,7 @@ ehclass_t *get_class(char *name) {
 	vhash = hash(name, HASH_INITVAL);
 	currclass = classtable[vhash];
 	while(currclass != NULL) {
-		if(strcmp(currclass->obj.class, name) == 0) {
+		if(strcmp(currclass->obj.classname, name) == 0) {
 			return currclass;
 		}
 		currclass = currclass->next;
@@ -1152,7 +1152,7 @@ ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t cont
 	return ret;
 }
 bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {
-	return !strcmp(lock->class, key->class);
+	return !strcmp(lock->classname, key->classname);
 }
 /*
  * Type casting

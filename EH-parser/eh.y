@@ -19,7 +19,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 	char *sValue;
 	int iValue;
 	type_enum tValue;
-	visibility_enum vValue;
+	attribute_enum vValue;
 	bool bValue;
 	struct ehretval_t *ehNode;
 	accessor_enum aValue;
@@ -440,7 +440,7 @@ char *eh_getinput(void) {
 	char *buf;
 
 	printf("> ");
-	buf = Malloc(512);
+	buf = (char *) Malloc(512);
 	return fgets(buf, 511, stdin);
 }
 void eh_outer_exit(int exitval) {
@@ -463,8 +463,7 @@ int main(int argc, char **argv) {
 	}
 	else {
 		is_interactive = true;
-		struct yy_buffer_state *b = yy_scan_string(eh_getinput());
-		yy_switch_to_buffer(b);
+		yy_scan_string(eh_getinput());
 	}
 	eh_init();
 	yyparse();

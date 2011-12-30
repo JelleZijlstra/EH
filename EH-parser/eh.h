@@ -133,7 +133,7 @@ typedef struct eharg_t {
 
 // EH object
 typedef struct ehobj_t {
-	char *class;
+	char *classname;
 	struct ehclassmember_t **members;
 } ehobj_t;
 

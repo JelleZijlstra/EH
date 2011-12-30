@@ -65,6 +65,9 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 	// default
 	ret.type = null_e;
 
+	// empty statements produce a null node
+	if(node == NULL)
+		return ret;
 	//printf("Executing nodetype %d\n", node->type);
 	if(node->type == op_e)
 		switch(node->opval->op) {

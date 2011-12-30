@@ -77,24 +77,22 @@ void eh_outer_exit(int exitval);
 
 %type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list
 %%
-global_list:
-	statement				{ 
-								ehretval_t ret = execute($1, NULL);
+global_list: /* NULL */		{ }
+	| global_list statement	{ 
+								ehretval_t ret = execute($2, NULL);
 								if(returning) 
 									eh_outer_exit(ret.intval);
 							}
-		global_list
-	| /* NULL */			{ eh_outer_exit(0); }
 	;
 
-statement_list:
-	statement statement_list
+statement_list: /* NULL */	{ $$ = operate(T_SEPARATOR, 0); }
+	| statement statement_list
 							{ $$ = operate(T_SEPARATOR, 2, $1, $2); }
-	| /* NULL */			{ $$ = operate(T_SEPARATOR, 0); }
 	;
 
 statement:
-	line_expr T_SEPARATOR	{ $$ = $1; }
+	T_SEPARATOR				{ $$ = 0; }
+	| line_expr T_SEPARATOR	{ $$ = $1; }
 	| T_ECHO expression T_SEPARATOR
 							{ $$ = operate(T_ECHO, 1, $2); }
 	| T_SET lvalue '=' expression T_SEPARATOR

@@ -104,7 +104,7 @@
 "++"		return T_PLUSPLUS;
 "--"		return T_MINMIN;
 ("//"|#).*[;\n]	; /* Ignore comment */
-[;\n]+		return T_SEPARATOR;
+[;\n]		return T_SEPARATOR;
 [a-zA-Z][a-zA-Z0-9]*	{
 				int len;
 				len = strlen(yytext);

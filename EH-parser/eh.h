@@ -208,3 +208,6 @@ const char *get_typestring(type_enum type);
 void eh_setarg(int argc, char **argv);
 
 #include "eh_libfuncs.h"
+
+// indicate that we're returning
+extern bool returning;

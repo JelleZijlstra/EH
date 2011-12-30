@@ -49,3 +49,5 @@ Attempt to write to constant variable: EH runtime error
 @switch.eh:
 @command.eh:
 Use of commands outside of EH-PHP context: EH runtime error
+@recursion.eh:
+@return.eh:

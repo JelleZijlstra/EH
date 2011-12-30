@@ -8,3 +8,4 @@
 
 EHLIBFUNC(getinput);
 EHLIBFUNC(printvar);
+void printvar_retval(ehretval_t in);

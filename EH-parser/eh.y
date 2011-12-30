@@ -11,6 +11,7 @@
 extern FILE *yyin;
 #define YYERROR_VERBOSE
 extern int yylineno;
+void eh_outer_exit(int exitval);
 %}
 %union {
 	char *sValue;
@@ -74,31 +75,22 @@ extern int yylineno;
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list
 %%
-program:
-	statement_list			{
-								//print_tree($1, 0);
-								eh_init();
+global_list:
+	statement				{ 
 								ehretval_t ret = execute($1, NULL);
-								free_node($1);
-								eh_exit();
-								// use exit value if possible
-								if(ret.type == int_e)
-									exit(ret.intval);
-								else
-									exit(0);
+								if(returning) 
+									eh_outer_exit(ret.intval);
 							}
-	| /* NULL */			{
-								fprintf(stderr, "No input\n");
-								exit(1);
-							}
+		global_list
+	| /* NULL */			{ eh_outer_exit(0); }
 	;
 
 statement_list:
-	statement				{ $$ = $1; }
-	| statement statement_list
+	statement statement_list
 							{ $$ = operate(T_SEPARATOR, 2, $1, $2); }
+	| /* NULL */			{ $$ = operate(T_SEPARATOR, 0); }
 	;
 
 statement:
@@ -444,17 +436,25 @@ attributelist:
 void yyerror(char *s) {
 	eh_error_line(yylineno, s);
 }
+void eh_outer_exit(int exitval) {
+	//free_node: something. We should actually be adding stuff to the AST, I suppose.
+	eh_exit();
+	exit(exitval);
+}
 int main(int argc, char **argv) {
 	if(argc < 2) {
-		fprintf(stderr, "Usage: %s file\n", argv[0]);
+		fprintf(stderr, "Usage: %s file\n\t%s -i\n", argv[0], argv[0]);
 		eh_error(NULL, efatal_e);
 	}
-	FILE *infile = fopen(argv[1], "r");
-	if(!infile)
-		eh_error("Unable to open input file", efatal_e);
-	eh_setarg(argc, argv);
-	// set input
-	yyin = infile;
+	if(strcmp(argv[1], "-i")) {
+		FILE *infile = fopen(argv[1], "r");
+		if(!infile)
+			eh_error("Unable to open input file", efatal_e);
+		eh_setarg(argc, argv);
+		// set input
+		yyin = infile;
+	}
+	eh_init();
 	yyparse();
 	return 0;
 }

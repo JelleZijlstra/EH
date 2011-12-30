@@ -6,9 +6,8 @@
  */
 #include "eh_interpreter.h"
 
-// indicate that we're returning
-static bool returning = false;
 // number of loops we're currently in
+bool returning = false;
 static int inloop = 0;
 static int breaking = 0;
 static bool continuing = 0;
@@ -177,11 +176,8 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 		 * Control flow
 		 */
 			case T_IF:
-				if(eh_xtobool(execute(node->opval->paras[0], context)).boolval) {
+				if(eh_xtobool(execute(node->opval->paras[0], context)).boolval)
 					ret = execute(node->opval->paras[1], context);
-					if(returning)
-						return ret;
-				}
 				else if(node->opval->nparas == 3)
 					ret = execute(node->opval->paras[2], context);
 				break;
@@ -261,6 +257,10 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 		 * Miscellaneous
 		 */
 			case T_SEPARATOR:
+				// if we're in an empty list
+				if(node->opval->nparas == 0)
+					return ret;
+				// else execute both commands
 				ret = execute(node->opval->paras[0], context);
 				if(returning || breaking || continuing)
 					return ret;
@@ -273,8 +273,8 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 				execute(node->opval->paras[0], context);
 				break;
 			case T_RET: // return from a function or the program
-				returning = true;
 				ret = execute(node->opval->paras[0], context);
+				returning = true;
 				break;
 			case T_BREAK: // break out of a loop
 				if(node->opval->nparas == 0)
@@ -942,7 +942,7 @@ ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcon
 			eh_error_argcount(f->argcount, i);
 			return ret;
 		}
-		var->value = execute(args->opval->paras[1], context);;
+		var->value = execute(args->opval->paras[1], context);
 		args = args->opval->paras[0];
 	}
 	// functions get their own scope (not incremented before because execution of arguments needs parent scope)

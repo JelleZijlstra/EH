@@ -6,7 +6,7 @@
  */
 #include "eh_interpreter.h"
 
-static void printvar_retval(ehretval_t in);
+void printvar_retval(ehretval_t in);
 static void printvar_array(ehvar_t **in);
 static void printvar_object(ehclassmember_t **in);
 
@@ -28,7 +28,7 @@ EHLIBFUNC(printvar) {
 	return;
 }
 
-static void printvar_retval(ehretval_t in) {
+void printvar_retval(ehretval_t in) {
 	int i;
 	switch(in.type) {
 		case null_e:

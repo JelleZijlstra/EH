@@ -39,3 +39,5 @@ static.eh
 closure2.eh
 switch.eh
 command.eh
+recursion.eh
+return.eh

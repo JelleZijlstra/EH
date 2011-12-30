@@ -12,7 +12,7 @@
 FILE *outfile;
 // label used
 unsigned int label = 0;
-static int compile(ehnode_t *node);
+static int compile(ehretval_t *node);
 
 void eh_init(void) {
 	return;
@@ -21,7 +21,7 @@ void eh_exit(void) {
 	return;
 }
 
-ehretval_t execute(ehnode_t *node, ehcontext_t context) {
+ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 	outfile = fopen("tmp.s", "w");
 	if(outfile == NULL) {
 		fprintf(stderr, "Unable to create output file");
@@ -46,36 +46,36 @@ ehretval_t execute(ehnode_t *node, ehcontext_t context) {
 	return ret;
 }
 
-static int compile(ehnode_t *node) {
+static int compile(ehretval_t *node) {
 	if(node == NULL)
 		return 0;
 	//printf("Executing nodetype %d\n", node->type);
 	switch(node->type) {
 		/* Not sure yet how to handle strings
-		case stringnode_e:
+		case string_e:
 			fprintf(outfile,
 			return node->id.name;
 		*/
-		case intnode_e:
-			fprintf(outfile, "pushl $%d\n", node->con.value);
+		case int_e:
+			fprintf(outfile, "pushl $%d\n", node->intval);
 			return 0;
-		case opnode_e:
-			//printf("Executing opcode: %d\n", node->op.op);
-			switch(node->op.op) {
+		case op_e:
+			//printf("Executing opcode: %d\n", node->opval->op);
+			switch(node->opval->op) {
 				case T_ECHO:
-					switch(node->op.paras[0]->type) {
-						case stringnode_e:
-						case opnode_e:
+					switch(node->opval->paras[0]->type) {
+						case int_e:
+						case op_e:
 							// make sure stack is aligned
 							fprintf(outfile, "subl $4, %%esp\n");
-							compile(node->op.paras[0]);
+							compile(node->opval->paras[0]);
 							// argument will already be on top of stack
 							fprintf(outfile, "pushl $printfnum\n");
 							fprintf(outfile, "call _printf\n");
 							fprintf(outfile, "addl $8, %%esp\n");
 							return 0;
-						case intnode_e:
-							printf("Constant %d\n", node->op.paras[0]->con.value);
+						case string_e:
+							printf("Constant %d\n", node->opval->paras[0]->intval);
 							return 0;
 						default:
 							fprintf(stderr, "Unsupported argument for echo\n");
@@ -87,12 +87,12 @@ static int compile(ehnode_t *node) {
 					// we'll need a label
 					label++;
 					// compile the condition
-					compile(node->op.paras[0]);
+					compile(node->opval->paras[0]);
 					fprintf(outfile, "popl %%eax\n");
 					fprintf(outfile, "cmpl $0, %%eax\n");
 					fprintf(outfile, "je L%03d\n", label);
 					// compile the then
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "L%03d:\n", label);
 					return 0;
 				case T_WHILE:
@@ -102,26 +102,26 @@ static int compile(ehnode_t *node) {
 					// first label
 					fprintf(outfile, "L%03d:\n", label - 1);
 					// compile the condition
-					compile(node->op.paras[0]);
+					compile(node->opval->paras[0]);
 					fprintf(outfile, "popl %%eax\n");
 					fprintf(outfile, "cmpl $0, %%eax\n");
 					fprintf(outfile, "je L%03d\n", label);
 					// compile the then
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[1]);
 					// jump back to condition
 					fprintf(outfile, "jmp L%03d\n", label - 1);
 					fprintf(outfile, "L%03d:\n", label);
 					break;
 				case T_SEPARATOR:
-					compile(node->op.paras[0]);
+					compile(node->opval->paras[0]);
 					// discard return value
 					fprintf(outfile, "popl %%eax\n");
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%eax\n");
 					return 0;
 				case '=':
-					compile(node->op.paras[0]);
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[0]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -132,8 +132,8 @@ static int compile(ehnode_t *node) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case '>':
-					compile(node->op.paras[0]);
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[0]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -144,8 +144,8 @@ static int compile(ehnode_t *node) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case '<':
-					compile(node->op.paras[0]);
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[0]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -156,8 +156,8 @@ static int compile(ehnode_t *node) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case T_GE:
-					compile(node->op.paras[0]);
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[0]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -168,8 +168,8 @@ static int compile(ehnode_t *node) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case T_LE:
-					compile(node->op.paras[0]);
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[0]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -180,8 +180,8 @@ static int compile(ehnode_t *node) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case T_NE:
-					compile(node->op.paras[0]);
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[0]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -192,32 +192,32 @@ static int compile(ehnode_t *node) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case '+':
-					compile(node->op.paras[0]);
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[0]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "addl %%ecx, %%ebx\n");
 					fprintf(outfile, "pushl %%ebx\n");
 					break;
 				case '-':
-					compile(node->op.paras[0]);
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[0]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "subl %%ecx, %%ebx\n");
 					fprintf(outfile, "pushl %%ebx\n");
 					break;
 				case '*':
-					compile(node->op.paras[0]);
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[0]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%eax\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "imull %%ebx\n");
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case '/':
-					compile(node->op.paras[0]);
-					compile(node->op.paras[1]);
+					compile(node->opval->paras[0]);
+					compile(node->opval->paras[1]);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%eax\n");
 					fprintf(outfile, "xorl %%edx, %%edx\n");
@@ -225,11 +225,12 @@ static int compile(ehnode_t *node) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				default:
-					printf("Unexpected opcode %d\n", node->op.op);
+					printf("Unexpected opcode %d\n", node->opval->op);
 					exit(0);
 			}
+			break;
 		default:
-			fprintf(stderr, "I'm too stupid a compiler; I can't handle this\n");
+			fprintf(stderr, "I'm too stupid a compiler; I can't handle this (type %d)\n", node->type);
 			break;
 	}
 	return 0;

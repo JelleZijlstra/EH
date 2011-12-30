@@ -5,7 +5,7 @@ YACCLEX = \
 
 compiler: eh_compiler.c
 	${YACCLEX}
-	gcc $(CCFLAGS) lex.yy.c y.tab.c eh_tree.c eh_compiler.c -o ehc
+	gcc $(CCFLAGS) lex.yy.c y.tab.c eh_tree.c eh_compiler.c eh_error.c -o ehc
 
 interpreter: eh_interpreter.c
 	${YACCLEX}

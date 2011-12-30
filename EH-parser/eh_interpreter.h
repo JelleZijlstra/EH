@@ -8,9 +8,9 @@
 #include "y.tab.h"
 // symbol table for variables and functions
 #define VARTABLE_S 1024
-ehvar_t *vartable[VARTABLE_S];
-ehfunc_t *functable[VARTABLE_S];
-ehclass_t *classtable[VARTABLE_S];
+extern ehvar_t *vartable[];
+extern ehfunc_t *functable[];
+extern ehclass_t *classtable[];
 
 // current variable scope
 extern int scope;
@@ -28,11 +28,11 @@ ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
 ehretval_t array_get(ehvar_t **array, ehretval_t index);
 int array_count(ehvar_t **array);
-void insert_class(ehclass_t *class);
+void insert_class(ehclass_t *classobj);
 ehclass_t *get_class(char *name);
-void class_insert(ehclassmember_t **class, ehretval_t *in, ehcontext_t context);
-ehclassmember_t *class_getmember(ehobj_t *class, char *name, ehcontext_t context);
-ehretval_t class_get(ehobj_t *class, char *name, ehcontext_t context);
+void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t context);
+ehclassmember_t *class_getmember(ehobj_t *classobj, char *name, ehcontext_t context);
+ehretval_t class_get(ehobj_t *classobj, char *name, ehcontext_t context);
 ehretval_t object_access(ehretval_t name, ehretval_t *index, ehcontext_t context);
 ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context);
 bool ehcontext_compare(ehcontext_t lock, ehcontext_t key);

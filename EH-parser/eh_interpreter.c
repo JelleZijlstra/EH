@@ -10,7 +10,10 @@
 bool returning = false;
 static int inloop = 0;
 static int breaking = 0;
-static bool continuing = 0;
+static int continuing = 0;
+ehvar_t *vartable[VARTABLE_S];
+ehfunc_t *functable[VARTABLE_S];
+ehclass_t *classtable[VARTABLE_S];
 
 // current object, gets passed around
 static ehcontext_t newcontext = NULL;
@@ -36,7 +39,7 @@ void eh_init(void) {
 	ehfunc_t *func;
 
 	for(i = 0; libfuncs[i].code != NULL; i++) {
-		func = Malloc(sizeof(ehfunc_t));
+		func = (ehfunc_t *) Malloc(sizeof(ehfunc_t));
 		func->name = libfuncs[i].name;
 		func->f.type = lib_e;
 		func->f.ptr = libfuncs[i].code;
@@ -57,7 +60,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 	ehretval_t *node2;
 	ehvar_t *var, *member;
 	ehfunc_t *func;
-	ehclass_t *class;
+	ehclass_t *classobj;
 	ehclassmember_t *classmember;
 	int i, count;
 	char *name;
@@ -168,7 +171,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 					eh_error_unknown("global variable", name, enotice_e);
 					break;
 				}
-				member = Malloc(sizeof(ehvar_t));
+				member = (ehvar_t *) Malloc(sizeof(ehvar_t));
 				member->name = name;
 				member->scope = scope;
 				member->value.type = reference_e;
@@ -216,7 +219,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 					var = get_variable(name, scope);
 					// variable is not yet set, so set it
 					if(var == NULL) {
-						var = Malloc(sizeof(ehvar_t));
+						var = (ehvar_t *) Malloc(sizeof(ehvar_t));
 						var->name = node->opval->paras[1]->stringval;
 						var->scope = scope;
 						insert_variable(var);
@@ -366,20 +369,20 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 				break;
 			case T_NEW: // object declaration
 				name = execute(node->opval->paras[0], context).stringval;
-				class = get_class(name);
-				if(class == NULL) {
+				classobj = get_class(name);
+				if(classobj == NULL) {
 					eh_error_unknown("class", name, efatal_e);
 					break;
 				}
 				ret.type = object_e;
-				ret.objectval = Malloc(sizeof(ehobj_t));
+				ret.objectval = (ehobj_t *) Malloc(sizeof(ehobj_t));
 				ret.objectval->classname = name;
-				ret.objectval->members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+				ret.objectval->members = (ehclassmember_t **) Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
 				ehclassmember_t *newmember;
 				for(i = 0; i < VARTABLE_S; i++) {
-					classmember = class->obj.members[i];
+					classmember = classobj->obj.members[i];
 					while(classmember != NULL) {
-						newmember = Malloc(sizeof(ehclassmember_t));
+						newmember = (ehclassmember_t *) Malloc(sizeof(ehclassmember_t));
 						// copy the whole thing over
 						*newmember = *classmember;
 						// handle static
@@ -406,7 +409,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 						eh_error_redefine("function", name, efatal_e);
 						break;
 					}
-					func = Malloc(sizeof(ehfunc_t));
+					func = (ehfunc_t *) Malloc(sizeof(ehfunc_t));
 					func->name = name;
 					// determine argcount
 					make_arglist(&func->f.argcount, &func->f.args, node->opval->paras[1]);
@@ -416,7 +419,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 				}
 				else {
 					ret.type = func_e;
-					ret.funcval = Malloc(sizeof(ehfm_t));
+					ret.funcval = (ehfm_t *) Malloc(sizeof(ehfm_t));
 					ret.funcval->type = user_e;
 					make_arglist(&ret.funcval->argcount, &ret.funcval->args, node->opval->paras[0]);
 					ret.funcval->code = node->opval->paras[1];
@@ -424,27 +427,27 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 				break;
 			case T_CLASS: // class declaration
 				operand1 = execute(node->opval->paras[0], context);
-				class = get_class(operand1.stringval);
-				if(class != NULL) {
+				classobj = get_class(operand1.stringval);
+				if(classobj != NULL) {
 					eh_error_redefine("class", operand1.stringval, efatal_e);
 					break;
 				}
-				class = Malloc(sizeof(ehclass_t));
-				class->obj.classname = operand1.stringval;
-				class->obj.members = Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+				classobj = (ehclass_t *) Malloc(sizeof(ehclass_t));
+				classobj->obj.classname = operand1.stringval;
+				classobj->obj.members = (ehclassmember_t **) Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
 				// insert class members
 				node = node->opval->paras[1];
 				while(node != NULL) {
 					if(node->type == op_e && node->opval->op == ',') {
-						class_insert(class->obj.members, node->opval->paras[0], context);						
+						class_insert(classobj->obj.members, node->opval->paras[0], context);						
 						node = node->opval->paras[1];
 					}
 					else {
-						class_insert(class->obj.members, node, context);
+						class_insert(classobj->obj.members, node, context);
 						break;
 					}
 				}
-				insert_class(class);
+				insert_class(classobj);
 				break;
 			case T_ATTRIBUTE: // class member attributes
 				ret.type = attributestr_e;
@@ -473,7 +476,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 				break;
 			case '[': // array declaration
 				ret.type = array_e;
-				ret.arrayval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
+				ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
 				// need to count array members first, because they are reversed in our node.
 				// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
 				node2 = node->opval->paras[0];
@@ -516,7 +519,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 					size_t len1, len2;
 					len1 = strlen(operand1.stringval);
 					len2 = strlen(operand2.stringval);
-					ret.stringval = Malloc(len1 + len2 + 1);
+					ret.stringval = (char *) Malloc(len1 + len2 + 1);
 					strcpy(ret.stringval, operand1.stringval);
 					strcpy(ret.stringval + len1, operand2.stringval);
 				}
@@ -640,7 +643,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 				if(operand1.type == null_e) {
 					if(operand1.referenceval == NULL || operand1.referenceval == (ehretval_t *) 0x1) {
 						// set new variable
-						var = Malloc(sizeof(ehvar_t));
+						var = (ehvar_t *) Malloc(sizeof(ehvar_t));
 						var->name = node->opval->paras[0]->opval->paras[0]->stringval;
 						var->scope = scope;
 						var->value = operand2;
@@ -737,7 +740,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 				// name of command to be executed
 				name = execute(node->opval->paras[0], context).stringval;
 				// we're making an array of parameters
-				ehvar_t **arrayval = Calloc(VARTABLE_S, sizeof(ehvar_t));
+				ehvar_t **arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t));
 				// count for simple parameters
 				operand2.type = int_e;
 				operand2.intval = 0;
@@ -752,7 +755,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 							count = strlen(node2->stringval);
 							operand3.type = string_e;
 							for(i = 0; i < count; i++) {
-								operand3.stringval = Malloc(2);
+								operand3.stringval = (char *) Malloc(2);
 								operand3.stringval[1] = '\0';
 								operand3.stringval[0] = node2->stringval[i];
 								array_insert_retval(
@@ -905,7 +908,7 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node) {
 	*argcount = currarg;
 	// if there are no arguments, the arglist can be NULL
 	if(currarg)
-		*arglist = Malloc(currarg * sizeof(eharg_t));
+		*arglist = (eharg_t *) Malloc(currarg * sizeof(eharg_t));
 	else
 		*arglist = NULL;
 	// add arguments to arglist
@@ -936,7 +939,7 @@ ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcon
 		}
 	}
 	else while(args->opval->nparas != 0) {
-		var = Malloc(sizeof(ehvar_t));
+		var = (ehvar_t *) Malloc(sizeof(ehvar_t));
 		var->name = f->args[i].name;
 		var->scope = scope + 1;
 		insert_variable(var);
@@ -966,17 +969,17 @@ ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcon
 /*
  * Classes
  */
-void insert_class(ehclass_t *class) {
+void insert_class(ehclass_t *classobj) {
 	unsigned int vhash;
 
-	vhash = hash(class->obj.classname, HASH_INITVAL);
+	vhash = hash(classobj->obj.classname, HASH_INITVAL);
 	if(classtable[vhash] == NULL) {
-		classtable[vhash] = class;
-		class->next = NULL;
+		classtable[vhash] = classobj;
+		classobj->next = NULL;
 	}
 	else {
-		class->next = classtable[vhash];
-		classtable[vhash] = class;
+		classobj->next = classtable[vhash];
+		classtable[vhash] = classobj;
 	}
 	return;
 }
@@ -994,12 +997,12 @@ ehclass_t *get_class(char *name) {
 	}
 	return NULL;
 }
-void class_insert(ehclassmember_t **class, ehretval_t *in, ehcontext_t context) {
+void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t context) {
 	// insert a member into a class
 	unsigned int vhash;
 	ehclassmember_t *member;
 	
-	member = Malloc(sizeof(ehclassmember_t));
+	member = (ehclassmember_t *) Malloc(sizeof(ehclassmember_t));
 	// rely on standard layout of the input ehretval_t
 	member->attribute = execute(in->opval->paras[0], context).attributestrval;
 	member->name = in->opval->paras[1]->stringval;
@@ -1014,7 +1017,7 @@ void class_insert(ehclassmember_t **class, ehretval_t *in, ehcontext_t context) 
 			break;
 		case 4: // method
 			member->value.type = func_e;
-			member->value.funcval = Malloc(sizeof(ehfm_t));
+			member->value.funcval = (ehfm_t *) Malloc(sizeof(ehfm_t));
 			member->value.funcval->code = in->opval->paras[3];
 			make_arglist(&member->value.funcval->argcount, &member->value.funcval->args, in->opval->paras[2]);
 			break;
@@ -1022,15 +1025,15 @@ void class_insert(ehclassmember_t **class, ehretval_t *in, ehcontext_t context) 
 
 	// insert into hash table
 	vhash = hash(member->name, 0);	
-	member->next = class[vhash];
-	class[vhash] = member;
+	member->next = classarr[vhash];
+	classarr[vhash] = member;
 }
-ehclassmember_t *class_getmember(ehobj_t *class, char *name, ehcontext_t context) {
+ehclassmember_t *class_getmember(ehobj_t *classobj, char *name, ehcontext_t context) {
 	ehclassmember_t *curr;
 	unsigned int vhash;
 	
 	vhash = hash(name, 0);
-	curr = class->members[vhash];
+	curr = classobj->members[vhash];
 	while(curr != NULL) {
 		if(!strcmp(curr->name, name)) {
 			// we found it; now check visibility
@@ -1042,7 +1045,7 @@ ehclassmember_t *class_getmember(ehobj_t *class, char *name, ehcontext_t context
 					if(context == NULL)
 						return NULL;
 					// check context
-					if(ehcontext_compare(class, context))
+					if(ehcontext_compare(classobj, context))
 						return curr;
 					else
 						return NULL;
@@ -1052,11 +1055,11 @@ ehclassmember_t *class_getmember(ehobj_t *class, char *name, ehcontext_t context
 	}
 	return curr;
 }
-ehretval_t class_get(ehobj_t *class, char *name, ehcontext_t context) {
+ehretval_t class_get(ehobj_t *classobj, char *name, ehcontext_t context) {
 	ehclassmember_t *curr;
 	ehretval_t ret;
 	
-	curr = class_getmember(class, name, context);
+	curr = class_getmember(classobj, name, context);
 	if(curr == NULL)
 		ret.type = null_e;
 	else
@@ -1117,7 +1120,7 @@ ehretval_t object_access(ehretval_t operand1, ehretval_t *index, ehcontext_t con
 }
 ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context) {
 	ehretval_t ret, label;
-	ehclass_t *class;
+	ehclass_t *classobj;
 	ehclassmember_t *member;
 	ret.type = null_e;
 	ret.referenceval = NULL;
@@ -1132,12 +1135,12 @@ ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t cont
 		eh_error_type("class access", operand1.type, efatal_e);
 		return ret;
 	}
-	class = get_class(operand1.stringval);
-	if(!class) {
+	classobj = get_class(operand1.stringval);
+	if(!classobj) {
 		eh_error_unknown("class", operand1.stringval, efatal_e);
 		return ret;
 	}
-	member = class_getmember(&class->obj, label.stringval, context);
+	member = class_getmember(&classobj->obj, label.stringval, context);
 	if(!member) {
 		eh_error_unknown("class member", label.stringval, eerror_e);
 		return ret;
@@ -1148,7 +1151,7 @@ ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t cont
 	else
 		ret.type = reference_e;
 	ret.referenceval = &member->value;
-	newcontext = &class->obj;
+	newcontext = &classobj->obj;
 	return ret;
 }
 bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {
@@ -1171,7 +1174,7 @@ char *eh_itostr(int in) {
 	char *buffer;
 
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and null terminator) should suffice for the result string
-	buffer = Malloc(12);
+	buffer = (char *) Malloc(12);
 	sprintf(buffer, "%d", in);
 
 	return buffer;
@@ -1214,16 +1217,16 @@ ehretval_t eh_xtostr(ehretval_t in) {
 			break;
 		case null_e:
 			// empty string
-			ret.stringval = Malloc(1);
+			ret.stringval = (char *) Malloc(1);
 			ret.stringval[0] = '\0';
 			break;
 		case bool_e:
 			if(in.boolval) {
-				ret.stringval = Malloc(5);
+				ret.stringval = (char *) Malloc(5);
 				strcpy(ret.stringval, "true");
 			}
 			else {
-				ret.stringval = Malloc(6);
+				ret.stringval = (char *) Malloc(6);
 				strcpy(ret.stringval, "false");
 			}
 			break;
@@ -1319,7 +1322,7 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 	ehretval_t label;
 
 	// new array member
-	ehvar_t *member = Malloc(sizeof(ehvar_t));
+	ehvar_t *member = (ehvar_t *) Malloc(sizeof(ehvar_t));
 
 	/*
 	 * We'll assume we're always getting a correct ehretval_t *, referring to a
@@ -1393,29 +1396,29 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 }
 ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) {
 	// Inserts a member into an array. Assumes that the member is not yet present in the array.
-	ehvar_t *new;
+	ehvar_t *newvar;
 	unsigned int vhash = 0;
 
-	new = Malloc(sizeof(ehvar_t));
-	new->indextype = index.type;
+	newvar = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	newvar->indextype = index.type;
 	switch(index.type) {
 		case int_e:
 			vhash = index.intval % VARTABLE_S;
-			new->index = index.intval;
+			newvar->index = index.intval;
 			break;
 		case string_e:
 			vhash = hash(index.stringval, 0);
-			new->name = index.stringval;
+			newvar->name = index.stringval;
 			break;
 		default:
 			eh_error_type("array index", index.type, enotice_e);
-			free(new);
+			free(newvar);
 			return NULL;
 	}
-	new->next = array[vhash];
-	array[vhash] = new;
-	SETVARFROMRET(new);
-	return new;
+	newvar->next = array[vhash];
+	array[vhash] = newvar;
+	SETVARFROMRET(newvar);
+	return newvar;
 }
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
 	ehvar_t *curr;
@@ -1494,7 +1497,7 @@ static ehretval_t int_arrow_get(ehretval_t operand1, ehretval_t operand2) {
 		eh_error_type("bitwise access to integer", operand2.type, enotice_e);
 		return ret;
 	}
-	if(operand2.intval >= sizeof(int) * 8) {
+	if(operand2.intval >= (int) sizeof(int) * 8) {
 		eh_error_int("Identifier too large for bitwise access to integer", operand2.intval, enotice_e);
 		return ret;
 	}
@@ -1580,7 +1583,7 @@ void eh_setarg(int argc, char **argv) {
 	ehretval_t ret, index;
 
 	// insert argc
-	argc_v = Malloc(sizeof(ehvar_t));
+	argc_v = (ehvar_t *) Malloc(sizeof(ehvar_t));
 	argc_v->value.type = int_e;
 	// global scope
 	argc_v->scope = 0;
@@ -1590,11 +1593,11 @@ void eh_setarg(int argc, char **argv) {
 	insert_variable(argc_v);
 
 	// insert argv
-	argv_v = Malloc(sizeof(ehvar_t));
+	argv_v = (ehvar_t *) Malloc(sizeof(ehvar_t));
 	argv_v->value.type = array_e;
 	argv_v->scope = 0;
 	argv_v->name = "argv";
-	argv_v->value.arrayval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	argv_v->value.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
 
 	// all members of argv are strings
 	ret.type = string_e;

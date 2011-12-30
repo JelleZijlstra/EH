@@ -30,7 +30,7 @@ void free_node(ehretval_t *in) {
 
 #define GETFUNC(name, vtype) ehretval_t *get_ ## name (vtype value) { \
 	ehretval_t *ret; \
-	ret = Malloc(sizeof(ehretval_t)); \
+	ret = (ehretval_t *) Malloc(sizeof(ehretval_t)); \
 	ret->type = name ## _e; \
 	ret-> name ## val = value; \
 	return ret; \
@@ -39,7 +39,7 @@ GETFUNC(int, int)
 GETFUNC(string, char *)
 ehretval_t *get_null(void) {
 	ehretval_t *ret;
-	ret = Malloc(sizeof(ehretval_t));
+	ret = (ehretval_t *) Malloc(sizeof(ehretval_t));
 
 	ret->type = null_e;
 
@@ -56,10 +56,10 @@ ehretval_t *operate(int operation, int nparas, ...) {
 	ehretval_t *ret;
 	int i;
 
-	ret = Malloc(sizeof(ehretval_t));
-	ret->opval = Malloc(sizeof(opnode_t));
+	ret = (ehretval_t *) Malloc(sizeof(ehretval_t));
+	ret->opval = (opnode_t *) Malloc(sizeof(opnode_t));
 	if(nparas)
-		ret->opval->paras = Malloc(nparas * sizeof(ehretval_t *));
+		ret->opval->paras = (ehretval_t **) Malloc(nparas * sizeof(ehretval_t *));
 	else
 		ret->opval->paras = NULL;
 

@@ -35,7 +35,6 @@ extern int yylineno;
 %token T_SWITCH
 %token T_ENDSWITCH
 %token T_CASE
-%token T_ENDCASE
 %token T_BREAK
 %token T_CONTINUE
 %token T_FUNC
@@ -73,8 +72,9 @@ extern int yylineno;
 %nonassoc T_NEW
 %nonassoc '[' ']'
 %nonassoc '(' ')'
+%token T_EXPRSWITCH
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist caselist acase
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist caselist acase exprcaselist exprcase
 %%
 program:
 	statement_list			{
@@ -202,6 +202,8 @@ expression:
 	| T_NEW bareword		{ $$ = operate(T_NEW, 1, $2); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
 							{ $$ = operate(T_FUNC, 2, $3, $5); }
+	| T_SWITCH expression T_SEPARATOR exprcaselist T_ENDSWITCH
+							{ $$ = operate(T_EXPRSWITCH, 2, $2, $4); }
 	;
 
 bareword:
@@ -250,7 +252,16 @@ caselist:
 	;
 
 acase:
-	T_CASE expression T_SEPARATOR statement_list T_ENDCASE T_SEPARATOR
+	T_CASE expression T_SEPARATOR statement_list
+							{ $$ = operate(T_CASE, 2, $2, $4); }
+
+exprcaselist:
+	exprcaselist exprcase	{ $$ = operate(',', 2, $1, $2); }
+	| /* NULL */			{ $$ = operate(',', 0); }
+	;
+
+exprcase:
+	T_CASE expression T_SEPARATOR expression T_SEPARATOR
 							{ $$ = operate(T_CASE, 2, $2, $4); }
 
 expressionwrap:

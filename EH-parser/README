@@ -16,7 +16,6 @@ interpreter:
   > bfind --variables=[year => 2003, authors => '/Musser/'] --print=false
   The PHP implementation does not support parameters that are arrays.
 - Integrate ehi into PHP using SWIG.
-- Switch statements?
 - Foreach-like loops for objects and arrays.
 
 To compile the interpreter (ehi), write:

@@ -1026,7 +1026,7 @@ ehretval_t object_access(ehretval_t operand1, ehretval_t *index, ehcontext_t con
 			object = context;
 		}
 		else {
-			eh_error_int("Unsupported magicvar", var->value.magicvarval, efatal_e);
+			eh_error_int("Unsupported magicvar", operand1.magicvarval, efatal_e);
 			return ret;
 		}
 	}

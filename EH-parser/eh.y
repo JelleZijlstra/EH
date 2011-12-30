@@ -12,6 +12,8 @@ extern FILE *yyin;
 #define YYERROR_VERBOSE
 extern int yylineno;
 void eh_outer_exit(int exitval);
+bool is_interactive = false;
+struct yy_buffer_state *yy_scan_string ( const char *str );
 %}
 %union {
 	char *sValue;
@@ -434,6 +436,13 @@ attributelist:
 void yyerror(char *s) {
 	eh_error_line(yylineno, s);
 }
+char *eh_getinput(void) {
+	char *buf;
+
+	printf("> ");
+	buf = Malloc(512);
+	return fgets(buf, 511, stdin);
+}
 void eh_outer_exit(int exitval) {
 	//free_node: something. We should actually be adding stuff to the AST, I suppose.
 	eh_exit();
@@ -451,6 +460,11 @@ int main(int argc, char **argv) {
 		eh_setarg(argc, argv);
 		// set input
 		yyin = infile;
+	}
+	else {
+		is_interactive = true;
+		struct yy_buffer_state *b = yy_scan_string(eh_getinput());
+		yy_switch_to_buffer(b);
 	}
 	eh_init();
 	yyparse();

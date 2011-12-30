@@ -135,5 +135,13 @@
 			}
 %%
 int yywrap(void) {
+	if(is_interactive) {
+		char *buf;
+		buf = eh_getinput();
+		if(!buf)
+			return 1;
+		yy_scan_string(buf);
+		return 0;
+	}
 	return 1;
 }

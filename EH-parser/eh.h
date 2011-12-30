@@ -211,3 +211,7 @@ void eh_setarg(int argc, char **argv);
 
 // indicate that we're returning
 extern bool returning;
+
+char *eh_getinput(void);
+extern bool is_interactive;
+

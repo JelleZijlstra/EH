@@ -392,21 +392,30 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 			 * Object definitions
 			 */
 				case T_FUNC: // function definition
-					name = node->opval->paras[0]->stringval;
-					//printf("Defining function %s with %d paras\n", node->opval->paras[0]->id.name, node->opval->nparas);
-					func = get_function(name);
-					// function definition
-					if(func != NULL) {
-						eh_error_redefine("function", name, efatal_e);
-						break;
+					if(node->opval->nparas == 3) {
+						name = node->opval->paras[0]->stringval;
+						//printf("Defining function %s with %d paras\n", node->opval->paras[0]->id.name, node->opval->nparas);
+						func = get_function(name);
+						// function definition
+						if(func != NULL) {
+							eh_error_redefine("function", name, efatal_e);
+							break;
+						}
+						func = Malloc(sizeof(ehfunc_t));
+						func->name = name;
+						// determine argcount
+						make_arglist(&func->f.argcount, &func->f.args, node->opval->paras[1]);
+						func->f.code = node->opval->paras[2];
+						func->f.type = user_e;
+						insert_function(func);
 					}
-					func = Malloc(sizeof(ehfunc_t));
-					func->name = name;
-					// determine argcount
-					make_arglist(&func->f.argcount, &func->f.args, node->opval->paras[1]);
-					func->f.code = node->opval->paras[2];
-					func->f.type = user_e;
-					insert_function(func);
+					else {
+						ret.type = func_e;
+						ret.funcval = Malloc(sizeof(ehfm_t));
+						ret.funcval->type = user_e;
+						make_arglist(&ret.funcval->argcount, &ret.funcval->args, node->opval->paras[0]);
+						ret.funcval->code = node->opval->paras[1];
+					}
 					break;
 				case T_CLASS: // class declaration
 					operand1 = execute(node->opval->paras[0], context);

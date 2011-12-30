@@ -194,6 +194,8 @@ expression:
 	| '[' arraylist ']'		{ $$ = operate('[', 1, $2); }
 	| T_COUNT expression	{ $$ = operate(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = operate(T_NEW, 1, $2); }
+	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
+							{ $$ = operate(T_FUNC, 2, $3, $5); }
 	;
 
 bareword:

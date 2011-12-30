@@ -43,3 +43,5 @@ No such function: baz: EH fatal error
 @this.eh:
 @prototype.eh:
 @static.eh:
+Attempt to write to constant variable: EH runtime error
+Attempt to write to constant variable: EH runtime error

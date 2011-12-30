@@ -56,6 +56,7 @@ static void printvar_retval(ehretval_t in) {
 			printvar_object(in.objectval->members);
 			printf("]\n");
 			break;
+		case creference_e:
 		case reference_e:
 			printvar_retval(*in.referenceval);
 			break;

@@ -26,6 +26,7 @@ typedef enum {
 	array_e,
 	func_e, // for internal use with methods; might become a real user type in the future
 	reference_e, // for internal use with lvalues, and as a value for references
+	creference_e, // constant references: can be dereferenced but not written to
 	object_e,
 	magicvar_e,
 	op_e,

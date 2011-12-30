@@ -654,8 +654,11 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 					else {
 						while(operand1.type == reference_e && operand1.referenceval->type == reference_e)
 							operand1 = *(operand1.referenceval);
-						// set variable
-						*operand1.referenceval = operand2;
+						// set variable, unless it is const
+						if(operand1.type == creference_e)
+							eh_error("Attempt to write to constant variable", eerror_e);
+						else
+							*operand1.referenceval = operand2;
 					}
 					break;
 				case T_MINMIN:
@@ -710,7 +713,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 								break;
 						}
 					}
-					else while(ret.type == reference_e)
+					else while(ret.type == reference_e || ret.type == creference_e)
 						ret = *ret.referenceval;
 					break;
 				default:
@@ -1038,7 +1041,11 @@ ehretval_t object_access(ehretval_t operand1, ehretval_t *index, ehcontext_t con
 		eh_error_unknown("object member", label.stringval, eerror_e);
 		return ret;
 	}
-	ret.type = reference_e;
+	// respect const specifier
+	if(classmember->attribute.isconst == const_e)
+		ret.type = creference_e;
+	else
+		ret.type = reference_e;
 	ret.referenceval = &classmember->value;
 	newcontext = object;
 	return ret;
@@ -1070,7 +1077,11 @@ ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t cont
 		eh_error_unknown("class member", label.stringval, eerror_e);
 		return ret;
 	}
-	ret.type = reference_e;
+	// respect const specifier
+	if(member->attribute.isconst == const_e)
+		ret.type = creference_e;
+	else
+		ret.type = reference_e;
 	ret.referenceval = &member->value;
 	newcontext = &class->obj;
 	return ret;

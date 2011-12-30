@@ -14,25 +14,15 @@ void free_node(ehretval_t *in) {
 		case string_e:
 			free(in->stringval);
 			break;
-		case int_e:
-		case null_e:
-		case bool_e:
-		case visibility_e:
-		case accessor_e:
-		case magicvar_e:
-		case type_e:
-		case array_e:
-		case func_e:
-		case reference_e:
-		case object_e:
-			// nothing to free (even for the last few ones; even though they
-			// always occupy malloc'ed memory, this function merely frees
-			// memory allocated by the parser)
-			break;
 		case op_e:
 			for(i = 0; i < in->opval->nparas; i++) {
 				free_node(in->opval->paras[i]);
 			}
+			break;
+		default:
+			// nothing to free (even for the last few ones; even though they
+			// always occupy malloc'ed memory, this function merely frees
+			// memory allocated by the parser)
 			break;
 	}
 	free(in);
@@ -58,7 +48,7 @@ ehretval_t *get_null(void) {
 GETFUNC(type, type_enum)
 GETFUNC(accessor, accessor_enum)
 GETFUNC(bool, bool)
-GETFUNC(visibility, visibility_enum)
+GETFUNC(attribute, attribute_enum)
 GETFUNC(magicvar, magicvar_enum)
 
 ehretval_t *operate(int operation, int nparas, ...) {
@@ -113,16 +103,17 @@ static void printntabs(int n) {
 	}
 }
 // print the abstract syntax tree
+#define PRINT_TREE_TYPE(vtype, format) case vtype ## _e: \
+	printntabs(n); \
+	printf("Value: %" #format "\n", in-> vtype ## val); \
+	break;
+
 void print_tree(ehretval_t *in, int n) {
 	int i;
 	printntabs(n); printf("Type: %s\n", get_typestring(in->type));
 	switch(in->type) {
-		case string_e:
-			printntabs(n); printf("Value: %s\n", in->stringval);
-			break;
-		case int_e:
-			printntabs(n); printf("Value: %d\n", in->intval);
-			break;
+		PRINT_TREE_TYPE(string, s)
+		PRINT_TREE_TYPE(int, d)
 		case op_e:
 			printntabs(n); printf("Opcode: %d\n", in->opval->op);
 			printntabs(n); printf("Nparas: %d\n", in->opval->nparas);
@@ -132,21 +123,12 @@ void print_tree(ehretval_t *in, int n) {
 			break;
 		case null_e:
 			break;
-		case accessor_e:
-			printntabs(n); printf("Value: %d\n", in->accessorval);
-			break;
-		case type_e:
-			printntabs(n); printf("Value: %d\n", in->typeval);
-			break;
-		case bool_e:
-			printntabs(n); printf("Value: %u\n", in->boolval);
-			break;
-		case visibility_e:
-			printntabs(n); printf("Value: %d\n", in->visibilityval);
-			break;
-		case magicvar_e:
-			printntabs(n); printf("Value: %d\n", in->magicvarval);
-			break;
+		PRINT_TREE_TYPE(accessor, d)
+		PRINT_TREE_TYPE(type, d)
+		PRINT_TREE_TYPE(attribute, d)
+		PRINT_TREE_TYPE(magicvar, d)
+		PRINT_TREE_TYPE(attributestr, d)
+		PRINT_TREE_TYPE(bool, u)
 		case array_e:
 		case func_e:
 		case reference_e:
@@ -170,7 +152,8 @@ const char *get_typestring(type_enum type) {
 		case object_e: return "object";
 		case magicvar_e: return "magicvar";
 		case op_e: return "op";
-		case visibility_e: return "visibility";
+		case attribute_e: return "attribute";
+		case attributestr_e: return "attributestr";
 	}
 	// to keep the compiler happy
 	return "null";

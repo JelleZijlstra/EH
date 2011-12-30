@@ -427,6 +427,31 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 					}
 					insert_class(class);
 					break;
+				case T_ATTRIBUTE: // class member attributes
+					ret.type = attributestr_e;
+					if(node->opval->nparas == 0)
+						// all zeroes
+						ret.intval = 0;
+					else {
+						// first execute first para
+						ret = execute(node->opval->paras[0], context);
+						// then overwrite with attribute from second para
+						switch(node->opval->paras[1]->attributeval) {
+							case publica_e: 
+								ret.attributestrval.visibility = public_e;
+								break;
+							case privatea_e:
+								ret.attributestrval.visibility = private_e;
+								break;
+							case statica_e:
+								ret.attributestrval.isstatic = static_e;
+								break;
+							case consta_e:
+								ret.attributestrval.isconst = const_e;
+								break;
+						}
+					}
+					break;
 				case '[': // array declaration
 					ret.type = array_e;
 					ret.arrayval = Calloc(VARTABLE_S, sizeof(ehvar_t *));
@@ -903,7 +928,7 @@ void class_insert(ehclassmember_t **class, ehretval_t *in, ehcontext_t context) 
 	
 	member = Malloc(sizeof(ehclassmember_t));
 	// rely on standard layout of the input ehretval_t
-	member->visibility = in->opval->paras[0]->visibilityval;
+	member->attribute = execute(in->opval->paras[0], context).attributestrval;
 	member->name = in->opval->paras[1]->stringval;
 
 	// decide what we got
@@ -936,7 +961,7 @@ ehclassmember_t *class_getmember(ehobj_t *class, char *name, ehcontext_t context
 	while(curr != NULL) {
 		if(!strcmp(curr->name, name)) {
 			// we found it; now check visibility
-			switch(curr->visibility) {
+			switch(curr->attribute.visibility) {
 				case public_e:
 					return curr;
 				case private_e:

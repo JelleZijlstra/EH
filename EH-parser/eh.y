@@ -48,8 +48,9 @@ extern int yylineno;
 %token T_GLOBAL
 %token T_LVALUE
 %token T_LVALUE_OBJECT
-%token <vValue> T_VISIBILITY
+%token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
+%token T_CLASSMEMBER
 %token T_EXPRESSION
 %token T_DOUBLEARROW
 %token <sValue> T_VARIABLE
@@ -69,7 +70,7 @@ extern int yylineno;
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist
 %%
 program:
 	statement_list			{
@@ -254,18 +255,19 @@ lvalue:
 	;
 
 classmember:
-	T_VISIBILITY bareword
-							{ /* property declaration */
-								$$ = operate(T_VISIBILITY, 2, get_visibility($1), $2);
+	attributelist bareword	{ /* property declaration */
+								$$ = operate(T_CLASSMEMBER, 2, $1, $2);
 							}
-	| T_VISIBILITY bareword '=' expression
-							{ 
-								$$ = operate(T_VISIBILITY, 3, get_visibility($1), $2, $4); 
-							}
-	| T_VISIBILITY bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC
-							{ 
-								$$ = operate(T_VISIBILITY, 4, get_visibility($1), $2, $4, $6); 
-							}
+	| attributelist bareword '=' expression
+							{ $$ = operate(T_CLASSMEMBER, 3, $1, $2, $4); }
+	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC
+							{ $$ = operate(T_CLASSMEMBER, 4, $1, $2, $4, $6); }
+	;
+
+attributelist:
+	attributelist T_ATTRIBUTE
+							{ $$ = operate(T_ATTRIBUTE, 2, $1, get_attribute($2)); }
+	| /* NULL */			{ $$ = operate(T_ATTRIBUTE, 0); }
 	;
 %%
 void yyerror(char *s) {

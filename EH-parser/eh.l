@@ -72,12 +72,20 @@
 "or"		return T_OR;
 "xor"		return T_XOR;
 "public"	{
-				yylval.vValue = public_e;
-				return T_VISIBILITY;
+				yylval.vValue = publica_e;
+				return T_ATTRIBUTE;
 			}
 "private"	{
-				yylval.vValue = private_e;
-				return T_VISIBILITY;
+				yylval.vValue = privatea_e;
+				return T_ATTRIBUTE;
+			}
+"static"	{
+				yylval.vValue = statica_e;
+				return T_ATTRIBUTE;
+			}
+"const"		{
+				yylval.vValue = consta_e;
+				return T_ATTRIBUTE;
 			}
 "true"		{
 				yylval.bValue = true;

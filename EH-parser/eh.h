@@ -29,13 +29,38 @@ typedef enum {
 	object_e,
 	magicvar_e,
 	op_e,
-	visibility_e,
+	attribute_e,
+	attributestr_e,
 } type_enum;
 
+// attributes of class members
 typedef enum {
-	public_e,
-	private_e
+	public_e = 0,
+	private_e = 1,
 } visibility_enum;
+
+typedef enum {
+	nonstatic_e = 0,
+	static_e = 1,
+} static_enum;
+
+typedef enum {
+	nonconst_e = 0,
+	const_e = 1,
+} const_enum;
+
+typedef struct memberattribute_t {
+	visibility_enum visibility : 2;
+	static_enum isstatic : 1;
+	const_enum isconst : 1;
+} memberattribute_t;
+
+typedef enum attribute_enum {
+	publica_e,
+	privatea_e,
+	statica_e,
+	consta_e
+} attribute_enum;
 
 typedef enum {
 	user_e = 0,
@@ -71,7 +96,8 @@ typedef struct ehretval_t {
 		// pseudo-types for internal use
 		opnode_t *opval;
 		type_enum typeval;
-		visibility_enum visibilityval;
+		attribute_enum attributeval;
+		memberattribute_t attributestrval;
 		accessor_enum accessorval;
 		magicvar_enum magicvarval;
 	};
@@ -139,7 +165,7 @@ typedef struct ehfunc_t {
 
 // Properties and methods of a class
 typedef struct ehclassmember_t {
-	visibility_enum visibility;
+	memberattribute_t attribute;
 	char *name;
 	ehretval_t value;
 	struct ehclassmember_t *next;

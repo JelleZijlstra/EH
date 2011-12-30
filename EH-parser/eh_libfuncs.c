@@ -91,8 +91,11 @@ static void printvar_retval(ehretval_t in) {
 		case op_e:
 			printf("@op %d", in.opval->op);
 			break;
-		case visibility_e:
-			printf("@visibility %d", in.visibilityval);
+		case attribute_e:
+			printf("@attribute %d", in.attributeval);
+			break;
+		case attributestr_e:
+			printf("@attributestr");
 			break;
 	}
 	printf("\n");
@@ -105,12 +108,28 @@ static void printvar_object(ehclassmember_t **in) {
 		curr = in[i];
 		while(curr != NULL) {
 			printf("%s <", curr->name);
-			switch(curr->visibility) {
+			switch(curr->attribute.visibility) {
 				case public_e:
-					printf("public");
+					printf("public,");
 					break;
 				case private_e:
-					printf("private");
+					printf("private,");
+					break;
+			}
+			switch(curr->attribute.isstatic) {
+				case static_e:
+					printf("static,");
+					break;
+				case nonstatic_e:
+					printf("non-static,");
+					break;
+			}
+			switch(curr->attribute.isconst) {
+				case const_e:
+					printf("constant");
+					break;
+				case nonconst_e:
+					printf("non-constant");
 					break;
 			}
 			printf(">: ");

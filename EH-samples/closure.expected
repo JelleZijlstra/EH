@@ -1,5 +1,5 @@
 @object <Foo> [
-bar <public>: @function <user>: n
+bar <public,non-static,non-constant>: @function <user>: n
 ]
 @function <user>: n
 4

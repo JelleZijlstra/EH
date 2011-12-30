@@ -28,3 +28,7 @@ $ make compiler
 To compile and run a file called "compile.eh" with ehc:
 $ ./meh.sh compile
 $ ./compile
+
+Other things to do:
+- Create a GeSHi spec for EH; see 
+  http://qbnz.com/highlighter/geshi-doc.html#language-file-example

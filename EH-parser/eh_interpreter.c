@@ -227,6 +227,20 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 				}
 				inloop--;
 				break;
+			case T_SWITCH: // switch statements
+				// switch variable
+				operand1 = execute(node->opval->paras[0], context);
+				node = node->opval->paras[1];
+				while(node->opval->nparas != 0) {
+					operand2 = execute(node->opval->paras[1]->opval->paras[0], context);
+					if(eh_looseequals(operand1, operand2).boolval) {
+						ret = execute(node->opval->paras[1]->opval->paras[1], context);
+						if(returning)
+							return ret;
+					}
+					node = node->opval->paras[0];
+				}
+				break;
 		/*
 		 * Miscellaneous
 		 */

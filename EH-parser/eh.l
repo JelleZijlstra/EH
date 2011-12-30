@@ -56,6 +56,10 @@
 "null"		return T_NULL;
 "class"		return T_CLASS;
 "endclass"	return T_ENDCLASS;
+"switch"	return T_SWITCH;
+"endswitch"	return T_ENDSWITCH;
+"case"		return T_CASE;
+"endcase"	return T_ENDCASE;
 "this"		{
 				yylval.mValue = this_e;
 				return T_MAGICVAR;

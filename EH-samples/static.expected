@@ -1,9 +1,9 @@
 @object <Foo> [
+baz <public,non-static,non-constant>: null
+meh <public,non-static,constant>: @function <user>: n
 bar <public,static,non-constant>: null
 mah <public,non-static,non-constant>: null
-meh <public,non-static,constant>: @function <user>: n
 muh <public,non-static,constant>: @int 2
-baz <public,non-static,non-constant>: null
 ]
 2
 3

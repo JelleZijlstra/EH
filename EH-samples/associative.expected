@@ -3,7 +3,7 @@ foo
 'test': @string 'foo'
 ]
 @array [
-'foo': @string 'bar'
 'baz': @string 'bah'
+'foo': @string 'bar'
 ]
 2

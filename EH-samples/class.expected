@@ -1,10 +1,10 @@
 2
 meh
 @object <Foo> [
+baz <private,non-static,non-constant>: null
+meh <public,non-static,non-constant>: @function <user>: n
 bar <public,non-static,non-constant>: @int 3
 mah <private,non-static,non-constant>: @function <user>: n
-meh <public,non-static,non-constant>: @function <user>: n
-baz <private,non-static,non-constant>: null
 ]
 3
 @function <user>: n

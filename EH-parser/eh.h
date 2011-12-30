@@ -213,5 +213,6 @@ void eh_setarg(int argc, char **argv);
 extern bool returning;
 
 char *eh_getinput(void);
+void eh_interactive(void);
 extern bool is_interactive;
 

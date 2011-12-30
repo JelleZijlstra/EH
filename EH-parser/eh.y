@@ -448,24 +448,9 @@ void eh_outer_exit(int exitval) {
 	eh_exit();
 	exit(exitval);
 }
-int main(int argc, char **argv) {
-	if(argc < 2) {
-		fprintf(stderr, "Usage: %s file\n\t%s -i\n", argv[0], argv[0]);
-		eh_error(NULL, efatal_e);
-	}
-	if(strcmp(argv[1], "-i")) {
-		FILE *infile = fopen(argv[1], "r");
-		if(!infile)
-			eh_error("Unable to open input file", efatal_e);
-		eh_setarg(argc, argv);
-		// set input
-		yyin = infile;
-	}
-	else {
-		is_interactive = true;
-		yy_scan_string(eh_getinput());
-	}
+void eh_interactive(void) {
+	is_interactive = true;
+	yy_scan_string(eh_getinput());
 	eh_init();
 	yyparse();
-	return 0;
 }

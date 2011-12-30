@@ -10,5 +10,5 @@ if !$bar
 	$ bar = 'I got some other number of command-line options'
 endif
 echo $bar
-$ baz = switch $foo; case 1; 'None'; case 2; 'Got one'; endswitch
+$ baz = given $foo; case 1; 'None'; case 2; 'Got one'; end
 echo $baz

@@ -32,6 +32,8 @@ extern int yylineno;
 %token T_ENDWHILE
 %token T_FOR
 %token T_ENDFOR
+%token T_GIVEN
+%token T_END
 %token T_SWITCH
 %token T_ENDSWITCH
 %token T_CASE
@@ -47,18 +49,17 @@ extern int yylineno;
 %token T_NULL
 %token T_CLASS
 %token T_ENDCLASS
-%token T_THIS
 %token T_GLOBAL
 %token T_LVALUE
-%token T_LVALUE_OBJECT
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
-%token T_CLASSMEMBER
 %token T_EXPRESSION
 %token T_DOUBLEARROW
+%token T_COMMAND T_SHORTPARA T_LONGPARA
 %token <sValue> T_VARIABLE
 %token <mValue> T_MAGICVAR
 %token <sValue> T_STRING
+%left T_LOWPREC /* Used to prevent S/R conflicts */
 %left ','
 %left T_AND T_OR T_XOR
 %left ':'
@@ -72,9 +73,8 @@ extern int yylineno;
 %nonassoc T_NEW
 %nonassoc '[' ']'
 %nonassoc '(' ')'
-%token T_EXPRSWITCH
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist caselist acase exprcaselist exprcase
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr
 %%
 program:
 	statement_list			{
@@ -102,7 +102,7 @@ statement_list:
 	;
 
 statement:
-	expression T_SEPARATOR	{ $$ = $1; }
+	line_expr T_SEPARATOR	{ $$ = $1; }
 	| T_ECHO expression T_SEPARATOR
 							{ $$ = operate(T_ECHO, 1, $2); }
 	| T_SET lvalue '=' expression T_SEPARATOR
@@ -140,6 +140,7 @@ statement:
 							{ $$ = operate(T_BREAK, 1, $2); }
 	| T_SWITCH expression T_SEPARATOR caselist T_ENDSWITCH T_SEPARATOR
 							{ $$ = operate(T_SWITCH, 2, $2, $4); }
+	| command T_SEPARATOR	{ $$ = $1; }
 	;
 
 expression:
@@ -202,8 +203,150 @@ expression:
 	| T_NEW bareword		{ $$ = operate(T_NEW, 1, $2); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
 							{ $$ = operate(T_FUNC, 2, $3, $5); }
-	| T_SWITCH expression T_SEPARATOR exprcaselist T_ENDSWITCH
-							{ $$ = operate(T_EXPRSWITCH, 2, $2, $4); }
+	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
+							{ $$ = operate(T_GIVEN, 2, $2, $4); }
+	;
+
+simple_expr:
+	T_INTEGER				{ $$ = get_int($1); }
+	| T_STRING				{ $$ = get_string($1); }
+	| T_NULL				{ $$ = get_null(); }
+	| T_BOOL				{ $$ = get_bool($1); }
+	| bareword				{ $$ = $1; }
+	| '(' expression ')'	{ $$ = $2; }
+	| '~' simple_expr		{ $$ = operate('~', 1, $2); }
+	| '!' simple_expr		{ $$ = operate('!', 1, $2); }
+	| simple_expr T_ACCESSOR simple_expr
+							{ $$ = operate(T_ACCESSOR, 3, $1, get_accessor($2), $3); }
+	| '$' lvalue			{ $$ = operate('$', 1, $2); }
+	| '@' T_TYPE simple_expr
+							{ $$ = operate('@', 2, get_type($2), $3); }
+	| simple_expr ':' arglist
+							{ $$ = operate(':', 2, $1, $3); }
+	| simple_expr '=' simple_expr
+							{ $$ = operate('=', 2, $1, $3); }
+	| simple_expr '>' simple_expr
+							{ $$ = operate('>', 2, $1, $3); }
+	| simple_expr '<' simple_expr
+							{ $$ = operate('<', 2, $1, $3); }
+	| simple_expr T_SE simple_expr
+							{ $$ = operate(T_SE, 2, $1, $3); }
+	| simple_expr T_GE simple_expr
+							{ $$ = operate(T_GE, 2, $1, $3); }
+	| simple_expr T_LE simple_expr
+							{ $$ = operate(T_LE, 2, $1, $3); }
+	| simple_expr T_NE simple_expr
+							{ $$ = operate(T_NE, 2, $1, $3); }
+	| simple_expr '+' simple_expr
+							{ $$ = operate('+', 2, $1, $3); }
+	| simple_expr '*' simple_expr
+							{ $$ = operate('*', 2, $1, $3); }
+	| simple_expr '/' simple_expr
+							{ $$ = operate('/', 2, $1, $3); }
+	| simple_expr '%' simple_expr
+							{ $$ = operate('%', 2, $1, $3); }
+	| simple_expr '^' simple_expr
+							{ $$ = operate('^', 2, $1, $3); }
+	| simple_expr '|' simple_expr
+							{ $$ = operate('|', 2, $1, $3); }
+	| simple_expr '&' simple_expr
+							{ $$ = operate('&', 2, $1, $3); }
+	| simple_expr T_AND simple_expr
+							{ $$ = operate(T_AND, 2, $1, $3); }
+	| simple_expr T_OR simple_expr
+							{ $$ = operate(T_OR, 2, $1, $3); }
+	| simple_expr T_XOR simple_expr
+							{ $$ = operate(T_XOR, 2, $1, $3); }
+	| '[' arraylist ']'		{ $$ = operate('[', 1, $2); }
+	| T_COUNT simple_expr	{ $$ = operate(T_COUNT, 1, $2); }
+	| T_NEW bareword		{ $$ = operate(T_NEW, 1, $2); }
+	;
+
+line_expr: 
+	/* need to separate expressions beginning with a bareword from commands */
+	T_INTEGER				{ $$ = get_int($1); }
+	| T_STRING				{ $$ = get_string($1); }
+	| T_NULL				{ $$ = get_null(); }
+	| T_BOOL				{ $$ = get_bool($1); }
+	| '(' expression ')'	{ $$ = $2; }
+	| '~' expression		{ $$ = operate('~', 1, $2); }
+	| '!' expression		{ $$ = operate('!', 1, $2); }
+	| '-' expression %prec T_NEGATIVE
+							{ $$ = operate(T_NEGATIVE, 1, $2); }
+	| line_expr T_ACCESSOR expression
+							{ $$ = operate(T_ACCESSOR, 3, $1, get_accessor($2), $3); }
+	| '$' lvalue			{ $$ = operate('$', 1, $2); }
+	| '&' lvalue %prec T_REFERENCE
+							{ $$ = operate(T_REFERENCE, 1, $2); }
+	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }
+	| bareword ':' arglist
+							{ $$ = operate(':', 2, $1, $3); }
+	| '$' lvalue ':' arglist
+							{ $$ = operate(':', 2,
+								operate('$', 1, $2),
+								$4);
+							}
+	| line_expr '=' expression
+							{ $$ = operate('=', 2, $1, $3); }
+	| line_expr '>' expression
+							{ $$ = operate('>', 2, $1, $3); }
+	| line_expr '<' expression
+							{ $$ = operate('<', 2, $1, $3); }
+	| line_expr T_SE expression
+							{ $$ = operate(T_SE, 2, $1, $3); }
+	| line_expr T_GE expression
+							{ $$ = operate(T_GE, 2, $1, $3); }
+	| line_expr T_LE expression
+							{ $$ = operate(T_LE, 2, $1, $3); }
+	| line_expr T_NE expression
+							{ $$ = operate(T_NE, 2, $1, $3); }
+	| line_expr '+' expression
+							{ $$ = operate('+', 2, $1, $3); }
+	| line_expr '-' expression
+							{ $$ = operate('-', 2, $1, $3); }
+	| line_expr '*' expression
+							{ $$ = operate('*', 2, $1, $3); }
+	| line_expr '/' expression
+							{ $$ = operate('/', 2, $1, $3); }
+	| line_expr '%' expression
+							{ $$ = operate('%', 2, $1, $3); }
+	| line_expr '^' expression
+							{ $$ = operate('^', 2, $1, $3); }
+	| line_expr '|' expression
+							{ $$ = operate('|', 2, $1, $3); }
+	| line_expr '&' expression
+							{ $$ = operate('&', 2, $1, $3); }
+	| line_expr T_AND expression
+							{ $$ = operate(T_AND, 2, $1, $3); }
+	| line_expr T_OR expression
+							{ $$ = operate(T_OR, 2, $1, $3); }
+	| line_expr T_XOR expression
+							{ $$ = operate(T_XOR, 2, $1, $3); }
+	| '[' arraylist ']'		{ $$ = operate('[', 1, $2); }
+	| T_COUNT expression	{ $$ = operate(T_COUNT, 1, $2); }
+	| T_NEW bareword		{ $$ = operate(T_NEW, 1, $2); }
+	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
+							{ $$ = operate(T_FUNC, 2, $3, $5); }
+	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
+							{ $$ = operate(T_GIVEN, 2, $2, $4); }
+	;
+
+command:
+	bareword paralist		{ $$ = operate(T_COMMAND, 2, $1, $2); }
+
+paralist:
+	paralist para			{ $$ = operate(',', 2, $1, $2); }
+	| /* NULL */			{ $$ = operate(',', 0); }
+	;
+
+para:
+	T_STRING				{ $$ = get_string($1); }
+	| bareword				{ $$ = $1; }
+	| T_MINMIN bareword '=' simple_expr
+							{ $$ = operate(T_LONGPARA, 2, $2, $4); }
+	| T_MINMIN T_STRING '=' simple_expr
+							{ $$ = operate(T_LONGPARA, 2, get_string($2), $4); }
+	| '-' bareword			{ $$ = operate(T_SHORTPARA, 1, $2); }
 	;
 
 bareword:
@@ -233,7 +376,7 @@ arglist:
 	;
 
 arg:
-	expression				{ $$ = $1; }
+	expression %prec T_LOWPREC				{ $$ = $1; }
 	| expression ','		{ $$ = $1; }
 	;
 
@@ -282,14 +425,14 @@ lvalue:
 							{ $$ = operate(T_LVALUE, 3, get_magicvar($1), get_accessor($2), $3); }
 	;
 
-classmember:
+classmember: /* , is used as the operator token for those, because none is really needed and , is the generic null token */
 	attributelist bareword	{ /* property declaration */
-								$$ = operate(T_CLASSMEMBER, 2, $1, $2);
+								$$ = operate(',', 2, $1, $2);
 							}
 	| attributelist bareword '=' expression
-							{ $$ = operate(T_CLASSMEMBER, 3, $1, $2, $4); }
+							{ $$ = operate(',', 3, $1, $2, $4); }
 	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC
-							{ $$ = operate(T_CLASSMEMBER, 4, $1, $2, $4, $6); }
+							{ $$ = operate(',', 4, $1, $2, $4, $6); }
 	;
 
 attributelist:

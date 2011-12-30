@@ -58,6 +58,8 @@
 "endclass"	return T_ENDCLASS;
 "switch"	return T_SWITCH;
 "endswitch"	return T_ENDSWITCH;
+"given"		return T_GIVEN;
+"end"		return T_END;
 "case"		return T_CASE;
 "this"		{
 				yylval.mValue = this_e;

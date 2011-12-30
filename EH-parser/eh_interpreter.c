@@ -240,7 +240,7 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 					node = node->opval->paras[0];
 				}
 				break;
-			case T_EXPRSWITCH: // inline switch statements
+			case T_GIVEN: // inline switch statements
 				// switch variable
 				operand1 = execute(node->opval->paras[0], context);
 				node = node->opval->paras[1];

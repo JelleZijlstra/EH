@@ -29,6 +29,9 @@ ehlibfunc_t libfuncs[] = {
 	{NULL, NULL}
 };
 
+/*
+ * Functions executed before and after the program itself is executed.
+ */
 void eh_init(void) {
 	int i;
 	ehfunc_t *func;
@@ -47,6 +50,9 @@ void eh_exit(void) {
 	return;
 }
 
+/*
+ * Main execution function
+ */
 ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 	// variables used
 	ehretval_t *node2;
@@ -720,6 +726,60 @@ ehretval_t execute(ehretval_t *node, ehcontext_t context) {
 				}
 				else while(ret.type == reference_e || ret.type == creference_e)
 					ret = *ret.referenceval;
+				break;
+		/*
+		 * Commands
+		 */
+			case T_COMMAND:
+				// name of command to be executed
+				name = execute(node->opval->paras[0], context).stringval;
+				// we're making an array of parameters
+				ehvar_t **arrayval = Calloc(VARTABLE_S, sizeof(ehvar_t));
+				// count for simple parameters
+				operand2.type = int_e;
+				operand2.intval = 0;
+				// loop through the paras given
+				node = node->opval->paras[1];
+				while(node->opval->nparas != 0) {
+					node2 = node->opval->paras[1];
+					if(node2->type == op_e) {
+						if(node2->opval->op == T_SHORTPARA) {
+							// short paras: set each letter to true
+							node2 = node2->opval->paras[0];
+							count = strlen(node2->stringval);
+							operand3.type = string_e;
+							for(i = 0; i < count; i++) {
+								operand3.stringval = Malloc(2);
+								operand3.stringval[1] = '\0';
+								operand3.stringval[0] = node2->stringval[i];
+								array_insert_retval(
+									arrayval, 
+									operand3,
+									(ehretval_t) {bool_e, {true}}
+								);
+							}
+						}
+						else {
+							// long-form paras
+							array_insert_retval(
+								arrayval,
+								execute(node2->opval->paras[0], context),
+								execute(node2->opval->paras[1], context)
+							);
+						}
+					}
+					else {
+						// non-named parameters
+						array_insert_retval(
+							arrayval, 
+							operand2, 
+							*node2
+						);
+						operand2.intval++;
+					}
+					node = node->opval->paras[0];
+				}
+				execute_command(name, arrayval);
 				break;
 			default:
 				eh_error_int("Unexpected opcode", node->opval->op, efatal_e);

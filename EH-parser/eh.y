@@ -449,9 +449,10 @@ void eh_outer_exit(int exitval) {
 	eh_exit();
 	exit(exitval);
 }
-void eh_interactive(void) {
+int EHI::eh_interactive(void) {
 	is_interactive = true;
 	yy_scan_string(eh_getinput());
 	eh_init();
 	yyparse();
+	return 0;
 }

@@ -37,7 +37,7 @@ ehretval_t object_access(ehretval_t name, ehretval_t *index, ehcontext_t context
 ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context);
 bool ehcontext_compare(ehcontext_t lock, ehcontext_t key);
 // commands
-void execute_command(char *, ehvar_t **);
+int execute_cmd(char *, ehvar_t **);
 
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)

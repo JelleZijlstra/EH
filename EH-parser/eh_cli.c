@@ -9,11 +9,13 @@
 extern FILE *yyin;
 void yyparse(void);
 
+EHI *interpreter;
 int main(int argc, char **argv) {
 	if(argc < 2) {
 		fprintf(stderr, "Usage: %s file\n\t%s -i\n", argv[0], argv[0]);
 		eh_error(NULL, efatal_e);
 	}
+	interpreter = new EHI;
 	if(strcmp(argv[1], "-i")) {
 		FILE *infile = fopen(argv[1], "r");
 		if(!infile)
@@ -25,12 +27,16 @@ int main(int argc, char **argv) {
 		yyparse();
 	}
 	else {
-		eh_interactive();
+		interpreter->eh_interactive();
 	}
+	delete interpreter;
 	return 0;
 }
 
-void execute_command(char *name, ehvar_t **array) {
+int EHI::execute_cmd(char *name, ehvar_t **array) {
 	eh_error("Use of commands outside of EH-PHP context", eerror_e);
+	return 0;
+}
+EHI::~EHI(void) {
 	return;
 }

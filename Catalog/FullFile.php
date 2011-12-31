@@ -1730,7 +1730,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					if(is_numeric($cmd)) $this->sfolder = $suggs[$cmd];
 					else $this->sfolder = $cmd;
 				/* sub-subfolder */
-					if(count($this->p->foldertree[$this->folder][$this->sfolder]) !== 0) {
+					if(isset($this->p->foldertree
+							[$this->folder]
+							[$this->sfolder]) 
+						and count($this->p->foldertree
+							[$this->folder]
+							[$this->sfolder]) !== 0) {
 						echo 'Suggestions: ';
 						$suggs = $this->sugg_helper($this->p->foldertree[$this->folder][$this->sfolder]);
 						$cmd = $this->getline(array(

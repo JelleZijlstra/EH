@@ -25,7 +25,6 @@ ehi: $(EHI_O)
 ehphp: $(EHPHP_O)
 	$(CC) -dynamiclib $(SYMBOLS) -o ehphp.dylib $(EHPHP_O)
 	sudo cp ehphp.dylib /opt/local/lib/php/extensions/no-debug-non-zts-20090626/ehphp.dylib
-	sudo cp ehphp.dylib /usr/local/lib/php/extensions/no-debug-non-zts-20100525/ehphp.dylib
 
 y.tab.c y.tab.h: eh.y
 	yacc -d eh.y

@@ -927,9 +927,14 @@ abstract class ExecuteHandler {
 				return self::EXECUTE_NEXT;
 		}
 		// now we're looking only at EH-defined commands, not language constructs
+		// split command into pieces
+		$paras = $this->divide_cmd($arg);
+		return $this->execute_cmd($rawcmd, $paras);
+	}
+	private function execute_cmd($rawcmd, $paras) {
 		$cmd = $this->expand_cmd($rawcmd);
 		if(!$cmd) {
-			echo 'Invalid command: ' . $in . PHP_EOL;
+			echo 'Invalid command: ' . $rawcmd . PHP_EOL;
 			return self::EXECUTE_NEXT;
 		}
 		$redirection = array(
@@ -938,29 +943,20 @@ abstract class ExecuteHandler {
 			'}' => false,
 			'}$' => false,
 		);
-		if(isset($cmd['rawarg']) and $cmd['rawarg'] === true) {
-			/* Argument is simply the raw argument */
-			$argument = $arg;
-		}
-		else {
-			// split command into pieces
-			$paras = $this->divide_cmd($arg);
-			// separate argument from paras
-			$argument = trim($paras[0]);
-			unset($paras[0]);
-			// separate output redirection and friends
-			foreach($redirection as $key => $var) {
-				if(isset($paras[$key])) {
-					$redirection[$key] = $paras[$key];
-					unset($paras[$key]);
-				}
+		// separate argument from paras
+		$argument = trim($paras[0]);
+		// separate output redirection and friends
+		foreach($redirection as $key => $var) {
+			if(isset($paras[$key])) {
+				$redirection[$key] = $paras[$key];
+				unset($paras[$key]);
 			}
-			// handle shortcut
-			if($argument === '*')
-				$argarray = $this->current;
-			else
-				$argarray = array($argument);
 		}
+		// handle shortcut
+		if($argument === '*')
+			$argarray = $this->current;
+		else
+			$argarray = array($argument);
 		// output redirection
 		if(($redirection['>'] !== false or $redirection['>$'] !== false) and
 			$cmd['execute'] !== 'quit') {

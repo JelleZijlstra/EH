@@ -6,6 +6,7 @@
  */
 %{
 #include "eh.h"
+#include "eh_interpreter.h"
 %}
 %module(directors="1") ehphp
 %feature("director");
@@ -17,7 +18,7 @@
 	int i;
 
 	// initiate PHP array
-	_array_init(arr);
+	array_init(arr);
 	for(i = 0; i < VARTABLE_S; i++) {
 		currvar = $input[i];
 		while(currvar != NULL) {
@@ -54,4 +55,4 @@
 	$1 = arr;
 }
 
-%include "eh_php.h"
+%include "ehi.h"

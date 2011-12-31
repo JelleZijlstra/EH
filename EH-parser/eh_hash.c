@@ -164,7 +164,7 @@ and these came close:
 
 /* EHI HASH FUNCTION */
 #include <string.h>
-#include "eh_interpreter.h"
+#include "eh.h"
 static uint32_t hashlittle( const void *key, size_t length, uint32_t initval);
 static uint32_t hashbig( const void *key, size_t length, uint32_t initval);
 unsigned int hash(char *data, int scope) {

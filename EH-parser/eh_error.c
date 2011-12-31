@@ -4,7 +4,9 @@
  *
  * Code file for the EH error handling system.
  */
-#include "eh_interpreter.h"
+#include "eh.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 void eh_error(char *message, errlevel_e level) {
 	if(message)

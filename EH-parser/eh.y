@@ -7,7 +7,8 @@
  * of this code were inspired by Tom Niemann's "A Compact Guide to Lex & Yacc", 
  * available at http://epaperpress.com/lexandyacc/
  */
-#include "eh_error.h"
+#include "eh.h"
+#include "y.tab.h"
 extern FILE *yyin;
 #define YYERROR_VERBOSE
 extern int yylineno;
@@ -21,7 +22,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 	type_enum tValue;
 	attribute_enum vValue;
 	bool bValue;
-	struct ehretval_t *ehNode;
+	ehretval_t *ehNode;
 	accessor_enum aValue;
 	magicvar_enum mValue;
 };

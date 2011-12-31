@@ -10,7 +10,7 @@ EHPHP = $(INTERPRETER) eh_php.c eh_wrap.c
 EHPHP_O = $(EHPHP:.c=.o)
 SYMBOLS = -Wl,-flat_namespace,-U,_zend_register_resource,-U,_zend_rsrc_list_get_rsrc_type,-U,_zend_wrong_param_count,-U,_compiler_globals,-U,_zend_hash_find,-U,_gc_remove_zval_from_buffer,-U,_zend_register_long_constant,-U,_zend_get_constant,-U,__efree,-U,__emalloc,-U,_zend_error,-U,__zend_list_find,-U,_main
 
-eh_wrap.o: eh_wrap.c
+eh_wrap.o: eh_wrap.cpp
 	$(CC) `php-config --includes` -fPIC -c $< -o $@
 
 %.o: %.c
@@ -32,8 +32,8 @@ y.tab.c y.tab.h: eh.y
 lex.yy.c: eh.l y.tab.h
 	lex eh.l
 
-eh_wrap.c: eh.i
-	swig -php eh.i
+eh_wrap.cpp: eh.i
+	swig -c++ -php eh.i
 
 clean:
-	rm -f *.o ehphp.so ehi ehc y.tab.h y.tab.c lex.yy.c y.output eh_wrap.c eh.php
+	rm -f *.o ehphp.so ehphp.dylib ehi ehc y.tab.h y.tab.c lex.yy.c y.output eh_wrap.c ehphp.php eh_wrap.cpp php_ehphp.h

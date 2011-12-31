@@ -4,7 +4,8 @@
  *
  * Implements a Lex- and Yacc-based interpreter for the EH scripting language.
  */
-#include "eh_interpreter.h"
+#include "eh.h"
+#include "eh_libfuncs.h"
 
 // number of loops we're currently in
 bool returning = false;

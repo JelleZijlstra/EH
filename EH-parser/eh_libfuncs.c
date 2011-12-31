@@ -4,7 +4,8 @@
  *
  * Contains definitions of EH library functions
  */
-#include "eh_interpreter.h"
+#include "eh.h"
+#include "eh_libfuncs.h"
 
 void printvar_retval(ehretval_t in);
 static void printvar_array(ehvar_t **in);

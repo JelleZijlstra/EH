@@ -4,7 +4,7 @@
  *
  * Default implementation of EH, used in the standalone interpreter.
  */
-#include "eh_error.h"
+#include "eh.h"
 
 extern FILE *yyin;
 void yyparse(void);

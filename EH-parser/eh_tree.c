@@ -51,7 +51,7 @@ GETFUNC(bool, bool)
 GETFUNC(attribute, attribute_enum)
 GETFUNC(magicvar, magicvar_enum)
 
-ehretval_t *operate(int operation, int nparas, ...) {
+ehretval_t *eh_addnode(int operation, int nparas, ...) {
 	va_list args;
 	ehretval_t *ret;
 	int i;

@@ -187,7 +187,7 @@ void *Calloc(size_t count, size_t size);
 void free_node(ehretval_t *in);
 
 #define GETFUNCPROTO(name, vtype) ehretval_t *eh_get_ ## name(vtype value);
-ehretval_t *get_null(void);
+ehretval_t *eh_get_null(void);
 GETFUNCPROTO(int, int)
 GETFUNCPROTO(string, char *)
 GETFUNCPROTO(accessor, accessor_enum)
@@ -197,7 +197,7 @@ GETFUNCPROTO(visibility, visibility_enum)
 GETFUNCPROTO(magicvar, magicvar_enum)
 GETFUNCPROTO(attribute, attribute_enum)
 
-ehretval_t *operate(int operations, int noperations, ...);
+ehretval_t *eh_addnode(int operations, int noperations, ...);
 
 ehretval_t eh_execute(ehretval_t *node, ehcontext_t context);
 void print_tree(ehretval_t *in, int n);

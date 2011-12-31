@@ -14,7 +14,7 @@ eh_wrap.o: eh_wrap.c
 	$(CC) `php-config --includes` -fPIC -c $< -o $@
 
 %.o: %.c
-	$(CC) -fPIC -c $(CCFLAGS) $< -o $@
+	$(CC) -c $(CCFLAGS) $< -o $@
 
 compiler: $(COMPILER_O)
 	$(CC) $(COMPILER_O) -o ehc

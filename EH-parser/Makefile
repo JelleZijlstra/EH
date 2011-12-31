@@ -1,4 +1,4 @@
-CC = gcc
+CC = g++
 CCFLAGS = -ggdb -Wall
 SOURCES = lex.yy.c y.tab.c eh_tree.c eh_error.c
 COMPILER = $(SOURCES) eh_compiler.c

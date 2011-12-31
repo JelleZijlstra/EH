@@ -513,7 +513,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 			case '+':
 				operand1 = eh_execute(node->opval->paras[0], context);
 				operand2 = eh_execute(node->opval->paras[1], context);
-				if(IS_STRING(operand1) && IS_STRING(operand2)) {
+				if(EH_IS_STRING(operand1) && EH_IS_STRING(operand2)) {
 					// concatenate them
 					ret.type = string_e;
 					size_t len1, len2;
@@ -526,7 +526,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				else {
 					operand1 = eh_xtoi(operand1);
 					operand2 = eh_xtoi(operand2);
-					if(IS_INT(operand1) && IS_INT(operand2)) {
+					if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) {
 						ret.type = int_e;
 						ret.intval = (operand1.intval + operand2.intval);
 					}
@@ -1272,16 +1272,16 @@ ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2) {
 	ehretval_t ret;
 	ret.type = bool_e;
 
-	if(IS_INT(operand1) && IS_INT(operand2)) {
+	if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) {
 		ret.boolval = (operand1.intval == operand2.intval);
 	}
-	else if(IS_STRING(operand1) && IS_STRING(operand2)) {
+	else if(EH_IS_STRING(operand1) && EH_IS_STRING(operand2)) {
 		ret.boolval = !strcmp(operand1.stringval, operand2.stringval);
 	}
 	else {
 		operand1 = eh_xtoi(operand1);
 		operand2 = eh_xtoi(operand2);
-		if(IS_INT(operand1) && IS_INT(operand2)) {
+		if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) {
 			ret.boolval = (operand1.intval == operand2.intval);
 		}
 		else
@@ -1293,16 +1293,16 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2) {
 	ehretval_t ret;
 	ret.type = bool_e;
 
-	if(IS_INT(operand1) && IS_INT(operand2)) {
+	if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) {
 		ret.boolval = (operand1.intval == operand2.intval);
 	}
-	else if(IS_STRING(operand1) && IS_STRING(operand2)) {
+	else if(EH_IS_STRING(operand1) && EH_IS_STRING(operand2)) {
 		ret.boolval = !strcmp(operand1.stringval, operand2.stringval);
 	}
-	else if(IS_BOOL(operand1) && IS_BOOL(operand2)) {
+	else if(EH_IS_BOOL(operand1) && EH_IS_BOOL(operand2)) {
 		ret.boolval = (operand1.boolval == operand2.boolval);
 	}
-	else if(IS_NULL(operand1) && IS_NULL(operand2)) {
+	else if(EH_IS_NULL(operand1) && EH_IS_NULL(operand2)) {
 		// null always equals null
 		ret.boolval = true;
 	}

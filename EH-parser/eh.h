@@ -120,11 +120,11 @@ typedef struct ehvar_t {
 } ehvar_t;
 
 // type checking
-#define IS_INT(var) (var.type == int_e)
-#define IS_STRING(var) (var.type == string_e)
-#define IS_ARRAY(var) (var.type == array_e)
-#define IS_BOOL(var) (var.type == bool_e)
-#define IS_NULL(var) (var.type == null_e)
+#define EH_IS_INT(var) (var.type == int_e)
+#define EH_IS_STRING(var) (var.type == string_e)
+#define EH_IS_ARRAY(var) (var.type == array_e)
+#define EH_IS_BOOL(var) (var.type == bool_e)
+#define EH_IS_NULL(var) (var.type == null_e)
 
 // in future, add type for type checking
 typedef struct eharg_t {

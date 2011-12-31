@@ -11,6 +11,7 @@ static void printvar_array(ehvar_t **in);
 static void printvar_object(ehclassmember_t **in);
 
 EHLIBFUNC(getinput) {
+	// more accurately, getint
 	retval->type = int_e;
 	fscanf(stdin, "%d", &retval->intval);
 	return;
@@ -20,6 +21,7 @@ EHLIBFUNC(printvar) {
 	// this function always returns NULL
 	retval->type = null_e;
 
+	// check argument count
 	if(paras->opval->paras[0]->opval->nparas != 0) {
 		eh_error_argcount_lib("printvar", 1, 2);
 		return;
@@ -27,7 +29,7 @@ EHLIBFUNC(printvar) {
 	printvar_retval(eh_execute(paras->opval->paras[1], context));
 	return;
 }
-
+// helper functions for printvar
 void printvar_retval(ehretval_t in) {
 	int i;
 	switch(in.type) {

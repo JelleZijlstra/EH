@@ -81,13 +81,14 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %%
 global_list: /* NULL */		{ }
 	| global_list statement	{ 
-								ehretval_t ret = execute($2, NULL);
+								ehretval_t ret = eh_execute($2, NULL);
 								if(returning) 
 									eh_outer_exit(ret.intval);
 							}
 	;
 
-statement_list: /* NULL */	{ $$ = operate(T_SEPARATOR, 0); }
+statement_list:
+	/* NULL */				{ $$ = operate(T_SEPARATOR, 0); }
 	| statement statement_list
 							{ $$ = operate(T_SEPARATOR, 2, $1, $2); }
 	;
@@ -136,10 +137,10 @@ statement:
 	;
 
 expression:
-	T_INTEGER				{ $$ = get_int($1); }
-	| T_STRING				{ $$ = get_string($1); }
-	| T_NULL				{ $$ = get_null(); }
-	| T_BOOL				{ $$ = get_bool($1); }
+	T_INTEGER				{ $$ = eh_get_int($1); }
+	| T_STRING				{ $$ = eh_get_string($1); }
+	| T_NULL				{ $$ = eh_get_null(); }
+	| T_BOOL				{ $$ = eh_get_bool($1); }
 	| bareword				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' expression		{ $$ = operate('~', 1, $2); }
@@ -147,11 +148,11 @@ expression:
 	| '-' expression %prec T_NEGATIVE
 							{ $$ = operate(T_NEGATIVE, 1, $2); }
 	| expression T_ACCESSOR expression
-							{ $$ = operate(T_ACCESSOR, 3, $1, get_accessor($2), $3); }
+							{ $$ = operate(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
 	| '$' lvalue			{ $$ = operate('$', 1, $2); }
 	| '&' lvalue %prec T_REFERENCE
 							{ $$ = operate(T_REFERENCE, 1, $2); }
-	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }
+	| '@' T_TYPE expression	{ $$ = operate('@', 2, eh_get_type($2), $3); }
 	| expression ':' arglist
 							{ $$ = operate(':', 2, $1, $3); }
 	| expression '=' expression
@@ -200,19 +201,19 @@ expression:
 	;
 
 simple_expr:
-	T_INTEGER				{ $$ = get_int($1); }
-	| T_STRING				{ $$ = get_string($1); }
-	| T_NULL				{ $$ = get_null(); }
-	| T_BOOL				{ $$ = get_bool($1); }
+	T_INTEGER				{ $$ = eh_get_int($1); }
+	| T_STRING				{ $$ = eh_get_string($1); }
+	| T_NULL				{ $$ = eh_get_null(); }
+	| T_BOOL				{ $$ = eh_get_bool($1); }
 	| bareword				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' simple_expr		{ $$ = operate('~', 1, $2); }
 	| '!' simple_expr		{ $$ = operate('!', 1, $2); }
 	| simple_expr T_ACCESSOR simple_expr
-							{ $$ = operate(T_ACCESSOR, 3, $1, get_accessor($2), $3); }
+							{ $$ = operate(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
 	| '$' lvalue			{ $$ = operate('$', 1, $2); }
 	| '@' T_TYPE simple_expr
-							{ $$ = operate('@', 2, get_type($2), $3); }
+							{ $$ = operate('@', 2, eh_get_type($2), $3); }
 	| simple_expr ':' arglist
 							{ $$ = operate(':', 2, $1, $3); }
 	| simple_expr '=' simple_expr
@@ -256,21 +257,21 @@ simple_expr:
 
 line_expr: 
 	/* need to separate expressions beginning with a bareword from commands */
-	T_INTEGER				{ $$ = get_int($1); }
-	| T_STRING				{ $$ = get_string($1); }
-	| T_NULL				{ $$ = get_null(); }
-	| T_BOOL				{ $$ = get_bool($1); }
+	T_INTEGER				{ $$ = eh_get_int($1); }
+	| T_STRING				{ $$ = eh_get_string($1); }
+	| T_NULL				{ $$ = eh_get_null(); }
+	| T_BOOL				{ $$ = eh_get_bool($1); }
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' expression		{ $$ = operate('~', 1, $2); }
 	| '!' expression		{ $$ = operate('!', 1, $2); }
 	| '-' expression %prec T_NEGATIVE
 							{ $$ = operate(T_NEGATIVE, 1, $2); }
 	| line_expr T_ACCESSOR expression
-							{ $$ = operate(T_ACCESSOR, 3, $1, get_accessor($2), $3); }
+							{ $$ = operate(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
 	| '$' lvalue			{ $$ = operate('$', 1, $2); }
 	| '&' lvalue %prec T_REFERENCE
 							{ $$ = operate(T_REFERENCE, 1, $2); }
-	| '@' T_TYPE expression	{ $$ = operate('@', 2, get_type($2), $3); }
+	| '@' T_TYPE expression	{ $$ = operate('@', 2, eh_get_type($2), $3); }
 	| bareword ':' arglist
 							{ $$ = operate(':', 2, $1, $3); }
 	| '$' lvalue ':' arglist
@@ -332,17 +333,17 @@ paralist:
 	;
 
 para:
-	T_STRING				{ $$ = get_string($1); }
+	T_STRING				{ $$ = eh_get_string($1); }
 	| bareword				{ $$ = $1; }
 	| T_MINMIN bareword '=' simple_expr
 							{ $$ = operate(T_LONGPARA, 2, $2, $4); }
 	| T_MINMIN T_STRING '=' simple_expr
-							{ $$ = operate(T_LONGPARA, 2, get_string($2), $4); }
+							{ $$ = operate(T_LONGPARA, 2, eh_get_string($2), $4); }
 	| '-' bareword			{ $$ = operate(T_SHORTPARA, 1, $2); }
 	;
 
 bareword:
-	T_VARIABLE				{ $$ = get_string($1); }
+	T_VARIABLE				{ $$ = eh_get_string($1); }
 	;
 
 arraylist:
@@ -412,9 +413,9 @@ classlist:
 lvalue:
 	bareword				{ $$ = operate(T_LVALUE, 1, $1); }
 	| bareword T_ACCESSOR expression
-							{ $$ = operate(T_LVALUE, 3, $1, get_accessor($2), $3); }
+							{ $$ = operate(T_LVALUE, 3, $1, eh_get_accessor($2), $3); }
 	| T_MAGICVAR T_ACCESSOR expression
-							{ $$ = operate(T_LVALUE, 3, get_magicvar($1), get_accessor($2), $3); }
+							{ $$ = operate(T_LVALUE, 3, eh_get_magicvar($1), eh_get_accessor($2), $3); }
 	;
 
 classmember: /* , is used as the operator token for those, because none is really needed and , is the generic null token */
@@ -429,7 +430,7 @@ classmember: /* , is used as the operator token for those, because none is reall
 
 attributelist:
 	attributelist T_ATTRIBUTE
-							{ $$ = operate(T_ATTRIBUTE, 2, $1, get_attribute($2)); }
+							{ $$ = operate(T_ATTRIBUTE, 2, $1, eh_get_attribute($2)); }
 	| /* NULL */			{ $$ = operate(T_ATTRIBUTE, 0); }
 	;
 %%

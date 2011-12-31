@@ -186,9 +186,7 @@ void *Malloc(size_t size);
 void *Calloc(size_t count, size_t size);
 void free_node(ehretval_t *in);
 
-#define GETFUNCPROTO(name, vtype) ehretval_t *get_ ## name(vtype value);
-ehretval_t *get_constant(int value);
-ehretval_t *get_identifier(char *value);
+#define GETFUNCPROTO(name, vtype) ehretval_t *eh_get_ ## name(vtype value);
 ehretval_t *get_null(void);
 GETFUNCPROTO(int, int)
 GETFUNCPROTO(string, char *)
@@ -201,7 +199,7 @@ GETFUNCPROTO(attribute, attribute_enum)
 
 ehretval_t *operate(int operations, int noperations, ...);
 
-ehretval_t execute(ehretval_t *node, ehcontext_t context);
+ehretval_t eh_execute(ehretval_t *node, ehcontext_t context);
 void print_tree(ehretval_t *in, int n);
 const char *get_typestring(type_enum type);
 

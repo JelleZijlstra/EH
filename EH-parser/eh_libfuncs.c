@@ -24,7 +24,7 @@ EHLIBFUNC(printvar) {
 		eh_error_argcount_lib("printvar", 1, 2);
 		return;
 	}
-	printvar_retval(execute(paras->opval->paras[1], context));
+	printvar_retval(eh_execute(paras->opval->paras[1], context));
 	return;
 }
 

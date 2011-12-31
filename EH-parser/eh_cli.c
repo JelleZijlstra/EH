@@ -1,5 +1,5 @@
 /*
- * eh_command_default.c
+ * eh_cli.c
  * Jelle Zijlstra, December 2011
  *
  * Default implementation of EH, used in the standalone interpreter.

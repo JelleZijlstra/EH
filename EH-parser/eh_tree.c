@@ -28,7 +28,7 @@ void free_node(ehretval_t *in) {
 	free(in);
 }
 
-#define GETFUNC(name, vtype) ehretval_t *get_ ## name (vtype value) { \
+#define GETFUNC(name, vtype) ehretval_t *eh_get_ ## name (vtype value) { \
 	ehretval_t *ret; \
 	ret = (ehretval_t *) Malloc(sizeof(ehretval_t)); \
 	ret->type = name ## _e; \
@@ -37,7 +37,7 @@ void free_node(ehretval_t *in) {
 }
 GETFUNC(int, int)
 GETFUNC(string, char *)
-ehretval_t *get_null(void) {
+ehretval_t *eh_get_null(void) {
 	ehretval_t *ret;
 	ret = (ehretval_t *) Malloc(sizeof(ehretval_t));
 

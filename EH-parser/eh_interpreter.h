@@ -58,8 +58,8 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
  */
 // take ints, returns an int
 #define EH_INT_CASE(token, operator) case token: \
-	operand1 = eh_xtoi(execute(node->opval->paras[0], context)); \
-	operand2 = eh_xtoi(execute(node->opval->paras[1], context)); \
+	operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context)); \
+	operand2 = eh_xtoi(eh_execute(node->opval->paras[1], context)); \
 	if(IS_INT(operand1) && IS_INT(operand2)) { \
 		ret.type = int_e; \
 		ret.intval = (operand1.intval operator operand2.intval); \
@@ -69,8 +69,8 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 	break;
 // take ints, return a bool
 #define EH_INTBOOL_CASE(token, operator) case token: \
-	operand1 = eh_xtoi(execute(node->opval->paras[0], context)); \
-	operand2 = eh_xtoi(execute(node->opval->paras[1], context)); \
+	operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context)); \
+	operand2 = eh_xtoi(eh_execute(node->opval->paras[1], context)); \
 	if(IS_INT(operand1) && IS_INT(operand2)) { \
 		ret.type = bool_e; \
 		ret.boolval = (operand1.intval operator operand2.intval); \
@@ -81,8 +81,8 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 	break;
 // take bools, return a bool
 #define EH_BOOL_CASE(token, operator) case token: \
-	operand1 = eh_xtobool(execute(node->opval->paras[0], context)); \
-	operand2 = eh_xtobool(execute(node->opval->paras[1], context)); \
+	operand1 = eh_xtobool(eh_execute(node->opval->paras[0], context)); \
+	operand2 = eh_xtobool(eh_execute(node->opval->paras[1], context)); \
 	ret.type = bool_e; \
 	ret.boolval = (operand1.boolval operator operand2.boolval); \
 	break;

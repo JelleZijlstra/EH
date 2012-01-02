@@ -39,4 +39,4 @@ eh_wrap.cpp: eh.i
 	sed -e "s/'\.PHP_SHLIB_SUFFIX/dylib'/" -i '.save' ehphp.php 
 
 clean:
-	rm -f *.o ehphp.so ehphp.dylib ehi ehc y.tab.h y.tab.c lex.yy.c y.output eh_wrap.c ehphp.php eh_wrap.cpp php_ehphp.h
+	rm -f *.o ehphp.so ehphp.dylib ehi ehc y.tab.h y.tab.c lex.yy.c y.output eh_wrap.c ehphp.php ehphp.php.save eh_wrap.cpp php_ehphp.h eh_wrap.h

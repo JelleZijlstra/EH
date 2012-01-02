@@ -551,6 +551,7 @@ class CsvList extends FileList {
 		'o: open the files' . PHP_EOL;
 		$history = array();
 		while(true) {
+			$file = '';
 			$in = $this->getline(array(
 				'lines' => $history,
 				'prompt' => 'dups_core> ',
@@ -566,7 +567,12 @@ class CsvList extends FileList {
 				}
 			}
 			switch($in[0]) {
-				case 'e': $this->c[$file]->edit(); break;
+				case 'e': 
+					if(isset($this->c[$file]))
+						$this->c[$file]->edit(); 
+					else
+						echo 'File does not exist' . PHP_EOL;
+					break;
 				case 'm':
 					$newname = $this->getline(array(
 						'prompt' => 'New name of file: '

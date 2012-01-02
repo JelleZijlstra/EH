@@ -1006,6 +1006,9 @@ class FullFile extends ListEntry {
 		}
 	}
 	public function set($paras) {
+		if(self::process_paras($paras, array(
+			'default' => array('cannotmove' => false),
+		)));
 		foreach($paras as $field => $content) {
 			if(self::hasproperty($field)) {
 				if($this->$field === $content) continue;

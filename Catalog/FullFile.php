@@ -456,6 +456,11 @@ class FullFile extends ListEntry {
 			unset($this->triedfinddoi);
 		if(!$this->needsdata() and $this->doi)
 			unset($this->triedadddata);
+		// this indicates it's in press
+		if($this->start === 'no') {
+			$this->start = 'in press';
+			$this->end = NULL;
+		}
 		// correct dashes (also prevent OpenOffice from bad things)
 		$this->volume = str_replace('-', "–", $this->volume);
 		$this->issue = preg_replace("/[-_]/u", "–", $this->issue);

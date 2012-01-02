@@ -7,10 +7,11 @@
 #include "eh.h"
 
 extern FILE *yyin;
-void yyparse(void);
+int yyparse(void);
 
 EHI *interpreter;
 int main(int argc, char **argv) {
+	int retval;
 	if(argc < 2) {
 		fprintf(stderr, "Usage: %s file\n\t%s -i\n", argv[0], argv[0]);
 		eh_error(NULL, efatal_e);
@@ -24,13 +25,13 @@ int main(int argc, char **argv) {
 		// set input
 		yyin = infile;
 		eh_init();
-		yyparse();
+		retval = yyparse();
 	}
 	else {
-		interpreter->eh_interactive();
+		retval = interpreter->eh_interactive();
 	}
 	delete interpreter;
-	return 0;
+	exit(retval);
 }
 
 int EHI::execute_cmd(char *name, ehvar_t **array) {
@@ -41,5 +42,5 @@ EHI::~EHI(void) {
 	return;
 }
 char *EHI::eh_getline(void) {
-	return NULL;
+	return eh_getinput();
 }

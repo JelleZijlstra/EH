@@ -10,4 +10,4 @@ func foo: n
 endfunc
 echo (test: 2)
 printvar: test: 2
-
+ret 42

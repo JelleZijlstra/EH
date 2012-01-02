@@ -12,7 +12,7 @@
 extern FILE *yyin;
 #define YYERROR_VERBOSE
 extern int yylineno;
-void eh_outer_exit(int exitval);
+int eh_outer_exit(int exitval);
 bool is_interactive = false;
 struct yy_buffer_state *yy_scan_string ( const char *str );
 %}
@@ -84,7 +84,7 @@ global_list: /* NULL */		{ }
 	| global_list statement	{ 
 								ehretval_t ret = eh_execute($2, NULL);
 								if(returning) 
-									eh_outer_exit(ret.intval);
+									return ret.intval;
 							}
 	;
 
@@ -445,10 +445,10 @@ char *eh_getinput(void) {
 	buf = (char *) Malloc(512);
 	return fgets(buf, 511, stdin);
 }
-void eh_outer_exit(int exitval) {
+int eh_outer_exit(int exitval) {
 	//free_node: something. We should actually be adding stuff to the AST, I suppose.
 	eh_exit();
-	exit(exitval);
+	return exitval;
 }
 int EHI::eh_interactive(void) {
 	char *cmd;
@@ -460,6 +460,5 @@ int EHI::eh_interactive(void) {
 		eh_outer_exit(0);
 	yy_scan_string(cmd);
 	eh_init();
-	yyparse();
-	return 0;
+	return yyparse();
 }

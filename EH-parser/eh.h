@@ -255,7 +255,6 @@ extern bool is_interactive;
 /*
  * EH interpreter
  */
-#include "eh_tree.h"
 #include "y.tab.h"
 // symbol table for variables and functions
 #define VARTABLE_S 1024

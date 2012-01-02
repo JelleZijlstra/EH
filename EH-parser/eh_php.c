@@ -4,7 +4,7 @@
  *
  * Implementation of EH as a PHP extension.
  */
-#include "eh_error.h"
+#include "eh.h"
 
 extern FILE *yyin;
 void yyparse(void);

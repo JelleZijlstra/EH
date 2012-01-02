@@ -6,13 +6,19 @@
  */
 %{
 #include "eh.h"
-#include "eh_interpreter.h"
+EHI *interpreter;
+int EHI::execute_cmd(char *cmd, ehvar_t **paras) {
+	return 0;
+}
+EHI::~EHI(void) {
+	return;
+}
 %}
 %module(directors="1") ehphp
 %feature("director");
 
 // Typemap from EH array to PHP array
-%typemap(in) ehvar_t ** {
+%typemap(out) ehvar_t ** {
 	zval *arr;
 	ehvar_t *currvar;
 	int i;
@@ -24,7 +30,7 @@
 		while(currvar != NULL) {
 			// convert an EH array member to a PHP array member
 			if(currvar->indextype == int_e) {
-				switch(currvar->type) {
+				switch(currvar->value.type) {
 					case int_e:
 						add_index_long(arr, currvar->index, currvar->value.intval);
 						break;
@@ -37,7 +43,7 @@
 				}
 			}
 			else if(currvar->indextype == string_e) {
-				switch(currvar->type) {
+				switch(currvar->value.type) {
 					case int_e:
 						add_assoc_long(arr, currvar->name, currvar->value.intval);
 						break;
@@ -55,4 +61,9 @@
 	$1 = arr;
 }
 
-%include "ehi.h"
+class EHI {
+public:
+	int eh_interactive(void);
+	virtual int execute_cmd(char *rawcmd, ehvar_t **paras);
+	virtual ~EHI();
+};

@@ -17,7 +17,7 @@ define('BPATH', __DIR__ . '/..');
 error_reporting(E_ALL | E_STRICT);
 ini_set("display_errors", '1');
 // try to get the C++ EHI loaded
-//require_once(BPATH . "/EH-parser/EHICore-C++.php");
+require_once(BPATH . "/EH-parser/EHICore-SWIG.php");
 // if we failed, use pure-PHP solutions
 if(extension_loaded("ehphp"))
 	define('EHI_LOADED', 1);

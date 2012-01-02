@@ -13,6 +13,11 @@ require_once(BPATH . "/Common/EHException.php");
 // TODO: more effectively ignore Ctrl+P and stuff like that.
 // Fix function definitions in exec_file. Currently, they just do random stuff when executed outside the exec_file context.
 abstract class ExecuteHandler extends EHICore {
+	/* Class constants */
+	const EXECUTE_NEXT = 0x0; // execute says: go on with next
+	const EXECUTE_PC = 0x1; // execute whatever is in the PC now
+	const EXECUTE_SYNTAX_ERROR = 0x2; // execute returned syntax error
+	const EXECUTE_QUIT = 0x3; // execute asked to quit the program
 	/* Private properties */
 	protected $commands;
 	protected $synonyms;
@@ -76,6 +81,7 @@ abstract class ExecuteHandler extends EHICore {
 			'execute' => 'callmethodarg'),
 	);
 	public function __construct($commands) {
+		parent::__construct();
 		$this->setup_ExecuteHandler($commands);
 	}
 	public function setup_ExecuteHandler($commands = NULL) {

@@ -7,7 +7,7 @@
  * implementation (ehi, ehphp) is unavailable.
  */
 
-class EHICore {
+abstract class EHICore {
 	/* Class constants */
 	const EVALUATE_ERROR = 0x1;
 	const EVALUATE_FUNCTION_CALL = 0x2;
@@ -16,10 +16,6 @@ class EHICore {
 	const CHECK_FLOW_IN_FUNC = 0x3;
 	const CHECK_FLOW_IN_WHILE = 0x4;
 	const CHECK_FLOW_NOT_EXECUTING_IN_IF = 0x5;
-	const EXECUTE_NEXT = 0x0; // execute says: go on with next
-	const EXECUTE_PC = 0x1; // execute whatever is in the PC now
-	const EXECUTE_SYNTAX_ERROR = 0x2; // execute returned syntax error
-	const EXECUTE_QUIT = 0x3; // execute asked to quit the program
 	/* command history */
 	// holds all executed commands
 	private $history = array();

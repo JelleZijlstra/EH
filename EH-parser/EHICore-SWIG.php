@@ -7,7 +7,7 @@
  */
 require_once(BPATH . "/EH-parser/ehphp.php");
 if(!class_exists("EHI")) return;
-class EHICore extends EHI {
+abstract class EHICore extends EHI {
 	public function __construct() {
 		parent::__construct();
 	}

@@ -1,9 +1,10 @@
 <?php
 define('PROCESS_PARAS_ERROR_FOUND', 0x1);
+require_once(__DIR__ . "/../Common/common.php");
 require_once(BPATH . "/Common/EHException.php");
 // TODO: more effectively ignore Ctrl+P and stuff like that.
 // Fix function definitions in exec_file. Currently, they just do random stuff when executed outside the exec_file context.
-abstract class ExecuteHandler {
+abstract class ExecuteHandler extends EHI {
 	/* Class constants */
 	const EVALUATE_ERROR = 0x1;
 	const EVALUATE_FUNCTION_CALL = 0x2;
@@ -931,10 +932,12 @@ abstract class ExecuteHandler {
 		$paras = $this->divide_cmd($arg);
 		return $this->execute_cmd($rawcmd, $paras);
 	}
-	private function execute_cmd($rawcmd, $paras) {
-		$cmd = $this->expand_cmd($rawcmd);
+	public function execute_cmd($rawcmd, $paras) {
+		// for some reason, accessing rawcmd in ehi mode botches the variable. This works around that.
+		$rawcmd2 = $rawcmd;
+		$cmd = $this->expand_cmd($rawcmd2);
 		if(!$cmd) {
-			echo 'Invalid command: ' . $rawcmd . PHP_EOL;
+			echo 'Invalid command: ' . $rawcmd2 . PHP_EOL;
 			return self::EXECUTE_NEXT;
 		}
 		$redirection = array(
@@ -944,7 +947,10 @@ abstract class ExecuteHandler {
 			'}$' => false,
 		);
 		// separate argument from paras
-		$argument = trim($paras[0]);
+		if(isset($paras[0]))
+			$argument = trim($paras[0]);
+		else
+			$argument = '';
 		// separate output redirection and friends
 		foreach($redirection as $key => $var) {
 			if(isset($paras[$key])) {
@@ -1053,8 +1059,12 @@ abstract class ExecuteHandler {
 		$in = $this->expand_cmd($in);
 		if($in) {
 			echo PHP_EOL . 'Function: ' . $in['name'] . PHP_EOL;
-			if(isset($in['aka']))
-				echo 'Aliases: ' . implode(', ', $in['aka']) . PHP_EOL;
+			if(isset($in['aka'])) {
+				if(is_array($in['aka']))
+					echo 'Aliases: ' . implode(', ', $in['aka']) . PHP_EOL;
+				else if(is_string($in['aka']))
+					echo 'Aliases: ' . $in['aka'] . PHP_EOL;
+			}
 			echo 'Description: ' . $in['desc'] . PHP_EOL;
 			echo 'Arguments: ' . $in['arg'] . PHP_EOL;
 			return true;

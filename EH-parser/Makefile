@@ -35,6 +35,8 @@ lex.yy.c: eh.l y.tab.h
 
 eh_wrap.cpp: eh.i
 	swig -c++ -php5 eh.i
+	# Need to change the generated .php files
+	sed -e "s/'\.PHP_SHLIB_SUFFIX/dylib'/" -i '.save' ehphp.php 
 
 clean:
 	rm -f *.o ehphp.so ehphp.dylib ehi ehc y.tab.h y.tab.c lex.yy.c y.output eh_wrap.c ehphp.php eh_wrap.cpp php_ehphp.h

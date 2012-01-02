@@ -33,9 +33,8 @@ y.tab.c y.tab.h: eh.y
 lex.yy.c: eh.l y.tab.h
 	lex eh.l
 
-# Had to update SWIG, since my installed SWIG messed up classes
 eh_wrap.cpp: eh.i
-	/opt/local/bin/swig -c++ -php5 eh.i
+	swig -c++ -php5 eh.i
 
 clean:
 	rm -f *.o ehphp.so ehphp.dylib ehi ehc y.tab.h y.tab.c lex.yy.c y.output eh_wrap.c ehphp.php eh_wrap.cpp php_ehphp.h

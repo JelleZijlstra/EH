@@ -8,11 +8,16 @@
 require_once(BPATH . "/EH-parser/ehphp.php");
 if(!class_exists("EHI")) return;
 abstract class EHICore extends EHI {
+	private $prompt;
 	public function __construct() {
 		parent::__construct();
 	}
 	public function setup_commandline($name, $paras = array()) {
+		$this->prompt = $name;
 		$this->eh_interactive();
+	}
+	public function eh_getinput() {
+		return $this->getline($prompt);
 	}
 	/* workarounds to prevent EH from blowing up when using the PHP implementation's features */
 	public function setvar($var, $value) {

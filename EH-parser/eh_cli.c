@@ -40,3 +40,6 @@ int EHI::execute_cmd(char *name, ehvar_t **array) {
 EHI::~EHI(void) {
 	return;
 }
+char *EHI::eh_getline(void) {
+	return NULL;
+}

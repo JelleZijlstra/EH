@@ -78,7 +78,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
 %%
 global_list: /* NULL */		{ }
 	| global_list statement	{ 
@@ -139,10 +139,9 @@ statement:
 
 expression:
 	T_INTEGER				{ $$ = eh_get_int($1); }
-	| T_STRING				{ $$ = eh_get_string($1); }
 	| T_NULL				{ $$ = eh_get_null(); }
 	| T_BOOL				{ $$ = eh_get_bool($1); }
-	| bareword				{ $$ = $1; }
+	| string				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' expression		{ $$ = eh_addnode('~', 1, $2); }
 	| '!' expression		{ $$ = eh_addnode('!', 1, $2); }
@@ -203,10 +202,9 @@ expression:
 
 simple_expr:
 	T_INTEGER				{ $$ = eh_get_int($1); }
-	| T_STRING				{ $$ = eh_get_string($1); }
 	| T_NULL				{ $$ = eh_get_null(); }
 	| T_BOOL				{ $$ = eh_get_bool($1); }
-	| bareword				{ $$ = $1; }
+	| string				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' simple_expr		{ $$ = eh_addnode('~', 1, $2); }
 	| '!' simple_expr		{ $$ = eh_addnode('!', 1, $2); }
@@ -334,8 +332,7 @@ paralist:
 	;
 
 para:
-	T_STRING				{ $$ = eh_get_string($1); }
-	| bareword				{ $$ = $1; }
+	string					{ $$ = $1; }
 	| T_MINMIN bareword '=' simple_expr
 							{ $$ = eh_addnode(T_LONGPARA, 2, $2, $4); }
 	| T_MINMIN T_STRING '=' simple_expr
@@ -345,6 +342,11 @@ para:
 
 bareword:
 	T_VARIABLE				{ $$ = eh_get_string($1); }
+	;
+
+string:
+	T_VARIABLE				{ $$ = eh_get_string($1); }
+	| T_STRING				{ $$ = eh_get_string($1); }
 	;
 
 arraylist:

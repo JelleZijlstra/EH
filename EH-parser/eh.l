@@ -137,7 +137,7 @@
 int yywrap(void) {
 	if(is_interactive) {
 		char *buf;
-		buf = eh_getinput();
+		buf = interpreter->eh_getline();
 		if(!buf)
 			return 1;
 		yy_scan_string(buf);

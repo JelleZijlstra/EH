@@ -687,6 +687,7 @@ abstract class ExecuteHandler extends EHICore {
 					$cmdlen--;
 					break;
 				case "\012": // newline
+					$cmd[$cmdlen++] = "\n";
 					$cmd = $getcmd();
 					if($cmd === NULL) return false;
 					// restore sane stty settings for the duration of command execution

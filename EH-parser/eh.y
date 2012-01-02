@@ -451,9 +451,14 @@ void eh_outer_exit(int exitval) {
 	exit(exitval);
 }
 int EHI::eh_interactive(void) {
+	char *cmd;
+
 	interpreter = this;
 	is_interactive = true;
-	yy_scan_string(eh_getinput());
+	cmd = interpreter->eh_getline();
+	if(!cmd)
+		eh_outer_exit(0);
+	yy_scan_string(cmd);
 	eh_init();
 	yyparse();
 	return 0;

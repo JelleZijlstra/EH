@@ -14,8 +14,9 @@ abstract class EHICore extends EHI {
 	}
 	public function setup_commandline($name, $paras = array()) {
 		$this->prompt = $name . '> ';
-		$this->eh_interactive();
+		$ret = $this->eh_interactive();
 		echo "Goodbye." . PHP_EOL;
+		return $ret;
 	}
 	public function eh_getline() {
 		$cmd = '';

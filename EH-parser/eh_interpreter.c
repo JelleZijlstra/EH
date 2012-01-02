@@ -1185,10 +1185,12 @@ bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {
  * Type casting
  */
 ehretval_t eh_strtoi(char *in) {
+	char *endptr;
 	ehretval_t ret;
 	ret.type = int_e;
-	ret.intval = strtol(in, NULL, 0);
-	if(ret.intval == 0 && errno == EINVAL) {
+	ret.intval = strtol(in, &endptr, 0);
+	// If in == endptr, strtol read no digits and there was no conversion.
+	if(ret.intval == 0 && in == endptr) {
 		ret.type = null_e;
 		eh_error("Unable to perform type juggling to int", enotice_e);
 	}

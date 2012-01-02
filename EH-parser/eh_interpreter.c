@@ -60,6 +60,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 	// variables used
 	ehretval_t *node2;
 	ehvar_t *var, *member;
+	ehvar_t **arrayval;
 	ehfunc_t *func;
 	ehclass_t *classobj;
 	ehclassmember_t *classmember;
@@ -741,7 +742,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				// name of command to be executed
 				name = eh_execute(node->opval->paras[0], context).stringval;
 				// we're making an array of parameters
-				ehvar_t **arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t));
+				arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t));
 				// count for simple parameters
 				operand2.type = int_e;
 				operand2.intval = 0;

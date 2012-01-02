@@ -451,6 +451,7 @@ void eh_outer_exit(int exitval) {
 	exit(exitval);
 }
 int EHI::eh_interactive(void) {
+	interpreter = this;
 	is_interactive = true;
 	yy_scan_string(eh_getinput());
 	eh_init();

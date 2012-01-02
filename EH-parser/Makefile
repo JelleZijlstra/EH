@@ -27,8 +27,10 @@ ehphp: $(EHPHP_O)
 	$(CC) -dynamiclib $(SYMBOLS) -o ehphp.dylib $(EHPHP_O)
 	sudo cp ehphp.dylib /opt/local/lib/php/extensions/no-debug-non-zts-20090626/ehphp.dylib
 
+# If I don't do "/usr/bin/bison", y.tab.c won't compile because of a const char* 
+# -> char* conversion.
 y.tab.c y.tab.h: eh.y
-	yacc -d eh.y
+	/usr/bin/bison -y -d eh.y
 
 lex.yy.c: eh.l y.tab.h
 	lex eh.l

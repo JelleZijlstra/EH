@@ -16,7 +16,7 @@ define('BPATH', __DIR__ . '/..');
 // show all errors
 error_reporting(E_ALL | E_STRICT);
 ini_set("display_errors", '1');
-// try to get the C EHI loaded
+// try to get the C++ EHI loaded
 //require_once(BPATH . "/EH-parser/ehphp.php");
 // if we failed, use pure-PHP solutions
 if(extension_loaded("ehphp"))
@@ -30,10 +30,6 @@ else {
 if(mb_internal_encoding('UTF-8') === false) {
 	echo "Unable to set encoding" . PHP_EOL;
 	exit(1);
-}
-function setupbot() {
-	global $editffile;
-	require_once(BPATH . "/UcuchaBot/wpbot.php");
 }
 function logwrite($in) {
 // writes something to the log file; requires $logfile to be set to a file

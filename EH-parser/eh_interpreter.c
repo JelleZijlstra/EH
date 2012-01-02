@@ -750,29 +750,51 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				while(node->opval->nparas != 0) {
 					node2 = node->opval->paras[1];
 					if(node2->type == op_e) {
-						if(node2->opval->op == T_SHORTPARA) {
-							// short paras: set each letter to true
-							node2 = node2->opval->paras[0];
-							count = strlen(node2->stringval);
-							operand3.type = string_e;
-							for(i = 0; i < count; i++) {
-								operand3.stringval = (char *) Malloc(2);
-								operand3.stringval[1] = '\0';
-								operand3.stringval[0] = node2->stringval[i];
+						switch(node2->opval->op) {
+							case T_SHORTPARA:
+								// short paras: set each letter to true
+								node2 = node2->opval->paras[0];
+								count = strlen(node2->stringval);
+								operand3.type = string_e;
+								for(i = 0; i < count; i++) {
+									operand3.stringval = (char *) Malloc(2);
+									operand3.stringval[1] = '\0';
+									operand3.stringval[0] = node2->stringval[i];
+									array_insert_retval(
+										arrayval, 
+										operand3,
+										(ehretval_t) {bool_e, {true}}
+									);
+								}
+								break;
+							case T_LONGPARA:
+								// long-form paras
 								array_insert_retval(
-									arrayval, 
-									operand3,
-									(ehretval_t) {bool_e, {true}}
+									arrayval,
+									eh_execute(node2->opval->paras[0], context),
+									eh_execute(node2->opval->paras[1], context)
 								);
-							}
-						}
-						else {
-							// long-form paras
-							array_insert_retval(
-								arrayval,
-								eh_execute(node2->opval->paras[0], context),
-								eh_execute(node2->opval->paras[1], context)
-							);
+								break;
+							case '>':
+								operand3.type = string_e;
+								operand3.stringval = ">";
+								// output redirector
+								array_insert_retval(
+									arrayval,
+									operand3,
+									eh_execute(node2->opval->paras[0], context)
+								);
+								break;
+							case '}':
+								operand3.type = string_e;
+								operand3.stringval = "}";
+								// output redirector
+								array_insert_retval(
+									arrayval,
+									operand3,
+									eh_execute(node2->opval->paras[0], context)
+								);
+								break;
 						}
 					}
 					else {

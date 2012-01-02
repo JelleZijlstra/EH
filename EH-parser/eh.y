@@ -217,8 +217,6 @@ simple_expr:
 							{ $$ = eh_addnode(':', 2, $1, $3); }
 	| simple_expr '=' simple_expr
 							{ $$ = eh_addnode('=', 2, $1, $3); }
-	| simple_expr '>' simple_expr
-							{ $$ = eh_addnode('>', 2, $1, $3); }
 	| simple_expr '<' simple_expr
 							{ $$ = eh_addnode('<', 2, $1, $3); }
 	| simple_expr T_SE simple_expr
@@ -333,11 +331,11 @@ paralist:
 
 para:
 	string					{ $$ = $1; }
-	| T_MINMIN bareword '=' simple_expr
+	| T_MINMIN string '=' simple_expr
 							{ $$ = eh_addnode(T_LONGPARA, 2, $2, $4); }
-	| T_MINMIN T_STRING '=' simple_expr
-							{ $$ = eh_addnode(T_LONGPARA, 2, eh_get_string($2), $4); }
-	| '-' bareword			{ $$ = eh_addnode(T_SHORTPARA, 1, $2); }
+	| '-' string			{ $$ = eh_addnode(T_SHORTPARA, 1, $2); }
+	| '>' string			{ $$ = eh_addnode('>', 1, $2); }
+	| '}' string			{ $$ = eh_addnode('}', 1, $2); }
 	;
 
 bareword:

@@ -7,7 +7,7 @@
  * implementation (ehi, ehphp) is unavailable.
  */
 
-class EHI {
+class EHICore {
 	/* Class constants */
 	const EVALUATE_ERROR = 0x1;
 	const EVALUATE_FUNCTION_CALL = 0x2;

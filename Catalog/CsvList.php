@@ -418,11 +418,15 @@ class CsvList extends FileList {
 						'm' => 'move to the next component',
 						's' => 'skip this file',
 						'q' => 'quit the program',
+						'e' => 'edit the file',
 					),
 					'head' => 'Could not find file ' . $file->name,
 					'process' => array(
 						'i' => function() use($file) {
 							$file->my_inform();
+						},
+						'e' => function() use($file) {
+							$file->edit();
 						},
 					),
 				));
@@ -549,6 +553,7 @@ class CsvList extends FileList {
 		's: quit this duplicate set' . PHP_EOL .
 		'q: quit this function' . PHP_EOL .
 		'o: open the files' . PHP_EOL;
+		'i: give information about the files' . PHP_EOL;
 		$history = array();
 		while(true) {
 			$file = '';
@@ -584,6 +589,10 @@ class CsvList extends FileList {
 				case 'o':
 					foreach($files as $fileo)
 						$fileo->openf();
+					break;
+				case 'i':
+					foreach($files as $fileo)
+						$fileo->inform();
 					break;
 				case 'r':
 					$this->remove($file);

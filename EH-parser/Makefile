@@ -24,8 +24,7 @@ ehi: $(EHI_O)
 	$(CC) $(EHI_O) -o ehi
 
 ehphp: $(EHPHP_O)
-	$(CC) -dynamiclib $(SYMBOLS) -o ehphp.dylib $(EHPHP_O)
-	sudo cp ehphp.dylib /opt/local/lib/php/extensions/no-debug-non-zts-20090626/ehphp.dylib
+	./make_ehphp.sh "$(CC)" "$(SYMBOLS)" "$(EHPHP_O)"
 
 # If I don't do "/usr/bin/bison", y.tab.c won't compile because of a const char* 
 # -> char* conversion.
@@ -37,8 +36,8 @@ lex.yy.c: eh.l y.tab.h
 
 eh_wrap.cpp: eh.i
 	swig -c++ -php5 eh.i
-	# Need to change the generated .php files
-	sed -e "s/'\.PHP_SHLIB_SUFFIX/dylib'/" -i '.save' ehphp.php 
+	# Need to change the generated .php files if we're in Mac OS X
+	if [ `uname` = 'Darwin' ]; then sed -e "s/'\.PHP_SHLIB_SUFFIX/dylib'/" -i '.save' ehphp.php; fi
 
 clean:
 	rm -f *.o ehphp.so ehphp.dylib ehi ehc y.tab.h y.tab.c lex.yy.c y.output eh_wrap.c ehphp.php ehphp.php.save eh_wrap.cpp php_ehphp.h eh_wrap.h

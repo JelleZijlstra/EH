@@ -890,4 +890,38 @@ class EHICore {
 		}
 		return true;
 	}
+	public function setup_commandline($name, $paras = array()) {
+	// Performs various functions in a pseudo-command line. A main entry point.
+	// stty stuff inspired by sfinktah at http://php.net/manual/en/function.fgetc.php
+		// can't use process_paras now because that is in ExecuteHandler
+		if(!is_array($paras)) return false;
+		if(!isset($paras['undoable'])) $paras['undoable'] = false;
+		// perhaps kill this; I never use it
+		if($paras['undoable'] and !$this->hascommand('undo')) {
+			$this->tmp = clone $this;
+			$newcmd['name'] = 'undo';
+			$newcmd['desc'] = 'Return to the previous state of the object';
+			$newcmd['arg'] = 'None';
+			$newcmd['execute'] = 'callmethod';
+			$this->addcommand($newcmd, array('ignoreduplicates' => true));
+		}
+		echo 'Welcome to command line mode. Type "help" for help.' . PHP_EOL;
+		// initialize stuff
+		$this->init_ehi();
+		// loop through commands
+		while(true) {
+			// get input
+			$cmd = $this->getline(array(
+				'lines' => $this->curr('history'),
+				'prompt' => $name . '> ')
+			);
+			if($cmd === false)
+				$cmd = 'quit';
+			// execute the command
+			if(!$this->driver($cmd)) {
+				echo 'Goodbye.' . PHP_EOL;
+				return;
+			}
+		}
+	}
 }

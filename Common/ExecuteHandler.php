@@ -412,45 +412,6 @@ abstract class ExecuteHandler extends EHICore {
 		$this->currhist--;
 		return true;
 	}
-	public function setup_commandline($name, $paras = array()) {
-	// Performs various functions in a pseudo-command line. A main entry point.
-	// stty stuff inspired by sfinktah at http://php.net/manual/en/function.fgetc.php
-		if(self::process_paras($paras, array(
-			'checklist' => array(
-				'undoable', // whether we should be able to undo changes to the object
-			),
-			'default' => array(
-				'undoable' => false,
-			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		// perhaps kill this; I never use it
-		if($paras['undoable'] and !$this->hascommand('undo')) {
-			$this->tmp = clone $this;
-			$newcmd['name'] = 'undo';
-			$newcmd['desc'] = 'Return to the previous state of the object';
-			$newcmd['arg'] = 'None';
-			$newcmd['execute'] = 'callmethod';
-			$this->addcommand($newcmd, array('ignoreduplicates' => true));
-		}
-		echo 'Welcome to command line mode. Type "help" for help.' . PHP_EOL;
-		// initialize stuff
-		$this->init_ehi();
-		// loop through commands
-		while(true) {
-			// get input
-			$cmd = $this->getline(array(
-				'lines' => $this->curr('history'),
-				'prompt' => $name . '> ')
-			);
-			if($cmd === false)
-				$cmd = 'quit';
-			// execute the command
-			if(!$this->driver($cmd)) {
-				echo 'Goodbye.' . PHP_EOL;
-				return;
-			}
-		}
-	}
 	private function debugecho($var) {
 	// For debugging: adds output to a log file. Useful when debugging methods like fgetc()
 		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";

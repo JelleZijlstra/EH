@@ -2021,7 +2021,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!$this->ispdf() or $this->isredirect())
 			return false;
 		// only get first page
-		$shcommand = PDFTOTEXT . " " . $this->path() . " - -l 1 2>> " . __DIR__ . "/pdftotextlog";
+		$shcommand = PDFTOTEXT . " " . $this->path() . " - -l 1 2>> " . __DIR__ . "/data/pdftotextlog";
 		$this->pdfcontent = trim(utf8_encode(shell_exec($shcommand)));
 		return $this->pdfcontent ? true : false;
 	}

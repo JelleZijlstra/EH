@@ -54,7 +54,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_CLASS
 %token T_ENDCLASS
 %token T_GLOBAL
-%token T_LVALUE
+%token T_LVALUE_GET T_LVALUE_SET
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
 %token T_EXPRESSION
@@ -78,7 +78,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
 %%
 global_list: /* NULL */		{ }
 	| global_list statement	{ 
@@ -99,11 +99,11 @@ statement:
 	| line_expr T_SEPARATOR	{ $$ = $1; }
 	| T_ECHO expression T_SEPARATOR
 							{ $$ = eh_addnode(T_ECHO, 1, $2); }
-	| T_SET lvalue '=' expression T_SEPARATOR
+	| T_SET lvalue_set '=' expression T_SEPARATOR
 							{ $$ = eh_addnode(T_SET, 2, $2, $4); }
-	| T_SET lvalue T_PLUSPLUS T_SEPARATOR
+	| T_SET lvalue_set T_PLUSPLUS T_SEPARATOR
 							{ $$ = eh_addnode(T_PLUSPLUS, 1, $2); }
-	| T_SET lvalue T_MINMIN T_SEPARATOR
+	| T_SET lvalue_set T_MINMIN T_SEPARATOR
 							{ $$ = eh_addnode(T_MINMIN, 1, $2); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = eh_addnode(T_IF, 2, $2, $4); }
@@ -149,8 +149,8 @@ expression:
 							{ $$ = eh_addnode(T_NEGATIVE, 1, $2); }
 	| expression T_ACCESSOR expression
 							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
-	| '$' lvalue			{ $$ = eh_addnode('$', 1, $2); }
-	| '&' lvalue %prec T_REFERENCE
+	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
+	| '&' lvalue_get %prec T_REFERENCE
 							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
 	| '@' T_TYPE expression	{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| expression ':' arglist
@@ -210,7 +210,7 @@ simple_expr:
 	| '!' simple_expr		{ $$ = eh_addnode('!', 1, $2); }
 	| simple_expr T_ACCESSOR simple_expr
 							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
-	| '$' lvalue			{ $$ = eh_addnode('$', 1, $2); }
+	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
 	| '@' T_TYPE simple_expr
 							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| simple_expr ':' arglist
@@ -265,13 +265,13 @@ line_expr:
 							{ $$ = eh_addnode(T_NEGATIVE, 1, $2); }
 	| line_expr T_ACCESSOR expression
 							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
-	| '$' lvalue			{ $$ = eh_addnode('$', 1, $2); }
-	| '&' lvalue %prec T_REFERENCE
+	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
+	| '&' lvalue_get %prec T_REFERENCE
 							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
 	| '@' T_TYPE expression	{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| bareword ':' arglist
 							{ $$ = eh_addnode(':', 2, $1, $3); }
-	| '$' lvalue ':' arglist
+	| '$' lvalue_get ':' arglist
 							{ $$ = eh_addnode(':', 2,
 								eh_addnode('$', 1, $2),
 								$4);
@@ -411,12 +411,20 @@ classlist:
 	| /* NULL */			{ $$ = 0; }
 	;
 
-lvalue:
-	bareword				{ $$ = eh_addnode(T_LVALUE, 1, $1); }
+lvalue_set:
+	bareword				{ $$ = eh_addnode(T_LVALUE_SET, 1, $1); }
 	| bareword T_ACCESSOR expression
-							{ $$ = eh_addnode(T_LVALUE, 3, $1, eh_get_accessor($2), $3); }
+							{ $$ = eh_addnode(T_LVALUE_SET, 3, $1, eh_get_accessor($2), $3); }
 	| T_MAGICVAR T_ACCESSOR expression
-							{ $$ = eh_addnode(T_LVALUE, 3, eh_get_magicvar($1), eh_get_accessor($2), $3); }
+							{ $$ = eh_addnode(T_LVALUE_SET, 3, eh_get_magicvar($1), eh_get_accessor($2), $3); }
+	;
+
+lvalue_get:
+	bareword				{ $$ = eh_addnode(T_LVALUE_GET, 1, $1); }
+	| bareword T_ACCESSOR expression
+							{ $$ = eh_addnode(T_LVALUE_GET, 3, $1, eh_get_accessor($2), $3); }
+	| T_MAGICVAR T_ACCESSOR expression
+							{ $$ = eh_addnode(T_LVALUE_GET, 3, eh_get_magicvar($1), eh_get_accessor($2), $3); }
 	;
 
 classmember: /* , is used as the operator token for those, because none is really needed and , is the generic null token */

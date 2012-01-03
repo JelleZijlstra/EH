@@ -567,7 +567,8 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 		/*
 		 * Variable manipulation
 		 */
-			case T_LVALUE:
+			case T_LVALUE_GET:
+			case T_LVALUE_SET:
 				/*
 				 * Get an lvalue. This case normally returns an
 				 * ehretval_t of type reference_e: a pointer to an
@@ -615,23 +616,54 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 									ret.referenceval = (ehretval_t *) 0x1;
 								}
 								if(var->value.type == array_e) {
-									operand1 = eh_execute(node->opval->paras[2], context);							
-									member = array_getmember(var->value.arrayval, operand1);
-									// if there is no member yet, insert it with a null value
+									operand1 = eh_execute(
+										node->opval->paras[2], 
+										context
+									);
+									member = array_getmember(
+										var->value.arrayval, 
+										operand1
+									);
+									// if there is no member yet and we are 
+									// setting, insert it with a null value
 									if(member == NULL) {
-										member = array_insert_retval(var->value.arrayval, operand1, ret);
+										if(node->opval->op == T_LVALUE_SET) {
+											member = array_insert_retval(
+												var->value.arrayval, 
+												operand1, 
+												ret
+											);
+											ret.type = reference_e;
+											ret.referenceval = &member->value;
+										}
+										else {
+											ret.type = null_e;
+											ret.referenceval = NULL;
+										}
 									}
-									ret.type = reference_e;
-									ret.referenceval = &member->value;
+									else {
+										ret.type = reference_e;
+										ret.referenceval = &member->value;
+									}
 								}
 								else
 									ret.referenceval = &var->value;
 								break;
 							case dot_e:
-								ret = object_access(operand1, node->opval->paras[2], context);
+								ret = object_access(
+									operand1, 
+									node->opval->paras[2], 
+									context, 
+									node->opval->op
+								);
 								break;
 							case doublecolon_e:
-								ret = colon_access(operand1, node->opval->paras[2], context);
+								ret = colon_access(
+									operand1, 
+									node->opval->paras[2], 
+									context,
+									node->opval->op
+								);
 								break;
 							default:
 								eh_error("Unsupported accessor", efatal_e);
@@ -1023,34 +1055,52 @@ ehclass_t *get_class(char *name) {
 }
 void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t context) {
 	// insert a member into a class
+	char *name;
+	memberattribute_t attribute;
+	ehretval_t value;
+
+	// rely on standard layout of the input ehretval_t
+	attribute = eh_execute(in->opval->paras[0], context).attributestrval;
+	name = in->opval->paras[1]->stringval;
+
+	// decide what we got
+	switch(in->opval->nparas) {
+		case 2: // non-set property: null
+			value.type = null_e;
+			break;
+		case 3: // set property
+			value = eh_execute(in->opval->paras[2], context);
+			break;
+		case 4: // method
+			value.type = func_e;
+			value.funcval = (ehfm_t *) Malloc(sizeof(ehfm_t));
+			value.funcval->code = in->opval->paras[3];
+			make_arglist(&value.funcval->argcount, &value.funcval->args, in->opval->paras[2]);
+			break;
+	}
+	class_insert_retval(classarr, name, attribute, value);
+}
+void class_insert_retval(
+	ehclassmember_t **classarr, 
+	char *name, 
+	memberattribute_t attribute, 
+	ehretval_t value
+) {
+	// insert a member into a class
 	unsigned int vhash;
 	ehclassmember_t *member;
 	
 	member = (ehclassmember_t *) Malloc(sizeof(ehclassmember_t));
 	// rely on standard layout of the input ehretval_t
-	member->attribute = eh_execute(in->opval->paras[0], context).attributestrval;
-	member->name = in->opval->paras[1]->stringval;
-
-	// decide what we got
-	switch(in->opval->nparas) {
-		case 2: // non-set property: null
-			member->value.type = null_e;
-			break;
-		case 3: // set property
-			member->value = eh_execute(in->opval->paras[2], context);
-			break;
-		case 4: // method
-			member->value.type = func_e;
-			member->value.funcval = (ehfm_t *) Malloc(sizeof(ehfm_t));
-			member->value.funcval->code = in->opval->paras[3];
-			make_arglist(&member->value.funcval->argcount, &member->value.funcval->args, in->opval->paras[2]);
-			break;
-	}
+	member->attribute = attribute;
+	member->name = name;
+	member->value = value;
 
 	// insert into hash table
 	vhash = hash(member->name, 0);	
 	member->next = classarr[vhash];
 	classarr[vhash] = member;
+	return;	
 }
 ehclassmember_t *class_getmember(ehobj_t *classobj, char *name, ehcontext_t context) {
 	ehclassmember_t *curr;
@@ -1090,7 +1140,12 @@ ehretval_t class_get(ehobj_t *classobj, char *name, ehcontext_t context) {
 		ret = curr->value;
 	return ret;
 }
-ehretval_t object_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context) {
+ehretval_t object_access(
+	ehretval_t operand1, 
+	ehretval_t *index, 
+	ehcontext_t context,
+	int token
+) {
 	ehretval_t label, ret;
 	ehvar_t *var;
 	ehclassmember_t *classmember;
@@ -1130,7 +1185,10 @@ ehretval_t object_access(ehretval_t operand1, ehretval_t *index, ehcontext_t con
 	}
 	classmember = class_getmember(object, label.stringval, context);
 	if(classmember == NULL) {
-		eh_error_unknown("object member", label.stringval, eerror_e);
+		// if we're setting, set as NULL initially
+		if(token == T_LVALUE_SET)
+			// TODO: work here: set attribute correctly &c. Also error if we're actually getting.
+			class_insert_retval(object->members, &ret, context);
 		return ret;
 	}
 	// respect const specifier
@@ -1142,7 +1200,12 @@ ehretval_t object_access(ehretval_t operand1, ehretval_t *index, ehcontext_t con
 	newcontext = object;
 	return ret;
 }
-ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context) {
+ehretval_t colon_access(
+	ehretval_t operand1, 
+	ehretval_t *index, 
+	ehcontext_t context,
+	int token
+) {
 	ehretval_t ret, label;
 	ehclass_t *classobj;
 	ehclassmember_t *member;

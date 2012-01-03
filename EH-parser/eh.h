@@ -281,10 +281,11 @@ int array_count(ehvar_t **array);
 void insert_class(ehclass_t *classobj);
 ehclass_t *get_class(char *name);
 void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t context);
+void class_insert_retval(ehclassmember_t **classarr, char *name, memberattribute_t attribute, ehretval_t value);
 ehclassmember_t *class_getmember(ehobj_t *classobj, char *name, ehcontext_t context);
 ehretval_t class_get(ehobj_t *classobj, char *name, ehcontext_t context);
-ehretval_t object_access(ehretval_t name, ehretval_t *index, ehcontext_t context);
-ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context);
+ehretval_t object_access(ehretval_t name, ehretval_t *index, ehcontext_t context, int token);
+ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context, int token);
 bool ehcontext_compare(ehcontext_t lock, ehcontext_t key);
 
 

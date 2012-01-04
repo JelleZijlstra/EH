@@ -1080,7 +1080,7 @@ void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t contex
 	}
 	class_insert_retval(classarr, name, attribute, value);
 }
-void class_insert_retval(
+ehclassmember_t *class_insert_retval(
 	ehclassmember_t **classarr, 
 	char *name, 
 	memberattribute_t attribute, 
@@ -1100,7 +1100,7 @@ void class_insert_retval(
 	vhash = hash(member->name, 0);	
 	member->next = classarr[vhash];
 	classarr[vhash] = member;
-	return;	
+	return member;	
 }
 ehclassmember_t *class_getmember(ehobj_t *classobj, char *name, ehcontext_t context) {
 	ehclassmember_t *curr;
@@ -1150,6 +1150,7 @@ ehretval_t object_access(
 	ehvar_t *var;
 	ehclassmember_t *classmember;
 	ehobj_t *object;
+	memberattribute_t attribute;
 
 	// default value. Set the referenceval explicitly because of T_LVALUE special conventions
 	ret.type = null_e;
@@ -1185,11 +1186,23 @@ ehretval_t object_access(
 	}
 	classmember = class_getmember(object, label.stringval, context);
 	if(classmember == NULL) {
-		// if we're setting, set as NULL initially
-		if(token == T_LVALUE_SET)
-			// TODO: work here: set attribute correctly &c. Also error if we're actually getting.
-			class_insert_retval(object->members, &ret, context);
-		return ret;
+		// add new member if we're setting
+		if(token == T_LVALUE_SET) {
+			// default is public, non-static, non-constant
+			attribute.visibility = public_e;
+			attribute.isstatic = nonstatic_e;
+			attribute.isconst = nonconst_e;
+			classmember = class_insert_retval(
+				object->members, 
+				label.stringval, 
+				attribute, 
+				ret
+			);
+		}
+		else {
+			eh_error_unknown("object member", label.stringval, eerror_e);
+			return ret;
+		}
 	}
 	// respect const specifier
 	if(classmember->attribute.isconst == const_e)
@@ -1209,6 +1222,7 @@ ehretval_t colon_access(
 	ehretval_t ret, label;
 	ehclass_t *classobj;
 	ehclassmember_t *member;
+	memberattribute_t attribute;
 	ret.type = null_e;
 	ret.referenceval = NULL;
 	
@@ -1229,8 +1243,23 @@ ehretval_t colon_access(
 	}
 	member = class_getmember(&classobj->obj, label.stringval, context);
 	if(!member) {
-		eh_error_unknown("class member", label.stringval, eerror_e);
-		return ret;
+		// add new member if we're setting
+		if(token == T_LVALUE_SET) {
+			// default is public, non-static, non-constant
+			attribute.visibility = public_e;
+			attribute.isstatic = nonstatic_e;
+			attribute.isconst = nonconst_e;
+			member = class_insert_retval(
+				classobj->obj.members, 
+				label.stringval, 
+				attribute, 
+				ret
+			);
+		}
+		else {
+			eh_error_unknown("object member", label.stringval, eerror_e);
+			return ret;
+		}
 	}
 	// respect const specifier
 	if(member->attribute.isconst == const_e)

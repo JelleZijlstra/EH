@@ -61,3 +61,4 @@ Incorrect argument count for function ehlf_class_is: expected 2, got at least 3:
 Incorrect argument count for function ehlf_printvar: expected 1, got at least 0: EH runtime error
 Incorrect argument count for function ehlf_is_int: expected 1, got at least 0: EH runtime error
 @assign.eh:
+@end.eh:

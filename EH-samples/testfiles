@@ -46,3 +46,4 @@ typecheck.eh
 classcheck.eh
 noargs.eh
 assign.eh
+end.eh

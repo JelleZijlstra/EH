@@ -11,6 +11,26 @@ void printvar_retval(ehretval_t in);
 static void printvar_array(ehvar_t **in);
 static void printvar_object(ehclassmember_t **in);
 
+// get arguments, and error if there are too many or few
+// Args should have enough memory malloc'ed to it to house n arguments.
+// Return 0 on success, -1 on too few, 1 on too many arguments.
+static int eh_getargs(ehretval_t *paras, int n, ehretval_t *args, ehcontext_t context, const char *name) {
+	int i = n;
+	while(i) {
+		if(paras->opval->nparas == 0) {
+			eh_error_argcount_lib(name, n, n - i);
+			return -1;
+		}
+		args[--i] = eh_execute(paras->opval->paras[1], context);
+		paras = paras->opval->paras[0];
+	}
+	if(paras->opval->nparas != 0) {
+		eh_error_argcount_lib(name, n, n + 1);
+		return 1;
+	}
+	return 0;
+}
+
 EHLIBFUNC(getinput) {
 	// more accurately, getint
 	retval->type = int_e;
@@ -161,4 +181,43 @@ static void printvar_array(ehvar_t **in) {
 			curr = curr->next;
 		}
 	}
+}
+
+/*
+ * Type checking functions
+ */
+#define TYPEFUNC(typev) EHLIBFUNC(is_ ## typev) { \
+	retval->type = bool_e; \
+	if(paras->opval->paras[0]->opval->nparas != 0) { \
+		eh_error_argcount_lib("is_" # typev, 1, 2); \
+		return; \
+	} \
+	ehretval_t value = eh_execute(paras->opval->paras[1], context); \
+	retval->boolval = (value.type == typev ## _e); \
+	return; \
+}
+
+TYPEFUNC(null)
+TYPEFUNC(int)
+TYPEFUNC(string)
+TYPEFUNC(bool)
+TYPEFUNC(array)
+TYPEFUNC(object)
+// check whether a variable is a member of a specified class
+EHLIBFUNC(class_is) {
+	ehretval_t *args = (ehretval_t *) Malloc(2 * sizeof(ehretval_t));
+	if(eh_getargs(paras, 2, args, context, __FUNCTION__))
+		EHLF_RETFALSE;
+	if(args[0].type != string_e) {
+		eh_error_type("argument 0 to class_is", args[0].type, enotice_e);
+		EHLF_RETFALSE;
+	}
+	if(args[1].type != object_e) {
+		eh_error_type("argument 1 to class_is", args[1].type, enotice_e);
+		EHLF_RETFALSE;
+	}
+	if(!strcmp(args[0].stringval, args[1].objectval->classname))
+		EHLF_RETTRUE;
+	else
+		EHLF_RETFALSE;
 }

@@ -105,7 +105,7 @@
 "--"		return T_MINMIN;
 ("//"|#).*[;\n]	; /* Ignore comment */
 [;\n]		return T_SEPARATOR;
-[a-zA-Z][a-zA-Z0-9]*	{
+[a-zA-Z][a-zA-Z0-9_]*	{
 				int len;
 				len = strlen(yytext);
 				yylval.sValue = (char *) Malloc(len + 1);

@@ -42,3 +42,5 @@ command.eh
 recursion.eh
 return.eh
 addtoclass.eh
+typecheck.eh
+classcheck.eh

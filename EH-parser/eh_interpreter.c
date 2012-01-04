@@ -30,6 +30,13 @@ static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rval
 ehlibfunc_t libfuncs[] = {
 	LIBFUNCENTRY(getinput)
 	LIBFUNCENTRY(printvar)
+	LIBFUNCENTRY(is_null)
+	LIBFUNCENTRY(is_string)
+	LIBFUNCENTRY(is_int)
+	LIBFUNCENTRY(is_bool)
+	LIBFUNCENTRY(is_array)
+	LIBFUNCENTRY(is_object)
+	LIBFUNCENTRY(class_is)
 	{NULL, NULL}
 };
 

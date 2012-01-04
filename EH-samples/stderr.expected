@@ -23,7 +23,7 @@ In line 7: syntax error, unexpected $end: EH fatal parsing error
 @stringvars.eh:
 Unable to perform type juggling to int: EH notice
 Unable to perform type juggling to int: EH notice
-Unsupported types null and null for operator 304: EH runtime error
+Unsupported types null and null for operator 305: EH runtime error
 @test.eh:
 @testfunc.eh:
 @typecast.eh:

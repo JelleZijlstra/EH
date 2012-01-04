@@ -872,6 +872,7 @@ abstract class EHICore {
 			}
 			catch(EHException $e) {
 				echo "Error '" . $e->getMessage() . "' occurred while executing command '" . $in . "'" . PHP_EOL;
+				$ret = ExecuteHandler::EXECUTE_NEXT;
 			}
 			switch($ret) {
 				case ExecuteHandler::EXECUTE_NEXT:

@@ -40,6 +40,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_END
 %token T_SWITCH
 %token T_ENDSWITCH
+%token T_ASSIGNMENT
 %token T_CASE
 %token T_BREAK
 %token T_CONTINUE
@@ -101,6 +102,8 @@ statement:
 							{ $$ = eh_addnode(T_ECHO, 1, $2); }
 	| T_SET lvalue_set '=' expression T_SEPARATOR
 							{ $$ = eh_addnode(T_SET, 2, $2, $4); }
+	| lvalue_set T_ASSIGNMENT expression T_SEPARATOR
+							{ $$ = eh_addnode(T_SET, 2, $1, $3); }
 	| T_SET lvalue_set T_PLUSPLUS T_SEPARATOR
 							{ $$ = eh_addnode(T_PLUSPLUS, 1, $2); }
 	| T_SET lvalue_set T_MINMIN T_SEPARATOR

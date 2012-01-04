@@ -23,7 +23,7 @@ In line 7: syntax error, unexpected $end: EH fatal parsing error
 @stringvars.eh:
 Unable to perform type juggling to int: EH notice
 Unable to perform type juggling to int: EH notice
-Unsupported types null and null for operator 305: EH runtime error
+Unsupported types null and null for operator 306: EH runtime error
 @test.eh:
 @testfunc.eh:
 @typecast.eh:
@@ -60,3 +60,4 @@ Incorrect argument count for function ehlf_class_is: expected 2, got at least 3:
 @noargs.eh:
 Incorrect argument count for function ehlf_printvar: expected 1, got at least 0: EH runtime error
 Incorrect argument count for function ehlf_is_int: expected 1, got at least 0: EH runtime error
+@assign.eh:

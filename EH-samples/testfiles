@@ -45,3 +45,4 @@ addtoclass.eh
 typecheck.eh
 classcheck.eh
 noargs.eh
+assign.eh

@@ -43,11 +43,10 @@ EHLIBFUNC(printvar) {
 	retval->type = null_e;
 
 	// check argument count
-	if(paras->opval->paras[0]->opval->nparas != 0) {
-		eh_error_argcount_lib("printvar", 1, 2);
+	ehretval_t *args = (ehretval_t *) Malloc(1 * sizeof(ehretval_t));
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
 		return;
-	}
-	printvar_retval(eh_execute(paras->opval->paras[1], context));
+	printvar_retval(args[0]);
 	return;
 }
 // helper functions for printvar
@@ -188,11 +187,10 @@ static void printvar_array(ehvar_t **in) {
  */
 #define TYPEFUNC(typev) EHLIBFUNC(is_ ## typev) { \
 	retval->type = bool_e; \
-	if(paras->opval->paras[0]->opval->nparas != 0) { \
-		eh_error_argcount_lib("is_" # typev, 1, 2); \
-		return; \
-	} \
-	ehretval_t value = eh_execute(paras->opval->paras[1], context); \
+	ehretval_t *args = (ehretval_t *) Malloc(1 * sizeof(ehretval_t)); \
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) \
+		EHLF_RETFALSE; \
+	ehretval_t value = args[0]; \
 	retval->boolval = (value.type == typev ## _e); \
 	return; \
 }

@@ -44,3 +44,4 @@ return.eh
 addtoclass.eh
 typecheck.eh
 classcheck.eh
+noargs.eh

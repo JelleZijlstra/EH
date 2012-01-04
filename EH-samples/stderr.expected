@@ -57,3 +57,6 @@ Use of commands outside of EH-PHP context: EH runtime error
 Incorrect argument count for function ehlf_class_is: expected 2, got at least 0: EH runtime error
 Incorrect argument count for function ehlf_class_is: expected 2, got at least 1: EH runtime error
 Incorrect argument count for function ehlf_class_is: expected 2, got at least 3: EH runtime error
+@noargs.eh:
+Incorrect argument count for function ehlf_printvar: expected 1, got at least 0: EH runtime error
+Incorrect argument count for function ehlf_is_int: expected 1, got at least 0: EH runtime error

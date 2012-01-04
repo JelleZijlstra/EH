@@ -5,7 +5,7 @@
  *
  * PHP interface for the C++ EHI interpreter.
  */
-include_once(BPATH . "/EH-parser/ehphp.php");
+@include_once(BPATH . "/EH-parser/ehphp.php");
 if(!class_exists("EHI")) return;
 abstract class EHICore extends EHI {
 	private $prompt;

@@ -46,10 +46,9 @@ function logwrite($in) {
 }
 $eclog = BPATH . '/Misc/log';
 function exec_catch($cmd, $debug = false) {
-// makes command and catches output; returns TRUE if successful (i.e., nothing in STDERR), FALSE if unsuccessful
+// makes command and catches output; returns TRUE if successful (i.e., return status = 0), FALSE if unsuccessful
 	global $eclog;
 	if($debug) echo $cmd . PHP_EOL;
-	// this is what keeps creating the file '1'; not sure yet how to fix
 	$tmp = shell_exec("$cmd 2>$eclog");
 	if($debug) echo $tmp . PHP_EOL;
 	$result = shell_exec('echo $?');

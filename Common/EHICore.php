@@ -874,13 +874,13 @@ abstract class EHICore {
 				echo "Error '" . $e->getMessage() . "' occurred while executing command '" . $in . "'" . PHP_EOL;
 			}
 			switch($ret) {
-				case self::EXECUTE_NEXT:
+				case ExecuteHandler::EXECUTE_NEXT:
 					$this->pcinc();
 					break;
-				case self::EXECUTE_PC:
+				case ExecuteHandler::EXECUTE_PC:
 					break;
-				case self::EXECUTE_SYNTAX_ERROR:
-				case self::EXECUTE_QUIT:
+				case ExecuteHandler::EXECUTE_SYNTAX_ERROR:
+				case ExecuteHandler::EXECUTE_QUIT:
 					return false;
 			}
 		}

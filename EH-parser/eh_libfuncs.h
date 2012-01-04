@@ -4,7 +4,7 @@
  *
  * Function definitions for EH library functions
  */
-#define EHLIBFUNC(f) void f(ehretval_t *paras, ehretval_t *retval, ehcontext_t context)
+#define EHLIBFUNC(f) void ehlf_ ## f(ehretval_t *paras, ehretval_t *retval, ehcontext_t context)
 
 EHLIBFUNC(getinput);
 EHLIBFUNC(printvar);

@@ -25,10 +25,11 @@ static ehretval_t string_arrow_get(ehretval_t operand1, ehretval_t operand2);
 static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
 static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
 
+#define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
 // library functions supported by ehi
 ehlibfunc_t libfuncs[] = {
-	{getinput, "getinput"},
-	{printvar, "printvar"},
+	LIBFUNCENTRY(getinput)
+	LIBFUNCENTRY(printvar)
 	{NULL, NULL}
 };
 

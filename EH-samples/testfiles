@@ -47,3 +47,4 @@ classcheck.eh
 noargs.eh
 assign.eh
 end.eh
+include.eh

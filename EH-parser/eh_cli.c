@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 	interpreter = new EHI;
 	if(!strcmp(argv[1], "-i")) {
 		retval = interpreter->eh_interactive();
-	} if(!strcmp(argv[1], "-r")) {
+	} else if(!strcmp(argv[1], "-r")) {
 		if(argc < 3) {
 			fprintf(stderr, "Usage: %s file\n\t%s -i\n\t%s -r code", argv[0], argv[0], argv[0]);
 			eh_error(NULL, efatal_e);

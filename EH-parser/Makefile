@@ -38,6 +38,8 @@ eh_wrap.cpp: eh.i
 	swig -c++ -php5 eh.i
 	# Need to change the generated .php files if we're in Mac OS X
 	if [ `uname` = 'Darwin' ]; then sed -e "s/'\.PHP_SHLIB_SUFFIX/dylib'/" -i '.save' ehphp.php; fi
+	# And need to this to get dl to succeed on Linux
+	if [ `uname` = 'Linux' ]; then sed -e "s/zend_error_noreturn/zend_error/" -i'.save' eh_wrap.cpp; fi
 
 clean:
 	rm -f *.o ehphp.so ehphp.dylib ehi ehc y.tab.h y.tab.c lex.yy.c y.output eh_wrap.c ehphp.php ehphp.php.save eh_wrap.cpp php_ehphp.h eh_wrap.h

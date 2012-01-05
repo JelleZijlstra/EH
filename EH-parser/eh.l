@@ -11,30 +11,32 @@
 #include "y.tab.h"
 %}
 %option yylineno
+%option reentrant
+%option bison-bridge
 %%
 ['][^']*[']	{
 				int len;
 				len = strlen(yytext);
-				yylval.sValue = (char *) Malloc(len - 1);
-				strncpy(yylval.sValue, yytext + 1, len - 2);
-				yylval.sValue[len - 2] = '\0';
+				yylval_param->sValue = (char *) Malloc(len - 1);
+				strncpy(yylval_param->sValue, yytext + 1, len - 2);
+				yylval_param->sValue[len - 2] = '\0';
 				return T_STRING;
 			}
-[0-9]*	{ yylval.iValue = atoi(yytext); return T_INTEGER; }
+[0-9]*		{ yylval_param->iValue = atoi(yytext); return T_INTEGER; }
 "int"		{
-				yylval.tValue = int_e;
+				yylval_param->tValue = int_e;
 				return T_TYPE;
 			}
 "string"	{
-				yylval.tValue = string_e;
+				yylval_param->tValue = string_e;
 				return T_TYPE;
 			}
 "array"		{
-				yylval.tValue = array_e;
+				yylval_param->tValue = array_e;
 				return T_TYPE;
 			}
 "bool"		{
-				yylval.tValue = bool_e;
+				yylval_param->tValue = bool_e;
 				return T_TYPE;
 			}
 "echo"		return T_ECHO;
@@ -62,12 +64,12 @@
 "end"		return T_END;
 "case"		return T_CASE;
 "this"		{
-				yylval.mValue = this_e;
+				yylval_param->mValue = this_e;
 				return T_MAGICVAR;
 			}
 "new"		return T_NEW;
 "::"		{
-				yylval.aValue = doublecolon_e;
+				yylval_param->aValue = doublecolon_e;
 				return T_ACCESSOR;
 			}
 "global"	return T_GLOBAL;
@@ -77,27 +79,27 @@
 "or"		return T_OR;
 "xor"		return T_XOR;
 "public"	{
-				yylval.vValue = publica_e;
+				yylval_param->vValue = publica_e;
 				return T_ATTRIBUTE;
 			}
 "private"	{
-				yylval.vValue = privatea_e;
+				yylval_param->vValue = privatea_e;
 				return T_ATTRIBUTE;
 			}
 "static"	{
-				yylval.vValue = statica_e;
+				yylval_param->vValue = statica_e;
 				return T_ATTRIBUTE;
 			}
 "const"		{
-				yylval.vValue = consta_e;
+				yylval_param->vValue = consta_e;
 				return T_ATTRIBUTE;
 			}
 "true"		{
-				yylval.bValue = true;
+				yylval_param->bValue = true;
 				return T_BOOL;
 			}
 "false"		{
-				yylval.bValue = false;
+				yylval_param->bValue = false;
 				return T_BOOL;
 			}
 "$ "		return T_SET;
@@ -109,9 +111,9 @@
 [a-zA-Z][a-zA-Z0-9_]*	{
 				int len;
 				len = strlen(yytext);
-				yylval.sValue = (char *) Malloc(len + 1);
-				strncpy(yylval.sValue, yytext, len);
-				yylval.sValue[len] = '\0';
+				yylval_param->sValue = (char *) Malloc(len + 1);
+				strncpy(yylval_param->sValue, yytext, len);
+				yylval_param->sValue[len] = '\0';
 				return T_VARIABLE;
 			}
 ">="		return T_GE;
@@ -120,11 +122,11 @@
 "=="		return T_SE;
 "=>"		return T_DOUBLEARROW;
 "->"		{
-				yylval.aValue = arrow_e;
+				yylval_param->aValue = arrow_e;
 				return T_ACCESSOR;
 			}
 "\."		{
-				yylval.aValue = dot_e;
+				yylval_param->aValue = dot_e;
 				return T_ACCESSOR;
 			}
 [@=$+\-*/<>(),:\[\]&\|^%~!{}]	return *yytext; /* Single character tokens */
@@ -132,17 +134,47 @@
 .			{
 				char message[100];
 				sprintf(message, "Unexpected character %s", yytext);
-				yyerror(message);
+				yyerror(yyscanner, message);
 			}
 %%
-int yywrap(void) {
+int yywrap(void *scanner) {
 	if(is_interactive) {
 		char *buf;
 		buf = interpreter->eh_getline();
 		if(!buf)
 			return 1;
-		yy_scan_string(buf);
+		yy_scan_string(buf, scanner);
 		return 0;
 	}
 	return 1;
+}
+
+int yyparse(void *);
+ehretval_t EHParser::parse_file(FILE *infile) {
+	ehretval_t ret;
+
+	buffer = yy_create_buffer(infile, YY_BUF_SIZE, scanner);
+	yy_switch_to_buffer(buffer, scanner);
+	ret.type = int_e;
+	ret.intval = yyparse(scanner);
+	return ret;
+}
+ehretval_t EHParser::parse_string(char *cmd) {
+	ehretval_t ret;
+
+	yy_scan_string(cmd, scanner);
+
+	ret.type = int_e;
+	ret.intval = yyparse(scanner);
+	return ret;
+}
+EHParser::EHParser(void) {
+	yylex_init(&scanner);
+}
+EHParser::~EHParser(void) {
+	yylex_destroy(scanner);
+}
+void yyerror(void *scanner, char *s) {
+	// give up on line numbers for now
+	eh_error(s, eparsing_e);
 }

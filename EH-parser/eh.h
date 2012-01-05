@@ -223,8 +223,7 @@ const char *get_typestring(type_enum type);
  */
 void eh_init(void);
 void eh_exit(void);
-int yylex (void);
-void yyerror(char *s);
+void yyerror(void *, char *s);
 void *Malloc(size_t size);
 void *Calloc(size_t count, size_t size);
 void free_node(ehretval_t *in);
@@ -362,5 +361,17 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 
 #define SETVARFROMRET(var) { var->value = ret; }
 
+/*
+ * The EH parser
+ */
+struct EHParser {
+public:
+	void *scanner;
+	struct yy_buffer_state *buffer;
+	ehretval_t parse_file(FILE *infile);
+	ehretval_t parse_string(char *cmd);
+	EHParser(void);
+	~EHParser(void);
+};
 // put this at the bottom because of dependencies
 #include "ehi.h"

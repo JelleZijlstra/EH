@@ -11,11 +11,16 @@
 #include "y.tab.h"
 extern FILE *yyin;
 #define YYERROR_VERBOSE
-extern int yylineno;
+#define YYLEX_PARAM scanner
 int eh_outer_exit(int exitval);
+int yylex (YYSTYPE *, void *);
+int yylex_init(void**);
+int yylex_destroy(void *);
 bool is_interactive = false;
 struct yy_buffer_state *yy_scan_string ( const char *str );
 %}
+%pure-parser
+%parse-param { void *scanner }
 %union {
 	char *sValue;
 	int iValue;
@@ -468,9 +473,6 @@ attributelist:
 	| /* NULL */			{ $$ = eh_addnode(T_ATTRIBUTE, 0); }
 	;
 %%
-void yyerror(char *s) {
-	eh_error_line(yylineno, s);
-}
 char *eh_getinput(void) {
 	char *buf;
 
@@ -485,13 +487,17 @@ int eh_outer_exit(int exitval) {
 }
 int EHI::eh_interactive(void) {
 	char *cmd;
-
+	ehretval_t ret;
+	EHParser *parser;
+	
+	parser = new EHParser;
 	interpreter = this;
 	is_interactive = true;
+	eh_init();
 	cmd = interpreter->eh_getline();
 	if(!cmd)
 		eh_outer_exit(0);
-	yy_scan_string(cmd);
-	eh_init();
-	return yyparse();
+	ret = parser->parse_string(cmd);
+	delete parser;
+	return ret.intval;
 }

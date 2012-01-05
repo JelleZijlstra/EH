@@ -6,6 +6,7 @@
  */
 #include "eh.h"
 #include "eh_libfuncs.h"
+#include "y.tab.h"
 
 void printvar_retval(ehretval_t in);
 static void printvar_array(ehvar_t **in);
@@ -218,4 +219,32 @@ EHLIBFUNC(class_is) {
 		EHLF_RETTRUE;
 	else
 		EHLF_RETFALSE;
+}
+
+/*
+ * Including files
+ */
+ehretval_t eh_include_file(FILE *file);
+EHLIBFUNC(include) {
+	ehretval_t *args;
+	FILE *infile;
+	EHParser *parser;
+	
+	args = (ehretval_t *) Malloc(1 * sizeof(ehretval_t));
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
+		EHLF_RETFALSE;
+	if(args[0].type != string_e) {
+		eh_error_type("argument 0 to include", args[0].type, enotice_e);
+		EHLF_RETFALSE;
+	}
+	// do the work
+	infile = fopen(args[0].stringval, "r");
+	if(!infile) {
+		eh_error("Unable to open included file", enotice_e);
+		EHLF_RETFALSE;
+	}
+	parser = new EHParser();
+	*retval = parser->parse_file(infile);
+	delete parser;
+	return;
 }

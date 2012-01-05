@@ -37,6 +37,7 @@ ehlibfunc_t libfuncs[] = {
 	LIBFUNCENTRY(is_array)
 	LIBFUNCENTRY(is_object)
 	LIBFUNCENTRY(class_is)
+	LIBFUNCENTRY(include)
 	{NULL, NULL}
 };
 

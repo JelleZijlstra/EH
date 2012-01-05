@@ -81,7 +81,7 @@ void *Malloc(size_t size) {
 	void *ret;
 	ret = malloc(size);
 	if(ret == NULL) {
-		yyerror("Unable to allocate memory");
+		yyerror(NULL, "Unable to allocate memory");
 		exit(1);
 	}
 	return ret;
@@ -90,7 +90,7 @@ void *Calloc(size_t count, size_t size) {
 	void *ret;
 	ret = calloc(count, size);
 	if(ret == NULL) {
-		yyerror("Unable to allocate memory");
+		yyerror(NULL, "Unable to allocate memory");
 		exit(1);
 	}
 	return ret;

@@ -6,7 +6,7 @@
 No such object member: mah: EH runtime error
 @compile.eh:
 @error.eh:
-In line 7: syntax error, unexpected $end: EH fatal parsing error
+syntax error, unexpected $end: EH fatal parsing error
 @fibonacci.eh:
 @for.eh:
 @greedy.eh 45:
@@ -63,3 +63,5 @@ Incorrect argument count for function ehlf_is_int: expected 1, got at least 0: E
 @assign.eh:
 @end.eh:
 @include.eh:
+@include2.eh:
+Unable to open included file: EH notice

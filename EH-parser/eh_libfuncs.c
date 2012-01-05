@@ -245,6 +245,8 @@ EHLIBFUNC(include) {
 	}
 	parser = new EHParser();
 	*retval = parser->parse_file(infile);
+	// we're no longer returning
+	returning = false;
 	delete parser;
 	return;
 }

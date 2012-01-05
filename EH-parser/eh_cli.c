@@ -5,19 +5,32 @@
  * Default implementation of EH, used in the standalone interpreter.
  */
 #include "eh.h"
+#include "y.tab.h"
 
 extern FILE *yyin;
 int yyparse(void);
+struct yy_buffer_state *yy_scan_string ( const char *str );
 
 EHI *interpreter;
 int main(int argc, char **argv) {
 	int retval;
 	if(argc < 2) {
-		fprintf(stderr, "Usage: %s file\n\t%s -i\n", argv[0], argv[0]);
+		fprintf(stderr, "Usage: %s file\n\t%s -i\n\t%s -r code", argv[0], argv[0], argv[0]);
 		eh_error(NULL, efatal_e);
 	}
 	interpreter = new EHI;
-	if(strcmp(argv[1], "-i")) {
+	if(!strcmp(argv[1], "-i")) {
+		retval = interpreter->eh_interactive();
+	} if(!strcmp(argv[1], "-r")) {
+		if(argc < 3) {
+			fprintf(stderr, "Usage: %s file\n\t%s -i\n\t%s -r code", argv[0], argv[0], argv[0]);
+			eh_error(NULL, efatal_e);
+		}
+		yy_scan_string(argv[2]);
+		eh_init();
+		retval = yyparse();
+	}
+	else {
 		FILE *infile = fopen(argv[1], "r");
 		if(!infile)
 			eh_error("Unable to open input file", efatal_e);
@@ -26,9 +39,6 @@ int main(int argc, char **argv) {
 		yyin = infile;
 		eh_init();
 		retval = yyparse();
-	}
-	else {
-		retval = interpreter->eh_interactive();
 	}
 	delete interpreter;
 	exit(retval);

@@ -17,7 +17,7 @@ eh_wrap.o: eh_wrap.cpp
 %.o: %.c
 	$(CC) -fPIC -c $(CCFLAGS) $< -o $@
 
-compiler: $(COMPILER_O)
+ehc: $(COMPILER_O)
 	$(CC) $(COMPILER_O) -o ehc
 
 ehi: $(EHI_O)

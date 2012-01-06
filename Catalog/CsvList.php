@@ -187,7 +187,6 @@ class CsvList extends FileList {
 			return false;
 		}
 		// output associative array
-		unset($this->lslist);
 		$this->lslist = array();
 		$escapelibrary = preg_replace("/\//", "\/", LIBRARY);
 		$list = preg_split("/\n" . PHP_EOL . $escapelibrary . "/", $list);
@@ -210,7 +209,6 @@ class CsvList extends FileList {
 	function build_newlist($path = '', $out = 'newlist') {
 		if(in_array($out, array('p'))) return false;
 		// reset out list
-		unset($this->$out);
 		$this->$out = array();
 		echo "acquiring list of new files... ";
 		if(!$path) $path = TEMPPATH;

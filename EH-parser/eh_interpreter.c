@@ -851,6 +851,8 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					node = node->opval->paras[0];
 				}
 				interpreter->execute_cmd(name, arrayval);
+				// we're not returning anymore
+				returning = false;
 				break;
 			default:
 				eh_error_int("Unexpected opcode", node->opval->op, efatal_e);

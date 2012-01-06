@@ -489,8 +489,10 @@ int EHI::eh_interactive(void) {
 	char *cmd;
 	ehretval_t ret;
 	EHParser *parser;
+	EHI *oldinterpreter;
 	
 	parser = new EHParser;
+	oldinterpreter = interpreter;
 	interpreter = this;
 	is_interactive = true;
 	eh_init();
@@ -499,5 +501,6 @@ int EHI::eh_interactive(void) {
 		eh_outer_exit(0);
 	ret = parser->parse_string(cmd);
 	delete parser;
+	interpreter = oldinterpreter;
 	return ret.intval;
 }

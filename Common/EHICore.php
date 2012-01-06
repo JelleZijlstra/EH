@@ -8,7 +8,11 @@
  */
 
 abstract class EHICore {
-	/* Class constants */
+	/* Class constants (partly duplicated) */
+	const EXECUTE_NEXT = 0x0; // execute says: go on with next
+	const EXECUTE_PC = 0x1; // execute whatever is in the PC now
+	const EXECUTE_SYNTAX_ERROR = 0x2; // execute returned syntax error
+	const EXECUTE_QUIT = 0x3; // execute asked to quit the program
 	const EVALUATE_ERROR = 0x1;
 	const EVALUATE_FUNCTION_CALL = 0x2;
 	const CHECK_FLOW_IN_IF = 0x1;

@@ -13,6 +13,9 @@ abstract class EHICore extends EHI {
 		parent::__construct();
 	}
 	public function setup_commandline($name, $paras = array()) {
+		// set up if necessary
+		if($this->_cPtr === NULL)
+			parent::__construct();
 		$this->prompt = $name . '> ';
 		$ret = $this->eh_interactive();
 		echo "Goodbye." . PHP_EOL;

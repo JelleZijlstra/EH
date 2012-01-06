@@ -65,3 +65,4 @@ Incorrect argument count for function ehlf_is_int: expected 1, got at least 0: E
 @include.eh:
 @include2.eh:
 Unable to open included file: EH notice
+@doublequotes.eh:

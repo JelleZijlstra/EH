@@ -22,6 +22,14 @@
 				yylval_param->sValue[len - 2] = '\0';
 				return T_STRING;
 			}
+["][^"]*["]	{
+				int len;
+				len = strlen(yytext);
+				yylval_param->sValue = (char *) Malloc(len - 1);
+				strncpy(yylval_param->sValue, yytext + 1, len - 2);
+				yylval_param->sValue[len - 2] = '\0';
+				return T_STRING;
+			}
 [0-9]*		{ yylval_param->iValue = atoi(yytext); return T_INTEGER; }
 "int"		{
 				yylval_param->tValue = int_e;

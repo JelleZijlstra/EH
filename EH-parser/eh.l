@@ -85,6 +85,7 @@
 "and"		return T_AND;
 "||"		return T_OR;
 "or"		return T_OR;
+"^^"		return T_XOR;
 "xor"		return T_XOR;
 "public"	{
 				yylval_param->vValue = publica_e;

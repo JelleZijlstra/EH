@@ -640,7 +640,7 @@ abstract class ExecuteHandler extends EHICore {
 					if(!isset($paras['lines'][$histptr]))
 						$cmd = array();
 					else
-						$cmd = mb_str_split($paras['lines'][$histptr]);
+						$cmd = mb_str_split(trim($paras['lines'][$histptr]));
 					$cmdlen = count($cmd);
 					$keypos = $cmdlen;
 					break;
@@ -651,7 +651,7 @@ abstract class ExecuteHandler extends EHICore {
 					// get new command
 					if($histptr < $this->curr('histlen')) {
 						// TODO: get a $this->curr() method for this
-						$cmd = mb_str_split($paras['lines'][$histptr]);
+						$cmd = mb_str_split(trim($paras['lines'][$histptr]));
 						$cmdlen = count($cmd);
 						$keypos = $cmdlen;
 					}

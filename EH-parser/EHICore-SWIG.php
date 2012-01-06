@@ -27,6 +27,7 @@ abstract class EHICore extends EHI {
 		$cmd = $this->getline(array(
 			'prompt' => $this->prompt, 
 			'lines' => $history,
+			'includenewlines' => true,
 		));
 		$history[] = $cmd;
 		return $cmd;

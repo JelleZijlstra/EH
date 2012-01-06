@@ -1265,7 +1265,7 @@ class FullFile extends ListEntry {
 		$sfn = '{{Sfn|';
 		$auts = explode('; ', $this->authors);
 		for($i = 0; $i < 4; $i++) {
-			if($auts[$i]) {
+			if(isset($auts[$i])) {
 				$sp = explode(',', $auts[$i]);
 				$sfn .= $sp[0] . '|';
 			}
@@ -1534,7 +1534,15 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$out .= '}';
 		return $out;
 	}
-	public function echocite($paras = '') {
+	public function echocite($paras = array()) {
+		if(self::process_paras($paras, array(
+			'checklist' => array(
+				'mode',
+			),
+			'default' => array(
+				'mode' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$this->p->verbosecite = true;
 		echo PHP_EOL;
 		if($paras['mode'])

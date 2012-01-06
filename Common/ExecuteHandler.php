@@ -580,10 +580,12 @@ abstract class ExecuteHandler extends EHICore {
 			'checklist' => array(
 				'lines', // array of lines accessed upon KEY_UP, KEY_DOWN etcetera
 				'prompt', // Prompt to be printed.
+				'includenewlines', // Whether to include newlines in the line returned
 			),
 			'default' => array(
 				'lines' => array(),
 				'prompt' => '> ',
+				'includenewlines' => false,
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
@@ -687,7 +689,8 @@ abstract class ExecuteHandler extends EHICore {
 					$cmdlen--;
 					break;
 				case "\012": // newline
-					$cmd[$cmdlen++] = "\n";
+					if($paras['includenewlines'])
+						$cmd[$cmdlen++] = "\n";
 					$cmd = $getcmd();
 					if($cmd === NULL) return false;
 					// restore sane stty settings for the duration of command execution

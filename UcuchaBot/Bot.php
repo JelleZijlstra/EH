@@ -597,7 +597,12 @@ class Bot extends Snoopy {
 		$dt = new DateTime('-14 days');
 		$date = $dt->format('Ymd');
 		// get FAC that older noms needs to be above
-		$oldfacs = $FacsList->bfind(array('date' => '<' . $date, 'archived' => '/^$/', 'print' => false, 'printresult' => false));
+		$oldfacs = $FacsList->bfind(array(
+			'date' => '<' . $date, 
+			'archived' => false, 
+			'print' => false, 
+			'printresult' => false
+		));
 		if(!is_array($oldfacs) or count($oldfacs) === 0) return false;
 		$newlocobj = $FacsList->largest($oldfacs, 'id', array('return' => 'object'));
 		$newloc = $newlocobj->name;

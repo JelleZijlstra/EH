@@ -7,13 +7,28 @@ class FacsList extends FileList {
 	protected static $childclass = 'FacsEntry';
 	public $bot;
 	const fac = 'Wikipedia:Featured article candidates';
+	protected static $FacsList_commands = array(
+		'edit' => array('name' => 'edit',
+			'desc' => 'Edit a particular FAC',
+			'arg' => 'Name of FAC',
+			'execute' => 'callmethodarg',
+		),
+	);
 	public function __construct() {
 		self::$fileloc = BPATH . '/UcuchaBot/data/facs.csv';
-		parent::__construct();
+		parent::__construct(self::$FacsList_commands);
 		$this->bot = getbot();
 	}
 	public function cli() {
 		$this->setup_commandline('Facs');
+	}
+	public function edit($fac, array $paras = array()) {
+		if(!$this->has($fac)) {
+			echo 'No such FAC' . PHP_EOL;
+			return false;
+		}
+		$this->c[$fac]->cli();
+		return true;
 	}
 	public function update() {
 		echo 'Updating the FAC database...' . PHP_EOL;
@@ -73,7 +88,11 @@ class FacsEntry extends ListEntry {
 	// stuff that is standard across GeneralList outputs
 	protected static $parentlist = 'FacsList';
 	protected static $FacsEntry_commands = array(
-
+		'addnoms' => array('name' => 'addnoms',
+			'desc' => 'Add nominators for an FAC',
+			'arg' => 'None',
+			'execute' => 'callmethod',
+		),
 	);
 	protected static $FacsEntry_synonyms = array(
 
@@ -91,6 +110,9 @@ class FacsEntry extends ListEntry {
 	public $isonfac; // Bool used internally and not saved; whether it's on current version of FAC
 	public $isnew; // Bool used internally; whether it was found on current update()
 	public $id; // ID on FAC
+	public function cli() {
+		$this->setup_commandline($this->name);
+	}
 	public function __construct($in = '', $code = '') {
 		global ${self::$parentlist};
 		if(!${self::$parentlist}) $this->p = ${self::$parentlist};
@@ -119,6 +141,7 @@ class FacsEntry extends ListEntry {
 				echo 'Invalid code' . PHP_EOL;
 				break;
 		}
+		parent::__construct(self::$FacsEntry_commands);
 	}
 	function toarray() {
 		$out = array();
@@ -138,16 +161,27 @@ class FacsEntry extends ListEntry {
 			$this->$bool = $this->$bool ? 1 : NULL;
 		}
 	}
-	public function addnoms() {
+	public function addnoms(array $paras = array()) {
 	// add or overwrite nominators
 		// get noms
 		$factext = $this->p->bot->fetchwp($this->name);
+		$name = $this->name;
+		$bot = $this->bot;
+		$failure = function() use($name, $bot) {
+			echo 'Unable to retrieve nominators for page ' . $name . PHP_EOL;
+			$bot->writewp('User talk:Ucucha', array(
+				'kind' => 'appendtext',
+				'text' => '==Nominators for ' . $name . '
+I was unable to find the list of nominators for the FAC ' . $name . '. Please fix the cause and run me again. ~~~~',
+				'donotmarkasbot' => true,
+			));
+		};
 		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator\(s\): (.*)(?=\n)/u',
 			$factext,
 			$matches
 		);
 		if(!isset($matches[0])) {
-			echo 'Unable to retrieve nominators for page ' . $this->name . PHP_EOL;
+			$failure();
 			return false;
 		}
 		$nomstext = $matches[0];
@@ -157,7 +191,7 @@ class FacsEntry extends ListEntry {
 			PREG_PATTERN_ORDER
 		);
 		if(!isset($matches[2])) {
-			echo 'Unable to retrieve nominators for page ' . $this->name . PHP_EOL;
+			$failure();
 			return false;
 		}
 		$noms = array();

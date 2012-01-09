@@ -4,7 +4,6 @@
  * Author: Smith609
  * License: PHP license
  */
-define('DEBUG', 0);
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/List.php');
 require_once(BPATH . '/UcuchaBot/Snoopy.class.php');
@@ -17,6 +16,8 @@ function getbot($paras = array()) {
 	return $bot;
 }
 class Bot extends Snoopy {
+	// debug level
+	private $botdebug = 0;
 	public $on;
 	const api = 'http://en.wikipedia.org/w/api.php';
 	const stddate = 'F j, Y'; // standard date format string for TFA/TFL
@@ -45,6 +46,18 @@ class Bot extends Snoopy {
 			'desc' => 'Add notices to the authors of pages that are about to appear on the Main Page',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
+		'do_move_marker' => array('name' => 'do_move_marker',
+			'desc' => 'Move the FAC marker',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
+		'do_wikicup_notice' => array('name' => 'do_wikicup_notice',
+			'desc' => 'Add WikiCup notices as necessary',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
+		'setup_facs' => array('name' => 'setup_facs',
+			'desc' => 'Set up the FACs database',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
 		'do_add_fa_stats' => array('name' => 'do_add_fa_stats',
 			'desc' => 'Add a line to [[Wikipedia:Featured article statistics]]',
 			'arg' => 'None',
@@ -65,6 +78,10 @@ class Bot extends Snoopy {
 			'desc' => 'Report current debug level',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
+		'set_debug' => array('name' => 'set_debug',
+			'desc' => 'Set the debug level',
+			'arg' => 'New debug level',
+			'execute' => 'callmethodarg'),
 	);
 	/* Basic functionality */
 	function __construct() {
@@ -124,7 +141,7 @@ class Bot extends Snoopy {
 	// @para ['text'] String text to write
 	// @para ['file'] String file containing text to write. Ignored if ['text'] is present
 	// @para ['summary'] String edit summary to be used. Defaults to "Bot edit".
-	// @para ['override'] Bool whether to override DEBUG and edit
+	// @para ['override'] Bool whether to override debug level and edit
 	// @para ['kind'] String appendtext, prependtext, or text (default). Which of those to use.
 	// @para ['abortifexists'] Bool whether to abort the edit if the page already exists. Defaults to "false".
 	// @para ['donotmarkasbot'] Bool whether to pretend we're not a bot (useful for talk messages)
@@ -198,7 +215,7 @@ class Bot extends Snoopy {
 		$submit_vars["format"] = "json";
 		$submit_vars["token"] = $my_page['edittoken'];
 		// submit query
-		if(DEBUG === 0 or $paras['override']) {
+		if($this->botdebug === 0 or $paras['override']) {
 			// no debugging; submit edit
 			$this->submit(self::api, $submit_vars);
 		}
@@ -209,7 +226,7 @@ class Bot extends Snoopy {
 				if($key !== 'token') $debuginfo .= $key . ':' . PHP_EOL . '<nowiki>' . $value . '</nowiki>' . PHP_EOL . PHP_EOL;
 			$debuginfo .= '------------' . PHP_EOL . PHP_EOL;
 			echo $debuginfo;
-			if(DEBUG === 2) {
+			if($this->botdebug === 2) {
 				// write to debug log
 				$newparas['override'] = true;
 				$newparas['text'] = $debuginfo;
@@ -257,7 +274,7 @@ class Bot extends Snoopy {
 	// @para $page String page to fetch
 	// @para ['action'] String action to fetch. Defaults to "raw"
 		if(!isset($paras['action'])) $paras['action'] = 'raw';
-		if(DEBUG > 0) {
+		if($this->botdebug > 0) {
 			echo 'Fetching page: ' . $page . PHP_EOL;
 		}
 		if(!$this->check_login()) return false;
@@ -277,7 +294,7 @@ class Bot extends Snoopy {
 			$url .= urlencode($key) . '=' . urlencode($value) . '&';
 		// remove last &
 		$url = substr($url, 0, -1);
-		if(DEBUG > 0) {
+		if($this->botdebug > 0) {
 			echo 'Fetching page: ' . $url . PHP_EOL;
 		}
 		if(!$this->check_login()) return false;
@@ -549,25 +566,36 @@ class Bot extends Snoopy {
 	}
 	public function do_wikicup_notice() {
 		global $FacsList;
+		echo 'Checking for WikiCup participants... ';
 		// get WP:CUP and list of Cup participants
 		$date = new DateTime();
 		$year = $date->format('Y');
 		// WikiCup does not run in November or December, so do not add notices
 		$month = $date->format('n');
 		if($month > 10) {
-			return;
+			echo 'We\'re not currently in WikiCup time' . PHP_EOL;
+			return true;
 		}
 		$wpcup = $this->fetchwp('Wikipedia:WikiCup/History/' . $year);
 		preg_match_all(
-			'/(?<=\{\{Wikipedia:WikiCup\/Participant2\|)[^\}]*(?=\}\})/u',
+			'/(?<=\{\{Wikipedia:WikiCup\/Participant\d\|)[^\}]*(?=\}\})/u',
 			$wpcup,
 			$matches,
-			PREG_PATTERN_ORDER);
+			PREG_PATTERN_ORDER
+		);
 		$cuppers = array();
 		foreach($matches[0] as $person)
 			$cuppers[] = $person;
+		if(count($cuppers) < 1) {
+			echo 'Unable to retrieve list of WikiCup participants' . PHP_EOL;
+			return false;
+		}
 		// get FACs we need to check
-		$tocheck = $FacsList->bfind(array('checkedcup' => '/^$/'));
+		$tocheck = $FacsList->bfind(array(
+			'checkedcup' => '/^$/',
+			'print' => false,
+			'printresult' => false,
+		));
 		$cupnoms = array();
 		if(is_array($tocheck)) foreach($tocheck as $fac) {
 			$cupnoms[$fac->name] = array();
@@ -581,6 +609,7 @@ class Bot extends Snoopy {
 			}
 			if(count($cupnoms[$fac->name]) > 0) {
 				$nomstring = '[[User:' . implode('|]], [[User:', 	$cupnoms[$fac->name]) . '|]]';
+				echo 'Found WikiCup nominators for FAC: ' . $fac->name . ': ' . $nomstring . PHP_EOL;
 				$msg = PHP_EOL . '{{subst:User:Ucucha/Cup|' . $nomstring . '}}';
 				$this->writewp(
 					$fac->name,
@@ -591,6 +620,8 @@ class Bot extends Snoopy {
 			}
 			$fac->checkedcup = true;
 		}
+		echo 'done' . PHP_EOL;
+		return true;
 	}
 	public function do_move_marker() {
 		global $FacsList;
@@ -801,7 +832,7 @@ class Bot extends Snoopy {
 		}
 		return $newpage;
 	}
-	private function setup_facs() {
+	protected function setup_facs() {
 		global $FacsList;
 		if(!class_exists('FacsList') or !$FacsList instanceof FacsList) {
 			require_once(BPATH . '/UcuchaBot/Facs.php');
@@ -809,8 +840,17 @@ class Bot extends Snoopy {
 			$FacsList->update();
 		}
 	}
+	public function set_debug($level, array $paras = array()) {
+		$level = (int) $level;
+		if($level !== 0 && $level !== 1 && $level !== 2) {
+			echo 'Invalid debug level: ' . $level . PHP_EOL;
+			return false;
+		}
+		$this->botdebug = $level;
+		return true;
+	}
 	public function report_debug(array $paras = array()) {
-		echo DEBUG . PHP_EOL;
-		return DEBUG;
+		echo 'Current debugging level: ' . $this->botdebug . PHP_EOL;
+		return $this->botdebug;
 	}
 }

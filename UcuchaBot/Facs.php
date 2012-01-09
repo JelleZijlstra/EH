@@ -16,6 +16,7 @@ class FacsList extends FileList {
 		$this->setup_commandline('Facs');
 	}
 	public function update() {
+		echo 'Updating the FAC database...' . PHP_EOL;
 		$wpfac = $this->bot->fetchwp(self::fac);
 		if($wpfac === false) {
 			echo 'Unable to retrieve FAC' . PHP_EOL;
@@ -65,6 +66,7 @@ class FacsList extends FileList {
 			}
 		}
 		$this->needsave = true;
+		echo 'done' . PHP_EOL;
 	}
 }
 class FacsEntry extends ListEntry {

@@ -1276,8 +1276,24 @@ class FullFile extends ListEntry {
 		return $sfn;
 	}
 	public function citelemurnews() {
-		if($this->journal)
-			$out = $this->authors . '. ' . $this->year . '. ' . $this->title . '. ' . $this->journal . ' ' . $this->volume . ': ' . $this->start . '–' . $this->end . '.';
+		switch($class = $this->cite_getclass()) {
+			case 'journal':
+				$out = $this->authors . '. ' . 
+					$this->year . '. ' . 
+					$this->title . '. ' . 
+					$this->journal . ' ' . 
+					$this->volume . ': ' . 
+					$this->start . '–' . 
+					$this->end . '.';
+				break;
+			case 'book':
+				$out = $this->authors . '. ' .
+					$this->year . '. ' .
+					$this->title . '. ' .
+					$this->publisher . ', ' .
+					$this->location . '. ';
+				break;
+		}
 		// TODO: support non-journal citations
 /*
 Ranaivoarisoa, J.F.; Ramanamahefa, R.; Louis, Jr., E.E.; Brenneman, R.A. 2006. Range extension of Perrier’s sifaka, <i>Propithecus perrieri</i>, in the Andrafiamena Classified Forest. Lemur News 11: 17-21.

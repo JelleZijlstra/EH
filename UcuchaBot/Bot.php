@@ -137,23 +137,16 @@ class Bot extends Snoopy {
 	public function writewp($page, array $paras = array()) {
 	// write to a page
 	// @para $page String page to write to
-	// @para $paras Array parameters
-	// @para ['text'] String text to write
-	// @para ['file'] String file containing text to write. Ignored if ['text'] is present
-	// @para ['summary'] String edit summary to be used. Defaults to "Bot edit".
-	// @para ['override'] Bool whether to override debug level and edit
-	// @para ['kind'] String appendtext, prependtext, or text (default). Which of those to use.
-	// @para ['abortifexists'] Bool whether to abort the edit if the page already exists. Defaults to "false".
-	// @para ['donotmarkasbot'] Bool whether to pretend we're not a bot (useful for talk messages)
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'text',
-				'file',
-				'summary',
-				'override',
-				'kind',
-				'abortifexists',
-				'donotmarkasbot',
+				'text' => 'String text to write',
+				'file' => 'String file containing text to write. Ignored if the text parameter is set',
+				'summary' => 'String edit summary to be used',
+				'override' => 'Bool whether to override debug level and edit',
+				'kind' => 'String appendtext, prependtext, or text (default). Which of those to use.',
+				'abortifexists' => 'Bool whether to abort the edit if the page already exists',
+				'donotmarkasbot' => 'Bool whether to pretend we\'re not a bot (useful for talk messages)',
 			),
 			'default' => array(
 				'summary' => 'Bot edit',
@@ -283,8 +276,11 @@ class Bot extends Snoopy {
 		return $this->results ?: false;
 	}
 	public function fetchapi(array $apiparas, array $paras = array()) {
-		if(self::process_paras($paras, array(
-			'checklist' => array('pageonly'),
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'pageonly' => 'Whether to return only information about the page itself',
+			),
 			'default' => array('pageonly' => false),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$url = self::api . '?';
@@ -784,12 +780,13 @@ class Bot extends Snoopy {
 	// 'name' String name of the TFA. Set to false if name cannot be located.
 	// 'date' String date of the TFA
 	// 'blurb' String TFA blurb
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'base',
-				'date',
-				'rawdate',
-				'print',
+				'base' => 'Base page name',
+				'date' => 'DateTime object holding date requested',
+				'rawdate' => 'String holding date requested',
+				'print' => 'Whether to print data about the TFA',
 			),
 			'default' => array(
 				'base' => 'Wikipedia:Today\'s featured article',
@@ -825,7 +822,8 @@ class Bot extends Snoopy {
 		$newpage['blurb'] = trim(preg_replace(
 			'/(Recently featured:|\{\{TFAfooter)[^\n]+(\n|$)/u',
 			'',
-			$tfatext));
+			$tfatext
+		));
 		if($paras['print']) {
 			foreach($newpage as $key => $value)
 				echo $key . ': ' . $value . PHP_EOL;

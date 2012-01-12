@@ -412,7 +412,7 @@ abstract class ExecuteHandler extends EHICore {
 						break;
 					}
 					foreach($paras as $key => $result) {
-						if(!in_array($key, $pp_value)) {
+						if(!array_key_exists($key, $pp_value)) {
 							// if the check function returns true, do not warn
 							if(isset($pp_paras['checkfunc'])) {
 								if($pp_paras['checkfunc']($key))

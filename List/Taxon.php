@@ -108,7 +108,17 @@ class Taxon extends ListEntry {
 			$this->warn('No content for species', 'status');
 	}
 	public function set($paras) {
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'easy' => 
+					'Use easy mode: do not check for necessary concurrent changes',
+				'verbose' =>
+					'Print each property that is changed',
+			),
+			'checkfunc' => function($in) {
+				return true;
+			},
 			'default' => array(
 				'easy' => false,
 				'verbose' => false,
@@ -145,7 +155,8 @@ class Taxon extends ListEntry {
 						$this->$field = $content;
 						break;
 				}
-				if($paras['verbose']) echo 'Set ' . $field . ' to "' . $content . '".' . PHP_EOL;
+				if($paras['verbose']) 
+					echo 'Set ' . $field . ' to "' . $content . '".' . PHP_EOL;
 				$this->p->needsave();
 			}
 		}

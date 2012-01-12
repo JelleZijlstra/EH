@@ -51,10 +51,11 @@ class TaxonList extends FileList {
 	}
 	public function add_entry(ListEntry $file, array $paras = array()) {
 	// Adds a FullFile to this object
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'name', //filename to write under (if different from $file->name)
-				'isnew', //whether we need to do things we do for new files (as opposed to old ones merely loaded into the catalog)
+				'name' => 'Name to write under',
+				'isnew' => 'Whether we need to do things we do for new entries (as opposed to old ones merely loaded into the catalog)',
 			),
 			'default' => array(
 				'name' => $file->name,
@@ -67,7 +68,7 @@ class TaxonList extends FileList {
 		}
 		while($this->has($paras['name'])) {
 			$cmd = $this->menu(array(
-				'head' => "File " . $paras['name'] . " already exists.",
+				'head' => "Taxon " . $paras['name'] . " already exists.",
 				'options' => array(
 					's' => 'skip this taxon',
 					'r' => 'overwrite the existing taxon',
@@ -168,9 +169,10 @@ class TaxonList extends FileList {
 	static $start_wiki = "This is part of a list of all currently recognized species of mammals:\n{{:Special:Prefixindex/User:Ucucha/List of mammals}}\nIt is based on the third edition of ''Mammal Species of the World'' (Wilson and Reeder, 2005) and incorporates changes made since then in the systematic literature. In addition, it strives to incorporate all mammal species that are known to have existed during the [[Holocene]], so as to give a more complete picture of Recent mammal diversity.\n\nThis document is intended primarily to gauge the completeness of our coverage of mammals. Please do not fix links or make changes in spelling and taxonomy, but let me know when you think you have discovered an error. In case of differences between this list and Wikipedia articles in spelling or taxonomy, this list is more likely to be correct. This file is generated automatically from a CSV file by a script.\n";
 	static $end_wiki = "\n=References=\n{{reflist|colwidth=30em}}\n";
 	public function outputwiki(array $paras = array()) {
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'taxon',
+				'taxon' => 'Taxon to write a file for',
 			),
 			'default' => array(
 				'taxon' => 'list',

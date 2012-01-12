@@ -794,14 +794,22 @@ abstract class ExecuteHandler extends EHICore {
 	protected function menu($paras) {
 	// Function that creates a menu and gets input
 		if(self::process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'head', // Menu heading
-				'options', // List of options. Associative array, with option in key and description in value
-				'printoptions', // Always print options?
-				'helpcommand', // Make help command available? (If set to true, commands beginning with "help" will not get returned.)
-				'validfunction', // Function to determine validity of command
-				'process', // Array of callbacks to execute when a given option is called.
-				'processcommand', // Function used to process the command after input
+				'head' => 
+					'Menu heading',
+				'options' => 
+					'List of options. Associative array, with option in key and description in value',
+				'printoptions' => 
+					'Whether options should always be printed',
+				'helpcommand' =>
+					'Whether to make the help command available. (If set to true, commands beginning with "help" will not get returned.)',
+				'validfunction' =>
+					'Function to determine validity of command',
+				'process' => 
+					'Array of callbacks to execute when a given option is called',
+				'processcommand' =>
+					'Function used to process the command after input',
 			),
 			'default' => array(
 				'head' => 'MENU',

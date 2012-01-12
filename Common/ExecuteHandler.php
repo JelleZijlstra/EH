@@ -793,7 +793,7 @@ abstract class ExecuteHandler extends EHICore {
 	}
 	protected function menu($paras) {
 	// Function that creates a menu and gets input
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
 				'head' => 

@@ -105,14 +105,15 @@ class AvidaInterface extends ExecuteHandler {
 	}
 	public function avida_events_add($paras = array()) {
 		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'errorifempty' => array('type', 'time'),
 			'checklist' => array(
-				'type', // type of operation
-				'time', // time at which operation is performed
-				'repeat', // time at which operation is repeated
-				'end', // time at which operation is ended
-				'arg', // argument to be given
-				'comment', // explaining what this does
+				'type' => 'Type of operation',
+				'time' => 'Time at which operation is performed',
+				'repeat' => 'Time at which operation is repeated',
+				'end' => 'Time at which operation is ended',
+				'arg' => 'Argument to be given',
+				'comment' => 'Comment explaining what the operation does',
 			),
 		)) == PROCESS_PARAS_ERROR_FOUND)
 			return false;
@@ -168,11 +169,12 @@ class AvidaInterface extends ExecuteHandler {
 	}
 	public function avida_analyze_add($paras = array()) {
 		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'errorifempty' => array('cmd'),
 			'checklist' => array(
-				'cmd', // Avida command
-				'arg', // argument to be given
-				'comment', // explaining what this does
+				'cmd' => 'Avida command',
+				'arg' => 'Argument to be given',
+				'comment' => 'Comment explaining what the command does',
 			),
 		)) == PROCESS_PARAS_ERROR_FOUND)
 			return false;

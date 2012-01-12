@@ -7,20 +7,20 @@ func mccarthy: n
 		ret $n - 10
 	else
 		ret mccarthy: mccarthy: $n + 11
-	endif
-endfunc
+	end
+end
 
 # Use $argv[1] if available
 if $argc > 2
 	echo 'Usage: ./mccarthy.eh [n]'
 	ret 1
-endif
+end
 if $argc = 2
 	$ input = @int $argv->1
 else
 	$ input = getinput:
-endif
+end
 for $input count i
 	echo mccarthy: $i
-endfor
+end
 ret 0

@@ -204,7 +204,7 @@ abstract class FileList extends ExecuteHandler {
 	}
 	public function doall($func, $paras = array()) {
 	// $paras['continueiffalse']: whether we go on with the next one if function returns false
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
 			'checklist' => array(
 				'continueiffalse' => 'Whether the command should continue calling child objects if one call returns "false"',
 			),
@@ -304,28 +304,28 @@ abstract class FileList extends ExecuteHandler {
 	/* finding files etcetera */
 	public function mlist($field, $paras = '') {
 	// @paras: array('sort' => 'ksort', 'function' => , 'isfunc' => false, 'print' => <bool>)
-		if(self::process_paras($paras, array(
-/* hide because this method can take arbitrary other parameters
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'sort', // sort function to be applied to results
-				'function', // function to be applied to results
-				'isfunc', // is the query a function?
-				'print', // print results
-				'groupby', // column to group results by
-				'array', // array to search in
+				'sort' => 'Sort function to be applied to results',
+				'function' => 'Function to be applied to results',
+				'isfunc' => 'Is the query a function?',
+				'print' => 'Whether to print results',
+				'groupby' => 'Column to group results by',
+				'array' => 'Array to search in',
 			),
-*/
+			'checkfunc' => function($in) {
+				return true;
+			},
 			'default' => array(
 				'print' => true,
-				'array' => '',
+				'array' => 'c',
 				'function' => '',
 				'isfunc' => false,
 				'groupby' => '',
 				'sort' => '',
 			),
-		)) === PROCESS_PARAS_ERROR_FOUND)
-			return false;
-		$arr = $paras['array'] ?: 'c';
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!is_array($this->$arr)) {
 			echo 'Invalid array' . PHP_EOL;
 			return false;
@@ -667,7 +667,7 @@ abstract class FileList extends ExecuteHandler {
 		if($i == 0) return false;
 		return sqrt($sum / $i);
 	}
-	public function smallest($files, $field, $paras = array()) {
+	public function smallest($files, $field, array $paras = array()) {
 		if(!is_array($files) or count($files) === 0) return false;
 		$childclass = static::$childclass;
 		if(!$childclass::hasproperty($field)) {
@@ -692,7 +692,7 @@ abstract class FileList extends ExecuteHandler {
 			default: return false;
 		}
 	}
-	public function largest($files, $field, $paras = array()) {
+	public function largest($files, $field, array $paras = array()) {
 		if(!is_array($files) or count($files) === 0) return false;
 		$childclass = static::$childclass;
 		if(!$childclass::hasproperty($field)) {
@@ -717,7 +717,7 @@ abstract class FileList extends ExecuteHandler {
 			default: return false;
 		}
 	}
-	public function getstats($field, $paras) {
+	public function getstats($field, array $paras = array()) {
 	// @para $field String field that is used
 	// @para $paras Array associative arrays with pairs of fields and values to search in
 		if(!is_array($paras)) return false;
@@ -742,8 +742,9 @@ abstract class FileList extends ExecuteHandler {
 		if($paras['includefiles']) $out['files'] = $files;
 		return $out;
 	}
-	public function listz($field, $paras) {
-		if(self::process_paras($paras, array(
+	public function listz($field, array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'errorifempty' => array('index'),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
@@ -770,7 +771,8 @@ abstract class FileList extends ExecuteHandler {
 		return true;
 	}
 	public function listz_group($field, $paras) {
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'errorifempty' => array('groupby'),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;

@@ -1260,7 +1260,7 @@ class FullFile extends ListEntry {
 		}
 		$out .= '}}';
 		// final cleanup
-		$out = preg_replace(array("/\s\s/", "/\.\./"), array(" ", "."), wikify($out));
+		$out = preg_replace(array("/\s\s/u", "/\.\./u"), array(" ", "."), wikify($out));
 		return ($verbosecite and $out1) ? array($sfn . $out1, $out) : $out;
 	}
 	public function getsfn() {

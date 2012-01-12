@@ -288,21 +288,21 @@ class Parser {
 		global $csvlist;
 		$replacement = $this->reflistbegin;
 		// weed out duplicates called with different Sfns
-		if(is_array($this->refs))
+		$refs = array();
+		if(is_array($this->refs)) {
 			foreach($this->refs as $ref)
 				$refs[$ref->handle] = $ref->text;
-		if(is_array($refs)) {
-			foreach($refs as $ref) {
-				switch($this->liststyle) {
-					case 0: $replacement .= '<div class="references-item">'; break;
-					case 1: $replacement .= '*'; break;
-					case 2: $replacement .= "\t\t"; break;
-				}
-				$replacement .= $ref;
-				switch($this->liststyle) {
-					case 0: $replacement .= "</div>\n"; break;
-					case 1: case 2: $replacement .= "\n"; break;
-				}
+		}
+		foreach($refs as $ref) {
+			switch($this->liststyle) {
+				case 0: $replacement .= '<div class="references-item">'; break;
+				case 1: $replacement .= '*'; break;
+				case 2: $replacement .= "\t\t"; break;
+			}
+			$replacement .= $ref;
+			switch($this->liststyle) {
+				case 0: $replacement .= "</div>\n"; break;
+				case 1: case 2: $replacement .= "\n"; break;
 			}
 		}
 		$replacement .= $this->reflistend;
@@ -310,38 +310,46 @@ class Parser {
 		$this->result = preg_replace($toreplace, $replacement, $this->result, 1);
 	}
 	function applysfnm() {
-		$this->result = preg_replace_callback('/(\{\{Sfn\|[^}]*?\}\}){2,}/u', array($this, 'applysfnm_cb'), $this->result);
-	}
-	function applysfnm_cb($matches) {
-		$sfns = preg_split('/(?<=\}\})(?=\{\{)/u', $matches[0]);
-		foreach($sfns as $key => $sfn) {
-			$paras = explode('|', substr($sfn, 5, -2));
-			foreach($paras as $pkey => $para) {
-				if(strpos($para, '=') !== false) {
-					$para = explode('=', $para);
-					$osfns[$key][$para[0]] = $para[1];
+		$this->result = preg_replace_callback(
+			'/(\{\{Sfn\|[^}]*?\}\}){2,}/u', 
+			function($matches) {
+				$sfns = preg_split('/(?<=\}\})(?=\{\{)/u', $matches[0]);
+				$osfns = array();
+				foreach($sfns as $key => $sfn) {
+					$paras = explode('|', substr($sfn, 5, -2));
+					$osfns[$key] = array();
+					foreach($paras as $pkey => $para) {
+						if(strpos($para, '=') !== false) {
+							$para = explode('=', $para);
+							$osfns[$key][$para[0]] = $para[1];
+						}
+						else if(preg_match('/^\d{4}$/', $para))
+							$osfns[$key]['year'] = $para;
+						else if($para)
+							$osfns[$key]['a' . $pkey] = $para;
+					}
 				}
-				else if(preg_match('/^\d{4}$/', $para))
-					$osfns[$key]['year'] = $para;
-				else if($para)
-					$osfns[$key]['a' . $pkey] = $para;
-			}
-		}
-		$out = '{{Sfnm';
-		foreach($osfns as $key => $sfn) {
-			foreach($sfn as $pkey => $para) {
-				if($pkey[0] === 'a') {
-					if($pkey === 'a1') $out .= '|' . $para;
-					else $out .= '|' . ($key + 1) . $pkey . '=' . $para;
+				$out = '{{Sfnm';
+				foreach($osfns as $key => $sfn) {
+					foreach($sfn as $pkey => $para) {
+						if($pkey[0] === 'a') {
+							if($pkey === 'a1') 
+								$out .= '|' . $para;
+							else
+								$out .= '|' . ($key + 1) . $pkey . '=' . $para;
+						}
+					}
+					$out .= '|' . $sfn['year'];
+					foreach(array('p', 'pp', 'loc') as $pname) {
+						if(isset($sfn[$pname])) 
+							$out .= '|' . ($key + 1) . $pname . '=' . $sfn[$pname];
+					}
 				}
-			}
-			$out .= '|' . $sfn['year'];
-			foreach(array('p', 'pp', 'loc') as $pname) {
-				if($sfn[$pname]) $out .= '|' . ($key + 1) . $pname . '=' . $sfn[$pname];
-			}
-		}
-		$out .= '}}';
-		return $out;
+				$out .= '}}';
+				return $out;
+			},
+			$this->result
+		);
 	}
 	function shutdown() {
 		global $csvlist;

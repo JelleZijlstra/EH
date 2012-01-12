@@ -625,11 +625,15 @@ abstract class ExecuteHandler extends EHICore {
 		// common use case
 		if(is_string($paras))
 			$paras = array('prompt' => $paras);
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'lines', // array of lines accessed upon KEY_UP, KEY_DOWN etcetera
-				'prompt', // Prompt to be printed.
-				'includenewlines', // Whether to include newlines in the line returned
+				'lines' =>
+					'Array of lines that can be accessed when KEY_UP and KEY_DOWN are pressed',
+				'prompt' =>
+					'Prompt to be printed',
+				'includenewlines' =>
+					'Whether to include newlines in the line returned',
 			),
 			'default' => array(
 				'lines' => array(),
@@ -697,10 +701,10 @@ abstract class ExecuteHandler extends EHICore {
 					break;
 				case "\033[B": // KEY_DOWN
 					// increment pointer
-					if($histptr < $this->curr('histlen'))
+					if(isset($paras['lines'][$histptr]))
 						$histptr++;
 					// get new command
-					if($histptr < $this->curr('histlen')) {
+					if(isset($paras['lines'][$histptr])) {
 						// TODO: get a $this->curr() method for this
 						$cmd = mb_str_split(trim($paras['lines'][$histptr]));
 						$cmdlen = count($cmd);

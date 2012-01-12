@@ -205,8 +205,13 @@ abstract class FileList extends ExecuteHandler {
 	public function doall($func, $paras = array()) {
 	// $paras['continueiffalse']: whether we go on with the next one if function returns false
 		if(self::process_paras($paras, array(
-			'checklist' => array('continueiffalse'),
-			'default' => array('continueiffalse' => false),
+			'checklist' => array(
+				'continueiffalse' => 'Whether the command should continue calling child objects if one call returns "false"',
+			),
+			'default' => array(
+				'continueiffalse' => false
+			),
+			'name' => __FUNCTION__,
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!method_exists(static::$childclass, $func)) {
 			echo 'Method does not exist: ' . $func . PHP_EOL;
@@ -412,26 +417,40 @@ abstract class FileList extends ExecuteHandler {
 		return $values;
 	}
 	public function bfind($paras = '') {
-		if(self::process_paras($paras, array(
-/* hide this because bfind can take arbitrary other parameters; kept here for ease of documentation
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'function', // String function applied to text found
-				'openfiles', // Open files found?
-				'isfunc', // Is the query parameter a function?
-				'print', // Print the files found?
-				'printresult', // Print number of files found?
-				'current', // Set $this->current?
-				'return', // What to return
-				'array', // Array to search in
+				'function' => 
+					'Name of function applied to text found',
+				'openfiles' => 
+					'Whether files found by the function should be opened',
+				'isfunc' =>
+					'Whether the query parameter is a function',
+				'print' =>
+					'Whether the entries found should be printed to the screen',
+				'printresult' =>
+					'Whether the count of entries found should be printed to the screen',
+				'setcurrent' =>
+					'Whether $this->current should be set',
+				'return' =>
+					'What to return. Options are "objectarray" (an array containing the entries found), "namearray" (an array containing the names of the entries found) and "count" (the count of entries found)',
+				'array' =>
+					'The array to search in',
 			),
-*/
-			'default' => array('print' => true,
+			'checkfunc' => function($para) {
+				return true;
+				// when we get to PHP 5.4, instead do:
+				// return property_exists($this, $para);
+			},
+			'default' => array(
+				'print' => true,
 				'printresult' => true,
 				'setcurrent' => true,
 				'return' => 'objectarray',
 				'openfiles' => false,
-				'array' => false,
+				'array' => 'c',
 				'function' => false,
+				'isfunc' => false,
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
@@ -439,9 +458,8 @@ abstract class FileList extends ExecuteHandler {
 		if($paras['openfiles'] and !method_exists($childclass, 'openf'))
 			$paras['openfiles'] = false;
 		// allow searching different arrays than $this->c;
-		$arr = $paras['array'] ?: 'c';
+		$arr = $paras['array'];
 		if(!is_array($this->$arr)) {
-			debug_print_backtrace();
 			echo 'Invalid array' . PHP_EOL;
 			return false;
 		}

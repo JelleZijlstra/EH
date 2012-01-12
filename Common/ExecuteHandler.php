@@ -308,7 +308,18 @@ abstract class ExecuteHandler extends EHICore {
 			return;
 		$paras[$field] = getinput_label(ucfirst($field));
 	}
-	static protected function process_paras(&$paras, $pp_paras = NULL) {
+	static protected function printvar($in) {
+		// print a variable in human-readable form.
+		if($in === true)
+			echo '(true)';
+		else if($in === false)
+			echo '(false)';
+		else if($in === NULL)
+			echo '(null)';
+		else
+			print_r($in);
+	}
+	protected function process_paras(&$paras, $pp_paras = NULL) {
 	// processes a function's $paras array, as specified in the $pp_paras parameter
 		if(!is_array($paras)) {
 			echo 'Error: invalid parameters given' . PHP_EOL;
@@ -317,6 +328,34 @@ abstract class ExecuteHandler extends EHICore {
 		if(!is_array($pp_paras)) {
 			// this means we only have to check whether $paras is an array
 			return 0;
+		}
+		// special parameter in all cases: help
+		if(isset($paras['help'])) {
+			if(isset($pp_paras['name'])) {
+				$this->execute_help($pp_paras['name']);
+				unset($pp_paras['name']);
+			}
+			// without checklist, we can't do much
+			if(!isset($pp_paras['checklist']))
+				return PROCESS_PARAS_ERROR_FOUND;
+			echo 'Parameters:' . PHP_EOL;
+			foreach($pp_paras['checklist'] as $name => $description) {
+				echo '- ' . $name . PHP_EOL;
+				echo $description . PHP_EOL;
+				if(isset($pp_paras['default'][$name])) {
+					echo 'Default: ';	
+					self::printvar($pp_paras['default'][$name]);
+					echo PHP_EOL;
+				}
+				echo PHP_EOL;
+			}
+			if(isset($pp_paras['synonyms'])) {
+				echo 'Synonyms:' . PHP_EOL;
+				foreach($pp_paras['synonyms'] as $key => $value)
+					echo $key . ' -> ' . $value . PHP_EOL;
+			}
+			// return "false": caller should stop after process_paras call
+			return PROCESS_PARAS_ERROR_FOUND;
 		}
 		$founderror = false;
 		foreach($pp_paras as $pp_key => $pp_value) {
@@ -374,9 +413,19 @@ abstract class ExecuteHandler extends EHICore {
 					}
 					foreach($paras as $key => $result) {
 						if(!in_array($key, $pp_value)) {
-							echo 'Warning: unrecognized parameter ' . $key . PHP_EOL;
+							// if the check function returns true, do not warn
+							if(isset($pp_paras['checkfunc'])) {
+								if($pp_paras['checkfunc']($key))
+									continue;
+							}
+							echo 'Warning: unrecognized parameter ' . 
+								$key . 
+								PHP_EOL;
 						}
 					}
+					break;
+				case 'checkfunc': 
+				case 'name': // ignore, used internally in other places
 					break;
 				default:
 					echo 'Error: unrecognized parameter ' . $pp_key . PHP_EOL;

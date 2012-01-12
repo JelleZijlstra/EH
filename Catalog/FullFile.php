@@ -190,16 +190,17 @@ class FullFile extends ListEntry {
 	}
 	public function path(array $paras = array()) {
 	// returns path to file
-		$this->process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'type', // type of path: shell, url, or none (no processing)
-				'folder', // whether we want the folder only
+				'type' => 'Type of path: shell, url, or none',
+				'folder' => 'Whether we want the folder only',
 			),
 			'default' => array(
 				'type' => 'shell',
 				'folder' => false,
 			),
-		));
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!$this->isfile()) {
 			return false;
 		}
@@ -1013,9 +1014,15 @@ class FullFile extends ListEntry {
 		}
 	}
 	public function set($paras) {
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'checklist' => array(
+				'cannotmove' => 'Whether to disallow moving a page',
+			),
+			'checkfunc' => function($in) {
+				return true;
+			},
 			'default' => array('cannotmove' => false),
-		)));
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		foreach($paras as $field => $content) {
 			if(self::hasproperty($field)) {
 				if($this->$field === $content) continue;
@@ -1553,9 +1560,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return $out;
 	}
 	public function echocite($paras = array()) {
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'mode',
+				'mode' => 
+					'Citation style to be used. If not set, the catalog\'s default style is used.',
 			),
 			'default' => array(
 				'mode' => false,
@@ -1793,9 +1802,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	public function add(array $paras = array()) {
 	// fill in data
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'noedittitle'
+				'noedittitle' =>
+					'Whether to skip editing the title of the newly added entry',
 			),
 			'default' => array(
 				'noedittitle' => false,
@@ -2053,10 +2064,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	public function getpdfcontent($paras = array()) {
 		if(!$this->ispdf() or $this->isredirect()) return false;
-		$this->process_paras($paras, array(
-			'checklist' => array('force'),
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'force' => 'Whether to force the generation of a new pdfcontent',
+			),
 			'default' => array('force' => false),
-		));
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!$paras['force']) {
 			$this->p->getpdfcontentcache();
 			if(isset($this->p->pdfcontentcache[$this->name])) {
@@ -2690,13 +2704,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return true;
 	}
 	protected function expanddoi($paras = array()) {
-	// in $paras:
-	// bool ['overwrite'] whether we overwrite existing data
-	// bool ['verbose'] whether we mention data that differs from existing data
 		if(self::process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'overwrite',
-				'verbose',
+				'overwrite' => 'Whether to overwrite existing data',
+				'verbose' => 'Whether to mention data that differs from existing data',
 			),
 			'default' => array(
 				'overwrite' => false,
@@ -2920,12 +2932,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	public function email($paras = array()) {
 	// Inspired by http://www.webcheatsheet.com/PHP/send_email_text_html_attachment.php#attachment
-		$this->process_paras($paras, array(
-			// what do we want?
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'to', // who to e-mail to
-				'message', // e-mail message
-				'subject', // subject
+				'to' => 'Address to send to',
+				'message' => 'E-mail message',
+				'subject' => 'Subject line',
 			),
 			'default' => array(
 				'subject' => $this->name,
@@ -2933,7 +2945,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			'askifempty' => array(
 				'to',
 			),
-		));
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!isset($paras['message'])) {
 			$paras['message'] = "<p>Please find attached the following paper:</p>\r\n<ul><li>" . $this->citepaper() . "</li></ul>\r\n";
 		}

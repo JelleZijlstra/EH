@@ -236,10 +236,13 @@ class CsvList extends FileList {
 	public function add_entry(ListEntry $file, array $paras = array()) {
 	// Adds a FullFile to this CsvList object
 	// Type hint is ListEntry instead of FullFile to keep E_STRICT happy
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'name', // filename to write under (if different from $file->name)
-				'isnew', // whether we need to do things we do for new files (as opposed to old ones merely loaded into the catalog)
+				'name' => 
+					'Filename to write under (if different from $file->name',
+				'isnew' => 
+					'Whether we need to do things we do for new files (as opposed to old ones merely loaded into the catalog)',
 			),
 			'default' => array(
 				'name' => $file->name,
@@ -621,12 +624,14 @@ class CsvList extends FileList {
 		}
 	}
 	public function stats(array $paras = array()) {
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'synonyms' => array(
 				'f' => 'includefoldertree',
 			),
 			'checklist' => array(
-				'includefoldertree', // whether we need to print the foldertree
+				'includefoldertree' => 
+					'Whether we need to print the foldertree',
 			),
 			'default' => array(
 				'includefoldertree' => false,
@@ -773,11 +778,15 @@ class CsvList extends FileList {
 	}
 	public function testtitles($paras = array()) {
 	// Test the findtitle_pdfcontent() method.
-		$this->process_paras($paras, array(
-			'checklist' => array('file'),
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'file' => 'File to write results too',
+			),
 			'default' => array('file' => false),
-		));
-		if($paras['file']) $fp = fopen($paras['file'], 'w');
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if($paras['file']) 
+			$fp = fopen($paras['file'], 'w');
 		$matches = $mismatches = $impossible = 0;
 		foreach($this->c as $child) {
 			$pdftitle = $child->findtitle_pdfcontent();
@@ -798,13 +807,15 @@ class CsvList extends FileList {
 				echo "\tSimplified as $dettitle\n";
 				echo 'Detected title: ' . $pdftitle . PHP_EOL;
 				$mismatches++;
-				if($paras['file']) fputcsv($fp, array($child->name, $child->title, $pdftitle, $rectitle, $dettitle, $levenshtein));
+				if($paras['file']) 
+					fputcsv($fp, array($child->name, $child->title, $pdftitle, $rectitle, $dettitle, $levenshtein));
 			}
 			else {
 				$matches++;
 			}
 		}
-		if($paras['file']) fclose($fp);
+		if($paras['file']) 
+			fclose($fp);
 		echo "\n\nTotal matches: $matches\nTotal mismatches: $mismatches\nCould not determine title: $impossible\n";
 	}
 	public function getpdfcontentcache() {

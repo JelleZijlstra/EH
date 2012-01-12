@@ -811,11 +811,20 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 								break;
 							case T_LONGPARA:
 								// long-form paras
-								array_insert_retval(
-									arrayval,
-									eh_execute(node2->opval->paras[0], context),
-									eh_execute(node2->opval->paras[1], context)
-								);
+								if(node2->opval->nparas == 1) {
+									array_insert_retval(
+										arrayval,
+										eh_execute(node2->opval->paras[0], context),
+										(ehretval_t) { bool_e, {true}}
+									);
+								}
+								else {
+									array_insert_retval(
+										arrayval,
+										eh_execute(node2->opval->paras[0], context),
+										eh_execute(node2->opval->paras[1], context)
+									);
+								}
 								break;
 							case '>':
 								operand3.type = string_e;

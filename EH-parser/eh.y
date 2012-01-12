@@ -361,6 +361,7 @@ para:
 	string					{ $$ = $1; }
 	| T_MINMIN string '=' simple_expr
 							{ $$ = eh_addnode(T_LONGPARA, 2, $2, $4); }
+	| T_MINMIN string		{ $$ = eh_addnode(T_LONGPARA, 1, $2); }
 	| '-' string			{ $$ = eh_addnode(T_SHORTPARA, 1, $2); }
 	| '>' string			{ $$ = eh_addnode('>', 1, $2); }
 	| '}' string			{ $$ = eh_addnode('}', 1, $2); }

@@ -250,13 +250,16 @@ class Parser {
 	public $replacement; // int: what {cites} get replaced with. 1 = do nothing, leave them as they are; 2 = nothing; 3 = full ref; 4 = Sfn; 5 = just the ref text
 	function replacecites() {
 		if($this->replacement === 1) return;
+		// work around because we can't use $this in the closure
+		$refs = $this->refs;
+		$replacement = $this->replacement;
 		$this->result = preg_replace_callback(
 			"/(?<!\{)\{(?![{|])(.*?)\}/", 
-			function($matches) {
-				if(!$this->refs[$matches[1]]) 
+			function($matches) use($refs, $replacement) {
+				if(!$refs[$matches[1]]) 
 					return $matches[0];
-				$ref = $this->refs[$matches[1]];
-				switch($this->replacement) {
+				$ref = $refs[$matches[1]];
+				switch($replacement) {
 					case 1: return $matches[0];
 					case 2: return '';
 					case 3: return "<ref name='" . $ref->getrefname() . "'>"  . $ref->text . '</ref>';

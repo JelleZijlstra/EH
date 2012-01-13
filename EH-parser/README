@@ -6,16 +6,21 @@ The following are some bugs and missing features still existing in the
 interpreter:
 - Massive memory leakage. It's hard to keep track of all malloc'ed memory within
   the interpreter, but we can do better than the current situation.
+- Make more use of C++ features. Right now it's basically C compiled with a C++
+  compiler; let's use some of C++'s fancy features.
 - Foreach-like loops for objects and arrays.
 
 To compile the interpreter (ehi), write:
-$ make interpreter
+$ make ehi
 
 To use the compiler (ehc) instead, write:
-$ make compiler
+$ make ehc
+
+And for the ehphp PHP extension:
+$ make ehphp
 
 To compile and run a file called "compile.eh" with ehc:
-$ ./meh.sh compile
+$ meh compile
 $ ./compile
 
 Other things to do:

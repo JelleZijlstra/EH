@@ -159,6 +159,10 @@ statement:
 	| T_SWITCH expression T_SEPARATOR caselist T_ENDSWITCH T_SEPARATOR
 							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
 	| command T_SEPARATOR	{ $$ = $1; }
+	| error T_SEPARATOR		{ 
+								yyerrok; 
+								$$ = NULL;
+							}
 	;
 
 expression:
@@ -500,7 +504,13 @@ int EHI::eh_interactive(void) {
 	cmd = interpreter->eh_getline();
 	if(!cmd)
 		eh_outer_exit(0);
-	ret = parser->parse_string(cmd);
+	// if a syntax error occurs, stop parsing and return -1
+	try {
+		ret = parser->parse_string(cmd);
+	}
+	catch(...) {
+		return -1;
+	}
 	delete parser;
 	interpreter = oldinterpreter;
 	return ret.intval;

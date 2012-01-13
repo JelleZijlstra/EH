@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+#include <exception>
+#include <iostream>
 
 /*
  * The EH AST

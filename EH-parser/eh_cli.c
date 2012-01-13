@@ -18,33 +18,42 @@ int main(int argc, char **argv) {
 
 	if(argc < 2) {
 		fprintf(stderr, "Usage: %s file\n\t%s -i\n\t%s -r code", argv[0], argv[0], argv[0]);
-		eh_error(NULL, efatal_e);
+		exit(-1);
 	}
 	interpreter = new EHI;
 	parser = new EHParser;
 
-	if(!strcmp(argv[1], "-i")) {
-		ret.intval = interpreter->eh_interactive();
-	} else if(!strcmp(argv[1], "-r")) {
-		if(argc < 3) {
-			fprintf(stderr, "Usage: %s file\n\t%s -i\n\t%s -r code", argv[0], argv[0], argv[0]);
-			eh_error(NULL, efatal_e);
+	try {
+		if(!strcmp(argv[1], "-i")) {
+			ret.intval = interpreter->eh_interactive();
 		}
-		eh_init();
-		ret = parser->parse_string(argv[2]);
+		else if(!strcmp(argv[1], "-r")) {
+			if(argc < 3) {
+				fprintf(stderr, "Usage: %s file\n\t%s -i\n\t%s -r code", argv[0], argv[0], argv[0]);
+				eh_error(NULL, efatal_e);
+			}
+			eh_init();
+			ret = parser->parse_string(argv[2]);
+		}
+		else {
+			FILE *infile = fopen(argv[1], "r");
+			if(!infile)
+				eh_error("Unable to open input file", efatal_e);
+			eh_setarg(argc, argv);
+			// set input
+			eh_init();
+			ret = parser->parse_file(infile);
+		}
+		delete interpreter;
+		delete parser;
+		exit(ret.intval);
 	}
-	else {
-		FILE *infile = fopen(argv[1], "r");
-		if(!infile)
-			eh_error("Unable to open input file", efatal_e);
-		eh_setarg(argc, argv);
-		// set input
-		eh_init();
-		ret = parser->parse_file(infile);
+	catch(std::exception &e) {
+		exit(-1);
 	}
-	delete interpreter;
-	delete parser;
-	exit(ret.intval);
+	catch(std::exception *e) {
+		exit(-1);
+	}
 }
 
 int EHI::execute_cmd(char *name, ehvar_t **array) {

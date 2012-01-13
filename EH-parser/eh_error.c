@@ -14,10 +14,13 @@ void eh_error(const char *message, errlevel_e level) {
 	switch(level) {
 		case efatal_e: 
 			fprintf(stderr, ": EH fatal error\n"); 
-			exit(-1);
+			throw new std::exception;
 		case eparsing_e:
-			fprintf(stderr, ": EH fatal parsing error\n"); 
-			exit(-1);
+			fprintf(stderr, ": EH parsing error\n");
+			if(is_interactive)
+				break;
+			else
+				throw new std::exception;
 		case eerror_e:
 			fprintf(stderr, ": EH runtime error\n");
 			break;

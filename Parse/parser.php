@@ -250,18 +250,22 @@ class Parser {
 	public $replacement; // int: what {cites} get replaced with. 1 = do nothing, leave them as they are; 2 = nothing; 3 = full ref; 4 = Sfn; 5 = just the ref text
 	function replacecites() {
 		if($this->replacement === 1) return;
-		$this->result = preg_replace_callback("/(?<!\{)\{(?![{|])(.*?)\}/", array($this, 'replacecites_cb'), $this->result);
-	}
-	function replacecites_cb($matches) {
-		if(!$this->refs[$matches[1]]) return $matches[0];
-		$ref = $this->refs[$matches[1]];
-		switch($this->replacement) {
-			case 1: return $matches[0];
-			case 2: return '';
-			case 3: return "<ref name='" . $ref->getrefname() . "'>"  . $ref->text . '</ref>';
-			case 4: return $ref->getsfn();
-			case 5: return $ref->text;
-		}
+		$this->result = preg_replace_callback(
+			"/(?<!\{)\{(?![{|])(.*?)\}/", 
+			function($matches) {
+				if(!$this->refs[$matches[1]]) 
+					return $matches[0];
+				$ref = $this->refs[$matches[1]];
+				switch($this->replacement) {
+					case 1: return $matches[0];
+					case 2: return '';
+					case 3: return "<ref name='" . $ref->getrefname() . "'>"  . $ref->text . '</ref>';
+					case 4: return $ref->getsfn();
+					case 5: return $ref->text;
+				}
+			},
+			$this->result
+		);
 	}
 	public $needsort; // sort the refs array?
 	function refsort() {

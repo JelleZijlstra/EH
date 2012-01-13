@@ -9,24 +9,67 @@
 #include "eh.bison.hpp"
 
 // file to write to
+char *outfilename;
 FILE *outfile;
 // label used
 unsigned int label = 0;
 bool returning = false;
 
 EHI *interpreter;
+
+void usage(char **argv) {
+	fprintf(stderr, "Usage: %s file -o output\n\t%s -o output file", argv[0], argv[0]);
+	exit(1);
+}
+
 int main(int argc, char **argv) {
 	ehretval_t ret;
 	EHParser *parser;
+	char *infilename;
 
-	if(argc < 2) {
-		fprintf(stderr, "Usage: %s file\n", argv[0]);
-		exit(-1);
+	// parse arguments
+	if(argc < 2 || argc == 3 || argc > 4)
+		usage(argv);
+	// no explicit output file given: s/\..*$/.s/
+	if(argc == 2) {
+		infilename = argv[1];
+		// default: replace .whatever with .s
+		outfilename = strdup(infilename);
+		if(!outfilename)
+			exit(1);
+		int i = strlen(outfilename) - 1;
+		while(1) {
+			if(i == 0) {
+				// fall back to tmp.s
+				free(outfilename);
+				outfilename = "tmp.s";
+				break;
+			}
+			if(outfilename[i] == '.') {
+				outfilename[i+1] = 's';
+				outfilename[i+2] = '\0';
+				break;
+			}
+			i--;
+		}
+	}
+	// explicit output file given
+	else {
+		if(!strcmp(argv[1], "-o")) {
+			outfilename = argv[2];
+			infilename = argv[3];
+		}
+		else if(!strcmp(argv[2], "-o")) {
+			infilename = argv[1];
+			outfilename = argv[3];
+		}
+		else
+			usage(argv);
 	}
 	parser = new EHParser;
 
 	try {
-		FILE *infile = fopen(argv[1], "r");
+		FILE *infile = fopen(infilename, "r");
 		if(!infile)
 			eh_error("Unable to open input file", efatal_e);
 		eh_setarg(argc, argv);
@@ -38,12 +81,12 @@ int main(int argc, char **argv) {
 		exit(ret.intval);
 	}
 	catch(...) {
-		exit(-1);
+		exit(1);
 	}
 }
 
 void eh_init(void) {
-	outfile = fopen("tmp.s", "w");
+	outfile = fopen(outfilename, "w");
 	if(outfile == NULL) {
 		fprintf(stderr, "Unable to create output file");
 		exit(1);

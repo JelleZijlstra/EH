@@ -256,7 +256,7 @@ extern bool is_interactive;
 /*
  * EH interpreter
  */
-#include "y.tab.h"
+#include "eh.bison.hpp"
 // symbol table for variables and functions
 #define VARTABLE_S 1024
 extern ehvar_t *vartable[];

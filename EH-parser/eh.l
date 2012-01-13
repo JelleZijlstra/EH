@@ -8,11 +8,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "eh.h"
-#include "y.tab.h"
+#include "eh.bison.hpp"
 %}
 %option yylineno
 %option reentrant
 %option bison-bridge
+%option outfile="eh.flex.cpp"
 %%
 ['][^']*[']	{
 				int len;

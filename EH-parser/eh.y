@@ -8,7 +8,7 @@
  * available at http://epaperpress.com/lexandyacc/
  */
 #include "eh.h"
-#include "y.tab.h"
+#include "eh.bison.hpp"
 extern FILE *yyin;
 #define YYERROR_VERBOSE
 #define YYLEX_PARAM scanner

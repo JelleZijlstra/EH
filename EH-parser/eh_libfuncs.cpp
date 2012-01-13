@@ -6,7 +6,7 @@
  */
 #include "eh.h"
 #include "eh_libfuncs.h"
-#include "y.tab.h"
+#include "eh.bison.hpp"
 
 void printvar_retval(ehretval_t in);
 static void printvar_array(ehvar_t **in);

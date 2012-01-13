@@ -5,7 +5,7 @@
  * Default implementation of EH, used in the standalone interpreter.
  */
 #include "eh.h"
-#include "y.tab.h"
+#include "eh.bison.hpp"
 
 extern FILE *yyin;
 int yyparse(void);

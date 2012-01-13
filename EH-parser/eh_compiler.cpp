@@ -6,7 +6,7 @@
  * of the language, really.
  */
 #include "eh.h"
-#include "y.tab.h"
+#include "eh.bison.hpp"
 
 // file to write to
 FILE *outfile;

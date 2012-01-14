@@ -2285,7 +2285,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		 * Will fail with various variants, including double surnames
 		 */
 		$authors = $head[1];
-		$authors = preg_split("/(,? and |, | & )/", $authors);
+		$authors = preg_split("/(,? and |, (?!and)| & )/", $authors);
 		// array for correctly formatted authors
 		$fmtauth = array();
 		foreach($authors as $author) {

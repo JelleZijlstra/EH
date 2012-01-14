@@ -218,7 +218,7 @@ abstract class FileList extends ExecuteHandler {
 			},
 			'default' => array(
 				'continueiffalse' => false,
-				'countafter' => false,
+				'countfalse' => false,
 				'askafter' => 100,
 			),
 			'name' => __FUNCTION__,
@@ -229,8 +229,8 @@ abstract class FileList extends ExecuteHandler {
 		}
 		$askafter = $paras['askafter'];
 		$continueiffalse = $paras['continueiffalse'];
-		$countafter = $paras['countafter'];
-		unset($paras['askafter'], $paras['continueiffalse'], $paras['countafter']);
+		$countfalse = $paras['countfalse'];
+		unset($paras['askafter'], $paras['continueiffalse'], $paras['countfalse']);
 		if(isset($paras['arg'])) {
 			$arg = $paras['arg'];
 			unset($paras['arg']);
@@ -253,7 +253,7 @@ abstract class FileList extends ExecuteHandler {
 				echo $e->getMessage();
 				if(!$continueiffalse) return;
 			}
-			if($countiffalse or $ret)
+			if($countfalse or $ret)
 				$i++;
 			if(!$continueiffalse and !$ret)
 				return;
@@ -562,7 +562,7 @@ abstract class FileList extends ExecuteHandler {
 					$found = ($query['content'] == $hay);
 				if(!$found) continue 2;
 			}
-			$out[] = $file;
+			$out[$file->name] = $file;
 			if($paras['print']) {
 				echo $file->name . PHP_EOL;
 				// need to change this for broader applicability

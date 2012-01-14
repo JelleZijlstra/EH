@@ -611,7 +611,7 @@ class Taxon extends ListEntry {
 	public function populatecitation(array $paras = array()) {
 	// try to find citation
 		if($this->citation)
-			return true;
+			return false;
 		// prepare bfind query
 		$authors = '/' . 	
 			preg_replace('/,\s*|\s*&\s*/u', '.*', $this->authority) . 

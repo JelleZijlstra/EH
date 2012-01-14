@@ -209,6 +209,7 @@ abstract class FileList extends ExecuteHandler {
 			'checklist' => array(
 				'continueiffalse' => 'Whether the command should continue calling child objects if one call returns "false"',
 				'askafter' => 'Ask the user whether he wants to continue after n child objects',
+				'countfalse' => 'Whether to count calls that return false for the purposes of askafter',
 				'arg' => 'Argument to be passed to called object',
 			),
 			// can take arbitrary arguments, which are passed to child
@@ -217,6 +218,7 @@ abstract class FileList extends ExecuteHandler {
 			},
 			'default' => array(
 				'continueiffalse' => false,
+				'countafter' => false,
 				'askafter' => 100,
 			),
 			'name' => __FUNCTION__,
@@ -227,15 +229,15 @@ abstract class FileList extends ExecuteHandler {
 		}
 		$askafter = $paras['askafter'];
 		$continueiffalse = $paras['continueiffalse'];
-		unset($paras['askafter'], $paras['continueiffalse']);
+		$countafter = $paras['countafter'];
+		unset($paras['askafter'], $paras['continueiffalse'], $paras['countafter']);
 		if(isset($paras['arg'])) {
 			$arg = $paras['arg'];
 			unset($paras['arg']);
 		}
 		$i = 0;
 		foreach($this->c as $file) {
-			$i++;
-			if($askafter and ($i % $askafter === 0)) {
+			if($askafter and $i and ($i % $askafter === 0)) {
 				switch($this->ynmenu('Do you still want to continue?')) {
 					case 'y': break;
 					case 'n': return;
@@ -251,6 +253,8 @@ abstract class FileList extends ExecuteHandler {
 				echo $e->getMessage();
 				if(!$continueiffalse) return;
 			}
+			if($countiffalse or $ret)
+				$i++;
 			if(!$continueiffalse and !$ret)
 				return;
 		}

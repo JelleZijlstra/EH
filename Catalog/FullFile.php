@@ -547,6 +547,12 @@ class FullFile extends ListEntry {
 			$this->publisher = $tmp[1];
 			$this->location = $tmp[0];
 		}
+		// eds. is added automatically by cite methods
+		$this->bookauthors = preg_replace(
+			'/\s*\(eds?\.\)$/u', 
+			'', 
+			$this->bookauthors
+		);
 		if(preg_match('/^(PhD|MSc) thesis, /', $this->journal)) {
 		// "PhD thesis" should be in "publisher" field
 			$this->publisher = $this->journal;

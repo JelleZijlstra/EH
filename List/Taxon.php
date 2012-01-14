@@ -22,6 +22,7 @@ class Taxon extends ListEntry {
 	public $ngen;
 	public $nspec;
 	public $isextant;
+	public $citation; // citation to the original description
 	protected static $Taxon_commands = array(
 
 	);
@@ -46,7 +47,7 @@ class Taxon extends ListEntry {
 					return;
 				}
 				/* Elements of class Taxon are stored in CSV as follows:
-				NAME,AUTHORITY,MOVEDGENUS,YEAR,RANK,PARENT,COMMENTS,STATUS,ENDEMIC [as JSON'd array],RANGE [as JSON'd array],IDS [as serialized array, not JSON'd because of better object handling in serialize],MISC [as JSON'd array, miscellaneous properties]
+				NAME,AUTHORITY,MOVEDGENUS,YEAR,RANK,PARENT,COMMENTS,STATUS,CITATION,ENDEMIC [as JSON'd array],RANGE [as JSON'd array],IDS [as serialized array, not JSON'd because of better object handling in serialize],MISC [as JSON'd array, miscellaneous properties]
 				*/
 				$this->name = $in[0];
 				$this->authority = $in[1];
@@ -56,11 +57,12 @@ class Taxon extends ListEntry {
 				$this->parent = $in[5];
 				$this->comments = $in[6];
 				$this->status = $in[7];
-				$this->endemic = json_decode($in[8], true);
-				if($in[9]) $this->range = unserialize($in[9]);
-				if($in[10]) $this->temprange = unserialize($in[10]);
-				$this->ids = json_decode($in[11], true);
-				$this->misc = json_decode($in[12], true);
+				$this->citation = $in[8];
+				$this->endemic = json_decode($in[9], true);
+				if($in[9]) $this->range = unserialize($in[10]);
+				if($in[10]) $this->temprange = unserialize($in[11]);
+				$this->ids = json_decode($in[12], true);
+				$this->misc = json_decode($in[13], true);
 				break;
 			case 'n': // new file
 				$this->name = $in;
@@ -78,6 +80,7 @@ class Taxon extends ListEntry {
 		$out[] = $this->parent;
 		$out[] = $this->comments;
 		$out[] = $this->status;
+		$out[] = $this->citation;
 		$out[] = $this->getarray('endemic');
 		if($this->range)
 			$out[] = serialize($this->range);

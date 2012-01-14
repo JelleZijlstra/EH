@@ -608,5 +608,59 @@ class Taxon extends ListEntry {
 	private function sortchildren() {
 		return $this->p->sortchildren($this->name);
 	}
+	public function populatecitation(array $paras = array()) {
+	// try to find citation
+		if($this->citation)
+			return true;
+		// prepare bfind query
+		$authors = '/' . 	
+			preg_replace('/,\s*|\s*&\s*/u', '.*', $this->authority) . 
+			'/u';
+		global $csvlist;
+		echo 'Searching for possible citations for entry ' . $this->name . PHP_EOL;
+		echo 'Authority: ' . $this->authority . '; year: ' . $this->year. PHP_EOL;
+		$cites = $csvlist->bfind(array(
+			'authors' => $authors,
+			'year' => $this->year,
+			'print' => false,
+		));
+		if(!$cites) {
+			echo 'Nothing found' . PHP_EOL;
+			$this->citation = 'Unknown';
+			return false;
+		}
+		foreach($cites as $cite) {
+			$taxon = $this;
+			$response = $this->menu(array(
+				'head' => 'Is this citation correct?' . PHP_EOL . $cite,
+				'options' => array(
+					'y' => 'This citation is correct',
+					'n' => 'This citation is not correct',
+					'ic' => 'Give more information about the citation',
+					'it' => 'Give more information about the taxon',
+					'o' => 'Open the citation file',
+				),
+				'process' => array(
+					'ic' => function() use($cite) {
+						$cite->inform();
+					},
+					'it' => function() use($taxon) {
+						$taxon->inform();
+					},
+					'o' => function() use($cite) {
+						$cite->openf();
+					}
+				),
+			));
+			switch($response) {
+				case 'y': 
+					$this->citation = $cite->name;
+					return true;
+				case 'n': break;
+			}
+		}
+		$this->citation = 'Unknown';
+		return false;
+	}
 }
 ?>

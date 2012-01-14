@@ -71,7 +71,7 @@ abstract class FileList extends ExecuteHandler {
 			'desc' => 'Print statistics about the library',
 			'arg' => '"-f" will also print the number of files in each folder',
 			'execute' => 'callmethod'),
-		'execute_all' => array('name' => 'execute_all',
+		'doall' => array('name' => 'doall',
 			'desc' => 'Execute a command on all list entries',
 			'arg' => 'Command',
 			'execute' => 'callmethodarg'),
@@ -202,14 +202,22 @@ abstract class FileList extends ExecuteHandler {
 				echo 'File does not exist' . PHP_EOL;
 		}
 	}
-	public function doall($func, $paras = array()) {
-	// $paras['continueiffalse']: whether we go on with the next one if function returns false
+	public function doall($func, array $paras = array()) {
+	// execute a function on all files in the list. Don't actually execute the command, since that is prohibitively expensive (requires EH to be initialized on every single ListEntry).
 		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
 				'continueiffalse' => 'Whether the command should continue calling child objects if one call returns "false"',
+				'askafter' => 'Ask the user whether he wants to continue after n child objects',
+				'arg' => 'Argument to be passed to called object',
 			),
+			// can take arbitrary arguments, which are passed to child
+			'checkfunc' => function($in) {
+				return true;
+			},
 			'default' => array(
-				'continueiffalse' => false
+				'continueiffalse' => false,
+				'askafter' => 100,
 			),
 			'name' => __FUNCTION__,
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
@@ -217,38 +225,35 @@ abstract class FileList extends ExecuteHandler {
 			echo 'Method does not exist: ' . $func . PHP_EOL;
 			return false;
 		}
-		foreach($this->c as $file) {
-			if($paras['continueiffalse'])
-				$file->$func();
-			else
-				if(!$file->$func()) return;
-		}
-	}
-	public function execute_all($cmd, $paras = array()) {
-	// execute a function on all files in the list. Don't actually execute the command, since that is prohibitively expensive (requires EH to be initialized on every single ListEntry).
+		$askafter = $paras['askafter'];
+		$continueiffalse = $paras['continueiffalse'];
+		unset($paras['askafter'], $paras['continueiffalse']);
 		if(isset($paras['arg'])) {
 			$arg = $paras['arg'];
 			unset($paras['arg']);
 		}
-		if(isset($paras['continueiffalse'])) {
-			$ciffalse = $paras['continueiffalse'];
-			unset($paras['continueiffalse']);
-		}
+		$i = 0;
 		foreach($this->c as $file) {
+			$i++;
+			if($askafter and ($i % $askafter === 0)) {
+				switch($this->ynmenu('Do you still want to continue?')) {
+					case 'y': break;
+					case 'n': return;
+				}
+			}
 			try {
 				if(isset($arg))
-					$ret = $file->$cmd($arg, $paras);
+					$ret = $file->$func($arg, $paras);
 				else
-					$ret = $file->$cmd($paras);
-				if(!$ciffalse and $ret === false)
-					break;
+					$ret = $file->$func($paras);
 			}
 			catch(EHException $e) {
 				echo $e->getMessage();
-				return false;
+				if(!$continueiffalse) return;
 			}
+			if(!$continueiffalse and !$ret)
+				return;
 		}
-		return true;
 	}
 	public function doone($func) {
 	// wrapper function for various utilities that do the following: get a filename and call function FullFile::$function() on it
@@ -969,7 +974,7 @@ abstract class ListEntry extends ExecuteHandler {
 		return false;
 	}
 	protected static $inform_exclude = array();
-	protected function inform() {
+	public function inform() {
 	// provide information for an entry
 		foreach($this as $key => $value) {
 			if(in_array($key, static::$inform_exclude))

@@ -239,7 +239,10 @@ abstract class FileList extends ExecuteHandler {
 		foreach($this->c as $file) {
 			if($askafter and $i and ($i % $askafter === 0)) {
 				switch($this->ynmenu('Do you still want to continue?')) {
-					case 'y': break;
+					case 'y': 
+						// otherwise we'll sometimes ask this twice in a row
+						$i++; 
+						break;
 					case 'n': return;
 				}
 			}
@@ -283,10 +286,15 @@ abstract class FileList extends ExecuteHandler {
 			return false;
 	}
 	public function formatall($paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array('w' => 'Write output to a file'),
+			'default' => array('w' => false),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$this->saveifneeded();
 		exec_catch('cp ' . static::$fileloc . ' ' . static::$fileloc . '.save');
 		if($paras['w']) ob_start();
-		$this->doall('format');
+		$this->doall('format', array('askafter' => 0));
 		if($paras['w']) {
 			// TODO: get DATAPATH straight
 			file_put_contents(DATAPATH . 'formatoutput.txt', preg_replace('/Warning \(file: (.*?)\): /', '$1' . PHP_EOL, ob_get_contents()));

@@ -617,6 +617,7 @@ class Taxon extends ListEntry {
 			preg_replace('/,\s*|\s*&\s*/u', '.*', $this->authority) . 
 			'/u';
 		global $csvlist;
+		$this->p->needsave();
 		echo 'Searching for possible citations for entry ' . $this->name . PHP_EOL;
 		echo 'Authority: ' . $this->authority . '; year: ' . $this->year. PHP_EOL;
 		$cites = $csvlist->bfind(array(
@@ -632,7 +633,9 @@ class Taxon extends ListEntry {
 		foreach($cites as $cite) {
 			$taxon = $this;
 			$response = $this->menu(array(
-				'head' => 'Is this citation correct?' . PHP_EOL . $cite,
+				'head' => 'Is this citation correct?' . PHP_EOL . 
+					$cite->name . PHP_EOL . 
+					$cite,
 				'options' => array(
 					'y' => 'This citation is correct',
 					'n' => 'This citation is not correct',

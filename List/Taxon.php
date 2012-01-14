@@ -521,19 +521,24 @@ class Taxon extends ListEntry {
 	}
 	private function setranktosisters() {
 		$sisters = $this->p->getchildren($this->parent);
-		if(!$sisters) return false;
-		$rank;
+		if(!$sisters) 
+			return false;
 		foreach($sisters as $key => $sister) {
 			$nrank = $this->p->get($sister, 'rank');
 			if(!$nrank)
 				return false;
-			if(!$rank)
+			if(!isset($rank))
 				$rank = $nrank;
 			else if($rank !== $nrank)
 				return false;
 		}
-		if(!$rank) return false;
-		$this->set(array('rank' => $rank, 'verbose' => true, 'easy' => true));
+		if(!isset($rank)) 
+			return false;
+		$this->set(array(
+			'rank' => $rank, 
+			'verbose' => true, 
+			'easy' => true
+		));
 		return true;
 	}
 	static $rankendings = array('superfamily' => 'oidea',
@@ -573,14 +578,29 @@ class Taxon extends ListEntry {
 		return false;
 	}
 	public function merge(array $paras = array()) {
-		while(!$this->has($paras['into'])) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				0 => 'Taxon to be merged',
+				'into' => 'Taxon that this taxon is to be merged into',
+			),
+			'default' => array(
+				'into' => false,
+			),
+			'errorifempty' => array(
+				0
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		while(!$this->p->has($paras['into'])) {
 			$paras['into'] = $this->getline('Taxon to be merged into: ');
-			if($paras['into'] === 'q') return false;
+			if($paras['into'] === 'q') 
+				return false;
 		}
-		$children = $this->p->getchildren($paras['into']);
+		$children = $this->getchildren();
 		foreach($children as $child)
-			$this->p->set($child, array('parent' => $this->name));
-		$this->p->remove($paras['into']);
+			$this->p->set($child, array('parent' => $paras['into']));
+		$this->p->remove($this->name);
+		return true;
 	}
 	private function sortchildren() {
 		return $this->p->sortchildren($this->name);

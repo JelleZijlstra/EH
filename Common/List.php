@@ -343,6 +343,7 @@ abstract class FileList extends ExecuteHandler {
 				'sort' => '',
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$arr = $paras['array'];
 		if(!is_array($this->$arr)) {
 			echo 'Invalid array' . PHP_EOL;
 			return false;

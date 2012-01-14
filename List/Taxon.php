@@ -24,19 +24,16 @@ class Taxon extends ListEntry {
 	public $isextant;
 	public $citation; // citation to the original description
 	protected static $Taxon_commands = array(
-
+		'populatecitation' => array('name' => 'populatecitation',
+			'desc' => 'Attempt to populate the citation field',
+			'aka' => 'addcite',
+			'arg' => 'None',
+			'execute' => 'callmethod',
+		),
 	);
-	protected static $Taxon_synonyms = array();
 	function __construct($in, $code) {
 	// $in: input data (array or string)
 	// $code: kind of FullFile to make
-		if(!self::$Taxon_synonyms) {
-			foreach(self::$Taxon_commands as $cmd) {
-				if($cmd['aka']) foreach($cmd['aka'] as $aka) {
-					self::$Taxon_commands[$aka] = $cmd['name'];
-				}
-			}
-		}
 		global $csvlist;
 		if($csvlist) $this->p = $csvlist;
 		if(!$code) return;
@@ -614,21 +611,41 @@ class Taxon extends ListEntry {
 			return false;
 		// prepare bfind query
 		$authors = '/' . 	
-			preg_replace('/,\s*|\s*&\s*/u', '.*', $this->authority) . 
-			'/u';
+			preg_replace(
+				array('/,\s*|\s*&\s*|\s+|-|[A-Z]\./u', '/(\.\*)+/u'),
+				array('.*', '.*'), 
+				$this->authority
+			) . 
+			'/iu';
+		$title = '/' .
+			preg_replace('/\s+/u', '.*', $this->name);
+		if($this->rank !== 'genus')
+			$title .= '.*nov/iu';
+		else
+			$title .= ' nov/iu';
 		global $csvlist;
 		$this->p->needsave();
 		echo 'Searching for possible citations for entry ' . $this->name . PHP_EOL;
 		echo 'Authority: ' . $this->authority . '; year: ' . $this->year. PHP_EOL;
-		$cites = $csvlist->bfind(array(
-			'authors' => $authors,
-			'year' => $this->year,
-			'print' => false,
-		));
+		if(!$this->authority or !$this->year) {
+			$this->citation = 'Unknown';
+			return false;
+		}
+		$cites = array_merge(
+			$csvlist->bfind(array(
+				'authors' => $authors,
+				'year' => $this->year,
+				'print' => false,
+			)),
+			$csvlist->bfind(array(
+				'name' => $title,
+				'print' => false,
+			))
+		);
 		if(!$cites) {
 			echo 'Nothing found' . PHP_EOL;
 			$this->citation = 'Unknown';
-			return false;
+			return true;
 		}
 		foreach($cites as $cite) {
 			$taxon = $this;
@@ -639,6 +656,7 @@ class Taxon extends ListEntry {
 				'options' => array(
 					'y' => 'This citation is correct',
 					'n' => 'This citation is not correct',
+					's' => 'This citation is not correct, and stop listing others',
 					'ic' => 'Give more information about the citation',
 					'it' => 'Give more information about the taxon',
 					'o' => 'Open the citation file',
@@ -660,10 +678,11 @@ class Taxon extends ListEntry {
 					$this->citation = $cite->name;
 					return true;
 				case 'n': break;
+				case 's': break 2;
 			}
 		}
 		$this->citation = 'Unknown';
-		return false;
+		return true;
 	}
 }
 ?>

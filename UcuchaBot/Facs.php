@@ -166,7 +166,7 @@ class FacsEntry extends ListEntry {
 		// get noms
 		$factext = $this->p->bot->fetchwp($this->name);
 		$name = $this->name;
-		$bot = $this->bot;
+		$bot = $this->p->bot;
 		$failure = function() use($name, $bot) {
 			echo 'Unable to retrieve nominators for page ' . $name . PHP_EOL;
 			$bot->writewp('User talk:Ucucha', array(

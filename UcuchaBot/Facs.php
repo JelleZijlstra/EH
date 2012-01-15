@@ -171,12 +171,14 @@ class FacsEntry extends ListEntry {
 			echo 'Unable to retrieve nominators for page ' . $name . PHP_EOL;
 			$bot->writewp('User talk:Ucucha', array(
 				'kind' => 'appendtext',
-				'text' => '==Nominators for ' . $name . '
-I was unable to find the list of nominators for the FAC ' . $name . '. Please fix the cause and run me again. ~~~~',
+				'text' => '
+==Nominators for ' . $name . '==
+I was unable to find the list of nominators for the FAC [[' . $name . ']]. Please fix the cause and run me again. ~~~~',
 				'donotmarkasbot' => true,
+				'summary' => 'Unable to retrieve nominators',
 			));
 		};
-		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator\(s\): (.*)(?=\n)/u',
+		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator(\(s\))?: (.*)(?=\n)/u',
 			$factext,
 			$matches
 		);

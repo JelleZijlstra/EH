@@ -167,6 +167,7 @@ class TaxonList extends FileList {
 		return true;
 	}
 	static $start_wiki = "This is part of a list of all currently recognized species of mammals:\n{{:Special:Prefixindex/User:Ucucha/List of mammals}}\nIt is based on the third edition of ''Mammal Species of the World'' (Wilson and Reeder, 2005) and incorporates changes made since then in the systematic literature. In addition, it strives to incorporate all mammal species that are known to have existed during the [[Holocene]], so as to give a more complete picture of Recent mammal diversity.\n\nThis document is intended primarily to gauge the completeness of our coverage of mammals. Please do not fix links or make changes in spelling and taxonomy, but let me know when you think you have discovered an error. In case of differences between this list and Wikipedia articles in spelling or taxonomy, this list is more likely to be correct. This file is generated automatically from a CSV file by a script.\n";
+	public $wiki_out = array();
 	static $end_wiki = "\n=References=\n{{reflist|colwidth=30em}}\n";
 	public function outputwiki(array $paras = array()) {
 		if($this->process_paras($paras, array(

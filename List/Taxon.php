@@ -244,6 +244,13 @@ class Taxon extends ListEntry {
 		}
 		else {
 			if(isset($tmp)) {
+				if($this->citation and $this->citation !== 'Unknown') {
+					global $csvlist;
+					$tmp .= ':::<small>Original description: ';
+					$csvlist->verbosecite = false;
+					$tmp .= $csvlist->cite($this->citation);
+					$tmp .= '</small>' . PHP_EOL;
+				}
 				if($this->comments) {
 					$tmp .= ':::<small>Comments: ';
 					$tmp .= $this->parse('comments', 'wref');

@@ -617,10 +617,10 @@ class Taxon extends ListEntry {
 				$this->authority
 			) . 
 			'/iu';
-		$title = '/' .
+		$title = '/\b' .
 			preg_replace('/\s+/u', '.*', $this->name);
 		if($this->rank !== 'genus')
-			$title .= '.*nov/iu';
+			$title .= '\b.*nov\b/iu';
 		else
 			$title .= ' nov/iu';
 		global $csvlist;

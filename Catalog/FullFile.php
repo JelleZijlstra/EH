@@ -641,7 +641,7 @@ class FullFile extends ListEntry {
 			case 'AC': $o = 'Acta Chiropterologica'; break;
 			case 'AGH': case 'Acta Geologica Hispanica': $o = 'Acta Geológica Hispánica'; break;
 			case 'AJPA': $o = 'American Journal of Physical Anthropology'; break;
-			case 'AMN': $o = 'American Museum Novitates'; break;
+			case 'AMN': case 'American Museum novitates': $o = 'American Museum Novitates'; break;
 			case 'AMNR': case 'Arquivos do Museu Nacional, Rio de Janeiro': $o = 'Arquivos do Museu Nacional'; break;
 			case 'ANMW': $o = 'Annales des Naturhistorischen Museums in Wien'; break;
 			case 'APP': $o = 'Acta Palaeontologica Polonica'; break;
@@ -2614,99 +2614,77 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$this->editedtitle = 1;
 		return true;
 	}
-	private function expandamnh() {
-		$html = @file_get_contents('http://hdl.handle.net/' . $this->hdl);
-		if(!$html) {
-			echo 'Could not retrieve data' . PHP_EOL;
+	protected function expandamnh(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array('text' => 'Text of HTML file to be parsed'),
+			'default' => array('text' => false),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if(!$this->hdl)
+			return false;
+		// load document. Suppress errors because it's not our fault if the AMNH's HTML is messed up.
+		$doc = new DOMDocument();
+		if($paras['text'] !== false)
+			@$doc->loadHTML($paras['text']);
+		else if(!@$doc->loadHTMLFile(
+			'http://digitallibrary.amnh.org/dspace/handle/' . 
+			$this->hdl . '?show=full')) {
+			echo 'Unable to load data from AMNH' . PHP_EOL;
 			return false;
 		}
 		else
-			echo 'Retrieved data from AMNH' . PHP_EOL;
-		$html = preg_split("/<tr><td class=\"metadataFieldLabel\">/", $html);
-		// If "Other Titles" field present, bump indices; same for abstract, keyword
-		if(preg_match("/Other Titles/", $html[2]))
-			$other = 1;
-		else
-			$other = 0;
-		if(preg_match("/Keywords/", $html[3 + $other]))
-			$keywords = 1 + $other;
-		else
-			$keywords = $other;
-		if(preg_match("/Abstract/", $html[6 + $keywords]))
-			$abstract = 1 + $keywords;
-		else
-			$abstract = $keywords;
-		/*
-		 * "Title" field
-		 */
-		$titleplus = preg_replace("/Title:&nbsp;<\/td><td class=\"metadataFieldValue\">/", "", $html[1]);
-		// journal
-		if(preg_match("/Bulletin of the AMNH/", $titleplus) || preg_match("/Bulletin of the American Museum of Natural History/", $titleplus))
-			$this->journal = "Bulletin of the American Museum of Natural History";
-		else if(preg_match("/American Museum novitates/", $titleplus))
-			$this->journal = "American Museum Novitates";
-		else if(preg_match("/Anthropological papers of the AMNH/", $titleplus))
-			$this->journal = "Anthropological Papers of the American Museum of Natural History";
-		else if(preg_match("/Memoirs of the AMNH/", $titleplus))
-			$this->journal = "Memoirs of the American Museum of Natural History";
-		else
-			echo "Could not detect journal." . PHP_EOL;
-		$titleplus = preg_split("/Bulletin of the AMNH|American Museum novitates|Anthropological papers of the AMNH|Memoirs of the AMNH|Bulletin of the American Museum of Natural History/", $titleplus);
-		// title
-		$this->title = preg_replace("/ :/", ":", trimplus($titleplus[0]));
-		// volume/issue
-		$tmp = preg_replace("/[^\d]*(\d+)[^\d]+(\d+).*/", "$1 $2", $titleplus[1]);
-		if($tmp === $titleplus[1]) {
-			// no "part"
-			$this->volume = preg_replace("/.*?(\d+).*/s", "$1", $tmp);
+			echo 'Loaded data from AMNH' . PHP_EOL;
+		$list = $doc->getElementsByTagName('tr');
+		$authors = '';
+		for($i = 0; $i < $list->length; $i++) {
+			$row = $list->item($i);
+			// only handle actual data
+			if(strpos($row->attributes->getNamedItem('class')->nodeValue, 'ds-table-row') !== 0)
+				continue;
+			$label = $row->childNodes->item(0)->nodeValue;
+			$value = $row->childNodes->item(2)->nodeValue;
+			switch($label) {
+				case 'dc.contributor.author':
+					// remove year of birth
+					$value = preg_replace('/, [\d\-]+$/u', '', $value);
+					$authors .= preg_replace(
+						'/(?<=, )([A-Z])[a-zA-Z]*\s*/u', 
+						'$1.',
+						$value
+					) . '; ';
+					break;
+				case 'dc.date.issued':
+					$this->year = $value;
+					break;
+				case 'dc.description':
+					if(!preg_match("/^\d+ p\./u", $value)) 
+						break;
+					$this->start = 1;
+					// number of pages is at beginning of this piece
+					$this->end = (int) $value;
+					break;
+				case 'dc.relation.ispartofseries':
+					$data = preg_split('/; (no|vol)\. |, article /u', $value);
+					$this->journal = trim($data[0]);
+					$this->volume = trim($data[1]);
+					if(isset($data[2]))
+						$this->issue = trim($data[2]);
+					break;
+				case 'dc.title': // title, with some extraneous stuff
+					$this->title = trim(preg_replace(
+						'/\. (American Museum novitates|Bulletin of the AMNH|Anthropological papers of the AMNH|Memoirs of the AMNH|Bulletin of the American Museum of Natural History).*$/u', 
+						'', 
+						$value
+					));
+					break;
+			}
 		}
-		else {
-			// also a "part"
-			$tmp = preg_split("/ /", $tmp);
-			$this->volume = trim($tmp[0]);
-			$this->issue = trim($tmp[1]);
-		}
-		/*
-		 * "Authors" field
-		 */
-		$authors = preg_replace(array("/Authors:&nbsp;<\/td><td class=\"metadataFieldValue\">/", "/<\/td><\/tr>/"), array("", ""), $html[2 + $other]);
-		$authors = preg_split("/<br>/", $authors);
-		foreach($authors as $key => $author) {
-			$tmp = trim($author);
-			// get rid of years
-			$tmp = preg_replace("/, \d+-?\d*\.*/", "", $tmp);
-			$tmp = preg_split("/, /", $tmp);
-			// abbreviate given names
-			$tmp[1] = preg_replace(array("/(?<=[A-Z])[^\s]*( |$)/", "/\.\./"), array(".", "."), $tmp[1]);
-			$tmp[0] .= ", " . $tmp[1];
-			$authors[$key] = $tmp[0];
-		}
-		foreach($authors as $key => $author) {
-			if($key > 0)
-				$aut .= "; ";
-			$aut .= $author;
-		}
-		$this->authors = $aut;
-		/*
-		 * "Issue Date" field
-		 */
-		$this->year = trim(preg_replace(array("/Issue Date:&nbsp;<\/td><td class=\"metadataFieldValue\">/", "/<\/td><\/tr>/"), array("", ""), $html[3 + $keywords]));
-		/*
-		 * "Description" field
-		 * Format of this field is *very* variable on the AMNH site
-		 */
-		$desc = trim(preg_replace(array("/Description:&nbsp;<\/td><td class=\"metadataFieldValue\">/", "/<\/td><\/tr>/"), array("", ""), $html[6 + $abstract]));
-		// find multi-page range
-		if(preg_match("/^(p\. )?\d+-\d+/", $desc)) {
-			$pages = preg_replace("/^(p\. )?(\d+-\d+).*/", "$2", $desc);
-			$pages = preg_split("/-/", $pages);
-			$this->start = $pages[0];
-			$this->end = $pages[1];
-		}
-		else {
-			$this->start = 1;
-			$this->end = preg_replace("/.*?(\d+).*/", "$1", $desc);
-		}
+		// final cleanup
+		$this->authors = trim(preg_replace(
+			array('/\.+/u', '/; $/u'),
+			array('.', ''),
+			$authors
+		));
 		return true;
 	}
 	protected function expanddoi($paras = array()) {

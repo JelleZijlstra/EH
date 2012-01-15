@@ -95,7 +95,7 @@ abstract class ExecuteHandler extends EHICore {
 			$this->addcommand($command);
 		}
 	}
-	public function addcommand($command) {
+	public function addcommand($command, array $paras = array()) {
 	// adds a command to the object's library
 	// @param command Array of data forming a command
 	// command can have the following components
@@ -108,7 +108,8 @@ abstract class ExecuteHandler extends EHICore {
 	// - rawarg: Bool whether the argument can be used "raw" (i.e., unprocessed)
 	// - method: String method called by the command
 		if(isset($this->commands[$command['name']])) {
-			if(!$paras['ignoreduplicates']) trigger_error('Command ' . $command['name'] . ' already exists', E_USER_NOTICE);
+			if(!isset($paras['ignoreduplicates']))
+				trigger_error('Command ' . $command['name'] . ' already exists', E_USER_NOTICE);
 			return false;
 		}
 		if(!self::testcommand($command)) return false;

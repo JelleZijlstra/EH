@@ -621,10 +621,14 @@ class Taxon extends ListEntry {
 			),
 			'default' => array('f' => false, 'c' => false),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if($paras['c'] and $this->citation and $this->citation !== 'Unknown')
-			return false;
-		else if($this->citation and !$paras['f'])
-			return false;
+		if($paras['c']) { 
+			if($this->citation and $this->citation !== 'Unknown')
+				return false;
+		}
+		else if(!$paras['f']) {
+			if($this->citation)
+				return false;
+		}
 		// prepare bfind query
 		$authors = '/' . 	
 			preg_replace(

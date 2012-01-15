@@ -178,7 +178,7 @@ I was unable to find the list of nominators for the FAC [[' . $name . ']]. Pleas
 				'summary' => 'Unable to retrieve nominators',
 			));
 		};
-		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator(\(s\))?: (.*)(?=\n)/u',
+		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator(\(?s\)?)?: (.*)(?=\n)/u',
 			$factext,
 			$matches
 		);

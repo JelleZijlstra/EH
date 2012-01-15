@@ -2646,9 +2646,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			switch($label) {
 				case 'dc.contributor.author':
 					// remove year of birth
-					$value = preg_replace('/, [\d\-]+$/u', '', $value);
+					$value = preg_replace('/, [\d\-]+| \(.*\)$/u', '', $value);
 					$authors .= preg_replace(
-						'/(?<=, )([A-Z])[a-zA-Z]*\s*/u', 
+						'/(?<=, )([A-Z])\w*\s*/u', 
 						'$1.',
 						$value
 					) . '; ';

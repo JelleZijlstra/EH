@@ -2614,7 +2614,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$this->editedtitle = 1;
 		return true;
 	}
-	protected function expandamnh(array $paras = array()) {
+	private function expandamnh(array $paras = array()) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array('text' => 'Text of HTML file to be parsed'),

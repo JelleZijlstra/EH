@@ -615,10 +615,15 @@ class Taxon extends ListEntry {
 	public function populatecitation(array $paras = array()) {
 	// try to find citation
 		if($this->process_paras($paras, array(
-			'checklist' => array('f' => 'Whether to search even though a citation is already present'),
-			'default' => array('f' => false),
+			'checklist' => array(
+				'f' => 'Whether to search even though a citation is already present',
+				'c' => 'Whether to search even though an "unknown" citation is already present'
+			),
+			'default' => array('f' => false, 'c' => false),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if($this->citation and !$paras['f'])
+		if($paras['c'] and $this->citation and $this->citation !== 'Unknown')
+			return false;
+		else if($this->citation and !$paras['f'])
 			return false;
 		// prepare bfind query
 		$authors = '/' . 	

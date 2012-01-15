@@ -992,21 +992,19 @@ abstract class ListEntry extends ExecuteHandler {
 		foreach($this as $key => $value) {
 			if(in_array($key, static::$inform_exclude) or $key === 'synonyms' or $key === 'commands')
 				continue;
-			switch(gettype($value)) {
-				case 'array':
-					foreach($value as $akey => $prop)
-						if($prop and !is_array($prop) and !is_object($prop))
-							echo $akey . ': ' . $prop . PHP_EOL;
-					break;
-				case 'string': case 'double': case 'int':
-					if($value)
-						echo $key . ': ' . $value . PHP_EOL;
-					break;
-				case 'bool':
-					echo $key . ': ';
-					echo $value ? 'true' : 'false';
-					echo PHP_EOL;
-					break;
+			if(is_array($value)) {
+				foreach($value as $akey => $prop)
+					if($prop and !is_array($prop) and !is_object($prop))
+						echo $akey . ': ' . $prop . PHP_EOL;
+			}
+			else if(is_string($value) or is_double($value) or is_int($value)) {
+				if($value)
+					echo $key . ': ' . $value . PHP_EOL;
+			}
+			else if(is_bool($value)) {
+				echo $key . ': ';
+				echo $value ? 'true' : 'false';
+				echo PHP_EOL;
 			}
 		}
 	}

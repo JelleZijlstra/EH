@@ -230,9 +230,9 @@ abstract class FileList extends ExecuteHandler {
 		$askafter = $paras['askafter'];
 		$continueiffalse = $paras['continueiffalse'];
 		$countfalse = $paras['countfalse'];
-		unset($paras['askafter'], $paras['continueiffalse'], $paras['countfalse']);
+		unset($paras['askafter'], $paras['continueiffalse'], $paras['countfalse'], $paras[0]);
 		if(isset($paras['arg'])) {
-			$arg = $paras['arg'];
+			$arg = $paras[0] = $paras['arg'];
 			unset($paras['arg']);
 		}
 		$i = 0;

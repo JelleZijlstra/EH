@@ -638,11 +638,11 @@ class Taxon extends ListEntry {
 			) . 
 			'/iu';
 		$title = '/\b' .
-			preg_replace('/\s+/u', '.*', $this->name);
+			preg_replace('/\s+/u', '.*\b', $this->name);
 		if($this->rank !== 'genus')
-			$title .= '\b.*nov\b/iu';
+			$title .= '(?! [a-z]+ nov)\b.*\bnov\b/u';
 		else
-			$title .= ' nov/iu';
+			$title .= ' \bnov\b/u';
 		global $csvlist;
 		$this->p->needsave();
 		echo 'Searching for possible citations for entry ' . $this->name . PHP_EOL;

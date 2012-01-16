@@ -34,26 +34,42 @@ zval *arrtozval(ehvar_t **paras) {
 			if(currvar->indextype == int_e) {
 				switch(currvar->value.type) {
 					case int_e:
-						add_index_long(arr, currvar->index, currvar->value.intval);
+						add_index_long(arr, 
+							currvar->index, currvar->value.intval);
 						break;
 					case string_e:
-						add_index_string(arr, currvar->index, currvar->value.stringval, 0);
+						add_index_string(arr, 
+							currvar->index, currvar->value.stringval, 0);
 						break;
 					case bool_e:
-						add_index_bool(arr, currvar->index, currvar->value.boolval);
+						add_index_bool(arr, 
+							currvar->index, currvar->value.boolval);
+						break;
+					case array_e:
+						add_index_zval(arr,
+							currvar->index,
+							arrtozval(currvar->value.arrayval));
 						break;
 				}
 			}
 			else if(currvar->indextype == string_e) {
 				switch(currvar->value.type) {
 					case int_e:
-						add_assoc_long(arr, currvar->name, currvar->value.intval);
+						add_assoc_long(arr, 
+							currvar->name, currvar->value.intval);
 						break;
 					case string_e:
-						add_assoc_string(arr, currvar->name, currvar->value.stringval, 0);
+						add_assoc_string(arr, 
+							currvar->name, currvar->value.stringval, 0);
 						break;
 					case bool_e:
-						add_assoc_bool(arr, currvar->name, currvar->value.boolval);
+						add_assoc_bool(arr, 
+							currvar->name, currvar->value.boolval);
+						break;
+					case array_e:
+						add_assoc_zval(arr,
+							currvar->name,
+							arrtozval(currvar->value.arrayval));
 						break;
 				}
 			}

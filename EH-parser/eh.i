@@ -16,20 +16,8 @@ char *EHI::eh_getline(void) {
 EHI::~EHI(void) {
 	return;
 }
-%}
-%module(directors="1") ehphp
-%feature("director");
 
-// EH string to PHP string
-%typemap(directorin) char* {
-	zval *str;
-	
-	MAKE_STD_ZVAL(str);
-	ZVAL_STRING(str, rawcmd, 1);
-	obj0 = *str;
-}
-// Typemap from EH array to PHP array
-%typemap(directorin) ehvar_t** {
+zval *arrtozval(ehvar_t **paras) {
 	zval *arr = (zval *)Malloc(sizeof(zval));
 	// need to initialize refcount in order to prevent PHP from segfaulting on this.
 	arr->refcount__gc = 1;
@@ -40,7 +28,6 @@ EHI::~EHI(void) {
 	// initiate PHP array
 	array_init(arr);
 	for(i = 0; i < VARTABLE_S; i++) {
-		// It looks like SWIG's directorin support for PHP may be broken. The code on the following line and the assignment at the end was written after inspection of the generated eh_wrap.cpp code and will not work when the argument names are different from those of EHI::execute_cmd().
 		currvar = paras[i];
 		while(currvar != NULL) {
 			// convert an EH array member to a PHP array member
@@ -73,8 +60,24 @@ EHI::~EHI(void) {
 			currvar = currvar->next;
 		}
 	}
-	// this one is also a kludge.
-	obj1 = *arr;
+	return arr;
+}
+%}
+%module(directors="1") ehphp
+%feature("director");
+
+// EH string to PHP string
+%typemap(directorin) char* {
+	zval *str;
+	
+	MAKE_STD_ZVAL(str);
+	ZVAL_STRING(str, rawcmd, 1);
+	obj0 = *str;
+}
+// Typemap from EH array to PHP array
+%typemap(directorin) ehvar_t** {
+	// It looks like SWIG's directorin support for PHP may be broken. The code on the following line was written after inspection of the generated eh_wrap.cpp code and will not work when the argument names are different from those of EHI::execute_cmd().
+	obj1 = *arrtozval(paras);
 }
 
 class EHI {

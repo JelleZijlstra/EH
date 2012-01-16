@@ -4,10 +4,6 @@ if [ ! $1 ]; then
 	echo 'No input file given'
 	exit
 fi
-PARDIR=$(dirname $0)
-if [ $PARDIR = '.' ]; then
-	PARDIR=$(pwd)
-fi
 infile=$1
 exp=${infile/.eh/.expected}
 echo "$infile" >> testfiles

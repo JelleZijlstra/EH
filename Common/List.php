@@ -853,15 +853,15 @@ abstract class FileList extends ExecuteHandler {
 	public function sort(array $paras = array()) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
-			'checklist' => array(
-				0 => 'Field to sort under',
-				'numeric' => 'Perform a numeric sort',
-				'reverse' => 'Whether to reverse the sort',
-			),
 			'synonyms' => array(
 				'field' => 0,
 				'n' => 'numeric',
 				'r' => 'reverse',
+			),
+			'checklist' => array(
+				0 => 'Field to sort under',
+				'numeric' => 'Perform a numeric sort',
+				'reverse' => 'Whether to reverse the sort',
 			),
 			'default' => array(
 				0 => false,

@@ -68,3 +68,5 @@ Unable to open included file: EH notice
 @doublequotes.eh:
 @error2.eh:
 syntax error, unexpected '+': EH parsing error
+@refloop.eh:
+Circular reference: EH runtime error

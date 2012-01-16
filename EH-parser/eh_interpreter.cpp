@@ -717,6 +717,18 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					// set variable, unless it is const
 					if(operand1.type == creference_e)
 						eh_error("Attempt to write to constant variable", eerror_e);
+					/*
+					 * Without this check, the following code creates an 
+					 * infinite loop:
+						$ foo = 3
+						$ bar = &foo
+						$ bar = &foo
+						echo $foo
+					 * That is because the third line sets foo to its own 
+					 * address.
+					 */
+					else if(operand2.type == reference_e && operand1.referenceval == operand2.referenceval)
+						eh_error("Circular reference", eerror_e);
 					else
 						*operand1.referenceval = operand2;
 				}

@@ -893,7 +893,7 @@ abstract class ExecuteHandler extends EHICore {
 	// Test function that might do anything I currently want to test
 	// Currently, testing what arguments it is getting
 		$this->stty('cbreak iutf8');
-		while(1) {
+		while(0) {
 			$char = ord(fgetc(STDIN));
 			echo PHP_EOL;
 			echo $char . ' : ' . base_convert($char, 10, 8) . PHP_EOL;

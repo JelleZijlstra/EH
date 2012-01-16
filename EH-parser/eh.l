@@ -185,7 +185,7 @@ EHParser::EHParser(void) {
 EHParser::~EHParser(void) {
 	yylex_destroy(scanner);
 }
-void yyerror(void *scanner, char *s) {
+void yyerror(void *scanner, const char *s) {
 	// give up on line numbers for now
 	eh_error(s, eparsing_e);
 }

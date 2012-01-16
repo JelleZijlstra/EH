@@ -227,7 +227,7 @@ const char *get_typestring(type_enum type);
  */
 void eh_init(void);
 void eh_exit(void);
-void yyerror(void *, char *s);
+void yyerror(void *, const char *s);
 void *Malloc(size_t size);
 void *Calloc(size_t count, size_t size);
 void free_node(ehretval_t *in);

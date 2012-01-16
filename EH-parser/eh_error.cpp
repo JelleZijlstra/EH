@@ -10,7 +10,7 @@
 
 void eh_error(const char *message, errlevel_e level) {
 	if(message)
-		fprintf(stderr, message);
+		fputs(message, stderr);
 	switch(level) {
 		case efatal_e: 
 			fprintf(stderr, ": EH fatal error\n"); 

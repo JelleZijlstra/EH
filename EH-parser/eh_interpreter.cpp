@@ -1713,7 +1713,7 @@ static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue)
 		eh_error_type("bitwise access to integer", index.type, enotice_e);
 		return;
 	}
-	if(index.intval >= sizeof(int) * 8) {
+	if(index.intval < 0 || (unsigned) index.intval >= sizeof(int) * 8) {
 		eh_error_int("Identifier too large for bitwise access to integer", index.intval, enotice_e);
 		return;
 	}

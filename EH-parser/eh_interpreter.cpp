@@ -211,16 +211,25 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 			case T_FOR:
 				inloop++;
 				breaking = 0;
+				int min, max;
 				// get the count
-				operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context));
-				if(operand1.type != int_e) {
-					eh_error_type("count", operand1.type, eerror_e);
-					break;
+				operand1 = eh_execute(node->opval->paras[0], context);
+				if(operand1.type == range_e) {
+					min = operand1.rangeval[0];
+					max = operand1.rangeval[1];
 				}
-				count = operand1.intval;
+				else {
+					operand1 = eh_xtoi(operand1);
+					if(operand1.type != int_e) {
+						eh_error_type("count", operand1.type, eerror_e);
+						break;
+					}
+					min = 0;
+					max = operand1.intval - 1;
+				}
 				if(node->opval->nparas == 2) {
 					// "for 5; do stuff; endfor" construct
-					for(i = 0; i < count; i++) {
+					for(i = 0; i < operand1.intval; i++) {
 						ret = eh_execute(node->opval->paras[1], context);
 						LOOPCHECKS;
 					}
@@ -238,7 +247,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					}
 					// count variable always gets to be an int
 					var->value.type = int_e;
-					for(var->value.intval = 0; var->value.intval < count; var->value.intval++) {
+					for(var->value.intval = min; var->value.intval <= max; var->value.intval++) {
 						ret = eh_execute(node->opval->paras[2], context);
 						LOOPCHECKS;
 					}

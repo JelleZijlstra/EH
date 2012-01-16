@@ -54,3 +54,5 @@ error2.eh
 refloop.eh
 callfactorial.eh
 range.eh
+eratosthenes.eh
+eratosthenes2.eh

@@ -9,6 +9,9 @@ interpreter:
 - Make more use of C++ features. Right now it's basically C compiled with a C++
   compiler; let's use some of C++'s fancy features.
 - Foreach-like loops for objects and arrays.
+- When compiled with Clang++, exceptions thrown by eh_error don't get caught. 
+  Whether this is because I'm misusing exceptions (because control passes
+  through the C function yyparse?) or because of a Clang++ bug I'm not sure.
 
 To compile the interpreter (ehi), write:
 $ make ehi

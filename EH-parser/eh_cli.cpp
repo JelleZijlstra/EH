@@ -48,10 +48,7 @@ int main(int argc, char **argv) {
 		delete parser;
 		exit(ret.intval);
 	}
-	catch(std::exception &e) {
-		exit(-1);
-	}
-	catch(std::exception *e) {
+	catch(...) {
 		exit(-1);
 	}
 }

@@ -167,7 +167,7 @@ and these came close:
 #include "eh.h"
 static uint32_t hashlittle( const void *key, size_t length, uint32_t initval);
 static uint32_t hashbig( const void *key, size_t length, uint32_t initval);
-unsigned int hash(char *data, int scope) {
+unsigned int hash(const char *data, int scope) {
 #if HASH_LITTLE_ENDIAN
 	return hashlittle(data, strlen(data), scope) % VARTABLE_S;
 #else

@@ -169,7 +169,7 @@ typedef struct ehfm_t {
 
 // EH procedure
 typedef struct ehfunc_t {
-	char *name;
+	const char *name;
 	struct ehfm_t f;
 	struct ehfunc_t *next;
 } ehfunc_t;
@@ -184,7 +184,7 @@ typedef struct ehclassmember_t {
 
 typedef struct ehlibfunc_t {
 	void (*code)(ehretval_t *, ehretval_t *, ehcontext_t);
-	char *name;
+	const char *name;
 } ehlibfunc_t;
 
 /*
@@ -294,7 +294,7 @@ bool ehcontext_compare(ehcontext_t lock, ehcontext_t key);
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
 #define HASH_INITVAL 234092
-unsigned int hash(char *data, int scope);
+unsigned int hash(const char *data, int scope);
 
 // type casting
 ehretval_t eh_strtoi(char *in);

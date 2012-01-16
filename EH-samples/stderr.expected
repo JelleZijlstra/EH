@@ -70,3 +70,4 @@ Unable to open included file: EH notice
 syntax error, unexpected '+': EH parsing error
 @refloop.eh:
 Circular reference: EH runtime error
+@callfactorial.eh:

@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 			if(i == 0) {
 				// fall back to tmp.s
 				free(outfilename);
-				outfilename = "tmp.s";
+				outfilename = strdup("tmp.s");
 				break;
 			}
 			if(outfilename[i] == '.') {
@@ -83,6 +83,7 @@ int main(int argc, char **argv) {
 	catch(...) {
 		exit(1);
 	}
+	return 0;
 }
 
 void eh_init(void) {

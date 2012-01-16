@@ -865,7 +865,8 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 								break;
 							case '>':
 								operand3.type = string_e;
-								operand3.stringval = ">";
+								operand3.stringval = (char *) Malloc(sizeof(">"));
+								strcpy(operand3.stringval, ">");
 								// output redirector
 								array_insert_retval(
 									arrayval,
@@ -875,7 +876,8 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 								break;
 							case '}':
 								operand3.type = string_e;
-								operand3.stringval = "}";
+								operand3.stringval = (char *) Malloc(sizeof("}"));
+								strcpy(operand3.stringval, "}");
 								// output redirector
 								array_insert_retval(
 									arrayval,

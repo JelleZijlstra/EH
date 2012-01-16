@@ -124,7 +124,7 @@ typedef struct ehretval_t {
 typedef struct ehvar_t {
 	// union: either the name of a variable or a numeric array index
 	union {
-		char *name;
+		const char *name;
 		int index;
 	};
 	// either the scope of a variable or the index-type of an array member
@@ -177,7 +177,7 @@ typedef struct ehfunc_t {
 // Properties and methods of a class
 typedef struct ehclassmember_t {
 	memberattribute_t attribute;
-	char *name;
+	const char *name;
 	ehretval_t value;
 	struct ehclassmember_t *next;
 } ehclassmember_t;

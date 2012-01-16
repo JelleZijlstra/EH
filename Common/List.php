@@ -75,6 +75,10 @@ abstract class FileList extends ExecuteHandler {
 			'desc' => 'Execute a command on all list entries',
 			'arg' => 'Command',
 			'execute' => 'callmethodarg'),
+		'sort' => array('name' => 'sort',
+			'desc' => 'Sort the c array',
+			'arg' => 'Field to sort by',
+			'execute' => 'callmethod'),
 	);
 	public function __construct($commands = array()) {
 		echo "processing CSV catalog... ";
@@ -845,6 +849,66 @@ abstract class FileList extends ExecuteHandler {
 			echo $field . ': ' . $number . ' of ' . $total . ' (' . round($number/$total*100, 1) . '%)' . PHP_EOL;
 		}
 		return;
+	}
+	public function sort(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				0 => 'Field to sort under',
+				'numeric' => 'Perform a numeric sort',
+				'reverse' => 'Whether to reverse the sort',
+			),
+			'synonyms' => array(
+				'field' => 0,
+				'n' => 'numeric',
+				'r' => 'reverse',
+			),
+			'default' => array(
+				0 => false,
+				'numeric' => false,
+				'reverse' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$field = $paras[0];
+		// if field not set, sort by name (= array key)
+		if($field === false) {
+			$this->needsave();
+			if($paras['reverse'])
+				return krsort($this->c);
+			else
+				return ksort($this->c);
+		}
+		$childclass = static::$childclass;
+		if(!$childclass::hasproperty($field)) {
+			echo 'No such property';
+			return false;
+		}
+		$this->needsave();
+		if($paras['numeric']) {
+			$func = function($obj1, $obj2) use($field) {
+				$field1 = $obj1->$field;
+				$field2 = $obj2->$field;
+				if($field1 > $field2)
+					return 1;
+				else if($field1 < $field2)
+					return -1;
+				else
+					return 0;
+			};
+		}
+		else {
+			$func = function($obj1, $obj2) use($field) {
+				return strcmp($obj1->$field, $obj2->$field);
+			};
+		}
+		if($paras['reverse']) {
+			$rfunc = function($obj1, $obj2) use($func) {
+				return -1 * $func($obj1, $obj2);
+			};
+			return uasort($this->c, $rfunc);
+		}
+		else
+			return uasort($this->c, $func);
 	}
 }
 abstract class ListEntry extends ExecuteHandler {

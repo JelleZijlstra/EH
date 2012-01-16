@@ -127,8 +127,24 @@ void print_tree(ehretval_t *in, int n) {
 		PRINT_TREE_TYPE(type, d)
 		PRINT_TREE_TYPE(attribute, d)
 		PRINT_TREE_TYPE(magicvar, d)
-		PRINT_TREE_TYPE(attributestr, d)
+		case attributestr_e:
+			printntabs(n);
+			if(in->attributestrval.visibility == private_e)
+				printf("private");
+			else
+				printf("public");
+			if(in->attributestrval.isstatic == static_e)
+				printf(", static");
+			else
+				printf(", nonstatic");
+			if(in->attributestrval.isconst == const_e)
+				printf(", const");
+			else
+				printf(", nonconst");
+			printf("\n");
+			break;
 		PRINT_TREE_TYPE(bool, u)
+		case range_e:
 		case array_e:
 		case func_e:
 		case reference_e:
@@ -156,6 +172,7 @@ const char *get_typestring(type_enum type) {
 		case op_e: return "op";
 		case attribute_e: return "attribute";
 		case attributestr_e: return "attributestr";
+		case range_e: return "range";
 	}
 	// to keep the compiler happy
 	return "null";

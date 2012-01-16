@@ -34,7 +34,7 @@ typedef enum type_enum {
 	accessor_e = 4, // for internal use with array/object accessors
 	type_e = 5, // for internal use with type casting
 	array_e,
-	func_e, // for internal use with methods; might become a real user type in the future
+	func_e, // methods
 	reference_e, // for internal use with lvalues, and as a value for references
 	creference_e, // constant references: can be dereferenced but not written to
 	object_e,
@@ -42,6 +42,7 @@ typedef enum type_enum {
 	op_e,
 	attribute_e,
 	attributestr_e,
+	range_e,
 } type_enum;
 
 // attributes of class members
@@ -116,6 +117,7 @@ typedef struct ehretval_t {
 		memberattribute_t attributestrval;
 		accessor_enum accessorval;
 		magicvar_enum magicvarval;
+		int *rangeval;
 	};
 } ehretval_t;
 

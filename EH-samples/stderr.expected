@@ -71,3 +71,4 @@ syntax error, unexpected '+': EH parsing error
 @refloop.eh:
 Circular reference: EH runtime error
 @callfactorial.eh:
+@range.eh:

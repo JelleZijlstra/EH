@@ -73,6 +73,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %left ','
 %left T_AND T_OR T_XOR
 %left ':'
+%left T_RANGE
 %left '|' '^' '&'
 %left '+' '-'
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
@@ -219,6 +220,8 @@ expression:
 							{ $$ = eh_addnode(T_OR, 2, $1, $3); }
 	| expression T_XOR expression
 							{ $$ = eh_addnode(T_XOR, 2, $1, $3); }
+	| expression T_RANGE expression
+							{ $$ = eh_addnode(T_RANGE, 2, $1, $3); }
 	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
 	| T_COUNT expression	{ $$ = eh_addnode(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = eh_addnode(T_NEW, 1, $2); }

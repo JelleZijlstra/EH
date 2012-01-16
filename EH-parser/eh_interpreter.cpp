@@ -36,6 +36,7 @@ ehlibfunc_t libfuncs[] = {
 	LIBFUNCENTRY(is_bool)
 	LIBFUNCENTRY(is_array)
 	LIBFUNCENTRY(is_object)
+	LIBFUNCENTRY(is_range)
 	LIBFUNCENTRY(class_is)
 	LIBFUNCENTRY(include)
 	{NULL, NULL}
@@ -679,6 +680,21 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 							break;
 						}
 				}
+				break;
+			case T_RANGE:
+				// attempt to cast operands to integers; if this does not work,
+				// return NULL. No need to yell, since eh_xtoi already does 
+				// that.
+				operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context));
+				if(operand1.type == null_e)
+					break;
+				operand2 = eh_xtoi(eh_execute(node->opval->paras[1], context));
+				if(operand2.type == null_e)
+					break;
+				ret.type = range_e;
+				ret.rangeval = (int *)Malloc(2 * sizeof(int));
+				ret.rangeval[0] = operand1.intval;
+				ret.rangeval[1] = operand2.intval;
 				break;
 			case T_SET:
 				operand1 = eh_execute(node->opval->paras[0], context);

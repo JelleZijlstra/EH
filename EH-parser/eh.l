@@ -126,6 +126,7 @@
 				yylval_param->sValue[len] = '\0';
 				return T_VARIABLE;
 			}
+".."		return T_RANGE;
 ">="		return T_GE;
 "<="		return T_LE;
 "!="		return T_NE;

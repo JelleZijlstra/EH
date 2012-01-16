@@ -119,6 +119,9 @@ void printvar_retval(ehretval_t in) {
 		case attributestr_e:
 			printf("@attributestr\n");
 			break;
+		case range_e:
+			printf("@range %d..%d\n", in.rangeval[0], in.rangeval[1]);
+			break;
 	}
 	return;
 }
@@ -202,6 +205,7 @@ TYPEFUNC(string)
 TYPEFUNC(bool)
 TYPEFUNC(array)
 TYPEFUNC(object)
+TYPEFUNC(range)
 // check whether a variable is a member of a specified class
 EHLIBFUNC(class_is) {
 	ehretval_t *args = (ehretval_t *) Malloc(2 * sizeof(ehretval_t));

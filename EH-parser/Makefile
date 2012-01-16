@@ -23,7 +23,6 @@ ehi: $(EHI_O)
 	$(CC) $(EHI_O) -o ehi
 
 ehphp: $(EHPHP_O)
-	echo "$(EHPHP_O)"
 	./make_ehphp.sh "$(CC)" "$(SYMBOLS)" "$(EHPHP_O)"
 
 # If I don't do "/usr/bin/bison", y.tab.c won't compile because of a const char* 

@@ -33,6 +33,7 @@ ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2);
 void eh_op_global(const char *name);
 void eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
 ehretval_t eh_op_for(opnode_t *op, ehcontext_t context);
+ehretval_t eh_op_while(ehretval_t **paras, ehcontext_t context);
 ehretval_t eh_op_as(opnode_t *op, ehcontext_t context);
 ehretval_t eh_op_new(const char *name);
 void eh_op_continue(opnode_t *op, ehcontext_t context);
@@ -131,14 +132,19 @@ ehlibfunc_t libfuncs[] = {
  * Stuff to be done in a loop
  */
 #define LOOPCHECKS { \
-	if(returning) break; \
+	if(returning) { \
+		inloop--; \
+		return ret; \
+	} \
 	if(breaking) { \
 		breaking--; \
-		break; \
+		inloop--; \
+		return ret; \
 	} \
 	if(continuing > 1) { \
 		continuing--; \
-		break; \
+		inloop--; \
+		return ret; \
 	} \
 	else if(continuing) { \
 		continuing = 0; \
@@ -222,13 +228,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					ret = eh_execute(node->opval->paras[2], context);
 				break;
 			case T_WHILE:
-				inloop++;
-				breaking = 0;
-				while(eh_xtobool(eh_execute(node->opval->paras[0], context)).boolval) {
-					ret = eh_execute(node->opval->paras[1], context);
-					LOOPCHECKS;
-				}
-				inloop--;
+				ret = eh_op_while(node->opval->paras, context);
 				break;
 			case T_FOR:
 				ret = eh_op_for(node->opval, context);
@@ -742,6 +742,18 @@ ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 	inloop--;
 	return ret;
 }
+ehretval_t eh_op_while(ehretval_t **paras, ehcontext_t context) {
+	ehretval_t ret;
+	ret.type = null_e;
+	inloop++;
+	breaking = 0;
+	while(eh_xtobool(eh_execute(paras[0], context)).boolval) {
+		ret = eh_execute(paras[1], context);
+		LOOPCHECKS;
+	}
+	inloop--;
+	return ret;
+}
 ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 	ehretval_t ret;
 	ret.type = null_e;
@@ -752,6 +764,8 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 		eh_error_type("for ... as operator", object.type, enotice_e);
 		return ret;
 	}
+	// increment loop count
+	inloop++;
 	// establish variables
 	char *membername;
 	ehvar_t *membervar;
@@ -833,6 +847,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 			}
 		}
 	}
+	inloop--;
 	return ret;
 }
 ehretval_t eh_op_new(const char *name) {

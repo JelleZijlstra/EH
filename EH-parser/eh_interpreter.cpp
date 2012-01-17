@@ -76,8 +76,8 @@ ehlibfunc_t libfuncs[] = {
  */
 // take ints, return an int
 #define EH_INT_CASE(token, operator) case token: \
-	operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context)); \
-	operand2 = eh_xtoi(eh_execute(node->opval->paras[1], context)); \
+	operand1 = eh_xtoint(eh_execute(node->opval->paras[0], context)); \
+	operand2 = eh_xtoint(eh_execute(node->opval->paras[1], context)); \
 	if(operand1.type == int_e && operand2.type == int_e) { \
 		ret.type = int_e; \
 		ret.intval = (operand1.intval operator operand2.intval); \
@@ -94,8 +94,8 @@ ehlibfunc_t libfuncs[] = {
 		ret.floatval = (operand1.floatval operator operand2.floatval); \
 	} \
 	else { \
-		operand1 = eh_xtoi(operand1); \
-		operand2 = eh_xtoi(operand2); \
+		operand1 = eh_xtoint(operand1); \
+		operand2 = eh_xtoint(operand2); \
 		if(operand1.type == int_e && operand2.type == int_e) { \
 			ret.type = int_e; \
 			ret.intval = (operand1.intval operator operand2.intval); \
@@ -113,8 +113,8 @@ ehlibfunc_t libfuncs[] = {
 		ret.boolval = (operand1.floatval operator operand2.floatval); \
 	} \
 	else { \
-		operand1 = eh_xtoi(operand1); \
-		operand2 = eh_xtoi(operand2); \
+		operand1 = eh_xtoint(operand1); \
+		operand2 = eh_xtoint(operand2); \
 		if(operand1.type == int_e && operand2.type == int_e) { \
 			ret.type = bool_e; \
 			ret.boolval = (operand1.intval operator operand2.intval); \
@@ -391,10 +391,10 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				// Attempt to cast operands to integers; if this does not work,
 				// return NULL. No need to yell, since eh_xtoi already does 
 				// that.
-				operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context));
+				operand1 = eh_xtoint(eh_execute(node->opval->paras[0], context));
 				if(operand1.type == null_e)
 					break;
-				operand2 = eh_xtoi(eh_execute(node->opval->paras[1], context));
+				operand2 = eh_xtoint(eh_execute(node->opval->paras[1], context));
 				if(operand2.type == null_e)
 					break;
 				ret = eh_make_range(operand1.intval, operand2.intval);
@@ -524,7 +524,7 @@ ehretval_t eh_op_tilde(ehretval_t in) {
 			break;
 		// else try to cast to int
 		default:
-			in = eh_xtoi(in);
+			in = eh_xtoint(in);
 			if(in.type != int_e) {
 				eh_error_type("bitwise negation", in.type, eerror_e);
 				ret.type = null_e;
@@ -550,7 +550,7 @@ ehretval_t eh_op_uminus(ehretval_t in) {
 			ret.type = float_e;
 			ret.floatval = -in.floatval;
 		default:
-			in = eh_xtoi(in);
+			in = eh_xtoint(in);
 			if(in.type != int_e) {
 				eh_error_type("negation", in.type, eerror_e);
 				ret.type = null_e;
@@ -581,8 +581,8 @@ ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2) {
 		ret.floatval = operand1.floatval + operand2.floatval;
 	}
 	else {
-		operand1 = eh_xtoi(operand1);
-		operand2 = eh_xtoi(operand2);
+		operand1 = eh_xtoint(operand1);
+		operand2 = eh_xtoint(operand2);
 		if(operand1.type == int_e && operand2.type == int_e) {
 			ret.type = int_e;
 			ret.intval = operand1.intval + operand2.intval;
@@ -706,7 +706,7 @@ ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 		max = count_r.rangeval[1];
 	}
 	else {
-		count_r = eh_xtoi(count_r);
+		count_r = eh_xtoint(count_r);
 		if(count_r.type != int_e) {
 			eh_error_type("count", count_r.type, eerror_e);
 			return ret;
@@ -888,7 +888,7 @@ void eh_op_break(opnode_t *op, ehcontext_t context) {
 	if(op->nparas == 0)
 		level = (ehretval_t){int_e, {1}};
 	else
-		level = eh_xtoi(eh_execute(op->paras[0], context));
+		level = eh_xtoint(eh_execute(op->paras[0], context));
 	if(level.type != int_e)
 		return;
 	// break as many levels as specified by the argument
@@ -904,7 +904,7 @@ void eh_op_continue(opnode_t *op, ehcontext_t context) {
 	if(op->nparas == 0)
 		level = (ehretval_t){int_e, {1}};
 	else
-		level = eh_xtoi(eh_execute(op->paras[0], context));
+		level = eh_xtoint(eh_execute(op->paras[0], context));
 	if(level.type != int_e)
 		return;
 	// break as many levels as specified by the argument
@@ -1675,10 +1675,10 @@ ehretval_t eh_cast(type_enum type, ehretval_t in) {
 	ehretval_t ret;
 	switch(type) {
 		case int_e:
-			ret = eh_xtoi(in);
+			ret = eh_xtoint(in);
 			break;
 		case string_e:
-			ret = eh_xtostr(in);
+			ret = eh_xtostring(in);
 			break;
 		case bool_e:
 			ret = eh_xtobool(in);
@@ -1710,7 +1710,7 @@ ehretval_t eh_cast(type_enum type, ehretval_t in) {
 	ret.type = null_e; \
 	return ret; \
 } while(0)
-ehretval_t eh_strtoi(char *in) {
+ehretval_t eh_stringtoint(char *in) {
 	char *endptr;
 	ehretval_t ret;
 	ret.type = int_e;
@@ -1722,7 +1722,7 @@ ehretval_t eh_strtoi(char *in) {
 	}
 	return ret;
 }
-ehretval_t eh_strtof(char *in) {
+ehretval_t eh_stringtofloat(char *in) {
 	char *endptr;
 	ehretval_t ret;
 	ret.type = float_e;
@@ -1734,7 +1734,7 @@ ehretval_t eh_strtof(char *in) {
 	}
 	return ret;
 }
-char *eh_itostr(int in) {
+char *eh_inttostring(int in) {
 	char *buffer;
 
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and null terminator) should suffice for the result string
@@ -1743,7 +1743,7 @@ char *eh_itostr(int in) {
 
 	return buffer;
 }
-char *eh_ftostr(float in) {
+char *eh_floattostring(float in) {
 	char *buffer;
 	
 	buffer = (char *) Malloc(12);
@@ -1751,7 +1751,7 @@ char *eh_ftostr(float in) {
 	
 	return buffer;
 }
-ehretval_t eh_xtoi(ehretval_t in) {
+ehretval_t eh_xtoint(ehretval_t in) {
 	ehretval_t ret;
 	ret.type = int_e;
 	switch(in.type) {
@@ -1759,7 +1759,7 @@ ehretval_t eh_xtoi(ehretval_t in) {
 			ret.intval = in.intval;
 			break;
 		case string_e:
-			ret = eh_strtoi(in.stringval);
+			ret = eh_stringtoint(in.stringval);
 			break;
 		case bool_e:
 			if(in.boolval)
@@ -1780,7 +1780,7 @@ ehretval_t eh_xtoi(ehretval_t in) {
 	}
 	return ret;
 }
-ehretval_t eh_xtostr(ehretval_t in) {
+ehretval_t eh_xtostring(ehretval_t in) {
 	ehretval_t ret;
 	ret.type = string_e;
 	switch(in.type) {
@@ -1788,7 +1788,7 @@ ehretval_t eh_xtostr(ehretval_t in) {
 			ret.stringval = in.stringval;
 			break;
 		case int_e:
-			ret.stringval = eh_itostr(in.intval);
+			ret.stringval = eh_inttostring(in.intval);
 			break;
 		case null_e:
 			// empty string
@@ -1806,7 +1806,7 @@ ehretval_t eh_xtostr(ehretval_t in) {
 			}
 			break;
 		case float_e:
-			ret.stringval = eh_ftostr(in.floatval);
+			ret.stringval = eh_floattostring(in.floatval);
 			break;
 		default:
 			eh_error_type("typecast to string", in.type, enotice_e);
@@ -1857,7 +1857,7 @@ ehretval_t eh_xtofloat(ehretval_t in) {
 			ret.floatval = (float) in.intval;
 			break;
 		case string_e:
-			ret = eh_strtof(in.stringval);
+			ret = eh_stringtofloat(in.stringval);
 			break;
 		case bool_e:
 			if(in.boolval)
@@ -1876,7 +1876,7 @@ ehretval_t eh_xtofloat(ehretval_t in) {
 	}
 	return ret;
 }
-ehretval_t eh_strtorange(char *in) {
+ehretval_t eh_stringtorange(char *in) {
 	// attempt to find two integers in the string
 	ehretval_t ret;
 	int i = 0;
@@ -1913,7 +1913,7 @@ ehretval_t eh_xtorange(ehretval_t in) {
 			ret.rangeval = in.rangeval;
 			break;
 		case string_e:
-			ret = eh_strtorange(in.stringval);
+			ret = eh_stringtorange(in.stringval);
 			break;
 		case int_e:
 			ret = eh_make_range(in.intval, in.intval);
@@ -1980,8 +1980,8 @@ ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2) {
 		ret.boolval = false;
 	}
 	else {
-		operand1 = eh_xtoi(operand1);
-		operand2 = eh_xtoi(operand2);
+		operand1 = eh_xtoint(operand1);
+		operand2 = eh_xtoint(operand2);
 		if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) {
 			ret.boolval = (operand1.intval == operand2.intval);
 		}

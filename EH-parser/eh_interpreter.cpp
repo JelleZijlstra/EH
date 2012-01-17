@@ -44,6 +44,9 @@ ehretval_t eh_op_switch(ehretval_t **paras, ehcontext_t context);
 ehretval_t eh_op_given(ehretval_t **paras, ehcontext_t context);
 ehretval_t eh_op_colon(ehretval_t **paras, ehcontext_t context);
 ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context);
+ehretval_t eh_op_dollar(ehretval_t *node, ehcontext_t context);
+void eh_op_set(ehretval_t **paras, ehcontext_t context);
+ehretval_t eh_op_accessor(ehretval_t **paras, ehcontext_t context);
 
 #define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
 // library functions supported by ehi
@@ -168,9 +171,7 @@ void eh_exit(void) {
  */
 ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 	// variables used
-	ehvar_t *var;
-	char *name;
-	ehretval_t ret, operand1, operand2, operand3;
+	ehretval_t ret, operand1, operand2;
 	// default
 	ret.type = null_e;
 
@@ -273,41 +274,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				ret = eh_op_colon(node->opval->paras, context);
 				break;
 			case T_ACCESSOR: // array access, and similar stuff for other types
-				operand1 = eh_execute(node->opval->paras[0], context);
-				if(node->opval->paras[1]->accessorval == dot_e) {
-					// object access
-					if(operand1.type != object_e) {
-						eh_error_type("object access", operand1.type, eerror_e);
-						break;
-					}
-					name = eh_execute(node->opval->paras[0], context).stringval;
-					ret = class_get(operand1.objectval, name, context);
-					if(ret.type == null_e) {
-						eh_error_unknown("object member", name, eerror_e);
-						break;
-					}
-					newcontext = operand1.objectval;
-				} else if(node->opval->paras[1]->accessorval == arrow_e) {
-					// "array" access
-					operand2 = eh_execute(node->opval->paras[2], context);
-					switch(operand1.type) {
-						case int_e:
-							ret = int_arrow_get(operand1, operand2);
-							break;
-						case string_e:
-							ret = string_arrow_get(operand1, operand2);
-							break;
-						case array_e:
-							// array access to an array works as expected.
-							ret = array_get(operand1.arrayval, operand2);
-							break;
-						default:
-							eh_error_type("array access", operand1.type, eerror_e);
-							break;
-					}
-				}
-				else
-					eh_error("Unsupported accessor", efatal_e);
+				ret = eh_op_accessor(node->opval->paras, context);
 				break;
 			case T_NEW: // object declaration
 				ret = eh_op_new(eh_execute(node->opval->paras[0], context).stringval);
@@ -429,55 +396,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				ret.rangeval[1] = operand2.intval;
 				break;
 			case T_SET:
-				operand1 = eh_execute(node->opval->paras[0], context);
-				operand2 = eh_execute(node->opval->paras[1], context);
-				if(operand1.type == null_e) {
-					if(operand1.referenceval == NULL) {
-						// set new variable
-						var = (ehvar_t *) Malloc(sizeof(ehvar_t));
-						var->name = node->opval->paras[0]->opval->paras[0]->stringval;
-						var->scope = scope;
-						var->value = operand2;
-						insert_variable(var);
-					}
-					// else do nothing; T_LVALUE will already have complained
-				}
-				else if(operand1.type == attribute_e) {
-					// operand 1 is a pointer to the variable modified, operand 2 is the value set to, operand 3 is the index
-					operand3 = eh_execute(node->opval->paras[0]->opval->paras[2], context);
-					switch(operand1.referenceval->type) {
-						case int_e:
-							int_arrow_set(operand1, operand3, operand2);
-							break;
-						case string_e:
-							string_arrow_set(operand1, operand3, operand2);
-							break;
-						default:
-							eh_error_type("array access", operand1.referenceval->type, eerror_e);
-							break;
-					}
-				}
-				else {
-					while(operand1.type == reference_e && operand1.referenceval->type == reference_e)
-						operand1 = *(operand1.referenceval);
-					// set variable, unless it is const
-					if(operand1.type == creference_e)
-						eh_error("Attempt to write to constant variable", eerror_e);
-					/*
-					 * Without this check, the following code creates an 
-					 * infinite loop:
-						$ foo = 3
-						$ bar = &foo
-						$ bar = &foo
-						echo $foo
-					 * That is because the third line sets foo to its own 
-					 * address.
-					 */
-					else if(operand2.type == reference_e && operand1.referenceval == operand2.referenceval)
-						eh_error("Circular reference", eerror_e);
-					else
-						*operand1.referenceval = operand2;
-				}
+				eh_op_set(node->opval->paras, context);
 				break;
 			case T_MINMIN:
 				operand1 = eh_execute(node->opval->paras[0], context);
@@ -511,28 +430,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					eh_error("Unable to create reference", eerror_e);
 				break;
 			case '$': // variable dereference
-				ret = eh_execute(node->opval->paras[0], context);
-				if(ret.type == null_e)
-					break;
-				else if(ret.type == attribute_e) {
-					// get operands
-					operand2 = eh_execute(node->opval->paras[0]->opval->paras[2], context);
-					if(operand2.type == reference_e)
-						ret = *ret.referenceval;
-					switch(ret.referenceval->type) {
-						case int_e:
-							ret = int_arrow_get(*ret.referenceval, operand2);
-							break;
-						case string_e:
-							ret = string_arrow_get(*ret.referenceval, operand2);
-							break;
-						default:
-							eh_error_type("array-type dereference", ret.referenceval->type, eerror_e);
-							break;
-					}
-				}
-				else while(ret.type == reference_e || ret.type == creference_e)
-					ret = *ret.referenceval;
+				ret = eh_op_dollar(node->opval->paras[0], context);
 				break;
 		/*
 		 * Commands
@@ -1127,6 +1025,114 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	}
 	return ret;
 }
+ehretval_t eh_op_dollar(ehretval_t *node, ehcontext_t context) {
+	ehretval_t ret, index;
+	ret = eh_execute(node, context);
+	if(ret.type == null_e)
+		return ret;
+	else if(ret.type == attribute_e) {
+		// get operands
+		index = eh_execute(node->opval->paras[2], context);
+		if(index.type == reference_e)
+			ret = *ret.referenceval;
+		switch(ret.referenceval->type) {
+			case int_e:
+				ret = int_arrow_get(*ret.referenceval, index);
+				break;
+			case string_e:
+				ret = string_arrow_get(*ret.referenceval, index);
+				break;
+			default:
+				eh_error_type("array-type dereference", ret.referenceval->type, eerror_e);
+				break;
+		}
+	}
+	else while(ret.type == reference_e || ret.type == creference_e)
+		ret = *ret.referenceval;
+	return ret;
+}
+void eh_op_set(ehretval_t **paras, ehcontext_t context) {
+	ehretval_t lvalue = eh_execute(paras[0], context);
+	ehretval_t rvalue = eh_execute(paras[1], context);
+	ehretval_t index;
+	if(lvalue.type == null_e) {
+		if(lvalue.referenceval == NULL) {
+			// set new variable
+			ehvar_t *var = (ehvar_t *) Malloc(sizeof(ehvar_t));
+			var->name = paras[0]->opval->paras[0]->stringval;
+			var->scope = scope;
+			var->value = rvalue;
+			insert_variable(var);
+		}
+		// else do nothing; T_LVALUE will already have complained
+	}
+	else if(lvalue.type == attribute_e) {
+		// lvalue is a pointer to the variable modified, rvalue is the value set to, index is the index
+		index = eh_execute(paras[0]->opval->paras[2], context);
+		switch(lvalue.referenceval->type) {
+			case int_e:
+				int_arrow_set(lvalue, index, rvalue);
+				break;
+			case string_e:
+				string_arrow_set(lvalue, index, rvalue);
+				break;
+			default:
+				eh_error_type("array access", lvalue.referenceval->type, eerror_e);
+				break;
+		}
+	}
+	else {
+		while(lvalue.type == reference_e && lvalue.referenceval->type == reference_e)
+			lvalue = *(lvalue.referenceval);
+		// set variable, unless it is const
+		if(lvalue.type == creference_e)
+			eh_error("Attempt to write to constant variable", eerror_e);
+		/*
+		 * Without this check, the following code creates an 
+		 * infinite loop:
+			$ foo = 3
+			$ bar = &foo
+			$ bar = &foo
+			echo $foo
+		 * That is because the third line sets foo to its own 
+		 * address.
+		 */
+		else if(rvalue.type == reference_e && lvalue.referenceval == rvalue.referenceval)
+			eh_error("Circular reference", eerror_e);
+		else
+			*lvalue.referenceval = rvalue;
+	}
+	return;
+}
+ehretval_t eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
+	// this only gets executed for array-type int and string access
+	ehretval_t ret;
+	ret.type = null_e;
+	if(paras[1]->accessorval == arrow_e) {
+		// "array" access
+		ehretval_t basevar = eh_execute(paras[0], context);
+		ehretval_t index = eh_execute(paras[2], context);
+		switch(basevar.type) {
+			case int_e:
+				ret = int_arrow_get(basevar, index);
+				break;
+			case string_e:
+				ret = string_arrow_get(basevar, index);
+				break;
+			case array_e:
+				// array access to an array works as expected.
+				ret = array_get(basevar.arrayval, index);
+				break;
+			default:
+				eh_error_type("array access", basevar.type, eerror_e);
+				break;
+		}
+	}
+	else
+		eh_error("Unsupported accessor", efatal_e);
+	return ret;
+}
+
 /*
  * Variables
  */

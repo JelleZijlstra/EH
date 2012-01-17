@@ -122,6 +122,9 @@ void printvar_retval(ehretval_t in) {
 		case range_e:
 			printf("@range %d..%d\n", in.rangeval[0], in.rangeval[1]);
 			break;
+		case float_e:
+			printf("@float %f\n", in.floatval);
+			break;
 	}
 	return;
 }
@@ -203,6 +206,7 @@ TYPEFUNC(null)
 TYPEFUNC(int)
 TYPEFUNC(string)
 TYPEFUNC(bool)
+TYPEFUNC(float)
 TYPEFUNC(array)
 TYPEFUNC(object)
 TYPEFUNC(range)

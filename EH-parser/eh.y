@@ -24,6 +24,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %union {
 	char *sValue;
 	int iValue;
+	float fValue;
 	type_enum tValue;
 	attribute_enum vValue;
 	bool bValue;
@@ -32,6 +33,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 	magicvar_enum mValue;
 };
 %token <iValue> T_INTEGER
+%token <fValue> T_FLOAT
 %token <tValue> T_TYPE
 %token <bValue> T_BOOL
 %token T_IF
@@ -170,6 +172,7 @@ expression:
 	T_INTEGER				{ $$ = eh_get_int($1); }
 	| T_NULL				{ $$ = eh_get_null(); }
 	| T_BOOL				{ $$ = eh_get_bool($1); }
+	| T_FLOAT				{ $$ = eh_get_float($1); }
 	| string				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' expression		{ $$ = eh_addnode('~', 1, $2); }

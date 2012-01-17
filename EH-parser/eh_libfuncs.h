@@ -26,6 +26,7 @@ EHLIBFUNC(is_bool);
 EHLIBFUNC(is_array);
 EHLIBFUNC(is_object);
 EHLIBFUNC(is_range);
+EHLIBFUNC(is_float);
 EHLIBFUNC(class_is);
 EHLIBFUNC(include);
 void printvar_retval(ehretval_t in);

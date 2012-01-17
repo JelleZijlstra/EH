@@ -43,6 +43,7 @@ typedef enum type_enum {
 	attribute_e,
 	attributestr_e,
 	range_e,
+	float_e,
 } type_enum;
 
 // attributes of class members
@@ -105,11 +106,13 @@ typedef struct ehretval_t {
 		int intval;
 		char *stringval;
 		bool boolval;
+		float floatval;
 		// complex types
 		struct ehvar_t **arrayval;
 		struct ehobj_t *objectval;
 		struct ehretval_t *referenceval;
 		struct ehfm_t *funcval;
+		int *rangeval;
 		// pseudo-types for internal use
 		opnode_t *opval;
 		type_enum typeval;
@@ -117,7 +120,6 @@ typedef struct ehretval_t {
 		memberattribute_t attributestrval;
 		accessor_enum accessorval;
 		magicvar_enum magicvarval;
-		int *rangeval;
 	};
 } ehretval_t;
 
@@ -241,6 +243,7 @@ void eh_setarg(int argc, char **argv);
 ehretval_t *eh_get_null(void);
 GETFUNCPROTO(int, int)
 GETFUNCPROTO(string, char *)
+GETFUNCPROTO(float, float)
 GETFUNCPROTO(accessor, accessor_enum)
 GETFUNCPROTO(type, type_enum)
 GETFUNCPROTO(bool, bool)

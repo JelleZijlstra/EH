@@ -23,7 +23,7 @@ syntax error, unexpected $end: EH parsing error
 @stringvars.eh:
 Unable to perform type juggling to int: EH notice
 Unable to perform type juggling to int: EH notice
-Unsupported types null and null for operator 307: EH runtime error
+Unsupported types null and null for operator 308: EH runtime error
 @test.eh:
 @testfunc.eh:
 @typecast.eh:
@@ -74,3 +74,4 @@ Circular reference: EH runtime error
 @range.eh:
 @eratosthenes.eh:
 @eratosthenes2.eh:
+@float.eh:

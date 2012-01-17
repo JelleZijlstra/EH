@@ -37,6 +37,7 @@ void free_node(ehretval_t *in) {
 }
 GETFUNC(int, int)
 GETFUNC(string, char *)
+GETFUNC(float, float)
 ehretval_t *eh_get_null(void) {
 	ehretval_t *ret;
 	ret = (ehretval_t *) Malloc(sizeof(ehretval_t));
@@ -144,6 +145,7 @@ void print_tree(ehretval_t *in, int n) {
 			printf("\n");
 			break;
 		PRINT_TREE_TYPE(bool, u)
+		PRINT_TREE_TYPE(float, f)
 		case range_e:
 		case array_e:
 		case func_e:
@@ -160,6 +162,7 @@ const char *get_typestring(type_enum type) {
 		case int_e: return "int";
 		case string_e: return "string";
 		case bool_e: return "bool";
+		case float_e: return "float";
 		case reference_e: return "reference";
 		case creference_e: return "creference";
 		case null_e: return "null";

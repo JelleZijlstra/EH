@@ -32,6 +32,8 @@ ehretval_t eh_op_uminus(ehretval_t in);
 ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2);
 void eh_op_global(const char *name);
 void eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
+ehretval_t eh_op_for(opnode_t *op, ehcontext_t context);
+ehretval_t eh_op_new(const char *name);
 
 #define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
 // library functions supported by ehi
@@ -160,8 +162,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 	ehvar_t *var, *member;
 	ehfunc_t *func;
 	ehclass_t *classobj;
-	ehclassmember_t *classmember;
-	int i, count;
+	int count;
 	char *name;
 	ehretval_t ret, operand1, operand2, operand3;
 	// default
@@ -222,50 +223,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				inloop--;
 				break;
 			case T_FOR:
-				inloop++;
-				breaking = 0;
-				int min, max;
-				// get the count
-				operand1 = eh_execute(node->opval->paras[0], context);
-				if(operand1.type == range_e) {
-					min = operand1.rangeval[0];
-					max = operand1.rangeval[1];
-				}
-				else {
-					operand1 = eh_xtoi(operand1);
-					if(operand1.type != int_e) {
-						eh_error_type("count", operand1.type, eerror_e);
-						break;
-					}
-					min = 0;
-					max = operand1.intval - 1;
-				}
-				if(node->opval->nparas == 2) {
-					// "for 5; do stuff; endfor" construct
-					for(i = 0; i < operand1.intval; i++) {
-						ret = eh_execute(node->opval->paras[1], context);
-						LOOPCHECKS;
-					}
-				}
-				else {
-					// "for 5 count i; do stuff; endfor" construct
-					name = node->opval->paras[1]->stringval;
-					var = get_variable(name, scope);
-					// variable is not yet set, so set it
-					if(var == NULL) {
-						var = (ehvar_t *) Malloc(sizeof(ehvar_t));
-						var->name = node->opval->paras[1]->stringval;
-						var->scope = scope;
-						insert_variable(var);
-					}
-					// count variable always gets to be an int
-					var->value.type = int_e;
-					for(var->value.intval = min; var->value.intval <= max; var->value.intval++) {
-						ret = eh_execute(node->opval->paras[2], context);
-						LOOPCHECKS;
-					}
-				}
-				inloop--;
+				ret = eh_op_for(node->opval, context);
 				break;
 			case T_SWITCH: // switch statements
 				// switch variable
@@ -353,7 +311,6 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				if(operand1.type == string_e) {
 					name = operand1.stringval;
 					func = get_function(name);
-					//printf("Calling function %s at scope %d\n", node->opval->paras[0]->id.name, scope);
 					if(func == NULL) {
 						eh_error_unknown("function", name, efatal_e);
 						break;
@@ -402,33 +359,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					eh_error("Unsupported accessor", efatal_e);
 				break;
 			case T_NEW: // object declaration
-				name = eh_execute(node->opval->paras[0], context).stringval;
-				classobj = get_class(name);
-				if(classobj == NULL) {
-					eh_error_unknown("class", name, efatal_e);
-					break;
-				}
-				ret.type = object_e;
-				ret.objectval = (ehobj_t *) Malloc(sizeof(ehobj_t));
-				ret.objectval->classname = name;
-				ret.objectval->members = (ehclassmember_t **) Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
-				ehclassmember_t *newmember;
-				for(i = 0; i < VARTABLE_S; i++) {
-					classmember = classobj->obj.members[i];
-					while(classmember != NULL) {
-						newmember = (ehclassmember_t *) Malloc(sizeof(ehclassmember_t));
-						// copy the whole thing over
-						*newmember = *classmember;
-						// handle static
-						if(classmember->attribute.isstatic == static_e) {
-							newmember->value.type = reference_e;
-							newmember->value.referenceval = &classmember->value;
-						}
-						newmember->next = ret.objectval->members[i];
-						ret.objectval->members[i] = newmember;
-						classmember = classmember->next;
-					}
-				}
+				ret = eh_op_new(eh_execute(node->opval->paras[0], context).stringval);
 				break;
 		/*
 		 * Object definitions
@@ -1061,6 +992,91 @@ void eh_op_command(const char *name, ehretval_t *node, ehcontext_t context) {
 	returning = false;
 	return;
 }
+ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
+	ehretval_t ret, count_r;
+	inloop++;
+	breaking = 0;
+	int min, max;
+
+	// initialize return value
+	ret.type = null_e;
+	// get the count
+	count_r = eh_execute(op->paras[0], context);
+	if(count_r.type == range_e) {
+		min = count_r.rangeval[0];
+		max = count_r.rangeval[1];
+	}
+	else {
+		count_r = eh_xtoi(count_r);
+		if(count_r.type != int_e) {
+			eh_error_type("count", count_r.type, eerror_e);
+			return ret;
+		}
+		min = 0;
+		max = count_r.intval - 1;
+	}
+	if(op->nparas == 2) {
+		// "for 5; do stuff; endfor" construct
+		for(int i = min; i <= max; i++) {
+			ret = eh_execute(op->paras[1], context);
+			LOOPCHECKS;
+		}
+	}
+	else {
+		// "for 5 count i; do stuff; endfor" construct
+		char *name = op->paras[1]->stringval;
+		ehvar_t *var = get_variable(name, scope);
+		// variable is not yet set, so set it
+		if(var == NULL) {
+			var = (ehvar_t *) Malloc(sizeof(ehvar_t));
+			var->name = op->paras[1]->stringval;
+			var->scope = scope;
+			insert_variable(var);
+		}
+		// count variable always gets to be an int
+		var->value.type = int_e;
+		for(var->value.intval = min; var->value.intval <= max; var->value.intval++) {
+			ret = eh_execute(op->paras[2], context);
+			LOOPCHECKS;
+		}
+	}
+	inloop--;
+	return ret;
+}
+ehretval_t eh_op_new(const char *name) {
+	ehretval_t ret;
+	ehclass_t *classobj;
+	ehclassmember_t *classmember, *newmember;
+
+	classobj = get_class(name);
+	if(classobj == NULL) {
+		eh_error_unknown("class", name, efatal_e);
+		ret.type = null_e;
+		return ret;
+	}
+	ret.type = object_e;
+	ret.objectval = (ehobj_t *) Malloc(sizeof(ehobj_t));
+	ret.objectval->classname = name;
+	ret.objectval->members = (ehclassmember_t **) Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+	for(int i = 0; i < VARTABLE_S; i++) {
+		classmember = classobj->obj.members[i];
+		while(classmember != NULL) {
+			newmember = (ehclassmember_t *) Malloc(sizeof(ehclassmember_t));
+			// copy the whole thing over
+			*newmember = *classmember;
+			// handle static
+			if(classmember->attribute.isstatic == static_e) {
+				newmember->value.type = reference_e;
+				newmember->value.referenceval = &classmember->value;
+			}
+			newmember->next = ret.objectval->members[i];
+			ret.objectval->members[i] = newmember;
+			classmember = classmember->next;
+		}
+	}
+	return ret;
+}
+
 /*
  * Variables
  */
@@ -1249,7 +1265,7 @@ void insert_class(ehclass_t *classobj) {
 	}
 	return;
 }
-ehclass_t *get_class(char *name) {
+ehclass_t *get_class(const char *name) {
 	unsigned int vhash;
 	ehclass_t *currclass;
 

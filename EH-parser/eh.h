@@ -140,12 +140,12 @@ typedef struct ehvar_t {
 
 // in future, add type for type checking
 typedef struct eharg_t {
-	char *name;
+	const char *name;
 } eharg_t;
 
 // EH object
 typedef struct ehobj_t {
-	char *classname;
+	const char *classname;
 	struct ehclassmember_t **members;
 } ehobj_t;
 
@@ -285,7 +285,7 @@ ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
 ehretval_t array_get(ehvar_t **array, ehretval_t index);
 int array_count(ehvar_t **array);
 void insert_class(ehclass_t *classobj);
-ehclass_t *get_class(char *name);
+ehclass_t *get_class(const char *name);
 void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t context);
 ehclassmember_t *class_insert_retval(ehclassmember_t **classarr, char *name, memberattribute_t attribute, ehretval_t value);
 ehclassmember_t *class_getmember(ehobj_t *classobj, char *name, ehcontext_t context);

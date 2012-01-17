@@ -112,7 +112,7 @@ typedef struct ehretval_t {
 		struct ehobj_t *objectval;
 		struct ehretval_t *referenceval;
 		struct ehfm_t *funcval;
-		int *rangeval;
+		struct ehrange_t *rangeval;
 		// pseudo-types for internal use
 		opnode_t *opval;
 		type_enum typeval;
@@ -148,6 +148,12 @@ typedef struct ehobj_t {
 	const char *classname;
 	struct ehclassmember_t **members;
 } ehobj_t;
+
+// range
+typedef struct ehrange_t {
+	int min;
+	int max;
+} ehrange_t;
 
 // context
 typedef ehobj_t *ehcontext_t;
@@ -304,7 +310,7 @@ ehretval_t eh_cast(type_enum type, ehretval_t in);
 ehretval_t eh_stringtoint(char *in);
 ehretval_t eh_stringtofloat(char *in);
 ehretval_t eh_stringtorange(char *in);
-ehretval_t eh_rangetoarray(int *range);
+ehretval_t eh_rangetoarray(ehrange_t *range);
 char *eh_inttostring(int in);
 ehretval_t eh_xtoarray(ehretval_t in);
 ehretval_t eh_xtoint(ehretval_t in);

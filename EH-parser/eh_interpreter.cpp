@@ -695,15 +695,14 @@ ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 	ehretval_t ret, count_r;
 	inloop++;
 	breaking = 0;
-	int min, max;
+	ehrange_t range;
 
 	// initialize return value
 	ret.type = null_e;
 	// get the count
 	count_r = eh_execute(op->paras[0], context);
 	if(count_r.type == range_e) {
-		min = count_r.rangeval[0];
-		max = count_r.rangeval[1];
+		range = *count_r.rangeval;
 	}
 	else {
 		count_r = eh_xtoint(count_r);
@@ -711,12 +710,12 @@ ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 			eh_error_type("count", count_r.type, eerror_e);
 			return ret;
 		}
-		min = 0;
-		max = count_r.intval - 1;
+		range.min = 0;
+		range.max = count_r.intval - 1;
 	}
 	if(op->nparas == 2) {
 		// "for 5; do stuff; endfor" construct
-		for(int i = min; i <= max; i++) {
+		for(int i = range.min; i <= range.max; i++) {
 			ret = eh_execute(op->paras[1], context);
 			LOOPCHECKS;
 		}
@@ -734,7 +733,7 @@ ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 		}
 		// count variable always gets to be an int
 		var->value.type = int_e;
-		for(var->value.intval = min; var->value.intval <= max; var->value.intval++) {
+		for(var->value.intval = range.min; var->value.intval <= range.max; var->value.intval++) {
 			ret = eh_execute(op->paras[2], context);
 			LOOPCHECKS;
 		}
@@ -1742,7 +1741,7 @@ char *eh_floattostring(float in) {
 	
 	return buffer;
 }
-ehretval_t eh_rangetoarray(int *range) {
+ehretval_t eh_rangetoarray(ehrange_t *range) {
 	ehretval_t ret, index, member;
 	ret.type = array_e;
 	index.type = int_e;
@@ -1750,10 +1749,10 @@ ehretval_t eh_rangetoarray(int *range) {
 
 	ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
 	index.intval = 0;
-	member.intval = range[0];
+	member.intval = range->min;
 	array_insert_retval(ret.arrayval, index, member);
 	index.intval = 1;
-	member.intval = range[1];
+	member.intval = range->max;
 	array_insert_retval(ret.arrayval, index, member);
 
 	return ret;
@@ -1877,7 +1876,7 @@ ehretval_t eh_xtobool(ehretval_t in) {
 			break;
 		case range_e:
 			// 0..0 is false, everything else true
-			if(in.rangeval[0] == 0 && in.rangeval[1] == 0)
+			if(in.rangeval->min == 0 && in.rangeval->max == 0)
 				ret.boolval = false;
 			else
 				ret.boolval = true;
@@ -2276,9 +2275,9 @@ static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rval
 ehretval_t eh_make_range(int min, int max) {
 	ehretval_t ret;
 	ret.type = range_e;
-	ret.rangeval = (int *)Malloc(2 * sizeof(int));
-	ret.rangeval[0] = min;
-	ret.rangeval[1] = max;
+	ret.rangeval = (ehrange_t *) Malloc(sizeof(ehrange_t));
+	ret.rangeval->min = min;
+	ret.rangeval->max = max;
 	return ret;
 }
 /*

@@ -108,6 +108,9 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					case null_e:
 						printf("(null)\n");
 						break;
+					case float_e:
+						printf("%f\n", ret.floatval);
+						break;
 					default:
 						eh_error_type("echo operator", ret.type, enotice_e);
 						break;
@@ -141,6 +144,9 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					case int_e:
 						ret.intval = sizeof(int) * 8;
 						break;
+					case float_e:
+						ret.intval = sizeof(float) * 8;
+						break;
 					case string_e:
 						ret.intval = strlen(operand1.stringval);
 						break;
@@ -159,12 +165,25 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				}
 				break;
 			case '~': // bitwise negation
-				operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context));
-				if(operand1.type != int_e)
-					eh_error_type("bitwise negation", operand1.type, eerror_e);
-				else {
-					ret.type = int_e;
-					ret.intval = ~operand1.intval;
+				operand1 = eh_execute(node->opval->paras[0], context);
+				switch(operand1.type) {
+					// bitwise negation of a bool is just normal negation
+					case bool_e:
+						ret.type = bool_e;
+						ret.boolval = !operand1.boolval;
+						break;
+					// else try to cast to int
+					default:
+						operand1 = eh_xtoi(operand1);
+						if(operand1.type != int_e) {
+							eh_error_type("bitwise negation", operand1.type, eerror_e);
+							return ret;
+						}
+						// fall through to int case
+					case int_e:
+						ret.type = int_e;
+						ret.intval = ~operand1.intval;
+						break;
 				}
 				break;
 			case T_NEGATIVE: // sign change

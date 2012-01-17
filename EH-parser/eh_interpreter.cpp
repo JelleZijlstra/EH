@@ -1674,24 +1674,17 @@ bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {
 ehretval_t eh_cast(type_enum type, ehretval_t in) {
 	ehretval_t ret;
 	switch(type) {
-		case int_e:
-			ret = eh_xtoint(in);
-			break;
-		case string_e:
-			ret = eh_xtostring(in);
-			break;
-		case bool_e:
-			ret = eh_xtobool(in);
-			break;
-		case float_e:
-			ret = eh_xtofloat(in);
-			break;
-		case range_e:
-			ret = eh_xtorange(in);
-			break;
-		case array_e:
-			ret = eh_xtoarray(in);
-			break;
+// macro for the common case
+#define EH_CAST_CASE(vtype) case vtype ## _e: \
+	ret = eh_xto ## vtype (in); \
+	break;
+		EH_CAST_CASE(int)
+		EH_CAST_CASE(string)
+		EH_CAST_CASE(bool)
+		EH_CAST_CASE(float)
+		EH_CAST_CASE(range)
+		EH_CAST_CASE(array)
+#undef EH_CAST_CASE
 		default:
 			ret.type = null_e;
 			eh_error_type("typecast", type, eerror_e);
@@ -1706,20 +1699,20 @@ ehretval_t eh_cast(type_enum type, ehretval_t in) {
 	return ret; \
 } while(0)
 #define CASTERROR_KNOWN(totype, vtype) do { \
-	eh_error_type("typecast to " #totype, vtype, enotice_e); \
+	eh_error_type("typecast to " #totype, vtype ## _e, enotice_e); \
 	ret.type = null_e; \
 	return ret; \
 } while(0)
+
+/* Casts between specific pairs of types */
 ehretval_t eh_stringtoint(char *in) {
 	char *endptr;
 	ehretval_t ret;
 	ret.type = int_e;
 	ret.intval = strtol(in, &endptr, 0);
 	// If in == endptr, strtol read no digits and there was no conversion.
-	if(in == endptr) {
-		ret.type = null_e;
-		eh_error("Unable to perform type juggling to int", enotice_e);
-	}
+	if(in == endptr)
+		CASTERROR_KNOWN(int, string);
 	return ret;
 }
 ehretval_t eh_stringtofloat(char *in) {
@@ -1728,10 +1721,8 @@ ehretval_t eh_stringtofloat(char *in) {
 	ret.type = float_e;
 	ret.floatval = strtof(in, &endptr);
 	// If in == endptr, strtol read no digits and there was no conversion.
-	if(in == endptr) {
-		ret.type = null_e;
-		eh_error("Unable to perform type juggling to float", enotice_e);
-	}
+	if(in == endptr)
+		CASTERROR_KNOWN(float, string);
 	return ret;
 }
 char *eh_inttostring(int in) {
@@ -1751,6 +1742,52 @@ char *eh_floattostring(float in) {
 	
 	return buffer;
 }
+ehretval_t eh_rangetoarray(int *range) {
+	ehretval_t ret, index, member;
+	ret.type = array_e;
+	index.type = int_e;
+	member.type = int_e;
+
+	ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	index.intval = 0;
+	member.intval = range[0];
+	array_insert_retval(ret.arrayval, index, member);
+	index.intval = 1;
+	member.intval = range[1];
+	array_insert_retval(ret.arrayval, index, member);
+
+	return ret;
+}
+ehretval_t eh_stringtorange(char *in) {
+	// attempt to find two integers in the string
+	ehretval_t ret;
+	int i = 0;
+	int min, max;
+	char *ptr;
+	// get lower part of range
+	while(1) {
+		if(in[i] == '\0')
+			CASTERROR_KNOWN(range, string);
+		if(isdigit(in[i])) {
+			min = strtol(&in[i], &ptr, 0);
+			break;
+		}
+		i++;
+	}
+	// get upper bound
+	i = 0;
+	while(1) {
+		if(ptr[i] == '\0')
+			CASTERROR_KNOWN(range, string);
+		if(isdigit(ptr[i])) {
+			max = strtol(&ptr[i], NULL, 0);
+			break;
+		}
+		i++;
+	}
+	return eh_make_range(min, max);
+}
+/* Casts from arbitrary types */
 ehretval_t eh_xtoint(ehretval_t in) {
 	ehretval_t ret;
 	ret.type = int_e;
@@ -1774,9 +1811,7 @@ ehretval_t eh_xtoint(ehretval_t in) {
 			ret.intval = (int) in.floatval;
 			break;
 		default:
-			eh_error_type("typecast to integer", in.type, enotice_e);
-			ret.type = null_e;
-			break;
+			CASTERROR(int);
 	}
 	return ret;
 }
@@ -1809,9 +1844,7 @@ ehretval_t eh_xtostring(ehretval_t in) {
 			ret.stringval = eh_floattostring(in.floatval);
 			break;
 		default:
-			eh_error_type("typecast to string", in.type, enotice_e);
-			ret.type = null_e;
-			break;
+			CASTERROR(string);
 	}
 	return ret;
 }
@@ -1820,6 +1853,9 @@ ehretval_t eh_xtobool(ehretval_t in) {
 	ret.type = bool_e;
 	// convert an arbitrary variable to a bool
 	switch(in.type) {
+		case bool_e:
+			ret.boolval = in.boolval;
+			break;
 		case int_e:
 			if(in.intval == 0)
 				ret.boolval = false;
@@ -1832,9 +1868,6 @@ ehretval_t eh_xtobool(ehretval_t in) {
 			else
 				ret.boolval = true;
 			break;
-		case bool_e:
-			ret.boolval = in.boolval;
-			break;
 		case array_e:
 			// empty arrays should return false
 			if(array_count(in.arrayval))
@@ -1842,6 +1875,12 @@ ehretval_t eh_xtobool(ehretval_t in) {
 			else
 				ret.boolval = false;
 			break;
+		case range_e:
+			// 0..0 is false, everything else true
+			if(in.rangeval[0] == 0 && in.rangeval[1] == 0)
+				ret.boolval = false;
+			else
+				ret.boolval = true;
 		default:
 			// other types are always false
 			ret.boolval = false;
@@ -1853,6 +1892,9 @@ ehretval_t eh_xtofloat(ehretval_t in) {
 	ehretval_t ret;
 	ret.type = float_e;
 	switch(in.type) {
+		case float_e:
+			ret.floatval = in.floatval;
+			break;
 		case int_e:
 			ret.floatval = (float) in.intval;
 			break;
@@ -1868,42 +1910,10 @@ ehretval_t eh_xtofloat(ehretval_t in) {
 		case null_e:
 			ret.floatval = 0;
 			break;
-		case float_e:
-			ret.floatval = in.floatval;
-			break;
 		default:
 			CASTERROR(float);
 	}
 	return ret;
-}
-ehretval_t eh_stringtorange(char *in) {
-	// attempt to find two integers in the string
-	ehretval_t ret;
-	int i = 0;
-	int min, max;
-	char *ptr;
-	// get lower part of range
-	while(1) {
-		if(in[i] == '\0')
-			CASTERROR_KNOWN(range, string_e);
-		if(isdigit(in[i])) {
-			min = strtol(&in[i], &ptr, 0);
-			break;
-		}
-		i++;
-	}
-	// get upper bound
-	i = 0;
-	while(1) {
-		if(ptr[i] == '\0')
-			CASTERROR_KNOWN(range, string_e);
-		if(isdigit(ptr[i])) {
-			max = strtol(&ptr[i], NULL, 0);
-			break;
-		}
-		i++;
-	}
-	return eh_make_range(min, max);
 }
 ehretval_t eh_xtorange(ehretval_t in) {
 	ehretval_t ret;
@@ -1921,22 +1931,6 @@ ehretval_t eh_xtorange(ehretval_t in) {
 		default:
 			CASTERROR(range);
 	}
-	return ret;
-}
-ehretval_t eh_rangetoarray(int *range) {
-	ehretval_t ret, index, member;
-	ret.type = array_e;
-	index.type = int_e;
-	member.type = int_e;
-
-	ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
-	index.intval = 0;
-	member.intval = range[0];
-	array_insert_retval(ret.arrayval, index, member);
-	index.intval = 1;
-	member.intval = range[1];
-	array_insert_retval(ret.arrayval, index, member);
-
 	return ret;
 }
 ehretval_t eh_xtoarray(ehretval_t in) {

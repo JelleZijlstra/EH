@@ -312,66 +312,6 @@ ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2);
 ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 
 /*
- * macros for interpreter behavior
- */
-// take ints, returns an int
-#define EH_INT_CASE(token, operator) case token: \
-	operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context)); \
-	operand2 = eh_xtoi(eh_execute(node->opval->paras[1], context)); \
-	if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) { \
-		ret.type = int_e; \
-		ret.intval = (operand1.intval operator operand2.intval); \
-	} \
-	else \
-		eh_error_types(#operator, operand1.type, operand2.type, eerror_e); \
-	break;
-// take ints, return a bool
-#define EH_INTBOOL_CASE(token, operator) case token: \
-	operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context)); \
-	operand2 = eh_xtoi(eh_execute(node->opval->paras[1], context)); \
-	if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) { \
-		ret.type = bool_e; \
-		ret.boolval = (operand1.intval operator operand2.intval); \
-	} \
-	else { \
-		eh_error_types(#operator, operand1.type, operand2.type, eerror_e); \
-	} \
-	break;
-// take bools, return a bool
-#define EH_BOOL_CASE(token, operator) case token: \
-	operand1 = eh_xtobool(eh_execute(node->opval->paras[0], context)); \
-	operand2 = eh_xtobool(eh_execute(node->opval->paras[1], context)); \
-	ret.type = bool_e; \
-	ret.boolval = (operand1.boolval operator operand2.boolval); \
-	break;
-
-/*
- * Stuff to be done in a loop
- */
-#define LOOPCHECKS { \
-	if(returning) break; \
-	if(breaking) { \
-		breaking--; \
-		break; \
-	} \
-	if(continuing > 1) { \
-		continuing--; \
-		break; \
-	} \
-	else if(continuing) { \
-		continuing = 0; \
-		continue; \
-	} \
-	}
-
-/*
- * Macros for converting between ehretval_t and ehvar_t
- */
-#define SETRETFROMVAR(var) { ret = var->value; }
-
-#define SETVARFROMRET(var) { var->value = ret; }
-
-/*
  * The EH parser
  */
 struct EHParser {

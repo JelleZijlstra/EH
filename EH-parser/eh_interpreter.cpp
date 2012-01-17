@@ -50,6 +50,85 @@ ehlibfunc_t libfuncs[] = {
 };
 
 /*
+ * macros for interpreter behavior
+ */
+// take ints, return an int
+#define EH_INT_CASE(token, operator) case token: \
+	operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context)); \
+	operand2 = eh_xtoi(eh_execute(node->opval->paras[1], context)); \
+	if(operand1.type == int_e && operand2.type == int_e) { \
+		ret.type = int_e; \
+		ret.intval = (operand1.intval operator operand2.intval); \
+	} \
+	else \
+		eh_error_types(#operator, operand1.type, operand2.type, eerror_e); \
+	break;
+// take ints or floats, return an int or float
+#define EH_FLOATINT_CASE(token, operator) case token: \
+	operand1 = eh_execute(node->opval->paras[0], context); \
+	operand2 = eh_execute(node->opval->paras[1], context); \
+	if(operand1.type == float_e && operand2.type == float_e) { \
+		ret.type = float_e; \
+		ret.floatval = (operand1.floatval operator operand2.floatval); \
+	} \
+	else { \
+		operand1 = eh_xtoi(operand1); \
+		operand2 = eh_xtoi(operand2); \
+		if(operand1.type == int_e && operand2.type == int_e) { \
+			ret.type = int_e; \
+			ret.intval = (operand1.intval operator operand2.intval); \
+		} \
+		else \
+			eh_error_types(#operator, operand1.type, operand2.type, eerror_e); \
+	} \
+	break;
+// take ints or floats, return a bool
+#define EH_INTBOOL_CASE(token, operator) case token: \
+	operand1 = eh_execute(node->opval->paras[0], context); \
+	operand2 = eh_execute(node->opval->paras[1], context); \
+	if(operand1.type == float_e && operand2.type == float_e) { \
+		ret.type = bool_e; \
+		ret.boolval = (operand1.floatval operator operand2.floatval); \
+	} \
+	else { \
+		operand1 = eh_xtoi(operand1); \
+		operand2 = eh_xtoi(operand2); \
+		if(operand1.type == int_e && operand2.type == int_e) { \
+			ret.type = bool_e; \
+			ret.boolval = (operand1.intval operator operand2.intval); \
+		} \
+		else \
+			eh_error_types(#operator, operand1.type, operand2.type, eerror_e); \
+	} \
+	break;
+// take bools, return a bool
+#define EH_BOOL_CASE(token, operator) case token: \
+	operand1 = eh_xtobool(eh_execute(node->opval->paras[0], context)); \
+	operand2 = eh_xtobool(eh_execute(node->opval->paras[1], context)); \
+	ret.type = bool_e; \
+	ret.boolval = (operand1.boolval operator operand2.boolval); \
+	break;
+
+/*
+ * Stuff to be done in a loop
+ */
+#define LOOPCHECKS { \
+	if(returning) break; \
+	if(breaking) { \
+		breaking--; \
+		break; \
+	} \
+	if(continuing > 1) { \
+		continuing--; \
+		break; \
+	} \
+	else if(continuing) { \
+		continuing = 0; \
+		continue; \
+	} \
+	}
+
+/*
  * Functions executed before and after the program itself is executed.
  */
 void eh_init(void) {
@@ -139,15 +218,15 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 		 */
 			case T_IF:
 				if(eh_xtobool(eh_execute(node->opval->paras[0], context)).boolval)
-					eh_execute(node->opval->paras[1], context);
+					ret = eh_execute(node->opval->paras[1], context);
 				else if(node->opval->nparas == 3)
-					eh_execute(node->opval->paras[2], context);
+					ret = eh_execute(node->opval->paras[2], context);
 				break;
 			case T_WHILE:
 				inloop++;
 				breaking = 0;
 				while(eh_xtobool(eh_execute(node->opval->paras[0], context)).boolval) {
-					eh_execute(node->opval->paras[1], context);
+					ret = eh_execute(node->opval->paras[1], context);
 					LOOPCHECKS;
 				}
 				inloop--;
@@ -174,7 +253,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				if(node->opval->nparas == 2) {
 					// "for 5; do stuff; endfor" construct
 					for(i = 0; i < operand1.intval; i++) {
-						eh_execute(node->opval->paras[1], context);
+						ret = eh_execute(node->opval->paras[1], context);
 						LOOPCHECKS;
 					}
 				}
@@ -192,7 +271,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					// count variable always gets to be an int
 					var->value.type = int_e;
 					for(var->value.intval = min; var->value.intval <= max; var->value.intval++) {
-						eh_execute(node->opval->paras[2], context);
+						ret = eh_execute(node->opval->paras[2], context);
 						LOOPCHECKS;
 					}
 				}
@@ -205,7 +284,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				while(node->opval->nparas != 0) {
 					operand2 = eh_execute(node->opval->paras[1]->opval->paras[0], context);
 					if(eh_looseequals(operand1, operand2).boolval) {
-						eh_execute(node->opval->paras[1]->opval->paras[1], context);
+						ret = eh_execute(node->opval->paras[1]->opval->paras[1], context);
 						break;
 					}
 					node = node->opval->paras[0];
@@ -497,9 +576,9 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					}
 				}
 				break;
-			EH_INT_CASE('-', -) // subtraction
-			EH_INT_CASE('*', *) // multiplication
-			EH_INT_CASE('/', /) // division
+			EH_FLOATINT_CASE('-', -) // subtraction
+			EH_FLOATINT_CASE('*', *) // multiplication
+			EH_FLOATINT_CASE('/', /) // division
 			EH_INT_CASE('%', %) // modulo
 			EH_INT_CASE('&', &) // bitwise AND
 			EH_INT_CASE('^', ^) // bitwise XOR
@@ -1735,7 +1814,7 @@ ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) 
 	}
 	newvar->next = array[vhash];
 	array[vhash] = newvar;
-	SETVARFROMRET(newvar);
+	newvar->value = ret;
 	return newvar;
 }
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
@@ -1783,7 +1862,7 @@ ehretval_t array_get(ehvar_t **array, ehretval_t index) {
 	if(curr == NULL)
 		ret.type = null_e;
 	else {
-		SETRETFROMVAR(curr);
+		ret = curr->value;
 	}
 	return ret;
 }

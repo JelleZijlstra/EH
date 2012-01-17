@@ -246,6 +246,7 @@ expression:
 
 simple_expr:
 	T_INTEGER				{ $$ = eh_get_int($1); }
+	| T_FLOAT				{ $$ = eh_get_float($1); }
 	| T_NULL				{ $$ = eh_get_null(); }
 	| T_BOOL				{ $$ = eh_get_bool($1); }
 	| string				{ $$ = $1; }
@@ -291,6 +292,8 @@ simple_expr:
 							{ $$ = eh_addnode(T_OR, 2, $1, $3); }
 	| simple_expr T_XOR simple_expr
 							{ $$ = eh_addnode(T_XOR, 2, $1, $3); }
+	| simple_expr T_RANGE simple_expr
+							{ $$ = eh_addnode(T_RANGE, 2, $1, $3); }
 	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
 	| T_COUNT simple_expr	{ $$ = eh_addnode(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = eh_addnode(T_NEW, 1, $2); }
@@ -299,6 +302,7 @@ simple_expr:
 line_expr: 
 	/* need to separate expressions beginning with a bareword from commands */
 	T_INTEGER				{ $$ = eh_get_int($1); }
+	| T_FLOAT				{ $$ = eh_get_float($1); }
 	| T_STRING				{ $$ = eh_get_string($1); }
 	| T_NULL				{ $$ = eh_get_null(); }
 	| T_BOOL				{ $$ = eh_get_bool($1); }
@@ -356,6 +360,8 @@ line_expr:
 							{ $$ = eh_addnode(T_OR, 2, $1, $3); }
 	| line_expr T_XOR expression
 							{ $$ = eh_addnode(T_XOR, 2, $1, $3); }
+	| line_expr T_RANGE expression
+							{ $$ = eh_addnode(T_RANGE, 2, $1, $3); }
 	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
 	| T_COUNT expression	{ $$ = eh_addnode(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = eh_addnode(T_NEW, 1, $2); }

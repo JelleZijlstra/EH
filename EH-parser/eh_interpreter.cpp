@@ -100,25 +100,8 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				print_retval(eh_execute(node->opval->paras[0], context));
 				break;
 			case '@': // type casting
-				operand1 = eh_execute(node->opval->paras[0], context);
 				operand2 = eh_execute(node->opval->paras[1], context);
-				switch(operand1.typeval) {
-					case int_e:
-						ret = eh_xtoi(operand2);
-						break;
-					case string_e:
-						ret = eh_xtostr(operand2);
-						break;
-					case bool_e:
-						ret = eh_xtobool(operand2);
-						break;
-					case float_e:
-						ret = eh_xtofloat(operand2);
-						break;
-					default:
-						eh_error_type("typecast", operand1.typeval, eerror_e);
-						break;
-				}
+				ret = eh_cast(node->opval->paras[0]->typeval, operand2);
 				break;
 			case T_COUNT:
 				operand1 = eh_execute(node->opval->paras[0], context);
@@ -1371,6 +1354,29 @@ bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {
 /*
  * Type casting
  */
+ehretval_t eh_cast(type_enum type, ehretval_t in) {
+	ehretval_t ret;
+	switch(type) {
+		case int_e:
+			ret = eh_xtoi(in);
+			break;
+		case string_e:
+			ret = eh_xtostr(in);
+			break;
+		case bool_e:
+			ret = eh_xtobool(in);
+			break;
+		case float_e:
+			ret = eh_xtofloat(in);
+			break;
+		default:
+			ret.type = null_e;
+			eh_error_type("typecast", type, eerror_e);
+			break;
+	}
+	return ret;
+}
+
 ehretval_t eh_strtoi(char *in) {
 	char *endptr;
 	ehretval_t ret;

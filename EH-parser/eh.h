@@ -300,6 +300,7 @@ bool ehcontext_compare(ehcontext_t lock, ehcontext_t key);
 unsigned int hash(const char *data, int scope);
 
 // type casting
+ehretval_t eh_cast(type_enum type, ehretval_t in);
 ehretval_t eh_strtoi(char *in);
 ehretval_t eh_strtof(char *in);
 char *eh_itostr(int in);

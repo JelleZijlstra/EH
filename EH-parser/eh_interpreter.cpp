@@ -2058,6 +2058,8 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 
 	// create array member
 	member->value = var;
+	// set next to NULL by default
+	member->next = NULL;
 
 	// insert it into the hashtable
 	ehvar_t **currptr = &array[vhash];

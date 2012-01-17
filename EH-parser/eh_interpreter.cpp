@@ -126,6 +126,9 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					case bool_e:
 						ret = eh_xtobool(operand2);
 						break;
+					case float_e:
+						ret = eh_xtofloat(operand2);
+						break;
 					default:
 						eh_error_type("typecast", operand1.typeval, eerror_e);
 						break;
@@ -1342,9 +1345,21 @@ ehretval_t eh_strtoi(char *in) {
 	ret.type = int_e;
 	ret.intval = strtol(in, &endptr, 0);
 	// If in == endptr, strtol read no digits and there was no conversion.
-	if(ret.intval == 0 && in == endptr) {
+	if(in == endptr) {
 		ret.type = null_e;
 		eh_error("Unable to perform type juggling to int", enotice_e);
+	}
+	return ret;
+}
+ehretval_t eh_strtof(char *in) {
+	char *endptr;
+	ehretval_t ret;
+	ret.type = float_e;
+	ret.floatval = strtof(in, &endptr);
+	// If in == endptr, strtol read no digits and there was no conversion.
+	if(in == endptr) {
+		ret.type = null_e;
+		eh_error("Unable to perform type juggling to float", enotice_e);
 	}
 	return ret;
 }
@@ -1353,8 +1368,16 @@ char *eh_itostr(int in) {
 
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and null terminator) should suffice for the result string
 	buffer = (char *) Malloc(12);
-	sprintf(buffer, "%d", in);
+	snprintf(buffer, 12, "%d", in);
 
+	return buffer;
+}
+char *eh_ftostr(float in) {
+	char *buffer;
+	
+	buffer = (char *) Malloc(12);
+	snprintf(buffer, 12, "%f", in);
+	
 	return buffer;
 }
 ehretval_t eh_xtoi(ehretval_t in) {
@@ -1375,6 +1398,9 @@ ehretval_t eh_xtoi(ehretval_t in) {
 			break;
 		case null_e:
 			ret.intval = 0;
+			break;
+		case float_e:
+			ret.intval = (int) in.floatval;
 			break;
 		default:
 			eh_error_type("typecast to integer", in.type, enotice_e);
@@ -1407,6 +1433,9 @@ ehretval_t eh_xtostr(ehretval_t in) {
 				ret.stringval = (char *) Malloc(6);
 				strcpy(ret.stringval, "false");
 			}
+			break;
+		case float_e:
+			ret.stringval = eh_ftostr(in.floatval);
 			break;
 		default:
 			eh_error_type("typecast to string", in.type, enotice_e);
@@ -1446,6 +1475,35 @@ ehretval_t eh_xtobool(ehretval_t in) {
 	}
 	return ret;
 }
+ehretval_t eh_xtofloat(ehretval_t in) {
+	ehretval_t ret;
+	ret.type = float_e;
+	switch(in.type) {
+		case int_e:
+			ret.floatval = (float) in.intval;
+			break;
+		case string_e:
+			ret = eh_strtof(in.stringval);
+			break;
+		case bool_e:
+			if(in.boolval)
+				ret.floatval = 1;
+			else
+				ret.floatval = 0;
+			break;
+		case null_e:
+			ret.floatval = 0;
+			break;
+		case float_e:
+			ret.floatval = in.floatval;
+			break;
+		default:
+			eh_error_type("typecast to float", in.type, enotice_e);
+			ret.type = null_e;
+			break;
+	}
+	return ret;
+}
 ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2) {
 	ehretval_t ret;
 	ret.type = bool_e;
@@ -1455,6 +1513,13 @@ ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2) {
 	}
 	else if(EH_IS_STRING(operand1) && EH_IS_STRING(operand2)) {
 		ret.boolval = !strcmp(operand1.stringval, operand2.stringval);
+	}
+	else if(operand1.type == float_e && operand2.type == float_e) {
+		ret.boolval = (operand1.floatval == operand2.floatval);
+	}
+	// comparing a float with something else always returns false.
+	else if(operand1.type == float_e || operand2.type == float_e) {
+		ret.boolval = false;
 	}
 	else {
 		operand1 = eh_xtoi(operand1);
@@ -1483,6 +1548,9 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2) {
 	else if(EH_IS_NULL(operand1) && EH_IS_NULL(operand2)) {
 		// null always equals null
 		ret.boolval = true;
+	}
+	else if(operand1.type == float_e && operand2.type == float_e) {
+		ret.boolval = (operand1.floatval == operand2.floatval);
 	}
 	else {
 		// strict comparison between different types always returns false

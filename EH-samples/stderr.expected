@@ -75,3 +75,4 @@ Circular reference: EH runtime error
 @eratosthenes.eh:
 @eratosthenes2.eh:
 @float.eh:
+@floatcast.eh:

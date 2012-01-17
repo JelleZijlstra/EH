@@ -24,6 +24,8 @@ static ehretval_t int_arrow_get(ehretval_t operand1, ehretval_t operand2);
 static ehretval_t string_arrow_get(ehretval_t operand1, ehretval_t operand2);
 static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
 static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
+// helper functions
+void print_retval(const ehretval_t in);
 
 #define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
 // library functions supported by ehi
@@ -92,29 +94,8 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 		 */
 			case T_ECHO:
 				ret = eh_execute(node->opval->paras[0], context);
-				switch(ret.type) {
-					case string_e:
-						printf("%s\n", ret.stringval);
-						break;
-					case int_e:
-						printf("%d\n", ret.intval);
-						break;
-					case bool_e:
-						if(ret.boolval)
-							printf("(true)\n");
-						else
-							printf("(false)\n");
-						break;
-					case null_e:
-						printf("(null)\n");
-						break;
-					case float_e:
-						printf("%f\n", ret.floatval);
-						break;
-					default:
-						eh_error_type("echo operator", ret.type, enotice_e);
-						break;
-				}
+				print_retval(ret);
+				printf("\n");
 				break;
 			case '@': // type casting
 				operand1 = eh_execute(node->opval->paras[0], context);
@@ -933,6 +914,36 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 		ret = *node;
 	return ret;
 }
+/*
+ * Opnode execution helpers
+ */
+void print_retval(const ehretval_t ret) {
+	switch(ret.type) {
+		case string_e:
+			printf("%s", ret.stringval);
+			break;
+		case int_e:
+			printf("%d", ret.intval);
+			break;
+		case bool_e:
+			if(ret.boolval)
+				printf("(true)");
+			else
+				printf("(false)");
+			break;
+		case null_e:
+			printf("(null)");
+			break;
+		case float_e:
+			printf("%f", ret.floatval);
+			break;
+		default:
+			eh_error_type("echo operator", ret.type, enotice_e);
+			break;
+	}
+	return;
+}
+
 /*
  * Variables
  */

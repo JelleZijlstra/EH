@@ -1,0 +1,17 @@
+@array [
+0: @int 1
+1: @int 42
+]
+@array [
+0: @string 'string'
+]
+@array [
+0: @int 42
+]
+@array [
+0: @bool true
+]
+@range 1..42
+@range 42..42
+@bool true
+@bool false

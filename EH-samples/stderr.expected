@@ -84,3 +84,4 @@ No such global variable: nosuchvar: EH notice
 @access.eh:
 @foras.eh:
 @forasbreak.eh:
+@crazycasts.eh:

@@ -6,6 +6,7 @@
  */
 #include "eh.h"
 #include "eh_libfuncs.h"
+#include <cctype>
 
 // number of loops we're currently in
 bool returning = false;
@@ -49,6 +50,8 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context);
 ehretval_t eh_op_dollar(ehretval_t *node, ehcontext_t context);
 void eh_op_set(ehretval_t **paras, ehcontext_t context);
 ehretval_t eh_op_accessor(ehretval_t **paras, ehcontext_t context);
+
+ehretval_t eh_make_range(int min, int max);
 
 #define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
 // library functions supported by ehi
@@ -385,7 +388,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				ret = eh_op_lvalue(node->opval, context);
 				break;
 			case T_RANGE:
-				// attempt to cast operands to integers; if this does not work,
+				// Attempt to cast operands to integers; if this does not work,
 				// return NULL. No need to yell, since eh_xtoi already does 
 				// that.
 				operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context));
@@ -394,10 +397,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				operand2 = eh_xtoi(eh_execute(node->opval->paras[1], context));
 				if(operand2.type == null_e)
 					break;
-				ret.type = range_e;
-				ret.rangeval = (int *)Malloc(2 * sizeof(int));
-				ret.rangeval[0] = operand1.intval;
-				ret.rangeval[1] = operand2.intval;
+				ret = eh_make_range(operand1.intval, operand2.intval);
 				break;
 			case T_SET:
 				eh_op_set(node->opval->paras, context);
@@ -1686,6 +1686,12 @@ ehretval_t eh_cast(type_enum type, ehretval_t in) {
 		case float_e:
 			ret = eh_xtofloat(in);
 			break;
+		case range_e:
+			ret = eh_xtorange(in);
+			break;
+		case array_e:
+			ret = eh_xtoarray(in);
+			break;
 		default:
 			ret.type = null_e;
 			eh_error_type("typecast", type, eerror_e);
@@ -1694,6 +1700,16 @@ ehretval_t eh_cast(type_enum type, ehretval_t in) {
 	return ret;
 }
 
+#define CASTERROR(totype) do { \
+	eh_error_type("typecast to " #totype, in.type, enotice_e); \
+	ret.type = null_e; \
+	return ret; \
+} while(0)
+#define CASTERROR_KNOWN(totype, vtype) do { \
+	eh_error_type("typecast to " #totype, vtype, enotice_e); \
+	ret.type = null_e; \
+	return ret; \
+} while(0)
 ehretval_t eh_strtoi(char *in) {
 	char *endptr;
 	ehretval_t ret;
@@ -1820,8 +1836,11 @@ ehretval_t eh_xtobool(ehretval_t in) {
 			ret.boolval = in.boolval;
 			break;
 		case array_e:
-			// ultimately, empty arrays should return false
-			ret.boolval = true;
+			// empty arrays should return false
+			if(array_count(in.arrayval))
+				ret.boolval = true;
+			else
+				ret.boolval = false;
 			break;
 		default:
 			// other types are always false
@@ -1853,9 +1872,93 @@ ehretval_t eh_xtofloat(ehretval_t in) {
 			ret.floatval = in.floatval;
 			break;
 		default:
-			eh_error_type("typecast to float", in.type, enotice_e);
-			ret.type = null_e;
+			CASTERROR(float);
+	}
+	return ret;
+}
+ehretval_t eh_strtorange(char *in) {
+	// attempt to find two integers in the string
+	ehretval_t ret;
+	int i = 0;
+	int min, max;
+	char *ptr;
+	// get lower part of range
+	while(1) {
+		if(in[i] == '\0')
+			CASTERROR_KNOWN(range, string_e);
+		if(isdigit(in[i])) {
+			min = strtol(&in[i], &ptr, 0);
 			break;
+		}
+		i++;
+	}
+	// get upper bound
+	i = 0;
+	while(1) {
+		if(ptr[i] == '\0')
+			CASTERROR_KNOWN(range, string_e);
+		if(isdigit(ptr[i])) {
+			max = strtol(&ptr[i], NULL, 0);
+			break;
+		}
+		i++;
+	}
+	return eh_make_range(min, max);
+}
+ehretval_t eh_xtorange(ehretval_t in) {
+	ehretval_t ret;
+	ret.type = range_e;
+	switch(in.type) {
+		case range_e:
+			ret.rangeval = in.rangeval;
+			break;
+		case string_e:
+			ret = eh_strtorange(in.stringval);
+			break;
+		case int_e:
+			ret = eh_make_range(in.intval, in.intval);
+			break;
+		default:
+			CASTERROR(range);
+	}
+	return ret;
+}
+ehretval_t eh_rangetoarray(int *range) {
+	ehretval_t ret, index, member;
+	ret.type = array_e;
+	index.type = int_e;
+	member.type = int_e;
+
+	ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	index.intval = 0;
+	member.intval = range[0];
+	array_insert_retval(ret.arrayval, index, member);
+	index.intval = 1;
+	member.intval = range[1];
+	array_insert_retval(ret.arrayval, index, member);
+
+	return ret;
+}
+ehretval_t eh_xtoarray(ehretval_t in) {
+	ehretval_t ret;
+	ret.type = array_e;
+	switch(in.type) {
+		case array_e:
+			ret.arrayval = in.arrayval;
+			break;
+		case range_e:
+			ret = eh_rangetoarray(in.rangeval);
+			break;
+		case int_e:
+		case bool_e:
+		case string_e:
+		case func_e:
+			// create an array with just this variable in it
+			ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+			array_insert_retval(ret.arrayval, (ehretval_t) {int_e, {0}}, in);
+			break;
+		default:
+			CASTERROR(array);
 	}
 	return ret;
 }
@@ -2173,7 +2276,17 @@ static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rval
 	input.referenceval->stringval[index.intval] = rvalue.intval;
 	return;
 }
-
+/*
+ * Other types
+ */
+ehretval_t eh_make_range(int min, int max) {
+	ehretval_t ret;
+	ret.type = range_e;
+	ret.rangeval = (int *)Malloc(2 * sizeof(int));
+	ret.rangeval[0] = min;
+	ret.rangeval[1] = max;
+	return ret;
+}
 /*
  * Command line arguments
  */

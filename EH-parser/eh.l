@@ -59,6 +59,10 @@
 				yylval_param->tValue = float_e;
 				return T_TYPE;
 			}
+"range"		{
+				yylval_param->tValue = range_e;
+				return T_TYPE;
+			}
 "echo"		return T_ECHO;
 "put"		return T_PUT;
 "if"		return T_IF;

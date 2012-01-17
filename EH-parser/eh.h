@@ -303,11 +303,15 @@ unsigned int hash(const char *data, int scope);
 ehretval_t eh_cast(type_enum type, ehretval_t in);
 ehretval_t eh_strtoi(char *in);
 ehretval_t eh_strtof(char *in);
+ehretval_t eh_strtorange(char *in);
+ehretval_t eh_rangetoarray(int *range);
 char *eh_itostr(int in);
+ehretval_t eh_xtoarray(ehretval_t in);
 ehretval_t eh_xtoi(ehretval_t in);
 ehretval_t eh_xtofloat(ehretval_t in);
 ehretval_t eh_xtostr(ehretval_t in);
 ehretval_t eh_xtobool(ehretval_t in);
+ehretval_t eh_xtorange(ehretval_t in);
 ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2);
 ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 

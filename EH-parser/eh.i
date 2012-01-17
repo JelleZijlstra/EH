@@ -50,6 +50,13 @@ zval *arrtozval(ehvar_t **paras) {
 							currvar->index,
 							arrtozval(currvar->value.arrayval));
 						break;
+					case float_e:
+						add_index_double(arr,
+							currvar->index, currvar->value.floatval);
+						break;
+					default:
+						eh_error_type("convert to PHP", currvar->value.type, enotice_e);
+						break;
 				}
 			}
 			else if(currvar->indextype == string_e) {
@@ -70,6 +77,13 @@ zval *arrtozval(ehvar_t **paras) {
 						add_assoc_zval(arr,
 							currvar->name,
 							arrtozval(currvar->value.arrayval));
+						break;
+					case float_e:
+						add_assoc_double(arr,
+							currvar->name, currvar->value.floatval);
+						break;
+					default:
+						eh_error_type("conversion to PHP", currvar->value.type, enotice_e);
 						break;
 				}
 			}

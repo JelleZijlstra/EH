@@ -97,9 +97,8 @@ void *Calloc(size_t count, size_t size) {
 	return ret;
 }
 
-static void printntabs(int n) {
-	int i;
-	for(i = 0; i < n; i++) {
+static void printntabs(const int n) {
+	for(int i = 0; i < n; i++) {
 		printf("\t");
 	}
 }
@@ -109,8 +108,7 @@ static void printntabs(int n) {
 	printf("Value: %" #format "\n", in-> vtype ## val); \
 	break;
 
-void print_tree(ehretval_t *in, int n) {
-	int i;
+void print_tree(const ehretval_t *const in, const int n) {
 	printntabs(n); printf("Type: %s\n", get_typestring(in->type));
 	switch(in->type) {
 		PRINT_TREE_TYPE(string, s)
@@ -118,7 +116,7 @@ void print_tree(ehretval_t *in, int n) {
 		case op_e:
 			printntabs(n); printf("Opcode: %d\n", in->opval->op);
 			printntabs(n); printf("Nparas: %d\n", in->opval->nparas);
-			for(i = 0; i < in->opval->nparas; i++) {
+			for(int i = 0; i < in->opval->nparas; i++) {
 				print_tree(in->opval->paras[i], n + 1);
 			}
 			break;

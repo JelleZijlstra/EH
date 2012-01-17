@@ -51,7 +51,7 @@ EHLIBFUNC(printvar) {
 	return;
 }
 // helper functions for printvar
-void printvar_retval(ehretval_t in) {
+void printvar_retval(const ehretval_t in) {
 	int i;
 	switch(in.type) {
 		case null_e:

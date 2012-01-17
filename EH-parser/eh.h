@@ -240,8 +240,8 @@ void *Malloc(size_t size);
 void *Calloc(size_t count, size_t size);
 void free_node(ehretval_t *in);
 ehretval_t *eh_addnode(int operations, int noperations, ...);
-ehretval_t eh_execute(ehretval_t *node, ehcontext_t context);
-void print_tree(ehretval_t *in, int n);
+ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context);
+void print_tree(const ehretval_t *const in, const int n);
 void eh_setarg(int argc, char **argv);
 
 // eh_get_x functions
@@ -283,7 +283,7 @@ ehvar_t *get_variable(const char *name, int scope);
 void remove_variable(const char *name, int scope);
 void list_variables(void);
 bool insert_function(ehfunc_t *func);
-ehfunc_t *get_function(char *name);
+ehfunc_t *get_function(const char *name);
 ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext);
 void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t context);
 ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
@@ -293,12 +293,12 @@ int array_count(ehvar_t **array);
 void insert_class(ehclass_t *classobj);
 ehclass_t *get_class(const char *name);
 void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t context);
-ehclassmember_t *class_insert_retval(ehclassmember_t **classarr, char *name, memberattribute_t attribute, ehretval_t value);
-ehclassmember_t *class_getmember(ehobj_t *classobj, char *name, ehcontext_t context);
-ehretval_t class_get(ehobj_t *classobj, char *name, ehcontext_t context);
+ehclassmember_t *class_insert_retval(ehclassmember_t **classarr, const char *name, memberattribute_t attribute, ehretval_t value);
+ehclassmember_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context);
+ehretval_t class_get(ehobj_t *classobj, const char *name, ehcontext_t context);
 ehretval_t object_access(ehretval_t name, ehretval_t *index, ehcontext_t context, int token);
 ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context, int token);
-bool ehcontext_compare(ehcontext_t lock, ehcontext_t key);
+bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
 
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
@@ -306,18 +306,18 @@ bool ehcontext_compare(ehcontext_t lock, ehcontext_t key);
 unsigned int hash(const char *data, int scope);
 
 // type casting
-ehretval_t eh_cast(type_enum type, ehretval_t in);
-ehretval_t eh_stringtoint(char *in);
-ehretval_t eh_stringtofloat(char *in);
-ehretval_t eh_stringtorange(char *in);
-ehretval_t eh_rangetoarray(ehrange_t *range);
-char *eh_inttostring(int in);
-ehretval_t eh_xtoarray(ehretval_t in);
-ehretval_t eh_xtoint(ehretval_t in);
-ehretval_t eh_xtofloat(ehretval_t in);
-ehretval_t eh_xtostring(ehretval_t in);
-ehretval_t eh_xtobool(ehretval_t in);
-ehretval_t eh_xtorange(ehretval_t in);
+ehretval_t eh_cast(const type_enum type, const ehretval_t in);
+ehretval_t eh_stringtoint(const char *const in);
+ehretval_t eh_stringtofloat(const char *const in);
+ehretval_t eh_stringtorange(const char *const in);
+ehretval_t eh_rangetoarray(const ehrange_t *const range);
+char *eh_inttostring(const int in);
+ehretval_t eh_xtoarray(const ehretval_t in);
+ehretval_t eh_xtoint(const ehretval_t in);
+ehretval_t eh_xtofloat(const ehretval_t in);
+ehretval_t eh_xtostring(const ehretval_t in);
+ehretval_t eh_xtobool(const ehretval_t in);
+ehretval_t eh_xtorange(const ehretval_t in);
 ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2);
 ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 

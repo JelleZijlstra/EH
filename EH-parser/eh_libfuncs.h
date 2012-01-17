@@ -29,4 +29,4 @@ EHLIBFUNC(is_range);
 EHLIBFUNC(is_float);
 EHLIBFUNC(class_is);
 EHLIBFUNC(include);
-void printvar_retval(ehretval_t in);
+void printvar_retval(const ehretval_t in);

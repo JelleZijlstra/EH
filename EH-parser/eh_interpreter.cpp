@@ -51,7 +51,7 @@ ehretval_t eh_op_dollar(ehretval_t *node, ehcontext_t context);
 void eh_op_set(ehretval_t **paras, ehcontext_t context);
 ehretval_t eh_op_accessor(ehretval_t **paras, ehcontext_t context);
 
-ehretval_t eh_make_range(int min, int max);
+ehretval_t eh_make_range(const int min, const int max);
 
 #define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
 // library functions supported by ehi
@@ -179,7 +179,7 @@ void eh_exit(void) {
 /*
  * Main execution function
  */
-ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
+ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 	// variables used
 	ehretval_t ret, operand1, operand2;
 	// default
@@ -1329,7 +1329,7 @@ bool insert_function(ehfunc_t *func) {
 	}
 	return true;
 }
-ehfunc_t *get_function(char *name) {
+ehfunc_t *get_function(const char *name) {
 	unsigned int vhash;
 	ehfunc_t *currfunc;
 
@@ -1475,7 +1475,7 @@ void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t contex
 }
 ehclassmember_t *class_insert_retval(
 	ehclassmember_t **classarr, 
-	char *name, 
+	const char *name, 
 	memberattribute_t attribute, 
 	ehretval_t value
 ) {
@@ -1495,7 +1495,7 @@ ehclassmember_t *class_insert_retval(
 	classarr[vhash] = member;
 	return member;	
 }
-ehclassmember_t *class_getmember(ehobj_t *classobj, char *name, ehcontext_t context) {
+ehclassmember_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context) {
 	ehclassmember_t *curr;
 	unsigned int vhash;
 	
@@ -1519,7 +1519,7 @@ ehclassmember_t *class_getmember(ehobj_t *classobj, char *name, ehcontext_t cont
 	}
 	return curr;
 }
-ehretval_t class_get(ehobj_t *classobj, char *name, ehcontext_t context) {
+ehretval_t class_get(ehobj_t *classobj, const char *name, ehcontext_t context) {
 	ehclassmember_t *curr;
 	ehretval_t ret;
 	
@@ -1660,7 +1660,7 @@ ehretval_t colon_access(
 	newcontext = &classobj->obj;
 	return ret;
 }
-bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {
+bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key) {
 	// in global context, we never have access to private stuff
 	if(key == NULL)
 		return false;
@@ -1670,7 +1670,7 @@ bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {
 /*
  * Type casting
  */
-ehretval_t eh_cast(type_enum type, ehretval_t in) {
+ehretval_t eh_cast(const type_enum type, const ehretval_t in) {
 	ehretval_t ret;
 	switch(type) {
 // macro for the common case
@@ -1704,7 +1704,7 @@ ehretval_t eh_cast(type_enum type, ehretval_t in) {
 } while(0)
 
 /* Casts between specific pairs of types */
-ehretval_t eh_stringtoint(char *in) {
+ehretval_t eh_stringtoint(const char *const in) {
 	char *endptr;
 	ehretval_t ret;
 	ret.type = int_e;
@@ -1714,7 +1714,7 @@ ehretval_t eh_stringtoint(char *in) {
 		CASTERROR_KNOWN(int, string);
 	return ret;
 }
-ehretval_t eh_stringtofloat(char *in) {
+ehretval_t eh_stringtofloat(const char *const in) {
 	char *endptr;
 	ehretval_t ret;
 	ret.type = float_e;
@@ -1724,7 +1724,7 @@ ehretval_t eh_stringtofloat(char *in) {
 		CASTERROR_KNOWN(float, string);
 	return ret;
 }
-char *eh_inttostring(int in) {
+char *eh_inttostring(const int in) {
 	char *buffer;
 
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and null terminator) should suffice for the result string
@@ -1733,7 +1733,7 @@ char *eh_inttostring(int in) {
 
 	return buffer;
 }
-char *eh_floattostring(float in) {
+char *eh_floattostring(const float in) {
 	char *buffer;
 	
 	buffer = (char *) Malloc(12);
@@ -1741,7 +1741,7 @@ char *eh_floattostring(float in) {
 	
 	return buffer;
 }
-ehretval_t eh_rangetoarray(ehrange_t *range) {
+ehretval_t eh_rangetoarray(const ehrange_t *const range) {
 	ehretval_t ret, index, member;
 	ret.type = array_e;
 	index.type = int_e;
@@ -1757,7 +1757,7 @@ ehretval_t eh_rangetoarray(ehrange_t *range) {
 
 	return ret;
 }
-ehretval_t eh_stringtorange(char *in) {
+ehretval_t eh_stringtorange(const char *const in) {
 	// attempt to find two integers in the string
 	ehretval_t ret;
 	int i = 0;
@@ -1787,7 +1787,7 @@ ehretval_t eh_stringtorange(char *in) {
 	return eh_make_range(min, max);
 }
 /* Casts from arbitrary types */
-ehretval_t eh_xtoint(ehretval_t in) {
+ehretval_t eh_xtoint(const ehretval_t in) {
 	ehretval_t ret;
 	ret.type = int_e;
 	switch(in.type) {
@@ -1814,7 +1814,7 @@ ehretval_t eh_xtoint(ehretval_t in) {
 	}
 	return ret;
 }
-ehretval_t eh_xtostring(ehretval_t in) {
+ehretval_t eh_xtostring(const ehretval_t in) {
 	ehretval_t ret;
 	ret.type = string_e;
 	switch(in.type) {
@@ -1847,7 +1847,7 @@ ehretval_t eh_xtostring(ehretval_t in) {
 	}
 	return ret;
 }
-ehretval_t eh_xtobool(ehretval_t in) {
+ehretval_t eh_xtobool(const ehretval_t in) {
 	ehretval_t ret;
 	ret.type = bool_e;
 	// convert an arbitrary variable to a bool
@@ -1887,7 +1887,7 @@ ehretval_t eh_xtobool(ehretval_t in) {
 	}
 	return ret;
 }
-ehretval_t eh_xtofloat(ehretval_t in) {
+ehretval_t eh_xtofloat(const ehretval_t in) {
 	ehretval_t ret;
 	ret.type = float_e;
 	switch(in.type) {
@@ -1914,7 +1914,7 @@ ehretval_t eh_xtofloat(ehretval_t in) {
 	}
 	return ret;
 }
-ehretval_t eh_xtorange(ehretval_t in) {
+ehretval_t eh_xtorange(const ehretval_t in) {
 	ehretval_t ret;
 	ret.type = range_e;
 	switch(in.type) {
@@ -1932,7 +1932,7 @@ ehretval_t eh_xtorange(ehretval_t in) {
 	}
 	return ret;
 }
-ehretval_t eh_xtoarray(ehretval_t in) {
+ehretval_t eh_xtoarray(const ehretval_t in) {
 	ehretval_t ret;
 	ret.type = array_e;
 	switch(in.type) {
@@ -2272,7 +2272,7 @@ static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rval
 /*
  * Other types
  */
-ehretval_t eh_make_range(int min, int max) {
+ehretval_t eh_make_range(const int min, const int max) {
 	ehretval_t ret;
 	ret.type = range_e;
 	ret.rangeval = (ehrange_t *) Malloc(sizeof(ehrange_t));

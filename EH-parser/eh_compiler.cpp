@@ -108,7 +108,7 @@ void eh_exit(void) {
 	return;
 }
 
-ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
+ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 	ehretval_t ret;
 	ret.type = int_e;
 	if(node == NULL)

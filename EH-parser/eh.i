@@ -7,7 +7,7 @@
 %{
 #include "eh.h"
 EHI *interpreter;
-int EHI::execute_cmd(char *cmd, ehvar_t **paras) {
+int EHI::execute_cmd(const char *cmd, ehvar_t **paras) {
 	return 0;
 }
 char *EHI::eh_getline(void) {
@@ -99,7 +99,7 @@ zval *arrtozval(ehvar_t **paras) {
 class EHI {
 public:
 	int eh_interactive(void);
-	virtual int execute_cmd(char *rawcmd, ehvar_t **paras);
+	virtual int execute_cmd(const char *rawcmd, ehvar_t **paras);
 	virtual char *eh_getline(void);
 	virtual ~EHI();
 };

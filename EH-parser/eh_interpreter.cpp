@@ -29,8 +29,9 @@ void print_retval(const ehretval_t in);
 ehretval_t eh_count(const ehretval_t in);
 ehretval_t eh_op_tilde(ehretval_t in);
 ehretval_t eh_op_uminus(ehretval_t in);
+ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2);
 void eh_op_global(const char *name);
-
+void eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
 
 #define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
 // library functions supported by ehi
@@ -157,7 +158,6 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 	// variables used
 	ehretval_t *node2;
 	ehvar_t *var, *member;
-	ehvar_t **arrayval;
 	ehfunc_t *func;
 	ehclass_t *classobj;
 	ehclassmember_t *classmember;
@@ -547,24 +547,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 			case '+':
 				operand1 = eh_execute(node->opval->paras[0], context);
 				operand2 = eh_execute(node->opval->paras[1], context);
-				if(EH_IS_STRING(operand1) && EH_IS_STRING(operand2)) {
-					// concatenate them
-					ret.type = string_e;
-					size_t len1, len2;
-					len1 = strlen(operand1.stringval);
-					len2 = strlen(operand2.stringval);
-					ret.stringval = (char *) Malloc(len1 + len2 + 1);
-					strcpy(ret.stringval, operand1.stringval);
-					strcpy(ret.stringval + len1, operand2.stringval);
-				}
-				else {
-					operand1 = eh_xtoi(operand1);
-					operand2 = eh_xtoi(operand2);
-					if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) {
-						ret.type = int_e;
-						ret.intval = (operand1.intval + operand2.intval);
-					}
-				}
+				ret = eh_op_plus(operand1, operand2);
 				break;
 			EH_FLOATINT_CASE('-', -) // subtraction
 			EH_FLOATINT_CASE('*', *) // multiplication
@@ -832,88 +815,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 			case T_COMMAND:
 				// name of command to be executed
 				name = eh_execute(node->opval->paras[0], context).stringval;
-				// we're making an array of parameters
-				arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t));
-				// count for simple parameters
-				operand2.type = int_e;
-				operand2.intval = 0;
-				// loop through the paras given
-				node = node->opval->paras[1];
-				while(node->opval->nparas != 0) {
-					node2 = node->opval->paras[1];
-					if(node2->type == op_e) {
-						switch(node2->opval->op) {
-							case T_SHORTPARA:
-								// short paras: set each letter to true
-								node2 = node2->opval->paras[0];
-								count = strlen(node2->stringval);
-								operand3.type = string_e;
-								for(i = 0; i < count; i++) {
-									operand3.stringval = (char *) Malloc(2);
-									operand3.stringval[1] = '\0';
-									operand3.stringval[0] = node2->stringval[i];
-									array_insert_retval(
-										arrayval, 
-										operand3,
-										(ehretval_t) {bool_e, {true}}
-									);
-								}
-								break;
-							case T_LONGPARA:
-								// long-form paras
-								if(node2->opval->nparas == 1) {
-									array_insert_retval(
-										arrayval,
-										eh_execute(node2->opval->paras[0], context),
-										(ehretval_t) { bool_e, {true}}
-									);
-								}
-								else {
-									array_insert_retval(
-										arrayval,
-										eh_execute(node2->opval->paras[0], context),
-										eh_execute(node2->opval->paras[1], context)
-									);
-								}
-								break;
-							case '>':
-								operand3.type = string_e;
-								operand3.stringval = (char *) Malloc(sizeof(">"));
-								strcpy(operand3.stringval, ">");
-								// output redirector
-								array_insert_retval(
-									arrayval,
-									operand3,
-									eh_execute(node2->opval->paras[0], context)
-								);
-								break;
-							case '}':
-								operand3.type = string_e;
-								operand3.stringval = (char *) Malloc(sizeof("}"));
-								strcpy(operand3.stringval, "}");
-								// output redirector
-								array_insert_retval(
-									arrayval,
-									operand3,
-									eh_execute(node2->opval->paras[0], context)
-								);
-								break;
-						}
-					}
-					else {
-						// non-named parameters
-						array_insert_retval(
-							arrayval, 
-							operand2, 
-							*node2
-						);
-						operand2.intval++;
-					}
-					node = node->opval->paras[0];
-				}
-				interpreter->execute_cmd(name, arrayval);
-				// we're not returning anymore
-				returning = false;
+				eh_op_command(name, node->opval->paras[1], context);
 				break;
 			default:
 				eh_error_int("Unexpected opcode", node->opval->op, efatal_e);
@@ -1032,6 +934,34 @@ ehretval_t eh_op_uminus(ehretval_t in) {
 	}
 	return ret;
 }
+ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2) {
+	ehretval_t ret;
+	if(operand1.type == string_e && operand2.type == string_e) {
+		// concatenate them
+		ret.type = string_e;
+		size_t len1, len2;
+		len1 = strlen(operand1.stringval);
+		len2 = strlen(operand2.stringval);
+		ret.stringval = (char *) Malloc(len1 + len2 + 1);
+		strcpy(ret.stringval, operand1.stringval);
+		strcpy(ret.stringval + len1, operand2.stringval);
+	}
+	else if(operand1.type == float_e && operand2.type == float_e) {
+		ret.type = float_e;
+		ret.floatval = operand1.floatval + operand2.floatval;
+	}
+	else {
+		operand1 = eh_xtoi(operand1);
+		operand2 = eh_xtoi(operand2);
+		if(operand1.type == int_e && operand2.type == int_e) {
+			ret.type = int_e;
+			ret.intval = operand1.intval + operand2.intval;
+		}
+		else
+			ret.type = null_e;
+	}
+	return ret;
+}
 void eh_op_global(const char *name) {
 	ehvar_t *globalvar;
 	ehvar_t *newvar;
@@ -1046,6 +976,89 @@ void eh_op_global(const char *name) {
 	newvar->value.type = reference_e;
 	newvar->value.referenceval = &globalvar->value;
 	insert_variable(newvar);
+	return;
+}
+void eh_op_command(const char *name, ehretval_t *node, ehcontext_t context) {
+	ehretval_t index_r, value_r;
+	ehvar_t **paras;
+	ehretval_t *node2;
+	// count for simple parameters
+	int count = 0;
+	// we're making an array of parameters
+	paras = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t));
+	// loop through the paras given
+	while(node->opval->nparas != 0) {
+		node2 = node->opval->paras[1];
+		if(node2->type == op_e) {
+			switch(node2->opval->op) {
+				case T_SHORTPARA:
+					// short paras: set each letter to true
+					node2 = node2->opval->paras[0];
+					for(int i = 0, len = strlen(node2->stringval); i < len; i++) {
+						index_r.type = string_e;
+						index_r.stringval = (char *) Malloc(2);
+						index_r.stringval[0] = node2->stringval[i];
+						index_r.stringval[1] = '\0';
+						value_r.type = bool_e;
+						value_r.boolval = true;
+						array_insert_retval(paras, index_r, value_r);
+					}
+					break;
+				case T_LONGPARA:
+					// long-form paras
+					if(node2->opval->nparas == 1) {
+						value_r.type = bool_e;
+						value_r.boolval = true;
+						array_insert_retval(
+							paras,
+							eh_execute(node2->opval->paras[0], context),
+							value_r
+						);
+					}
+					else {
+						array_insert_retval(
+							paras,
+							eh_execute(node2->opval->paras[0], context),
+							eh_execute(node2->opval->paras[1], context)
+						);
+					}
+					break;
+				case '>':
+					index_r.type = string_e;
+					index_r.stringval = (char *) Malloc(sizeof(">"));
+					strcpy(index_r.stringval, ">");
+					// output redirector
+					array_insert_retval(
+						paras,
+						index_r,
+						eh_execute(node2->opval->paras[0], context)
+					);
+					break;
+				case '}':
+					index_r.type = string_e;
+					index_r.stringval = (char *) Malloc(sizeof("}"));
+					strcpy(index_r.stringval, "}");
+					// output redirector
+					array_insert_retval(
+						paras,
+						index_r,
+						eh_execute(node2->opval->paras[0], context)
+					);
+					break;
+			}
+		}
+		else {
+			// non-named parameters
+			index_r.type = int_e;
+			index_r.intval = count;
+			array_insert_retval(paras, index_r, *node2);
+			count++;
+		}
+		node = node->opval->paras[0];
+	}
+	interpreter->execute_cmd(name, paras);
+	// we're not returning anymore
+	returning = false;
 	return;
 }
 /*

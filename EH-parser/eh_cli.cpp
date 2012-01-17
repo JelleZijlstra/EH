@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 	}
 }
 
-int EHI::execute_cmd(char *name, ehvar_t **array) {
+int EHI::execute_cmd(const char *name, ehvar_t **array) {
 	eh_error("Use of commands outside of EH-PHP context", eerror_e);
 	return 0;
 }

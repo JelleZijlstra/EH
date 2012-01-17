@@ -26,6 +26,10 @@ static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue)
 static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
 // helper functions
 void print_retval(const ehretval_t in);
+ehretval_t eh_count(const ehretval_t in);
+ehretval_t eh_op_tilde(ehretval_t in);
+ehretval_t eh_op_uminus(ehretval_t in);
+
 
 #define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
 // library functions supported by ehi
@@ -104,62 +108,13 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				ret = eh_cast(node->opval->paras[0]->typeval, operand2);
 				break;
 			case T_COUNT:
-				operand1 = eh_execute(node->opval->paras[0], context);
-				ret.type = int_e;
-				switch(operand1.type) {
-					case int_e:
-						ret.intval = sizeof(int) * 8;
-						break;
-					case float_e:
-						ret.intval = sizeof(float) * 8;
-						break;
-					case string_e:
-						ret.intval = strlen(operand1.stringval);
-						break;
-					case array_e:
-						ret.intval = array_count(operand1.arrayval);
-						break;
-					case null_e:
-						ret.intval = 0;
-						break;
-					case bool_e:
-						ret.intval = 0;
-						break;
-					default:
-						eh_error_type("count operator", operand1.type, eerror_e);
-						break;
-				}
+				ret = eh_count(eh_execute(node->opval->paras[0], context));
 				break;
 			case '~': // bitwise negation
-				operand1 = eh_execute(node->opval->paras[0], context);
-				switch(operand1.type) {
-					// bitwise negation of a bool is just normal negation
-					case bool_e:
-						ret.type = bool_e;
-						ret.boolval = !operand1.boolval;
-						break;
-					// else try to cast to int
-					default:
-						operand1 = eh_xtoi(operand1);
-						if(operand1.type != int_e) {
-							eh_error_type("bitwise negation", operand1.type, eerror_e);
-							return ret;
-						}
-						// fall through to int case
-					case int_e:
-						ret.type = int_e;
-						ret.intval = ~operand1.intval;
-						break;
-				}
+				ret = eh_op_tilde(eh_execute(node->opval->paras[0], context));
 				break;
 			case T_NEGATIVE: // sign change
-				operand1 = eh_xtoi(eh_execute(node->opval->paras[0], context));
-				if(operand1.type != int_e)
-					eh_error_type("negation", operand1.type, eerror_e);
-				else {
-					ret.type = int_e;
-					ret.intval = -operand1.intval;
-				}
+				ret = eh_op_uminus(eh_execute(node->opval->paras[0], context));
 				break;
 			case '!': // Boolean not
 				ret = eh_xtobool(eh_execute(node->opval->paras[0], context));
@@ -184,15 +139,15 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 		 */
 			case T_IF:
 				if(eh_xtobool(eh_execute(node->opval->paras[0], context)).boolval)
-					ret = eh_execute(node->opval->paras[1], context);
+					eh_execute(node->opval->paras[1], context);
 				else if(node->opval->nparas == 3)
-					ret = eh_execute(node->opval->paras[2], context);
+					eh_execute(node->opval->paras[2], context);
 				break;
 			case T_WHILE:
 				inloop++;
 				breaking = 0;
 				while(eh_xtobool(eh_execute(node->opval->paras[0], context)).boolval) {
-					ret = eh_execute(node->opval->paras[1], context);
+					eh_execute(node->opval->paras[1], context);
 					LOOPCHECKS;
 				}
 				inloop--;
@@ -219,7 +174,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				if(node->opval->nparas == 2) {
 					// "for 5; do stuff; endfor" construct
 					for(i = 0; i < operand1.intval; i++) {
-						ret = eh_execute(node->opval->paras[1], context);
+						eh_execute(node->opval->paras[1], context);
 						LOOPCHECKS;
 					}
 				}
@@ -237,7 +192,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 					// count variable always gets to be an int
 					var->value.type = int_e;
 					for(var->value.intval = min; var->value.intval <= max; var->value.intval++) {
-						ret = eh_execute(node->opval->paras[2], context);
+						eh_execute(node->opval->paras[2], context);
 						LOOPCHECKS;
 					}
 				}
@@ -250,7 +205,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				while(node->opval->nparas != 0) {
 					operand2 = eh_execute(node->opval->paras[1]->opval->paras[0], context);
 					if(eh_looseequals(operand1, operand2).boolval) {
-						ret = eh_execute(node->opval->paras[1]->opval->paras[1], context);
+						eh_execute(node->opval->paras[1]->opval->paras[1], context);
 						break;
 					}
 					node = node->opval->paras[0];
@@ -928,7 +883,86 @@ void print_retval(const ehretval_t ret) {
 	}
 	return;
 }
-
+ehretval_t eh_count(const ehretval_t in) {
+	ehretval_t ret;
+	ret.type = int_e;
+	switch(in.type) {
+		case int_e:
+			ret.intval = sizeof(int) * 8;
+			break;
+		case float_e:
+			ret.intval = sizeof(float) * 8;
+			break;
+		case string_e:
+			ret.intval = strlen(in.stringval);
+			break;
+		case array_e:
+			ret.intval = array_count(in.arrayval);
+			break;
+		case null_e:
+			ret.intval = 0;
+			break;
+		case bool_e:
+			ret.intval = 0;
+			break;
+		default:
+			eh_error_type("count operator", in.type, eerror_e);
+			ret.type = null_e;
+			break;
+	}
+	return ret;
+}
+ehretval_t eh_op_tilde(ehretval_t in) {
+	// no const argument because it's modified below
+	ehretval_t ret;
+	switch(in.type) {
+		// bitwise negation of a bool is just normal negation
+		case bool_e:
+			ret.type = bool_e;
+			ret.boolval = !in.boolval;
+			break;
+		// else try to cast to int
+		default:
+			in = eh_xtoi(in);
+			if(in.type != int_e) {
+				eh_error_type("bitwise negation", in.type, eerror_e);
+				ret.type = null_e;
+				return ret;
+			}
+			// fall through to int case
+		case int_e:
+			ret.type = int_e;
+			ret.intval = ~in.intval;
+			break;
+	}
+	return ret;
+}
+ehretval_t eh_op_uminus(ehretval_t in) {
+	ehretval_t ret;
+	switch(in.type) {
+		// negation
+		case bool_e:
+			ret.type = bool_e;
+			ret.boolval = !in.boolval;
+			break;
+		case float_e:
+			ret.type = float_e;
+			ret.floatval = -in.floatval;
+		default:
+			in = eh_xtoi(in);
+			if(in.type != int_e) {
+				eh_error_type("negation", in.type, eerror_e);
+				ret.type = null_e;
+				return ret;
+			}
+			// fall through to int case
+		case int_e:
+			ret.type = int_e;
+			ret.intval = -in.intval;
+			break;
+	}
+	return ret;
+}
 /*
  * Variables
  */

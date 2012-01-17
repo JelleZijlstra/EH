@@ -80,3 +80,4 @@ Circular reference: EH runtime error
 @put.eh:
 @global.eh:
 No such global variable: nosuchvar: EH notice
+@floatmath.eh:

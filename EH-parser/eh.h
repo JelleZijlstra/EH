@@ -273,8 +273,8 @@ extern int scope;
 
 // prototypes
 bool insert_variable(ehvar_t *var);
-ehvar_t *get_variable(char *name, int scope);
-void remove_variable(char *name, int scope);
+ehvar_t *get_variable(const char *name, int scope);
+void remove_variable(const char *name, int scope);
 void list_variables(void);
 bool insert_function(ehfunc_t *func);
 ehfunc_t *get_function(char *name);

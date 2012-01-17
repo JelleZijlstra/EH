@@ -29,6 +29,7 @@ void print_retval(const ehretval_t in);
 ehretval_t eh_count(const ehretval_t in);
 ehretval_t eh_op_tilde(ehretval_t in);
 ehretval_t eh_op_uminus(ehretval_t in);
+void eh_op_global(const char *name);
 
 
 #define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
@@ -200,18 +201,7 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				ret.boolval = !ret.boolval;
 				break;
 			case T_GLOBAL: // global variable declaration
-				name = node->opval->paras[0]->stringval;
-				var = get_variable(name, 0);
-				if(var == NULL) {
-					eh_error_unknown("global variable", name, enotice_e);
-					break;
-				}
-				member = (ehvar_t *) Malloc(sizeof(ehvar_t));
-				member->name = name;
-				member->scope = scope;
-				member->value.type = reference_e;
-				member->value.referenceval = &var->value;
-				insert_variable(member);
+				eh_op_global(node->opval->paras[0]->stringval);
 				break;
 		/*
 		 * Control flow
@@ -1042,6 +1032,22 @@ ehretval_t eh_op_uminus(ehretval_t in) {
 	}
 	return ret;
 }
+void eh_op_global(const char *name) {
+	ehvar_t *globalvar;
+	ehvar_t *newvar;
+	globalvar = get_variable(name, 0);
+	if(globalvar == NULL) {
+		eh_error_unknown("global variable", name, enotice_e);
+		return;
+	}
+	newvar = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	newvar->name = name;
+	newvar->scope = scope;
+	newvar->value.type = reference_e;
+	newvar->value.referenceval = &globalvar->value;
+	insert_variable(newvar);
+	return;
+}
 /*
  * Variables
  */
@@ -1059,7 +1065,7 @@ bool insert_variable(ehvar_t *var) {
 	}
 	return true;
 }
-ehvar_t *get_variable(char *name, int scope) {
+ehvar_t *get_variable(const char *name, int scope) {
 	unsigned int vhash;
 	ehvar_t *currvar;
 
@@ -1074,7 +1080,7 @@ ehvar_t *get_variable(char *name, int scope) {
 	}
 	return NULL;
 }
-void remove_variable(char *name, int scope) {
+void remove_variable(const char *name, int scope) {
 	//printf("Removing variable %s of scope %d\n", name, scope);
 	//list_variables();
 	unsigned int vhash;

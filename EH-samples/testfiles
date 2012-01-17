@@ -60,3 +60,4 @@ float.eh
 floatcast.eh
 bitwise.eh
 put.eh
+global.eh

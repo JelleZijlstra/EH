@@ -78,3 +78,5 @@ Circular reference: EH runtime error
 @floatcast.eh:
 @bitwise.eh:
 @put.eh:
+@global.eh:
+No such global variable: nosuchvar: EH notice

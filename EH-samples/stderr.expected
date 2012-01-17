@@ -82,3 +82,4 @@ Circular reference: EH runtime error
 No such global variable: nosuchvar: EH notice
 @floatmath.eh:
 @access.eh:
+@foras.eh:

@@ -67,6 +67,7 @@
 "endif"		return T_ENDIF;
 "for"		return T_FOR;
 "endfor"	return T_ENDFOR;
+"as"		return T_AS;
 "count"		return T_COUNT;
 "while"		return T_WHILE;
 "endwhile"	return T_ENDWHILE;

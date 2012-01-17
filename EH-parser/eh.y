@@ -43,6 +43,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_ENDWHILE
 %token T_FOR
 %token T_ENDFOR
+%token T_AS
 %token T_GIVEN
 %token T_END
 %token T_SWITCH
@@ -129,6 +130,10 @@ statement:
 							{ $$ = eh_addnode(T_FOR, 2, $2, $4); }
 	| T_FOR expression T_COUNT bareword T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = eh_addnode(T_FOR, 3, $2, $4, $6); }
+	| T_FOR expression T_AS bareword T_SEPARATOR statement_list T_END T_SEPARATOR
+							{ $$ = eh_addnode(T_AS, 3, $2, $4, $6); }
+	| T_FOR expression T_AS bareword T_DOUBLEARROW bareword T_SEPARATOR statement_list T_END T_SEPARATOR
+							{ $$ = eh_addnode(T_AS, 4, $2, $4, $6, $8); }
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = eh_addnode(T_IF, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_ENDIF T_SEPARATOR

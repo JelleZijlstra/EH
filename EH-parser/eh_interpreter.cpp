@@ -33,6 +33,7 @@ ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2);
 void eh_op_global(const char *name);
 void eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
 ehretval_t eh_op_for(opnode_t *op, ehcontext_t context);
+ehretval_t eh_op_as(opnode_t *op, ehcontext_t context);
 ehretval_t eh_op_new(const char *name);
 void eh_op_continue(opnode_t *op, ehcontext_t context);
 void eh_op_break(opnode_t *op, ehcontext_t context);
@@ -231,6 +232,9 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 				break;
 			case T_FOR:
 				ret = eh_op_for(node->opval, context);
+				break;
+			case T_AS:
+				ret = eh_op_as(node->opval, context);
 				break;
 			case T_SWITCH: // switch statements
 				ret = eh_op_switch(node->opval->paras, context);
@@ -736,6 +740,99 @@ ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 		}
 	}
 	inloop--;
+	return ret;
+}
+ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
+	ehretval_t ret;
+	ret.type = null_e;
+
+	// get the object to be looped through and check its type
+	ehretval_t object = eh_execute(op->paras[0], context);
+	if(object.type != array_e && object.type != object_e) {
+		eh_error_type("for ... as operator", object.type, enotice_e);
+		return ret;
+	}
+	// establish variables
+	char *membername;
+	ehvar_t *membervar;
+	char *indexname;
+	ehvar_t *indexvar;
+	ehretval_t *code;
+	// no index
+	if(op->nparas == 3) {
+		membername = op->paras[1]->stringval;
+		indexname = NULL;
+		code = op->paras[2];
+	}
+	// with index
+	else {
+		indexname = op->paras[1]->stringval;
+		membername = op->paras[2]->stringval;
+		code = op->paras[3];
+	}
+	// create variables
+	membervar = get_variable(membername, scope);
+	if(membervar == NULL) {
+		membervar = (ehvar_t *) Malloc(sizeof(ehvar_t));
+		membervar->name = membername;
+		membervar->scope = scope;
+		insert_variable(membervar);
+	}
+	if(indexname != NULL) {
+		indexvar = get_variable(indexname, scope);
+		if(indexvar == NULL) {
+			indexvar = (ehvar_t *) Malloc(sizeof(ehvar_t));
+			indexvar->name = indexname;
+			indexvar->scope = scope;
+			insert_variable(indexvar);
+		}
+	}
+	if(object.type == object_e) {
+		// object index is always a string
+		indexvar->value.type = string_e;
+		ehclassmember_t **members = object.objectval->members;
+		// check whether we're allowed to access private things
+		const bool doprivate = ehcontext_compare(object.objectval, context);
+		for(int i = 0; i < VARTABLE_S; i++) {
+			for(ehclassmember_t *currmember = members[i]; currmember != NULL; currmember = currmember->next) {
+				// ignore private
+				if(!doprivate && currmember->attribute.visibility == private_e)
+					continue;
+				if(currmember->attribute.isconst == const_e) {
+					membervar->value.type = creference_e;
+					membervar->value.referenceval = &currmember->value;
+				}
+				else
+					membervar->value = currmember->value;
+				if(indexname) {
+					// need the strdup here because currmember->name is const
+					// and a string_e is not. Perhaps solve this instead by
+					// creating a new cstring_e type?
+					indexvar->value.stringval = strdup(currmember->name);
+				}
+				ret = eh_execute(code, context);
+				LOOPCHECKS;
+			}
+		}
+	}
+	else {
+		// arrays
+		ehvar_t **members = object.arrayval;
+		for(int i = 0; i < VARTABLE_S; i++) {
+			for(ehvar_t *currmember = members[i]; currmember != NULL; currmember = currmember->next) {
+				membervar->value = currmember->value;
+				if(indexname) {
+					indexvar->value.type = currmember->indextype;
+					if(currmember->indextype == string_e)
+						indexvar->value.stringval = strdup(currmember->name);
+					else
+						indexvar->value.intval = currmember->index;
+				}
+				ret = eh_execute(code, context);
+				LOOPCHECKS;
+			}
+		}
+	}
 	return ret;
 }
 ehretval_t eh_op_new(const char *name) {
@@ -1397,9 +1494,6 @@ ehclassmember_t *class_getmember(ehobj_t *classobj, char *name, ehcontext_t cont
 				case public_e:
 					return curr;
 				case private_e:
-					// if context is NULL, we're never going to get private stuff
-					if(context == NULL)
-						return NULL;
 					// check context
 					if(ehcontext_compare(classobj, context))
 						return curr;
@@ -1553,7 +1647,11 @@ ehretval_t colon_access(
 	return ret;
 }
 bool ehcontext_compare(ehcontext_t lock, ehcontext_t key) {
-	return !strcmp(lock->classname, key->classname);
+	// in global context, we never have access to private stuff
+	if(key == NULL)
+		return false;
+	else
+		return !strcmp(lock->classname, key->classname);
 }
 /*
  * Type casting

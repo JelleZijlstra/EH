@@ -55,6 +55,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_ENDFUNC
 %token T_RET
 %token T_ECHO
+%token T_PUT
 %token T_SEPARATOR
 %token T_SET
 %token T_CALL
@@ -108,6 +109,8 @@ statement:
 	| line_expr T_SEPARATOR	{ $$ = $1; }
 	| T_ECHO expression T_SEPARATOR
 							{ $$ = eh_addnode(T_ECHO, 1, $2); }
+	| T_PUT expression T_SEPARATOR
+							{ $$ = eh_addnode(T_PUT, 1, $2); }
 	| T_SET lvalue_set '=' expression T_SEPARATOR
 							{ $$ = eh_addnode(T_SET, 2, $2, $4); }
 	| lvalue_set T_ASSIGNMENT expression T_SEPARATOR

@@ -34,8 +34,8 @@ void eh_error_type(const char *context, type_enum type, errlevel_e level) {
 	fprintf(stderr, "Unsupported type %s for %s", get_typestring(type), context);
 	eh_error(NULL, level);
 }
-void eh_error_types(int context, type_enum type1, type_enum type2, errlevel_e level) {
-	fprintf(stderr, "Unsupported types %s and %s for operator %d", get_typestring(type1), get_typestring(type2), context);
+void eh_error_types(const char *context, type_enum type1, type_enum type2, errlevel_e level) {
+	fprintf(stderr, "Unsupported types %s and %s for operator %s", get_typestring(type1), get_typestring(type2), context);
 	eh_error(NULL, level);
 }
 void eh_error_looplevels(const char *context, int levels) {

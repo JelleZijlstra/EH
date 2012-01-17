@@ -60,6 +60,7 @@
 				return T_TYPE;
 			}
 "echo"		return T_ECHO;
+"put"		return T_PUT;
 "if"		return T_IF;
 "else"		return T_ELSE;
 "set"		return T_SET;

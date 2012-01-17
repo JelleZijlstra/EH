@@ -93,9 +93,11 @@ ehretval_t eh_execute(ehretval_t *node, ehcontext_t context) {
 		 * Unary operators
 		 */
 			case T_ECHO:
-				ret = eh_execute(node->opval->paras[0], context);
-				print_retval(ret);
+				print_retval(eh_execute(node->opval->paras[0], context));
 				printf("\n");
+				break;
+			case T_PUT:
+				print_retval(eh_execute(node->opval->paras[0], context));
 				break;
 			case '@': // type casting
 				operand1 = eh_execute(node->opval->paras[0], context);

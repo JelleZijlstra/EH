@@ -207,7 +207,7 @@ void eh_error_redefine(const char *kind, const char *name, errlevel_e level);
 void eh_error_int(const char *message, int opcode, errlevel_e level);
 void eh_error_argcount(int expected, int received);
 void eh_error_line(int line, const char *msg);
-void eh_error_types(int context, type_enum type1, type_enum type2, errlevel_e level);
+void eh_error_types(const char *context, type_enum type1, type_enum type2, errlevel_e level);
 void eh_error_argcount_lib(const char *name, int expected, int received);
 /*
  * Other global functions
@@ -322,7 +322,7 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 		ret.intval = (operand1.intval operator operand2.intval); \
 	} \
 	else \
-		eh_error_types(token, operand1.type, operand2.type, eerror_e); \
+		eh_error_types(#operator, operand1.type, operand2.type, eerror_e); \
 	break;
 // take ints, return a bool
 #define EH_INTBOOL_CASE(token, operator) case token: \
@@ -333,7 +333,7 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 		ret.boolval = (operand1.intval operator operand2.intval); \
 	} \
 	else { \
-		eh_error_types(token, operand1.type, operand2.type, eerror_e); \
+		eh_error_types(#operator, operand1.type, operand2.type, eerror_e); \
 	} \
 	break;
 // take bools, return a bool

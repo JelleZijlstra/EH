@@ -120,7 +120,7 @@ void printvar_retval(ehretval_t in) {
 			printf("@attributestr\n");
 			break;
 		case range_e:
-			printf("@range %d..%d\n", in.rangeval[0], in.rangeval[1]);
+			printf("@range %d..%d\n", in.rangeval->min, in.rangeval->max);
 			break;
 		case float_e:
 			printf("@float %f\n", in.floatval);

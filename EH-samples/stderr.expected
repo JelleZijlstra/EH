@@ -86,3 +86,4 @@ No such global variable: nosuchvar: EH notice
 @forasbreak.eh:
 @crazycasts.eh:
 @arrayref.eh:
+@default.eh:

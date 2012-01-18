@@ -89,6 +89,7 @@
 "given"		return T_GIVEN;
 "end"		return T_END;
 "case"		return T_CASE;
+"default"	return T_DEFAULT;
 "this"		{
 				yylval_param->mValue = this_e;
 				return T_MAGICVAR;

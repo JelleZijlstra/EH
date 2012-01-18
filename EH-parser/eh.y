@@ -47,6 +47,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_GIVEN
 %token T_END
 %token T_SWITCH
+%token T_DEFAULT
 %token T_ENDSWITCH
 %token T_ASSIGNMENT
 %token T_CASE
@@ -437,22 +438,28 @@ parg:
 	| bareword ','			{ $$ = $1; }
 
 caselist:
-	caselist acase			{ $$ = eh_addnode(',', 2, $1, $2); }
+	acase caselist			{ $$ = eh_addnode(',', 2, $1, $2); }
 	| /* NULL */			{ $$ = eh_addnode(',', 0); }
 	;
 
 acase:
 	T_CASE expression T_SEPARATOR statement_list
 							{ $$ = eh_addnode(T_CASE, 2, $2, $4); }
+	| T_DEFAULT T_SEPARATOR statement_list
+							{ $$ = eh_addnode(T_CASE, 1, $3); }
+	;
 
 exprcaselist:
-	exprcaselist exprcase	{ $$ = eh_addnode(',', 2, $1, $2); }
+	exprcase exprcaselist	{ $$ = eh_addnode(',', 2, $1, $2); }
 	| /* NULL */			{ $$ = eh_addnode(',', 0); }
 	;
 
 exprcase:
 	T_CASE expression T_SEPARATOR expression T_SEPARATOR
 							{ $$ = eh_addnode(T_CASE, 2, $2, $4); }
+	| T_DEFAULT T_SEPARATOR expression T_SEPARATOR
+							{ $$ = eh_addnode(T_CASE, 1, $3); }
+	;
 
 expressionwrap:
 	expression				{ $$ = eh_addnode(T_EXPRESSION, 1, $1); }

@@ -478,6 +478,9 @@ void print_retval(const ehretval_t ret) {
 		case float_e:
 			printf("%f", ret.floatval);
 			break;
+		case range_e:
+			printf("%d to %d", ret.rangeval->min, ret.rangeval->max);
+			break;
 		default:
 			eh_error_type("echo operator", ret.type, enotice_e);
 			break;
@@ -994,15 +997,20 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 ehretval_t eh_op_switch(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t switchvar, casevar;
 	ehretval_t *node;
+	opnode_t *op;
 
 	// switch variable
 	switchvar = eh_execute(paras[0], context);
 	node = paras[1];
 	while(node->opval->nparas != 0) {
-		casevar = eh_execute(node->opval->paras[1]->opval->paras[0], context);
+		op = node->opval->paras[0]->opval;
+		// execute default
+		if(op->nparas == 1)
+			return eh_execute(op->paras[0], context);
+		casevar = eh_execute(op->paras[0], context);
 		if(eh_looseequals(switchvar, casevar).boolval)
-			return eh_execute(node->opval->paras[1]->opval->paras[1], context);
-		node = node->opval->paras[0];
+			return eh_execute(op->paras[1], context);
+		node = node->opval->paras[1];
 	}
 	ehretval_t ret;
 	ret.type = null_e;
@@ -1011,15 +1019,20 @@ ehretval_t eh_op_switch(ehretval_t **paras, ehcontext_t context) {
 ehretval_t eh_op_given(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t switchvar, casevar;
 	ehretval_t *node;
+	opnode_t *op;
 
 	// switch variable
 	switchvar = eh_execute(paras[0], context);
 	node = paras[1];
 	while(node->opval->nparas != 0) {
-		casevar = eh_execute(node->opval->paras[1]->opval->paras[0], context);
+		op = node->opval->paras[0]->opval;
+		// execute default
+		if(op->nparas == 1)
+			return eh_execute(op->paras[0], context);
+		casevar = eh_execute(op->paras[0], context);
 		if(eh_looseequals(switchvar, casevar).boolval)
-			return eh_execute(node->opval->paras[1]->opval->paras[1], context);
-		node = node->opval->paras[0];
+			return eh_execute(op->paras[1], context);
+		node = node->opval->paras[1];
 	}
 	ehretval_t ret;
 	ret.type = null_e;

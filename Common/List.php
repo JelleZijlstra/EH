@@ -35,7 +35,7 @@ abstract class FileList extends ExecuteHandler {
 			'execute' => 'callmethod'),
 		'find_cmd' => array('name' => 'find_cmd',
 			'aka' => array('f', 'find'),
-			'desc' => "Find files that fulfil the condition given in the argument. An argument consists of a field name plus a text or regex pattern (separated by slashes) the field name should fulfil. Examples:\n\tfind_cmd year 1984\nwill find all files published in 1984\n\tfind_cmd title /Sudamerica/\nwill find all files with \"Sudamerica\" in the title",
+			'desc' => "Find files that fulfil the condition given in the argument. An argument consists of a field name plus a text or regex pattern (separated by slashes) the field name should fulfil. Examples:\n\tfind_cmd year '1984'\nwill find all files published in 1984\n\tfind_cmd title '/Sudamerica/'\nwill find all files with \"Sudamerica\" in the title",
 			'arg' => 'Field plus pattern; see description',
 			'execute' => 'callmethodarg'),
 		'mlist' => array('name' => 'mlist',

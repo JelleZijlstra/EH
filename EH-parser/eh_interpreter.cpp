@@ -241,6 +241,8 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 				break;
 			case T_SWITCH: // switch statements
 				ret = eh_op_switch(node->opval->paras, context);
+				// incremented in the eh_op_switch function
+				inloop--;
 				break;
 			case T_GIVEN: // inline switch statements
 				ret = eh_op_given(node->opval->paras, context);
@@ -995,24 +997,45 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	return;
 }
 ehretval_t eh_op_switch(ehretval_t **paras, ehcontext_t context) {
-	ehretval_t switchvar, casevar;
+	ehretval_t switchvar, casevar, ret;
 	ehretval_t *node;
 	opnode_t *op;
+	
+	// because we use continue, we'll pretend this is a loop
+	inloop++;
 
 	// switch variable
 	switchvar = eh_execute(paras[0], context);
-	node = paras[1];
-	while(node->opval->nparas != 0) {
+	for(node = paras[1]; node->opval->nparas != 0; node = node->opval->paras[1]) {
 		op = node->opval->paras[0]->opval;
 		// execute default
-		if(op->nparas == 1)
-			return eh_execute(op->paras[0], context);
-		casevar = eh_execute(op->paras[0], context);
-		if(eh_looseequals(switchvar, casevar).boolval)
-			return eh_execute(op->paras[1], context);
-		node = node->opval->paras[1];
+		if(op->nparas == 1) {
+			ret = eh_execute(op->paras[0], context);
+		}
+		else {
+			casevar = eh_execute(op->paras[0], context);
+			if(eh_looseequals(switchvar, casevar).boolval)
+				ret = eh_execute(op->paras[1], context);
+			else
+				continue;
+		}
+		// check whether we need to leave
+		if(returning)
+			return ret;
+		else if(breaking) {
+			breaking--;
+			return ret;
+		}
+		else if(continuing) {
+			// if continuing == 1, then continue
+			continuing--;
+			// so if continuing now > 0, leave the switch
+			if(continuing)
+				return ret;
+		}
+		else
+			return ret;
 	}
-	ehretval_t ret;
 	ret.type = null_e;
 	return ret;
 }

@@ -87,3 +87,5 @@ No such global variable: nosuchvar: EH notice
 @crazycasts.eh:
 @arrayref.eh:
 @default.eh:
+@switchcont.eh:
+@switchcont.eh 1:

@@ -37,7 +37,7 @@ abstract class FileList extends ExecuteHandler {
 			'aka' => array('f', 'find'),
 			'desc' => "Find files that fulfil the condition given in the argument. An argument consists of a field name plus a text or regex pattern (separated by slashes) the field name should fulfil. Examples:\n\tfind_cmd year '1984'\nwill find all files published in 1984\n\tfind_cmd title '/Sudamerica/'\nwill find all files with \"Sudamerica\" in the title",
 			'arg' => 'Field plus pattern; see description',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'mlist' => array('name' => 'mlist',
 			'aka' => array('list'),
 			'desc' => 'List content for a given field',
@@ -642,17 +642,21 @@ abstract class FileList extends ExecuteHandler {
 		}
 		$this->bfind(array($key => $value));
 	}
-	public function find_cmd($cmd = '') {
-		if(!$cmd) {
-			echo 'Syntax: <field> <value>' . PHP_EOL;
-			$cmd = $this->getline(array('prompt' => 'find> '));
-		}
-		if($cmd === 'q') return false;
-		$sep = strpos($cmd, ' ');
-		$field = substr($cmd, 0, $sep);
-		$value = substr($cmd, $sep + 1);
-		$this->bfind(array($field => $value));
-		return true;
+	public function find_cmd(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				// they get returned in back-to-front order by ehi... need to do something about that
+				1 => 'field',
+				0 => 'value',
+			),
+			'checklist' => array(
+				'field' => 'Field to search in',
+				'value' => 'Value to search for',
+			),
+			'askifempty' => array('field', 'value'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		return $this->bfind(array($paras['field'] => $paras['value']));
 	}
 	public function average($files, $field) {
 		if(!is_array($files) or count($files) === 0) return false;

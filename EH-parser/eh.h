@@ -285,6 +285,7 @@ void list_variables(void);
 bool insert_function(ehfunc_t *func);
 ehfunc_t *get_function(const char *name);
 ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext);
+ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, const ehretval_t *const args);
 void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t context);
 ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);

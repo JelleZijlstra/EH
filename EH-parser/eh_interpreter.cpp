@@ -1014,7 +1014,20 @@ ehretval_t eh_op_switch(ehretval_t **paras, ehcontext_t context) {
 		}
 		else {
 			casevar = eh_execute(op->paras[0], context);
-			if(eh_looseequals(switchvar, casevar).boolval)
+			ehretval_t decider;
+			// try to call function
+			if(casevar.type == func_e) {
+				decider = call_function_args(casevar.funcval, context, newcontext, 1, &switchvar);
+				if(decider.type != bool_e) {
+					eh_error("Switch case method does not return bool", eerror_e);
+					ret.type = null_e;
+					return ret;
+				}
+			}
+			else
+				decider = eh_looseequals(switchvar, casevar);
+			// apply the decider
+			if(decider.boolval)
 				ret = eh_execute(op->paras[1], context);
 			else
 				continue;
@@ -1446,6 +1459,40 @@ ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcon
 	ret = eh_execute(f->code, newcontext);
 	returning = false;
 	for(i = 0; i < f->argcount; i++) {
+		remove_variable(f->args[i].name, scope);
+	}
+	scope--;
+	return ret;
+}
+ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, const ehretval_t *const args) {
+	ehretval_t ret;
+	ehvar_t *var;
+
+	ret.type = null_e;
+	if(f->type == lib_e) {
+		// library function not supported here for now
+		eh_error("call_function_args does not support library functions", efatal_e);
+		return ret;
+	}
+	// check parameter count
+	if(nargs != f->argcount) {
+		eh_error_argcount(f->argcount, nargs);
+		return ret;
+	}
+	// set parameters as necessary
+	for(int i = 0; i < nargs; i++) {
+		var = (ehvar_t *) Malloc(sizeof(ehvar_t));
+		var->name = f->args[i].name;
+		var->scope = scope + 1;
+		var->value = eh_execute(&args[i], context);
+		insert_variable(var);
+	}
+	// functions get their own scope (not incremented before because execution of arguments needs parent scope)
+	scope++;
+	// set new context (only useful for methods)
+	ret = eh_execute(f->code, newcontext);
+	returning = false;
+	for(int i = 0; i < nargs; i++) {
 		remove_variable(f->args[i].name, scope);
 	}
 	scope--;

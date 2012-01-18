@@ -6,25 +6,55 @@
 \tableofcontents
 \pagebreak
 \section{Introduction}
-EH is a scripting language that I developed and implemented. It grew out of command-line interfaces that I developed for PHP objects representing (among others) citations to scientific articles, mammal species, and a Wikipedia bot. This interface initially allowed only for commands to be passed to the PHP objects (a command like \verb#bfind --authors='/Zijlstra/'# would get interpreted into \verb#$this->bfind(array('authors' => '/Zijlstra/'));#---a function that searches the Catalog bibliographic database). Later, I extended the PHP command-line interpreter to include features like variables, basic mathematics, functions, and loops. While this PHP tool, based mostly on regular expressions, does its job correctly, it is limited to simple statements (it cannot parse an assignment like \verb#$ foo = 1 + 2 * 3#) and lacks a proper grammar.
+EH is a scripting language that I developed and implemented. 
+%%
+It grew out of command-line interfaces that I developed for PHP objects representing (among others) citations to scientific articles, mammal species, and a Wikipedia bot. 
+%%
+This interface initially allowed only for commands to be passed to the PHP objects (a command like \verb#bfind --authors='/Zijlstra/'# would get interpreted into \verb#$this->bfind(array('authors' => '/Zijlstra/'));#---a function that searches the Catalog bibliographic database). 
+%%
+Later, I extended the PHP command-line interpreter to include features like variables, basic mathematics, functions, and loops. 
+%%
+While this PHP tool, based mostly on regular expressions, does its job correctly, it is limited to simple statements (it cannot parse an assignment like \verb#$ foo = 1 + 2 * 3#) and lacks a proper grammar.
 
-Therefore, I have re-implemented EH using the standard tools Flex and Bison and a C++ interpreter. This code is used to generate a standalone interpreter (\verb#ehi#) as well as a PHP interface for the interpreter (\verb#ehphp#), which supports execution of commands (see below) parsed in C++ using PHP code. (I also started work on a compiler, \verb#ehc#, but am not maintaining it at the moment.) This implementation of EH supports virtually all features of the PHP implementation, and adds many others, including classes, complex expressions, and type casting.
+Therefore, I have re-implemented EH using the standard tools Flex and Bison and a C++ interpreter. 
+%%
+This code is used to generate a standalone interpreter (\verb#ehi#) as well as a PHP interface for the interpreter (\verb#ehphp#), which supports execution of commands (see below) parsed in C++ using PHP code. 
+%%
+(I also started work on a compiler, \verb#ehc#, but am not maintaining it at the moment.) 
+%%
+This implementation of EH supports virtually all features of the PHP implementation, and adds many others, including classes, complex expressions, and type casting.
 
-Still, EH is a limited language, with a small standard library, no support for file I/O, and a constantly memory-leaking interpreter. It is useful to me as a way to develop my coding skills and to make it easier to interface with PHP code for e.g. Catalog without modifying the PHP code itself.
+Still, EH is a limited language, with a small standard library, no support for file I/O, and a constantly memory-leaking interpreter. 
+%%
+It is useful to me as a way to develop my coding skills and to make it easier to interface with PHP code for e.g. Catalog without modifying the PHP code itself.
 
 This introduction documents the syntax of EH in the form supported by the C++ interpreter.
 
 \section{Basic syntax}
-EH is an imperative language, with syntax similar in many ways to languages like C. However, it does not use curly braces, instead ending blocks with the \verb#end# keyword, and function calls use a colon instead of parentheses. An EH program consists of statements, separated by either newlines or semicolons. A statement may be a variable assignment, an expression, a command, the definition of a function or class, or any of various control flow structures. With some exceptions, the number of spaces between operators is irrelevant.
+EH is an imperative language, with syntax similar in many ways to languages like C. 
+%%
+However, it does not use curly braces, instead ending blocks with the \verb#end# keyword, and function calls use a colon instead of parentheses. 
+%%
+An EH program consists of statements, separated by either newlines or semicolons. 
+%%
+A statement may be a variable assignment, an expression, a command, the definition of a function or class, or any of various control flow structures. 
+%%
+With some exceptions, the number of spaces between operators is irrelevant.
 
 Variable assignments take the form \verb#$ var = expression# (the space after the \$ is, in this case, essential), like this:
 \begin{verbatim}
 $ var = 2
 echo $var
 \end{verbatim}
-This program will print 2. Alternatively, \verb#set var = expression# or \verb#var := expression# may also be used for assignment.
+This program will print 2. 
+%%
+Alternatively, \verb#set var = expression# or \verb#var := expression# may also be used for assignment.
 
-Variables are scoped to either global scope or the function they are in. Global variables are not automatically accessible from functions; to use a global variable within a function, it must be declared with the \verb#global# keyword. The following program, which will print 42, provides an example:
+Variables are scoped to either global scope or the function they are in. 
+%%
+Global variables are not automatically accessible from functions; to use a global variable within a function, it must be declared with the \verb#global# keyword. 
+%%
+The following program, which will print 42, provides an example:
 \begin{verbatim}
 $ var = 42
 func printit:
@@ -34,10 +64,14 @@ end
 printit:
 \end{verbatim}
 
-The \verb#echo# statement will print an arbitrary expression followed by a newline, and \verb#put# will do the same without the accompanying newline. Both are neither functions nor commands, but core language constructs.
+The \verb#echo# statement will print an arbitrary expression followed by a newline, and \verb#put# will do the same without the accompanying newline. 
+%%
+Both are neither functions nor commands, but core language constructs.
 
 \section{Types}
-EH is dynamically typed; the type of a variable is decided at runtime and variables may change between types. EH supports the following types:
+EH is dynamically typed; the type of a variable is decided at runtime and variables may change between types. 
+%%
+EH supports the following types:
 \begin{itemize}
 \item \verb#null# A variable of this type has no value.
 \item \verb#bool# Boolean values: either \verb#true# or \verb#false#.
@@ -51,22 +85,42 @@ EH is dynamically typed; the type of a variable is decided at runtime and variab
 \end{itemize}
 Functions and objects are treated in more detail below.
 
-Arrays can hold variables of any type and use indices that may be either integers or strings. Accessing to an array uses the arrow operator \verb#->#; \verb#$ foo -> 'bar' = 'baz'# will place the string 'baz' in the array \$foo under the index 'bar'. An array may be declared within square brackets; for example, \verb#$ foo = ['bar' => 'baz', 'spam' => 'eggs']#. The keys may also be omitted; in this case, numeric keys are automatically used.
+Arrays can hold variables of any type and use indices that may be either integers or strings. 
+%%
+Access to an array uses the arrow operator \verb#->#; \verb#$ foo -> 'bar' = 'baz'# will place the string 'baz' in the array \$foo under the index 'bar'. 
+%%
+An array may be declared within square brackets; for example, \verb#$ foo = ['bar' => 'baz', 'spam' => 'eggs']#. 
+%%
+The keys may also be omitted; in this case, numeric keys are automatically used.
 
-The array access operator \verb#-># may also be used with strings and integers, but only with integers keys. For strings, it returns the ASCII value of the nth character in the string; for integers, it returns the value of the nth bit of the integer.
+The array access operator \verb#-># may also be used with strings and integers, but only with integers keys. 
+%%
+For strings, it returns the ASCII value of the nth character in the string; for integers, it returns the value of the nth bit of the integer.
 
-The type of an expression may be shown using the \verb#printvar:# library function; for example, \verb#printvar: 3# will print \verb#@int 3#. The method for typecasting an expression parallels \verb#printvar:#'s output: for example, \verb#printvar: @string 3# will show that the integer has been converted into a string containing the text '3'.
+The type of an expression can be shown using the \verb#printvar:# library function; for example, \verb#printvar: 3# will print \verb#@int 3#. 
+%%
+The method for typecasting an expression parallels \verb#printvar:#'s output: for example, \verb#printvar: @string 3# will show that the integer has been converted into a string containing the text '3'.
 
 \section{Expressions}
-EH expressions may include variable dereferences, mathematical operations, array declarations, function calls, and inline switch statements, among others. An expression returns a value, which may be of any type.
+EH expressions may include variable dereferences, mathematical operations, array declarations, function calls, and inline switch statements, among others. 
+%%
+An expression returns a value, which may be of any type.
 
 Variables are dereferenced using a \verb#$# without a succeeding space, followed by the variable's name.
 
-The binary operators supported are \verb#+# (addition and string concatenation), \verb#-# (subtraction), \verb#*# (multiplication), \verb#/# (division), \verb#\%# (modulo), \verb#&# (binary and), \verb#|# (binary or), \verb#^# (binary exclusive-or), \verb#=# (equality; not assignment!), \verb#>=#, \verb#>#, \verb#<=#, \verb#<#, \verb#!=# (with the expected meanings), \verb#&&# or \verb#and# (logical and), \verb#||# or \verb#or# (logical or), and \verb#^^# or \verb#xor# (logical exclusive-or). Unary operators include \verb#-# (negation), \verb#~# (bitwise negation), \verb#count# (number of elements of an array, length of a string, size of an int), and \verb#!# (boolean negation). The logical \textit{and} and \textit{or} operators use short-circuit evaluation.
+The binary operators supported are \verb#+# (addition and string concatenation), \verb#-# (subtraction), \verb#*# (multiplication), \verb#/# (division), \verb#\%# (modulo), \verb#&# (binary and), \verb#|# (binary or), \verb#^# (binary exclusive-or), \verb#=# (equality; not assignment!), \verb#>=#, \verb#>#, \verb#<=#, \verb#<#, \verb#!=# (with the expected meanings), \verb#&&# or \verb#and# (logical and), \verb#||# or \verb#or# (logical or), and \verb#^^# or \verb#xor# (logical exclusive-or). 
+%%
+Unary operators include \verb#-# (negation), \verb#~# (bitwise negation), \verb#count# (number of elements of an array, length of a string, size of an int), and \verb#!# (boolean negation). 
+%%
+The logical \textit{and} and \textit{or} operators use short-circuit evaluation.
 
-Operator precedence is generally sensible. If that is not enough, parentheses can be used to force a number of expressions together.
+Operator precedence is generally sensible.
+%%
+If that is not enough, parentheses can be used to force a number of expressions together.
 
-Inline switch statements use the \verb#given# keyword and are useful as a concise version of a \verb#switch#. For example, one could write
+Inline switch statements use the \verb#given# keyword and are useful as a concise version of a \verb#switch#. 
+%%
+For example, one could write
 \begin{verbatim}
 echo given $argc
 	case 1

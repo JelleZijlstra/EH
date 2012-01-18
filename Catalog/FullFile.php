@@ -31,6 +31,7 @@ class FullFile extends ListEntry {
 	static $n_comm = array('pages', 'newtaxa', 'draft', 'muroids'); // names of commentary fields supported
 	static $n_bools = array('editedtitle', 'parturl', 'fullissue', 'triedfindurl', 'triedfinddoi', 'triedadddata'); // variables (mostly boolean) supported
 	static $parentlist = 'csvlist';
+	static protected $set_exclude_child = array('editedtitle', 'triedfindurl', 'triedfinddoi', 'triedadddata');
 	private $truename_return;
 	private $pdfcontent; // holds text of first page of PDF
 	private $adddata_return; // private variable used in FullFile::adddata()

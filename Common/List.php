@@ -959,6 +959,8 @@ abstract class ListEntry extends ExecuteHandler {
 			'arg' => 'Property to be emptied',
 			'execute' => 'callmethodarg'),
 	);
+	// array of variables that shouldn't get dynamically defined set commands
+	private static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');
 	protected function getarray($var, $paras = array()) {
 	// helper for toarray(), to prepare array variables for storage
 		if(!is_array($this->$var)) return NULL;
@@ -1084,6 +1086,7 @@ abstract class ListEntry extends ExecuteHandler {
 		if($writefull) logwrite($this->toarray());
 	}
 	protected function listproperties() {
+	// list the user-visible properties of the object
 		$vars = get_object_vars($this);
 		foreach($vars as $key => $var) {
 			$out[] = $key;
@@ -1098,6 +1101,11 @@ abstract class ListEntry extends ExecuteHandler {
 				}
 			}
 		}
+		// ditch stuff we don't want as a dynamic property
+		if(is_array(static::$set_exclude_child))
+			$out = array_diff($out, self::$set_exclude, static::$set_exclude_child);
+		else
+			$out = array_diff($out, self::$set_exclude);
 		return $out;
 	}
 	public function __call($name, $arguments) {

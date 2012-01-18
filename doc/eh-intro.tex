@@ -20,7 +20,7 @@ Therefore, I have re-implemented EH using the standard tools Flex and Bison and 
 %%
 This code is used to generate a standalone interpreter (\verb#ehi#) as well as a PHP interface for the interpreter (\verb#ehphp#), which supports execution of commands (see below) parsed in C++ using PHP code. 
 %%
-(I also started work on a compiler, \verb#ehc#, but am not maintaining it at the moment.) 
+(I also started work on a compiler, \verb#ehc#, but it only supports a small subset of the language.) 
 %%
 This implementation of EH supports virtually all features of the PHP implementation, and adds many others, including classes, complex expressions, and type casting.
 
@@ -29,6 +29,8 @@ Still, EH is a limited language, with a small standard library, no support for f
 It is useful to me as a way to develop my coding skills and to make it easier to interface with PHP code for e.g. Catalog without modifying the PHP code itself.
 
 This introduction documents the syntax of EH in the form supported by the C++ interpreter.
+%%
+Further examples of the language are in the \verb#EH-samples# directory; these examples are referred to occasionally in this documentation.
 
 \section{Basic syntax}
 EH is an imperative language, with syntax similar in many ways to languages like C. 
@@ -131,7 +133,13 @@ echo given $argc
 		'I got ' + (@string $argc) + ' arguments'
 end
 \end{verbatim}
-% Actually, "default" isn't implemented yet.
+The case labels may also be anonymous functions (see below).
+%%
+In this case, the function get executed with the switch variable (\verb#$argc# in the example) as its only argument. 
+%%
+If it returns \verb#true#, the case matches.
+%%
+See \verb#givenfunc.eh# for an example of this feature.
 
 \section{Control flow}
 EH uses the control flow operators \verb#if#, \verb#for#, \verb#while#, and \verb#switch#. 

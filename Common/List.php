@@ -449,9 +449,13 @@ abstract class FileList extends ExecuteHandler {
 				'isfunc' =>
 					'Whether the query parameter is a function',
 				'print' =>
-					'Whether the entries found should be printed to the screen',
+					'If this parameter is set to false, nothing is printed, regardless of whether printentries, printresult, and printvalues are set',
+				'printvalues' =>
+					'Whether the values of the entries found should be printed',
+				'printentries' =>
+					'Whether the names of the entries found should be printed',
 				'printresult' =>
-					'Whether the count of entries found should be printed to the screen',
+					'Whether the count of entries found should be printed',
 				'setcurrent' =>
 					'Whether $this->current should be set',
 				'return' =>
@@ -466,6 +470,8 @@ abstract class FileList extends ExecuteHandler {
 			},
 			'default' => array(
 				'print' => true,
+				'printentries' => true,
+				'printvalues' => false,
 				'printresult' => true,
 				'setcurrent' => true,
 				'return' => 'objectarray',
@@ -554,6 +560,8 @@ abstract class FileList extends ExecuteHandler {
 		$out = array();
 		foreach($this->$arr as $file) {
 			if($file->isredirect()) continue;
+			if($paras['printvalues'])
+				$values = array();
 			foreach($queries as $query) {
 				$hay = isset($query['func'])
 					? $file->{$query['field']}()
@@ -574,13 +582,20 @@ abstract class FileList extends ExecuteHandler {
 				else
 					$found = ($query['content'] == $hay);
 				if(!$found) continue 2;
+				// remember values if necessary
+				if($paras['printvalues'])
+					$values[$query['field']] = $hay;
 			}
 			$out[$file->name] = $file;
-			if($paras['print']) {
+			if($paras['printentries']) {
 				echo $file->name . PHP_EOL;
 				// need to change this for broader applicability
 				if(method_exists($file, 'citepaper'))
 					echo $file->citepaper() . PHP_EOL;
+			}
+			if($paras['printvalues']) {
+				foreach($values as $key => $value)
+					echo $key . ': ' . $value . PHP_EOL;
 			}
 			// TODO: add method of the sort where $paras['dothis'] = array('openfiles') will replace this
 			if($paras['openfiles']) $file->openf();

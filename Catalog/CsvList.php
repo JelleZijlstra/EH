@@ -1,5 +1,4 @@
 <?php
-require_once(__DIR__ . '/../Common/ExecuteHandler.php');
 class CsvList extends FileList {
 	public $citetype; // default citation type
 	public $verbosecite; // whether citation functions need to be verbose
@@ -239,9 +238,9 @@ class CsvList extends FileList {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
-				'name' => 
+				'name' =>
 					'Filename to write under (if different from $file->name',
-				'isnew' => 
+				'isnew' =>
 					'Whether we need to do things we do for new files (as opposed to old ones merely loaded into the catalog)',
 			),
 			'default' => array(
@@ -573,9 +572,9 @@ class CsvList extends FileList {
 				}
 			}
 			switch($in[0]) {
-				case 'e': 
+				case 'e':
 					if(isset($this->c[$file]))
-						$this->c[$file]->edit(); 
+						$this->c[$file]->edit();
 					else
 						echo 'File does not exist' . PHP_EOL;
 					break;
@@ -630,7 +629,7 @@ class CsvList extends FileList {
 				'f' => 'includefoldertree',
 			),
 			'checklist' => array(
-				'includefoldertree' => 
+				'includefoldertree' =>
 					'Whether we need to print the foldertree',
 			),
 			'default' => array(
@@ -785,7 +784,7 @@ class CsvList extends FileList {
 			),
 			'default' => array('file' => false),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if($paras['file']) 
+		if($paras['file'])
 			$fp = fopen($paras['file'], 'w');
 		$matches = $mismatches = $impossible = 0;
 		foreach($this->c as $child) {
@@ -807,14 +806,14 @@ class CsvList extends FileList {
 				echo "\tSimplified as $dettitle\n";
 				echo 'Detected title: ' . $pdftitle . PHP_EOL;
 				$mismatches++;
-				if($paras['file']) 
+				if($paras['file'])
 					fputcsv($fp, array($child->name, $child->title, $pdftitle, $rectitle, $dettitle, $levenshtein));
 			}
 			else {
 				$matches++;
 			}
 		}
-		if($paras['file']) 
+		if($paras['file'])
 			fclose($fp);
 		echo "\n\nTotal matches: $matches\nTotal mismatches: $mismatches\nCould not determine title: $impossible\n";
 	}

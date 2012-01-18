@@ -1,31 +1,31 @@
-This repository contains a number of tools for my personal use. Most are built 
+This repository contains a number of tools for my personal use. Most are built
 on or related to the ExecuteHandler PHP class, which provides a command-line
-interface to PHP objects and the ability to have commands executed by the 
+interface to PHP objects and the ability to have commands executed by the
 object. The language used in these commands is called "eh" and has two
-implementations, a pure PHP, but limited parser, and a full-featured parser 
+implementations, a pure PHP, but limited parser, and a full-featured parser
 written in C++ using a yacc grammar.
 
 This repository contains the following main folders:
 - AvidaInterface: an interface to the Avida digital evolution engine. Used in an
   OEB 192 class project.
 - Catalog: the program that keeps track of my database of scientific papers.
-- Common: various things that are at the core of ExecuteHandler. 
-  ExecuteHandler.php contains the ExecuteHandler class and its core 
-  functionality, EHICore.php contains the pure-PHP implementation of eh, 
-  List.php contains the FileList and ListEntry classes, which are used in among
-  others Catalog and List.
+- Common: various things that are at the core of ExecuteHandler.
+  ExecuteHandler.php contains the ExecuteHandler class and its core
+  functionality, EHICore.php contains the pure-PHP implementation of eh,
+  FileList.php and ListEntry.php contain the FileList and ListEntry classes,
+  which are used in among others Catalog and List.
 - doc: documentation for the eh language, currently incomplete.
 - EH-parser: the C++ implementation of eh.
-- EH-samples: samples of EH code, used to test the standalone C++ interpreter 
+- EH-samples: samples of EH code, used to test the standalone C++ interpreter
   (ehi) for regressions. I hope to add support for testing of ehphp later.
-- GeneralList: a program that can generate basic FileList and ListEntry 
+- GeneralList: a program that can generate basic FileList and ListEntry
   implementations on the basis of a CSV input file.
-- List: a program used to keep track of a list of the species of mammals. It 
+- List: a program used to keep track of a list of the species of mammals. It
   uses FileList and ListEntry and is linked with Catalog.
 - Misc: various utility scripts.
-- MySQL: contains a Database class for a possible future move of 
-  FileList/ListEntry-type programs from CSV data files to proper MySQL 
+- MySQL: contains a Database class for a possible future move of
+  FileList/ListEntry-type programs from CSV data files to proper MySQL
   databases.
-- Parse: a program that can "parse" input for references defined in the Catalog 
+- Parse: a program that can "parse" input for references defined in the Catalog
   and replace them with full citations.
 - UcuchaBot: code used for bots that I run on Wikipedia.

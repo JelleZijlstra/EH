@@ -1,6 +1,7 @@
 <?php
 require_once(__DIR__  . '/../Common/common.php');
-require_once(BPATH . '/Common/List.php');
+require_once(BPATH . '/Common/FileList.php');
+require_once(BPATH . '/Common/ListEntry.php');
 require_once(BPATH . '/UcuchaBot/Bot.php');
 class FacsList extends FileList {
 	protected static $fileloc;
@@ -54,7 +55,7 @@ class FacsList extends FileList {
 				$id = $this->get($fac, 'id');
 				if($id < $lastid)
 					$this->set($fac, array(
-						'id' => ++$lastid, 
+						'id' => ++$lastid,
 						'date' => $facdate
 					));
 				else

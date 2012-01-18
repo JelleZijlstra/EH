@@ -72,7 +72,8 @@ require_once(GLISTREPO . '/$classname.php');
 		$realpath = realpath($file);
 		fwrite($outclass, "<?php
 require_once(__DIR__ . '/../Common/common.php');
-require_once(BPATH . '/Common/List.php');
+require_once(BPATH . '/Common/FileList.php');
+require_once(BPATH . '/Common/ListEntry.php');
 class {$classname}List extends FileList {
 	protected static \$fileloc = '$realpath';
 	protected static \$childclass = '{$classname}Entry';

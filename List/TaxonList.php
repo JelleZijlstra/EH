@@ -1,5 +1,5 @@
 <?
-require_once(BPATH . '/Common/List.php');
+require_once(BPATH . '/Common/FileList.php');
 class TaxonList extends FileList {
 	public $extantonly; // whether output includes extinct species
 	public $par; // array of arrays that list the children for each parent

@@ -6,7 +6,8 @@
  */
 if($argc !== 2) die("No filename specified" . PHP_EOL);
 require_once(__DIR__ . "/../Common/common.php");
-require_once(BPATH . "/Common/List.php");
+require_once(BPATH . "/Common/FileList.php");
+require_once(BPATH . "/Common/ListEntry.php");
 require_once(BPATH . "/Catalog/FullFile.php");
 require_once(BPATH . "/Catalog/settings.php");
 $ff = new FullFile();

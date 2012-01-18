@@ -8,7 +8,8 @@
  * - Improve pdfcontent_findtitle to include some of the logic of the trygoogle() etc methods
  */
 require_once(__DIR__ . '/../Common/common.php');
-require_once(BPATH . '/Common/List.php');
+require_once(BPATH . '/Common/FileList.php');
+require_once(BPATH . '/Common/ListEntry.php');
 require_once(BPATH . '/Catalog/settings.php');
 require_once(BPATH . '/Catalog/FullFile.php');
 require_once(BPATH . '/Catalog/CsvList.php');

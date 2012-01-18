@@ -5,7 +5,8 @@
  * License: PHP license
  */
 require_once(__DIR__ . '/../Common/common.php');
-require_once(BPATH . '/Common/List.php');
+require_once(BPATH . '/Common/FileList.php');
+require_once(BPATH . '/Common/ListEntry.php');
 require_once(BPATH . '/UcuchaBot/Snoopy.class.php');
 function getbot($paras = array()) {
 	if(isset($paras['new']) and $paras['new'] === true)
@@ -625,9 +626,9 @@ class Bot extends Snoopy {
 		$date = $dt->format('Ymd');
 		// get FAC that older noms needs to be above
 		$oldfacs = $FacsList->bfind(array(
-			'date' => '<' . $date, 
-			'archived' => false, 
-			'print' => false, 
+			'date' => '<' . $date,
+			'archived' => false,
+			'print' => false,
 			'printresult' => false
 		));
 		if(!is_array($oldfacs) or count($oldfacs) === 0) return false;

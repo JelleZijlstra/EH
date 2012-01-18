@@ -1102,7 +1102,7 @@ abstract class ListEntry extends ExecuteHandler {
 			}
 		}
 		// ditch stuff we don't want as a dynamic property
-		if(is_array(static::$set_exclude_child))
+		if(isset(static::$set_exclude_child) and is_array(static::$set_exclude_child))
 			$out = array_diff($out, self::$set_exclude, static::$set_exclude_child);
 		else
 			$out = array_diff($out, self::$set_exclude);

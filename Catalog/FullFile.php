@@ -2779,7 +2779,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$cmd = $this->ynmenu('A file with this name already exists. Do you want to continue anyway?');
 						switch($cmd) {
 							case 'y': break 3;
-							case 'n': continue 4;
+							case 'n': continue 3;
 						}
 					}
 			}

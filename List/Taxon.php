@@ -655,11 +655,11 @@ class Taxon extends ListEntry {
 			$csvlist->bfind(array(
 				'authors' => $authors,
 				'year' => $this->year,
-				'print' => false,
+				'quiet' => true,
 			)),
 			$csvlist->bfind(array(
 				'name' => $title,
-				'print' => false,
+				'quiet' => true,
 			))
 		);
 		if(!$cites) {

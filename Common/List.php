@@ -410,7 +410,7 @@ abstract class FileList extends ExecuteHandler {
 		}
 		if($dobfind) {
 			$bfindparas['array'] = $arr;
-			$bfindparas['print'] = false;
+			$bfindparas['quiet'] = true;
 			$files = $this->bfind($bfindparas);
 			if(!$files)
 				return false;
@@ -441,6 +441,9 @@ abstract class FileList extends ExecuteHandler {
 	public function bfind($paras = '') {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
+			'synonyms' => array(
+				'q' => 'quiet',
+			),
 			'checklist' => array(
 				'function' => 
 					'Name of function applied to text found',
@@ -448,8 +451,8 @@ abstract class FileList extends ExecuteHandler {
 					'Whether files found by the function should be opened',
 				'isfunc' =>
 					'Whether the query parameter is a function',
-				'print' =>
-					'If this parameter is set to false, nothing is printed, regardless of whether printentries, printresult, and printvalues are set',
+				'quiet' =>
+					'If this parameter is set, nothing is printed, regardless of whether printentries, printresult, and printvalues are set',
 				'printvalues' =>
 					'Whether the values of the entries found should be printed',
 				'printentries' =>
@@ -469,7 +472,7 @@ abstract class FileList extends ExecuteHandler {
 				// return property_exists($this, $para);
 			},
 			'default' => array(
-				'print' => true,
+				'quiet' => false,
 				'printentries' => true,
 				'printvalues' => false,
 				'printresult' => true,
@@ -770,8 +773,10 @@ abstract class FileList extends ExecuteHandler {
 		}
 		// bfind will check the input for us
 		$paras[$field] = '/^\s*\d+(\.\d+)?\s*$/'; // only include things where the field is actually numeric
-		$paras['print'] = false;
-		if(!$print) $paras['printresult'] = false;
+		if($print)
+			$paras['printentries'] = false;
+		else
+			$paras['quiet'] = true;
 		$files = $this->bfind($paras);
 		if(!$files) return false;
 		$out = array();

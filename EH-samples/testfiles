@@ -71,3 +71,4 @@ default.eh
 switchcont.eh
 switchcont.eh 1
 switchfunc.eh
+givenfunc.eh

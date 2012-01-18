@@ -90,3 +90,4 @@ No such global variable: nosuchvar: EH notice
 @switchcont.eh:
 @switchcont.eh 1:
 @switchfunc.eh:
+@givenfunc.eh:

@@ -1053,7 +1053,7 @@ ehretval_t eh_op_switch(ehretval_t **paras, ehcontext_t context) {
 	return ret;
 }
 ehretval_t eh_op_given(ehretval_t **paras, ehcontext_t context) {
-	ehretval_t switchvar, casevar;
+	ehretval_t switchvar, casevar, ret;
 	ehretval_t *node;
 	opnode_t *op;
 
@@ -1066,11 +1066,21 @@ ehretval_t eh_op_given(ehretval_t **paras, ehcontext_t context) {
 		if(op->nparas == 1)
 			return eh_execute(op->paras[0], context);
 		casevar = eh_execute(op->paras[0], context);
-		if(eh_looseequals(switchvar, casevar).boolval)
+		ehretval_t decider;
+		if(casevar.type == func_e) {
+			decider = call_function_args(casevar.funcval, context, newcontext, 1, &switchvar);
+			if(decider.type != bool_e) {
+				eh_error("Given case method does not return bool", eerror_e);
+				ret.type = null_e;
+				return ret;
+			}
+		}
+		else
+			decider = eh_looseequals(switchvar, casevar);
+		if(decider.boolval)
 			return eh_execute(op->paras[1], context);
 		node = node->opval->paras[1];
 	}
-	ehretval_t ret;
 	ret.type = null_e;
 	return ret;
 }

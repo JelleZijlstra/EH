@@ -243,9 +243,9 @@ abstract class FileList extends ExecuteHandler {
 		foreach($this->c as $file) {
 			if($askafter and $i and ($i % $askafter === 0)) {
 				switch($this->ynmenu('Do you still want to continue?')) {
-					case 'y': 
+					case 'y':
 						// otherwise we'll sometimes ask this twice in a row
-						$i++; 
+						$i++;
 						break;
 					case 'n': return;
 				}
@@ -445,9 +445,9 @@ abstract class FileList extends ExecuteHandler {
 				'q' => 'quiet',
 			),
 			'checklist' => array(
-				'function' => 
+				'function' =>
 					'Name of function applied to text found',
-				'openfiles' => 
+				'openfiles' =>
 					'Whether files found by the function should be opened',
 				'isfunc' =>
 					'Whether the query parameter is a function',
@@ -878,22 +878,24 @@ abstract class FileList extends ExecuteHandler {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(
-				'field' => 0,
+				0 => 'field',
 				'n' => 'numeric',
 				'r' => 'reverse',
 			),
 			'checklist' => array(
-				0 => 'Field to sort under',
+				'field' => 'Field to sort under',
 				'numeric' => 'Perform a numeric sort',
 				'reverse' => 'Whether to reverse the sort',
 			),
 			'default' => array(
-				0 => false,
+				'field' => false,
 				'numeric' => false,
 				'reverse' => false,
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$field = $paras[0];
+		$field = $paras['field'];
+		// we'll need to save
+		$this->needsave();
 		// if field not set, sort by name (= array key)
 		if($field === false) {
 			$this->needsave();
@@ -902,12 +904,13 @@ abstract class FileList extends ExecuteHandler {
 			else
 				return ksort($this->c);
 		}
+		// check whether the field is valid
 		$childclass = static::$childclass;
 		if(!$childclass::hasproperty($field)) {
 			echo 'No such property';
 			return false;
 		}
-		$this->needsave();
+		// create numeric sort function
 		if($paras['numeric']) {
 			$func = function($obj1, $obj2) use($field) {
 				$field1 = $obj1->$field;
@@ -920,16 +923,17 @@ abstract class FileList extends ExecuteHandler {
 					return 0;
 			};
 		}
+		// or create string sort function
 		else {
 			$func = function($obj1, $obj2) use($field) {
 				return strcmp($obj1->$field, $obj2->$field);
 			};
 		}
 		if($paras['reverse']) {
-			$rfunc = function($obj1, $obj2) use($func) {
+			// wrap $func in a new lambda function
+			return uasort($this->c, function($obj1, $obj2) use($func) {
 				return -1 * $func($obj1, $obj2);
-			};
-			return uasort($this->c, $rfunc);
+			});
 		}
 		else
 			return uasort($this->c, $func);

@@ -4,7 +4,7 @@
  * Jelle Zijlstra, December 2011
  *
  * Yacc grammar specification for the EH scripting language. The first versions
- * of this code were inspired by Tom Niemann's "A Compact Guide to Lex & Yacc", 
+ * of this code were inspired by Tom Niemann's "A Compact Guide to Lex & Yacc",
  * available at http://epaperpress.com/lexandyacc/
  */
 #include "eh.h"
@@ -16,7 +16,7 @@ int eh_outer_exit(int exitval);
 int yylex (YYSTYPE *, void *);
 int yylex_init(void**);
 int yylex_destroy(void *);
-bool is_interactive = false;
+int is_interactive = 0;
 struct yy_buffer_state *yy_scan_string ( const char *str );
 %}
 %pure-parser
@@ -93,9 +93,9 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
 %%
 global_list: /* NULL */		{ }
-	| global_list statement	{ 
+	| global_list statement	{
 								ehretval_t ret = eh_execute($2, NULL);
-								if(returning) 
+								if(returning)
 									return ret.intval;
 							}
 	;
@@ -171,8 +171,8 @@ statement:
 	| T_SWITCH expression T_SEPARATOR caselist T_ENDSWITCH T_SEPARATOR
 							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
 	| command T_SEPARATOR	{ $$ = $1; }
-	| error T_SEPARATOR		{ 
-								yyerrok; 
+	| error T_SEPARATOR		{
+								yyerrok;
 								$$ = NULL;
 							}
 	;
@@ -300,7 +300,7 @@ simple_expr:
 	| T_NEW bareword		{ $$ = eh_addnode(T_NEW, 1, $2); }
 	;
 
-line_expr: 
+line_expr:
 	/* need to separate expressions beginning with a bareword from commands */
 	T_INTEGER				{ $$ = eh_get_int($1); }
 	| T_FLOAT				{ $$ = eh_get_float($1); }
@@ -508,7 +508,8 @@ attributelist:
 char *eh_getinput(void) {
 	char *buf;
 
-	printf("> ");
+	if(is_interactive == 2)
+		printf("> ");
 	buf = (char *) Malloc(512);
 	return fgets(buf, 511, stdin);
 }
@@ -522,15 +523,16 @@ int EHI::eh_interactive(void) {
 	ehretval_t ret;
 	EHParser *parser;
 	EHI *oldinterpreter;
-	
+
 	parser = new EHParser;
 	oldinterpreter = interpreter;
 	interpreter = this;
-	is_interactive = true;
+	if(!is_interactive)
+		is_interactive = 2;
 	eh_init();
 	cmd = interpreter->eh_getline();
 	if(!cmd)
-		eh_outer_exit(0);
+		return eh_outer_exit(0);
 	// if a syntax error occurs, stop parsing and return -1
 	try {
 		ret = parser->parse_string(cmd);

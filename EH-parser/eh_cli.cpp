@@ -12,26 +12,33 @@ int yyparse(void);
 struct yy_buffer_state *yy_scan_string ( const char *str );
 
 EHI *interpreter;
+
+void eh_usage(char *name) {
+	fprintf(stderr, "Usage: %s\n\t%s file [arguments]\n\t%s -i\n\t%s -r code\n", name, name, name, name);
+	exit(-1);
+}
+
 int main(int argc, char **argv) {
 	ehretval_t ret;
 	EHParser *parser;
 
-	if(argc < 2) {
-		fprintf(stderr, "Usage: %s file\n\t%s -i\n\t%s -r code", argv[0], argv[0], argv[0]);
-		exit(-1);
-	}
 	interpreter = new EHI;
 	parser = new EHParser;
 
 	try {
-		if(!strcmp(argv[1], "-i")) {
+		if(argc == 1) {
+			is_interactive = 1;
+			ret.intval = interpreter->eh_interactive();
+		}
+		else if(!strcmp(argv[1], "-i")) {
+			if(argc != 2)
+				eh_usage(argv[0]);
+			is_interactive = 2;
 			ret.intval = interpreter->eh_interactive();
 		}
 		else if(!strcmp(argv[1], "-r")) {
-			if(argc < 3) {
-				fprintf(stderr, "Usage: %s file\n\t%s -i\n\t%s -r code", argv[0], argv[0], argv[0]);
-				eh_error(NULL, efatal_e);
-			}
+			if(argc != 3)
+				eh_usage(argv[0]);
 			eh_init();
 			ret = parser->parse_string(argv[2]);
 		}

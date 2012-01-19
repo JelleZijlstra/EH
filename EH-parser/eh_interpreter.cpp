@@ -310,7 +310,7 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 					ret = eh_execute(node->opval->paras[0], context);
 					// then overwrite with attribute from second para
 					switch(node->opval->paras[1]->attributeval) {
-						case publica_e: 
+						case publica_e:
 							ret.attributestrval.visibility = public_e;
 							break;
 						case privatea_e:
@@ -391,7 +391,7 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 				break;
 			case T_RANGE:
 				// Attempt to cast operands to integers; if this does not work,
-				// return NULL. No need to yell, since eh_xtoi already does 
+				// return NULL. No need to yell, since eh_xtoi already does
 				// that.
 				operand1 = eh_xtoint(eh_execute(node->opval->paras[0], context));
 				if(operand1.type == null_e)
@@ -444,8 +444,8 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 			case T_COMMAND:
 				// name of command to be executed
 				eh_op_command(
-					eh_execute(node->opval->paras[0], context).stringval, 
-					node->opval->paras[1], 
+					eh_execute(node->opval->paras[0], context).stringval,
+					node->opval->paras[1],
 					context
 				);
 				break;
@@ -985,7 +985,7 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t *node = paras[1];
 	while(node != NULL) {
 		if(node->type == op_e && node->opval->op == ',') {
-			class_insert(classobj->obj.members, node->opval->paras[0], context);						
+			class_insert(classobj->obj.members, node->opval->paras[0], context);
 			node = node->opval->paras[1];
 		}
 		else {
@@ -1000,7 +1000,7 @@ ehretval_t eh_op_switch(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t switchvar, casevar, ret;
 	ehretval_t *node;
 	opnode_t *op;
-	
+
 	// because we use continue, we'll pretend this is a loop
 	inloop++;
 
@@ -1088,7 +1088,7 @@ ehretval_t eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t function;
 	ehretval_t ret;
 	ret.type = null_e;
-	
+
 	function = eh_execute(paras[0], context);
 	// operand1 will be either a string (indicating a normal function call) or a func_e (indicating a method or closure call)
 	if(function.type == string_e) {
@@ -1106,17 +1106,17 @@ ehretval_t eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 }
 ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	/*
-	 * Get an lvalue. This function normally returns an ehretval_t of type 
-	 * reference_e: a pointer to an ehretval_t that can be modified by the 
+	 * Get an lvalue. This function normally returns an ehretval_t of type
+	 * reference_e: a pointer to an ehretval_t that can be modified by the
 	 * calling code.
 	 *
-	 * Because of special needs of calling code, this case actually returns 
-	 * useful data in the second field of the ehretval_t struct if its type is 
-	 * null_e: either NULL (if referring to a non-existing  variable) and 0x1 
+	 * Because of special needs of calling code, this case actually returns
+	 * useful data in the second field of the ehretval_t struct if its type is
+	 * null_e: either NULL (if referring to a non-existing  variable) and 0x1
 	 * (if referring to a member of a non-existent variable).
 	 *
-	 * Otherwise, it returns an attribute_e with a pointer to the ehretval_t of 
-	 * the variable referred to, so that T_SET can do its bitwise magic with 
+	 * Otherwise, it returns an attribute_e with a pointer to the ehretval_t of
+	 * the variable referred to, so that T_SET can do its bitwise magic with
 	 * ints and similar stuff.
 	 */
 	ehretval_t ret, basevar, index;
@@ -1138,7 +1138,7 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 				ret.referenceval = &var->value;
 			}
 			/*
-			 * If there is no variable of this name, and it is a 
+			 * If there is no variable of this name, and it is a
 			 * simple access, we use NULL as the referenceval.
 			 */
 			break;
@@ -1157,13 +1157,13 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 					if(var->value.type == array_e) {
 						index = eh_execute(op->paras[2], context);
 						member = array_getmember(var->value.arrayval, index);
-						// if there is no member yet and we are 
+						// if there is no member yet and we are
 						// setting, insert it with a null value
 						if(member == NULL) {
 							if(op->op == T_LVALUE_SET) {
 								member = array_insert_retval(
-									var->value.arrayval, 
-									index, 
+									var->value.arrayval,
+									index,
 									ret
 								);
 								ret.type = reference_e;
@@ -1258,13 +1258,13 @@ void eh_op_set(ehretval_t **paras, ehcontext_t context) {
 		if(lvalue.type == creference_e)
 			eh_error("Attempt to write to constant variable", eerror_e);
 		/*
-		 * Without this check, the following code creates an 
+		 * Without this check, the following code creates an
 		 * infinite loop:
 			$ foo = 3
 			$ bar = &foo
 			$ bar = &foo
 			echo $foo
-		 * That is because the third line sets foo to its own 
+		 * That is because the third line sets foo to its own
 		 * address.
 		 */
 		else if(rvalue.type == reference_e && lvalue.referenceval == rvalue.referenceval)
@@ -1567,15 +1567,15 @@ void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t contex
 	class_insert_retval(classarr, name, attribute, value);
 }
 ehclassmember_t *class_insert_retval(
-	ehclassmember_t **classarr, 
-	const char *name, 
-	memberattribute_t attribute, 
+	ehclassmember_t **classarr,
+	const char *name,
+	memberattribute_t attribute,
 	ehretval_t value
 ) {
 	// insert a member into a class
 	unsigned int vhash;
 	ehclassmember_t *member;
-	
+
 	member = (ehclassmember_t *) Malloc(sizeof(ehclassmember_t));
 	// rely on standard layout of the input ehretval_t
 	member->attribute = attribute;
@@ -1583,15 +1583,15 @@ ehclassmember_t *class_insert_retval(
 	member->value = value;
 
 	// insert into hash table
-	vhash = hash(member->name, 0);	
+	vhash = hash(member->name, 0);
 	member->next = classarr[vhash];
 	classarr[vhash] = member;
-	return member;	
+	return member;
 }
 ehclassmember_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context) {
 	ehclassmember_t *curr;
 	unsigned int vhash;
-	
+
 	vhash = hash(name, 0);
 	curr = classobj->members[vhash];
 	while(curr != NULL) {
@@ -1615,7 +1615,7 @@ ehclassmember_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_
 ehretval_t class_get(ehobj_t *classobj, const char *name, ehcontext_t context) {
 	ehclassmember_t *curr;
 	ehretval_t ret;
-	
+
 	curr = class_getmember(classobj, name, context);
 	if(curr == NULL)
 		ret.type = null_e;
@@ -1624,8 +1624,8 @@ ehretval_t class_get(ehobj_t *classobj, const char *name, ehcontext_t context) {
 	return ret;
 }
 ehretval_t object_access(
-	ehretval_t operand1, 
-	ehretval_t *index, 
+	ehretval_t operand1,
+	ehretval_t *index,
 	ehcontext_t context,
 	int token
 ) {
@@ -1638,7 +1638,7 @@ ehretval_t object_access(
 	// default value. Set the referenceval explicitly because of T_LVALUE special conventions
 	ret.type = null_e;
 	ret.referenceval = NULL;
-	
+
 	label = eh_execute(index, context);
 	if(label.type != string_e) {
 		eh_error_type("object member label", label.type, eerror_e);
@@ -1676,9 +1676,9 @@ ehretval_t object_access(
 			attribute.isstatic = nonstatic_e;
 			attribute.isconst = nonconst_e;
 			classmember = class_insert_retval(
-				object->members, 
-				label.stringval, 
-				attribute, 
+				object->members,
+				label.stringval,
+				attribute,
 				ret
 			);
 		}
@@ -1697,8 +1697,8 @@ ehretval_t object_access(
 	return ret;
 }
 ehretval_t colon_access(
-	ehretval_t operand1, 
-	ehretval_t *index, 
+	ehretval_t operand1,
+	ehretval_t *index,
 	ehcontext_t context,
 	int token
 ) {
@@ -1708,7 +1708,7 @@ ehretval_t colon_access(
 	memberattribute_t attribute;
 	ret.type = null_e;
 	ret.referenceval = NULL;
-	
+
 	label = eh_execute(index, context);
 	if(label.type != string_e) {
 		eh_error_type("object member label", label.type, eerror_e);
@@ -1733,9 +1733,9 @@ ehretval_t colon_access(
 			attribute.isstatic = nonstatic_e;
 			attribute.isconst = nonconst_e;
 			member = class_insert_retval(
-				classobj->obj.members, 
-				label.stringval, 
-				attribute, 
+				classobj->obj.members,
+				label.stringval,
+				attribute,
 				ret
 			);
 		}
@@ -1828,10 +1828,10 @@ char *eh_inttostring(const int in) {
 }
 char *eh_floattostring(const float in) {
 	char *buffer;
-	
+
 	buffer = (char *) Malloc(12);
 	snprintf(buffer, 12, "%f", in);
-	
+
 	return buffer;
 }
 ehretval_t eh_rangetoarray(const ehrange_t *const range) {
@@ -1973,6 +1973,7 @@ ehretval_t eh_xtobool(const ehretval_t in) {
 				ret.boolval = false;
 			else
 				ret.boolval = true;
+			break;
 		default:
 			// other types are always false
 			ret.boolval = false;

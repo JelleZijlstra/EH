@@ -95,6 +95,8 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 global_list: /* NULL */		{ }
 	| global_list statement	{
 								ehretval_t ret = eh_execute($2, NULL);
+								// flush stdout after executing each statement
+								fflush(stdout);
 								if(returning)
 									return ret.intval;
 							}

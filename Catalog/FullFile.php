@@ -1,4 +1,7 @@
 <?php
+// methods that should not get redirects resolved by FileList
+FileList::$resolve_redirect_exclude[] = array('FullFile', 'isredirect');
+
 class FullFile extends ListEntry {
 	public $name; //name of file (or handle of citation)
 	public $folder; //folder (NOFILE when "file" is not a file)
@@ -32,7 +35,6 @@ class FullFile extends ListEntry {
 	static $n_bools = array('editedtitle', 'parturl', 'fullissue', 'triedfindurl', 'triedfinddoi', 'triedadddata'); // variables (mostly boolean) supported
 	static $parentlist = 'csvlist';
 	static protected $set_exclude_child = array('editedtitle', 'triedfindurl', 'triedfinddoi', 'triedadddata');
-	private $truename_return;
 	private $pdfcontent; // holds text of first page of PDF
 	private $adddata_return; // private flag used in FullFile::adddata()
 	static $FullFile_commands = array(
@@ -458,12 +460,11 @@ class FullFile extends ListEntry {
 			$redirect_remove = array('sfolder', 'ssfolder', 'authors', 'year', 'title', 'journal', 'volume', 'series', 'issue', 'start', 'end', 'bookauthors', 'booktitle', 'pages', 'bookpages', 'ids', 'comm', 'doi', 'url', 'location', 'status', 'bools');
 			foreach($redirect_remove as $key)
 				$this->$key = NULL;
-			$target = $this->gettruename();
-			// this line crashed the program once; can't reproduce now
+			$target = $this->resolve_redirect();
 			if(!$this->p->has($target))
 				$this->warn('invalid redirect target', 'folder');
 			else if($this->p->isredirect($target))
-				$this->folder = 'SEE ' . $this->p->gettruename($target);
+				$this->folder = 'SEE ' . $this->p->resolve_redirect($target);
 		}
 		if($this->issupplement()) {
 			$supplement_remove = array('authors', 'year', 'journal', 'volume', 'series', 'issue', 'start', 'end', 'bookauthors', 'booktitle', 'pages', 'bookpages', 'ids', 'comm', 'doi', 'url', 'location', 'status', 'bools');
@@ -472,7 +473,7 @@ class FullFile extends ListEntry {
 			$target = $this->supp_getbasic();
 			// resolve redirect
 			if($this->p->isredirect($target))
-				$this->title = preg_replace('@^/([^/]+)/.*$@', '/$1/' . $this->p->gettruename($target), $this->title);
+				$this->title = preg_replace('@^/([^/]+)/.*$@u', '/$1/' . $this->p->resolve_redirect($target), $this->title);
 
 		}
 		if($this->parturl)
@@ -828,30 +829,7 @@ class FullFile extends ListEntry {
 	public function isredirect() {
 		return (substr($this->folder, 0, 4) === 'SEE ');
 	}
-	public function truename() {
-	// if file is a redirect, return true name
-	/* example use
-		if($this->truename()) return $this->truename_return;
-	and when you have arguments
-		if($this->truename()) return $this->__FUNCTION__(<args>);
-	*/
-		if($this->isredirect()) {
-			$backtrace = debug_backtrace();
-			$function = $backtrace[1]['function'];
-			$truename = substr($this->folder, 4);
-			if(!$this->p->has($truename)) {
-				echo 'Invalid redirect target: ' . $truename . PHP_EOL;
-				return false;
-			}
-			if($backtrace[1]['args'])
-				return $truename;
-			$this->truename_return = $this->p->{$function}($truename);
-			return true;
-		}
-		else
-			return false;
-	}
-	public function gettruename() {
+	public function resolve_redirect() {
 		if($this->isredirect()) {
 			$target = substr($this->folder, 4);
 			if($this->p->has($target))
@@ -1118,7 +1096,6 @@ class FullFile extends ListEntry {
 			else
 				return false;
 		}
-		if($this->truename()) return $this->truename_return;
 		if(!$this->p->citetype) $this->p->citetype = 'wp';
 		$func = 'cite' . $this->p->citetype;
 		return $this->$func();
@@ -2925,7 +2902,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return !($this->hasid() and $this->year and $this->volume and $this->start);
 	}
 	function folderstr() {
-		if($this->truename()) return $this->truename_return;
 		return $this->folder . ':' . $this->sfolder . ':' . $this->ssfolder;
 	}
 	function getkey() {
@@ -2936,7 +2912,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	function getrefname() {
 	// generate refname, which should usually be unique with this method
-		if($this->truename()) return $this->truename_return;
 		$tmp = explode(',', $this->authors);
 		$refname = $tmp[0] . $this->year . $this->volume . $this->start;
 		if(!$refname) $refname = $this->title;

@@ -34,7 +34,7 @@ class FullFile extends ListEntry {
 	static protected $set_exclude_child = array('editedtitle', 'triedfindurl', 'triedfinddoi', 'triedadddata');
 	private $truename_return;
 	private $pdfcontent; // holds text of first page of PDF
-	private $adddata_return; // private variable used in FullFile::adddata()
+	private $adddata_return; // private flag used in FullFile::adddata()
 	static $FullFile_commands = array(
 		'edittitle' => array('name' => 'edittitle',
 			'aka' => array('t'),
@@ -77,11 +77,16 @@ class FullFile extends ListEntry {
 			'execute' => 'callmethod'),
 		'format' => array('name' => 'format',
 			'desc' => 'Format the file',
-			'arg' => 'None required',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
+		'path' => array('name' => 'path',
+			'desc' => 'Return the path to the file',
+			'arg' => 'None',
 			'execute' => 'callmethod'),
 	);
-	static $FullFile_synonyms = array();
 	protected static $arrays_to_check = array('ids', 'comm', 'bools');
+	// fields not printed by inform()
+	protected static $inform_exclude = array('pdfcontent');
 	/* OBJECT CONSTRUCTION AND BASIC OPERATIONS */
 	public function __construct($in = '', $code = '') {
 	// $in: input data (array or string)
@@ -183,10 +188,11 @@ class FullFile extends ListEntry {
 		$out[] = $this->getarray('bools');
 		return $out;
 	}
-	protected static $inform_exclude = array('pdfcontent');
 	public function my_inform() {
 	// provide information for a file
+		// call the parent's basic inform() method
 		$this->inform();
+		// provide ls data
 		if($this->isfile()) echo shell_exec('ls -l ' . $this->path()) . PHP_EOL;
 	}
 	public function path(array $paras = array()) {
@@ -196,10 +202,17 @@ class FullFile extends ListEntry {
 			'checklist' => array(
 				'type' => 'Type of path: shell, url, or none',
 				'folder' => 'Whether we want the folder only',
+				'print' => 'Whether the result should be printed',
 			),
 			'default' => array(
 				'type' => 'shell',
 				'folder' => false,
+				'print' => false,
+			),
+			'checkparas' => array(
+				'type' => function($in) {
+					return in_array($in, array('shell', 'url', 'none'));
+				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!$this->isfile()) {
@@ -224,26 +237,41 @@ class FullFile extends ListEntry {
 		}
 		// if there is no folder, just return filename and hope for the best
 		if($this->folder === NULL)
-			return $process($this->name);
-		$out = $process(LIBRARY) . "/" . $process($this->folder);
-		if($this->sfolder) {
-			$out .= "/" . $process($this->sfolder);
-			if($this->ssfolder)
-				$out .= "/" . $process($this->ssfolder);
+			$out = $process($this->name);
+		else {
+			$out = $process(LIBRARY) . "/" . $process($this->folder);
+			if($this->sfolder) {
+				$out .= "/" . $process($this->sfolder);
+				if($this->ssfolder)
+					$out .= "/" . $process($this->ssfolder);
+			}
+			if(!$paras['folder'])
+				$out .= "/" . $process($this->name);
 		}
-		if($paras['folder']) return $out;
-		$out .= "/" . $process($this->name);
+		if($paras['print'])
+			echo $out . PHP_EOL;
 		return $out;
 	}
-	public function openf($paras = '') {
-		if(!isset($paras['place'])) $paras['place'] = 'catalog';
+	public function openf(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'place' => 'Place where the file is located',
+			),
+			'default' => array(
+				'place' => 'catalog',
+			),
+			'checkparas' => array(
+				'place' => function($in) {
+					return in_array($in, array('catalog', 'temp'));
+				}
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if($this->isfile()) {
 			if($paras['place'] === 'catalog')
 				exec_catch('open ' . $this->path());
-			else if($paras['place'] === 'temp')
-				exec_catch("open " . TEMPPATH . "/" . escape_shell($this->name));
 			else
-				echo 'Unrecognized place: ' . $paras['place'] . PHP_EOL;
+				exec_catch("open " . TEMPPATH . "/" . escape_shell($this->name));
 		}
 		else
 			echo 'Not a file; cannot open' . PHP_EOL;
@@ -251,7 +279,16 @@ class FullFile extends ListEntry {
 	}
 	public function remove() {
 	// remove a file
-		$cmd = $this->ynmenu('Are you sure you want to remove file ' . $this->name . '?');
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array('f' => 'force'),
+			'checklist' => array('force' => 'Do not ask for confirmation'),
+			'default' => array('force' => false),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if($paras['force'])
+			$cmd = 'y';
+		else
+			$cmd = $this->ynmenu('Are you sure you want to remove file ' . $this->name . '?');
 		switch($cmd) {
 			case 'y':
 				if($this->isfile()) exec_catch('rm ' . $this->path());
@@ -364,7 +401,7 @@ class FullFile extends ListEntry {
 		}
 	}
 	/* FORMATTING */
-	public function format() {
+	public function format(array $paras = array()) {
 		/*
 		 * completion of partial citations
 		 */
@@ -420,7 +457,7 @@ class FullFile extends ListEntry {
 			// no other data for redirects
 			$redirect_remove = array('sfolder', 'ssfolder', 'authors', 'year', 'title', 'journal', 'volume', 'series', 'issue', 'start', 'end', 'bookauthors', 'booktitle', 'pages', 'bookpages', 'ids', 'comm', 'doi', 'url', 'location', 'status', 'bools');
 			foreach($redirect_remove as $key)
-				unset($this->$key);
+				$this->$key = NULL;
 			$target = $this->gettruename();
 			// this line crashed the program once; can't reproduce now
 			if(!$this->p->has($target))
@@ -431,7 +468,7 @@ class FullFile extends ListEntry {
 		if($this->issupplement()) {
 			$supplement_remove = array('authors', 'year', 'journal', 'volume', 'series', 'issue', 'start', 'end', 'bookauthors', 'booktitle', 'pages', 'bookpages', 'ids', 'comm', 'doi', 'url', 'location', 'status', 'bools');
 			foreach($supplement_remove as $key)
-				unset($this->$key);
+				$this->$key = NULL;
 			$target = $this->supp_getbasic();
 			// resolve redirect
 			if($this->p->isredirect($target))
@@ -445,19 +482,19 @@ class FullFile extends ListEntry {
 		if($this->editedtitle)
 			$this->editedtitle = 1;
 		else
-			unset($this->editedtitle);
+			$this->editedtitle = NULL;
 		// replace with DOI
 		if($this->jstor) {
 			$this->doi = '10.2307/' . $this->jstor;
-			unset($this->jstor);
+			$this->jstor = NULL;
 		}
 		// those are unnecessary
 		if($this->url)
-			unset($this->triedfindurl);
+			$this->triedfindurl = NULL;
 		if($this->doi)
-			unset($this->triedfinddoi);
+			$this->triedfinddoi = NULL;
 		if(!$this->needsdata() and $this->doi)
-			unset($this->triedadddata);
+			$this->triedadddata = NULL;
 		// this indicates it's in press
 		if($this->start === 'no') {
 			$this->start = 'in press';
@@ -468,13 +505,25 @@ class FullFile extends ListEntry {
 		$this->issue = preg_replace("/[-_]/u", "–", $this->issue);
 		$this->year = str_replace('-', "–", $this->year);
 		// all-uppercase author names corrected (disabled because of "IUCN")
-		$this->authors = preg_replace_callback("/(?<=^|\s)[A-Z]+(?=[,\s])/u", create_function('$uppercase', 'return ucfirst(mb_strtolower($uppercase[0], "UTF-8"));'), $this->authors);
+		$this->authors = preg_replace_callback(
+			"/(?<=^|\s)[A-Z]+(?=[,\s])/u",
+			function($uppercase) {
+				return ucfirst(mb_strtolower($uppercase[0], "UTF-8"));
+			},
+			$this->authors
+		);
 		// typo I often make (> for .), and stuff that just happens
 		$this->authors = str_replace(array('>', ';;'), array('.', ';'), $this->authors);
 		// Jr. problems
 		$this->authors = preg_replace('/; Jr\.(?=;|$)/', ', Jr.', $this->authors);
 		// cap after hyphen
-		$this->authors = preg_replace_callback("/(?<=-)(\w)(?!\.)/u", create_function('$matches', 'return mb_strtoupper($matches[0], \'UTF-8\');'), $this->authors);
+		$this->authors = preg_replace_callback(
+			"/(?<=-)(\w)(?!\.)/u",
+			function($matches) {
+				return mb_strtoupper($matches[0], 'UTF-8');
+			},
+			$this->authors
+		);
 		// some journals place the volume in "issue"
 		if($this->issue && !$this->volume) {
 			$this->volume = $this->issue;
@@ -598,7 +647,7 @@ class FullFile extends ListEntry {
 		if(preg_match("/\((?!ed\.\)|eds\.\))/", $this->authors))
 			$this->warn('parenthesis', 'authors');
 		// bug in previous code
-		if($this->bookauthors and ($this->bookauthors == $this->booktitle))
+		if($this->bookauthors and ($this->bookauthors === $this->booktitle))
 			$this->warn('bookauthors equal with booktitle', 'bookauthors');
 		// buggy Geodiversitas and AMNH code tends to cause this
 		// OpenOffice weirdness
@@ -625,19 +674,17 @@ class FullFile extends ListEntry {
 		// TODO: cap after apostrophes (D'elia)
 		// get rid of fancy apostrophes and quotes
 		foreach($this as $key => $field) {
-			if(is_array($field) or is_object($field) or is_resource($field))
-				continue;
-			if(is_string($field))
+			if(is_string($field)) {
 				$this->$key = preg_replace(array("/([`’‘]|&apos;)/u", '/[“”]/u'), array("'", '"'), $this->$key);
-			if(($key !== 'pdfcontent') and preg_match("/(\n|\r)/", $field))
-				$this->warn('line break', $key);
-			if(strpos($field, '??') !== false)
-				$this->warn('double question mark', $key);
+				if(($key !== 'pdfcontent') and preg_match("/(\n|\r)/", $field))
+					$this->warn('line break', $key);
+				if(strpos($field, '??') !== false)
+					$this->warn('double question mark', $key);
+			}
 		}
-
 	}
 	private function expandjournal($in = '') {
-		$i = $in ? $in : $this->journal;
+		$i = $in ?: $this->journal;
 		switch($i) {
 			case 'AC': $o = 'Acta Chiropterologica'; break;
 			case 'AGH': case 'Acta Geologica Hispanica': $o = 'Acta Geológica Hispánica'; break;
@@ -736,6 +783,7 @@ class FullFile extends ListEntry {
 	}
 	/* KINDS OF FILES AND CONSEQUENCES */
 	public function isor() {
+	// whether the file belongs to any of the categories specified by the arguments
 		$args = func_get_args();
 		foreach($args as $arg) {
 			if(method_exists($this, 'is' . $arg)) {
@@ -743,7 +791,7 @@ class FullFile extends ListEntry {
 					return true;
 			}
 			else
-				trigger_error('Invalid input to ' . __METHOD__ . ': ' . $arg, E_USER_NOTICE);
+				throw new EHException('Invalid input to ' . __METHOD__ . ': ' . $arg, EHException::E_RECOVERABLE);
 		}
 		return false;
 	}
@@ -817,7 +865,7 @@ class FullFile extends ListEntry {
 			return $this->name;
 	}
 	public function isinpress() {
-	// checks whether file is in "in press" (and therefore, year etcetera cannot be given
+	// checks whether file is in "in press" (and therefore, year etcetera cannot be given)
 		return ($this->start === 'in press');
 	}
 	public function issupplement() {
@@ -858,21 +906,27 @@ class FullFile extends ListEntry {
 	}
 	/* MANUAL EDITING */
 	public function editalltitles() {
-	// wrapper function for use in the edittitlesall command
-		if($this->editedtitle == 1 or $this->isor('redirect', 'supplement'))
+	// wrapper function for use in the editalltitles command
+		if($this->editedtitle or $this->isor('redirect', 'supplement'))
 			return true;
 		else {
 			echo 'Editing title of file ' . $this->name . PHP_EOL;
 			return $this->edittitle();
 		}
 	}
-	public function edittitle() {
+	public function edittitle(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		// function to create the internal title array
 		$makesplit = function($title) use (&$splittitle) {
 			$splittitle = explode(' ', $title);
 			foreach($splittitle as $key => $word) {
 				echo $key . ': ' . $word . PHP_EOL;
 			}
 		};
+		// and another to convert it back into a good title
 		$unite = function() use (&$splittitle) {
 			$title = implode(' ', $splittitle);
 			$title = preg_replace('/^\s+|\s+$|\s+(?= )/u', '', $title);
@@ -880,6 +934,7 @@ class FullFile extends ListEntry {
 		};
 		echo 'Current title: ' . $this->title . PHP_EOL;
 		$makesplit($this->title);
+		// The edittitle() menu is too complicated for menu() to handle at the moment.
 		makemenu(array('l<n>' => 'make word <n> lowercase',
 			'u<n>' => 'make word <n> uppercase',
 			'i<n>' => 'make word <n> italicized',
@@ -1020,8 +1075,9 @@ class FullFile extends ListEntry {
 			unset($nbeg, $nend, $n);
 		}
 	}
-	public function set($paras) {
+	public function set(array $paras) {
 		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
 				'cannotmove' => 'Whether to disallow moving a page',
 			),
@@ -1120,14 +1176,14 @@ class FullFile extends ListEntry {
 			if($this->issue)
 				$out .= "($this->issue)";
 			$out .= ":";
-			if($this->start == $this->end)
+			if($this->start === $this->end)
 				$out .= $this->start;
 			else
 				$out .= $this->start . "–" . $this->end;
 			$out .= ".";
 		}
 		else if($this->booktitle) {
-			if($this->start == $this->end)
+			if($this->start === $this->end)
 				$out .= "P. $this->start in ";
 			else
 				$out .= "Pp. " . $this->start . "–" . $this->end . " in ";
@@ -1208,7 +1264,7 @@ class FullFile extends ListEntry {
 		$paras['publisher'] = $this->publisher;
 		$paras['location'] = $this->location;
 		$paras['isbn'] = $this->isbn;
-		if(($this->start === $this->end) or $this->end == NULL)
+		if(($this->start === $this->end) or $this->end === NULL)
 			$paras['pages'] = $this->start;
 		else
 			$paras['pages'] = $this->start . "–". $this->end;
@@ -1343,7 +1399,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				// need to catch "double series"
 				$out .= "(" . str_replace(";", ") (", $this->series) . ")";
 			$out .= '<b>' . $this->volume . '</b>: ';
-			if($this->start == $this->end)
+			if($this->start === $this->end)
 				$out .= $this->start;
 			else
 				$out .= $this->start . "–" . $this->end;
@@ -1398,7 +1454,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= "<i>$this->journal</i>, ";
 				// TODO: series
 				$out .= "<b>$this->volume</b>, ";
-				if($this->start == $this->end)
+				if($this->start === $this->end)
 					$out .= $this->start;
 				else
 					$out .= $this->start . "–" . $this->end;
@@ -1446,13 +1502,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$n = count($in);
 			$pa_out = '';
 			foreach($in as $key => $aut) {
-				// put initials before last name
-				$paut = preg_replace('/^(.*?), (.*)$/u', '$2 $1', $aut);
-				// if type == normal, first author should not be paut
+				// if type is 'normal', first author should not be processed
 				if($key === 0 and $type === 'normal') {
 					$pa_out .= $aut;
 					continue;
 				}
+				// put initials before last name
+				$paut = preg_replace('/^(.*?), (.*)$/u', '$2 $1', $aut);
 				// put "and" for last author
 				if($key === $n - 1 and $n !== 1) {
 					if($n > 2) $pa_out .= ',';
@@ -3010,10 +3066,6 @@ Content-Disposition: attachment
 			return false;
 		}
 		return true;
-	}
-	/* PROGRAMMING HELPS */
-	public function test() {
-		self::fetchgoogle("test");
 	}
 }
 ?>

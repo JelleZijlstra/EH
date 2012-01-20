@@ -207,6 +207,16 @@ abstract class FileList extends ExecuteHandler {
 			return false;
 		return call_user_func_array(array($this->c[$file], $func), $args);
 	}
+	public function __invoke($file) {
+		// invoke calls the child and invokes it
+		if(!$this->has($file)) {
+			echo 'No such file: ' . $file . PHP_EOL;
+			return false;
+		}
+		if(method_exists(static::$childclass, 'resolve_redirect'))
+			$file = $this->c[$file]->resolve_redirect();
+		return $this->c[$file]();
+	}
 	public function doall($func, array $paras = array()) {
 	// execute a function on all files in the list. Don't actually execute the command, since that is prohibitively expensive (requires EH to be initialized on every single ListEntry).
 		if($this->process_paras($paras, array(

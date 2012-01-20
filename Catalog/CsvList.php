@@ -158,14 +158,6 @@ class CsvList extends FileList {
 		$this->includerefharv = true;
 		$this->addmanual = true;
 	}
-	public function __invoke($file) {
-		if(!$this->has($file)) {
-			trigger_error('Invalid file: ' . $file, E_USER_WARNING);
-			return false;
-		}
-		$file = $this->c[$file]->gettruename();
-		return $this->c[$file]();
-	}
 	public function makeredirect($handle, $target) {
 	// redirect one file to another
 		if(!$this->has($handle) or !$this->has($target)) return false;

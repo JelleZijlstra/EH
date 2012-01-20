@@ -550,8 +550,8 @@ class FullFile extends ListEntry {
 		}
 		// eds. is added automatically by cite methods
 		$this->bookauthors = preg_replace(
-			'/\s*\(eds?\.\)$/u', 
-			'', 
+			'/\s*\(eds?\.\)$/u',
+			'',
 			$this->bookauthors
 		);
 		if(preg_match('/^(PhD|MSc) thesis, /', $this->journal)) {
@@ -625,9 +625,9 @@ class FullFile extends ListEntry {
 		// TODO: cap after apostrophes (D'elia)
 		// get rid of fancy apostrophes and quotes
 		foreach($this as $key => $field) {
-			if(is_array($field) or is_object($field) or is_resource($field)) 
+			if(is_array($field) or is_object($field) or is_resource($field))
 				continue;
-			if(is_string($field)) 
+			if(is_string($field))
 				$this->$key = preg_replace(array("/([`’‘]|&apos;)/u", '/[“”]/u'), array("'", '"'), $this->$key);
 			if(($key !== 'pdfcontent') and preg_match("/(\n|\r)/", $field))
 				$this->warn('line break', $key);
@@ -1292,12 +1292,12 @@ class FullFile extends ListEntry {
 	public function citelemurnews() {
 		switch($class = $this->cite_getclass()) {
 			case 'journal':
-				$out = $this->authors . '. ' . 
-					$this->year . '. ' . 
-					$this->title . '. ' . 
-					$this->journal . ' ' . 
-					$this->volume . ': ' . 
-					$this->start . '–' . 
+				$out = $this->authors . '. ' .
+					$this->year . '. ' .
+					$this->title . '. ' .
+					$this->journal . ' ' .
+					$this->volume . ': ' .
+					$this->start . '–' .
 					$this->end . '.';
 				break;
 			case 'book':
@@ -1566,11 +1566,56 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$out .= '}';
 		return $out;
 	}
+	public function citezootaxa() {
+		$class = $this->cite_getclass();
+		// this is going to be the citation
+		$out = '';
+		$processauthors = function($in, $type = 'normal') {
+			// replace semicolons
+			$in = preg_replace(
+				array('/;(?=[^;]$)/u', '/;/u'),
+				array('& ', ','),
+				$in
+			);
+			if($type === 'editors')
+				$in .= ' (Eds)';
+			return $in;
+		};
+		$out .= $processauthors($this->authors);
+		$out .= " ($this->year) ";
+		switch($class) {
+			case 'journal':
+				$out .= "$this->title. <i>$this->journal</i>, $this->volume, ";
+				if($this->start === $this->end)
+					$out .= $this->start;
+				else
+					$out .= $this->start . '–' . $this->end;
+				break;
+			case 'chapter':
+				$out .= "$this->title. <i>In</i>: ";
+				$out .= $processauthors($this->bookauthors, 'editors');
+				$out .= ", <i>$this->booktitle</i>. $this->publisher, $this->location, pp. " . $this->start . '–' . $this->end;
+				break;
+			case 'book':
+				$out .= "<i>$this->title</i>. $this->publisher";
+				if($this->location) $out .= ", $this->location";
+				if($this->bookpages) $out .= ", $this->bookpages pp.";
+				break;
+			default:
+				$out .= "$this->title. ";
+				$out .= "<!--Unknown citation type; fallback citation-->";
+				break;
+		}
+		// final cleanup
+		$out .= ".";
+		$out = preg_replace(array("/\s\s/u", "/\.\./u"), array(" ", "."), $out);
+		return $out;
+	}
 	public function echocite($paras = array()) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
-				'mode' => 
+				'mode' =>
 					'Citation style to be used. If not set, the catalog\'s default style is used.',
 			),
 			'default' => array(
@@ -1782,7 +1827,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				/* sub-subfolder */
 					if(isset($this->p->foldertree
 							[$this->folder]
-							[$this->sfolder]) 
+							[$this->sfolder])
 						and count($this->p->foldertree
 							[$this->folder]
 							[$this->sfolder]) !== 0) {
@@ -2628,7 +2673,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if($paras['text'] !== false)
 			@$doc->loadHTML($paras['text']);
 		else if(!@$doc->loadHTMLFile(
-			'http://digitallibrary.amnh.org/dspace/handle/' . 
+			'http://digitallibrary.amnh.org/dspace/handle/' .
 			$this->hdl . '?show=full')) {
 			echo 'Unable to load data from AMNH' . PHP_EOL;
 			return false;
@@ -2649,7 +2694,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					// remove year of birth
 					$value = preg_replace('/, [\d\-]+| \(.*\)$/u', '', $value);
 					$authors .= preg_replace(
-						'/(?<=, )([A-Z])\w*\s*/u', 
+						'/(?<=, )([A-Z])\w*\s*/u',
 						'$1.',
 						$value
 					) . '; ';
@@ -2658,7 +2703,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$this->year = $value;
 					break;
 				case 'dc.description':
-					if(!preg_match("/^\d+ p\./u", $value)) 
+					if(!preg_match("/^\d+ p\./u", $value))
 						break;
 					$this->start = 1;
 					// number of pages is at beginning of this piece
@@ -2673,8 +2718,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					break;
 				case 'dc.title': // title, with some extraneous stuff
 					$this->title = trim(preg_replace(
-						'/\. (American Museum novitates|Bulletin of the AMNH|Anthropological papers of the AMNH|Memoirs of the AMNH|Bulletin of the American Museum of Natural History).*$/u', 
-						'', 
+						'/\. (American Museum novitates|Bulletin of the AMNH|Anthropological papers of the AMNH|Memoirs of the AMNH|Bulletin of the American Museum of Natural History).*$/u',
+						'',
 						$value
 					));
 					break;

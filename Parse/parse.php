@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-require_once(__DIR__ . "../Common/common.php");
+require_once(__DIR__ . "/../Common/common.php");
 require_once(BPATH . "/Parse/parser.php");
 if(!isset($argv[1]))
 	exit(1);

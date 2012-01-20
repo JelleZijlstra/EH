@@ -32,7 +32,7 @@ ehretval_t eh_op_tilde(ehretval_t in);
 ehretval_t eh_op_uminus(ehretval_t in);
 ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2);
 void eh_op_global(const char *name);
-void eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
+ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
 ehretval_t eh_op_for(opnode_t *op, ehcontext_t context);
 ehretval_t eh_op_while(ehretval_t **paras, ehcontext_t context);
 ehretval_t eh_op_as(opnode_t *op, ehcontext_t context);
@@ -443,7 +443,7 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 		 */
 			case T_COMMAND:
 				// name of command to be executed
-				eh_op_command(
+				ret = eh_op_command(
 					eh_execute(node->opval->paras[0], context).stringval,
 					node->opval->paras[1],
 					context
@@ -613,7 +613,7 @@ void eh_op_global(const char *name) {
 	insert_variable(newvar);
 	return;
 }
-void eh_op_command(const char *name, ehretval_t *node, ehcontext_t context) {
+ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context) {
 	ehretval_t index_r, value_r;
 	ehvar_t **paras;
 	ehretval_t *node2;
@@ -691,10 +691,10 @@ void eh_op_command(const char *name, ehretval_t *node, ehcontext_t context) {
 		}
 		node = node->opval->paras[0];
 	}
-	interpreter->execute_cmd(name, paras);
+	ehretval_t ret = interpreter->execute_cmd(name, paras);
 	// we're not returning anymore
 	returning = false;
-	return;
+	return ret;
 }
 ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 	ehretval_t ret, count_r;

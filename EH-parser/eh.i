@@ -7,8 +7,8 @@
 %{
 #include "eh.h"
 EHI *interpreter;
-int EHI::execute_cmd(const char *cmd, ehvar_t **paras) {
-	return 0;
+ehretval_t EHI::execute_cmd(const char *cmd, ehvar_t **paras) {
+	return (ehretval_t) { null_e, {0} };
 }
 char *EHI::eh_getline(void) {
 	return NULL;
@@ -34,15 +34,15 @@ zval *arrtozval(ehvar_t **paras) {
 			if(currvar->indextype == int_e) {
 				switch(currvar->value.type) {
 					case int_e:
-						add_index_long(arr, 
+						add_index_long(arr,
 							currvar->index, currvar->value.intval);
 						break;
 					case string_e:
-						add_index_string(arr, 
+						add_index_string(arr,
 							currvar->index, currvar->value.stringval, 0);
 						break;
 					case bool_e:
-						add_index_bool(arr, 
+						add_index_bool(arr,
 							currvar->index, currvar->value.boolval);
 						break;
 					case array_e:
@@ -62,15 +62,15 @@ zval *arrtozval(ehvar_t **paras) {
 			else if(currvar->indextype == string_e) {
 				switch(currvar->value.type) {
 					case int_e:
-						add_assoc_long(arr, 
+						add_assoc_long(arr,
 							currvar->name, currvar->value.intval);
 						break;
 					case string_e:
-						add_assoc_string(arr, 
+						add_assoc_string(arr,
 							currvar->name, currvar->value.stringval, 0);
 						break;
 					case bool_e:
-						add_assoc_bool(arr, 
+						add_assoc_bool(arr,
 							currvar->name, currvar->value.boolval);
 						break;
 					case array_e:
@@ -99,7 +99,7 @@ zval *arrtozval(ehvar_t **paras) {
 // EH string to PHP string
 %typemap(directorin) char* {
 	zval *str;
-	
+
 	MAKE_STD_ZVAL(str);
 	ZVAL_STRING(str, rawcmd, 1);
 	obj0 = *str;
@@ -110,10 +110,16 @@ zval *arrtozval(ehvar_t **paras) {
 	obj1 = *arrtozval(paras);
 }
 
+// Typemap for returning stuff from execute_cmd
+%typemap(directorout) ehretval_t {
+	// provisional, we'll want to work on making it actually do something useful with what PHP returns
+	c_result = (ehretval_t) { null_e, {0}};
+}
+
 class EHI {
 public:
 	int eh_interactive(void);
-	virtual int execute_cmd(const char *rawcmd, ehvar_t **paras);
+	virtual ehretval_t execute_cmd(const char *rawcmd, ehvar_t **paras);
 	virtual char *eh_getline(void);
 	virtual ~EHI();
 };

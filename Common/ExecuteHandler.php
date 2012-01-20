@@ -75,6 +75,10 @@ abstract class ExecuteHandler extends EHICore {
 			'desc' => 'Print input to terminal',
 			'arg' => 'Text to be printed',
 			'execute' => 'callmethodarg'),
+		'print_paras' => array('name' => 'print_paras',
+			'desc' => 'Print its arguments',
+			'arg' => 'As many as you want',
+			'execute' => 'callmethodarg'),
 		'test' => array('name' => 'test',
 			'desc' => 'Do something random',
 			'arg' => 'None',
@@ -905,6 +909,11 @@ abstract class ExecuteHandler extends EHICore {
 				}
 			},
 		));
+	}
+	public function print_paras() {
+	// dump the arguments it gets, useful for debugging ehphp
+		var_dump(func_get_args());
+		return true;
 	}
 	public function test() {
 	// Test function that might do anything I currently want to test

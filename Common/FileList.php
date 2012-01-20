@@ -201,7 +201,7 @@ abstract class FileList extends ExecuteHandler {
 			return false;
 		}
 		// resolve redirects, if those exist in the implementation and that is desired for this function
-		if(method_exists(static::$childclass, 'resolve_redirect') and !in_array(array(static::$childclass, $func), self::$resolve_redirect_exclude))
+		if($func !== 'resolve_redirect' and method_exists(static::$childclass, 'resolve_redirect') and !in_array(array(static::$childclass, $func), self::$resolve_redirect_exclude))
 			$file = $this->c[$file]->resolve_redirect();
 		if($file === false)
 			return false;

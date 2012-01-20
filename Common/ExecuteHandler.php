@@ -3,8 +3,8 @@
  * ExecuteHandler.php
  * Jelle Zijlstra, 2011 – January 2012
  *
- * The core of the ExecuteHandler framework, including functionality to keep 
- * track of commands and pre-process parameters. The actual interpretation of 
+ * The core of the ExecuteHandler framework, including functionality to keep
+ * track of commands and pre-process parameters. The actual interpretation of
  * the EH scripting language is handled by the parent EHI class, which has been
  * implemented both in PHP and more fully in C++.
  */
@@ -344,7 +344,7 @@ abstract class ExecuteHandler extends EHICore {
 				echo '- ' . $name . PHP_EOL;
 				echo $description . PHP_EOL;
 				if(isset($pp_paras['default'][$name])) {
-					echo 'Default: ';	
+					echo 'Default: ';
 					self::printvar($pp_paras['default'][$name]);
 					echo PHP_EOL;
 				}
@@ -361,7 +361,7 @@ abstract class ExecuteHandler extends EHICore {
 		$founderror = false;
 		foreach($pp_paras as $pp_key => $pp_value) {
 			switch($pp_key) {
-				case 'synonyms':
+				case 'synonyms': // rename paras
 					if(!is_array($pp_value)) {
 						echo 'Error: synonyms parameter is not an array' . PHP_EOL;
 						$founderror = true;
@@ -374,7 +374,7 @@ abstract class ExecuteHandler extends EHICore {
 						}
 					}
 					break;
-				case 'askifempty':
+				case 'askifempty': // if a para is empty, ask user for input
 					if(!is_array($pp_value))
 						$pp_value = array($pp_value);
 					foreach($pp_value as $key) {
@@ -385,7 +385,7 @@ abstract class ExecuteHandler extends EHICore {
 						}
 					}
 					break;
-				case 'errorifempty':
+				case 'errorifempty': // if a para is empty, throw an error
 					if(!is_array($pp_value))
 						$pp_value = array($pp_value);
 					foreach($pp_value as $key) {
@@ -395,7 +395,7 @@ abstract class ExecuteHandler extends EHICore {
 						}
 					}
 					break;
-				case 'default':
+				case 'default': // set default values for paras
 					if(!is_array($pp_value)) {
 						echo 'Error: default parameter is not an array' . PHP_EOL;
 						$founderror = true;
@@ -406,9 +406,9 @@ abstract class ExecuteHandler extends EHICore {
 							$paras[$key] = $result;
 					}
 					break;
-				case 'checklist':
+				case 'checklist': // check that all paras given are legal
 					if(!is_array($pp_value)) {
-						echo 'Error: list of parameter is not an array' . PHP_EOL;
+						echo 'Error: checklist parameter is not an array' . PHP_EOL;
 						$founderror = true;
 						break;
 					}
@@ -419,14 +419,28 @@ abstract class ExecuteHandler extends EHICore {
 								if($pp_paras['checkfunc']($key))
 									continue;
 							}
-							echo 'Warning: unrecognized parameter ' . 
-								$key . 
+							echo 'Warning: unrecognized parameter ' .
+								$key .
 								PHP_EOL;
 						}
 					}
 					break;
-				case 'checkfunc': 
-				case 'name': // ignore, used internally in other places
+				case 'checkparas': // functions used to check the validity of input for a given para
+					if(!is_array($pp_value)) {
+						echo 'Error: checkparas parameter is not an array' . PHP_EOL;
+						$founderror = true;
+						break;
+					}
+					foreach($pp_value as $para => $func) {
+						if(!$func($paras[$para])) {
+							echo 'Error: invalid value "' . $paras[$para] . '" for parameter "' . $para . '"' . PHP_EOL;
+							$founderror = true;
+						}
+					}
+					break;
+				case 'checkfunc': // function used to check paras that are not matched by checklist
+				case 'name': // name of method calling process_paras
+					// ignore, used internally in other places
 					break;
 				default:
 					echo 'Error: unrecognized parameter ' . $pp_key . PHP_EOL;
@@ -797,17 +811,17 @@ abstract class ExecuteHandler extends EHICore {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
-				'head' => 
+				'head' =>
 					'Menu heading',
-				'options' => 
+				'options' =>
 					'List of options. Associative array, with option in key and description in value',
-				'printoptions' => 
+				'printoptions' =>
 					'Whether options should always be printed',
 				'helpcommand' =>
 					'Whether to make the help command available. (If set to true, commands beginning with "help" will not get returned.)',
 				'validfunction' =>
 					'Function to determine validity of command',
-				'process' => 
+				'process' =>
 					'Array of callbacks to execute when a given option is called',
 				'processcommand' =>
 					'Function used to process the command after input',

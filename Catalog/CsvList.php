@@ -557,18 +557,18 @@ class CsvList extends FileList {
 			if(strlen($in) > 2) {
 				$file = substr($in, 2);
 				if($this->has($file))
-					$file = $this->c[$file]->gettruename();
-				else {
+					$file = $this->c[$file]->resolve_redirect();
+				else
+					$file = false;
+				// if there is no file or the redirect is broken
+				if($file === false) {
 					echo 'File does not exist' . PHP_EOL;
 					continue;
 				}
 			}
 			switch($in[0]) {
 				case 'e':
-					if(isset($this->c[$file]))
-						$this->c[$file]->edit();
-					else
-						echo 'File does not exist' . PHP_EOL;
+					$this->c[$file]->edit();
 					break;
 				case 'm':
 					$newname = $this->getline(array(
@@ -587,7 +587,7 @@ class CsvList extends FileList {
 						$fileo->inform();
 					break;
 				case 'r':
-					$this->remove($file);
+					$this->c[$file]->remove();
 					// add redirect from old file
 					$targets = array();
 					foreach($files as $fileo) {
@@ -609,8 +609,10 @@ class CsvList extends FileList {
 					}
 					$this->add_entry(new FullFile(array($file, $target), 'r'));
 					break;
-				case 's': return true;
-				case 'q': return false;
+				case 's':
+					return true;
+				case 'q':
+					return false;
 			}
 		}
 	}

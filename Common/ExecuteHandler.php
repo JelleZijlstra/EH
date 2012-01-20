@@ -230,6 +230,8 @@ abstract class ExecuteHandler extends EHICore {
 				trigger_error('Unrecognized execution mode', E_USER_NOTICE);
 				break;
 		}
+		// always make return value accessible to script
+		$this->setvar('ret', $ret);
 		if($cmd['setcurrent'] and (count($argarray) !== 0))
 			$this->current = $argarray;
 		if($redirection['>'] !== false) {
@@ -259,8 +261,6 @@ abstract class ExecuteHandler extends EHICore {
 		if($redirection['}$']) {
 			$this->setvar($redirect['}$'], $ret);
 		}
-		// always make return value accessible to script
-		$this->setvar('ret', $ret);
 		return self::EXECUTE_NEXT;
 	}
 	private function expand_cmd($in) {

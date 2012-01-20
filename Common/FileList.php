@@ -207,19 +207,6 @@ abstract class FileList extends ExecuteHandler {
 			return false;
 		return call_user_func_array(array($this->c[$file], $func), $args);
 	}
-	public function getone($cmds = array('q')) {
-	// Get one file from the list using stdin input
-	// This could be converted to menu() when we can use $this-> in lambda functions. Or it could be scrapped, because it is apparently unused.
-		while(true) {
-			$file = $this->getline();
-			if(in_array($file, $cmds))
-				return $file;
-			if($this->has($file))
-				return self::$resolve_redirects ? $this->c[$file]->gettruename() : $this->c[$file]->name;
-			else
-				echo 'File does not exist' . PHP_EOL;
-		}
-	}
 	public function doall($func, array $paras = array()) {
 	// execute a function on all files in the list. Don't actually execute the command, since that is prohibitively expensive (requires EH to be initialized on every single ListEntry).
 		if($this->process_paras($paras, array(
@@ -278,17 +265,6 @@ abstract class FileList extends ExecuteHandler {
 				$i++;
 			if(!$continueiffalse and !$ret)
 				return;
-		}
-	}
-	public function doone($func) {
-	// wrapper function for various utilities that do the following: get a filename and call function FullFile::$function() on it
-	// Doesn't look like it's currently used anywhere, though.
-		echo "Type a filename. Alternatively, type 'q' to quit $func()." . PHP_EOL;
-		while(true) {
-			echo "Name: ";
-			$file = $this->getone();
-			if($file === "q") return;
-			$this->c[$file]->$func();
 		}
 	}
 	static protected function is_childproperty($field) {

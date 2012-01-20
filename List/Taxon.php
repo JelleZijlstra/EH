@@ -107,11 +107,11 @@ class Taxon extends ListEntry {
 		if($this->rank === 'species' and !$this->status)
 			$this->warn('No content for species', 'status');
 	}
-	public function set($paras) {
+	public function set(array $paras) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
-				'easy' => 
+				'easy' =>
 					'Use easy mode: do not check for necessary concurrent changes',
 				'verbose' =>
 					'Print each property that is changed',
@@ -155,7 +155,7 @@ class Taxon extends ListEntry {
 						$this->$field = $content;
 						break;
 				}
-				if($paras['verbose']) 
+				if($paras['verbose'])
 					echo 'Set ' . $field . ' to "' . $content . '".' . PHP_EOL;
 				$this->p->needsave();
 			}
@@ -528,7 +528,7 @@ class Taxon extends ListEntry {
 	}
 	private function setranktosisters() {
 		$sisters = $this->p->getchildren($this->parent);
-		if(!$sisters) 
+		if(!$sisters)
 			return false;
 		foreach($sisters as $key => $sister) {
 			$nrank = $this->p->get($sister, 'rank');
@@ -539,11 +539,11 @@ class Taxon extends ListEntry {
 			else if($rank !== $nrank)
 				return false;
 		}
-		if(!isset($rank)) 
+		if(!isset($rank))
 			return false;
 		$this->set(array(
-			'rank' => $rank, 
-			'verbose' => true, 
+			'rank' => $rank,
+			'verbose' => true,
 			'easy' => true
 		));
 		return true;
@@ -600,7 +600,7 @@ class Taxon extends ListEntry {
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		while(!$this->p->has($paras['into'])) {
 			$paras['into'] = $this->getline('Taxon to be merged into: ');
-			if($paras['into'] === 'q') 
+			if($paras['into'] === 'q')
 				return false;
 		}
 		$children = $this->getchildren();
@@ -621,7 +621,7 @@ class Taxon extends ListEntry {
 			),
 			'default' => array('f' => false, 'c' => false),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if($paras['c']) { 
+		if($paras['c']) {
 			if($this->citation and $this->citation !== 'Unknown')
 				return false;
 		}
@@ -630,12 +630,12 @@ class Taxon extends ListEntry {
 				return false;
 		}
 		// prepare bfind query
-		$authors = '/' . 	
+		$authors = '/' .
 			preg_replace(
 				array('/,\s*|\s*&\s*|\s+|-|[A-Z]\./u', '/(\.\*)+/u'),
-				array('.*', '.*'), 
+				array('.*', '.*'),
 				$this->authority
-			) . 
+			) .
 			'/iu';
 		$title = '/\b' .
 			preg_replace('/\s+/u', '.*\b', $this->name);
@@ -670,8 +670,8 @@ class Taxon extends ListEntry {
 		foreach($cites as $cite) {
 			$taxon = $this;
 			$response = $this->menu(array(
-				'head' => 'Is this citation correct?' . PHP_EOL . 
-					$cite->name . PHP_EOL . 
+				'head' => 'Is this citation correct?' . PHP_EOL .
+					$cite->name . PHP_EOL .
 					$cite,
 				'options' => array(
 					'y' => 'This citation is correct',
@@ -694,7 +694,7 @@ class Taxon extends ListEntry {
 				),
 			));
 			switch($response) {
-				case 'y': 
+				case 'y':
 					$this->citation = $cite->name;
 					return true;
 				case 'n': break;

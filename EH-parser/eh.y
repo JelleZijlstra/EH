@@ -245,6 +245,7 @@ expression:
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
+	| '`' command '`'		{ $$ = $2; }
 	;
 
 simple_expr:
@@ -300,6 +301,7 @@ simple_expr:
 	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
 	| T_COUNT simple_expr	{ $$ = eh_addnode(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = eh_addnode(T_NEW, 1, $2); }
+	| '`' command '`'		{ $$ = $2; }
 	;
 
 line_expr:
@@ -374,6 +376,7 @@ line_expr:
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
+	| '`' command '`'		{ $$ = $2; }
 	;
 
 command:

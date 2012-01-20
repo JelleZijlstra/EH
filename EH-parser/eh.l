@@ -31,13 +31,13 @@
 				yylval_param->sValue[len - 2] = '\0';
 				return T_STRING;
 			}
-[0-9]*\.[0-9]+	{ 
-				yylval_param->fValue = strtof(yytext, NULL); 
-				return T_FLOAT; 
+[0-9]*\.[0-9]+	{
+				yylval_param->fValue = strtof(yytext, NULL);
+				return T_FLOAT;
 			}
-[0-9]+		{ 
-				yylval_param->iValue = atoi(yytext); 
-					return T_INTEGER; 
+[0-9]+		{
+				yylval_param->iValue = atoi(yytext);
+					return T_INTEGER;
 			}
 "int"		{
 				yylval_param->tValue = int_e;
@@ -158,7 +158,7 @@
 				yylval_param->aValue = dot_e;
 				return T_ACCESSOR;
 			}
-[@=$+\-*/<>(),:\[\]&\|^%~!{}]	return *yytext; /* Single character tokens */
+[@=$+\-*/<>(),:\[\]&\|^%~!{}`]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{
 				char message[100];

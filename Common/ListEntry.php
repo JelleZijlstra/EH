@@ -223,7 +223,7 @@ abstract class ListEntry extends ExecuteHandler {
 		}
 		$this->setup_commandline($this->name, array('undoable' => true));
 	}
-	public function set($paras) {
+	public function set(array $paras) {
 	// default method; should be overridden by child classes with more precise needs
 		foreach($paras as $field => $content) {
 			if(self::hasproperty($field)) {

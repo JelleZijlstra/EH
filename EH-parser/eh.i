@@ -92,6 +92,46 @@ zval *arrtozval(ehvar_t **paras) {
 	}
 	return arr;
 }
+
+ehretval_t zvaltoeh(zval *in) {
+	ehretval_t ret;
+	ret.type = null_e;
+	switch(in->type) {
+		case IS_NULL:
+			// don't do anything
+			break;
+		case IS_BOOL:
+			// apparently, a bool is stored as a long
+			ret.type = bool_e;
+			if(in->value.lval)
+				ret.boolval = true;
+			else
+				ret.boolval = false;
+			break;
+		case IS_DOUBLE:
+			ret.type = float_e;
+			ret.floatval = in->value.dval;
+			break;
+		case IS_STRING:
+			ret.type = string_e;
+			// would be nice to use strndup with in->value.str.len, can't get it though
+			ret.stringval = strdup(in->value.str.val);
+			break;
+		case IS_ARRAY:
+			// TODO
+			break;
+		case IS_LONG:
+			ret.type = int_e;
+			ret.intval = in->value.lval;
+			break;
+		case IS_RESOURCE:
+		case IS_OBJECT:
+		default:
+			fprintf(stderr, "Unsupported PHP type\n");
+			break;
+	}
+	return ret;
+}
 %}
 %module(directors="1") ehphp
 %feature("director");
@@ -113,7 +153,7 @@ zval *arrtozval(ehvar_t **paras) {
 // Typemap for returning stuff from execute_cmd
 %typemap(directorout) ehretval_t {
 	// provisional, we'll want to work on making it actually do something useful with what PHP returns
-	c_result = (ehretval_t) { null_e, {0}};
+	c_result = zvaltoeh(result);
 }
 
 class EHI {

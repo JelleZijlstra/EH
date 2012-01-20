@@ -20,6 +20,8 @@ abstract class FileList extends ExecuteHandler {
 	protected $labels; // first line of CSV file
 	protected static $fileloc; // where the file lives that we get our list from
 	protected static $childclass; // name of the class that children need to be a member of
+	// array of functions for which __call should not resolve redirects. Entries are in the form array('FullFile', 'isredirect')
+	public static $resolve_redirect_exclude = array();
 	private static $FileList_commands = array(
 		'my_inform' => array('name' => 'my_inform',
 			'aka' => array('inform'),
@@ -189,8 +191,7 @@ abstract class FileList extends ExecuteHandler {
 	// example: $csvlist->edit('Agathaeromys nov.pdf'); equals $csvlist->c['Agathaeromys nov.pdf']->edit();
 		// check method validity
 		if(!$func or !method_exists(static::$childclass, $func)) {
-			trigger_error('Invalid call to ' . __METHOD__ . ' (method ' . $func . ' invalid)', E_USER_WARNING);
-			debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+			throw new EHException('Invalid call to ' . __METHOD__ . ' (method ' . $func . ' invalid)', EHException::E_RECOVERABLE);
 			return false;
 		}
 		$file = array_shift($args);
@@ -199,10 +200,11 @@ abstract class FileList extends ExecuteHandler {
 			echo 'Entry ' . $file . ' does not exist (method ' . $func . ')' . PHP_EOL;
 			return false;
 		}
-		// resolve redirects. There may be cases where this is not warranted; perhaps check for that or add some kind of switch.
-		if(static::$resolve_redirects)
-			$file = $this->c[$file]->gettruename();
-		if(!$file) return false;
+		// resolve redirects, if those exist in the implementation and that is desired for this function
+		if(method_exists(static::$childclass, 'resolve_redirect') and !in_array(array(static::$childclass, $func), self::$resolve_redirect_exclude))
+			$file = $this->c[$file]->resolve_redirect();
+		if($file === false)
+			return false;
 		return call_user_func_array(array($this->c[$file], $func), $args);
 	}
 	public function getone($cmds = array('q')) {

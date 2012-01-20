@@ -15,6 +15,14 @@ all: ehc ehphp ehi
 eh_wrap.o: eh_wrap.cpp
 	$(CC) `php-config --includes` -fPIC -c $< -o $@
 
+eh.h: ehi.h
+
+%.cpp: eh.h
+
+eh_interpreter.cpp: eh_libfuncs.h
+
+eh_libfuncs.cpp: eh_libfuncs.h
+
 %.o: %.cpp
 	$(CC) -fPIC -c $(CCFLAGS) $< -o $@
 

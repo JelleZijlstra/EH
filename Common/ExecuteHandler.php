@@ -419,6 +419,9 @@ abstract class ExecuteHandler extends EHICore {
 								if($pp_paras['checkfunc']($key))
 									continue;
 							}
+							// for now, ignore para 0, which is automatically set
+							if($key === 0)
+								continue;
 							echo 'Warning: unrecognized parameter ' .
 								$key .
 								PHP_EOL;

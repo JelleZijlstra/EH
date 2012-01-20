@@ -230,7 +230,7 @@ class Parser {
 		else
 			$text = $tmp;
 		if($this->resolveredirects and $csvlist->isredirect($cite)) {
-			$replace = '{' . $csvlist->gettruename($c['main']);
+			$replace = '{' . $csvlist->resolve_redirect($c['main']);
 			if(isset($c['p'])) $replace .= '|p=' . $c['p'];
 			if(isset($c['pp'])) $replace .= '|pp=' . $c['pp'];
 			if(isset($c['loc'])) $replace .= '|loc=' . $c['loc'];
@@ -254,9 +254,9 @@ class Parser {
 		$refs = $this->refs;
 		$replacement = $this->replacement;
 		$this->result = preg_replace_callback(
-			"/(?<!\{)\{(?![{|])(.*?)\}/", 
+			"/(?<!\{)\{(?![{|])(.*?)\}/",
 			function($matches) use($refs, $replacement) {
-				if(!$refs[$matches[1]]) 
+				if(!$refs[$matches[1]])
 					return $matches[0];
 				$ref = $refs[$matches[1]];
 				switch($replacement) {
@@ -318,7 +318,7 @@ class Parser {
 	}
 	function applysfnm() {
 		$this->result = preg_replace_callback(
-			'/(\{\{Sfn\|[^}]*?\}\}){2,}/u', 
+			'/(\{\{Sfn\|[^}]*?\}\}){2,}/u',
 			function($matches) {
 				$sfns = preg_split('/(?<=\}\})(?=\{\{)/u', $matches[0]);
 				$osfns = array();
@@ -340,7 +340,7 @@ class Parser {
 				foreach($osfns as $key => $sfn) {
 					foreach($sfn as $pkey => $para) {
 						if($pkey[0] === 'a') {
-							if($pkey === 'a1') 
+							if($pkey === 'a1')
 								$out .= '|' . $para;
 							else
 								$out .= '|' . ($key + 1) . $pkey . '=' . $para;
@@ -348,7 +348,7 @@ class Parser {
 					}
 					$out .= '|' . $sfn['year'];
 					foreach(array('p', 'pp', 'loc') as $pname) {
-						if(isset($sfn[$pname])) 
+						if(isset($sfn[$pname]))
 							$out .= '|' . ($key + 1) . $pname . '=' . $sfn[$pname];
 					}
 				}

@@ -174,10 +174,10 @@ static void printvar_array(ehvar_t **in) {
 		while(curr != NULL) {
 			switch(curr->indextype) {
 				case int_e:
-					printf("%d: ", curr->index);
+					printf("%d => ", curr->index);
 					break;
 				case string_e:
-					printf("'%s': ", curr->name);
+					printf("'%s' => ", curr->name);
 					break;
 				default:
 					eh_error_type("array index", curr->indextype, eerror_e);
@@ -237,7 +237,7 @@ EHLIBFUNC(include) {
 	ehretval_t *args;
 	FILE *infile;
 	EHParser *parser;
-	
+
 	args = (ehretval_t *) Malloc(1 * sizeof(ehretval_t));
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
 		EHLF_RETFALSE;

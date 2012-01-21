@@ -116,7 +116,7 @@ class CsvList extends FileList {
 			'aka' => array('t'),
 			'desc' => 'set the default style used for citing',
 			'arg' => 'citetype',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'openurl' => array('name' => 'openurl',
 			'aka' => array('u'),
 			'desc' => 'Open the URL associated with a file',
@@ -677,20 +677,26 @@ class CsvList extends FileList {
 		return;
 	}
 	/* citing */
-	public function setcitetype($new = '') {
-		if($new and $this->validcitetype($new))
-			$this->citetype = $new;
-		else {
-			echo 'Current citetype: ' . $this->citetype . PHP_EOL;
-			while(true) {
-				$new = $this->getline(array('prompt' => "New citetype: "));
-				if($this->validcitetype($new)) {
-					$this->citetype = $new;
-					break;
-				}
-				echo 'Invalid citetype' . PHP_EOL;
-			}
-		}
+	public function setcitetype(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'new',
+			),
+			'checklist' => array(
+				'new' => 'New citetype',
+			),
+			'askifempty' => array(
+				'new',
+			),
+			'checkparas' => array(
+				'new' => function($in) {
+					global $csvlist;
+					return $csvlist->validcitetype($in);
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$this->citetype = $paras['new'];
 		return $this->citetype;
 	}
 	protected function validcitetype($in = '') {

@@ -417,7 +417,7 @@ abstract class FileList extends ExecuteHandler {
 		}
 		else
 			$files = $this->$arr;
-		// array of values for the field; $values["<value>"] == number of occurrences
+		// array of values for the field; $values["<value>"] gives the number of occurrences
 		$values = array();
 		// fill array
 		foreach($files as $file) {
@@ -588,9 +588,12 @@ abstract class FileList extends ExecuteHandler {
 					$found = ($hay < $query['content']);
 				else if(isset($query['<=']))
 					$found = ($hay <= $query['content']);
-				else
+				else {
+					// loose comparison is intentional here
 					$found = ($query['content'] == $hay);
-				if(!$found) continue 2;
+				}
+				if(!$found)
+					continue 2;
 				// remember values if necessary
 				if($paras['printvalues'])
 					$values[$query['field']] = $hay;
@@ -683,7 +686,8 @@ abstract class FileList extends ExecuteHandler {
 		return $this->bfind(array($paras['field'] => $paras['value']));
 	}
 	public function average($files, $field) {
-		if(!is_array($files) or count($files) === 0) return false;
+		if(!is_array($files) or count($files) === 0)
+			return false;
 		$childclass = static::$childclass;
 		if(!$childclass::hasproperty($field)) {
 			echo 'Invalid property' . PHP_EOL;
@@ -692,11 +696,13 @@ abstract class FileList extends ExecuteHandler {
 		$sum = 0;
 		$i = 0;
 		foreach($files as $file) {
-			if(!$this->has($file->name) or !is_numeric($file->$field)) continue;
+			if(!$this->has($file->name) or !is_numeric($file->$field))
+				continue;
 			$sum += $file->$field;
 			$i++;
 		}
-		if($i == 0) return false;
+		if($i === 0)
+			return false;
 		return $sum / $i;
 	}
 	public function stdev($files, $field) {
@@ -710,15 +716,18 @@ abstract class FileList extends ExecuteHandler {
 		$sum = 0;
 		$i = 0;
 		foreach($files as $file) {
-			if(!$this->has($file->name) or !is_numeric($file->$field)) continue;
+			if(!$this->has($file->name) or !is_numeric($file->$field))
+				continue;
 			$sum += pow(($file->$field - $average), 2);
 			$i++;
 		}
-		if($i == 0) return false;
+		if($i === 0)
+			return false;
 		return sqrt($sum / $i);
 	}
 	public function smallest($files, $field, array $paras = array()) {
-		if(!is_array($files) or count($files) === 0) return false;
+		if(!is_array($files) or count($files) === 0)
+			return false;
 		$childclass = static::$childclass;
 		if(!$childclass::hasproperty($field)) {
 			echo 'Invalid property' . PHP_EOL;
@@ -727,14 +736,16 @@ abstract class FileList extends ExecuteHandler {
 		$i = 0;
 		$out = 0;
 		foreach($files as $file) {
-			if(!$this->has($file->name) or !is_numeric($file->$field)) continue;
-			if($i == 0)
+			if(!$this->has($file->name) or !is_numeric($file->$field))
+				continue;
+			if($i === 0)
 				$out = $file;
 			else if($file->$field < $out->$field)
 				$out = $file;
 			$i++;
 		}
-		if($i == 0) return false;
+		if($i === 0)
+			return false;
 		$paras['return'] = $paras['return'] ?: 'value';
 		switch($paras['return']) {
 			case 'object': return $out;
@@ -753,13 +764,14 @@ abstract class FileList extends ExecuteHandler {
 		$out = 0;
 		foreach($files as $file) {
 			if(!$this->has($file->name) or !is_numeric($file->$field)) continue;
-			if($i == 0)
+			if($i === 0)
 				$out = $file;
 			else if($file->$field > $out->$field)
 				$out = $file;
 			$i++;
 		}
-		if($i == 0) return false;
+		if($i === 0)
+			return false;
 		$paras['return'] = $paras['return'] ?: 'value';
 		switch($paras['return']) {
 			case 'object': return $out;
@@ -811,14 +823,15 @@ abstract class FileList extends ExecuteHandler {
 			echo 'No entries found' . PHP_EOL;
 			return false;
 		}
-		if($stats['stdev'] == 0) {
+		if($stats['stdev'] === 0) {
 			echo 'SD = 0, so Z = 0 for all files' . PHP_EOL;
 			return false;
 		}
 		foreach($stats['files'] as $file) {
 			$z = ($file->$field - $stats['average']) / $stats['stdev'];
 			echo $file->$index . "\t" . $z . PHP_EOL;
-			if($into) $this->set($file->name, array($into => $z));
+			if($into)
+				$this->set($file->name, array($into => $z));
 		}
 		return true;
 	}

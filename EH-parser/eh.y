@@ -78,13 +78,14 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %left ','
 %left T_AND T_OR T_XOR
 %left ':'
-%left T_RANGE
 %left '|' '^' '&'
 %left '+' '-'
 %left '=' '>' '<' T_GE T_LE T_NE T_SE
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
+%right '@'
 %right <aValue> T_ACCESSOR
+%nonassoc T_RANGE
 %nonassoc '$' T_REFERENCE '~' '!' T_NEGATIVE T_COUNT
 %nonassoc T_NEW
 %nonassoc '[' ']'
@@ -195,7 +196,7 @@ expression:
 	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
 	| '&' lvalue_get %prec T_REFERENCE
 							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
-	| '@' T_TYPE expression	{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
+	| '@' T_TYPE expression %prec '@'	{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| expression ':' arglist
 							{ $$ = eh_addnode(':', 2, $1, $3); }
 	| expression '=' expression

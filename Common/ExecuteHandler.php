@@ -386,9 +386,22 @@ abstract class ExecuteHandler extends EHICore {
 						$pp_value = array($pp_value);
 					foreach($pp_value as $key) {
 						if(!isset($paras[$key])) {
-							$paras['key'] = $this->getline(array(
-								'prompt' => $key . ': ',
-							));
+							// paras for the menu() call
+							$menu_paras = array(
+								'head' => $key . ': ',
+								'options' => array('q'),
+							);
+							if(isset($pp_paras['checkparas'][$key])) {
+								$menu_paras['validfunction'] = $pp_paras['checkparas'][$key];
+							}
+							else {
+								$menu_paras['validfunc'] = function($in) {
+									return true;
+								};
+							}
+							$paras[$key] = $this->menu($menu_paras);
+							if($paras[$key] === 'q')
+								$founderror = true;
 						}
 					}
 					break;

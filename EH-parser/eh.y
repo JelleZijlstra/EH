@@ -389,6 +389,10 @@ paralist:
 
 para:
 	string					{ $$ = $1; }
+	| T_INTEGER				{ $$ = eh_get_int($1); }
+	| T_FLOAT				{ $$ = eh_get_float($1); }
+	| T_NULL				{ $$ = eh_get_null(); }
+	| T_BOOL				{ $$ = eh_get_bool($1); }
 	| T_MINMIN string '=' simple_expr
 							{ $$ = eh_addnode(T_LONGPARA, 2, $2, $4); }
 	| T_MINMIN string		{ $$ = eh_addnode(T_LONGPARA, 1, $2); }

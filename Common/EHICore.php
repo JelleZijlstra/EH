@@ -206,7 +206,7 @@ abstract class EHICore {
 		}
 		// math
 		else if(preg_match(
-			"/^(?![\"'])([^\s]*)\s*([+\-*\/=><]|!=|>=|<=)\s*([^\s]*)(?<![\"'])$/u",
+			"/^(?![\"'])([^\s]*)\s*([+\-*\/=><]|!=|>=|<=|==)\s*([^\s]*)(?<![\"'])$/u",
 			$in,
 			$matches)) {
 			$lval = (float) trim($matches[1]);
@@ -216,7 +216,10 @@ abstract class EHICore {
 				case '-': return $lval - $rval;
 				case '*': return $lval * $rval;
 				case '/': return $lval / $rval;
-				case '=': return ($lval == $rval);
+				case '=':
+					// loose comparison is intentional here
+					return ($lval == $rval);
+				case '==': return ($lval === $rval);
 				case '>': return ($lval > $rval);
 				case '<': return ($lval < $rval);
 				case '!=': return ($lval != $rval);
@@ -783,7 +786,7 @@ abstract class EHICore {
 					echo 'Syntax error: In line: ' . $in . PHP_EOL;
 					return self::EXECUTE_SYNTAX_ERROR;
 				}
-				if($this->flowctr == 0) {
+				if($this->flowctr === 0) {
 					return self::EXECUTE_NEXT;
 				}
 				$var = $arg;

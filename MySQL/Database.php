@@ -15,10 +15,12 @@ class Database extends ExecuteHandler {
 			$this->errmessage = mysql_error();
 			return;
 		}
+		// go to the right database
 		$this->query("USE " . mysql_real_escape_string(DB_NAME));
 	}
 	protected static $Database_commands = array(
 		'count' => array('name' => 'count',
+			'aka' => 'dbcount',
 			'desc' => 'Count from a table',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
@@ -32,7 +34,7 @@ class Database extends ExecuteHandler {
 	}
 	private function query($sql) {
 		$result = mysql_query($sql);
-		if($result == false) {
+		if($result === false) {
 			$this->err = true;
 			$this->errmessage = mysql_error();
 			if($this->verbose) {
@@ -62,7 +64,8 @@ class Database extends ExecuteHandler {
 	public function count($paras = array()) {
 		$query = 'SELECT COUNT(*) FROM ' . $this->table . ' ' . $this->where($paras);
 		$result = $this->query($query);
-		if(!$result) return false;
+		if(!$result)
+			return false;
 		$row = mysql_fetch_array($result);
 		return $row[0];
 	}
@@ -82,7 +85,8 @@ class Database extends ExecuteHandler {
 	}
 	public function showcolumns() {
 	// show columns in default table
-		if(!$this->table) return false;
+		if(!$this->table)
+			return false;
 		echo 'Columns in table ' . $this->table . PHP_EOL;
 		foreach($this->columns as $column) {
 			echo $column . PHP_EOL;

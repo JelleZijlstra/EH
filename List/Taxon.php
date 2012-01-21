@@ -359,14 +359,16 @@ class Taxon extends ListEntry {
 		return true;
 	}
 	function expandrawr() {
-		if(!$this->rawr) return true;
+		if(!$this->rawr)
+			return true;
 		foreach($this->rawr as $key => $countries) {
 			foreach($countries as $country) {
 				$ccode = cencode($country);
 				if($ccode === false)
 					echo 'Unknown country: ' . $country . PHP_EOL;
 				else if(!$this->range[$ccode]) {
-					if(rencode($key) == 4) $comment = $key;
+					if(rencode($key) === 4)
+						$comment = $key;
 					$this->range[$ccode] = new Country($key, '{redlist}', $comment);
 					$needsave = true;
 				}

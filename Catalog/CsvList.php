@@ -47,8 +47,8 @@ class CsvList extends FileList {
 		'add_redirect' => array('name' => 'add_redirect',
 			'aka' => array('d'),
 			'desc' => 'Add a new redirect',
-			'arg' => 'New file handle',
-			'execute' => 'callmethodarg',
+			'arg' => 'None',
+			'execute' => 'callmethod',
 			'setcurrent' => true),
 		'editalltitles' => array('name' => 'editalltitles',
 			'desc' => 'Edit the title for files that have not yet had their titles edited',
@@ -302,40 +302,30 @@ class CsvList extends FileList {
 			array('isnew' => true)
 		);
 	}
-	function add_redirect($handle = '', $target = '') {
-		if(!$handle) while(true) {
-			$handle = $this->menu(array(
-				'head' => 'Type the handle for the new redirect',
-				'options' => array('q' => 'quit'),
-				'validfunction' => function() { return true; },
-			));
-			if($handle === 'q') return false;
-			if($this->has($handle) or strpos($handle, '.') !== false)
-				echo 'Invalid handle' . PHP_EOL;
-			else
-				break;
-		}
-		else if($this->has($handle)) {
-			echo 'Invalid handle' . PHP_EOL;
-			return false;
-		}
-		if(!$target) while(true) {
-			$target = $this->menu(array(
-				'head' => 'Type the target for the new redirect',
-				'options' => array('q' => 'quit'),
-				'validfunction' => function() { return true; },
-			));
-			if($target === 'q') return false;
-			if(!$this->has($target))
-				echo 'Invalid target' . PHP_EOL;
-			else
-				break;
-		}
-		else if(!$this->has($target)) {
-			echo 'Invalid target' . PHP_EOL;
-			return false;
-		}
-		return $this->add_entry(new FullFile(array($handle, $target), 'r'), array('isnew' => true));
+	public function add_redirect(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				// eh returns them in reverse order, though I'd like to change that
+				1 => 'handle',
+				0 => 'target',
+			),
+			'askifempty' => array('handle', 'target'),
+			'checkparas' => array(
+				'handle' => function($in) {
+					global $csvlist;
+					return !$csvlist->has($in);
+				},
+				'target' => function($in) {
+					global $csvlist;
+					return $csvlist->has($in);
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		return $this->add_entry(
+			new FullFile(array($paras['handle'], $paras['target']), 'r'),
+			array('isnew' => true)
+		);
 	}
 	/* do things with files */
 	protected function parse_wtext($rawarg) {

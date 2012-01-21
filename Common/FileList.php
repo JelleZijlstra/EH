@@ -24,10 +24,10 @@ abstract class FileList extends ExecuteHandler {
 	public static $resolve_redirect_exclude = array();
 	private static $FileList_commands = array(
 		'my_inform' => array('name' => 'my_inform',
-			'aka' => array('inform'),
+			'aka' => array('inform', 'i'),
 			'desc' => 'Give information about an entry',
 			'arg' => 'Entry handle',
-			'execute' => 'callmethodarg'),
+			'execute' => 'docurr'),
 		'set' => array('name' => 'set',
 			'desc' => 'Set a property of a file',
 			'arg' => 'Entry handle, plus fields to be changed in the form "--<field>=<content>"',

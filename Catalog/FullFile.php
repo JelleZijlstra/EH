@@ -1,4 +1,10 @@
 <?php
+/*
+ * FullFile.php
+ *
+ * A class to represent a single library file with its bibliographic data.
+ * A FullFile should be a member of the $p array of a CsvList object.
+ */
 // methods that should not get redirects resolved by FileList
 FileList::$resolve_redirect_exclude[] = array('FullFile', 'isredirect');
 
@@ -27,9 +33,9 @@ class FullFile extends ListEntry {
 	public $location; //geographical location published
 	public $bookpages; //number of pages in book
 	public $status; //status of the file
-	public $ids;
-	public $comm;
-	public $bools;
+	public $ids; //array of properties for various less-common identifiers
+	public $comm; //array of properties for comments, notes, and other secondary stuff
+	public $bools; // array of boolean flags
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
 	static $n_comm = array('pages', 'newtaxa', 'draft', 'muroids'); // names of commentary fields supported
 	static $n_bools = array('editedtitle', 'parturl', 'fullissue', 'triedfindurl', 'triedfinddoi', 'triedadddata'); // variables (mostly boolean) supported
@@ -404,6 +410,8 @@ class FullFile extends ListEntry {
 	}
 	/* FORMATTING */
 	public function format(array $paras = array()) {
+	// This function does various kinds of cleanups and tweaks. It's a mess,
+	// though, and should be organized better.
 		/*
 		 * completion of partial citations
 		 */
@@ -1673,6 +1681,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return true;
 	}
 	public function __toString() {
+	// return a citation for this file
 		$out = $this();
 		if(is_array($out))
 			return implode(PHP_EOL, $out);
@@ -1709,6 +1718,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return $url;
 	}
 	public function getharvard($paras = array()) {
+	// get a Harvard citation
 		// TODO: implement getting both Zijlstra et al. (2010) and (Zijlstra et al., 2010)
 		// TODO: more citetype dependence
 		$splitauthors = explode('; ', $this->authors);
@@ -2138,6 +2148,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			else if($doi) $this->doi = $doi;
 		}
 	}
+	// Get the PDF text of a file and process it
 	private function putpdfcontent() {
 		// only do actual PDF files
 		if(!$this->ispdf() or $this->isredirect())
@@ -2274,6 +2285,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			echo $this->findtitle_pdfcontent() . PHP_EOL;
 		return true;
 	}
+	// Try to determine the citation from the PDF content
 	private function tryjstor() {
 		if(!preg_match("/(Stable URL: http:\/\/www\.jstor\.org\/stable\/| Accessed: )/", $this->pdfcontent))
 			return false;
@@ -2565,6 +2577,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			}
 		}
 	}
+	// Getting stuff from Google
 	private function googletitle($title = '') {
 		if(!$title) $title = $this->title;
 		return urlencode(preg_replace("/\(|\)|;|-+\\/(?=\s)|(?<=\s)-+|<\/?i>/", "", $title));
@@ -2590,6 +2603,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		return $cjson;
 	}
+	// Manual input
 	private function doiamnhinput() {
 		if(!$this->p->addmanual) return false;
 		if($this->pdfcontent) echo $this->pdfcontent . PHP_EOL;
@@ -2693,6 +2707,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$this->editedtitle = 1;
 		return true;
 	}
+	// Expanding AMNH data and DOIs
 	private function expandamnh(array $paras = array()) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -2836,6 +2851,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		return true;
 	}
+	/* PROCESSING PDFS */
 	function burst() {
 	// bursts a PDF file into several files
 		echo 'Bursting file ' . $this->name . '. Opening file.' . PHP_EOL;

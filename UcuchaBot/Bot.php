@@ -120,7 +120,7 @@ class Bot extends Snoopy {
 		}
 		$this->submit(self::api, $submit_vars);
 		$login_result = json_decode($this->results);
-		if($login_result->login->result == "Success") {
+		if($login_result->login->result === "Success") {
 			echo("Login succeeded. Using account " . $login_result->login->lgusername . "." . PHP_EOL);
 			// Add other cookies, which are necessary to remain logged in.
 			$cookie_prefix = "enwiki";
@@ -232,7 +232,7 @@ class Bot extends Snoopy {
 		}
 		// handle result
 		$result = json_decode($this->results);
-		if(isset($result->edit) and $result->edit->result == "Success") {
+		if(isset($result->edit) and $result->edit->result === "Success") {
 			return true;
 		}
 		else if(isset($result->edit) and $result->edit->result) {

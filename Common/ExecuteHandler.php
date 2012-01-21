@@ -905,7 +905,7 @@ abstract class ExecuteHandler extends EHICore {
 					return $cmd;
 			}
 			else
-				echo 'Unrecognized option ' . $cmd . PHP_EOL;
+				echo 'Invalid value ' . $cmd . PHP_EOL;
 		}
 	}
 	protected function ynmenu($head, $process = NULL) {

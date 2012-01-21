@@ -164,7 +164,10 @@ abstract class ExecuteHandler extends EHICore {
 		$cmd = $this->expand_cmd($rawcmd2);
 		if(!$cmd) {
 			echo 'Invalid command: ' . $rawcmd2 . PHP_EOL;
-			return self::EXECUTE_NEXT;
+			if(defined('IS_EHPHP'))
+				return NULL;
+			else
+				return self::EXECUTE_NEXT;
 		}
 		$redirection = array(
 			'>' => false,
@@ -225,13 +228,22 @@ abstract class ExecuteHandler extends EHICore {
 				$ret = $cmd['name']($argument, $paras);
 				break;
 			case 'quit':
-				return self::EXECUTE_QUIT;
+				if(defined('IS_EHPHP'))
+					return NULL;
+				else
+					return self::EXECUTE_QUIT;
 			default:
 				trigger_error('Unrecognized execution mode', E_USER_NOTICE);
 				break;
 		}
 		// always make return value accessible to script
 		$this->setvar('ret', $ret);
+
+		// from here, return $ret if we're in ehphp, but EXECUTE_NEXT if we're in the pure-PHP implementation
+		if(defined('IS_EHPHP'))
+			$returnvalue = $ret;
+		else
+			$returnvalue = self::EXECUTE_NEXT;
 		if($cmd['setcurrent'] and (count($argarray) !== 0))
 			$this->current = $argarray;
 		if($redirection['>'] !== false) {
@@ -239,7 +251,7 @@ abstract class ExecuteHandler extends EHICore {
 			if(!$file) {
 				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
 				ob_end_clean();
-				return self::EXECUTE_NEXT;
+				return $returnvalue;
 			}
 			fwrite($file, ob_get_contents());
 			ob_end_clean();
@@ -253,7 +265,7 @@ abstract class ExecuteHandler extends EHICore {
 			if(!$file) {
 				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
 				ob_end_clean();
-				return self::EXECUTE_NEXT;
+				return $returnvalue;
 			}
 			fwrite($file, $ret);
 		}
@@ -261,7 +273,7 @@ abstract class ExecuteHandler extends EHICore {
 		if($redirection['}$']) {
 			$this->setvar($redirect['}$'], $ret);
 		}
-		return self::EXECUTE_NEXT;
+		return $returnvalue;
 	}
 	private function expand_cmd($in) {
 		// search for commands
@@ -915,17 +927,10 @@ abstract class ExecuteHandler extends EHICore {
 		var_dump(func_get_args());
 		return true;
 	}
-	public function test() {
+	public function test($arg, $paras) {
 	// Test function that might do anything I currently want to test
-	// Currently, testing what arguments it is getting
-		$this->stty('cbreak iutf8');
-		while(0) {
-			$char = ord(fgetc(STDIN));
-			echo PHP_EOL;
-			echo $char . ' : ' . base_convert($char, 10, 8) . PHP_EOL;
-			if($char === 4) break;
-		}
-		var_dump(func_get_args());
+	// Currently, returning its argument
+		return $paras[0];
 	}
 }
 ?>

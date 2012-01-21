@@ -7,6 +7,7 @@
  * implementation (ehi, ehphp) is unavailable.
  */
 
+define('IS_PUREPHP', 0);
 abstract class EHICore {
 	/* Class constants (partly duplicated) */
 	const EXECUTE_NEXT = 0x0; // execute says: go on with next

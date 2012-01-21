@@ -7,6 +7,7 @@
  */
 @include_once(BPATH . "/EH-parser/ehphp.php");
 if(!class_exists("EHI")) return;
+define('IS_EHPHP', 0);
 abstract class EHICore extends EHI {
 	private $prompt;
 	public function __construct() {
@@ -25,7 +26,7 @@ abstract class EHICore extends EHI {
 		$cmd = '';
 		static $history = array();
 		$cmd = $this->getline(array(
-			'prompt' => $this->prompt, 
+			'prompt' => $this->prompt,
 			'lines' => $history,
 			'includenewlines' => true,
 		));

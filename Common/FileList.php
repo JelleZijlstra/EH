@@ -485,6 +485,12 @@ abstract class FileList extends ExecuteHandler {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
+		// be really quiet
+		if($paras['quiet']) {
+			$paras['printentries'] = false;
+			$paras['printvalues'] = false;
+			$paras['printresult'] = false;
+		}
 		$childclass = static::$childclass;
 		if($paras['openfiles'] and !method_exists($childclass, 'openf'))
 			$paras['openfiles'] = false;

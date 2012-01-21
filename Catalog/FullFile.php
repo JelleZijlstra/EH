@@ -1804,7 +1804,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$cmd = 'mv ' . TEMPPATH . '/' .
 							escape_shell($this->name) . ' ' .
 							$this->p->lslist[$this->name]->path();
-						if(!exec_catch($cmd)) echo "Error moving file" . PHP_EOL;
+						if(!exec_catch($cmd))
+							echo "Error moving file" . PHP_EOL;
 						$this->p->edit($this->name);
 						return 1;
 					case 'd':
@@ -1820,7 +1821,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$sugg_lister = function($in) {
 		// in folder suggestions part 2, print a list of suggestions and return useful array
 		// input: array of folders
-			if(!is_array($in)) return;
+			if(!is_array($in))
+				return;
 			// input is array with key: name of folder; value: array with contents
 			// discard value, use key as value for out array
 			foreach($in as $key => $value)
@@ -1841,7 +1843,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					echo 'Suggested placement. Folder: ' . $sugg[0];
 					if($sugg[1]) {
 						echo '; subfolder: ' . $sugg[1];
-						if($sugg[2]) echo '; sub-subfolder: ' . $sugg[2];
+						if($sugg[2])
+							echo '; sub-subfolder: ' . $sugg[2];
 					}
 					$cmd = $this->menu(array(
 						'head' => PHP_EOL,
@@ -1865,23 +1868,29 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 			}
 			if(!$this->folder) {
-				if(!$this->p->foldertree) $this->p->build_foldertree();
+				if(!$this->p->foldertree)
+					$this->p->build_foldertree();
 				/* folder */
 				echo 'Suggestions: ';
 				$suggs = $sugg_lister($this->p->foldertree);
 				$cmd = $this->getline('Folder: ');
-				if($cmd === 'q') continue 2;
-				if(is_numeric($cmd)) $this->folder = $suggs[$cmd];
+				if($cmd === 'q')
+					continue 2;
+				if(is_numeric($cmd))
+					$this->folder = $suggs[$cmd];
 				else $this->folder = $cmd;
 				/* subfolder */
 				if(count($this->p->foldertree[$this->folder]) !== 0) {
 					echo 'Suggestions: ';
 					$suggs = $sugg_lister($this->p->foldertree[$this->folder]);
 					$cmd = $this->getline('Subfolder: ');
-					if($cmd === 'q') continue 2;
-					if(is_numeric($cmd)) $this->sfolder = $suggs[$cmd];
-					else $this->sfolder = $cmd;
-				/* sub-subfolder */
+					if($cmd === 'q')
+						continue 2;
+					if(is_numeric($cmd))
+						$this->sfolder = $suggs[$cmd];
+					else
+						$this->sfolder = $cmd;
+					/* sub-subfolder */
 					if(isset($this->p->foldertree
 							[$this->folder]
 							[$this->sfolder])
@@ -1889,12 +1898,14 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 							[$this->folder]
 							[$this->sfolder]) !== 0) {
 						echo 'Suggestions: ';
-						$suggs = $sugg_lister($this->p->foldertree[$this->folder][$this->sfolder]);
-						$cmd = $this->getline(array(
-							'prompt' => 'Sub-subfolder: ',
-						));
-						if($cmd === 'q') continue 2;
-						if(is_numeric($cmd)) $this->ssfolder = $suggs[$cmd];
+						$suggs = $sugg_lister(
+							$this->p->foldertree[$this->folder][$this->sfolder]
+						);
+						$cmd = $this->getline('Sub-subfolder: ');
+						if($cmd === 'q')
+							continue 2;
+						if(is_numeric($cmd))
+							$this->ssfolder = $suggs[$cmd];
 						else $this->ssfolder = $cmd;
 					}
 				}
@@ -2929,18 +2940,21 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	/* SMALL UTILITIES */
 	public function needsdata() {
+	// whether this citation has incomplete information
 		return !($this->hasid() and $this->year and $this->volume and $this->start);
 	}
-	function folderstr() {
+	public function folderstr() {
+		// return the folder path in string format
 		return $this->folder . ':' . $this->sfolder . ':' . $this->ssfolder;
 	}
-	function getkey() {
+	public function getkey() {
+		// get the key to the suggestions array
 		if(strpos($this->name, 'MS ') === 0)
 			return preg_replace('/^MS ([^\s]+).*$/', '$1', $this->name);
 		$tmp = preg_split('/[\s\-,]/', $this->name);
 		return $tmp[0];
 	}
-	function getrefname() {
+	public function getrefname() {
 	// generate refname, which should usually be unique with this method
 		$tmp = explode(',', $this->authors);
 		$refname = $tmp[0] . $this->year . $this->volume . $this->start;
@@ -2979,7 +2993,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		);
 		return $title;
 	}
-	function openurl() {
+	public function openurl(array $paras = array()) {
+	// open the URL associated with the file
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No parameters accepted */ ),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if($this->url)
 			$url = $this->url;
 		else if($this->doi)
@@ -2998,16 +3017,19 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		return exec_catch("open '" . $url . "'");
 	}
-	function searchgoogletitle() {
+	public function searchgoogletitle() {
 	// searches for the title of the article in Google
 		$url = 'http://www.google.com/search?q=' . $this->googletitle();
 		return exec_catch("open '" . $url . "'");
 	}
 	public function gethost() {
-		if(!$this->url) return false;
+	// get the host part of the URL
+		if(!$this->url)
+			return false;
 		return parse_url($this->url, PHP_URL_HOST);
 	}
-	public function email($paras = array()) {
+	public function email(array $paras = array()) {
+	// Email this file to someone
 	// Inspired by http://www.webcheatsheet.com/PHP/send_email_text_html_attachment.php#attachment
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -3023,6 +3045,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				'to',
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		// not in process_paras because then the code would be evaluated no matter what.
 		if(!isset($paras['message'])) {
 			$paras['message'] = "<p>Please find attached the following paper:</p>\r\n<ul><li>" . $this->citepaper() . "</li></ul>\r\n";
 		}

@@ -1832,7 +1832,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				echo $key . ': ' . $value . '; ';
 			echo PHP_EOL;
 			return $out;
-		}
+		};
 		// loop in case of incorrect folders
 		while(true) {
 			if(!$this->p->sugglist) $this->p->build_sugglist();

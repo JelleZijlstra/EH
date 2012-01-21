@@ -1,11 +1,11 @@
 <?php
 require_once(__DIR__ . "/../Common/common.php");
 require_once(BPATH . "/Common/ExecuteHandler.php");
-define(AVIDADIR, "/Users/jellezijlstra/Desktop/Avida");
-define(AVIDACONFIG, AVIDADIR . "/avida.cfg");
-define(AVIDAEVENTS, AVIDADIR . "/events.cfg");
-define(AVIDAPROG, AVIDADIR . "/avida");
-define(AVIDAANALYZE, AVIDADIR . "/analyze.cfg");
+define('AVIDADIR', "/Users/jellezijlstra/Desktop/Avida");
+define('AVIDACONFIG', AVIDADIR . "/avida.cfg");
+define('AVIDAEVENTS', AVIDADIR . "/events.cfg");
+define('AVIDAPROG', AVIDADIR . "/avida");
+define('AVIDAANALYZE', AVIDADIR . "/analyze.cfg");
 class AvidaInterface extends ExecuteHandler {
 	protected static $AvidaInterface_commands = array(
 		'avida_config' => array('name' => 'avida_config',
@@ -115,7 +115,13 @@ class AvidaInterface extends ExecuteHandler {
 				'arg' => 'Argument to be given',
 				'comment' => 'Comment explaining what the operation does',
 			),
-		)) == PROCESS_PARAS_ERROR_FOUND)
+			'default' => array(
+				'repeat' => 0,
+				'end' => 0,
+				'arg' => '',
+				'comment' => '',
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
 		// we always start events with u for now
 		$event = 'u ';
@@ -163,11 +169,12 @@ class AvidaInterface extends ExecuteHandler {
 		echo 'Avida exited from analysis mode with exit code ' . $ret . ' after ' . ($after - $before) . ' seconds' . PHP_EOL;
 		return true;
 	}
-	public function avida_analyze_start() {
+	public function avida_analyze_start(array $paras = array()) {
 	// start assembling events
+		// no paras, ignore anything we might get
 		$this->avida_analyze = array();
 	}
-	public function avida_analyze_add($paras = array()) {
+	public function avida_analyze_add(array $paras = array()) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'errorifempty' => array('cmd'),
@@ -176,7 +183,11 @@ class AvidaInterface extends ExecuteHandler {
 				'arg' => 'Argument to be given',
 				'comment' => 'Comment explaining what the command does',
 			),
-		)) == PROCESS_PARAS_ERROR_FOUND)
+			'default' => array(
+				'arg' => false,
+				'comment' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
 		// we always start events with u for now
 		$line = $paras['cmd'];
@@ -186,7 +197,8 @@ class AvidaInterface extends ExecuteHandler {
 		$this->avida_analyze[] = $line;
 		return true;
 	}
-	public function avida_analyze_push() {
+	public function avida_analyze_push(array $paras = array()) {
+		// no paras, ignore anything we might get
 		$events = implode('', $this->avida_analyze);
 		if(!file_put_contents(AVIDAANALYZE, $events)) {
 			echo 'Error saving new analyze.cfg' . PHP_EOL;

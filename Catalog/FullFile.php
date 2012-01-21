@@ -1817,6 +1817,20 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 			}
 		}
+		$sugg_lister = function($in) {
+		// in folder suggestions part 2, print a list of suggestions and return useful array
+		// input: array of folders
+			if(!is_array($in)) return;
+			// input is array with key: name of folder; value: array with contents
+			// discard value, use key as value for out array
+			foreach($in as $key => $value)
+				$out[] = $key;
+			// print new keys (ints) to be used in user input
+			foreach($out as $key => $value)
+				echo $key . ': ' . $value . '; ';
+			echo PHP_EOL;
+			return $out;
+		}
 		// loop in case of incorrect folders
 		while(true) {
 			if(!$this->p->sugglist) $this->p->build_sugglist();
@@ -1854,7 +1868,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				if(!$this->p->foldertree) $this->p->build_foldertree();
 				/* folder */
 				echo 'Suggestions: ';
-				$suggs = $this->sugg_helper($this->p->foldertree);
+				$suggs = $sugg_lister($this->p->foldertree);
 				$cmd = $this->getline('Folder: ');
 				if($cmd === 'q') continue 2;
 				if(is_numeric($cmd)) $this->folder = $suggs[$cmd];
@@ -1862,7 +1876,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				/* subfolder */
 				if(count($this->p->foldertree[$this->folder]) !== 0) {
 					echo 'Suggestions: ';
-					$suggs = $this->sugg_helper($this->p->foldertree[$this->folder]);
+					$suggs = $sugg_lister($this->p->foldertree[$this->folder]);
 					$cmd = $this->getline('Subfolder: ');
 					if($cmd === 'q') continue 2;
 					if(is_numeric($cmd)) $this->sfolder = $suggs[$cmd];
@@ -1875,7 +1889,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 							[$this->folder]
 							[$this->sfolder]) !== 0) {
 						echo 'Suggestions: ';
-						$suggs = $this->sugg_helper($this->p->foldertree[$this->folder][$this->sfolder]);
+						$suggs = $sugg_lister($this->p->foldertree[$this->folder][$this->sfolder]);
 						$cmd = $this->getline(array(
 							'prompt' => 'Sub-subfolder: ',
 						));
@@ -2992,20 +3006,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	public function gethost() {
 		if(!$this->url) return false;
 		return parse_url($this->url, PHP_URL_HOST);
-	}
-	private function sugg_helper($in) {
-	// in folder suggestions part 2, print a list of suggestions and return useful array
-	// input: array of folders
-		if(!is_array($in)) return;
-		// input is array with key: name of folder; value: array with contents
-		// discard value, use key as value for out array
-		foreach($in as $key => $value)
-			$out[] = $key;
-		// print new keys (ints) to be used in user input
-		foreach($out as $key => $value)
-			echo $key . ': ' . $value . '; ';
-		echo PHP_EOL;
-		return $out;
 	}
 	public function email($paras = array()) {
 	// Inspired by http://www.webcheatsheet.com/PHP/send_email_text_html_attachment.php#attachment

@@ -2810,7 +2810,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$isbn = (string)$result->isbn;
 		$authorsraw = $result->contributors->children();
 		$authors = '';
-		if($authorsraw) foreach($authorsraw as $author) {
+		if($result->contributors->count()) foreach($authorsraw as $author) {
 			if((string)$author->attributes() !== "first")
 				$authors .= "; ";
 			$authors .= ucwords(mb_strtolower((string)$author->surname, 'UTF-8'));

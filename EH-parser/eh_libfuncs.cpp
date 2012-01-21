@@ -238,6 +238,10 @@ EHLIBFUNC(include) {
 	FILE *infile;
 	EHParser *parser;
 
+	// set is_interactive
+	int old_is_interactive = is_interactive;
+	is_interactive = 0;
+
 	args = (ehretval_t *) Malloc(1 * sizeof(ehretval_t));
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
 		EHLF_RETFALSE;
@@ -255,6 +259,7 @@ EHLIBFUNC(include) {
 	*retval = parser->parse_file(infile);
 	// we're no longer returning
 	returning = false;
+	is_interactive = old_is_interactive;
 	delete parser;
 	return;
 }

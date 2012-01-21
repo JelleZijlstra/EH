@@ -54,6 +54,9 @@ zval *arrtozval(ehvar_t **paras) {
 						add_index_double(arr,
 							currvar->index, currvar->value.floatval);
 						break;
+					case null_e:
+						add_index_null(arr, currvar->index);
+						break;
 					default:
 						eh_error_type("convert to PHP", currvar->value.type, enotice_e);
 						break;
@@ -81,6 +84,9 @@ zval *arrtozval(ehvar_t **paras) {
 					case float_e:
 						add_assoc_double(arr,
 							currvar->name, currvar->value.floatval);
+						break;
+					case null_e:
+						add_assoc_null(arr, currvar->name);
 						break;
 					default:
 						eh_error_type("conversion to PHP", currvar->value.type, enotice_e);

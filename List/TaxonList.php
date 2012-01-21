@@ -134,21 +134,28 @@ class TaxonList extends FileList {
 		else
 			return false;
 	}
-	public function outputhtml($paras = '') {
+	public function outputhtml(array $paras = array()) {
 	// generates a HTML version of The List
-		$this->expandargs($paras, array(0 => 'taxon'));
-		if($paras['taxon'])
-			$filename = $paras['taxon'];
-		else
-			$filename = 'list';
-		$outfile = $paras['out'] ?: BPATH . '/List/Output/' . $filename . '.html';
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'taxon'),
+			'checklist' => array(
+				'taxon' => 'Taxon to print output for',
+				'out' => 'File to write to',
+			),
+			'default' => array(
+				'taxon' => 'list',
+				'out' => false, // default used below needs $paras['taxon'] first
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$outfile = $paras['out'] ?: BPATH . '/List/data/' . $paras['taxon'] . '.html';
 		$this->html_out = $out = @fopen($outfile, 'w');
 		if(!$out) {
 			echo 'Error: could not open output file ' . $outfile . PHP_EOL;
 			return false;
 		}
 		fwrite($out, self::$start_html . PHP_EOL);
-		if(isset($paras['taxon'])) {
+		if($paras['taxon'] !== 'list') {
 			if($this->has($paras['taxon'])) {
 				$this->completedata($paras['taxon']);
 				$this->html($paras['taxon']);
@@ -162,7 +169,7 @@ class TaxonList extends FileList {
 			$this->call_root('html');
 		fwrite($out, self::$end_html);
 		fclose($out);
-		unset($this->html_out);
+		$this->html_out = NULL;
 		exec_catch('open ' . $outfile);
 		return true;
 	}

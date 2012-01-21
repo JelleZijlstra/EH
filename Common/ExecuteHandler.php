@@ -310,15 +310,6 @@ abstract class ExecuteHandler extends EHICore {
 			return false;
 		}
 	}
-	static protected function expandargs(&$paras, $synonyms) {
-	// utility function for EH commands.
-	// Deprecated: use process_paras instead
-		if(!is_array($synonyms)) return false;
-		foreach($synonyms as $key => $result) {
-			if(isset($paras[$key]) and !isset($paras[$result]))
-				$paras[$result] = $paras[$key];
-		}
-	}
 	static protected function setifneeded(&$paras, $field) {
 	// deprecated; use process_paras instead
 		if(isset($paras[$field]))

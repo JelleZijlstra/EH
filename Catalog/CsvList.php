@@ -23,7 +23,7 @@ class CsvList extends FileList {
 			'aka' => array('a'),
 			'desc' => 'Add a new non-file entry',
 			'arg' => 'New file handle',
-			'execute' => 'callmethodarg',
+			'execute' => 'callmethod',
 			'setcurrent' => true),
 		'catalog_backup' => array('name' => 'catalog_backup',
 			'aka' => array('backup'),
@@ -274,24 +274,33 @@ class CsvList extends FileList {
 		}
 		return true;
 	}
-	function add_nofile($handle = '') {
-		if(!$handle) while(true) {
-			$handle = $this->menu(array(
-				'head' => 'Type the handle for the new reference',
-				'options' => array('q' => 'quit'),
-				'validfunction' => function() { return true; },
-			));
-			if($handle === 'q') return false;
-			if($this->has($handle) or strpos($handle, '.') !== false)
-				echo 'Invalid handle' . PHP_EOL;
-			else
-				break;
-		}
-		else if($this->has($handle) or strpos($handle, '.') !== false) {
-			echo 'Invalid handle' . PHP_EOL;
-			return false;
-		}
-		return $this->add_entry(new FullFile($handle, 'n'), array('isnew' => true));
+	public function add_nofile(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'handle',
+			),
+			'checklist' => array(
+				'handle' => 'Handle of new entry',
+			),
+			'askifempty' => array(
+				'handle',
+			),
+			'checkparas' => array(
+				'handle' => function($in) {
+					// NOFILEs can't have dots in their names
+					if(strpos($in, '.') !== false)
+						return false;
+					// when we're in PHP 5.4, use $this->has instead here
+					global $csvlist;
+					return !$csvlist->has($in);
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		return $this->add_entry(
+			new FullFile($paras['handle'], 'n'),
+			array('isnew' => true)
+		);
 	}
 	function add_redirect($handle = '', $target = '') {
 		if(!$handle) while(true) {

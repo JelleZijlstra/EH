@@ -41,7 +41,7 @@ abstract class ExecuteHandler extends EHICore {
 			'aka' => array('h', 'help', 'man'),
 			'desc' => 'Get help information about the command line or a specific command',
 			'arg' => 'Command name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'quit' => array('name' => 'quit',
 			'aka' => array('q'),
 			'desc' => 'Quit the program',
@@ -282,25 +282,31 @@ abstract class ExecuteHandler extends EHICore {
 		else
 			return false;
 	}
-	private function execute_help($in) {
+	private function execute_help(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'cmd'),
+			'checklist' => array('cmd' => 'Command to explain'),
+			'default' => array('cmd' => ''),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// array of functions with info
-		if(!$in) {
+		if($paras['cmd'] === '') {
 			echo 'In command line, various options can be used to manipulate the list or its files. The following commands are available:' . PHP_EOL;
 			$this->listcommands();
 			echo 'Type "help <command>" to get more information about that commmand. Commands will sometimes take an argument, often a filename.' . PHP_EOL;
 			return true;
 		}
-		$in = $this->expand_cmd($in);
-		if($in) {
-			echo PHP_EOL . 'Function: ' . $in['name'] . PHP_EOL;
-			if(isset($in['aka'])) {
-				if(is_array($in['aka']))
-					echo 'Aliases: ' . implode(', ', $in['aka']) . PHP_EOL;
-				else if(is_string($in['aka']))
-					echo 'Aliases: ' . $in['aka'] . PHP_EOL;
+		$cmd = $this->expand_cmd($paras['cmd']);
+		if($cmd) {
+			echo PHP_EOL . 'Function: ' . $cmd['name'] . PHP_EOL;
+			if(isset($cmd['aka'])) {
+				if(is_array($cmd['aka']))
+					echo 'Aliases: ' . implode(', ', $cmd['aka']) . PHP_EOL;
+				else if(is_string($cmd['aka']))
+					echo 'Aliases: ' . $cmd['aka'] . PHP_EOL;
 			}
-			echo 'Description: ' . $in['desc'] . PHP_EOL;
-			echo 'Arguments: ' . $in['arg'] . PHP_EOL;
+			echo 'Description: ' . $cmd['desc'] . PHP_EOL;
+			echo 'Arguments: ' . $cmd['arg'] . PHP_EOL;
 			return true;
 		}
 		else {
@@ -338,7 +344,7 @@ abstract class ExecuteHandler extends EHICore {
 		// special parameter in all cases: help
 		if(isset($paras['help'])) {
 			if(isset($pp_paras['name'])) {
-				$this->execute_help($pp_paras['name']);
+				$this->execute_help(array($pp_paras['name']));
 				unset($pp_paras['name']);
 			}
 			// without checklist, we can't do much

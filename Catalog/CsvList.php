@@ -96,7 +96,7 @@ class CsvList extends FileList {
 			'aka' => array('tparse'),
 			'desc' => 'Parse an input file handle into a Wikipedia-ready file',
 			'arg' => 'Filename',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'remove' => array('name' => 'remove',
 			'aka' => array('r'),
 			'desc' => 'Remove a file',
@@ -323,16 +323,16 @@ class CsvList extends FileList {
 		);
 	}
 	/* do things with files */
-	protected function parse_wtext($rawarg) {
-		if($rawarg) {
-			if(strpos($rawarg, '/') === false)
-				$rawarg = '/Users/jellezijlstra/Dropbox/Open WP/' . $rawarg;
-			return parse_wtext($rawarg);
-		}
-		else {
-			echo 'Error: no argument given' . PHP_EOL;
-			return false;
-		}
+	protected function parse_wtext(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'file'),
+			'default' => array('file' => 'File to parse'),
+			'errorifempty' => array('file'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if(strpos($paras['file'], '/') === false)
+			$paras['file'] = '/Users/jellezijlstra/Dropbox/Open WP/' . $paras['file'];
+		return parse_wtext($paras['file']);
 	}
 	public function byfile() {
 	// deprecated

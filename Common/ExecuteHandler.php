@@ -30,7 +30,6 @@ abstract class ExecuteHandler extends EHICore {
 	// descriptions
 	private static $handlers = array(
 		'doallorcurr' => 'Execute a function for the argument only if there is one, and else for all entries. Users that use this handler must implement the doall() method and the method defined by the command\'s name.',
-		'docurr' => 'Execute a function for the current entries.',
 		'callmethod' => 'Execute the given method, with as its argument $paras.',
 		'callmethodarg' => 'As callmethod, with $rawarg as the first argument.',
 		'callfunc' => 'Execute the given function, with as its argument $paras.',
@@ -213,11 +212,6 @@ abstract class ExecuteHandler extends EHICore {
 				}
 				else
 					$ret = $this->doall($cmd['name'], $paras);
-				break;
-			case 'docurr':
-				foreach($argarray as $entry) {
-					$ret = $this->{$cmd['name']}($entry, $paras);
-				}
 				break;
 			case 'callmethod':
 				$ret = $this->{$cmd['name']}($paras);

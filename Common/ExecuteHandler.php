@@ -59,7 +59,7 @@ abstract class ExecuteHandler extends EHICore {
 			'aka' => 'exec_catch',
 			'desc' => 'Execute a command from the shell',
 			'arg' => 'Shell command',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'configset' => array('name' => 'configset',
 			'aka' => 'setconfig',
 			'desc' => 'Set a configuration variable',
@@ -565,10 +565,15 @@ abstract class ExecuteHandler extends EHICore {
 		else
 			return true;
 	}
-	static private function shell($in) {
+	private function shell(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'cmd'),
+			'errorifempty' => array('cmd'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// cd won't actually change the shell until we do some special magic
-		if(preg_match('/^cd /', $in)) {
-			$dir = substr($in, 3);
+		if(preg_match('/^cd /', $paras['cmd'])) {
+			$dir = substr($paras['cmd'], 3);
 			// handle home directory
 			if($dir[0] === '~') {
 				$home = trim(shell_exec('echo $HOME'));
@@ -577,7 +582,7 @@ abstract class ExecuteHandler extends EHICore {
 			chdir($dir);
 		}
 		else
-			echo shell_exec($in);
+			echo shell_exec($paras['cmd']);
 	}
 	protected function myecho($in) {
 		echo $in . PHP_EOL;

@@ -1,5 +1,5 @@
 CC = g++
-CCFLAGS = -ggdb -Wall
+CCFLAGS = -ggdb -Wall -pedantic
 SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)

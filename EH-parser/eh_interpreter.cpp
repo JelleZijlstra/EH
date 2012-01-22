@@ -889,12 +889,15 @@ ehretval_t eh_op_new(const char *name) {
 }
 void eh_op_break(opnode_t *op, ehcontext_t context) {
 	ehretval_t level;
-	if(op->nparas == 0)
-		level = (ehretval_t){int_e, {1}};
-	else
+	if(op->nparas == 0) {
+		level.type = int_e;
+		level.intval = 1;
+	}
+	else {
 		level = eh_xtoint(eh_execute(op->paras[0], context));
-	if(level.type != int_e)
-		return;
+		if(level.type != int_e)
+			return;
+	}
 	// break as many levels as specified by the argument
 	if(level.intval > inloop) {
 		eh_error_looplevels("Cannot break", level.intval);
@@ -905,12 +908,15 @@ void eh_op_break(opnode_t *op, ehcontext_t context) {
 }
 void eh_op_continue(opnode_t *op, ehcontext_t context) {
 	ehretval_t level;
-	if(op->nparas == 0)
-		level = (ehretval_t){int_e, {1}};
-	else
+	if(op->nparas == 0) {
+		level.type = int_e;
+		level.intval = 1;
+	}
+	else {
 		level = eh_xtoint(eh_execute(op->paras[0], context));
-	if(level.type != int_e)
-		return;
+		if(level.type != int_e)
+			return;
+	}
 	// break as many levels as specified by the argument
 	if(level.intval > inloop) {
 		eh_error_looplevels("Cannot continue", level.intval);
@@ -2042,7 +2048,10 @@ ehretval_t eh_xtoarray(const ehretval_t in) {
 		case func_e:
 			// create an array with just this variable in it
 			ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
-			array_insert_retval(ret.arrayval, (ehretval_t) {int_e, {0}}, in);
+			ehretval_t index;
+			index.type = int_e;
+			index.intval = 0;
+			array_insert_retval(ret.arrayval, index, in);
 			break;
 		default:
 			CASTERROR(array);

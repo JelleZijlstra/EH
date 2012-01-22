@@ -23,7 +23,7 @@
  */
 // magic variables
 typedef enum magicvar_enum {
-	this_e,
+	this_e
 } magicvar_enum;
 
 typedef enum type_enum {
@@ -43,23 +43,23 @@ typedef enum type_enum {
 	attribute_e,
 	attributestr_e,
 	range_e,
-	float_e,
+	float_e
 } type_enum;
 
 // attributes of class members
 typedef enum visibility_enum {
 	public_e = 0,
-	private_e = 1,
+	private_e = 1
 } visibility_enum;
 
 typedef enum static_enum {
 	nonstatic_e = 0,
-	static_e = 1,
+	static_e = 1
 } static_enum;
 
 typedef enum const_enum {
 	nonconst_e = 0,
-	const_e = 1,
+	const_e = 1
 } const_enum;
 
 // struct for class member attributes
@@ -79,7 +79,7 @@ typedef enum attribute_enum {
 
 typedef enum functype_enum {
 	user_e = 0,
-	lib_e = 1,
+	lib_e = 1
 } functype_enum;
 
 typedef enum accessor_enum {
@@ -202,7 +202,7 @@ typedef enum {
 	efatal_e,
 	eparsing_e,
 	eerror_e, // runtime non-fatal error
-	enotice_e,
+	enotice_e
 } errlevel_e;
 
 void eh_error(const char *message, errlevel_e level);

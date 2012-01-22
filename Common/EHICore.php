@@ -21,6 +21,22 @@ abstract class EHICore {
 	const CHECK_FLOW_IN_FUNC = 0x3;
 	const CHECK_FLOW_IN_WHILE = 0x4;
 	const CHECK_FLOW_NOT_EXECUTING_IN_IF = 0x5;
+	/* core commands */
+	protected static $core_commands = array(
+		'myecho' => array('name' => 'myecho',
+			'aka' => 'echo',
+			'desc' => 'Echo input',
+			'arg' => 'Text to be echoed',
+			'execute' => 'callmethodarg'),
+		'put' => array('name' => 'put',
+			'desc' => 'Print input to terminal',
+			'arg' => 'Text to be printed',
+			'execute' => 'callmethodarg'),
+		'exec_file' => array('name' => 'exec_file',
+			'desc' => 'Execute a series of commands from a file',
+			'arg' => 'File path',
+			'execute' => 'callmethodarg'),
+	);
 	/* command history */
 	// holds all executed commands
 	private $history = array();
@@ -928,5 +944,42 @@ abstract class EHICore {
 				return;
 			}
 		}
+	}
+	/* commands used only in pure-PHP EH */
+	public function exec_file($file, $paras = '') {
+		// open input file
+		$in = fopen($file, 'r');
+		if(!$in) {
+			echo 'Invalid input file' . PHP_EOL;
+			return false;
+		}
+		$this->currhist++;
+		// set stuff up
+		$this->curr('currscope', 0);
+		$this->curr('vars', array());
+		$this->curr('history', array());
+		$this->curr('histlen', 0);
+		$this->curr('pc', 0);
+		$this->curr('flowctr', 0);
+		$this->curr('flowo', array(
+			'type' => 'global',
+			'start' => 0,
+			'execute' => true,
+		));
+		while(($line = fgets($in)) !== false) {
+			if(!$this->driver($line)) {
+				$this->currhist--;
+				return false;
+			}
+		}
+		$this->currhist--;
+		return true;
+	}
+	protected function myecho($in) {
+		echo $in . PHP_EOL;
+	}
+	protected function put($in) {
+	// like myecho(), but does not put newline
+		echo $in;
 	}
 }

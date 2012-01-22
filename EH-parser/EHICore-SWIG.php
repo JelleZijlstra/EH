@@ -10,6 +10,10 @@ if(!class_exists("EHI")) return;
 define('IS_EHPHP', 0);
 abstract class EHICore extends EHI {
 	private $prompt;
+	/* core commands */
+	protected static $core_commands = array(
+
+	);
 	public function __construct() {
 		parent::__construct();
 	}

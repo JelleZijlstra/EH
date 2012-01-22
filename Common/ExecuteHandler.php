@@ -36,7 +36,7 @@ abstract class ExecuteHandler extends EHICore {
 		'callfuncarg' => 'As callfunc, with $rawarg as the first argument.',
 		'quit' => 'Quit the command line.',
 	);
-	private static $basic_commands = array(
+	private static $ExecuteHandler_commands = array(
 		'execute_help' => array('name' => 'execute_help',
 			'aka' => array('h', 'help', 'man'),
 			'desc' => 'Get help information about the command line or a specific command',
@@ -51,10 +51,6 @@ abstract class ExecuteHandler extends EHICore {
 			'desc' => 'List legal commands',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
-		'exec_file' => array('name' => 'exec_file',
-			'desc' => 'Execute a series of commands from a file',
-			'arg' => 'File path',
-			'execute' => 'callmethodarg'),
 		'shell' => array('name' => 'shell',
 			'aka' => 'exec_catch',
 			'desc' => 'Execute a command from the shell',
@@ -65,15 +61,6 @@ abstract class ExecuteHandler extends EHICore {
 			'desc' => 'Set a configuration variable',
 			'arg' => 'Variables to be set',
 			'execute' => 'callmethod'),
-		'myecho' => array('name' => 'myecho',
-			'aka' => 'echo',
-			'desc' => 'Echo input',
-			'arg' => 'Text to be echoed',
-			'execute' => 'callmethodarg'),
-		'put' => array('name' => 'put',
-			'desc' => 'Print input to terminal',
-			'arg' => 'Text to be printed',
-			'execute' => 'callmethodarg'),
 		'print_paras' => array('name' => 'print_paras',
 			'desc' => 'Print its arguments',
 			'arg' => 'As many as you want',
@@ -91,12 +78,12 @@ abstract class ExecuteHandler extends EHICore {
 	// sets up a handler.
 	// @param commands Array of commands to be added to the object's library
 		$this->current = array();
-		foreach(self::$basic_commands as $command) {
+		foreach(self::$ExecuteHandler_commands as $command)
 			$this->addcommand($command);
-		}
-		if($commands) foreach($commands as $command) {
+		foreach(parent::$core_commands as $command)
 			$this->addcommand($command);
-		}
+		if($commands) foreach($commands as $command)
+			$this->addcommand($command);
 	}
 	public function addcommand($command, array $paras = array()) {
 	// adds a command to the object's library
@@ -480,35 +467,6 @@ abstract class ExecuteHandler extends EHICore {
 		else
 			return 0;
 	}
-	public function exec_file($file, $paras = '') {
-		// open input file
-		$in = fopen($file, 'r');
-		if(!$in) {
-			echo 'Invalid input file' . PHP_EOL;
-			return false;
-		}
-		$this->currhist++;
-		// set stuff up
-		$this->curr('currscope', 0);
-		$this->curr('vars', array());
-		$this->curr('history', array());
-		$this->curr('histlen', 0);
-		$this->curr('pc', 0);
-		$this->curr('flowctr', 0);
-		$this->curr('flowo', array(
-			'type' => 'global',
-			'start' => 0,
-			'execute' => true,
-		));
-		while(($line = fgets($in)) !== false) {
-			if(!$this->driver($line)) {
-				$this->currhist--;
-				return false;
-			}
-		}
-		$this->currhist--;
-		return true;
-	}
 	private function debugecho($var) {
 	// For debugging: adds output to a log file. Useful when debugging methods like fgetc()
 		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
@@ -583,13 +541,6 @@ abstract class ExecuteHandler extends EHICore {
 		}
 		else
 			echo shell_exec($paras['cmd']);
-	}
-	protected function myecho($in) {
-		echo $in . PHP_EOL;
-	}
-	protected function put($in) {
-	// like myecho(), but does not put newline
-		echo $in;
 	}
 	protected function fgetc($infile) {
 	// re-implementation of fgetc that allows multi-byte characters

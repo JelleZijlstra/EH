@@ -68,7 +68,7 @@ abstract class ExecuteHandler extends EHICore {
 		'test' => array('name' => 'test',
 			'desc' => 'Do something random',
 			'arg' => 'None',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 	);
 	public function __construct($commands) {
 		parent::__construct();
@@ -891,7 +891,7 @@ abstract class ExecuteHandler extends EHICore {
 		var_dump(func_get_args());
 		return true;
 	}
-	public function test($arg, $paras) {
+	public function test($paras) {
 	// Test function that might do anything I currently want to test
 	// Currently, returning its argument
 		return $paras[0];

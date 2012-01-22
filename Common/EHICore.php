@@ -27,15 +27,15 @@ abstract class EHICore {
 			'aka' => 'echo',
 			'desc' => 'Echo input',
 			'arg' => 'Text to be echoed',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'put' => array('name' => 'put',
 			'desc' => 'Print input to terminal',
 			'arg' => 'Text to be printed',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'exec_file' => array('name' => 'exec_file',
 			'desc' => 'Execute a series of commands from a file',
 			'arg' => 'File path',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 	);
 	/* command history */
 	// holds all executed commands
@@ -946,7 +946,13 @@ abstract class EHICore {
 		}
 	}
 	/* commands used only in pure-PHP EH */
-	public function exec_file($file, $paras = '') {
+	public function exec_file(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'file'),
+			'checklist' => array('file' => 'File to open'),
+			'errorifempty' => array('file'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// open input file
 		$in = fopen($file, 'r');
 		if(!$in) {
@@ -975,11 +981,23 @@ abstract class EHICore {
 		$this->currhist--;
 		return true;
 	}
-	protected function myecho($in) {
-		echo $in . PHP_EOL;
+	protected function myecho(array $paras) {
+		$first = true;
+		foreach($paras as $value) {
+			if(!$first)
+				echo ' ';
+			$first = false;
+			echo $value;
+		}
+		echo PHP_EOL;
 	}
-	protected function put($in) {
+	protected function put(array $paras) {
 	// like myecho(), but does not put newline
-		echo $in;
-	}
+		$first = true;
+		foreach($paras as $value) {
+			if(!$first)
+				echo ' ';
+			$first = false;
+			echo $value;
+		}
 }

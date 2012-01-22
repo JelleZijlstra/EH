@@ -188,8 +188,12 @@ abstract class ExecuteHandler extends EHICore {
 			}
 		}
 		// handle shortcut
-		if($argument === '*')
+		if($argument === '*') {
+			unset($paras[0]);
+			foreach($this->current as $file)
+				$paras[] = $file;
 			$argarray = $this->current;
+		}
 		else
 			$argarray = array($argument);
 		// output redirection

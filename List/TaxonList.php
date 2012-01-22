@@ -29,7 +29,7 @@ class TaxonList extends FileList {
 			'aka' => array('e'),
 			'desc' => 'Edits a particular taxon',
 			'arg' => 'Taxon name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'newtaxon' => array('name' => 'newtaxon',
 			'aka' => array('add', 'new'),
 			'desc' => 'Adds a taxon to the list',

@@ -27,11 +27,11 @@ abstract class FileList extends ExecuteHandler {
 			'aka' => array('inform', 'i'),
 			'desc' => 'Give information about an entry',
 			'arg' => 'Entry handle',
-			'execute' => 'docurr'),
+			'execute' => 'callmethod'),
 		'set' => array('name' => 'set',
 			'desc' => 'Set a property of a file',
 			'arg' => 'Entry handle, plus fields to be changed in the form "--<field>=<content>"',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'save' => array('name' => 'save',
 			'aka' => array('v'),
 			'desc' => 'Save the catalog to disk',
@@ -194,18 +194,37 @@ abstract class FileList extends ExecuteHandler {
 			throw new EHException('Invalid call to ' . __METHOD__ . ' (method ' . $func . ' invalid)', EHException::E_RECOVERABLE);
 			return false;
 		}
-		$file = array_shift($args);
-		// check file validity. Don't throw a PHP warning here, since this may be an end-user error.
-		if(!$this->has($file)) {
-			echo 'Entry ' . $file . ' does not exist (method ' . $func . ')' . PHP_EOL;
-			return false;
+		// parameters to send to called function
+		$paras = $args[0];
+		// files to call
+		$files = array();
+		// retrieve files, which are numeric entries in the paras array
+		foreach($paras as $key => $value) {
+			if(is_int($key)) {
+				// check validity
+				if(!$this->has($value)) {
+					echo 'Entry ' . $paras[$key] . ' does not exist (method ' . $func . ')' . PHP_EOL;
+					unset($paras[$key]);
+					continue;
+				}
+				// resolve redirect if desired
+				if($func !== 'resolve_redirect' and method_exists(static::$childclass, 'resolve_redirect') and !in_array(array(static::$childclass, $func), self::$resolve_redirect_exclude))
+					$value = $this->c[$value]->resolve_redirect();
+				// check validity (again)
+				if($value === false or !$this->has($value)) {
+					echo 'Entry ' . $paras[$key] . ' does not exist (method ' . $func . ')' . PHP_EOL;
+					unset($paras[$key]);
+					continue;
+				}
+				// add the file to the array of files to be called
+				$files[] = $value;
+				unset($paras[$key]);
+			}
 		}
-		// resolve redirects, if those exist in the implementation and that is desired for this function
-		if($func !== 'resolve_redirect' and method_exists(static::$childclass, 'resolve_redirect') and !in_array(array(static::$childclass, $func), self::$resolve_redirect_exclude))
-			$file = $this->c[$file]->resolve_redirect();
-		if($file === false)
-			return false;
-		return call_user_func_array(array($this->c[$file], $func), $args);
+		$ret = NULL;
+		foreach($files as $file)
+			$ret = call_user_func(array($this->c[$file], $func), $paras);
+		return $ret;
 	}
 	public function __invoke($file) {
 		// invoke calls the child and invokes it

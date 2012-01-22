@@ -27,7 +27,7 @@ abstract class ListEntry extends ExecuteHandler {
 				'aka' => $property,
 				'desc' => 'Edit the field "' . $property . '"',
 				'arg' => 'Optionally, new content of field',
-				'execute' => 'callmethodarg',
+				'execute' => 'callmethod',
 			));
 		}
 		$this->setup_execute = true;
@@ -49,7 +49,7 @@ abstract class ListEntry extends ExecuteHandler {
 			'aka' => array('empty'),
 			'desc' => 'Empty a property of the entry',
 			'arg' => 'Property to be emptied',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 	);
 	// array of variables that shouldn't get dynamically defined set commands
 	private static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');
@@ -205,10 +205,13 @@ abstract class ListEntry extends ExecuteHandler {
 		if(substr($name, 0, 3) === 'set') {
 			$prop = substr($name, 3);
 			if(static::hasproperty($prop)) {
-				$new = $arguments[0];
-				if($new === NULL or $new === '') {
-					if($this->$prop) echo 'Current value: ' . $this->$prop . PHP_EOL;
-					$new = $this->getline(array('prompt' => 'New value: '));
+				$paras = $arguments[0];
+				$new = isset($paras['new']) ? $paras['new'] :
+					(isset($paras[0]) ? $paras[0] : false);
+				if($new === false or $new === '') {
+					if($this->$prop)
+						echo 'Current value: ' . $this->$prop . PHP_EOL;
+					$new = $this->getline('New value: ');
 				}
 				return $this->set(array($prop => $new));
 			}
@@ -233,8 +236,14 @@ abstract class ListEntry extends ExecuteHandler {
 			}
 		}
 	}
-	public function setempty($para) {
-	// sets para $para to empty by calling set()
-		return $this->set(array($para => ''));
+	public function setempty(array $paras) {
+	// sets field to empty by calling set()
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'field'),
+			'checklist' => array('field' => 'Field to be emptied'),
+			'errorifempty' => array('field'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		return $this->set(array($paras['field'] => NULL));
 	}
 }

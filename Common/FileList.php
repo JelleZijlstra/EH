@@ -196,6 +196,9 @@ abstract class FileList extends ExecuteHandler {
 		}
 		// parameters to send to called function
 		$paras = $args[0];
+		// if we're called with a string argument, place it in $paras[0]
+		if(is_string($paras))
+			$paras = array($paras);
 		// files to call
 		$files = array();
 		// retrieve files, which are numeric entries in the paras array

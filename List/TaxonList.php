@@ -116,7 +116,7 @@ class TaxonList extends FileList {
 		return true;
 	}
 	// static stuff for output
-	static public $separate_wiki = array('Rodentia', 'Chiroptera', 'Lipotyphla', 'Primates', 'Muridae', 'Cricetidae', 'Vespertilionidae', 'Carnivora', 'Cetartiodactyla', 'Sciuridae'); // taxa that need separate output files for wiki output
+	static public $separate_wiki = array('Rodentia', 'Chiroptera', 'Lipotyphla', 'Primates', 'Muridae', 'Cricetidae', 'Vespertilionidae', 'Carnivora', 'Artiodactyla', 'Sciuridae'); // taxa that need separate output files for wiki output
 	static private $start_html = "<html>\n<head>\n\t<title>List of currently recognized mammal species</title>\n\t<meta http-equiv='Content-Type' content='text/html;charset=utf-8'>\n\t<link rel='stylesheet' href='list.css'>\n</head>\n<body>"; // text that gets put at the beginning of HTML output
 	static private $end_html = "</body>\n</html>\n"; // at end
 	public $html_out; // resource to write HTML output to

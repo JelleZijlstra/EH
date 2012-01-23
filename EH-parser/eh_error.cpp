@@ -12,8 +12,8 @@ void eh_error(const char *message, errlevel_e level) {
 	if(message)
 		fputs(message, stderr);
 	switch(level) {
-		case efatal_e: 
-			fprintf(stderr, ": EH fatal error\n"); 
+		case efatal_e:
+			fprintf(stderr, ": EH fatal error\n");
 			throw new std::exception;
 		case eparsing_e:
 			fprintf(stderr, ": EH parsing error\n");
@@ -25,7 +25,7 @@ void eh_error(const char *message, errlevel_e level) {
 			fprintf(stderr, ": EH runtime error\n");
 			break;
 		case enotice_e:
-			fprintf(stderr, ": EH notice\n"); 
+			fprintf(stderr, ": EH notice\n");
 			break;
 	}
 }

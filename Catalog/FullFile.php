@@ -877,6 +877,19 @@ class FullFile extends ListEntry {
 	public function isthesis() {
 		return preg_match('/^(PhD|MSc|BSc) thesis/', $this->publisher);
 	}
+	public function thesis_getuni() {
+	// get the university for a thesis
+		if(!$this->isthesis())
+			return false;
+		// "PhD thesis, " is 12 letters
+		return substr($this->publisher, 12);
+	}
+	public function thesis_gettype() {
+		if(!$this->isthesis())
+			return false;
+		// first three letters
+		return substr($this->publisher, 0, 3);
+	}
 	public function supp_getbasic() {
 		$out = preg_replace('/^.*\//u', '', $this->title);
 		if($this->p->has($out))
@@ -1458,6 +1471,17 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= "$this->publisher, ";
 				if($this->location) $out .= "$this->location, ";
 				$out .= "$this->bookpages pp.";
+				break;
+			case 'thesis':
+				$out .= "<i>$this->title</i>. Unpublished ";
+				switch($this->thesis_gettype()) {
+					case 'PhD': $out .= 'Ph.D.'; break;
+					case 'MSc': $out .= 'M.Sc.'; break;
+					case 'BSc': $out .= 'B.Sc.'; break;
+				}
+				$out .= ", ";
+				$out .= $this->thesis_getuni();
+				$out .= ", $this->bookpages pp.";
 				break;
 			default:
 				$out .= "$this->title. ";

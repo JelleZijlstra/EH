@@ -491,9 +491,9 @@ class CsvList extends FileList {
 		}
 		echo 'done' . PHP_EOL;
 	}
-	private function find_dups($key, $needle, $paras = '') {
-		if(!isset($paras['print'])) $paras['print'] = false;
-		if(!isset($paras['printresult'])) $paras['printresult'] = false;
+	private function find_dups($key, $needle, array $paras = array()) {
+		if(!isset($paras['quiet']))
+			$paras['quiet'] = true;
 		$paras[$key] = $needle;
 		$files = $this->bfind($paras);
 		if(($files === false) or (count($files) === 0))

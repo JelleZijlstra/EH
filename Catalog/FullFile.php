@@ -285,7 +285,7 @@ class FullFile extends ListEntry {
 			echo 'Not a file; cannot open' . PHP_EOL;
 		return true;
 	}
-	public function remove() {
+	public function remove(array $paras = array()) {
 	// remove a file
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,

@@ -169,11 +169,13 @@ class Taxon extends ListEntry {
 			return $this->p->par[$this->name];
 	}
 	private function call_children($func, array $paras) {
-		if(!isset($this->p->par[$this->name])) return;
+		if(!isset($this->p->par[$this->name]))
+			return;
 		$children = $this->p->par[$this->name];
 		foreach($children as $child) {
-			$this->p->$func($child, $paras);
+			$paras[] = $child;
 		}
+		$this->p->$func($paras);
 	}
 	public function html(array $paras = array()) {
 	// print taxon
@@ -225,7 +227,14 @@ class Taxon extends ListEntry {
 		}
 		return $out;
 	}
-	public function wiki($paras) {
+	public function wiki(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'taxon' => 'Taxon associated with the file we are writing to'
+			),
+			'errorifempty' => array('taxon'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!$this->isextant()) return;
 		switch($this->rank) {
 			// omit some taxa

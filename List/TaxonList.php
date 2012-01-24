@@ -34,7 +34,7 @@ class TaxonList extends FileList {
 			'aka' => array('add', 'new'),
 			'desc' => 'Adds a taxon to the list',
 			'arg' => 'Taxon name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'remove' => array('name' => 'remove',
 			'desc' => 'Removes a taxon',
 			'arg' => 'Taxon name',
@@ -229,12 +229,28 @@ class TaxonList extends FileList {
 	public function cli() {
 		$this->setup_commandline('list');
 	}
-	public function newtaxon($name, array $paras = array()) {
-		while($this->has($name)) {
-			echo 'A taxon with this name already exists.' . PHP_EOL;
-			$name = $this->getline('Enter a new name: ');
-		}
-		return $this->add_entry(new Taxon($name, 'n'), array('isnew' => true));
+	public function newtaxon(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'name'),
+			'checklist' => array('name' => 'Name of new taxon'),
+			'askifempty' => array('name'),
+			'checkparas' => array(
+				'name' => function($in) {
+					global $taxonlist;
+					if($taxonlist->has($in)) {
+						echo 'A taxon with this name already exists.' . PHP_EOL;
+						return false;
+					} else {
+						return true;
+					}
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		return $this->add_entry(
+			new Taxon($paras['name'], 'n'),
+			array('isnew' => true)
+		);
 	}
 	public function remove($name) {
 		if(!$this->has($name)) return false;

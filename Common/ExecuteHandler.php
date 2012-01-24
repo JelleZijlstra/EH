@@ -496,7 +496,7 @@ abstract class ExecuteHandler extends EHICore {
 						if(!isset($paras[$para])) {
 							continue;
 						}
-						if(!$func($paras[$para])) {
+						if(!$func($paras[$para], $paras)) {
 							$showerror('invalid value "' . $paras[$para] . '" for parameter "' . $para . '"');
 						}
 					}

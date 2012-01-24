@@ -15,7 +15,7 @@ class TaxonList extends FileList {
 			'aka' => array('text'),
 			'desc' => 'Outputs a text version of the list for a particular genus',
 			'arg' => 'Genus to be listed',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'outputwiki' => array('name' => 'outputwiki',
 			'aka' => array('wiki'),
 			'desc' => 'Ouputs a wikitext version of the list',
@@ -121,12 +121,18 @@ class TaxonList extends FileList {
 	static private $end_html = "</body>\n</html>\n"; // at end
 	public $html_out; // resource to write HTML output to
 	public $refsend_p; // parser for comments
-	public function outputtext($taxon, $paras = '') {
-		if(!$taxon or ($this->c[$taxon]->rank !== 'genus')) {
+	public function outputtext(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'taxon'),
+			'checklist' => array('taxon' => 'Taxon to output'),
+			'errorifempty' => array('taxon'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if($this->c[$paras['taxon']]->rank !== 'genus') {
 			echo 'Invalid taxon' . PHP_EOL;
 			return false;
 		}
-		$text = $this->text($taxon);
+		$text = $this->c[$paras['taxon']]->text();
 		if($text) {
 			echo $text;
 			return true;

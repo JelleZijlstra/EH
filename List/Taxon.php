@@ -214,14 +214,13 @@ class Taxon extends ListEntry {
 		}
 		else
 			$pre = "\t";
-		$out .= PHP_EOL . $pre . ucfirst($this->rank) . ': ' . $this->name . PHP_EOL;
+		$out = PHP_EOL . $pre . ucfirst($this->rank) . ': ' . $this->name . PHP_EOL;
 		$out .= $pre . 'Authority: ' . $this->constructauthority() . PHP_EOL;
 		if($this->originalref)
 			$out .= $pre . 'Original reference: ' . $this->parse('originalref', 'simple') . PHP_EOL;
 		if($this->comments)
 			$out .= $pre . 'Comments: ' . $this->parse('comments', 'refend');
-		else
-			$out .= PHP_EOL;
+		$out .= PHP_EOL;
 		if($children = $this->getchildren()) foreach($children as $child) {
 			$out .= $this->p->text($child);
 		}

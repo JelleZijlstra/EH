@@ -11,26 +11,40 @@ class GeneralList extends ExecuteHandler {
 		'create' => array('name' => 'create',
 			'desc' => 'Create new GeneralList file',
 			'arg' => 'Input file name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 	);
 	public function __construct() {
 		parent::__construct(self::$GeneralList_commands);
 		$this->cli();
 	}
-	public function create($file) {
+	public function create(array $paras) {
 	// $file: input CSV file
-		if(!is_readable($file)) {
-			echo 'No such file' . PHP_EOL;
-			return false;
-		}
-		if(substr($file, -4) !== '.csv') {
-			echo 'Unsupported file type' . PHP_EOL;
-			return false;
-		}
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'file'),
+			'checklist' => array(
+				'file' => 'Name of input CSV file',
+			),
+			'errorifempty' => array('file'),
+			'checkparas' => array(
+				'file' => function($in) {
+					if(!is_readable($in)) {
+						echo 'No such file' . PHP_EOL;
+						return false;
+					}
+					if(substr($in, -4) !== '.csv') {
+						echo 'Unsupported file type' . PHP_EOL;
+						return false;
+					}
+					return true;
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// set name used
-		$classname = ucfirst(substr($file, 0, -4));
-		$in = fopen($file, 'r');
-		if(!$in) return false;
+		$classname = ucfirst(substr($paras['file'], 0, -4));
+		$in = fopen($paras['file'], 'r');
+		if(!$in)
+			return false;
 		$firstline = fgetcsv($in);
 		if(!$firstline) {
 			echo 'Unable to retrieve data labels' . PHP_EOL;
@@ -186,4 +200,3 @@ class {$classname}Entry extends ListEntry {
 		$this->setup_commandline('generallist');
 	}
 }
-?>

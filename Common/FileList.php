@@ -88,7 +88,7 @@ abstract class FileList extends ExecuteHandler {
 		'doall' => array('name' => 'doall',
 			'desc' => 'Execute a command on all list entries',
 			'arg' => 'Command',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'sort' => array('name' => 'sort',
 			'desc' => 'Sort the c array',
 			'arg' => 'Field to sort by',
@@ -239,11 +239,12 @@ abstract class FileList extends ExecuteHandler {
 			$file = $this->c[$file]->resolve_redirect();
 		return $this->c[$file]();
 	}
-	public function doall($func, array $paras = array()) {
+	public function doall(array $paras) {
 	// execute a function on all files in the list. Don't actually execute the command, since that is prohibitively expensive (requires EH to be initialized on every single ListEntry).
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
+				0 => 'Function to execute',
 				'continueiffalse' => 'Whether the command should continue calling child objects if one call returns "false"',
 				'askafter' => 'Ask the user whether he wants to continue after n child objects',
 				'countfalse' => 'Whether to count calls that return false for the purposes of askafter',
@@ -253,13 +254,14 @@ abstract class FileList extends ExecuteHandler {
 			'checkfunc' => function($in) {
 				return true;
 			},
+			'errorifempty' => array(0),
 			'default' => array(
 				'continueiffalse' => false,
 				'countfalse' => false,
 				'askafter' => 100,
 			),
-			'name' => __FUNCTION__,
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$func = $paras[0];
 		if(!method_exists(static::$childclass, $func)) {
 			echo 'Method does not exist: ' . $func . PHP_EOL;
 			return false;

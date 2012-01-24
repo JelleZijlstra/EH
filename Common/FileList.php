@@ -56,7 +56,7 @@ abstract class FileList extends ExecuteHandler {
 			'aka' => array('list'),
 			'desc' => 'List content for a given field',
 			'arg' => 'Field',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'bfind' => array('name' => 'bfind',
 			'desc' => 'Find files according to multiple criteria',
 			'arg' => 'Set of arguments according to the syntax --<field>=<content>',
@@ -354,11 +354,14 @@ abstract class FileList extends ExecuteHandler {
 			echo $child->name . PHP_EOL;
 	}
 	/* finding files etcetera */
-	public function mlist($field, $paras = '') {
+	public function mlist(array $paras) {
 	// @paras: array('sort' => 'ksort', 'function' => , 'isfunc' => false, 'print' => <bool>)
+		$childclass = static::$childclass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'field'),
 			'checklist' => array(
+				'field' => 'Field to separate by',
 				'sort' => 'Sort function to be applied to results',
 				'function' => 'Function to be applied to results',
 				'isfunc' => 'Is the query a function?',
@@ -375,64 +378,62 @@ abstract class FileList extends ExecuteHandler {
 				'function' => '',
 				'isfunc' => false,
 				'groupby' => '',
-				'sort' => '',
+				'sort' => 'ksort',
+			),
+			'checkparas' => array(
+				'function' => function($in) {
+					return ($in === '') or function_exists($in);
+				},
+				'sort' => function($in) {
+					return function_exists($in);
+				},
+				'field' => function($in, $paras) use($childclass) {
+					if($paras['isfunc']) {
+						if(!method_exists($childclass, $in)) {
+							echo 'No such method: ' . $in . PHP_EOL;
+							return false;
+						}
+					}
+					else if(!$childclass::hasproperty($in)) {
+						echo 'No such property: ' . $in . PHP_EOL;
+						return false;
+					}
+					return true;
+				},
+				'groupby' => function($in) use($childclass) {
+					return ($in === '') or $childclass::hasproperty($in);
+				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$arr = $paras['array'];
+		$field = $paras['field'];
 		if(!is_array($this->$arr)) {
 			echo 'Invalid array' . PHP_EOL;
 			return false;
 		}
-		$childclass = static::$childclass;
 		// check for groupby
 		if($paras['groupby']) {
-			if(!$childclass::hasproperty($paras['groupby'])) {
-				echo 'No such property: ' . $paras['groupby'] . PHP_EOL;
-				return false;
-			}
 			$childparas = $paras;
 			unset($childparas['groupby']);
-			$values = $this->mlist($paras['groupby'], $childparas);
+			$childparas['field'] = $paras['groupby'];
+			$values = $this->mlist($childparas);
 			if(!is_array($values)) {
 				echo 'Error retrieving value list' . PHP_EOL;
 				return false;
 			}
 			$out = array();
+			$childparas['field'] = $field;
 			foreach($values as $value => $ignore) {
 				$childparas[$paras['groupby']] = $value;
-				if($paras['print']) echo PHP_EOL . $paras['groupby'] . ': ' . $value . PHP_EOL;
-				$out[$value] = $this->mlist($field, $childparas);
+				if($paras['print'])
+					echo PHP_EOL . $paras['groupby'] . ': ' . $value . PHP_EOL;
+				$out[$value] = $this->mlist($childparas);
 			}
 			return $out;
 		}
-		// detect method
-		if(substr($field, -2) === '()') {
-			$field = substr($field, 0, -2);
-			$paras['isfunc'] = true;
-		}
-		// check whether property is valid
-		if($paras['isfunc']) {
-			if(!method_exists($childclass, $field)) {
-				echo 'No such method: ' . $field . PHP_EOL;
-				return false;
-			}
-		}
-		else {
-			if(!$childclass::hasproperty($field)) {
-				echo 'No such property: ' . $field . PHP_EOL;
-				return false;
-			}
-		}
-		if($paras['function'] and !function_exists($paras['function'])) {
-			echo 'No such function: ' . $paras['function'] . PHP_EOL;
-			return false;
-		}
-		if($paras['sort'] and !function_exists($paras['sort'])) {
-			echo 'No such function: ' . $paras['sort'] . PHP_EOL;
-			return false;
-		}
 		// test whether we need bfind
 		$dobfind = false;
+		$bfindparas = array();
 		foreach($paras as $para => $content) {
 			if($childclass::hasproperty($para)) {
 				$dobfind = true;
@@ -460,7 +461,6 @@ abstract class FileList extends ExecuteHandler {
 			$values[$value]++;
 		}
 		// sort (arsort to list by number, ksort to list alphabetically)
-		if(!$paras['sort']) $paras['sort'] = 'ksort';
 		$paras['sort']($values);
 		if($paras['print']) {
 			echo strtoupper($field) . PHP_EOL;
@@ -539,7 +539,7 @@ abstract class FileList extends ExecuteHandler {
 				$query['field'] = $key;
 				$query['content'] = $para;
 				// test special syntax
-				switch($para[0]) {
+				if(strlen($para)) switch($para[0]) {
 					case '/':
 						if(!self::testregex($para)) {
 							echo 'Invalid regex: ' . $para . PHP_EOL;

@@ -313,7 +313,7 @@ abstract class FileList extends ExecuteHandler {
 		else
 			return false;
 	}
-	public function formatall($paras = array()) {
+	public function formatall(array $paras) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array('w' => 'Write output to a file'),
@@ -469,7 +469,7 @@ abstract class FileList extends ExecuteHandler {
 		}
 		return $values;
 	}
-	public function bfind($paras = '') {
+	public function bfind(array $paras) {
 		$childclass = static::$childclass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -672,42 +672,7 @@ abstract class FileList extends ExecuteHandler {
 			case 'count': return $count;
 		}
 	}
-	public function find($key, $needle, $paras = '') {
-	// Wrapper for bfind. Is this used anywhere?
-	// @paras: /array(function => <string>, openfiles => <bool>, isfunc => <bool>, print => <bool>, printresult => <bool>, isregex => <bool>, current => true)
-		trigger_error("FileList::find is deprecated", E_USER_NOTICE);
-		$paras[$key] = $needle;
-		return $this->bfind($paras);
-	}
-	public function find_input($key = '') {
-		$childclass = static::$childclass;
-		while(true) {
-			if(!$key) {
-				$key = $this->getline(array('prompt' => 'Key to search on: '));
-			}
-			if(strpos($key, '()') !== false) {
-				$paras['isfunc'] = true;
-				$rkey = substr($key, 0, -2);
-				if(!method_exists($childclass, $rkey)) {
-					echo 'No such method' . PHP_EOL;
-					unset($key);
-				}
-				else break;
-			}
-			else if(!$childclass::hasproperty($key)) {
-				echo 'No such property' . PHP_EOL;
-				unset($key);
-			}
-			else break;
-		}
-		while(true) {
-			$value = $this->getline(array('prompt' => 'Value to search for: '));
-			if($value === 'q') return true;
-			if($value) break;
-		}
-		$this->bfind(array($key => $value));
-	}
-	public function find_cmd(array $paras = array()) {
+	public function find_cmd(array $paras) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(

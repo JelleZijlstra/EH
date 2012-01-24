@@ -128,7 +128,7 @@ function simplify($in) {
 function convertfile($in, $out) {
 	static $started;
 	if(!$started) {
-		exec_catch('/Applications/OpenOffice.org.app/Contents/MacOS/soffice -headless -accept="socket,host=127.0.0.1,port=8100;urp;" -nofirststartwizard &');
+		shell_exec('/Applications/OpenOffice.org.app/Contents/MacOS/soffice -headless \'-accept="socket,host=127.0.0.1,port=8100;urp;"\' -nofirststartwizard &');
 		$started = true;
 	}
 	exec_catch('java -jar /Users/jellezijlstra/Documents/Programs/jodconverter-2.2.2/lib/jodconverter-cli-2.2.2.jar ' . $in . ' ' . $out);

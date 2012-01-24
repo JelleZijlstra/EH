@@ -319,7 +319,49 @@ abstract class ExecuteHandler extends EHICore {
 			print_r($in);
 	}
 	protected function process_paras(&$paras, $pp_paras = NULL) {
-	// processes a function's $paras array, as specified in the $pp_paras parameter
+		/*
+		 *    int ExecuteHandler::process_paras(array &$paras, array $pp_paras)
+		 *
+		 * This method processes a function's $paras array in the way specified
+		 * in the $pp_paras parameter. In addition, it will print a summary of
+		 * the method's usage if $paras['help'] is set. process_paras() will
+		 * return 0 if it is successful and PROCESS_PARAS_ERROR_FOUND if it has
+		 * detected an error in its input.
+		 *
+		 * $pp_paras is an associative array with the following members:
+		 *   'name': Name of the calling function. This is used to generate the
+		 *      information printed by $paras['help'].
+		 *   'synonyms': An associative array where the keys denote synonyms
+		 *      and the values the normalized names for parameters in $paras.
+		 *      For example, if 'synonyms' contains array('f' => 'force'), the
+		 *      value in $paras['f'] will be moved to $paras['force'].
+		 *   'checklist': An associative array with the names of parameters in
+		 *      the keys and a description of their usage in the values. Any
+		 *      parameter in $paras that is not a key in 'checklist' will
+		 *      generate an error (except if 'checkfunc' is set; see below). The
+		 *      descriptions are used by $paras['help'].
+		 *   'checkfunc': A function that is called if process_paras()
+		 *      encounters a key in $paras that is not in 'checklist'. If the
+		 *      functions returns true, the key is accepted; if not, an error
+		 *      is thrown.
+		 *   'default': An associative array where the key is a $paras key and
+		 *      the value is a default value. If the key is not set in $paras,
+		 *      the default value is inserted.
+		 *   'errorifempty': An array of keys. If any of the keys in this array
+		 *      is not set in $paras, an error is thrown.
+		 *   'askifempty': Similar to 'errorifempty', but instead of throwing
+		 *      an error, process_paras() asks the user to provide a value for
+		 *      the parameter.
+		 *   'checkparas': An associative array where the key is $paras key and
+		 *      the value is a function. process_paras() will call the function
+		 *      with the value for the key in $paras as its argument, and will
+		 *      throw an error if the function returns false.
+		 *
+		 * The order of the $pp_paras members is significant, because they will
+		 * be executed sequentially. For example, if 'checklist' is placed
+		 * before 'synonyms', 'checklist' will throw an error for synonyms
+		 * that are not listed separately in 'checklist'.
+		 */
 		if(!is_array($paras)) {
 			echo 'Error: invalid parameters given' . PHP_EOL;
 			return PROCESS_PARAS_ERROR_FOUND;
@@ -357,12 +399,18 @@ abstract class ExecuteHandler extends EHICore {
 			return PROCESS_PARAS_ERROR_FOUND;
 		}
 		$founderror = false;
+		$showerror = function($msg) use($pp_paras, &$founderror) {
+			if(isset($pp_paras['name'])) {
+				echo $pp_paras['name'] . ': ';
+			}
+			echo 'error: ' . $msg . PHP_EOL;
+			$founderror = true;
+		};
 		foreach($pp_paras as $pp_key => $pp_value) {
 			switch($pp_key) {
 				case 'synonyms': // rename paras
 					if(!is_array($pp_value)) {
-						echo 'Error: synonyms parameter is not an array' . PHP_EOL;
-						$founderror = true;
+						$showerror('synonyms parameter is not an array');
 						break;
 					}
 					foreach($pp_value as $key => $result) {
@@ -373,8 +421,9 @@ abstract class ExecuteHandler extends EHICore {
 					}
 					break;
 				case 'askifempty': // if a para is empty, ask user for input
-					if(!is_array($pp_value))
+					if(!is_array($pp_value)) {
 						$pp_value = array($pp_value);
+					}
 					foreach($pp_value as $key) {
 						if(!isset($paras[$key])) {
 							// paras for the menu() call
@@ -382,9 +431,11 @@ abstract class ExecuteHandler extends EHICore {
 								'head' => $key . ': ',
 								'options' => array('q'),
 							);
+							// use checkparas validation if possible
 							if(isset($pp_paras['checkparas'][$key])) {
 								$menu_paras['validfunction'] = $pp_paras['checkparas'][$key];
 							}
+							// else accept anything
 							else {
 								$menu_paras['validfunc'] = function($in) {
 									return true;
@@ -397,19 +448,18 @@ abstract class ExecuteHandler extends EHICore {
 					}
 					break;
 				case 'errorifempty': // if a para is empty, throw an error
-					if(!is_array($pp_value))
+					if(!is_array($pp_value)) {
 						$pp_value = array($pp_value);
+					}
 					foreach($pp_value as $key) {
 						if(!isset($paras[$key])) {
-							echo 'Error: parameter ' . $key . ' should be set' . PHP_EOL;
-							$founderror = true;
+							$showerror('parameter ' . $key . ' should be set');
 						}
 					}
 					break;
 				case 'default': // set default values for paras
 					if(!is_array($pp_value)) {
-						echo 'Error: default parameter is not an array' . PHP_EOL;
-						$founderror = true;
+						$showerror('default parameter is not an array');
 						break;
 					}
 					foreach($pp_value as $key => $result) {
@@ -419,36 +469,35 @@ abstract class ExecuteHandler extends EHICore {
 					break;
 				case 'checklist': // check that all paras given are legal
 					if(!is_array($pp_value)) {
-						echo 'Error: checklist parameter is not an array' . PHP_EOL;
-						$founderror = true;
+						$showerror('checklist parameter is not an array');
 						break;
 					}
 					foreach($paras as $key => $result) {
 						if(!array_key_exists($key, $pp_value)) {
 							// if the check function returns true, do not warn
-							if(isset($pp_paras['checkfunc'])) {
-								if($pp_paras['checkfunc']($key))
-									continue;
+							if(isset($pp_paras['checkfunc']) and $pp_paras['checkfunc']($key)) {
+								continue;
 							}
 							// for now, ignore para 0, which is automatically set
-							if($key === 0)
+							if($key === 0) {
 								continue;
-							echo 'Warning: unrecognized parameter ' .
-								$key .
-								PHP_EOL;
+							}
+							$showerror('unrecognized parameter "' . $key . '"');
 						}
 					}
 					break;
 				case 'checkparas': // functions used to check the validity of input for a given para
 					if(!is_array($pp_value)) {
-						echo 'Error: checkparas parameter is not an array' . PHP_EOL;
-						$founderror = true;
+						$showerror('checkparas parameter is not an array');
 						break;
 					}
 					foreach($pp_value as $para => $func) {
+						// errorifempty may already have yelled
+						if(!isset($paras[$para])) {
+							continue;
+						}
 						if(!$func($paras[$para])) {
-							echo 'Error: invalid value "' . $paras[$para] . '" for parameter "' . $para . '"' . PHP_EOL;
-							$founderror = true;
+							$showerror('invalid value "' . $paras[$para] . '" for parameter "' . $para . '"');
 						}
 					}
 					break;
@@ -457,8 +506,7 @@ abstract class ExecuteHandler extends EHICore {
 					// ignore, used internally in other places
 					break;
 				default:
-					echo 'Error: unrecognized parameter ' . $pp_key . PHP_EOL;
-					$founderror = true;
+					$showerror('unrecognized process_paras parameter ' . $pp_key);
 					break;
 			}
 		}

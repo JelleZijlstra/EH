@@ -1452,15 +1452,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= "<i>$this->journal</i>, ";
 				// TODO: series
 				$out .= "<b>$this->volume</b>, ";
-				if($this->start === $this->end)
-					$out .= $this->start;
-				else
-					$out .= $this->start . "–" . $this->end;
+				$out .= $this->pages();
 				break;
 			case 'book':
 				$out .= "<i>$this->title.</i> ";
 				$out .= "$this->publisher, ";
-				if($this->location) $out .= "$this->location, ";
+				if($this->location)
+					$out .= "$this->location, ";
 				$out .= "$this->bookpages pp.";
 				break;
 			case 'chapter':
@@ -1469,7 +1467,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= " (eds). ";
 				$out .= "<i>$this->booktitle.</i> ";
 				$out .= "$this->publisher, ";
-				if($this->location) $out .= "$this->location, ";
+				if($this->location)
+					$out .= "$this->location, ";
 				$out .= "$this->bookpages pp.";
 				break;
 			case 'thesis':
@@ -1774,6 +1773,22 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		$out .= ' (' . $this->year . ')';
 		return $out;
+	}
+	private function pages() {
+	// return a string representing the pages of the article
+		if($this->start and $this->end) {
+			// single page
+			if($this->start === $this->end)
+				return (string) $this->start;
+			// normal
+			else
+				return $this->start . '–' . $this->end;
+		}
+		// Palaeontologia Electronica and friends
+		else if($this->start)
+			return $this->start;
+		else
+			return false;
 	}
 	/* ADDING DATA */
 	public function newadd() {

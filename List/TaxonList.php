@@ -38,11 +38,11 @@ class TaxonList extends FileList {
 		'remove' => array('name' => 'remove',
 			'desc' => 'Removes a taxon',
 			'arg' => 'Taxon name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'merge' => array('name' => 'merge',
 			'desc' => 'Merge a taxon into another',
 			'arg' => 'Taxon name; optionally --into=<taxon to be merged into>',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 	);
 	function __construct() {
 		parent::__construct(self::$TaxonList_commands);
@@ -252,10 +252,20 @@ class TaxonList extends FileList {
 			array('isnew' => true)
 		);
 	}
-	public function remove($name) {
-		if(!$this->has($name)) return false;
-		unset($this->par[$this->c[$name]->parent][$name]);
-		unset($this->c[$name]);
+	public function remove(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'name'),
+			'checklist' => array('name' => 'Taxon to be removed'),
+			'checkparas' => array(
+				'name' => function($in) {
+					global $taxonlist;
+					return $taxonlist->has($in);
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		unset($this->par[$this->c[$paras['name']]->parent][$paras['name']]);
+		unset($this->c[$paras['name']]);
 	}
 	public function sortchildren($name) {
 		if(!$this->par[$name]) return false;

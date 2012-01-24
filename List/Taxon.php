@@ -149,7 +149,7 @@ class Taxon extends ListEntry {
 						$oldname = $this->name;
 						$this->name = $content;
 						$this->p->add_entry($this);
-						$this->p->remove($oldname);
+						$this->p->remove(array($oldname));
 						break;
 					default:
 						$this->$field = $content;
@@ -587,7 +587,8 @@ class Taxon extends ListEntry {
 		return in_array($this->rank, array('superfamily', 'family', 'subfamily', 'tribe', 'subtribe'));
 	}
 	public function remove() {
-		$this->p->remove($this->name);
+	// Wrapper function, do we really need it?
+		$this->p->remove(array($this->name));
 	}
 	public function isextant() {
 		if($this->isextant) return true;
@@ -598,25 +599,20 @@ class Taxon extends ListEntry {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
-				0 => 'Taxon to be merged',
 				'into' => 'Taxon that this taxon is to be merged into',
 			),
-			'default' => array(
-				'into' => false,
-			),
-			'errorifempty' => array(
-				0
+			'askifempty' => array('into'),
+			'checkparas' => array(
+				'into' => function($in) {
+					global $taxonlist;
+					return $taxonlist->has($in);
+				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		while(!$this->p->has($paras['into'])) {
-			$paras['into'] = $this->getline('Taxon to be merged into: ');
-			if($paras['into'] === 'q')
-				return false;
-		}
 		$children = $this->getchildren();
 		foreach($children as $child)
-			$this->p->set($child, array('parent' => $paras['into']));
-		$this->p->remove($this->name);
+			$this->p->set(array(0 => $child, 'parent' => $paras['into']));
+		$this->p->remove(array($this->name));
 		return true;
 	}
 	private function sortchildren() {

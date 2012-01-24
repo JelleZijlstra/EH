@@ -369,8 +369,8 @@ abstract class FileList extends ExecuteHandler {
 				'groupby' => 'Column to group results by',
 				'array' => 'Array to search in',
 			),
-			'checkfunc' => function($in) {
-				return true;
+			'checkfunc' => function($in) use($childclass) {
+				return $childclass::hasproperty($in);
 			},
 			'default' => array(
 				'print' => true,
@@ -470,6 +470,7 @@ abstract class FileList extends ExecuteHandler {
 		return $values;
 	}
 	public function bfind($paras = '') {
+		$childclass = static::$childclass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(
@@ -497,10 +498,8 @@ abstract class FileList extends ExecuteHandler {
 				'array' =>
 					'The array to search in',
 			),
-			'checkfunc' => function($para) {
-				return true;
-				// when we get to PHP 5.4, instead do:
-				// return property_exists($this, $para);
+			'checkfunc' => function($in) use($childclass) {
+				return $childclass::hasproperty($in);
 			},
 			'default' => array(
 				'quiet' => false,
@@ -514,6 +513,11 @@ abstract class FileList extends ExecuteHandler {
 				'function' => false,
 				'isfunc' => false,
 			),
+			'checkparas' => array(
+				'openfiles' => function($in) use($childclass) {
+					return ($in === false) or method_exists($childclass, 'openf');
+				}
+			),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
 		// be really quiet
@@ -522,9 +526,6 @@ abstract class FileList extends ExecuteHandler {
 			$paras['printvalues'] = false;
 			$paras['printresult'] = false;
 		}
-		$childclass = static::$childclass;
-		if($paras['openfiles'] and !method_exists($childclass, 'openf'))
-			$paras['openfiles'] = false;
 		// allow searching different arrays than $this->c;
 		$arr = $paras['array'];
 		if(!is_array($this->$arr)) {
@@ -592,8 +593,10 @@ abstract class FileList extends ExecuteHandler {
 			}
 		}
 		if(count($queries) === 0) {
-			if($paras['printresult']) echo 'Invalid query' . PHP_EOL;
-			if($this->config['debug']) print_r($paras);
+			if($paras['printresult'])
+				echo 'Invalid query' . PHP_EOL;
+			if($this->config['debug'])
+				print_r($paras);
 			return false;
 		}
 		// do the search
@@ -641,19 +644,23 @@ abstract class FileList extends ExecuteHandler {
 					echo $key . ': ' . $value . PHP_EOL;
 			}
 			// TODO: add method of the sort where $paras['dothis'] = array('openfiles') will replace this
-			if($paras['openfiles']) $file->openf();
+			if($paras['openfiles']) {
+				$file->openf();
+			}
 		}
 		$count = count($out);
 		if($paras['printresult']) {
-			if($count === 0)
+			if($count === 0) {
 				echo 'No entries found' . PHP_EOL;
-			else
+			} else {
 				echo $count . ' entries found' . PHP_EOL;
+			}
 		}
 		if($count !== 0 and $paras['setcurrent']) {
 			$this->current = array();
-			foreach($out as $result)
+			foreach($out as $result) {
 				$this->current[] = $result->name;
+			}
 		}
 		switch($paras['return']) {
 			case 'objectarray': return $out;

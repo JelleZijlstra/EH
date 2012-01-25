@@ -5,6 +5,11 @@ object. The language used in these commands is called "eh" and has two
 implementations, a pure PHP, but limited parser, and a full-featured parser
 written in C++ using a yacc grammar.
 
+The code was written and mostly run on a Mac OS X system, and some components
+are running on Linux systems. However, I can't guarantee that this code will do
+anything resembling what it is supposed to do on any systems other than my own;
+use it at your own risk.
+
 This repository contains the following main folders:
 - AvidaInterface: an interface to the Avida digital evolution engine. Used in an
   OEB 192 class project.

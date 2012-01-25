@@ -782,31 +782,55 @@ abstract class FileList extends ExecuteHandler {
 			default: return false;
 		}
 	}
-	public function getstats($field, array $paras = array()) {
+	public function getstats(array $paras) {
 	// @para $field String field that is used
 	// @para $paras Array associative arrays with pairs of fields and values to search in
-		if(!is_array($paras)) return false;
-		$print = isset($paras['print']) ? $paras['print'] : true;
 		$childclass = static::$childclass;
-		if(!$childclass::hasproperty($field)) {
-			echo 'Invalid property' . PHP_EOL;
-			return false;
-		}
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'field', 'q' => 'quiet'),
+			'checklist' => array(
+				'field' => 'Field to give statistics for',
+				'includefiles' => 'Whether to include files in the output',
+				'groupby' => 'Parameter to groupby',
+			),
+			'checkfunc' => function($in) {
+				// paras are passed to bfind/mlist, which will check them more fully
+				return true;
+			},
+			'default' => array('includefiles' => false),
+			'checkparas' => array(
+				'field' => function($in) use ($childclass) {
+					return $childclass::hasproperty($in);
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$field = $paras['field'];
+		unset($paras['field']);
 		// bfind will check the input for us
 		$paras[$field] = '/^\s*\d+(\.\d+)?\s*$/'; // only include things where the field is actually numeric
-		if($print)
-			$paras['printentries'] = false;
-		else
-			$paras['quiet'] = true;
+		// do "groupby" if desired
+		if($paras['groupby']) {
+			$groupby = $paras['groupby'];
+		}
+		// perform search
 		$files = $this->bfind($paras);
-		if(!$files) return false;
+		if(!$files) {
+			return false;
+		}
+		// assemble output
 		$out = array();
 		$out['count'] = count($files);
+		// add statistics
 		foreach(array('average', 'stdev', 'smallest', 'largest') as $var) {
 			$out[$var] = $this->$var($files, $field);
-			if($print) echo ucfirst($var) . ': ' . round($out[$var], 3) . PHP_EOL;
+			if(!$paras['quiet']) {
+				echo ucfirst($var) . ': ' . round($out[$var], 3) . PHP_EOL;
+			}
 		}
-		if($paras['includefiles']) $out['files'] = $files;
+		if($paras['includefiles']) {
+			$out['files'] = $files;
+		}
 		return $out;
 	}
 	public function listz($field, array $paras = array()) {

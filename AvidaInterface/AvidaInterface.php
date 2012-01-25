@@ -1,4 +1,11 @@
 <?php
+/*
+ *
+ * An interface for the Avida digital evolution platform.
+ *
+ * I've updated this file when I changed the EH interfaces, but not tested it,
+ * so it may not currently work.
+ */
 require_once(__DIR__ . "/../Common/common.php");
 require_once(BPATH . "/Common/ExecuteHandler.php");
 define('AVIDADIR', "/Users/jellezijlstra/Desktop/Avida");
@@ -31,7 +38,7 @@ class AvidaInterface extends ExecuteHandler {
 		'avida_run' => array('name' => 'avida_run',
 			'desc' => 'Run Avida',
 			'arg' => 'File to save results to',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'avida_analyze_start' => array('name' => 'avida_analyze_start',
 			'desc' => 'Start assembling Avida analysis file',
 			'arg' => 'None',
@@ -47,15 +54,15 @@ class AvidaInterface extends ExecuteHandler {
 		'avida_analyze' => array('name' => 'avida_analyze',
 			'desc' => 'Run Avida in analysis mode',
 			'arg' => 'File to save results to',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'avida_get_org' => array('name' => 'avida_get_org',
 			'desc' => 'Place an Avida organism in the main directory',
 			'arg' => 'Organism name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'avida_lineages' => array('name' => 'avida_lineages',
 			'desc' => 'Compute lineage statistics for an Avida saved population file',
 			'arg' => 'Filename',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 	);
 	public function __construct() {
 		parent::__construct(self::$AvidaInterface_commands);
@@ -148,11 +155,17 @@ class AvidaInterface extends ExecuteHandler {
 		}
 		return true;
 	}
-	public function avida_run($file) {
+	public function avida_run(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'file'),
+			'checklist' => array('file' => 'File to write to'),
+			'errorifempty' => array('file'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// random seed
 		static $seed = 42;
 		chdir(AVIDADIR);
-		$cmd = AVIDAPROG . " -s $seed 1> '$file' 2> /dev/null; echo \$?";
+		$cmd = AVIDAPROG . " -s $seed 1> '" . $paras['file'] . "' 2> /dev/null; echo \$?";
 		$seed++;
 		$before = time();
 		$ret = trim(shell_exec($cmd));
@@ -160,21 +173,27 @@ class AvidaInterface extends ExecuteHandler {
 		echo 'Avida exited with exit code ' . $ret . ' after ' . ($after - $before) . ' seconds' . PHP_EOL;
 		return true;
 	}
-	public function avida_analyze($file) {
+	public function avida_analyze(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'file'),
+			'checklist' => array('file' => 'File to write to'),
+			'errorifempty' => array('file'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		chdir(AVIDADIR);
-		$cmd = AVIDAPROG . " -a 1> '" . $file. "' 2> /dev/null; echo \$?";
+		$cmd = AVIDAPROG . " -a 1> '" . $paras['file'] . "' 2> /dev/null; echo \$?";
 		$before = time();
 		$ret = trim(shell_exec($cmd));
 		$after = time();
 		echo 'Avida exited from analysis mode with exit code ' . $ret . ' after ' . ($after - $before) . ' seconds' . PHP_EOL;
 		return true;
 	}
-	public function avida_analyze_start(array $paras = array()) {
+	public function avida_analyze_start(array $paras) {
 	// start assembling events
 		// no paras, ignore anything we might get
 		$this->avida_analyze = array();
 	}
-	public function avida_analyze_add(array $paras = array()) {
+	public function avida_analyze_add(array $paras) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'errorifempty' => array('cmd'),
@@ -197,7 +216,7 @@ class AvidaInterface extends ExecuteHandler {
 		$this->avida_analyze[] = $line;
 		return true;
 	}
-	public function avida_analyze_push(array $paras = array()) {
+	public function avida_analyze_push(array $paras) {
 		// no paras, ignore anything we might get
 		$events = implode('', $this->avida_analyze);
 		if(!file_put_contents(AVIDAANALYZE, $events)) {
@@ -206,15 +225,21 @@ class AvidaInterface extends ExecuteHandler {
 		}
 		return true;
 	}
-	public function avida_get_org($org) {
+	public function avida_get_org(array $paras) {
 	// place an organism in the main directory
-		$cmd = "cp " . AVIDADIR . "/data/$org/$org " . AVIDADIR . "/$org";
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'org'),
+			'checklist' => array('org' => 'Organism to write'),
+			'errorifempty' => array('org'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$cmd = "cp " . AVIDADIR . "/data/$org/$org " . AVIDADIR . "/" . $paras['org'];
 		if(!exec_catch($cmd))
 			$success = false;
 		else
 			$success = true;
 		// report organism fitness
-		$fp = file_get_contents(AVIDADIR . "/$org");
+		$fp = file_get_contents(AVIDADIR . '/' . $paras['org']);
 		$count = preg_match("/# Fitness\.\.\.\.\.\.\.\.\.: (\d+\.\d+)/u", $fp, $matches);
 		if($count === 0)
 			echo 'Unable to find fitness' . PHP_EOL;
@@ -224,10 +249,16 @@ class AvidaInterface extends ExecuteHandler {
 		}
 		return $success;
 	}
-	public function avida_lineages($in) {
-		$fh = fopen(AVIDADIR . '/' . $in, 'r');
+	public function avida_lineages(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'file'),
+			'checklist' => array('file' => 'File to write to'),
+			'errorifempty' => array('file'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$fh = fopen(AVIDADIR . '/' . $paras['file'], 'r');
 		if(!$fh) {
-			echo __METHOD__ . ': Could not open input file: ' . $in;
+			echo __METHOD__ . ': Could not open input file: ' . $paras['file'];
 			return false;
 		}
 		$counts = array(0, 0);

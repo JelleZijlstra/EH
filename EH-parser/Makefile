@@ -15,7 +15,7 @@ all: ehc ehphp ehi
 eh_wrap.o: eh_wrap.cpp
 	$(CC) `php-config --includes` -fPIC -c $< -o $@
 
-eh.h: ehi.h
+eh.h: ehi.h eh.bison.hpp
 
 %.cpp: eh.h
 

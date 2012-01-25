@@ -355,7 +355,8 @@ abstract class ExecuteHandler extends EHICore {
 		 *   'checkparas': An associative array where the key is $paras key and
 		 *      the value is a function. process_paras() will call the function
 		 *      with the value for the key in $paras as its argument, and will
-		 *      throw an error if the function returns false.
+		 *      throw an error if the function returns false. The default
+		 *      value of a parameter is always accepted.
 		 *
 		 * The order of the $pp_paras members is significant, because they will
 		 * be executed sequentially. For example, if 'checklist' is placed
@@ -494,6 +495,10 @@ abstract class ExecuteHandler extends EHICore {
 					foreach($pp_value as $para => $func) {
 						// errorifempty may already have yelled
 						if(!isset($paras[$para])) {
+							continue;
+						}
+						// always accept default value
+						if(isset($pp_paras['default'][$para]) and ($paras[$para] === $pp_paras['default'][$para])) {
 							continue;
 						}
 						if(!$func($paras[$para], $paras)) {

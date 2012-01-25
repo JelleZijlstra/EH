@@ -82,7 +82,7 @@ class Bot extends Snoopy {
 		'set_debug' => array('name' => 'set_debug',
 			'desc' => 'Set the debug level',
 			'arg' => 'New debug level',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 	);
 	/* Basic functionality */
 	function __construct() {
@@ -859,8 +859,14 @@ class Bot extends Snoopy {
 			$FacsList->update();
 		}
 	}
-	public function set_debug($level, array $paras = array()) {
-		$level = (int) $level;
+	public function set_debug(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'level'),
+			'checklist' => array('level' => 'Level to set to'),
+			'errorifempty' => array('level'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$level = (int) $paras['level'];
 		if($level !== 0 && $level !== 1 && $level !== 2) {
 			echo 'Invalid debug level: ' . $level . PHP_EOL;
 			return false;

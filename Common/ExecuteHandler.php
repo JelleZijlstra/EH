@@ -551,6 +551,9 @@ abstract class ExecuteHandler extends EHICore {
 		}
 	}
 	private function listcommands() {
+		// sort commands and synonyms first
+		ksort($this->commands);
+		ksort($this->synonyms);
 		echo 'Commands:' . PHP_EOL;
 		foreach($this->commands as $command => $content)
 			echo "\t" . $command . PHP_EOL;

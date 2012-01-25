@@ -27,7 +27,7 @@ class Database extends ExecuteHandler {
 		'settable' => array('name' => 'settable',
 			'desc' => 'Set the default table to work with',
 			'arg' => 'Table name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 	);
 	public function cli() {
 		return $this->setup_commandline('Database');
@@ -47,8 +47,14 @@ class Database extends ExecuteHandler {
 		}
 		return $result;
 	}
-	public function settable($table) {
-		$table = mysql_real_escape_string($table);
+	public function settable(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'table'),
+			'checklist' => array('table' => 'Table to set to'),
+			'errorifempty' => array('table'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$table = mysql_real_escape_string($paras['table']);
 		$columns = $this->query("SHOW COLUMNS FROM " . $table);
 		if(!$columns) {
 			echo 'Failed to set table' . PHP_EOL;
@@ -61,7 +67,7 @@ class Database extends ExecuteHandler {
 		}
 		return true;
 	}
-	public function count($paras = array()) {
+	public function count(array $paras) {
 		$query = 'SELECT COUNT(*) FROM ' . $this->table . ' ' . $this->where($paras);
 		$result = $this->query($query);
 		if(!$result)

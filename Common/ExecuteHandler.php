@@ -531,7 +531,7 @@ abstract class ExecuteHandler extends EHICore {
 							$handlepara($para);
 						}
 					} elseif(!is_array($pp_value)) {
-						$showerror('spit parameter is not an array');
+						$showerror('split parameter is not an array');
 					} else {
 						foreach($pp_value as $para) {
 							$handlepara($para);

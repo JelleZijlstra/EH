@@ -218,7 +218,8 @@ class TaxonList extends FileList {
 			else
 				$pagename = 'User:Ucucha/List_of_mammals/' . ucfirst(substr($filename, 0, -3));
 			echo "Writing to $pagename...";
-			if(!$bot->writewp($pagename, array(
+			if(!$bot->writewp(array(
+				'page' => $pagename,
 				'file' => $file,
 				'summary' => 'Update'
 			)))

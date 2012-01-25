@@ -20,7 +20,7 @@ class FacsList extends FileList {
 	}
 	public function update() {
 		echo 'Updating the FAC database...' . PHP_EOL;
-		$wpfac = $this->bot->fetchwp(self::fac);
+		$wpfac = $this->bot->fetchwp(array('page' => self::fac));
 		if($wpfac === false) {
 			echo 'Unable to retrieve FAC' . PHP_EOL;
 			exit(1);
@@ -149,12 +149,13 @@ class FacsEntry extends ListEntry {
 	public function addnoms(array $paras = array()) {
 	// add or overwrite nominators
 		// get noms
-		$factext = $this->p->bot->fetchwp($this->name);
+		$factext = $this->p->bot->fetchwp(array('page' => $this->name));
 		$name = $this->name;
 		$bot = $this->p->bot;
 		$failure = function() use($name, $bot) {
 			echo 'Unable to retrieve nominators for page ' . $name . PHP_EOL;
-			$bot->writewp('User talk:Ucucha', array(
+			$bot->writewp(array(
+				'page' => 'User talk:Ucucha',
 				'kind' => 'appendtext',
 				'text' => '
 ==Nominators for ' . $name . '==

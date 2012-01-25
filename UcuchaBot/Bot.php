@@ -29,12 +29,12 @@ class Bot extends Snoopy {
 			'aka' => array('write'),
 			'desc' => 'Write to a Wikipedia page',
 			'arg' => 'Page to write to, and text in --text=',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'fetchwp' => array('name' => 'fetchwp',
 			'aka' => array('fetch'),
 			'desc' => 'Fetch the wikitext of a Wikipedia page',
 			'arg' => 'Page to fetch',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'do_fa_bolding' => array('name' => 'do_fa_bolding',
 			'desc' => 'Bold TFA on WP:FA (UcuchaBot task 1)',
 			'arg' => 'None',
@@ -135,12 +135,14 @@ class Bot extends Snoopy {
 			return false;
 		}
 	}
-	public function writewp($page, array $paras = array()) {
+	public function writewp(array $paras) {
 	// write to a page
 	// @para $page String page to write to
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'page'),
 			'checklist' => array(
+				'page' => 'Page to write to',
 				'text' => 'String text to write',
 				'file' => 'String file containing text to write. Ignored if the text parameter is set',
 				'summary' => 'String edit summary to be used',
@@ -158,6 +160,7 @@ class Bot extends Snoopy {
 				'text' => false,
 				'file' => false,
 			),
+			'errorifempty' => array('page'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!$this->check_login()) return false;
 		if($paras['text'])
@@ -165,29 +168,29 @@ class Bot extends Snoopy {
 		else if($paras['file'])
 			$data = file_get_contents($paras['file']);
 		else {
-			echo 'No text to write to ' . $page . PHP_EOL;
+			echo 'No text to write to ' . $paras['page'] . PHP_EOL;
 			return false;
 		}
 		$result = $this->fetchapi(array(
 			'action' => 'query',
 			'prop' => 'info',
 			'intoken' => 'edit',
-			'titles' => $page,
+			'titles' => $paras['page'],
 		));
 		if(!is_array($result)) {
-			echo "Failed to fetch page to write to: " . $page . PHP_EOL;
+			echo "Failed to fetch page to write to: " . $paras['page'] . PHP_EOL;
 			return false;
 		}
 		foreach($result['query']['pages'] as $i_page) {
 			$my_page = $i_page;
 		}
-		$pagetext = $this->fetchwp($page);
+		$pagetext = $this->fetchwp(array($page));
 		if(preg_match("/(\{\{(no)?bots\|deny=UcuchaBot\}\}|\{\{nobots\}\})/", $pagetext)) {
-			echo "Edit denied to page " . $page . PHP_EOL;
+			echo "Edit denied to page " . $paras['page'] . PHP_EOL;
 			return false;
 		}
 		if($pagetext and $paras['abortifexists']) {
-			echo 'Page ' . $page . ' already exists, so aborting edit.' . PHP_EOL;
+			echo 'Page ' . $paras['page'] . ' already exists, so aborting edit.' . PHP_EOL;
 			return false;
 		}
 		// prepare query
@@ -226,7 +229,8 @@ class Bot extends Snoopy {
 				$newparas['text'] = $debuginfo;
 				$newparas['kind'] = 'appendtext';
 				$newparas['summary'] = 'Test output';
-				$this->writewp('User:UcuchaBot/Debug', $newparas);
+				$newparas['page'] = 'User:UcuchaBot/Debug';
+				$this->writewp($newparas);
 			}
 			return true;
 		}
@@ -263,17 +267,27 @@ class Bot extends Snoopy {
 		}
 		return true;
 	}
-	public function fetchwp($page, array $paras = array()) {
+	public function fetchwp(array $paras) {
 	// fetch a page from WP
-	// @para $page String page to fetch
-	// @para ['action'] String action to fetch. Defaults to "raw"
-		if(!isset($paras['action'])) $paras['action'] = 'raw';
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'page'),
+			'checklist' => array(
+				'page' => 'Page to fetch',
+				'action' => 'Action to fetch',
+			),
+			'default' => array('action' => 'raw'),
+			'errorifempty' => array('page'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if($this->botdebug > 0) {
-			echo 'Fetching page: ' . $page . PHP_EOL;
+			echo 'Fetching page: ' . $paras['page'] . PHP_EOL;
 		}
-		if(!$this->check_login()) return false;
-		if(!$this->fetch("http://en.wikipedia.org/w/index.php?action=raw&title=" . urlencode($page)))
+		if(!$this->check_login()) {
 			return false;
+		}
+		if(!$this->fetch("http://en.wikipedia.org/w/index.php?action=" . $paras['action'] . "&title=" . urlencode($paras['page']))) {
+			return false;
+		}
 		return $this->results ?: false;
 	}
 	public function fetchapi(array $apiparas, array $paras = array()) {
@@ -317,22 +331,21 @@ class Bot extends Snoopy {
 		$time = new DateTime();
 		$date = $time->format('F j, Y');
 		echo $date . ": finding today's TFA..." . PHP_EOL;
-		$tfa = $this->fetchwp('Template:TFA title/' . $date);
+		$tfa = $this->fetchwp(array('Template:TFA title/' . $date));
 		if(!$tfa) {
 			echo "Could not find TFA name." . PHP_EOL;
 			return false;
 		}
 		echo "Done: ". $tfa . PHP_EOL;
 		echo "Editing $writepage... " . PHP_EOL;
-		$wpfa = $this->fetchwp($writepage);
+		$wpfa = $this->fetchwp(array($writepage));
 		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?)/";
 		$wpfa = preg_replace($pattern, "{{FA/BeenOnMainPage|$1}}", $wpfa);
-		$this->writewp($writepage,
-			array(
+		$this->writewp(array(
+				'page' => $writepage,
 				'text' => $wpfa,
 				'summary' => "Bot: bolding today's featured article"
-			)
-		);
+		));
 		echo "done" . PHP_EOL;
 		return true;
 	}
@@ -344,12 +357,12 @@ class Bot extends Snoopy {
 		$pages = array(); // pages that we are handling
 		while(true) {
 			$newpage = $this->gettfa(array('date' => $date));
+			$date->modify('+1 day');
 			if(!is_array($newpage)) // no more TFAs
 				break;
 			if(!$newpage['name']) // could not find TFA name
 				continue;
 			$pages[] = $newpage;
-			$date->modify('+1 day');
 		}
 		file_put_contents($datefile, $date->format(self::stddate));
 		// HANDLE EACH PAGE
@@ -363,11 +376,11 @@ class Bot extends Snoopy {
 		echo "Notifying contributors for page " . $page['name'] . PHP_EOL;
 		$notifiedusers = array(); // users to notify
 		//edit TFA talk page
-		$talkpage = $this->fetchwp('Talk:' . $page['name']);
-		if(preg_match('/\|\s*maindate\s*=/u', $talkpage))
+		$talkpage = $this->fetchwp(array('Talk:' . $page['name']));
+		if(preg_match('/\|\s*maindate\s*=/u', $talkpage)) {
 			echo 'Maindate already exists on talkpage of page ' .
 				$page['name'] . PHP_EOL;
-		else {
+		} else {
 			$text = preg_replace('/(\|\s*currentstatus\s*=\s*FA\s*)/u',
 				"$1|maindate=" . $page['date'] . "\n",
 				$talkpage,
@@ -378,7 +391,8 @@ class Bot extends Snoopy {
 					PHP_EOL;
 				var_dump($text, $count);
 				// tell me that it failed
-				$this->writewp('User talk: Ucucha', array(
+				$this->writewp(array(
+					'page' => 'User talk:Ucucha',
 					'kind' => 'appendtext',
 					'summary' => 'Failed to write maindate: ' .
 						$page['name'],
@@ -389,12 +403,14 @@ class Bot extends Snoopy {
 					'donotmarkasbot' => true,
 				));
 			}
-			else
-				$this->writewp('Talk:' . $page['name'], array(
+			else {
+				$this->writewp(array(
+					'page' => 'Talk:' . $page['name'],
 					'text' => $text,
 					'summary' => 'Bot edit: This page will appear as ' .
 						'today\'s featured article in the near future',
 				));
+			}
 		}
 		// get noms
 		$ahparas = $this->parse_ah(array('text' => $talkpage));
@@ -439,7 +455,8 @@ class Bot extends Snoopy {
 		foreach($notifiedusers as $user => $bool) {
 			if(!$bool) continue;
 			echo "Notifying user: " . $user . PHP_EOL;
-			$this->writewp('User talk:' . $user, array(
+			$this->writewp(array(
+				'page' => 'User talk:' . $user,
 				'text' => '{{subst:User:UcuchaBot/TFA notice' .
 					'|page=' . $page['name'] .
 					'|date=' . $page['date'] .
@@ -460,8 +477,8 @@ class Bot extends Snoopy {
 		$writetitle = 'Wikipedia:Featured articles that haven\'t been on the Main Page';
 		$fetchtitle = 'Wikipedia:Featured articles';
 		// get input pages
-		$fetchpage = $this->fetchwp($fetchtitle);
-		$writepage = $this->fetchwp($writetitle);
+		$fetchpage = $this->fetchwp(array($fetchtitle));
+		$writepage = $this->fetchwp(array($writetitle));
 		// total articles not on main page
 		$totalnmp = 0;
 		// get header and footer for WP:FANMP
@@ -517,12 +534,11 @@ class Bot extends Snoopy {
 		);
 		$writetext = $writeheader . $writebody . $writefooter;
 		// commit edit
-		$success = $this->writewp($writetitle,
-			array(
-				'text' => $writetext,
-				'summary' => "Bot: updating WP:FANMP",
-			)
-		);
+		$success = $this->writewp(array(
+			'page' => $writetitle,
+			'text' => $writetext,
+			'summary' => "Bot: updating WP:FANMP",
+		));
 		if($success === false)
 			echo "failed";
 		else
@@ -535,21 +551,21 @@ class Bot extends Snoopy {
 		$time = new DateTime();
 		$date = $time->format('F j, Y');
 		echo $date . ": finding today's TFL..." . PHP_EOL;
-		$tfa = $this->fetchwp('Template:TFL title/' . $date);
+		$tfa = $this->fetchwp(array('Template:TFL title/' . $date));
 		if(!$tfa) {
 			echo "Could not find TFL name." . PHP_EOL;
 			return false;
 		}
 		echo "Done: ". $tfa . PHP_EOL;
 		echo "Editing $writepage..." . PHP_EOL;
-		$wpfa = $this->fetchwp($writepage);
+		$wpfa = $this->fetchwp(array($writepage));
 		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?)/";
 		$wpfa = preg_replace($pattern, "{{FA/BeenOnMainPage|$1}}", $wpfa);
-		$this->writewp($writepage,
-			array(
-				'text' => $wpfa,
-				'summary' => "Bot: bolding today's featured list"
-			));
+		$this->writewp(array(
+			'page' => $writepage,
+			'text' => $wpfa,
+			'summary' => "Bot: bolding today's featured list"
+		));
 		echo "Done" . PHP_EOL;
 		return true;
 	}
@@ -573,7 +589,7 @@ class Bot extends Snoopy {
 			echo 'We\'re not currently in WikiCup time' . PHP_EOL;
 			return true;
 		}
-		$wpcup = $this->fetchwp('Wikipedia:WikiCup/History/' . $year);
+		$wpcup = $this->fetchwp(array('Wikipedia:WikiCup/History/' . $year));
 		preg_match_all(
 			'/(?<=\{\{Wikipedia:WikiCup\/Participant\d\|)[^\}]*(?=\}\})/u',
 			$wpcup,
@@ -590,8 +606,7 @@ class Bot extends Snoopy {
 		// get FACs we need to check
 		$tocheck = $FacsList->bfind(array(
 			'checkedcup' => '/^$/',
-			'print' => false,
-			'printresult' => false,
+			'quiet' => true,
 		));
 		$cupnoms = array();
 		if(is_array($tocheck)) foreach($tocheck as $fac) {
@@ -608,11 +623,11 @@ class Bot extends Snoopy {
 				$nomstring = '[[User:' . implode('|]], [[User:', 	$cupnoms[$fac->name]) . '|]]';
 				echo 'Found WikiCup nominators for FAC: ' . $fac->name . ': ' . $nomstring . PHP_EOL;
 				$msg = PHP_EOL . '{{subst:User:Ucucha/Cup|' . $nomstring . '}}';
-				$this->writewp(
-					$fac->name,
-					array('text' => $msg,
-						'summary' => 'Bot adding notice that this is a WikiCup nomination',
-						'kind' => 'appendtext',
+				$this->writewp(array(
+					'page' => $fac->name,
+					'text' => $msg,
+					'summary' => 'Bot adding notice that this is a WikiCup nomination',
+					'kind' => 'appendtext',
 				));
 			}
 			$fac->checkedcup = true;
@@ -628,14 +643,13 @@ class Bot extends Snoopy {
 		$oldfacs = $FacsList->bfind(array(
 			'date' => '<' . $date,
 			'archived' => false,
-			'print' => false,
-			'printresult' => false
+			'quiet' => true,
 		));
 		if(!is_array($oldfacs) or count($oldfacs) === 0) return false;
 		$newlocobj = $FacsList->largest($oldfacs, 'id', array('return' => 'object'));
 		$newloc = $newlocobj->name;
 		// TODO
-		$fac = $this->fetchwp(FacsList::fac);
+		$fac = $this->fetchwp(array(FacsList::fac));
 		preg_match('/==\s*Older nominations\s*==\s*{{([^\}]*)/u', $fac, $matches);
 		$currloc = $matches[1];
 		if($currloc === $newloc) {
@@ -665,7 +679,8 @@ class Bot extends Snoopy {
 			echo 'Error: could not find new location' . PHP_EOL;
 			return false;
 		}
-		return $this->writewp(FacsList::fac, array(
+		return $this->writewp(array(
+			'page' => FacsList::fac,
 			'text' => $fac,
 			'summary' => 'Bot edit: Move marker'));
 	}
@@ -678,13 +693,18 @@ class Bot extends Snoopy {
 			'abortifexists' => true,
 			'summary' => 'Bot creating new monthly log page',
 		);
-		$this->writewp('Wikipedia:Featured article candidates/Featured log/' . $month, $writeparas);
-		$this->writewp('Wikipedia:Featured article candidates/Archived nominations/' . $month, $writeparas);
+		$writeparas['page'] = 'Wikipedia:Featured article candidates/Featured log/' . $month;
+		$this->writewp($writeparas);
+		$writeparas['page'] = 'Wikipedia:Featured article candidates/Archived nominations/' . $month;
+		$this->writewp($writeparas);
 		$writeparas['text'] = "{{Featured list log}}\n{{TOClimit|3}}";
-		$this->writewp('Wikipedia:Featured list candidates/Featured log/' . $month, $writeparas);
-		$this->writewp('Wikipedia:Featured list candidates/Failed log/' . $month, $writeparas);
+		$writeparas['page'] = 'Wikipedia:Featured list candidates/Featured log/' . $month;
+		$this->writewp($writeparas);
+		$writeparas['page'] = 'Wikipedia:Featured list candidates/Failed log/' . $month;
+		$this->writewp($writeparas);
 		$writeparas['text'] = "{{Featured list log}}\n\n==Kept==\n\n==Delisted==";
-		$this->writewp('Wikipedia:Featured list removal candidates/log/' . $month, $writeparas);
+		$writeparas['page'] = 'Wikipedia:Featured list removal candidates/log/' . $month;
+		$this->writewp($writeparas);
 		return true;
 	}
 	public function do_add_fa_stats() {
@@ -701,12 +721,12 @@ class Bot extends Snoopy {
 		$tparas['FAoldid'] = $info['lastrevid'];
 		// FAs promoted
 		$countfacs = function ($page) {
-			$text = $this->fetchwp($page);
+			$text = $this->fetchwp(array($page));
 			if(!$text) return false;
 			return preg_match_all('/\{\{Wikipedia:Featured article candidates\//u', $text);
 		};
 		$logpage = 'Wikipedia:Featured article candidates/Featured log/' . $tparas['date'];
-		$text = $this->fetchwp($logpage);
+		$text = $this->fetchwp(array($logpage));
 		if(!$text) {
 			echo 'Error: could not retrieve text of page ' . $logpage . PHP_EOL;
 			return false;
@@ -714,7 +734,7 @@ class Bot extends Snoopy {
 		$tparas['FAs promoted'] = preg_match_all('/\{\{Wikipedia:Featured article candidates\//u', $text, $matches);
 		// FAs demoted
 		$logpage = 'Wikipedia:Featured article review/archive/' . $tparas['date'];
-		$text = $this->fetchwp($logpage);
+		$text = $this->fetchwp(array($logpage));
 		if(!$text) {
 			echo 'Error: could not retrieve text of page ' . $logpage . PHP_EOL;
 			return false;
@@ -738,8 +758,7 @@ class Bot extends Snoopy {
 		$tparas['current FACs'] = $FacsList->bfind(array(
 			'archived' => '/^$/',
 			'return' => 'count',
-			'print' => false,
-			'printresult' => false,
+			'quiet' => true,
 		));
 		$newtext = maketemplate('subst:User:UcuchaBot/FAS line', $tparas);
 		echo $newtext . PHP_EOL;
@@ -750,7 +769,7 @@ class Bot extends Snoopy {
 		//@para ['text'] text of article talk page
 		//@para ['page'] page to be checked. If ['text'] is given, this is disregarded, to avoid an unnecessary API call.
 		if(!isset($paras['text'])) {
-			$paras['text'] = $this->fetchwp('Talk:' . $paras['page']);
+			$paras['text'] = $this->fetchwp(array('Talk:' . $paras['page']));
 			if(!isset($paras['text'])) {
 				echo 'Could not retrieve talk page.';
 				return false;
@@ -806,7 +825,7 @@ class Bot extends Snoopy {
 		}
 		$newpage = array();
 		$newpage['page'] = $paras['base'] . '/' . $paras['date']->format(self::stddate);
-		$tfatext = $this->fetchwp($newpage['page']);
+		$tfatext = $this->fetchwp(array($newpage['page']));
 		if(!$tfatext or strpos($tfatext, '{{TFAempty}}') !== false) // day hasn't been set yet
 			return false;
 		if(!preg_match(
@@ -814,11 +833,12 @@ class Bot extends Snoopy {
 			"/(?:'''|<b>)\s*\[\[\s*([^|\]]+?)\s*(?:\|[^]]+)?\]\]\s*('''|<\/b>)/u",
 			$tfatext,
 			$matches)) {
-			echo 'Error: could not retrieve TFA name from page ' . $tfapage . PHP_EOL;
+			echo 'Error: could not retrieve TFA name from page ' . $newpage['page'] . PHP_EOL;
 			$newpage['name'] = false;
 		}
-		else
+		else {
 			$newpage['name'] = str_replace('&nbsp;', ' ', $matches[1]);
+		}
 		$newpage['date'] = $paras['date']->format(self::stddate);
 		$newpage['blurb'] = trim(preg_replace(
 			'/(Recently featured:|\{\{TFAfooter)[^\n]+(\n|$)/u',

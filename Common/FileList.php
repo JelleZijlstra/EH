@@ -65,10 +65,6 @@ abstract class FileList extends ExecuteHandler {
 			'desc' => 'Give numerical statistics about entries fulfilling the given criteria',
 			'arg' => 'Field, plus a series of criteria in the form --<field>=<content>',
 			'execute' => 'callmethod'),
-		'getstats_group' => array('name' => 'getstats_group',
-			'desc' => 'As for getstats, but give statistics for entries for each value of the groupby parameter',
-			'arg' => 'As for getats, plus --groupby=<field to group by>',
-			'execute' => 'callmethodarg'),
 		'listz' => array('name' => 'listz',
 			'desc' => 'List Z value for entries found in a getstats query',
 			'arg' => 'As for getstats, plus --index=<field given as index>',
@@ -729,6 +725,16 @@ abstract class FileList extends ExecuteHandler {
 		return sqrt($sum / $i);
 	}
 	public function smallest($files, $field, array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array('return' => 'Type of return value'),
+			'default' => array('return' => 'value'),
+			'checkparas' => array(
+				'return' => function($in) {
+					return ($in === 'object') or ($in === 'value');
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!is_array($files) or count($files) === 0)
 			return false;
 		$childclass = static::$childclass;
@@ -749,14 +755,22 @@ abstract class FileList extends ExecuteHandler {
 		}
 		if($i === 0)
 			return false;
-		$paras['return'] = $paras['return'] ?: 'value';
 		switch($paras['return']) {
 			case 'object': return $out;
 			case 'value': return $out->$field;
-			default: return false;
 		}
 	}
 	public function largest($files, $field, array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array('return' => 'Type of return value'),
+			'default' => array('return' => 'value'),
+			'checkparas' => array(
+				'return' => function($in) {
+					return ($in === 'object') or ($in === 'value');
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!is_array($files) or count($files) === 0) return false;
 		$childclass = static::$childclass;
 		if(!$childclass::hasproperty($field)) {
@@ -775,44 +789,81 @@ abstract class FileList extends ExecuteHandler {
 		}
 		if($i === 0)
 			return false;
-		$paras['return'] = $paras['return'] ?: 'value';
 		switch($paras['return']) {
 			case 'object': return $out;
 			case 'value': return $out->$field;
-			default: return false;
 		}
 	}
 	public function getstats(array $paras) {
-	// @para $field String field that is used
-	// @para $paras Array associative arrays with pairs of fields and values to search in
 		$childclass = static::$childclass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
-			'synonyms' => array(0 => 'field', 'q' => 'quiet'),
+			'synonyms' => array(0 => 'field', 'q' => 'getstats_quiet'),
 			'checklist' => array(
 				'field' => 'Field to give statistics for',
 				'includefiles' => 'Whether to include files in the output',
-				'groupby' => 'Parameter to groupby',
+				'groupby' => 'Parameter to group by',
+				'getstats_quiet' => 'Whether output should be printed (note that the parameter "quiet" will be passed to mlist and bfind)',
 			),
 			'checkfunc' => function($in) {
 				// paras are passed to bfind/mlist, which will check them more fully
 				return true;
 			},
-			'default' => array('includefiles' => false),
+			'default' => array(
+				'includefiles' => false,
+				'groupby' => '',
+				'getstats_quiet' => false,
+				'quiet' => true, // be quiet when we're in mlist and bfind
+			),
 			'checkparas' => array(
 				'field' => function($in) use ($childclass) {
 					return $childclass::hasproperty($in);
 				},
+				'groupby' => function($in) use ($childclass) {
+					return $childclass::hasproperty($in);
+				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$field = $paras['field'];
-		unset($paras['field']);
+		// save method-specific paras to local variables
+		$groupby = $paras['groupby'];
+		$quiet = $paras['getstats_quiet'];
+		unset($paras['groupby'], $paras['getstats_quiet']);
 		// bfind will check the input for us
-		$paras[$field] = '/^\s*\d+(\.\d+)?\s*$/'; // only include things where the field is actually numeric
 		// do "groupby" if desired
-		if($paras['groupby']) {
-			$groupby = $paras['groupby'];
+		if($groupby) {
+			// call mlist to get groups
+			$groups = $this->mlist(array(
+				'print' => false,
+				'field' => $groupby,
+			));
+			// check for mlist errors
+			if(!$groups) {
+				return false;
+			}
+			// output
+			$out = array();
+			foreach($groups as $group => $i) {
+				ob_start();
+				if(!$quiet)
+					echo '-------' . PHP_EOL . 'Group: ' . $group . PHP_EOL;
+				$paras[$groupby] = $group;
+				$success = $this->getstats($paras);
+				if($success) {
+					$out[$group] = $success;
+					ob_end_flush();
+				}
+				else {
+					// we failed
+					ob_end_clean();
+				}
+			}
+			return $out;
 		}
+		$field = $paras['field'];
+		$includefiles = $paras['includefiles'];
+		unset($paras['field'], $paras['includefiles']);
+		// only include things where the field is actually numeric
+		$paras[$field] = '/^\s*\d+(\.\d+)?\s*$/';
 		// perform search
 		$files = $this->bfind($paras);
 		if(!$files) {
@@ -824,11 +875,11 @@ abstract class FileList extends ExecuteHandler {
 		// add statistics
 		foreach(array('average', 'stdev', 'smallest', 'largest') as $var) {
 			$out[$var] = $this->$var($files, $field);
-			if(!$paras['quiet']) {
+			if(!$quiet) {
 				echo ucfirst($var) . ': ' . round($out[$var], 3) . PHP_EOL;
 			}
 		}
-		if($paras['includefiles']) {
+		if($includefiles) {
 			$out['files'] = $files;
 		}
 		return $out;
@@ -875,23 +926,6 @@ abstract class FileList extends ExecuteHandler {
 		foreach($groups as $group => $i) {
 			$paras[$paras['groupby']] = $group;
 			$this->listz($field, $paras);
-		}
-	}
-	public function getstats_group($field, $paras) {
-		if(!isset($paras['groupby'])) return false;
-		$childclass = static::$childclass;
-		if(!$childclass::hasproperty($paras['groupby'])) return false;
-		$mlistparas = array('print' => false);
-		$groups = $this->mlist($paras['groupby'], $mlistparas);
-		foreach($groups as $group => $i) {
-			ob_start();
-			echo '-------' . PHP_EOL . 'Group: ' . $group . PHP_EOL;
-			$paras[$paras['groupby']] = $group;
-			$success = $this->getstats($field, $paras);
-			if($success)
-				ob_end_flush();
-			else
-				ob_end_clean();
 		}
 	}
 	public function stats(array $paras = array()) {

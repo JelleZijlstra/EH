@@ -80,6 +80,7 @@
 "call"		return T_CALL;
 "func"		return T_FUNC;
 "endfunc"	return T_ENDFUNC;
+"quit"		return T_QUIT;
 "ret"		return T_RET;
 "null"		return T_NULL;
 "class"		return T_CLASS;

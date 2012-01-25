@@ -58,6 +58,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_RET
 %token T_ECHO
 %token T_PUT
+%token T_QUIT
 %token T_SEPARATOR
 %token T_SET
 %token T_CALL
@@ -156,6 +157,11 @@ statement:
 							{ $$ = eh_addnode(T_FUNC, 3, $2, $4, $6); }
 	| T_RET expression T_SEPARATOR
 							{ $$ = eh_addnode(T_RET, 1, $2); }
+	| T_QUIT T_SEPARATOR
+							{
+								/* "quit" is equivalent to "ret 0" */
+								$$ = eh_addnode(T_RET, 1, eh_get_int(0));
+							}
 	| T_CLASS bareword T_SEPARATOR classlist T_END T_SEPARATOR
 							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
 	| T_CLASS bareword T_SEPARATOR classlist T_ENDCLASS T_SEPARATOR

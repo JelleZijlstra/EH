@@ -68,11 +68,7 @@ abstract class FileList extends ExecuteHandler {
 		'listz' => array('name' => 'listz',
 			'desc' => 'List Z value for entries found in a getstats query',
 			'arg' => 'As for getstats, plus --index=<field given as index>',
-			'execute' => 'callmethodarg'),
-		'listz_group' => array('name' => 'listz_group',
-			'desc' => 'List Z value for groups of entries found in a getstats query',
-			'arg' => 'As for listz, plus --groupby=<field to group by>',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'formatall' => array('name' => 'formatall',
 			'desc' => 'Format all entries',
 			'arg' => 'None',
@@ -894,19 +890,52 @@ abstract class FileList extends ExecuteHandler {
 		}
 		return $out;
 	}
-	public function listz($field, array $paras = array()) {
+	public function listz(array $paras) {
+		// initialize variables used in process_paras call
+		$listz_paras = array();
+		$childclass = static::$childclass;
+		$checkparas_f = function($in) use($childclass) {
+			return $childclass::hasproperty($in);
+		};
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
-			'errorifempty' => array('index'),
-		)) === PROCESS_PARAS_ERROR_FOUND)
-			return false;
-		$childclass = static::$childclass;
-		if(!$childclass::hasproperty($paras['index'])) return false;
-		if(isset($paras['into']) and $childclass::hasproperty($paras['into']))
-			$into = $paras['into'];
-		$index = $paras['index'];
+			'synonyms' => array(0 => 'field'),
+			'checklist' => array(
+				'index' => 'Field to print for entries',
+				'field' => 'Field to give statistics for',
+				'into' => 'Field to place the computed Z-value into',
+				'groupby' => 'Field to group by',
+			),
+			'default' => array(
+				'into' => false,
+				'index' => 'name',
+				'groupby' => false,
+			),
+			'checkfunc' => function($in) { return true; },
+			'checkparas' => array(
+				'index' => $checkparas_f,
+				'into' => $checkparas_f,
+				'groupby' => $checkparas_f,
+			),
+			'errorifempty' => array('field'),
+			'split' => array('into', 'index', 'groupby'),
+		), $listz_paras) === PROCESS_PARAS_ERROR_FOUND) return false;
+		// use groupby if needed
+		if($listz_paras['groupby']) {
+			$groups = $this->mlist(array(
+				'field' => $listz_paras['groupby'],
+				'print' => false,
+			));
+			$paras['index'] = $listz_paras['index'];
+			$paras['into'] = $listz_paras['into'];
+			foreach($groups as $group => $i) {
+				$paras[$listz_paras['groupby']] = $group;
+				$this->listz($paras);
+			}
+			return true;
+		}
 		$paras['includefiles'] = true;
-		$stats = $this->getstats($field, $paras);
+		$stats = $this->getstats($paras);
 		if(!$stats) {
 			echo 'No entries found' . PHP_EOL;
 			return false;
@@ -916,27 +945,13 @@ abstract class FileList extends ExecuteHandler {
 			return false;
 		}
 		foreach($stats['files'] as $file) {
-			$z = ($file->$field - $stats['average']) / $stats['stdev'];
-			echo $file->$index . "\t" . $z . PHP_EOL;
-			if($into)
-				$this->set($file->name, array($into => $z));
+			$z = ($file->{$paras['field']} - $stats['average']) / $stats['stdev'];
+			echo $file->{$listz_paras['index']} . "\t" . $z . PHP_EOL;
+			if($listz_paras['into']) {
+				$file->set(array($listz_paras['into'] => $z));
+			}
 		}
 		return true;
-	}
-	public function listz_group($field, $paras) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'errorifempty' => array('groupby'),
-		)) === PROCESS_PARAS_ERROR_FOUND)
-			return false;
-		$childclass = static::$childclass;
-		if(!$childclass::hasproperty($paras['groupby'])) return false;
-		$mlistparas = array('print' => false);
-		$groups = $this->mlist($paras['groupby'], $mlistparas);
-		foreach($groups as $group => $i) {
-			$paras[$paras['groupby']] = $group;
-			$this->listz($field, $paras);
-		}
 	}
 	public function stats(array $paras = array()) {
 		$results = array();

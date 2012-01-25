@@ -92,3 +92,4 @@ No such global variable: nosuchvar: EH notice
 @switchfunc.eh:
 @givenfunc.eh:
 @eratosthenes3.eh:
+@quit.eh:

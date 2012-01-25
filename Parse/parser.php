@@ -383,6 +383,10 @@ function parsecite($in, $part = '') {
 	return $out;
 }
 function parse_wlist($in = '') {
+	// make possible call from callfunc
+	if(is_array($in)) {
+		$in = $in[0];
+	}
 	global $wlist_p, $csvlist;
 	if(!$in) {
 		echo 'Text to parse: ';

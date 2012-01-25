@@ -29,10 +29,8 @@ abstract class ExecuteHandler extends EHICore {
 	// array of codes that can be given in the 'execute' field of a command, and
 	// descriptions
 	private static $handlers = array(
-		'doallorcurr' => 'Execute a function for the argument only if there is one, and else for all entries. Users that use this handler must implement the doall() method and the method defined by the command\'s name.',
 		'callmethod' => 'Execute the given method, with as its argument $paras.',
 		'callfunc' => 'Execute the given function, with as its argument $paras.',
-		'callfuncarg' => 'As callfunc, with $rawarg as the first argument.',
 		'quit' => 'Quit the command line.',
 	);
 	private static $ExecuteHandler_commands = array(
@@ -160,11 +158,6 @@ abstract class ExecuteHandler extends EHICore {
 			'}' => false,
 			'}$' => false,
 		);
-		// separate argument from paras
-		if(isset($paras[0]))
-			$argument = trim($paras[0]);
-		else
-			$argument = '';
 		// separate output redirection and friends
 		foreach($redirection as $key => $var) {
 			if(isset($paras[$key])) {
@@ -173,14 +166,11 @@ abstract class ExecuteHandler extends EHICore {
 			}
 		}
 		// handle shortcut
-		if($argument === '*') {
+		if(isset($paras[0]) and $paras[0] === '*') {
 			unset($paras[0]);
 			foreach($this->current as $file)
 				$paras[] = $file;
-			$argarray = $this->current;
 		}
-		else
-			$argarray = array($argument);
 		// output redirection
 		if(($redirection['>'] !== false or $redirection['>$'] !== false) and
 			$cmd['execute'] !== 'quit') {
@@ -190,23 +180,11 @@ abstract class ExecuteHandler extends EHICore {
 		$ret = NULL;
 		// execute it
 		switch($cmd['execute']) {
-			case 'doallorcurr':
-				if(count($argarray) > 0 and $argarray[0] !== '') {
-					foreach($argarray as $file)
-						if(!($ret = $this->{$cmd['name']}($file, $paras)))
-							break;
-				}
-				else
-					$ret = $this->doall($cmd['name'], $paras);
-				break;
 			case 'callmethod':
 				$ret = $this->{$cmd['name']}($paras);
 				break;
 			case 'callfunc':
 				$ret = $cmd['name']($paras);
-				break;
-			case 'callfuncarg':
-				$ret = $cmd['name']($argument, $paras);
 				break;
 			case 'quit':
 				if(defined('IS_EHPHP'))

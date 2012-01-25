@@ -89,6 +89,11 @@ abstract class FileList extends ExecuteHandler {
 			'desc' => 'Sort the c array',
 			'arg' => 'Field to sort by',
 			'execute' => 'callmethod'),
+		'edit' => array('name' => 'edit',
+			'aka' => array('e'),
+			'desc' => 'Edit information associated with an entry',
+			'arg' => 'Entry name',
+			'execute' => 'callmethod'),
 	);
 	public function __construct($commands = array()) {
 		echo "processing CSV catalog... ";

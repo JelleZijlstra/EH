@@ -9,11 +9,6 @@ class FacsList extends FileList {
 	public $bot;
 	const fac = 'Wikipedia:Featured article candidates';
 	protected static $FacsList_commands = array(
-		'edit' => array('name' => 'edit',
-			'desc' => 'Edit a particular FAC',
-			'arg' => 'Name of FAC',
-			'execute' => 'callmethodarg',
-		),
 	);
 	public function __construct() {
 		self::$fileloc = BPATH . '/UcuchaBot/data/facs.csv';
@@ -22,14 +17,6 @@ class FacsList extends FileList {
 	}
 	public function cli() {
 		$this->setup_commandline('Facs');
-	}
-	public function edit($fac, array $paras = array()) {
-		if(!$this->has($fac)) {
-			echo 'No such FAC' . PHP_EOL;
-			return false;
-		}
-		$this->c[$fac]->cli();
-		return true;
 	}
 	public function update() {
 		echo 'Updating the FAC database...' . PHP_EOL;
@@ -94,9 +81,6 @@ class FacsEntry extends ListEntry {
 			'arg' => 'None',
 			'execute' => 'callmethod',
 		),
-	);
-	protected static $FacsEntry_synonyms = array(
-
 	);
 	public $name; // String name of FAC page
 	public $nominators; // Array noms

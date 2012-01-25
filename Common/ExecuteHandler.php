@@ -320,7 +320,8 @@ abstract class ExecuteHandler extends EHICore {
 	}
 	protected function process_paras(&$paras, $pp_paras, &$split = NULL) {
 		/*
-		 *    int ExecuteHandler::process_paras(array &$paras, array $pp_paras)
+		 *    int ExecuteHandler::process_paras(array &$paras, array $pp_paras,
+		 *      array &$split = NULL);
 		 *
 		 * This method processes a function's $paras array in the way specified
 		 * in the $pp_paras parameter. In addition, it will print a summary of
@@ -331,6 +332,9 @@ abstract class ExecuteHandler extends EHICore {
 		 * $pp_paras is an associative array with the following members:
 		 *   'name': Name of the calling function. This is used to generate the
 		 *      information printed by $paras['help'].
+		 *   'toarray': If $paras is not an array, convert it to an array with
+		 *      the non-array value associated with the key given by
+		 *      $pp_paras['toarray'].
 		 *   'synonyms': An associative array where the keys denote synonyms
 		 *      and the values the normalized names for parameters in $paras.
 		 *      For example, if 'synonyms' contains array('f' => 'force'), the
@@ -368,13 +372,19 @@ abstract class ExecuteHandler extends EHICore {
 		 * before 'synonyms', 'checklist' will throw an error for synonyms
 		 * that are not listed separately in 'checklist'.
 		 */
-		if(!is_array($paras)) {
-			echo 'Error: invalid parameters given' . PHP_EOL;
+		if(!is_array($pp_paras)) {
+			// bogus input
+			echo 'process_paras: error: invalid parameters' . PHP_EOL;
 			return PROCESS_PARAS_ERROR_FOUND;
 		}
-		if(!is_array($pp_paras)) {
-			// this means we only have to check whether $paras is an array
-			return 0;
+		if(!is_array($paras)) {
+			// apply 'toarray'
+			if(isset($pp_paras['toarray'])) {
+				$paras = array($pp_paras['toarray'] => $paras);
+			} else {
+				echo 'process_paras: error: $paras is not an array' . PHP_EOL;
+				return PROCESS_PARAS_ERROR_FOUND;
+			}
 		}
 		// special parameter in all cases: help
 		if(isset($paras['help'])) {
@@ -540,6 +550,7 @@ abstract class ExecuteHandler extends EHICore {
 					break;
 				case 'checkfunc': // function used to check paras that are not matched by checklist
 				case 'name': // name of method calling process_paras
+				case 'toarray':
 					// ignore, used internally in other places
 					break;
 				default:

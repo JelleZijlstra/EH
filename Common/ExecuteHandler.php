@@ -318,7 +318,7 @@ abstract class ExecuteHandler extends EHICore {
 		else
 			print_r($in);
 	}
-	protected function process_paras(&$paras, $pp_paras = NULL) {
+	protected function process_paras(&$paras, $pp_paras, &$split = NULL) {
 		/*
 		 *    int ExecuteHandler::process_paras(array &$paras, array $pp_paras)
 		 *
@@ -357,6 +357,11 @@ abstract class ExecuteHandler extends EHICore {
 		 *      with the value for the key in $paras as its argument, and will
 		 *      throw an error if the function returns false. The default
 		 *      value of a parameter is always accepted.
+		 *    'split': An array of paras that are to be split off into a
+		 *      separate array, the $split argument. This is useful when a
+		 *      method passes some of its parameters to another method, but also
+		 *      takes some parameters itself. If just set to "true", this
+		 *      parameter will split off all paras listed in 'checklist'.
 		 *
 		 * The order of the $pp_paras members is significant, because they will
 		 * be executed sequentially. For example, if 'checklist' is placed
@@ -503,6 +508,33 @@ abstract class ExecuteHandler extends EHICore {
 						}
 						if(!$func($paras[$para], $paras)) {
 							$showerror('invalid value "' . $paras[$para] . '" for parameter "' . $para . '"');
+						}
+					}
+					break;
+				case 'split': // transfer paras
+					if(!is_array($split)) {
+						$showerror('split argument is not an array');
+						break;
+					}
+					$handlepara = function($para) use(&$paras, &$split) {
+						if(isset($paras[$para])) {
+							$split[$para] = $paras[$para];
+							unset($paras[$para]);
+						} else {
+							// with good pp_paras set, this will happen only if
+							// errorifempty has already yelled.
+							$split[$para] = NULL;
+						}
+					};
+					if($pp_value === true) {
+						foreach($pp_paras['checklist'] as $para => $desc) {
+							$handlepara($para);
+						}
+					} elseif(!is_array($pp_value)) {
+						$showerror('spit parameter is not an array');
+					} else {
+						foreach($pp_value as $para) {
+							$handlepara($para);
 						}
 					}
 					break;

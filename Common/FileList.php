@@ -356,7 +356,11 @@ abstract class FileList extends ExecuteHandler {
 	}
 	/* finding files etcetera */
 	public function mlist(array $paras) {
-	// @paras: array('sort' => 'ksort', 'function' => , 'isfunc' => false, 'print' => <bool>)
+	// Make a list of possible values for a field with their frequency.
+	// TODO: make this more efficient; especially with 'groupby' used, this may
+	// entail lots of calls to mlist itself and to bfind. Both should probably
+	// accept a 'files' parameter to search in a smaller array of files instead
+	// of the whole $this->c.
 		$childclass = static::$childclass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -471,6 +475,7 @@ abstract class FileList extends ExecuteHandler {
 		return $values;
 	}
 	public function bfind(array $paras) {
+	// Query the database.
 		$childclass = static::$childclass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -674,6 +679,7 @@ abstract class FileList extends ExecuteHandler {
 		}
 	}
 	public function find_cmd(array $paras) {
+	// Simple wrapper for bfind
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(

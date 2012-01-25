@@ -796,6 +796,8 @@ abstract class FileList extends ExecuteHandler {
 	}
 	public function getstats(array $paras) {
 		$childclass = static::$childclass;
+		// paras for this method
+		$gs_paras = array();
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(0 => 'field', 'q' => 'getstats_quiet'),
@@ -823,18 +825,14 @@ abstract class FileList extends ExecuteHandler {
 					return $childclass::hasproperty($in);
 				},
 			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		// save method-specific paras to local variables
-		$groupby = $paras['groupby'];
-		$quiet = $paras['getstats_quiet'];
-		unset($paras['groupby'], $paras['getstats_quiet']);
-		// bfind will check the input for us
+			'split' => true,
+		), $gs_paras) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// do "groupby" if desired
-		if($groupby) {
+		if($gs_paras['groupby']) {
 			// call mlist to get groups
 			$groups = $this->mlist(array(
 				'print' => false,
-				'field' => $groupby,
+				'field' => $gs_paras['groupby'],
 			));
 			// check for mlist errors
 			if(!$groups) {
@@ -842,11 +840,15 @@ abstract class FileList extends ExecuteHandler {
 			}
 			// output
 			$out = array();
+			// use original paras for quiet, includefiles, and field
+			$paras['field'] = $gs_paras['field'];
+			$paras['includefiles'] = $gs_paras['includefiles'];
+			$paras['getstats_quiet'] = $gs_paras['getstats_quiet'];
 			foreach($groups as $group => $i) {
 				ob_start();
-				if(!$quiet)
+				if(!$gs_paras['getstats_quiet'])
 					echo '-------' . PHP_EOL . 'Group: ' . $group . PHP_EOL;
-				$paras[$groupby] = $group;
+				$paras[$gs_paras['groupby']] = $group;
 				$success = $this->getstats($paras);
 				if($success) {
 					$out[$group] = $success;
@@ -859,11 +861,8 @@ abstract class FileList extends ExecuteHandler {
 			}
 			return $out;
 		}
-		$field = $paras['field'];
-		$includefiles = $paras['includefiles'];
-		unset($paras['field'], $paras['includefiles']);
 		// only include things where the field is actually numeric
-		$paras[$field] = '/^\s*\d+(\.\d+)?\s*$/';
+		$paras[$gs_paras['field']] = '/^\s*\d+(\.\d+)?\s*$/';
 		// perform search
 		$files = $this->bfind($paras);
 		if(!$files) {
@@ -874,12 +873,12 @@ abstract class FileList extends ExecuteHandler {
 		$out['count'] = count($files);
 		// add statistics
 		foreach(array('average', 'stdev', 'smallest', 'largest') as $var) {
-			$out[$var] = $this->$var($files, $field);
-			if(!$quiet) {
+			$out[$var] = $this->$var($files, $gs_paras['field']);
+			if(!$gs_paras['getstats_quiet']) {
 				echo ucfirst($var) . ': ' . round($out[$var], 3) . PHP_EOL;
 			}
 		}
-		if($includefiles) {
+		if($gs_paras['includefiles']) {
 			$out['files'] = $files;
 		}
 		return $out;

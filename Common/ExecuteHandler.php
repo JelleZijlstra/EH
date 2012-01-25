@@ -31,7 +31,6 @@ abstract class ExecuteHandler extends EHICore {
 	private static $handlers = array(
 		'callmethod' => 'Execute the given method, with as its argument $paras.',
 		'callfunc' => 'Execute the given function, with as its argument $paras.',
-		'quit' => 'Quit the command line.',
 	);
 	private static $ExecuteHandler_commands = array(
 		'execute_help' => array('name' => 'execute_help',
@@ -39,11 +38,6 @@ abstract class ExecuteHandler extends EHICore {
 			'desc' => 'Get help information about the command line or a specific command',
 			'arg' => 'Command name',
 			'execute' => 'callmethod'),
-		'quit' => array('name' => 'quit',
-			'aka' => array('q'),
-			'desc' => 'Quit the program',
-			'arg' => 'None',
-			'execute' => 'quit'),
 		'listcommands' => array('name' => 'listcommands',
 			'desc' => 'List legal commands',
 			'arg' => 'None',
@@ -144,6 +138,11 @@ abstract class ExecuteHandler extends EHICore {
 	public function execute_cmd($rawcmd, $paras) {
 		// for some reason, accessing rawcmd in ehi mode botches the variable. This works around that.
 		$rawcmd2 = $rawcmd;
+		if($rawcmd2 === 'quit') {
+			// execute "quit" immediately. No need to account for ehphp here,
+			// because "quit" is built in to the language.
+			return self::EXECUTE_QUIT;
+		}
 		$cmd = $this->expand_cmd($rawcmd2);
 		if(!$cmd) {
 			echo 'Invalid command: ' . $rawcmd2 . PHP_EOL;
@@ -186,11 +185,6 @@ abstract class ExecuteHandler extends EHICore {
 			case 'callfunc':
 				$ret = $cmd['name']($paras);
 				break;
-			case 'quit':
-				if(defined('IS_EHPHP'))
-					return NULL;
-				else
-					return self::EXECUTE_QUIT;
 			default:
 				trigger_error('Unrecognized execution mode', E_USER_NOTICE);
 				break;

@@ -275,14 +275,18 @@ class FullFile extends ListEntry {
 				}
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if($this->isfile()) {
-			if($paras['place'] === 'catalog')
-				exec_catch('open ' . $this->path());
-			else
-				exec_catch("open " . TEMPPATH . "/" . escape_shell($this->name));
+		if(!$this->isfile()) {
+			echo 'openf: error: not a file, cannot open' . PHP_EOL;
+			return false;
 		}
-		else
-			echo 'Not a file; cannot open' . PHP_EOL;
+		switch($paras['place']) {
+			case 'catalog':
+				exec_catch('open ' . $this->path());
+				break;
+			case 'temp':
+				exec_catch("open " . TEMPPATH . "/" . escape_shell($this->name));
+				break;
+		}
 		return true;
 	}
 	public function remove(array $paras = array()) {
@@ -310,7 +314,7 @@ class FullFile extends ListEntry {
 		}
 		return true;
 	}
-	function move($newname = '') {
+	public function move($newname = '') {
 	// renames a file
 		if($this->isredirect()) return true;
 		if($this->name === $newname) return true;

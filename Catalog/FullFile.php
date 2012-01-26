@@ -398,7 +398,10 @@ class FullFile extends ListEntry {
 						$this->p->add_entry($this);
 						// make redirect
 						$this->p->unsetf($oldname);
-						$this->p->add_redirect($oldname, $newname);
+						$this->p->add_redirect(array(
+							'handle' => $oldname,
+							'target' => $newname,
+						));
 						echo "Found new filename." . PHP_EOL;
 						return true;
 					}

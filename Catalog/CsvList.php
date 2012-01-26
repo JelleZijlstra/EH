@@ -308,6 +308,10 @@ class CsvList extends FileList {
 				1 => 'handle',
 				0 => 'target',
 			),
+			'checklist' => array(
+				'handle' => 'Handle of new redirect',
+				'target' => 'Target of new redirect',
+			),
 			'askifempty' => array('handle', 'target'),
 			'checkparas' => array(
 				'handle' => function($in) {

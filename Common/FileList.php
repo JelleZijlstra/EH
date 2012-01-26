@@ -528,10 +528,14 @@ abstract class FileList extends ExecuteHandler {
 			$paras['printvalues'] = false;
 			$paras['printresult'] = false;
 		}
+		// function to show error
+		$error = function($msg) {
+			echo 'bfind: error: ' . $msg . PHP_EOL;
+		};
 		// allow searching different arrays than $this->c;
 		$arr = $paras['array'];
 		if(!is_array($this->$arr)) {
-			echo 'Invalid array' . PHP_EOL;
+			$error('invalid array');
 			return false;
 		}
 		// process input
@@ -545,7 +549,7 @@ abstract class FileList extends ExecuteHandler {
 				if(strlen($para)) switch($para[0]) {
 					case '/':
 						if(!self::testregex($para)) {
-							echo 'Invalid regex: ' . $para . PHP_EOL;
+							$error('invalid regex: ' . $para);
 							continue 2;
 						}
 						$query['regex'] = true;
@@ -585,7 +589,7 @@ abstract class FileList extends ExecuteHandler {
 					$query['content'] = $para;
 					if($para[0] === '/') {
 						if(!self::testregex($para)) {
-							echo 'Invalid regex: ' . $para . PHP_EOL;
+							$error('invalid regex: ' . $para);
 							continue;
 						}
 						$query['regex'] = true;
@@ -596,7 +600,7 @@ abstract class FileList extends ExecuteHandler {
 		}
 		if(count($queries) === 0) {
 			if($paras['printresult'])
-				echo 'Invalid query' . PHP_EOL;
+				$error('invalid query');
 			if($this->config['debug'])
 				print_r($paras);
 			return false;
@@ -612,27 +616,30 @@ abstract class FileList extends ExecuteHandler {
 					? $file->{$query['field']}()
 					: $file->{$query['field']};
 				// apply function
-				if($paras['function'])
+				if($paras['function']) {
 					$hay = $paras['function']($hay);
-				if(isset($query['regex']))
+				}
+				if(isset($query['regex'])) {
 					$found = preg_match($query['content'], $hay);
-				else if(isset($query['>']))
+				} elseif(isset($query['>'])) {
 					$found = ($hay > $query['content']);
-				else if(isset($query['>=']))
+				} elseif(isset($query['>='])) {
 					$found = ($hay >= $query['content']);
-				else if(isset($query['<']))
+				} elseif(isset($query['<'])) {
 					$found = ($hay < $query['content']);
-				else if(isset($query['<=']))
+				} elseif(isset($query['<='])) {
 					$found = ($hay <= $query['content']);
-				else {
+				} else {
 					// loose comparison is intentional here
 					$found = ($query['content'] == $hay);
 				}
-				if(!$found)
+				if(!$found) {
 					continue 2;
+				}
 				// remember values if necessary
-				if($paras['printvalues'])
+				if($paras['printvalues']) {
 					$values[$query['field']] = $hay;
+				}
 			}
 			$out[$file->name] = $file;
 			if($paras['printentries']) {

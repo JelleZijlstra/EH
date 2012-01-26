@@ -918,6 +918,8 @@ class FullFile extends ListEntry {
 			'name' => __FUNCTION__,
 			'checklist' => array( /* No paras */ ),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		// the array to hold the title
+		$splittitle = array();
 		// function to create the internal title array
 		$makesplit = function($title) use (&$splittitle) {
 			$splittitle = explode(' ', $title);
@@ -1053,7 +1055,8 @@ class FullFile extends ListEntry {
 							$cmd2 = $this->getline();
 							if(strlen($cmd2) > 1) $newtitle = $cmd2;
 							else switch($cmd2) {
-								case 'q': return false;
+								case 'q':
+									return false;
 								case 's':
 									$this->title = $newtitle;
 									$this->log('Edited title');
@@ -1062,11 +1065,14 @@ class FullFile extends ListEntry {
 									$this->p->needsave();
 									return true;
 								case 'r':
-									if(!$newtitle) break 2;
+									if(!$newtitle)
+										break 2;
 									$this->log('Edited title');
 									$this->title = $newtitle;
 									return $this->edittitle();
-								case 'b': echo 'Quit full-title editing' . PHP_EOL; break 2;
+								case 'b':
+									echo 'Quit full-title editing' . PHP_EOL;
+									break 2;
 							}
 						}
 					}

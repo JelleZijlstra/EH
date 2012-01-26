@@ -26,12 +26,6 @@ abstract class ExecuteHandler extends EHICore {
 	);
 	// currently handled files
 	protected $current;
-	// array of codes that can be given in the 'execute' field of a command, and
-	// descriptions
-	private static $handlers = array(
-		'callmethod' => 'Execute the given method, with as its argument $paras.',
-		'callfunc' => 'Execute the given function, with as its argument $paras.',
-	);
 	private static $ExecuteHandler_commands = array(
 		'execute_help' => array('name' => 'execute_help',
 			'aka' => array('h', 'help', 'man'),
@@ -82,12 +76,8 @@ abstract class ExecuteHandler extends EHICore {
 	// command can have the following components
 	// - name: String basic name of the command
 	// - aka: Array synonyms
-	// - execute: String member of self::$handlers used to execute the command
 	// - desc: String description of what the command does
 	// - arg: String description of the arguments the command takes
-	// - setcurrent: Bool whether $this->current needs to be set to $arg
-	// - rawarg: Bool whether the argument can be used "raw" (i.e., unprocessed)
-	// - method: String method called by the command
 		if(isset($this->commands[$command['name']])) {
 			if(!isset($paras['ignoreduplicates']))
 				trigger_error('Command ' . $command['name'] . ' already exists', E_USER_NOTICE);
@@ -108,10 +98,6 @@ abstract class ExecuteHandler extends EHICore {
 					$this->synonyms[$aka] = $command['name'];
 			}
 		}
-		if(!isset($command['setcurrent']))
-			$command['setcurrent'] = false;
-		if(!isset($command['rawarg']))
-			$command['rawarg'] = false;
 		$this->commands[$command['name']] = $command;
 		return true;
 	}
@@ -120,10 +106,6 @@ abstract class ExecuteHandler extends EHICore {
 		// if we don't have those, little point in proceeding
 		if(!isset($command['name'])) {
 			trigger_error('No name given for new command', E_USER_NOTICE);
-			return false;
-		}
-		if(!isset($command['execute']) or !array_key_exists($command['execute'], self::$handlers)) {
-			trigger_error('No valid execute sequence given for new command ' . $command['name'], E_USER_NOTICE);
 			return false;
 		}
 		// warn if no documentation
@@ -171,24 +153,11 @@ abstract class ExecuteHandler extends EHICore {
 				$paras[] = $file;
 		}
 		// output redirection
-		if(($redirection['>'] !== false or $redirection['>$'] !== false) and
-			$cmd['execute'] !== 'quit') {
+		if($redirection['>'] !== false or $redirection['>$'] !== false) {
 			ob_start();
 		}
-		// return value of executed command
-		$ret = NULL;
-		// execute it
-		switch($cmd['execute']) {
-			case 'callmethod':
-				$ret = $this->{$cmd['name']}($paras);
-				break;
-			case 'callfunc':
-				$ret = $cmd['name']($paras);
-				break;
-			default:
-				trigger_error('Unrecognized execution mode', E_USER_NOTICE);
-				break;
-		}
+		// execute the command
+		$ret = $this->{$cmd['name']}($paras);
 		// always make return value accessible to script
 		$this->setvar('ret', $ret);
 
@@ -197,8 +166,6 @@ abstract class ExecuteHandler extends EHICore {
 			$returnvalue = $ret;
 		else
 			$returnvalue = self::EXECUTE_NEXT;
-		if($cmd['setcurrent'] and (count($argarray) !== 0))
-			$this->current = $argarray;
 		if($redirection['>'] !== false) {
 			$file = fopen($redirection['>'], 'w');
 			if(!$file) {

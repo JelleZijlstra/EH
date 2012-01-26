@@ -94,3 +94,4 @@ No such global variable: nosuchvar: EH notice
 @eratosthenes3.eh:
 @quit.eh:
 @bto10.eh:
+@arrayfunc.eh:

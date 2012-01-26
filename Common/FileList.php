@@ -37,11 +37,6 @@ abstract class FileList extends ExecuteHandler {
 			'desc' => 'Save the catalog to disk',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
-		'switchcli' => array('name' => 'switchcli',
-			'aka' => array('switch'),
-			'desc' => 'Switch to a different command line',
-			'arg' => 'Name of command line to switch to',
-			'execute' => 'callmethod'),
 		'listmembers' => array('name' => 'listmembers',
 			'aka' => array('ls'),
 			'desc' => 'List the members of this list',
@@ -330,21 +325,6 @@ abstract class FileList extends ExecuteHandler {
 		$this->save();
 		echo shell_exec('diff ' . static::$fileloc . ' ' . static::$fileloc . '.save');
 		exec_catch('rm ' . static::$fileloc . '.save');
-	}
-	public function switchcli(array $paras) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(0 => 'to'),
-			'checklist' => array('to' => 'CLI to switch to'),
-			'errorifempty' => array('to'),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$to = $paras['to'];
-		global ${$to};
-		if(!${$to} or !is_object(${$to}) or !method_exists(${$to}, 'cli')) {
-			echo 'No such variable or CLI' . PHP_EOL;
-			return false;
-		}
-		return ${$to}->cli();
 	}
 	/* listing, manipulating, and summarizing the whole list */
 	public function listmembers(array $paras) {

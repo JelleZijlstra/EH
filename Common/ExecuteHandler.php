@@ -46,6 +46,11 @@ abstract class ExecuteHandler extends EHICore {
 			'desc' => 'Set a configuration variable',
 			'arg' => 'Variables to be set',
 			'execute' => 'callmethod'),
+		'switchcli' => array('name' => 'switchcli',
+			'aka' => array('switch'),
+			'desc' => 'Switch to a different command line',
+			'arg' => 'Name of command line to switch to',
+			'execute' => 'callmethod'),
 		'print_paras' => array('name' => 'print_paras',
 			'desc' => 'Print its arguments',
 			'arg' => 'As many as you want',
@@ -917,6 +922,21 @@ abstract class ExecuteHandler extends EHICore {
 				}
 			},
 		));
+	}
+	public function switchcli(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'to'),
+			'checklist' => array('to' => 'CLI to switch to'),
+			'errorifempty' => array('to'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$to = $paras['to'];
+		global ${$to};
+		if(!${$to} or !is_object(${$to}) or !method_exists(${$to}, 'cli')) {
+			echo 'No such variable or CLI' . PHP_EOL;
+			return false;
+		}
+		return ${$to}->cli();
 	}
 	public function print_paras() {
 	// dump the arguments it gets, useful for debugging ehphp

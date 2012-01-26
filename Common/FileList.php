@@ -346,11 +346,102 @@ abstract class FileList extends ExecuteHandler {
 		}
 		return ${$to}->cli();
 	}
-	public function listmembers() {
+	/* listing, manipulating, and summarizing the whole list */
+	public function listmembers(array $paras) {
 		foreach($this->c as $child)
 			echo $child->name . PHP_EOL;
 	}
-	/* finding files etcetera */
+	public function stats(array $paras = array()) {
+		$results = array();
+		foreach($this->c as $file) {
+			foreach($file as $key => $property) {
+				if($property) {
+					if(!isset($results[$key])) $results[$key] = 0;
+					$results[$key]++;
+				}
+				if(is_array($property)) {
+					foreach($property as $key => $prop) {
+						if($prop) {
+							if(!isset($results[$key])) $results[$key] = 0;
+							$results[$key]++;
+						}
+					}
+				}
+			}
+		}
+		$total = count($this->c);
+		echo 'Total number of files is ' . $total . '.' . PHP_EOL;
+		ksort($results);
+		foreach($results as $field => $number) {
+			echo $field . ': ' . $number . ' of ' . $total . ' (' . round($number/$total*100, 1) . '%)' . PHP_EOL;
+		}
+		return;
+	}
+	public function sort(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'field',
+				'n' => 'numeric',
+				'r' => 'reverse',
+			),
+			'checklist' => array(
+				'field' => 'Field to sort under',
+				'numeric' => 'Perform a numeric sort',
+				'reverse' => 'Whether to reverse the sort',
+			),
+			'default' => array(
+				'field' => false,
+				'numeric' => false,
+				'reverse' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$field = $paras['field'];
+		// we'll need to save
+		$this->needsave();
+		// if field not set, sort by name (= array key)
+		if($field === false) {
+			$this->needsave();
+			if($paras['reverse'])
+				return krsort($this->c);
+			else
+				return ksort($this->c);
+		}
+		// check whether the field is valid
+		$childclass = static::$childclass;
+		if(!$childclass::hasproperty($field)) {
+			echo 'No such property';
+			return false;
+		}
+		// create numeric sort function
+		if($paras['numeric']) {
+			$func = function($obj1, $obj2) use($field) {
+				$field1 = $obj1->$field;
+				$field2 = $obj2->$field;
+				if($field1 > $field2)
+					return 1;
+				else if($field1 < $field2)
+					return -1;
+				else
+					return 0;
+			};
+		}
+		// or create string sort function
+		else {
+			$func = function($obj1, $obj2) use($field) {
+				return strcmp($obj1->$field, $obj2->$field);
+			};
+		}
+		if($paras['reverse']) {
+			// wrap $func in a new lambda function
+			return uasort($this->c, function($obj1, $obj2) use($func) {
+				return -1 * $func($obj1, $obj2);
+			});
+		}
+		else
+			return uasort($this->c, $func);
+	}
+	/* finding files and making lists */
 	public function mlist(array $paras) {
 	// Make a list of possible values for a field with their frequency.
 	// TODO: make this more efficient; especially with 'groupby' used, this may
@@ -701,6 +792,7 @@ abstract class FileList extends ExecuteHandler {
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		return $this->bfind(array($paras['field'] => $paras['value']));
 	}
+	/* statistics */
 	public function average($files, $field) {
 		if(!is_array($files) or count($files) === 0)
 			return false;
@@ -962,96 +1054,6 @@ abstract class FileList extends ExecuteHandler {
 			}
 		}
 		return true;
-	}
-	public function stats(array $paras = array()) {
-		$results = array();
-		foreach($this->c as $file) {
-			foreach($file as $key => $property) {
-				if($property) {
-					if(!isset($results[$key])) $results[$key] = 0;
-					$results[$key]++;
-				}
-				if(is_array($property)) {
-					foreach($property as $key => $prop) {
-						if($prop) {
-							if(!isset($results[$key])) $results[$key] = 0;
-							$results[$key]++;
-						}
-					}
-				}
-			}
-		}
-		$total = count($this->c);
-		echo 'Total number of files is ' . $total . '.' . PHP_EOL;
-		ksort($results);
-		foreach($results as $field => $number) {
-			echo $field . ': ' . $number . ' of ' . $total . ' (' . round($number/$total*100, 1) . '%)' . PHP_EOL;
-		}
-		return;
-	}
-	public function sort(array $paras = array()) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(
-				0 => 'field',
-				'n' => 'numeric',
-				'r' => 'reverse',
-			),
-			'checklist' => array(
-				'field' => 'Field to sort under',
-				'numeric' => 'Perform a numeric sort',
-				'reverse' => 'Whether to reverse the sort',
-			),
-			'default' => array(
-				'field' => false,
-				'numeric' => false,
-				'reverse' => false,
-			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$field = $paras['field'];
-		// we'll need to save
-		$this->needsave();
-		// if field not set, sort by name (= array key)
-		if($field === false) {
-			$this->needsave();
-			if($paras['reverse'])
-				return krsort($this->c);
-			else
-				return ksort($this->c);
-		}
-		// check whether the field is valid
-		$childclass = static::$childclass;
-		if(!$childclass::hasproperty($field)) {
-			echo 'No such property';
-			return false;
-		}
-		// create numeric sort function
-		if($paras['numeric']) {
-			$func = function($obj1, $obj2) use($field) {
-				$field1 = $obj1->$field;
-				$field2 = $obj2->$field;
-				if($field1 > $field2)
-					return 1;
-				else if($field1 < $field2)
-					return -1;
-				else
-					return 0;
-			};
-		}
-		// or create string sort function
-		else {
-			$func = function($obj1, $obj2) use($field) {
-				return strcmp($obj1->$field, $obj2->$field);
-			};
-		}
-		if($paras['reverse']) {
-			// wrap $func in a new lambda function
-			return uasort($this->c, function($obj1, $obj2) use($func) {
-				return -1 * $func($obj1, $obj2);
-			});
-		}
-		else
-			return uasort($this->c, $func);
 	}
 }
 ?>

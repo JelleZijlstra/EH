@@ -25,11 +25,10 @@ class CsvList extends FileList {
 			'arg' => 'New file handle',
 			'execute' => 'callmethod',
 			'setcurrent' => true),
-		'catalog_backup' => array('name' => 'catalog_backup',
-			'aka' => array('backup'),
+		'backup' => array('name' => 'backup',
 			'desc' => 'Save a backup of the catalog',
 			'arg' => 'None',
-			'execute' => 'callfunc'),
+			'execute' => 'callmethod'),
 		'format' => array('name' => 'format',
 			'desc' => 'Format an individual reference',
 			'arg' => 'File handle',
@@ -153,6 +152,15 @@ class CsvList extends FileList {
 		if(!$this->has($handle) or !$this->has($target)) return false;
 		$this->c[$handle]->name = 'SEE ' . $target;
 		$this->c[$handle]->format();
+		return true;
+	}
+	public function backup(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$date = new DateTime();
+		exec_catch('cp ' . CATALOG . ' ' . BPATH . '/Catalog/Backup/catalog.csv.' . $date->format('YmdHis'));
 		return true;
 	}
 	/* load related lists */

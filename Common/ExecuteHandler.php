@@ -249,14 +249,17 @@ abstract class ExecuteHandler extends EHICore {
 	}
 	static protected function printvar($in) {
 		// print a variable in human-readable form.
-		if($in === true)
+		if($in === true) {
 			echo '(true)';
-		else if($in === false)
+		} elseif($in === false) {
 			echo '(false)';
-		else if($in === NULL)
+		} elseif($in === NULL) {
 			echo '(null)';
-		else
+		} elseif($in === '') {
+			echo '(empty string)';
+		} else {
 			print_r($in);
+		}
 	}
 	protected function process_paras(&$paras, $pp_paras, &$split = NULL) {
 		/*

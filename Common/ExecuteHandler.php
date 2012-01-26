@@ -651,14 +651,12 @@ abstract class ExecuteHandler extends EHICore {
 		else
 			return false;
 	}
-	protected function getline(array $paras) {
+	protected function getline($paras) {
 	// get a line from stdin, allowing for use of arrow keys, backspace, etc.
 	// Return false upon EOF or failure.
-		// common use case
-		if(is_string($paras))
-			$paras = array('prompt' => $paras);
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
+			'toarray' => 'prompt',
 			'checklist' => array(
 				'lines' =>
 					'Array of lines that can be accessed when KEY_UP and KEY_DOWN are pressed',

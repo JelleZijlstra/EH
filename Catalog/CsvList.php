@@ -85,7 +85,7 @@ class CsvList extends FileList {
 			'aka' => array('p', 'parse'),
 			'desc' => 'Parse a string into a reference list',
 			'arg' => 'Input string',
-			'execute' => 'callfunc'),
+			'execute' => 'callmethod'),
 		'parse_wtext' => array('name' => 'parse_wtext',
 			'aka' => array('tparse'),
 			'desc' => 'Parse an input file handle into a Wikipedia-ready file',
@@ -325,8 +325,17 @@ class CsvList extends FileList {
 			array('isnew' => true)
 		);
 	}
-	/* do things with files */
-	protected function parse_wtext(array $paras = array()) {
+	/* parsing - needs overall revision, and coordination with Parser class */
+	protected function parse_wlist(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'file'),
+			'default' => array('file' => 'File to parse'),
+			'errorifempty' => array('file'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		return parse_wlist($paras['file']);
+	}
+	protected function parse_wtext(array $paras) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(0 => 'file'),
@@ -337,6 +346,7 @@ class CsvList extends FileList {
 			$paras['file'] = '/Users/jellezijlstra/Dropbox/Open WP/' . $paras['file'];
 		return parse_wtext($paras['file']);
 	}
+	/* do things with files */
 	public function byfile() {
 	// deprecated
 		$this->cli();

@@ -381,6 +381,9 @@ abstract class FileList extends ExecuteHandler {
 				'groupby' => '',
 				'sort' => 'ksort',
 			),
+			'errorifempty' => array(
+				'field',
+			),
 			'checkparas' => array(
 				'function' => function($in) {
 					return ($in === '') or function_exists($in);

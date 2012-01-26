@@ -512,7 +512,7 @@ abstract class ExecuteHandler extends EHICore {
 		}
 		return implode("\n", $output);
 	}
-	protected function configset($paras = array()) {
+	protected function configset(array $paras) {
 	// sets something in the $this->config array, which configures the EH instance
 		foreach($paras as $key => $value) {
 			if(array_key_exists($key, $this->config))
@@ -557,7 +557,7 @@ abstract class ExecuteHandler extends EHICore {
 		else
 			return true;
 	}
-	private function shell(array $paras = array()) {
+	private function shell(array $paras) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(0 => 'cmd'),
@@ -651,7 +651,7 @@ abstract class ExecuteHandler extends EHICore {
 		else
 			return false;
 	}
-	protected function getline($paras = array()) {
+	protected function getline(array $paras) {
 	// get a line from stdin, allowing for use of arrow keys, backspace, etc.
 	// Return false upon EOF or failure.
 		// common use case
@@ -823,7 +823,7 @@ abstract class ExecuteHandler extends EHICore {
 			$showcursor();
 		}
 	}
-	protected function menu($paras) {
+	protected function menu(array $paras) {
 	// Function that creates a menu and gets input
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,

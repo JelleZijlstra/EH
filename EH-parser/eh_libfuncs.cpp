@@ -7,6 +7,7 @@
 #include "eh.h"
 #include "eh_libfuncs.h"
 #include "eh.bison.hpp"
+#include <math.h>
 
 void printvar_retval(ehretval_t in);
 static void printvar_array(ehvar_t **in);
@@ -262,4 +263,32 @@ EHLIBFUNC(include) {
 	is_interactive = old_is_interactive;
 	delete parser;
 	return;
+}
+
+// power
+EHLIBFUNC(pow) {
+	ehretval_t *args = (ehretval_t *) Malloc(2 * sizeof(ehretval_t));
+	if(eh_getargs(paras, 2, args, context, __FUNCTION__))
+		EHLF_RETFALSE;
+	if(args[0].type == int_e && args[1].type == int_e) {
+		retval->type = int_e;
+		retval->intval = (int) pow((float) args[0].intval, (float) args[1].intval);
+	}
+	else if(args[0].type == int_e && args[1].type == float_e) {
+		retval->type = float_e;
+		retval->floatval = pow((float) args[0].intval, args[1].floatval);
+	}
+	else if(args[0].type == float_e && args[1].type == int_e) {
+		retval->type = float_e;
+		retval->floatval = pow(args[0].floatval, (float) args[1].intval);
+	}
+	else if(args[0].type == float_e && args[1].type == float_e) {
+		retval->type = float_e;
+		retval->floatval = pow(args[0].floatval, args[1].floatval);
+	}
+	else {
+		eh_error_type("argument 0 to pow", args[0].type, enotice_e);
+		eh_error_type("argument 1 to pow", args[1].type, enotice_e);
+		EHLF_RETFALSE;
+	}
 }

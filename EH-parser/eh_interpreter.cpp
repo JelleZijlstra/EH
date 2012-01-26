@@ -68,6 +68,7 @@ ehlibfunc_t libfuncs[] = {
 	LIBFUNCENTRY(is_float)
 	LIBFUNCENTRY(class_is)
 	LIBFUNCENTRY(include)
+	LIBFUNCENTRY(pow)
 	{NULL, NULL}
 };
 

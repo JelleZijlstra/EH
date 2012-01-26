@@ -1,7 +1,7 @@
 #!/bin/bash
 # addalias.sh
 # Add a persistent alias in bash
-if [ -z $2 ]; then
+if [ -z "$2" ]; then
 	echo 'Invalid input'
 	exit
 fi

@@ -412,7 +412,7 @@ abstract class ExecuteHandler extends EHICore {
 					}
 					foreach($pp_value as $key) {
 						if(!isset($paras[$key])) {
-							$showerror('parameter ' . $key . ' should be set');
+							$showerror('parameter "' . $key . '" should be set');
 						}
 					}
 					break;

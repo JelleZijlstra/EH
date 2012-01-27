@@ -954,7 +954,7 @@ abstract class EHICore {
 			'errorifempty' => array('file'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// open input file
-		$in = fopen($file, 'r');
+		$in = fopen($paras['file'], 'r');
 		if(!$in) {
 			echo 'Invalid input file' . PHP_EOL;
 			return false;

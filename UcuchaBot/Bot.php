@@ -184,7 +184,7 @@ class Bot extends Snoopy {
 		foreach($result['query']['pages'] as $i_page) {
 			$my_page = $i_page;
 		}
-		$pagetext = $this->fetchwp(array($page));
+		$pagetext = $this->fetchwp($paras['page']));
 		if(preg_match("/(\{\{(no)?bots\|deny=UcuchaBot\}\}|\{\{nobots\}\})/", $pagetext)) {
 			echo "Edit denied to page " . $paras['page'] . PHP_EOL;
 			return false;

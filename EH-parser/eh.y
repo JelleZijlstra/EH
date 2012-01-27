@@ -198,11 +198,14 @@ expression:
 	| '-' expression %prec T_NEGATIVE
 							{ $$ = eh_addnode(T_NEGATIVE, 1, $2); }
 	| expression T_ACCESSOR expression
-							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
+							{
+								$$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3);
+							}
 	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
 	| '&' lvalue_get %prec T_REFERENCE
 							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
-	| '@' T_TYPE expression %prec '@'	{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
+	| '@' T_TYPE expression %prec '@'	
+							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| expression ':' arglist
 							{ $$ = eh_addnode(':', 2, $1, $3); }
 	| expression '=' expression
@@ -267,7 +270,7 @@ simple_expr:
 	| simple_expr T_ACCESSOR simple_expr
 							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
 	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
-	| '@' T_TYPE simple_expr
+	| '@' T_TYPE simple_expr %prec '@'
 							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| simple_expr ':' arglist
 							{ $$ = eh_addnode(':', 2, $1, $3); }
@@ -328,7 +331,8 @@ line_expr:
 	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
 	| '&' lvalue_get %prec T_REFERENCE
 							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
-	| '@' T_TYPE expression	{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
+	| '@' T_TYPE expression	%prec '@'
+							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| bareword ':' arglist
 							{ $$ = eh_addnode(':', 2, $1, $3); }
 	| '$' lvalue_get ':' arglist

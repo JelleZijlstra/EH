@@ -317,7 +317,7 @@ abstract class ExecuteHandler extends EHICore {
 		 */
 		if(!is_array($pp_paras)) {
 			// bogus input
-			echo 'process_paras: error: invalid parameters' . PHP_EOL;
+			echo 'process_paras: error: invalid pp_paras' . PHP_EOL;
 			return PROCESS_PARAS_ERROR_FOUND;
 		}
 		if(!is_array($paras)) {
@@ -333,7 +333,6 @@ abstract class ExecuteHandler extends EHICore {
 		if(isset($paras['help'])) {
 			if(isset($pp_paras['name'])) {
 				$this->execute_help(array($pp_paras['name']));
-				unset($pp_paras['name']);
 			}
 			// without checklist, we can't do much
 			if(!isset($pp_paras['checklist']))

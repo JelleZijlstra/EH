@@ -396,9 +396,11 @@ class Bot extends Snoopy {
 					'kind' => 'appendtext',
 					'summary' => 'Failed to write maindate: ' .
 						$page['name'],
-					'text' => 'I was unable to insert a ' .
+					'text' => '==Failed to insert maindate on [[Talk:' .
+						$page['name'] . "]]==\n" .
+						' I was unable to insert a ' .
 						'<code>|maindate=</code> on the page [[Talk:' .
-						$page['name'] . '. It is TFA on ' .
+						$page['name'] . ']]. It is TFA on ' .
 						$page['date'] . '. Thank you! ~~~~',
 					'donotmarkasbot' => true,
 				));
@@ -764,7 +766,7 @@ class Bot extends Snoopy {
 		echo $newtext . PHP_EOL;
 	}
 	/* Helper methods */
-	private function parse_ah(array $paras = array()) {
+	private function parse_ah(array $paras) {
 	// parse an article's ArticleHistory template
 		//@para ['text'] text of article talk page
 		//@para ['page'] page to be checked. If ['text'] is given, this is disregarded, to avoid an unnecessary API call.
@@ -775,12 +777,11 @@ class Bot extends Snoopy {
 				return false;
 			}
 		}
-		preg_match('/{{\s*ArticleHistory\s*([^}]*?)\s*}}/u', $paras['text'], $matches);
-		$ahtext = $matches[1];
-		if(!$ahtext) {
+		if(!preg_match('/{{\s*ArticleHistory\s*([^}]*?)\s*}}/u', $paras['text'], $matches)) {
 			echo 'Could not retrieve AH template' . PHP_EOL;
 			return false;
 		}
+		$ahtext = $matches[1];
 		$ahparas = array();
 		$split1 = explode('|', $ahtext);
 		foreach($split1 as $para) {

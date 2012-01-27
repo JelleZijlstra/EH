@@ -67,6 +67,7 @@ ehlibfunc_t libfuncs[] = {
 	LIBFUNCENTRY(is_range)
 	LIBFUNCENTRY(is_float)
 	LIBFUNCENTRY(class_is)
+	LIBFUNCENTRY(get_type)
 	LIBFUNCENTRY(include)
 	LIBFUNCENTRY(pow)
 	{NULL, NULL}
@@ -1108,6 +1109,10 @@ ehretval_t eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 	}
 	else if(function.type == func_e) {
 		ret = call_function(function.funcval, paras[1], context, newcontext);
+	}
+	// ignore null_e, because private method calls otherwise get confused
+	else if(function.type != null_e) {
+		eh_error_type("function call", function.type, eerror_e);
 	}
 	return ret;
 }

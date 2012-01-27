@@ -229,6 +229,15 @@ EHLIBFUNC(class_is) {
 	else
 		EHLF_RETFALSE;
 }
+// get the type of a variable
+EHLIBFUNC(get_type) {
+	ehretval_t *args = (ehretval_t *)Malloc(1 * sizeof(ehretval_t));
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
+		EHLF_RETFALSE;
+	}
+	retval->type = string_e;
+	retval->stringval = strdup(get_typestring(args[0].type));
+}
 
 /*
  * Including files

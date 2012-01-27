@@ -304,6 +304,10 @@ abstract class ExecuteHandler extends EHICore {
 		 *      with the value for the key in $paras as its argument, and will
 		 *      throw an error if the function returns false. The default
 		 *      value of a parameter is always accepted.
+		 *    'listoptions': An associative array, similar to 'checkparas', but
+		 *      instead of a function, each para has an array associated with 
+		 *      it. The code throws an error if the value for a para is not in 
+		 *      the array for that para.
 		 *    'split': An array of paras that are to be split off into a
 		 *      separate array, the $split argument. This is useful when a
 		 *      method passes some of its parameters to another method, but also
@@ -466,6 +470,27 @@ abstract class ExecuteHandler extends EHICore {
 						}
 						if(!$func($paras[$para], $paras)) {
 							$showerror('invalid value "' . $paras[$para] . '" for parameter "' . $para . '"');
+						}
+					}
+					break;
+				case 'listoptions': // list options for a para
+					if(!is_array($pp_value)) {
+						$showerror('listoptions parameter is not an array');
+						break;
+					}
+					foreach($pp_value as $para => $options) {
+						if(!isset($paras[$para])) {
+							continue;
+						}
+						// always accept default value
+						if(isset($pp_paras['default'][$para]) and ($paras[$para] === $pp_paras['default'][$para])) {
+							continue;
+						}
+						if(!in_array($paras[$para], $options, true)) {
+							$showerror('invalid value "' . $paras[$para] . 
+								'" for parameter "' . $para . '" (allowed ' .
+								'options: "' . implode('", "', $options) . '")'
+							);
 						}
 					}
 					break;

@@ -217,10 +217,8 @@ class FullFile extends ListEntry {
 				'folder' => false,
 				'print' => false,
 			),
-			'checkparas' => array(
-				'type' => function($in) {
-					return in_array($in, array('shell', 'url', 'none'));
-				},
+			'listoptions' => array(
+				'type' => array('shell', 'url', 'none'),
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!$this->isfile()) {

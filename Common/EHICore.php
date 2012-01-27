@@ -1000,4 +1000,5 @@ abstract class EHICore {
 			$first = false;
 			echo $value;
 		}
+	}
 }

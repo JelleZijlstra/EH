@@ -23,7 +23,7 @@ class FacsList extends FileList {
 		$wpfac = $this->bot->fetchwp(array('page' => self::fac));
 		if($wpfac === false) {
 			echo 'Unable to retrieve FAC' . PHP_EOL;
-			exit(1);
+			return false;
 		}
 		$lines = preg_split('/[\r\n]+/u', $wpfac);
 		$facs = array();
@@ -38,10 +38,15 @@ class FacsList extends FileList {
 		$lastid = 0; //initialize
 		foreach($facs as $key => $fac) {
 			if($this->has($fac)) {
-				$this->set($fac, array('isonfac' => true, 'archived' => false));
+				$this->set(array(
+					0 => $fac, 
+					'isonfac' => true, 
+					'archived' => false
+				));
 				$id = $this->get($fac, 'id');
 				if($id < $lastid)
-					$this->set($fac, array(
+					$this->set(array(
+						0 => $fac,
 						'id' => ++$lastid,
 						'date' => $facdate
 					));

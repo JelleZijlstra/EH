@@ -267,10 +267,11 @@ class Bot extends Snoopy {
 		}
 		return true;
 	}
-	public function fetchwp(array $paras) {
+	public function fetchwp($paras) {
 	// fetch a page from WP
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
+			'toarray' => 'page',
 			'synonyms' => array(0 => 'page'),
 			'checklist' => array(
 				'page' => 'Page to fetch',

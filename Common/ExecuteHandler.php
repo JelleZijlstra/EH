@@ -347,6 +347,12 @@ abstract class ExecuteHandler extends EHICore {
 					self::printvar($pp_paras['default'][$name]);
 					echo PHP_EOL;
 				}
+				if(isset($pp_paras['errorifempty']) and in_array($name, $pp_paras['errorifempty'])) {
+					echo 'This parameter is required.' . PHP_EOL;
+				}
+				if(isset($pp_paras['askifempty']) and in_array($name, $pp_paras['askifempty'])) {
+					echo 'This parameter is required; if it is not set, the user will be asked to provide a value.' . PHP_EOL;
+				}
 				echo PHP_EOL;
 			}
 			if(isset($pp_paras['synonyms'])) {

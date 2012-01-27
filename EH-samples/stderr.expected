@@ -95,3 +95,4 @@ No such global variable: nosuchvar: EH notice
 @quit.eh:
 @bto10.eh:
 @arrayfunc.eh:
+@get_type.eh:

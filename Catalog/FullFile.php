@@ -350,7 +350,10 @@ class FullFile extends ListEntry {
 			$this->p->add_entry($this);
 			// make redirect
 			$this->p->unsetf($oldname);
-			$this->p->add_redirect($oldname, $newname);
+			$this->p->add_redirect(array(
+				'handle' => $oldname,
+				'target' => $newname,
+			));
 		}
 		return true;
 	}
@@ -367,23 +370,25 @@ class FullFile extends ListEntry {
 				$elist = $this->p->c;
 				$searchlist = $this->p->lslist;
 				break;
-			default: echo "Unrecognized mode"; return false;
+			default:
+				echo "Unrecognized mode";
+				return false;
 		}
 		echo PHP_EOL . "Type 'q' to quit and 'i' to get information about this file." . PHP_EOL;
 		// ask user
 		while(true) {
 			$newname = $this->getline("New name of file: ");
 			// get a way to escape
-			if($newname === "q")
+			if($newname === "q") {
 				return false;
-			if($newname === "i")
+			} elseif($newname === "i") {
 				$this->my_inform();
-			else {
+			} else {
 				$searchres = $searchlist[$newname];
 				if($searchres) {
-					if($elist[$searchres->name])
+					if(isset($elist[$searchres->name])) {
 						echo "File already exists in catalog." . PHP_EOL;
-					else {
+					} else {
 						$this->p->needsave();
 						logwrite("File " . $this->name . " renamed to " . $newname . " (" . $mode . "check)." . PHP_EOL);
 						if($mode === 'ls') {

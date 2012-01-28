@@ -16,7 +16,7 @@ require_once(BPATH . '/Common/ListEntry.php');
 abstract class FileList extends ExecuteHandler {
 // this is an abstract class for classes that implement lists of entries, whether references or taxa.
 	protected $needsave; // whether we need to save
-	protected $c; //array of children
+	public $c; //array of children
 	protected $labels; // first line of CSV file
 	protected static $fileloc; // where the file lives that we get our list from
 	protected static $childclass; // name of the class that children need to be a member of

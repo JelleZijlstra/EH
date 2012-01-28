@@ -77,3 +77,5 @@ quit.eh
 bto10.eh
 arrayfunc.eh
 get_type.eh
+root.eh
+sign.eh

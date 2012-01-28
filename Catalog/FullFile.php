@@ -267,7 +267,7 @@ class FullFile extends ListEntry {
 			'default' => array(
 				'place' => 'catalog',
 			),
-			'listoptons' => array(
+			'listoptions' => array(
 				'place' => array('catalog', 'temp'),
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;

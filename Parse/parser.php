@@ -102,7 +102,7 @@ class Parser {
 				switch(getinput()) {
 					case 'q': $this->shutdown();
 					case 'r':
-						if(!$csvlist->add_redirect($citename))
+						if(!$csvlist->add_redirect(array('handle' => $citename)))
 							$this->shutdown();
 						$this->refs[$cite] = $this->cite($target);
 						break;

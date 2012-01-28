@@ -457,7 +457,7 @@ abstract class FileList extends ExecuteHandler {
 			),
 			'checkparas' => array(
 				'function' => function($in) {
-					return ($in === '') or function_exists($in);
+					return function_exists($in);
 				},
 				'sort' => function($in) {
 					return function_exists($in);
@@ -476,7 +476,7 @@ abstract class FileList extends ExecuteHandler {
 					return true;
 				},
 				'groupby' => function($in) use($childclass) {
-					return ($in === '') or $childclass::hasproperty($in);
+					return $childclass::hasproperty($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
@@ -591,7 +591,7 @@ abstract class FileList extends ExecuteHandler {
 			),
 			'checkparas' => array(
 				'openfiles' => function($in) use($childclass) {
-					return ($in === false) or method_exists($childclass, 'openf');
+					return method_exists($childclass, 'openf');
 				}
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND)
@@ -818,10 +818,8 @@ abstract class FileList extends ExecuteHandler {
 			'name' => __FUNCTION__,
 			'checklist' => array('return' => 'Type of return value'),
 			'default' => array('return' => 'value'),
-			'checkparas' => array(
-				'return' => function($in) {
-					return ($in === 'object') or ($in === 'value');
-				},
+			'listoptions' => array(
+				'return' => array('object', 'value'),
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!is_array($files) or count($files) === 0)
@@ -855,9 +853,7 @@ abstract class FileList extends ExecuteHandler {
 			'checklist' => array('return' => 'Type of return value'),
 			'default' => array('return' => 'value'),
 			'checkparas' => array(
-				'return' => function($in) {
-					return ($in === 'object') or ($in === 'value');
-				},
+				'return' => array('object', 'value'),
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!is_array($files) or count($files) === 0) return false;

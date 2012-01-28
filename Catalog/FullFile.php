@@ -267,10 +267,8 @@ class FullFile extends ListEntry {
 			'default' => array(
 				'place' => 'catalog',
 			),
-			'checkparas' => array(
-				'place' => function($in) {
-					return in_array($in, array('catalog', 'temp'));
-				}
+			'listoptons' => array(
+				'place' => array('catalog', 'temp'),
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!$this->isfile()) {

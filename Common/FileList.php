@@ -567,6 +567,8 @@ abstract class FileList extends ExecuteHandler {
 					'Whether the names of the entries found should be printed',
 				'printresult' =>
 					'Whether the count of entries found should be printed',
+				'printproperties' =>
+					'Array of properties of entries found that should be printed',
 				'setcurrent' =>
 					'Whether $this->current should be set',
 				'return' =>
@@ -582,6 +584,7 @@ abstract class FileList extends ExecuteHandler {
 				'printentries' => true,
 				'printvalues' => false,
 				'printresult' => true,
+				'printproperties' => false,
 				'setcurrent' => true,
 				'return' => 'objectarray',
 				'openfiles' => false,
@@ -592,7 +595,25 @@ abstract class FileList extends ExecuteHandler {
 			'checkparas' => array(
 				'openfiles' => function($in) use($childclass) {
 					return method_exists($childclass, 'openf');
-				}
+				},
+				'printproperties' => function($in) use($childclass) {
+					// check whether it's even an array
+					if(!is_array($in)) {
+						return false;
+					}
+					// check all array entries
+					foreach($in as $prop) {
+						if(!is_string($prop) or !$childclass::hasproperty($prop)) {
+							echo 'bfind: invalid printproperties entry: ';
+							self::printvar($prop);
+							return false;
+						}
+					}
+					return true;
+				},
+			),
+			'listoptions' => array(
+				'return' => array('objectarray', 'namearray', 'count'),
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND)
 			return false;
@@ -601,6 +622,7 @@ abstract class FileList extends ExecuteHandler {
 			$paras['printentries'] = false;
 			$paras['printvalues'] = false;
 			$paras['printresult'] = false;
+			$paras['printproperties'] = false;
 		}
 		// function to show error
 		$error = function($msg) {
@@ -725,6 +747,13 @@ abstract class FileList extends ExecuteHandler {
 			if($paras['printvalues']) {
 				foreach($values as $key => $value)
 					echo $key . ': ' . $value . PHP_EOL;
+			}
+			if($paras['printproperties']) {
+				foreach($paras['printproperties'] as $prop) {
+					echo $prop . ': ';
+					self::printvar($file->$prop);
+					echo PHP_EOL;
+				}
 			}
 			// TODO: add method of the sort where $paras['dothis'] = array('openfiles') will replace this
 			if($paras['openfiles']) {

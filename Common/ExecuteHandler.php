@@ -971,9 +971,9 @@ abstract class ExecuteHandler extends EHICore {
 		}
 		return ${$to}->cli();
 	}
-	public function print_paras() {
+	public function print_paras(array $paras) {
 	// dump the arguments it gets, useful for debugging ehphp
-		var_dump(func_get_args());
+		var_dump($paras);
 		return true;
 	}
 	public function test($paras) {

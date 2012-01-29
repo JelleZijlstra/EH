@@ -682,13 +682,22 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 						eh_execute(node2->opval->paras[0], context)
 					);
 					break;
+				default: // non-named parameters with an expression
+					// non-named parameters
+					index_r.type = int_e;
+					index_r.intval = count;
+					value_r = eh_execute(node2, context);
+					array_insert_retval(paras, index_r, value_r);
+					count++;
+					break;
 			}
 		}
 		else {
 			// non-named parameters
 			index_r.type = int_e;
 			index_r.intval = count;
-			array_insert_retval(paras, index_r, *node2);
+			value_r = eh_execute(node2, context);
+			array_insert_retval(paras, index_r, value_r);
 			count++;
 		}
 		node = node->opval->paras[0];

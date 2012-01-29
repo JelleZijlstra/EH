@@ -70,7 +70,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_ARRAYMEMBER
 %token T_EXPRESSION
 %token T_DOUBLEARROW
-%token T_COMMAND T_SHORTPARA T_LONGPARA
+%token T_COMMAND T_SHORTPARA T_LONGPARA T_REDIRECT
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %left T_LOWPREC /* Used to prevent S/R conflicts */
@@ -397,16 +397,12 @@ paralist:
 	;
 
 para:
-	string					{ $$ = $1; }
-	| T_INTEGER				{ $$ = eh_get_int($1); }
-	| T_FLOAT				{ $$ = eh_get_float($1); }
-	| T_NULL				{ $$ = eh_get_null(); }
-	| T_BOOL				{ $$ = eh_get_bool($1); }
+	simple_expr					{ $$ = $1; }
 	| T_MINMIN string '=' simple_expr
 							{ $$ = eh_addnode(T_LONGPARA, 2, $2, $4); }
 	| T_MINMIN string		{ $$ = eh_addnode(T_LONGPARA, 1, $2); }
 	| '-' string			{ $$ = eh_addnode(T_SHORTPARA, 1, $2); }
-	| '>' string			{ $$ = eh_addnode('>', 1, $2); }
+	| '>' string			{ $$ = eh_addnode(T_REDIRECT, 1, $2); }
 	| '}' string			{ $$ = eh_addnode('}', 1, $2); }
 	;
 

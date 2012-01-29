@@ -248,7 +248,6 @@ GETFUNCPROTO(attribute, attribute_enum)
 extern bool returning;
 
 char *eh_getinput(void);
-void eh_interactive(void);
 
 // represents the interactivity of the parser. 0 is non-interactive, 1 just reads stuff from stdin, 2 gives a prompt. Of course, this should really be a property of the interpreter object.
 extern int is_interactive;

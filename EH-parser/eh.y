@@ -554,3 +554,28 @@ int EHI::eh_interactive(void) {
 	interpreter = oldinterpreter;
 	return ret.intval;
 }
+void EHI::exec_file(const char *name) {
+	FILE *infile = fopen(name, "r");
+	if(!infile) {
+		fprintf(stderr, "Could not open input file\n");
+		return;
+	}
+	EHParser *parser;
+	EHI *oldinterpreter;
+
+	parser = new EHParser;
+	oldinterpreter = interpreter;
+	interpreter = this;
+	is_interactive = 0;
+	eh_init();
+	// if a syntax error occurs, stop parsing and return -1
+	try {
+		parser->parse_file(infile);
+	}
+	// TODO: actually do something useful with exceptions
+	catch(...) {
+	}
+	delete parser;
+	interpreter = oldinterpreter;
+	return;
+}

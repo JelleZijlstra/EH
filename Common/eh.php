@@ -21,6 +21,6 @@ if($arg === '-i')
 	$fe->cli();
 // TODO: replace this, we no longer have execute.
 else
-	$fe->execute("exec_file " . $arg);
+	$fe->exec_file($arg);
 exit(0);
 ?>

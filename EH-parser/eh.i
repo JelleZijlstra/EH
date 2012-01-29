@@ -7,7 +7,7 @@
 %{
 #include "eh.h"
 EHI *interpreter;
-ehretval_t EHI::execute_cmd(const char *cmd, ehvar_t **paras) {
+ehretval_t EHI::execute_cmd(const char *name, ehvar_t **paras) {
 	return (ehretval_t) { null_e, {0} };
 }
 char *EHI::eh_getline(void) {
@@ -147,7 +147,7 @@ ehretval_t zvaltoeh(zval *in) {
 	zval *str;
 
 	MAKE_STD_ZVAL(str);
-	ZVAL_STRING(str, rawcmd, 1);
+	ZVAL_STRING(str, name, 1);
 	obj0 = *str;
 }
 // Typemap from EH array to PHP array
@@ -165,7 +165,8 @@ ehretval_t zvaltoeh(zval *in) {
 class EHI {
 public:
 	int eh_interactive(void);
-	virtual ehretval_t execute_cmd(const char *rawcmd, ehvar_t **paras);
+	virtual ehretval_t execute_cmd(const char *name, ehvar_t **paras);
+	virtual void exec_file(const char *name);
 	virtual char *eh_getline(void);
 	virtual ~EHI();
 };

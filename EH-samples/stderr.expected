@@ -98,3 +98,4 @@ No such global variable: nosuchvar: EH notice
 @get_type.eh:
 @root.eh:
 @sign.eh:
+@objtest.eh:

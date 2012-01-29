@@ -11,7 +11,7 @@
 
 void printvar_retval(ehretval_t in);
 static void printvar_array(ehvar_t **in);
-static void printvar_object(ehclassmember_t **in);
+static void printvar_object(ehvar_t **in);
 
 // get arguments, and error if there are too many or few
 // Args should have enough memory malloc'ed to it to house n arguments.
@@ -108,9 +108,6 @@ void printvar_retval(const ehretval_t in) {
 		case type_e:
 			printf("@type %s\n", get_typestring(in.typeval));
 			break;
-		case magicvar_e:
-			printf("@magicvar %d\n", in.magicvarval);
-			break;
 		case op_e:
 			printf("@op %d\n", in.opval->op);
 			break;
@@ -129,12 +126,13 @@ void printvar_retval(const ehretval_t in) {
 	}
 	return;
 }
-static void printvar_object(ehclassmember_t **in) {
-	int i;
-	ehclassmember_t * curr;
-	for(i = 0; i < VARTABLE_S; i++) {
-		curr = in[i];
-		while(curr != NULL) {
+static void printvar_object(ehvar_t **in) {
+	for(int i = 0; i < VARTABLE_S; i++) {
+		for(ehvar_t *curr = in[i]; curr != NULL; curr = curr->next) {
+			// ignore $this
+			if(!strcmp(curr->name, "this")) {
+				continue;
+			}
 			printf("%s <", curr->name);
 			switch(curr->attribute.visibility) {
 				case public_e:
@@ -162,7 +160,6 @@ static void printvar_object(ehclassmember_t **in) {
 			}
 			printf(">: ");
 			printvar_retval(curr->value);
-			curr = curr->next;
 		}
 	}
 }

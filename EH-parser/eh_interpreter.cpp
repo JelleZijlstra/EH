@@ -31,7 +31,7 @@ ehretval_t eh_count(const ehretval_t in);
 ehretval_t eh_op_tilde(ehretval_t in);
 ehretval_t eh_op_uminus(ehretval_t in);
 ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2);
-void eh_op_global(const char *name);
+void eh_op_global(const char *name, ehcontext_t context);
 ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
 ehretval_t eh_op_for(opnode_t *op, ehcontext_t context);
 ehretval_t eh_op_while(ehretval_t **paras, ehcontext_t context);
@@ -221,7 +221,7 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 				ret.boolval = !ret.boolval;
 				break;
 			case T_GLOBAL: // global variable declaration
-				eh_op_global(node->opval->paras[0]->stringval);
+				eh_op_global(node->opval->paras[0]->stringval, context);
 				break;
 		/*
 		 * Control flow
@@ -599,10 +599,10 @@ ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2) {
 	}
 	return ret;
 }
-void eh_op_global(const char *name) {
+void eh_op_global(const char *name, ehcontext_t context) {
 	ehvar_t *globalvar;
 	ehvar_t *newvar;
-	globalvar = get_variable(name, 0);
+	globalvar = get_variable(name, 0, context);
 	if(globalvar == NULL) {
 		eh_error_unknown("global variable", name, enotice_e);
 		return;
@@ -730,7 +730,7 @@ ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 	else {
 		// "for 5 count i; do stuff; endfor" construct
 		char *name = op->paras[1]->stringval;
-		ehvar_t *var = get_variable(name, scope);
+		ehvar_t *var = get_variable(name, scope, context);
 		// variable is not yet set, so set it
 		if(var == NULL) {
 			var = (ehvar_t *) Malloc(sizeof(ehvar_t));
@@ -791,7 +791,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 		code = op->paras[3];
 	}
 	// create variables
-	membervar = get_variable(membername, scope);
+	membervar = get_variable(membername, scope, context);
 	if(membervar == NULL) {
 		membervar = (ehvar_t *) Malloc(sizeof(ehvar_t));
 		membervar->name = membername;
@@ -799,7 +799,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 		insert_variable(membervar);
 	}
 	if(indexname != NULL) {
-		indexvar = get_variable(indexname, scope);
+		indexvar = get_variable(indexname, scope, context);
 		if(indexvar == NULL) {
 			indexvar = (ehvar_t *) Malloc(sizeof(ehvar_t));
 			indexvar->name = indexname;
@@ -810,11 +810,11 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 	if(object.type == object_e) {
 		// object index is always a string
 		indexvar->value.type = string_e;
-		ehclassmember_t **members = object.objectval->members;
+		ehvar_t **members = object.objectval->members;
 		// check whether we're allowed to access private things
 		const bool doprivate = ehcontext_compare(object.objectval, context);
 		for(int i = 0; i < VARTABLE_S; i++) {
-			for(ehclassmember_t *currmember = members[i]; currmember != NULL; currmember = currmember->next) {
+			for(ehvar_t *currmember = members[i]; currmember != NULL; currmember = currmember->next) {
 				// ignore private
 				if(!doprivate && currmember->attribute.visibility == private_e)
 					continue;
@@ -859,7 +859,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 ehretval_t eh_op_new(const char *name) {
 	ehretval_t ret;
 	ehclass_t *classobj;
-	ehclassmember_t *classmember, *newmember;
+	ehvar_t *classmember, *newmember;
 
 	classobj = get_class(name);
 	if(classobj == NULL) {
@@ -870,15 +870,20 @@ ehretval_t eh_op_new(const char *name) {
 	ret.type = object_e;
 	ret.objectval = (ehobj_t *) Malloc(sizeof(ehobj_t));
 	ret.objectval->classname = name;
-	ret.objectval->members = (ehclassmember_t **) Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+	ret.objectval->members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
 	for(int i = 0; i < VARTABLE_S; i++) {
 		classmember = classobj->obj.members[i];
 		while(classmember != NULL) {
-			newmember = (ehclassmember_t *) Malloc(sizeof(ehclassmember_t));
+			newmember = (ehvar_t *) Malloc(sizeof(ehvar_t));
 			// copy the whole thing over
 			*newmember = *classmember;
+			// modify this pointer
+			if(!strcmp(newmember->name, "this")) {
+				newmember->value.type = object_e;
+				newmember->value.objectval = ret.objectval;
+			}
 			// handle static
-			if(classmember->attribute.isstatic == static_e) {
+			else if(classmember->attribute.isstatic == static_e) {
 				newmember->value.type = reference_e;
 				newmember->value.referenceval = &classmember->value;
 			}
@@ -988,7 +993,7 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	}
 	classobj = (ehclass_t *) Malloc(sizeof(ehclass_t));
 	classobj->obj.classname = classname_r.stringval;
-	classobj->obj.members = (ehclassmember_t **) Calloc(VARTABLE_S, sizeof(ehclassmember_t *));
+	classobj->obj.members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
 	// insert class members
 	ehretval_t *node = paras[1];
 	while(node != NULL) {
@@ -1001,6 +1006,15 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 			break;
 		}
 	}
+	// insert this pointer
+	memberattribute_t thisattributes;
+	thisattributes.visibility = private_e;
+	thisattributes.isstatic = nonstatic_e;
+	thisattributes.isconst = const_e;
+	ehretval_t thisvalue;
+	thisvalue.type = object_e;
+	thisvalue.objectval = &(classobj->obj);
+	class_insert_retval(classobj->obj.members, "this", thisattributes, thisvalue);
 	insert_class(classobj);
 	return;
 }
@@ -1139,11 +1153,7 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	ret.referenceval = NULL;
 	switch(op->nparas) {
 		case 1:
-			if(basevar.type == magicvar_e) {
-				eh_error("Cannot use magic variable in scalar context", eerror_e);
-				break;
-			}
-			var = get_variable(basevar.stringval, scope);
+			var = get_variable(basevar.stringval, scope, context);
 			// dereference variable
 			if(var != NULL) {
 				ret.type = reference_e;
@@ -1157,11 +1167,7 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 		case 3:
 			switch(op->paras[1]->accessorval) {
 				case arrow_e:
-					if(basevar.type == magicvar_e) {
-						eh_error("Cannot use magic variable in array context", eerror_e);
-						break;
-					}
-					var = get_variable(basevar.stringval, scope);
+					var = get_variable(basevar.stringval, scope, context);
 					if(var == NULL) {
 						eh_error("Cannot access member of non-existing variable", eerror_e);
 						ret.referenceval = (ehretval_t *) 0x1;
@@ -1332,7 +1338,7 @@ bool insert_variable(ehvar_t *var) {
 	}
 	return true;
 }
-ehvar_t *get_variable(const char *name, int scope) {
+ehvar_t *get_variable(const char *name, int scope, ehcontext_t context) {
 	unsigned int vhash;
 	ehvar_t *currvar;
 
@@ -1344,6 +1350,12 @@ ehvar_t *get_variable(const char *name, int scope) {
 			return currvar;
 		}
 		currvar = currvar->next;
+	}
+	// else try the object
+	if(context) {
+		if((currvar = class_getmember(context, name, context))) {
+			return currvar;
+		}
 	}
 	return NULL;
 }
@@ -1551,7 +1563,7 @@ ehclass_t *get_class(const char *name) {
 	}
 	return NULL;
 }
-void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t context) {
+void class_insert(ehvar_t **classarr, ehretval_t *in, ehcontext_t context) {
 	// insert a member into a class
 	char *name;
 	memberattribute_t attribute;
@@ -1578,17 +1590,17 @@ void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t contex
 	}
 	class_insert_retval(classarr, name, attribute, value);
 }
-ehclassmember_t *class_insert_retval(
-	ehclassmember_t **classarr,
+ehvar_t *class_insert_retval(
+	ehvar_t **classarr,
 	const char *name,
 	memberattribute_t attribute,
 	ehretval_t value
 ) {
 	// insert a member into a class
 	unsigned int vhash;
-	ehclassmember_t *member;
+	ehvar_t *member;
 
-	member = (ehclassmember_t *) Malloc(sizeof(ehclassmember_t));
+	member = (ehvar_t *) Malloc(sizeof(ehvar_t));
 	// rely on standard layout of the input ehretval_t
 	member->attribute = attribute;
 	member->name = name;
@@ -1600,8 +1612,8 @@ ehclassmember_t *class_insert_retval(
 	classarr[vhash] = member;
 	return member;
 }
-ehclassmember_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context) {
-	ehclassmember_t *curr;
+ehvar_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context) {
+	ehvar_t *curr;
 	unsigned int vhash;
 
 	vhash = hash(name, 0);
@@ -1625,7 +1637,7 @@ ehclassmember_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_
 	return curr;
 }
 ehretval_t class_get(ehobj_t *classobj, const char *name, ehcontext_t context) {
-	ehclassmember_t *curr;
+	ehvar_t *curr;
 	ehretval_t ret;
 
 	curr = class_getmember(classobj, name, context);
@@ -1643,7 +1655,7 @@ ehretval_t object_access(
 ) {
 	ehretval_t label, ret;
 	ehvar_t *var;
-	ehclassmember_t *classmember;
+	ehvar_t *classmember;
 	ehobj_t *object;
 	memberattribute_t attribute;
 
@@ -1657,28 +1669,13 @@ ehretval_t object_access(
 		return ret;
 	}
 
-	// this dereference
-	if(operand1.type == magicvar_e) {
-		if(operand1.magicvarval == this_e) {
-			if(context == NULL) {
-				eh_error("Use of $this outside an object", eerror_e);
-				return ret;
-			}
-			object = context;
-		}
-		else {
-			eh_error_int("Unsupported magicvar", operand1.magicvarval, efatal_e);
-			return ret;
-		}
+	var = get_variable(operand1.stringval, scope, context);
+	if(var->value.type != object_e) {
+		eh_error_type("object access", var->value.type, eerror_e);
+		return ret;
 	}
-	else {
-		var = get_variable(operand1.stringval, scope);
-		if(var->value.type != object_e) {
-			eh_error_type("object access", var->value.type, eerror_e);
-			return ret;
-		}
-		object = var->value.objectval;
-	}
+	object = var->value.objectval;
+
 	classmember = class_getmember(object, label.stringval, context);
 	if(classmember == NULL) {
 		// add new member if we're setting
@@ -1716,7 +1713,7 @@ ehretval_t colon_access(
 ) {
 	ehretval_t ret, label;
 	ehclass_t *classobj;
-	ehclassmember_t *member;
+	ehvar_t *member;
 	memberattribute_t attribute;
 	ret.type = null_e;
 	ret.referenceval = NULL;

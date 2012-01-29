@@ -30,7 +30,6 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 	bool bValue;
 	ehretval_t *ehNode;
 	accessor_enum aValue;
-	magicvar_enum mValue;
 };
 %token <iValue> T_INTEGER
 %token <fValue> T_FLOAT
@@ -73,7 +72,6 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_DOUBLEARROW
 %token T_COMMAND T_SHORTPARA T_LONGPARA
 %token <sValue> T_VARIABLE
-%token <mValue> T_MAGICVAR
 %token <sValue> T_STRING
 %left T_LOWPREC /* Used to prevent S/R conflicts */
 %left ','
@@ -495,16 +493,12 @@ lvalue_set:
 	bareword				{ $$ = eh_addnode(T_LVALUE_SET, 1, $1); }
 	| bareword T_ACCESSOR expression
 							{ $$ = eh_addnode(T_LVALUE_SET, 3, $1, eh_get_accessor($2), $3); }
-	| T_MAGICVAR T_ACCESSOR expression
-							{ $$ = eh_addnode(T_LVALUE_SET, 3, eh_get_magicvar($1), eh_get_accessor($2), $3); }
 	;
 
 lvalue_get:
 	bareword				{ $$ = eh_addnode(T_LVALUE_GET, 1, $1); }
 	| bareword T_ACCESSOR expression
 							{ $$ = eh_addnode(T_LVALUE_GET, 3, $1, eh_get_accessor($2), $3); }
-	| T_MAGICVAR T_ACCESSOR expression
-							{ $$ = eh_addnode(T_LVALUE_GET, 3, eh_get_magicvar($1), eh_get_accessor($2), $3); }
 	;
 
 classmember: /* , is used as the operator token for those, because none is really needed and , is the generic null token */

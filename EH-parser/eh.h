@@ -21,10 +21,6 @@
 /*
  * Enums used in the parser and interpreter
  */
-// magic variables
-typedef enum magicvar_enum {
-	this_e
-} magicvar_enum;
 
 typedef enum type_enum {
 	null_e = 0,
@@ -38,7 +34,6 @@ typedef enum type_enum {
 	reference_e, // for internal use with lvalues, and as a value for references
 	creference_e, // constant references: can be dereferenced but not written to
 	object_e,
-	magicvar_e,
 	op_e,
 	attribute_e,
 	attributestr_e,
@@ -119,7 +114,6 @@ typedef struct ehretval_t {
 		attribute_enum attributeval;
 		memberattribute_t attributestrval;
 		accessor_enum accessorval;
-		magicvar_enum magicvarval;
 	};
 } ehretval_t;
 
@@ -129,10 +123,12 @@ typedef struct ehvar_t {
 		const char *name;
 		int index;
 	};
-	// either the scope of a variable or the index-type of an array member
+	// the scope of a variable, the index-type of an array member, or the
+	// attributes of an object member
 	union {
 		int scope;
 		type_enum indextype;
+		memberattribute_t attribute;
 	};
 	struct ehretval_t value;
 	struct ehvar_t *next;
@@ -146,7 +142,7 @@ typedef struct eharg_t {
 // EH object
 typedef struct ehobj_t {
 	const char *classname;
-	struct ehclassmember_t **members;
+	struct ehvar_t **members;
 } ehobj_t;
 
 // range
@@ -181,14 +177,6 @@ typedef struct ehfunc_t {
 	struct ehfm_t f;
 	struct ehfunc_t *next;
 } ehfunc_t;
-
-// Properties and methods of a class
-typedef struct ehclassmember_t {
-	memberattribute_t attribute;
-	const char *name;
-	ehretval_t value;
-	struct ehclassmember_t *next;
-} ehclassmember_t;
 
 typedef struct ehlibfunc_t {
 	void (*code)(ehretval_t *, ehretval_t *, ehcontext_t);
@@ -254,7 +242,6 @@ GETFUNCPROTO(accessor, accessor_enum)
 GETFUNCPROTO(type, type_enum)
 GETFUNCPROTO(bool, bool)
 GETFUNCPROTO(visibility, visibility_enum)
-GETFUNCPROTO(magicvar, magicvar_enum)
 GETFUNCPROTO(attribute, attribute_enum)
 
 // indicate that we're returning
@@ -281,7 +268,7 @@ extern int scope;
 
 // prototypes
 bool insert_variable(ehvar_t *var);
-ehvar_t *get_variable(const char *name, int scope);
+ehvar_t *get_variable(const char *name, int scope, ehcontext_t context);
 void remove_variable(const char *name, int scope);
 void list_variables(void);
 bool insert_function(ehfunc_t *func);
@@ -295,9 +282,9 @@ ehretval_t array_get(ehvar_t **array, ehretval_t index);
 int array_count(ehvar_t **array);
 void insert_class(ehclass_t *classobj);
 ehclass_t *get_class(const char *name);
-void class_insert(ehclassmember_t **classarr, ehretval_t *in, ehcontext_t context);
-ehclassmember_t *class_insert_retval(ehclassmember_t **classarr, const char *name, memberattribute_t attribute, ehretval_t value);
-ehclassmember_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context);
+void class_insert(ehvar_t **classarr, ehretval_t *in, ehcontext_t context);
+ehvar_t *class_insert_retval(ehvar_t **classarr, const char *name, memberattribute_t attribute, ehretval_t value);
+ehvar_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context);
 ehretval_t class_get(ehobj_t *classobj, const char *name, ehcontext_t context);
 ehretval_t object_access(ehretval_t name, ehretval_t *index, ehcontext_t context, int token);
 ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context, int token);

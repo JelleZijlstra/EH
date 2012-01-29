@@ -50,7 +50,6 @@ GETFUNC(type, type_enum)
 GETFUNC(accessor, accessor_enum)
 GETFUNC(bool, bool)
 GETFUNC(attribute, attribute_enum)
-GETFUNC(magicvar, magicvar_enum)
 
 ehretval_t *eh_addnode(int operation, int nparas, ...) {
 	va_list args;
@@ -125,7 +124,6 @@ void print_tree(const ehretval_t *const in, const int n) {
 		PRINT_TREE_TYPE(accessor, d)
 		PRINT_TREE_TYPE(type, d)
 		PRINT_TREE_TYPE(attribute, d)
-		PRINT_TREE_TYPE(magicvar, d)
 		case attributestr_e:
 			printntabs(n);
 			if(in->attributestrval.visibility == private_e)
@@ -169,7 +167,6 @@ const char *get_typestring(type_enum type) {
 		case array_e: return "array";
 		case func_e: return "function";
 		case object_e: return "object";
-		case magicvar_e: return "magicvar";
 		case op_e: return "op";
 		case attribute_e: return "attribute";
 		case attributestr_e: return "attributestr";

@@ -91,10 +91,6 @@
 "end"		return T_END;
 "case"		return T_CASE;
 "default"	return T_DEFAULT;
-"this"		{
-				yylval_param->mValue = this_e;
-				return T_MAGICVAR;
-			}
 "new"		return T_NEW;
 "::"		{
 				yylval_param->aValue = doublecolon_e;

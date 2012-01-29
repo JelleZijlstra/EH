@@ -80,3 +80,4 @@ get_type.eh
 root.eh
 sign.eh
 objtest.eh
+newthis.eh

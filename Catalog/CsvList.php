@@ -410,23 +410,8 @@ class CsvList extends FileList {
 		echo 'checking whether cataloged articles are in library... ';
 		foreach($this->c as $file) {
 			if(isset($this->lslist[$file->name])) {
-				$found = $this->lslist[$file->name];
 				// update path
-				if(($file->folder != $found->folder) or
-					($file->sfolder != $found->sfolder) or
-					($file->ssfolder != $found->ssfolder)) {
-					echo 'Updating folder for file ' . $file->name . PHP_EOL;
-					echo 'Stored folder: ' . $file->folder . PHP_EOL;
-					echo 'Current folder: ' . $found->folder . PHP_EOL;
-					echo 'Stored sfolder: ' . $file->sfolder . PHP_EOL;
-					echo 'Current sfolder: ' . $found->sfolder . PHP_EOL;
-					echo 'Stored ssfolder: ' . $file->ssfolder . PHP_EOL;
-					echo 'Current ssfolder: ' . $found->ssfolder . PHP_EOL;
-					$file->folder = $found->folder;
-					$file->sfolder = $found->sfolder;
-					$file->ssfolder = $found->ssfolder;
-					$this->needsave = true;
-				}
+				$file->setpath(array('fromfile' => $this->lslist[$file->name]));
 			}
 			else if($file->isfile() && !$file->isredirect()) {
 				echo PHP_EOL;

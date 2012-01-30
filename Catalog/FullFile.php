@@ -3134,5 +3134,40 @@ Content-Disposition: attachment
 		}
 		return true;
 	}
+	public function setpath(array $paras = array()) {
+	// set the path for a file on the basis of a fromfile. This can now be used
+	// in lscheck; as a similar process becomes useful elsewhere, this function
+	// may be expanded.
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array('v' => 'verbose'),
+			'checklist' => array(
+				'fromfile' => 'File to copy path from',
+				'verbose' => 'Whether to provide verbose output',
+			),
+			'default' => array('verbose' => true),
+			'errorifempty' => array('fromfile'),
+			'checkparas' => array(
+				'fromfile' => function($in) {
+					return $in instanceof FullFile;
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$once = false;
+		foreach(array('folder', 'sfolder', 'ssfolder') as $v) {
+			if($this->$v !== $paras['fromfile']->$v) {
+				if($paras['verbose']) {
+					if(!$once) {
+						echo 'Updating folders for file ' . $this->name . PHP_EOL;
+						$once = true;
+					}
+					echo 'Stored ' . $v . ': ' . $this->$v . PHP_EOL;
+					echo 'New ' . $v . ': ' . $paras['fromfile']->$v . PHP_EOL;
+				}
+				$this->$v = $paras['fromfile']->$v;
+			}
+		}
+		return true;
+	}
 }
 ?>

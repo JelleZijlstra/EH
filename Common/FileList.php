@@ -789,9 +789,8 @@ abstract class FileList extends ExecuteHandler {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(
-				// they get returned in back-to-front order by ehi... need to do something about that
-				1 => 'field',
-				0 => 'value',
+				0 => 'field',
+				1 => 'value',
 			),
 			'checklist' => array(
 				'field' => 'Field to search in',

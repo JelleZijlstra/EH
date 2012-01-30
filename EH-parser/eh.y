@@ -392,7 +392,7 @@ command:
 	bareword paralist		{ $$ = eh_addnode(T_COMMAND, 2, $1, $2); }
 
 paralist:
-	paralist para			{ $$ = eh_addnode(',', 2, $1, $2); }
+	para paralist			{ $$ = eh_addnode(',', 2, $1, $2); }
 	| /* NULL */			{ $$ = eh_addnode(',', 0); }
 	;
 
@@ -488,17 +488,22 @@ classlist:
 lvalue_set:
 	bareword				{ $$ = eh_addnode(T_LVALUE_SET, 1, $1); }
 	| bareword T_ACCESSOR expression
-							{ $$ = eh_addnode(T_LVALUE_SET, 3, $1, eh_get_accessor($2), $3); }
+							{ $$ = eh_addnode(T_LVALUE_SET, 3, $1, 
+								eh_get_accessor($2), $3); }
 	;
 
 lvalue_get:
 	bareword				{ $$ = eh_addnode(T_LVALUE_GET, 1, $1); }
 	| bareword T_ACCESSOR expression
-							{ $$ = eh_addnode(T_LVALUE_GET, 3, $1, eh_get_accessor($2), $3); }
+							{ $$ = eh_addnode(T_LVALUE_GET, 3, $1, 
+								eh_get_accessor($2), $3); }
 	;
 
-classmember: /* , is used as the operator token for those, because none is really needed and , is the generic null token */
+classmember:
 	attributelist bareword	{ /* property declaration */
+								/* ',' is used as the operator token for those, 
+								 * because it is a suitably generic token 
+								 */
 								$$ = eh_addnode(',', 2, $1, $2);
 							}
 	| attributelist bareword '=' expression
@@ -511,7 +516,8 @@ classmember: /* , is used as the operator token for those, because none is reall
 
 attributelist:
 	attributelist T_ATTRIBUTE
-							{ $$ = eh_addnode(T_ATTRIBUTE, 2, $1, eh_get_attribute($2)); }
+							{ $$ = eh_addnode(T_ATTRIBUTE, 2, $1, 
+								eh_get_attribute($2)); }
 	| /* NULL */			{ $$ = eh_addnode(T_ATTRIBUTE, 0); }
 	;
 %%

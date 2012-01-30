@@ -625,7 +625,7 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 	paras = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t));
 	// loop through the paras given
 	while(node->opval->nparas != 0) {
-		node2 = node->opval->paras[1];
+		node2 = node->opval->paras[0];
 		if(node2->type == op_e) {
 			switch(node2->opval->op) {
 				case T_SHORTPARA:
@@ -700,7 +700,7 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 			array_insert_retval(paras, index_r, value_r);
 			count++;
 		}
-		node = node->opval->paras[0];
+		node = node->opval->paras[1];
 	}
 	ehretval_t ret = interpreter->execute_cmd(name, paras);
 	// we're not returning anymore

@@ -100,3 +100,5 @@ No such global variable: nosuchvar: EH notice
 @sign.eh:
 @objtest.eh:
 @newthis.eh:
+@funcerror.eh:
+Attempt to redefine function: intest: EH fatal error

@@ -365,7 +365,7 @@ class CsvList extends FileList {
 		}
 	}
 	/* check */
-	function check($stop = true) {
+	public function check(array $paras = array()) {
 	/*
 	 * Checks the catalog for things to be changed:
 	 * - Checks whether there are any files in the catalog that are not in the
@@ -375,15 +375,32 @@ class CsvList extends FileList {
 	 * - Checks whether there are new files in temporary storage that need to be
 	 *   added to the library
 	 */
+	 	if($this->process_paras($paras, array(
+	 		'name' => __FUNCTION__,
+	 		'checklist' => array( /* No paras */ ),
+	 	)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// always get new ls list, since changes may have occurred since previous check()
 		$this->build_lslist();
-		if(!$this->lslist) return;
+		if(!$this->lslist) {
+			return false;
+		}
 		$date = new DateTime();
 		logwrite(PHP_EOL . PHP_EOL . 'check() session ' . $date->format('Y-m-d H:i:s') . PHP_EOL);
-		if(!$this->csvcheck()) return;
-		if(!$this->lscheck()) return;
-		if(!$this->burstcheck()) return;
+		// check whether all files in the catalog are in the actual library
+		if(!$this->csvcheck()) {
+			return false;
+		}
+		// check whether all files in the actual library are in the catalog
+		if(!$this->lscheck()) {
+			return false;
+		}
+		// check whether there are any files to be burst
+		if(!$this->burstcheck()) {
+			return false;
+		}
+		// check whether there are any new files to be added
 		$this->newcheck();
+		return true;
 	}
 	private function csvcheck() {
 	/* check CSV list for problems

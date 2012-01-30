@@ -136,7 +136,7 @@ abstract class FileList extends ExecuteHandler {
 		fwrite($cat, $this->labels);
 		foreach($this->c as $file) {
 			// do not put back in files where name has been set to NULL
-			if($file->name) {
+			if($file->name !== NULL) {
 				$line = $file->toarray();
 				if(!fputcsv($cat, $line))
 					echo "Error writing data for " . $file->name . ".";

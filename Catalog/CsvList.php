@@ -13,7 +13,7 @@ class CsvList extends FileList {
 	public $foldertree_n;
 	public $pdfcontentcache = array(); // cache for FullFile::$pdfcontent
 	protected static $inform_exclude = array('pdfcontent');
-	static $CsvList_commands = array(
+	private static $CsvList_commands = array(
 		'adddata' => array('name' => 'adddata',
 			'desc' => 'Add data to existing reference through API lookups',
 			'arg' => 'None',
@@ -524,7 +524,7 @@ class CsvList extends FileList {
 		/*
 		 * First try: find duplicate DOIs
 		 */
-		$dois = $this->mlist('doi', array('print' => false));
+		$dois = $this->mlist(array('field' => 'doi', 'print' => false));
 		foreach($dois as $doi => $n) {
 			if($n > 1 && $doi) {
 				echo "Found $n instances of DOI $doi" . PHP_EOL;
@@ -536,7 +536,7 @@ class CsvList extends FileList {
 		/*
 		 * Other tries: titles?
 		 */
-		$titles = $this->mlist('getsimpletitle', array('isfunc' => true, 'print' => false));
+		$titles = $this->mlist(array('field' => 'getsimpletitle', 'isfunc' => true, 'print' => false));
 		foreach($titles as $title => $n) {
 			if($n > 1 && $title) {
 				echo "Found $n instances of title $title" . PHP_EOL;
@@ -775,10 +775,16 @@ class CsvList extends FileList {
 	/* URL magic */
 	private $urls_by_journal;
 	public function geturlsjournal($journal, $paras = '') {
-		if(!$journal) return false;
+		if(!$journal)
+			return false;
 		if(!$paras['rebuild'] and !isset($this->urls_by_journal)) {
-			$mlistparas = array('groupby' => 'journal', 'print' => false, 'printresult' => false);
-			$this->urls_by_journal = $this->mlist('gethost()', $mlistparas);
+			$this->urls_by_journal = $this->mlist(array(
+				'field' => 'gethost',
+				'isfunc' => true,
+				'groupby' => 'journal', 
+				'print' => false, 
+				'printresult' => false,
+			));
 		}
 		if(!is_array($this->urls_by_journal)) return false;
 		return $this->urls_by_journal[$journal] ?: false;

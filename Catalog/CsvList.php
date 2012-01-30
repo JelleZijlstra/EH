@@ -12,7 +12,6 @@ class CsvList extends FileList {
 	public $foldertree; // tree of folders used in the List
 	public $foldertree_n;
 	public $pdfcontentcache = array(); // cache for FullFile::$pdfcontent
-	protected static $resolve_redirects = true;
 	protected static $inform_exclude = array('pdfcontent');
 	static $CsvList_commands = array(
 		'adddata' => array('name' => 'adddata',

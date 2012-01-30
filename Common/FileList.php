@@ -108,7 +108,6 @@ abstract class FileList extends ExecuteHandler {
 	public function __destruct() {
 		$this->saveifneeded();
 	}
-	protected static $resolve_redirects;
 	public function add_entry(ListEntry $file, array $paras = array()) {
 	// very basic add_entry function. Possibly some of the complex stuff that TaxonList and CsvList have should be moved to FileList somehow.
 		if($this->has($file->name))

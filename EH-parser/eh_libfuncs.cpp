@@ -254,12 +254,16 @@ EHLIBFUNC(include) {
 		EHLF_RETFALSE;
 	if(args[0].type != string_e) {
 		eh_error_type("argument 0 to include", args[0].type, enotice_e);
+		is_interactive = old_is_interactive;
+		returning = false;
 		EHLF_RETFALSE;
 	}
 	// do the work
 	infile = fopen(args[0].stringval, "r");
 	if(!infile) {
 		eh_error("Unable to open included file", enotice_e);
+		is_interactive = old_is_interactive;
+		returning = false;
 		EHLF_RETFALSE;
 	}
 	parser = new EHParser();

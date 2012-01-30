@@ -102,3 +102,5 @@ No such global variable: nosuchvar: EH notice
 @newthis.eh:
 @funcerror.eh:
 Attempt to redefine function: intest: EH fatal error
+@failedinclude.eh:
+Unable to open included file: EH notice

@@ -519,8 +519,12 @@ class CsvList extends FileList {
 			echo $file->name . PHP_EOL . $file->citepaper() . PHP_EOL;
 		return $files;
 	}
-	public function dups() {
+	public function dups(array $paras = array()) {
 	// automatically find (some) duplicate files, and handle them
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		/*
 		 * First try: find duplicate DOIs
 		 */
@@ -536,7 +540,14 @@ class CsvList extends FileList {
 		/*
 		 * Other tries: titles?
 		 */
-		$titles = $this->mlist(array('field' => 'getsimpletitle', 'isfunc' => true, 'print' => false));
+		$titles = $this->mlist(array(
+			'field' => 'getsimpletitle',
+			'isfunc' => true,
+			'print' => false
+		));
+		if($titles === false) {
+			return;
+		}
 		foreach($titles as $title => $n) {
 			if($n > 1 && $title) {
 				echo "Found $n instances of title $title" . PHP_EOL;

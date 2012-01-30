@@ -448,7 +448,7 @@ abstract class FileList extends ExecuteHandler {
 				'array' => 'Array to search in',
 			),
 			'checkfunc' => function($in) use($childclass) {
-				return $childclass::hasproperty($in);
+				return $childclass::haspm($in);
 			},
 			'default' => array(
 				'print' => true,
@@ -470,13 +470,13 @@ abstract class FileList extends ExecuteHandler {
 				},
 				'field' => function($in, $paras) use($childclass) {
 					if($paras['isfunc']) {
-						if(!method_exists($childclass, $in)) {
+						if(!$childclass::hasmethod($in)) {
 							echo 'No such method: ' . $in . PHP_EOL;
 							return false;
 						}
 					}
-					else if(!$childclass::hasproperty($in)) {
-						echo 'No such property: ' . $in . PHP_EOL;
+					else if(!$childclass::haspm($in)) {
+						echo 'No such property or method: ' . $in . PHP_EOL;
 						return false;
 					}
 					return true;
@@ -583,7 +583,7 @@ abstract class FileList extends ExecuteHandler {
 					'The array to search in',
 			),
 			'checkfunc' => function($in) use($childclass) {
-				return $childclass::hasproperty($in);
+				return $childclass::haspm($in);
 			},
 			'default' => array(
 				'quiet' => false,

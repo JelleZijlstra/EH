@@ -122,14 +122,33 @@ abstract class ListEntry extends ExecuteHandler {
 				unset($this->{$arr}[$property]);
 		}
 	}
+	static public function haspm($in) {
+	// Call self::hasproperty() and self::hasmethod() together, as we often 
+	// want in calling code.
+		return self::hasproperty($in) or self::hasmethodps($in);
+	}
 	static public function hasproperty($property) {
-		if(!$property) return false;
-		if(property_exists(get_called_class(), $property))
-			return true;
-		if(static::findarray($property) !== false)
-			return true;
-		else
+		if(!$property) {
 			return false;
+		}
+		if(property_exists(get_called_class(), $property)) {
+			return true;
+		}
+		return (static::findarray($property) !== false);
+	}
+	static public function hasmethodps($method) {
+		// common way of referring to class methods in bfind queries
+		// Ultimately, this should only allow a subset of methods; we don't
+		// really want `bfind --'remove()'=true`.
+		if(substr($method, -2) !== '()') {
+			return false;
+		}
+		$mname = substr($method, 0, -2);
+		return method_exists(get_called_class(), $mname);
+	}
+	static public function hasmethod($method) {
+		// Like hasmethodps, but without the parentheses
+		return method_exists(get_called_class(), $method);
 	}
 	protected function findarray_dyn($property) {
 		$out = self::findarray($property);

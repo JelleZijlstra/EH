@@ -140,7 +140,6 @@ class CsvList extends FileList {
 	function __construct() {
 		parent::__construct(self::$CsvList_commands);
 		// set some stuff initially
-		$this->needsave = false;
 		$this->citetype = 'wp';
 		$this->verbosecite = true;
 		$this->includesfn = true;
@@ -267,7 +266,7 @@ class CsvList extends FileList {
 		if($paras['isnew']) {
 			$this->log($file->name, 'Added file to catalog');
 			echo "Added to catalog!" . PHP_EOL;
-			$this->needsave = true;
+			$this->needsave();
 			$this->format($file->name);
 		}
 		return true;
@@ -440,10 +439,10 @@ class CsvList extends FileList {
 					case 'm': return true;
 					case 'l': $file->rename('csv'); break;
 					case 's': break;
-					// set name to NULL; putcsvlist() will then not write the file
 					case 'r':
+						// set name to NULL; putcsvlist() will then not write the file
 						$file->log('Removed');
-						$this->needsave = true;
+						$this->needsave();
 						$file->name = NULL;
 						return true;
 				}
@@ -589,7 +588,7 @@ class CsvList extends FileList {
 					));
 					if($newname === 'q') break;
 					$this->c[$file]->move($newname);
-					$this->needsave = true;
+					$this->needsave();
 					break;
 				case 'o':
 					foreach($files as $fileo)

@@ -15,7 +15,13 @@ require_once(BPATH . '/Common/ExecuteHandler.php');
 require_once(BPATH . '/Common/ListEntry.php');
 abstract class FileList extends ExecuteHandler {
 // this is an abstract class for classes that implement lists of entries, whether references or taxa.
-	protected $needsave; // whether we need to save
+	/*
+	 * Whether we need to save the data on destruction. This is set to false
+	 * initially, and may be set to true through a call to the needsave()
+	 * method. Only methods that are actually involved with saving should
+	 * modify this directly.
+	 */
+	private $needsave = false;
 	public $c; //array of children
 	protected $labels; // first line of CSV file
 	protected static $fileloc; // where the file lives that we get our list from
@@ -176,6 +182,7 @@ abstract class FileList extends ExecuteHandler {
 			return false;
 	}
 	public function needsave() {
+		// Tell the FileList that we need to save the catalog.
 		$this->needsave = true;
 	}
 	public function __call($func, $args) {

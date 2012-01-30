@@ -92,7 +92,7 @@ class TaxonList extends FileList {
 		if($paras['isnew']) {
 			$this->log($file->name, 'Added file to catalog');
 			echo "Added to catalog!" . PHP_EOL;
-			$this->needsave = true;
+			$this->needsave();
 			$this->format($file->name);
 		}
 		return true;

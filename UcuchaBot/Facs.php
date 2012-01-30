@@ -73,7 +73,7 @@ class FacsList extends FileList {
 				$entry->archived = 1;
 			}
 		}
-		$this->needsave = true;
+		$this->needsave();
 		echo 'done' . PHP_EOL;
 	}
 }

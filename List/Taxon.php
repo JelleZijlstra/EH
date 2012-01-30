@@ -363,7 +363,7 @@ class Taxon extends ListEntry {
 			if(preg_match("/<li class='country'>/", $line))
 				$this->rawr[$type][] = trim(str_replace(array("<li class='country'>", '</li>'), array('', ''), $line));
 		}
-		$this->p->needsave = true;
+		$this->p->needsave();
 		return true;
 	}
 	function expandrawr() {
@@ -378,7 +378,7 @@ class Taxon extends ListEntry {
 					if(rencode($key) === 4)
 						$comment = $key;
 					$this->range[$ccode] = new Country($key, '{redlist}', $comment);
-					$needsave = true;
+					$this->p->needsave();
 				}
 			}
 		}
@@ -453,7 +453,7 @@ class Taxon extends ListEntry {
 					}
 					else
 						$this->range[$ccode] = new Country($cmd, $source, $comment);
-					$this->p->needsave = true;
+					$this->p->needsave();
 					break;
 				default: echo 'Invalid command' . PHP_EOL; break;
 			}

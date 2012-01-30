@@ -314,7 +314,7 @@ abstract class FileList extends ExecuteHandler {
 		$this->saveifneeded();
 		exec_catch('cp ' . static::$fileloc . ' ' . static::$fileloc . '.save');
 		if($paras['w']) ob_start();
-		$this->doall('format', array('askafter' => 0));
+		$this->doall(array(0 => 'format', 'askafter' => 0));
 		if($paras['w']) {
 			// TODO: get DATAPATH straight
 			file_put_contents(DATAPATH . 'formatoutput.txt', preg_replace('/Warning \(file: (.*?)\): /', '$1' . PHP_EOL, ob_get_contents()));

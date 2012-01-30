@@ -12,7 +12,7 @@ define('PROCESS_PARAS_ERROR_FOUND', 0x1);
 require_once(BPATH . "/Common/EHException.php");
 // TODO: more effectively ignore Ctrl+P and stuff like that.
 // Fix function definitions in exec_file. Currently, they just do random stuff when executed outside the exec_file context.
-abstract class ExecuteHandler extends EHICore {
+class ExecuteHandler extends EHICore {
 	/* Class constants */
 	const EXECUTE_NEXT = 0x0; // execute says: go on with next
 	const EXECUTE_PC = 0x1; // execute whatever is in the PC now
@@ -60,7 +60,7 @@ abstract class ExecuteHandler extends EHICore {
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 	);
-	public function __construct($commands) {
+	public function __construct($commands = array()) {
 		parent::__construct();
 		$this->setup_ExecuteHandler($commands);
 	}
@@ -557,7 +557,10 @@ abstract class ExecuteHandler extends EHICore {
 				$this->config[$key] = $value;
 		}
 	}
-	abstract public function cli(); // sets up command line
+	public function cli() { 
+	// sets up command line
+		$this->setup_commandline(get_called_class());
+	}
 	private function undo() {
 		$blacklist = array('tmp', 'commands', 'synonyms', 'p', 'props');
 		$vars = get_object_vars($this);

@@ -349,10 +349,6 @@ class CsvList extends FileList {
 		return parse_wtext($paras['file']);
 	}
 	/* do things with files */
-	public function byfile() {
-	// deprecated
-		$this->cli();
-	}
 	public function cli() {
 	// Performs various functions in a pseudo-command line. A main entry point.
 		$this->setup_commandline('Catalog');

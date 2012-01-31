@@ -5,9 +5,9 @@ class CsvList extends FileList {
 	public $includesfn; // whether Sfn needs to be included in FullFile::citewp()
 	public $includerefharv; // whether |ref=harv needs to be included in FullFile::citewp()
 	public $addmanual; // whether we want data adding functions to ask for manual input
-	public $lslist;
-	public $newlist;
-	public $burstlist;
+	private $lslist;
+	private $newlist;
+	private $burstlist;
 	public $sugglist; // list of suggestions used in FullFile::newadd()
 	public $foldertree; // tree of folders used in the List
 	public $foldertree_n;
@@ -162,7 +162,7 @@ class CsvList extends FileList {
 		return true;
 	}
 	/* load related lists */
-	function build_lslist() {
+	private function build_lslist() {
 	/*
 	 * Gets list of files into $this->lslist, an array of results (FullFile form).
 	 */
@@ -193,7 +193,7 @@ class CsvList extends FileList {
 		}
 		echo "done" . PHP_EOL;
 	}
-	function build_newlist($path = '', $out = 'newlist') {
+	private function build_newlist($path = '', $out = 'newlist') {
 		if(in_array($out, array('p'))) return false;
 		// reset out list
 		$this->$out = array();
@@ -435,7 +435,12 @@ class CsvList extends FileList {
 				switch($cmd) {
 					case 'q': throw new StopException('csvcheck');
 					case 'm': return true;
-					case 'l': $file->rename('csv'); break;
+					case 'l': 
+						$file->effect_rename(array(
+							'elist' => $this->c,
+							'searchlist' => $this->lslist,
+						)); 
+						break;
 					case 's': break;
 					case 'r':
 						// set name to NULL; putcsvlist() will then not write the file
@@ -470,7 +475,12 @@ class CsvList extends FileList {
 				switch($cmd) {
 					case 'q': throw new StopException('lscheck');
 					case 'm': return true;
-					case 'l': $lsfile->rename('ls'); break;
+					case 'l': 
+						$lsfile->effect_rename(array(
+							'elist' => $this->lslist,
+							'searchlist' => $this->c,
+							'domove' => true,
+						)); break;
 					case 's': break;
 					case 'a':
 						$lsfile->add();
@@ -498,7 +508,7 @@ class CsvList extends FileList {
 		$this->build_newlist();
 		if($this->newlist) {
 			foreach($this->newlist as $file) {
-				switch($file->newadd()) {
+				switch($file->newadd(array('lslist' => $this->lslist))) {
 					case 0: return;
 					case 1: continue 2;
 					case 2: $this->add_entry($file, array('isnew' => true));

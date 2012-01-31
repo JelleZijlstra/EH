@@ -357,23 +357,22 @@ class FullFile extends ListEntry {
 		}
 		return true;
 	}
-	function rename($mode) {
-	// files that have been renamed in the catalog but not the library, or vice versa
-	// function edits the library and/or renames the file to correct them
-	// @param mode: may be either "ls" (called during lscheck, renames actual file) or "csv" (called during csvcheck, renames file in catalog)
-		switch($mode) {
-			case 'ls':
-				$elist = $this->p->lslist;
-				$searchlist = $this->p->c;
-				break;
-			case 'csv':
-				$elist = $this->p->c;
-				$searchlist = $this->p->lslist;
-				break;
-			default:
-				echo "Unrecognized mode";
-				return false;
-		}
+	public function effect_rename(array $paras) {
+	// fix files that have been renamed in the catalog but not the library, or 
+	// vice versa
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'searchlist' => 'List to search in for the existing version of 
+					the file',
+				'elist' => 'List that we found the lost file in',
+				'domove' => 'Whether we need to move the physical file',
+			),
+			'errorifempty' => array('searchlist', 'elist'),
+			'default' => array('domove' => false),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$searchlist = $paras['searchlist'];
+		$elist = $paras['elist'];
 		echo PHP_EOL . "Type 'q' to quit and 'i' to get information about this file." . PHP_EOL;
 		// ask user
 		while(true) {
@@ -384,35 +383,35 @@ class FullFile extends ListEntry {
 			} elseif($newname === "i") {
 				$this->my_inform();
 			} else {
-				$searchres = $searchlist[$newname];
-				if($searchres) {
-					if(isset($elist[$searchres->name])) {
-						echo "File already exists in catalog." . PHP_EOL;
-					} else {
-						$this->p->needsave();
-						logwrite("File " . $this->name . " renamed to " . $newname . " (" . $mode . "check)." . PHP_EOL);
-						if($mode === 'ls') {
-							if(!exec_catch("mv -n " . $this->path() . " " . $searchres->path()))
-								echo "Error moving file $this->name to $searchres->name." . PHP_EOL;
-						}
-						$oldname = $this->name;
-						$this->name = $searchres->name;
-						$this->folder = $searchres->folder;
-						$this->sfolder = $searchres->sfolder;
-						$this->ssfolder = $searchres->ssfolder;
-						$this->p->add_entry($this);
-						// make redirect
-						$this->p->unsetf($oldname);
-						$this->p->add_redirect(array(
-							'handle' => $oldname,
-							'target' => $newname,
-						));
-						echo "Found new filename." . PHP_EOL;
-						return true;
-					}
-				}
-				else
+				if(!isset($searchlist[$newname])) {
 					echo "Could not find a file with this name; try again." . PHP_EOL;
+					continue;					
+				}
+				$searchres = $searchlist[$newname];
+				if(isset($elist[$searchres->name])) {
+					echo "File already exists in catalog." . PHP_EOL;
+					continue;
+				}
+				$this->p->needsave();
+				logwrite("File " . $this->name . " renamed to " . $newname . " (check)." . PHP_EOL);
+				if($paras['domove']) {
+					if(!exec_catch("mv -n " . $this->path() . " " . $searchres->path()))
+						echo "Error moving file $this->name to $searchres->name." . PHP_EOL;
+				}
+				$oldname = $this->name;
+				$this->name = $searchres->name;
+				$this->folder = $searchres->folder;
+				$this->sfolder = $searchres->sfolder;
+				$this->ssfolder = $searchres->ssfolder;
+				$this->p->add_entry($this);
+				// make redirect
+				$this->p->unsetf($oldname);
+				$this->p->add_redirect(array(
+					'handle' => $oldname,
+					'target' => $newname,
+				));
+				echo "Found new filename." . PHP_EOL;
+				return true;
 			}
 		}
 	}
@@ -1805,8 +1804,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			return false;
 	}
 	/* ADDING DATA */
-	public function newadd() {
+	public function newadd(array $paras) {
 	// add from CsvList::newcheck(). This function gets the path and moves the file into the library.
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array('lslist' => 'List of files found using ls'),
+			'errorifempty' => array('lslist'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		makemenu(array('o' => 'open this file',
 				'q' => 'quit',
 				's' => 'skip this file',
@@ -1842,7 +1846,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		 */
 		$oldname = $this->name;
 		// loop until the value of $this->name doesn't exist yet
-		while(isset($this->p->lslist[$this->name])) {
+		while(isset($paras['lslist'][$this->name])) {
 			makemenu(array('r' => 'move over the existing file',
 					'd' => 'delete the new file',
 					'o' => 'open the new and existing files',
@@ -1851,12 +1855,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				switch($newname = $this->getline()) {
 					case 'o':
 						$this->openf(array('place' => 'temp'));
-						$this->p->lslist[$this->name]->openf();
+						$paras['lslist'][$this->name]->openf();
 						break;
 					case 'r':
 						$cmd = 'mv ' . TEMPPATH . '/' .
 							escape_shell($this->name) . ' ' .
-							$this->p->lslist[$this->name]->path();
+							$paras['lslist'][$this->name]->path();
 						if(!exec_catch($cmd))
 							echo "Error moving file" . PHP_EOL;
 						$this->p->edit($this->name);

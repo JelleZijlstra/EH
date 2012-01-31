@@ -161,8 +161,24 @@ class ExecuteHandler extends EHICore {
 		if($redirection['>'] !== false or $redirection['>$'] !== false) {
 			ob_start();
 		}
-		// execute the command
-		$ret = $this->{$cmd['name']}($paras);
+		try {
+			// execute the command
+			$ret = $this->{$cmd['name']}($paras);
+		} catch(EHException $e) {
+			echo "Error '" . $e->getMessage() . "' occurred while executing command '" . $cmd['name'] . "'" . PHP_EOL;
+			if(defined('IS_EHPHP')) {
+				return NULL;
+			} else {
+				return self::EXECUTE_NEXT;
+			}
+		} catch(StopException $e) {
+			echo 'Stopped ' . $cmd['name'] . ' (' . $e->getMessage() . ')' . PHP_EOL;
+			if(defined('IS_EHPHP')) {
+				return NULL;
+			} else {
+				return self::EXECUTE_NEXT;
+			}
+		}
 		// always make return value accessible to script
 		$this->setvar('ret', $ret);
 
@@ -832,7 +848,6 @@ class ExecuteHandler extends EHICore {
 				case "\014": // Ctrl+L
 				case "\016": // Ctrl+N
 				case "\020": // Ctrl+P
-				case "\022": // Ctrl+R
 				case "\024": // Ctrl+T
 				case "\025": // Ctrl+U
 				case "\026": // Ctrl+V
@@ -840,6 +855,10 @@ class ExecuteHandler extends EHICore {
 				case "\030": // Ctrl+X
 				case "\033": // Ctrl+[
 				case "\035": // Ctrl+]
+					break;
+				case "\022": // Ctrl+R: stop
+					echo PHP_EOL; // make newline
+					throw new StopException("fgetc");
 					break;
 				default: // other characters: add to command
 					// temporary array to hold characters to be moved over

@@ -393,7 +393,7 @@ class CsvList extends FileList {
 			$this->burstcheck();
 			// check whether there are any new files to be added
 			$this->newcheck();
-		} catch (StopException $e) {
+		} catch(StopException $e) {
 			echo 'Exiting from check (' . $e->getMessage() . ')' . PHP_EOL;
 			return false;
 		}

@@ -293,6 +293,9 @@ abstract class FileList extends ExecuteHandler {
 				echo $e->getMessage();
 				if(!$continueiffalse) return;
 			}
+			catch(StopException $e) {
+				echo 'Stopping doall at ' . $file->name . PHP_EOL;
+			}
 			if($countfalse or $ret)
 				$i++;
 			if(!$continueiffalse and !$ret)

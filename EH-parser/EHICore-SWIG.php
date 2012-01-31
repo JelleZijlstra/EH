@@ -22,7 +22,12 @@ abstract class EHICore extends EHI {
 		if($this->_cPtr === NULL)
 			parent::__construct();
 		$this->prompt = $name . '> ';
-		$ret = $this->eh_interactive();
+		try {
+			$ret = $this->eh_interactive();
+		} catch(StopException $e) {
+			// don't do anything, just stop it
+			$ret = NULL;
+		}
 		echo "Goodbye." . PHP_EOL;
 		return $ret;
 	}

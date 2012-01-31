@@ -179,7 +179,7 @@ abstract class EHICore {
 				}
 				$func = $this->funcs[$funcname];
 				$argcount = count($vars);
-				if($argcount != $func['argcount']) {
+				if($argcount !== $func['argcount']) {
 					echo "Error: incorrect variable number for function  $funcname (expected {$func['argcount']}, got $argcount)\n";
 					$this->evaluate_ret = self::EVALUATE_ERROR;
 					return NULL;
@@ -222,7 +222,7 @@ abstract class EHICore {
 		}
 		// math
 		else if(preg_match(
-			"/^(?![\"'])([^\s]*)\s*([+\-*\/=><]|!=|>=|<=|==)\s*([^\s]*)(?<![\"'])$/u",
+			"/^(?![\"'])([^\s]*)\s*([+\-*\/=><]|!=|!==|>=|<=|==)\s*([^\s]*)(?<![\"'])$/u",
 			$in,
 			$matches)) {
 			$lval = (float) trim($matches[1]);
@@ -238,7 +238,10 @@ abstract class EHICore {
 				case '==': return ($lval === $rval);
 				case '>': return ($lval > $rval);
 				case '<': return ($lval < $rval);
-				case '!=': return ($lval != $rval);
+				case '!=':
+					// loose comparison is intentional here
+					return ($lval != $rval);
+				case '!==': return ($lval !== $rval);
 				case '>=': return ($lval >= $rval);
 				case '<=': return ($lval <= $rval);
 			}

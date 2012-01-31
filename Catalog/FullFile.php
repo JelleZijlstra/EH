@@ -577,7 +577,7 @@ class FullFile extends ListEntry {
 			if(!$this->hdl) {
 				$this->hdl = $newhdl;
 			}
-			else if($this->hdl != $newhdl) {
+			else if($this->hdl !== $newhdl) {
 				echo 'Recorded HDL for file ' . $this->name . ': ' . $this->hdl . '. HDL in URL: ' . $newhdl . PHP_EOL;
 			}
 			$this->url = NULL;
@@ -2918,6 +2918,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			if(${$var}) {
 				// echo differences if verbose is set
 				if($paras['verbose']) {
+					// loose comparison is intentional here
 					if(simplify(${$var}) != simplify($this->$var)) {
 						echo 'Different data from expanddoi(). File ' . $this->name . '; var ' . $var . PHP_EOL;
 						echo 'Existing data: ' . $this->$var . PHP_EOL;

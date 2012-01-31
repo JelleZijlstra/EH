@@ -828,7 +828,7 @@ class CsvList extends FileList {
 			}
 			$rectitle = $child->getsimpletitle();
 			$dettitle = $child->getsimpletitle($pdftitle);
-			if(($dettitle != $rectitle) and
+			if(($dettitle !== $rectitle) and
 				($rectitle ? (strpos($dettitle, $rectitle) === false) : true) and
 				($dettitle ? (strpos($rectitle, $dettitle) === false) : true)
 			) {

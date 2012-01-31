@@ -1,0 +1,23 @@
+== PHP ==
+All methods that execute user-visible commands should call process_paras before
+executing any substantive code. (Some methods may need to execute a few 
+assignments of local variables before calling process_paras.)
+
+Braces should be used around any block of code, and braces should not be put on
+their own lines, as follows:
+	if($some_condition) {
+		return true;
+	} elseif($some_other_condition) {
+		return false;
+	} else {
+		return true;
+	}
+This is not currently applied consistently.
+
+Methods that execute commands should generally be declared public, because they
+create a public interface that should in principle also be callable from other
+classes. (Technically, such methods only need to be protected for the command to
+work.)
+
+Other methods and properties should have as low visibility as possible. Much
+work is still needed to fix unnecessarily public class members.

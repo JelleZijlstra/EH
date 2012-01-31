@@ -2,7 +2,7 @@
 # Add a file to the EH test suite
 
 # Find the executer
-executer=`head testfiles`
+executer=`head -n 1 testfiles`
 if [ -z "$executer" ]; then
 	echo 'Invalid executer'
 	exit

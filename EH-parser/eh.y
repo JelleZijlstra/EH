@@ -260,9 +260,9 @@ expression:
 
 simple_expr:
 	T_INTEGER				{ $$ = eh_get_int($1); }
-	| T_FLOAT				{ $$ = eh_get_float($1); }
 	| T_NULL				{ $$ = eh_get_null(); }
 	| T_BOOL				{ $$ = eh_get_bool($1); }
+	| T_FLOAT				{ $$ = eh_get_float($1); }
 	| string				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' simple_expr		{ $$ = eh_addnode('~', 1, $2); }
@@ -270,7 +270,9 @@ simple_expr:
 	| simple_expr T_ACCESSOR simple_expr
 							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
 	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
-	| '@' T_TYPE simple_expr %prec '@'
+	| '&' lvalue_get %prec T_REFERENCE
+							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
+	| '@' T_TYPE expression %prec '@'	
 							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| simple_expr ':' arglist
 							{ $$ = eh_addnode(':', 2, $1, $3); }
@@ -318,10 +320,10 @@ simple_expr:
 line_expr:
 	/* need to separate expressions beginning with a bareword from commands */
 	T_INTEGER				{ $$ = eh_get_int($1); }
-	| T_FLOAT				{ $$ = eh_get_float($1); }
-	| T_STRING				{ $$ = eh_get_string($1); }
 	| T_NULL				{ $$ = eh_get_null(); }
 	| T_BOOL				{ $$ = eh_get_bool($1); }
+	| T_FLOAT				{ $$ = eh_get_float($1); }
+	| T_STRING				{ $$ = eh_get_string($1); }
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' expression		{ $$ = eh_addnode('~', 1, $2); }
 	| '!' expression		{ $$ = eh_addnode('!', 1, $2); }
@@ -332,7 +334,7 @@ line_expr:
 	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
 	| '&' lvalue_get %prec T_REFERENCE
 							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
-	| '@' T_TYPE expression	%prec '@'
+	| '@' T_TYPE expression %prec '@'	
 							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| bareword ':' arglist
 							{ $$ = eh_addnode(':', 2, $1, $3); }

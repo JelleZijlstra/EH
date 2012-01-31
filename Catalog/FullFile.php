@@ -2930,7 +2930,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return true;
 	}
 	/* PROCESSING PDFS */
-	function burst() {
+	public function burst() {
 	// bursts a PDF file into several files
 		echo 'Bursting file ' . $this->name . '. Opening file.' . PHP_EOL;
 		$cmd = 'open \'' . BURSTPATH . '/' . $this->name . '\'';
@@ -2945,7 +2945,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					if(!exec_catch($cmd))
 						echo 'Error moving file ' . $this->name . ' to Old' . PHP_EOL;
 					return true;
-				case 'q': return false;
+				case 'q': throw new StopException('burst');
 				default:
 					if($this->p->has($name)) {
 						$cmd = $this->ynmenu('A file with this name already exists. Do you want to continue anyway?');

@@ -384,20 +384,19 @@ class CsvList extends FileList {
 		}
 		$date = new DateTime();
 		logwrite(PHP_EOL . PHP_EOL . 'check() session ' . $date->format('Y-m-d H:i:s') . PHP_EOL);
-		// check whether all files in the catalog are in the actual library
-		if(!$this->csvcheck()) {
+		try {
+			// check whether all files in the catalog are in the actual library
+			$this->csvcheck();
+			// check whether all files in the actual library are in the catalog
+			$this->lscheck();
+			// check whether there are any files to be burst
+			$this->burstcheck();
+			// check whether there are any new files to be added
+			$this->newcheck();
+		} catch (StopException $e) {
+			echo 'Exiting from check (' . $e->getMessage() . ')' . PHP_EOL;
 			return false;
 		}
-		// check whether all files in the actual library are in the catalog
-		if(!$this->lscheck()) {
-			return false;
-		}
-		// check whether there are any files to be burst
-		if(!$this->burstcheck()) {
-			return false;
-		}
-		// check whether there are any new files to be added
-		$this->newcheck();
 		return true;
 	}
 	private function csvcheck() {
@@ -434,7 +433,7 @@ class CsvList extends FileList {
 					),
 				));
 				switch($cmd) {
-					case 'q': return false;
+					case 'q': throw new StopException('csvcheck');
 					case 'm': return true;
 					case 'l': $file->rename('csv'); break;
 					case 's': break;
@@ -469,7 +468,7 @@ class CsvList extends FileList {
 					'head' => 'Could not find file ' . $lsfile->name . ' in catalog',
 				));
 				switch($cmd) {
-					case 'q': return false;
+					case 'q': throw new StopException('lscheck');
 					case 'm': return true;
 					case 'l': $lsfile->rename('ls'); break;
 					case 's': break;
@@ -488,7 +487,7 @@ class CsvList extends FileList {
 		$this->build_newlist(BURSTPATH, 'burstlist');
 		if($this->burstlist)
 			foreach($this->burstlist as $file) {
-				if(!$file->burst()) return false;
+				$file->burst();
 			}
 		echo 'done' . PHP_EOL;
 		return true;

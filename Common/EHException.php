@@ -38,3 +38,10 @@ class EHException extends Exception {
 		exit(1);
 	}
 }
+
+// Used to exit from a series of function calls
+class StopException extends Exception {
+	public function __construct($message, $code = 0, Exception $previous = NULL) {
+		parent::__construct($message, $code, $previous);
+	}
+}

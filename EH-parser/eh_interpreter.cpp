@@ -190,7 +190,6 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 	// empty statements produce a null node
 	if(node == NULL)
 		return ret;
-	//printf("Executing nodetype %d\n", node->type);
 	if(node->type == op_e)
 		switch(node->opval->op) {
 		/*
@@ -304,10 +303,10 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 				break;
 			case T_ATTRIBUTE: // class member attributes
 				ret.type = attributestr_e;
-				if(node->opval->nparas == 0)
+				if(node->opval->nparas == 0) {
 					// all zeroes
 					ret.intval = 0;
-				else {
+				} else {
 					// first execute first para
 					ret = eh_execute(node->opval->paras[0], context);
 					// then overwrite with attribute from second para

@@ -33,15 +33,11 @@ abstract class ListEntry extends ExecuteHandler {
 		$this->setup_execute = true;
 	}
 	abstract public function toarray();
-	public function my_inform() {
-		// implementors may want to do more stuff here
-		return $this->inform();
-	}
 	public $discardthis; // flag to $this->p->add_entry() that this entry should not be added
 	protected $setup_execute;
 	protected static $ListEntry_commands = array(
-		'my_inform' => array('name' => 'my_inform',
-			'aka' => array('inform', 'i'),
+		'inform' => array('name' => 'inform',
+			'aka' => array('i'),
 			'desc' => 'Give information about an entry',
 			'arg' => 'None',
 			'execute' => 'callmethod'),

@@ -459,8 +459,8 @@ class Taxon extends ListEntry {
 			}
 		}
 	}
-	function my_inform() {
-		$this->inform();
+	public function inform() {
+		parent::inform();
 		$this->informrange();
 		$this->informchildren();
 	}

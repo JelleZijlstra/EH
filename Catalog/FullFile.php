@@ -196,10 +196,10 @@ class FullFile extends ListEntry {
 		$out[] = $this->getarray('bools');
 		return $out;
 	}
-	public function my_inform() {
+	public function inform() {
 	// provide information for a file
 		// call the parent's basic inform() method
-		$this->inform();
+		parent::inform();
 		// provide ls data
 		if($this->isfile()) echo shell_exec('ls -l ' . $this->path()) . PHP_EOL;
 	}
@@ -381,7 +381,7 @@ class FullFile extends ListEntry {
 			if($newname === "q") {
 				return false;
 			} elseif($newname === "i") {
-				$this->my_inform();
+				$this->inform();
 			} else {
 				if(!isset($searchlist[$newname])) {
 					echo "Could not find a file with this name; try again." . PHP_EOL;
@@ -2125,7 +2125,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						exec_catch("open '" . str_replace("'", "\'", $result->link) . "'");
 						break;
 					case 'i':
-						$this->my_inform();
+						$this->inform();
 						break;
 					case 'n':
 						break 2;
@@ -2745,7 +2745,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					},
 				));
 				if($cmd === 'e') {
-					$this->my_inform();
+					$this->inform();
 					$this->edit();
 				}
 				return true;

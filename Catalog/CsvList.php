@@ -421,7 +421,7 @@ class CsvList extends FileList {
 					'head' => 'Could not find file ' . $file->name,
 					'process' => array(
 						'i' => function() use($file) {
-							$file->my_inform();
+							$file->inform();
 						},
 						'e' => function() use($file) {
 							$file->edit();

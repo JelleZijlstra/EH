@@ -29,8 +29,8 @@ abstract class FileList extends ExecuteHandler {
 	// array of functions for which __call should not resolve redirects. Entries are in the form array('FullFile', 'isredirect')
 	public static $resolve_redirect_exclude = array();
 	private static $FileList_commands = array(
-		'my_inform' => array('name' => 'my_inform',
-			'aka' => array('inform', 'i'),
+		'inform' => array('name' => 'inform',
+			'aka' => array('i'),
 			'desc' => 'Give information about an entry',
 			'arg' => 'Entry handle',
 			'execute' => 'callmethod'),

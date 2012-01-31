@@ -2,8 +2,6 @@ In the PHP code:
 - Avoid loose comparison, create_function, private methods that are better
   recast as lambda functions, ad-hoc reimplementations of parts of menu() and
   process_paras().
-- Minimize use of callmethodarg and all other execute variants except
-  callmethod.
 
 EH-PHP interface:
 - Enable }$ and >$ use.

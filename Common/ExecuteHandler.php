@@ -55,6 +55,9 @@ class ExecuteHandler extends EHICore {
 			'desc' => 'Print its arguments',
 			'arg' => 'As many as you want',
 			'execute' => 'callmethod'),
+		'return_para' => array('name' => 'return_para',
+			'desc' => 'Returns its first argument',
+			'arg' => 'One; everything else is ignored'),
 		'test' => array('name' => 'test',
 			'desc' => 'Do something random',
 			'arg' => 'None',
@@ -997,6 +1000,14 @@ class ExecuteHandler extends EHICore {
 	// dump the arguments it gets, useful for debugging ehphp
 		var_dump($paras);
 		return true;
+	}
+	public function return_para(array $paras) {
+	// return its first para
+		if(!isset($paras[0])) {
+			return NULL;
+		} else {
+			return $paras[0];
+		}
 	}
 	public function test($paras) {
 	// Test function that might do anything I currently want to test

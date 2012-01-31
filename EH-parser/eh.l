@@ -31,6 +31,7 @@
 				yylval_param->sValue[len - 2] = '\0';
 				return T_STRING;
 			}
+[\\]\n		/* Ignore escape */
 [0-9]*\.[0-9]+	{
 				yylval_param->fValue = strtof(yytext, NULL);
 				return T_FLOAT;

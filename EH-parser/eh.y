@@ -87,6 +87,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %nonassoc T_RANGE
 %nonassoc '$' T_REFERENCE '~' '!' T_NEGATIVE T_COUNT
 %nonassoc T_NEW
+%nonassoc '`'
 %nonassoc '[' ']'
 %nonassoc '(' ')'
 
@@ -390,6 +391,7 @@ line_expr:
 
 command:
 	bareword paralist		{ $$ = eh_addnode(T_COMMAND, 2, $1, $2); }
+	;
 
 paralist:
 	para paralist			{ $$ = eh_addnode(',', 2, $1, $2); }
@@ -450,6 +452,7 @@ parglist:
 parg:
 	bareword				{ $$ = $1; }
 	| bareword ','			{ $$ = $1; }
+	;
 
 caselist:
 	acase caselist			{ $$ = eh_addnode(',', 2, $1, $2); }

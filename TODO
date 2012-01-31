@@ -7,10 +7,6 @@ In the PHP code:
 
 EH-PHP interface:
 - Enable }$ and >$ use.
-- Allowing arbitrary expressions in unnamed arguments broke the ` syntax. The
-  closing ` gets interpreted as the start of a nested `, instead of the closing
-  of another one. Can't yet think of a solution short of defining another
-  subtype of expression.
 
 ehi core:
 - Do something about those memory leaks.

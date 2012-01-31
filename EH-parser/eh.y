@@ -89,7 +89,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %nonassoc T_NEW
 %nonassoc '`'
 %nonassoc '[' ']'
-%nonassoc '(' ')'
+%nonassoc '(' ')' T_DOLLARPAREN
 
 %type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
 %%
@@ -254,7 +254,8 @@ expression:
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
-	| '`' command '`'		{ $$ = $2; }
+	| T_DOLLARPAREN command ')'
+							{ $$ = $2; }
 	;
 
 simple_expr:
@@ -310,7 +311,8 @@ simple_expr:
 	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
 	| T_COUNT simple_expr	{ $$ = eh_addnode(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = eh_addnode(T_NEW, 1, $2); }
-	| '`' command '`'		{ $$ = $2; }
+	| T_DOLLARPAREN command ')'
+							{ $$ = $2; }
 	;
 
 line_expr:
@@ -386,7 +388,8 @@ line_expr:
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
-	| '`' command '`'		{ $$ = $2; }
+	| T_DOLLARPAREN command ')'
+							{ $$ = $2; }
 	;
 
 command:
@@ -400,7 +403,7 @@ paralist:
 
 para:
 	simple_expr					{ $$ = $1; }
-	| T_MINMIN string '=' simple_expr
+	| T_MINMIN string '=' expression
 							{ $$ = eh_addnode(T_LONGPARA, 2, $2, $4); }
 	| T_MINMIN string		{ $$ = eh_addnode(T_LONGPARA, 1, $2); }
 	| '-' string			{ $$ = eh_addnode(T_SHORTPARA, 1, $2); }

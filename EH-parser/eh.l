@@ -127,6 +127,7 @@
 				yylval_param->bValue = false;
 				return T_BOOL;
 			}
+"$("		return T_DOLLARPAREN;
 "$ "		return T_SET;
 "++"		return T_PLUSPLUS;
 "--"		return T_MINMIN;
@@ -155,7 +156,7 @@
 				yylval_param->aValue = dot_e;
 				return T_ACCESSOR;
 			}
-[@=$+\-*/<>(),:\[\]&\|^%~!{}`]	return *yytext; /* Single character tokens */
+[@=$+\-*/<>(),:\[\]&\|^%~!{}]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{
 				char message[100];

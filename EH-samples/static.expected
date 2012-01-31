@@ -7,4 +7,6 @@ muh <public,non-static,constant>: @int 2
 ]
 2
 3
+Attempt to write to constant variable: EH runtime error
+Attempt to write to constant variable: EH runtime error
 2

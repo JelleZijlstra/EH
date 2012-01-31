@@ -2,4 +2,5 @@ test 42
 bah foo
 19 foo
 1919
+No such global variable: nosuchvar: EH notice
 null

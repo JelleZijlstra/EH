@@ -1,2 +1,4 @@
+Incorrect argument count for function ehlf_printvar: expected 1, got at least 0: EH runtime error
 (null)
+Incorrect argument count for function ehlf_is_int: expected 1, got at least 0: EH runtime error
 (false)

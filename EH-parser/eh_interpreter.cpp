@@ -1403,62 +1403,46 @@ void list_variables(void) {
  * Functions
  */
 bool insert_function(ehfunc_t *func) {
-	unsigned int vhash;
-
-	vhash = hash(func->name, HASH_INITVAL);
-	if(functable[vhash] == NULL) {
-		functable[vhash] = func;
-		func->next = NULL;
-	}
-	else {
-		func->next = functable[vhash];
-		functable[vhash] = func;
-	}
+	unsigned int vhash = hash(func->name, HASH_INITVAL);
+	func->next = functable[vhash];
+	functable[vhash] = func;
 	return true;
 }
 ehfunc_t *get_function(const char *name) {
-	unsigned int vhash;
-	ehfunc_t *currfunc;
-
-	vhash = hash(name, HASH_INITVAL);
-	currfunc = functable[vhash];
-	while(currfunc != NULL) {
+	for(ehfunc_t *currfunc = functable[hash(name, HASH_INITVAL)]; 
+	  currfunc != NULL; currfunc = currfunc->next) {
 		if(strcmp(currfunc->name, name) == 0) {
 			return currfunc;
 		}
-		currfunc = currfunc->next;
 	}
 	return NULL;
 }
 static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node) {
 	*argcount = 0;
 	// traverse linked list to determine argument count
-	ehretval_t *tmp;
 	int currarg = 0;
 
-	tmp = node;
-	while(tmp->opval->nparas != 0) {
+	for(ehretval_t *tmp = node; tmp->opval->nparas != 0; 
+	  tmp = tmp->opval->paras[0]) {
 		currarg++;
-		tmp = tmp->opval->paras[0];
 	}
 	*argcount = currarg;
 	// if there are no arguments, the arglist can be NULL
-	if(currarg)
+	if(currarg) {
 		*arglist = (eharg_t *) Malloc(currarg * sizeof(eharg_t));
-	else
+	} else {
 		*arglist = NULL;
+	}
 	// add arguments to arglist
-	tmp = node;
 	currarg = 0;
-	while(tmp->opval->nparas != 0) {
+	for(ehretval_t *tmp = node; tmp->opval->nparas != 0; 
+	  tmp = tmp->opval->paras[0]) {
 		(*arglist)[currarg].name = tmp->opval->paras[1]->stringval;
 		currarg++;
-		tmp = tmp->opval->paras[0];
 	}
 }
 ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext) {
 	ehretval_t ret;
-	ehvar_t *var;
 
 	ret.type = null_e;
 	if(f->type == lib_e) {
@@ -1475,7 +1459,7 @@ ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcon
 		}
 	}
 	else while(args->opval->nparas != 0) {
-		var = (ehvar_t *) Malloc(sizeof(ehvar_t));
+		ehvar_t *var = (ehvar_t *) Malloc(sizeof(ehvar_t));
 		var->name = f->args[i].name;
 		var->scope = scope + 1;
 		insert_variable(var);
@@ -1504,12 +1488,12 @@ ehretval_t call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcon
 }
 ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, const ehretval_t *const args) {
 	ehretval_t ret;
-	ehvar_t *var;
 
 	ret.type = null_e;
 	if(f->type == lib_e) {
 		// library function not supported here for now
-		eh_error("call_function_args does not support library functions", efatal_e);
+		eh_error("call_function_args does not support library functions", 
+			efatal_e);
 		return ret;
 	}
 	// check parameter count
@@ -1519,13 +1503,14 @@ ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, 
 	}
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {
-		var = (ehvar_t *) Malloc(sizeof(ehvar_t));
+		ehvar_t *var = (ehvar_t *) Malloc(sizeof(ehvar_t));
 		var->name = f->args[i].name;
 		var->scope = scope + 1;
 		var->value = eh_execute(&args[i], context);
 		insert_variable(var);
 	}
-	// functions get their own scope (not incremented before because execution of arguments needs parent scope)
+	// functions get their own scope (not incremented before because execution 
+	// of arguments needs parent scope)
 	scope++;
 	// set new context (only useful for methods)
 	ret = eh_execute(f->code, newcontext);
@@ -1540,30 +1525,17 @@ ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, 
  * Classes
  */
 void insert_class(ehclass_t *classobj) {
-	unsigned int vhash;
-
-	vhash = hash(classobj->obj.classname, HASH_INITVAL);
-	if(classtable[vhash] == NULL) {
-		classtable[vhash] = classobj;
-		classobj->next = NULL;
-	}
-	else {
-		classobj->next = classtable[vhash];
-		classtable[vhash] = classobj;
-	}
+	unsigned int vhash = hash(classobj->obj.classname, HASH_INITVAL);
+	classobj->next = classtable[vhash];
+	classtable[vhash] = classobj;
 	return;
 }
 ehclass_t *get_class(const char *name) {
-	unsigned int vhash;
-	ehclass_t *currclass;
-
-	vhash = hash(name, HASH_INITVAL);
-	currclass = classtable[vhash];
-	while(currclass != NULL) {
+	for(ehclass_t *currclass = classtable[hash(name, HASH_INITVAL)]; 
+	  currclass != NULL; currclass = currclass->next) {
 		if(strcmp(currclass->obj.classname, name) == 0) {
 			return currclass;
 		}
-		currclass = currclass->next;
 	}
 	return NULL;
 }
@@ -1575,9 +1547,8 @@ void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i) {
 	if(!strcmp(newmember->name, "this")) {
 		newmember->value.type = object_e;
 		newmember->value.objectval = classobj;
-	}
-	// handle static
-	else if(classmember->attribute.isstatic == static_e) {
+	} else if(classmember->attribute.isstatic == static_e) {
+		// handle static
 		newmember->value.type = reference_e;
 		newmember->value.referenceval = &classmember->value;
 	}
@@ -1587,13 +1558,12 @@ void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i) {
 }
 void class_insert(ehvar_t **classarr, ehretval_t *in, ehcontext_t context) {
 	// insert a member into a class
-	char *name;
-	memberattribute_t attribute;
 	ehretval_t value;
 
 	// rely on standard layout of the input ehretval_t
-	attribute = eh_execute(in->opval->paras[0], context).attributestrval;
-	name = in->opval->paras[1]->stringval;
+	memberattribute_t attribute = eh_execute(in->opval->paras[0], 
+		context).attributestrval;
+	char *name = in->opval->paras[1]->stringval;
 
 	// decide what we got
 	switch(in->opval->nparas) {
@@ -1607,7 +1577,8 @@ void class_insert(ehvar_t **classarr, ehretval_t *in, ehcontext_t context) {
 			value.type = func_e;
 			value.funcval = (ehfm_t *) Malloc(sizeof(ehfm_t));
 			value.funcval->code = in->opval->paras[3];
-			make_arglist(&value.funcval->argcount, &value.funcval->args, in->opval->paras[2]);
+			make_arglist(&value.funcval->argcount, &value.funcval->args, 
+				in->opval->paras[2]);
 			break;
 	}
 	class_insert_retval(classarr, name, attribute, value);
@@ -1619,28 +1590,22 @@ ehvar_t *class_insert_retval(
 	ehretval_t value
 ) {
 	// insert a member into a class
-	unsigned int vhash;
-	ehvar_t *member;
 
-	member = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *member = (ehvar_t *) Malloc(sizeof(ehvar_t));
 	// rely on standard layout of the input ehretval_t
 	member->attribute = attribute;
 	member->name = name;
 	member->value = value;
 
 	// insert into hash table
-	vhash = hash(member->name, 0);
+	unsigned int vhash = hash(member->name, 0);
 	member->next = classarr[vhash];
 	classarr[vhash] = member;
 	return member;
 }
 ehvar_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context) {
-	ehvar_t *curr;
-	unsigned int vhash;
-
-	vhash = hash(name, 0);
-	curr = classobj->members[vhash];
-	while(curr != NULL) {
+	for(ehvar_t *curr = classobj->members[hash(name, 0)]; curr != NULL; 
+	  curr = curr->next) {
 		if(!strcmp(curr->name, name)) {
 			// we found it; now check visibility
 			switch(curr->attribute.visibility) {
@@ -1648,25 +1613,21 @@ ehvar_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t contex
 					return curr;
 				case private_e:
 					// check context
-					if(ehcontext_compare(classobj, context))
-						return curr;
-					else
-						return NULL;
+					return ehcontext_compare(classobj, context) ? curr : NULL;
 			}
 		}
-		curr = curr->next;
 	}
-	return curr;
+	return NULL;
 }
 ehretval_t class_get(ehobj_t *classobj, const char *name, ehcontext_t context) {
-	ehvar_t *curr;
 	ehretval_t ret;
 
-	curr = class_getmember(classobj, name, context);
-	if(curr == NULL)
+	ehvar_t *curr = class_getmember(classobj, name, context);
+	if(curr == NULL) {
 		ret.type = null_e;
-	else
+	} else {
 		ret = curr->value;
+	}
 	return ret;
 }
 ehretval_t object_access(
@@ -1681,9 +1642,8 @@ ehretval_t object_access(
 	ehobj_t *object;
 	memberattribute_t attribute;
 
-	// default value. Set the referenceval explicitly because of T_LVALUE special conventions
+	// default value
 	ret.type = null_e;
-	ret.referenceval = NULL;
 
 	label = eh_execute(index, context);
 	if(label.type != string_e) {
@@ -1712,17 +1672,17 @@ ehretval_t object_access(
 				attribute,
 				ret
 			);
-		}
-		else {
+		} else {
 			eh_error_unknown("object member", label.stringval, eerror_e);
 			return ret;
 		}
 	}
 	// respect const specifier
-	if(classmember->attribute.isconst == const_e)
+	if(classmember->attribute.isconst == const_e) {
 		ret.type = creference_e;
-	else
+	} else {
 		ret.type = reference_e;
+	}
 	ret.referenceval = &classmember->value;
 	newcontext = object;
 	return ret;
@@ -1734,8 +1694,6 @@ ehretval_t colon_access(
 	int token
 ) {
 	ehretval_t ret, label;
-	ehclass_t *classobj;
-	ehvar_t *member;
 	memberattribute_t attribute;
 	ret.type = null_e;
 	ret.referenceval = NULL;
@@ -1750,12 +1708,12 @@ ehretval_t colon_access(
 		eh_error_type("class access", operand1.type, efatal_e);
 		return ret;
 	}
-	classobj = get_class(operand1.stringval);
+	ehclass_t *classobj = get_class(operand1.stringval);
 	if(!classobj) {
 		eh_error_unknown("class", operand1.stringval, efatal_e);
 		return ret;
 	}
-	member = class_getmember(&classobj->obj, label.stringval, context);
+	ehvar_t *member = class_getmember(&classobj->obj, label.stringval, context);
 	if(!member) {
 		// add new member if we're setting
 		if(token == T_LVALUE_SET) {
@@ -1776,10 +1734,11 @@ ehretval_t colon_access(
 		}
 	}
 	// respect const specifier
-	if(member->attribute.isconst == const_e)
+	if(member->attribute.isconst == const_e) {
 		ret.type = creference_e;
-	else
+	} else {
 		ret.type = reference_e;
+	}
 	ret.referenceval = &member->value;
 	newcontext = &classobj->obj;
 	return ret;
@@ -1834,8 +1793,9 @@ ehretval_t eh_stringtoint(const char *const in) {
 	ret.type = int_e;
 	ret.intval = strtol(in, &endptr, 0);
 	// If in == endptr, strtol read no digits and there was no conversion.
-	if(in == endptr)
+	if(in == endptr) {
 		CASTERROR_KNOWN(int, string);
+	}
 	return ret;
 }
 ehretval_t eh_stringtofloat(const char *const in) {
@@ -1843,24 +1803,22 @@ ehretval_t eh_stringtofloat(const char *const in) {
 	ehretval_t ret;
 	ret.type = float_e;
 	ret.floatval = strtof(in, &endptr);
-	// If in == endptr, strtol read no digits and there was no conversion.
-	if(in == endptr)
+	// If in == endptr, strtof read no digits and there was no conversion.
+	if(in == endptr) {
 		CASTERROR_KNOWN(float, string);
+	}
 	return ret;
 }
 char *eh_inttostring(const int in) {
-	char *buffer;
-
-	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and null terminator) should suffice for the result string
-	buffer = (char *) Malloc(12);
+	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and 
+	// null terminator) should suffice for the result string
+	char *buffer = (char *) Malloc(12);
 	snprintf(buffer, 12, "%d", in);
 
 	return buffer;
 }
 char *eh_floattostring(const float in) {
-	char *buffer;
-
-	buffer = (char *) Malloc(12);
+	char *buffer = (char *) Malloc(12);
 	snprintf(buffer, 12, "%f", in);
 
 	return buffer;
@@ -1884,29 +1842,27 @@ ehretval_t eh_rangetoarray(const ehrange_t *const range) {
 ehretval_t eh_stringtorange(const char *const in) {
 	// attempt to find two integers in the string
 	ehretval_t ret;
-	int i = 0;
 	int min, max;
 	char *ptr;
 	// get lower part of range
-	while(1) {
-		if(in[i] == '\0')
+	for(int i = 0; ; i++) {
+		if(in[i] == '\0') {
 			CASTERROR_KNOWN(range, string);
+		}
 		if(isdigit(in[i])) {
 			min = strtol(&in[i], &ptr, 0);
 			break;
 		}
-		i++;
 	}
 	// get upper bound
-	i = 0;
-	while(1) {
-		if(ptr[i] == '\0')
+	for(int i = 0; ; i++) {
+		if(ptr[i] == '\0') {
 			CASTERROR_KNOWN(range, string);
+		}
 		if(isdigit(ptr[i])) {
 			max = strtol(&ptr[i], NULL, 0);
 			break;
 		}
-		i++;
 	}
 	return eh_make_range(min, max);
 }
@@ -1922,10 +1878,11 @@ ehretval_t eh_xtoint(const ehretval_t in) {
 			ret = eh_stringtoint(in.stringval);
 			break;
 		case bool_e:
-			if(in.boolval)
+			if(in.boolval) {
 				ret.intval = 1;
-			else
+			} else {
 				ret.intval = 0;
+			}
 			break;
 		case null_e:
 			ret.intval = 0;
@@ -1935,6 +1892,7 @@ ehretval_t eh_xtoint(const ehretval_t in) {
 			break;
 		default:
 			CASTERROR(int);
+			break;
 	}
 	return ret;
 }
@@ -1968,6 +1926,7 @@ ehretval_t eh_xtostring(const ehretval_t in) {
 			break;
 		default:
 			CASTERROR(string);
+			break;
 	}
 	return ret;
 }
@@ -1980,30 +1939,18 @@ ehretval_t eh_xtobool(const ehretval_t in) {
 			ret.boolval = in.boolval;
 			break;
 		case int_e:
-			if(in.intval == 0)
-				ret.boolval = false;
-			else
-				ret.boolval = true;
+			ret.boolval = (in.intval != 0);
 			break;
 		case string_e:
-			if(strlen(in.stringval) == 0)
-				ret.boolval = false;
-			else
-				ret.boolval = true;
+			ret.boolval = (strlen(in.stringval) != 0);
 			break;
 		case array_e:
 			// empty arrays should return false
-			if(array_count(in.arrayval))
-				ret.boolval = true;
-			else
-				ret.boolval = false;
+			ret.boolval = (array_count(in.arrayval) != 0);
 			break;
 		case range_e:
 			// 0..0 is false, everything else true
-			if(in.rangeval->min == 0 && in.rangeval->max == 0)
-				ret.boolval = false;
-			else
-				ret.boolval = true;
+			ret.boolval = (in.rangeval->min != 0 || in.rangeval->max != 0);
 			break;
 		default:
 			// other types are always false
@@ -2026,16 +1973,18 @@ ehretval_t eh_xtofloat(const ehretval_t in) {
 			ret = eh_stringtofloat(in.stringval);
 			break;
 		case bool_e:
-			if(in.boolval)
-				ret.floatval = 1;
-			else
-				ret.floatval = 0;
+			if(in.boolval) {
+				ret.floatval = 1.0;
+			} else {
+				ret.floatval = 0.0;
+			}
 			break;
 		case null_e:
-			ret.floatval = 0;
+			ret.floatval = 0.0;
 			break;
 		default:
 			CASTERROR(float);
+			break;
 	}
 	return ret;
 }
@@ -2054,6 +2003,7 @@ ehretval_t eh_xtorange(const ehretval_t in) {
 			break;
 		default:
 			CASTERROR(range);
+			break;
 	}
 	return ret;
 }
@@ -2080,6 +2030,7 @@ ehretval_t eh_xtoarray(const ehretval_t in) {
 			break;
 		default:
 			CASTERROR(array);
+			break;
 	}
 	return ret;
 }
@@ -2170,8 +2121,7 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 		var = eh_execute(in->opval->paras[0], context);
 		member->indextype = int_e;
 		member->index = place;
-	}
-	else {
+	} else {
 		label = eh_execute(in->opval->paras[0], context);
 		switch(label.type) {
 			case int_e:
@@ -2202,8 +2152,9 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 	switch(member->indextype) {
 		case int_e:
 			while(*currptr != NULL) {
-				if((*currptr)->indextype == int_e && (*currptr)->index == member->index) {
-					// replace this array member. I suppose this will break if we somehow enable references.
+				if((*currptr)->indextype == int_e 
+				  && (*currptr)->index == member->index) {
+					// replace this array member
 					member->next = (*currptr)->next;
 					free(*currptr);
 					*currptr = member;
@@ -2214,7 +2165,8 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 			break;
 		case string_e:
 			while(*currptr != NULL) {
-				if((*currptr)->indextype == string_e && !strcmp((*currptr)->name, member->name)) {
+				if((*currptr)->indextype == string_e 
+				  && !strcmp((*currptr)->name, member->name)) {
 					member->next = (*currptr)->next;
 					free(*currptr);
 					*currptr = member;
@@ -2230,11 +2182,11 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 	return;
 }
 ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) {
-	// Inserts a member into an array. Assumes that the member is not yet present in the array.
-	ehvar_t *newvar;
-	unsigned int vhash = 0;
+	// Inserts a member into an array. 
+	// Assumes that the member is not yet present in the array.
+	unsigned int vhash;
 
-	newvar = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *const newvar = (ehvar_t *) Malloc(sizeof(ehvar_t));
 	newvar->indextype = index.type;
 	switch(index.type) {
 		case int_e:
@@ -2273,48 +2225,43 @@ ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
 	curr = array[vhash];
 	switch(index.type) {
 		case int_e:
-			while(curr != NULL) {
-				if(curr->indextype == int_e && curr->index == index.intval)
+			for( ; curr != NULL; curr = curr->next) {
+				if(curr->indextype == int_e && curr->index == index.intval) {
 					return curr;
-				curr = curr->next;
+				}
 			}
 			break;
 		case string_e:
-			while(curr != NULL) {
-				if(curr->indextype == string_e && !strcmp(curr->name, index.stringval))
+			for( ; curr != NULL; curr = curr->next) {
+				if(curr->indextype == string_e 
+				  && !strcmp(curr->name, index.stringval)) {
 					return curr;
-				curr = curr->next;
+				}
 			}
 			break;
-		default:
-			// to keep the compiler happy; this will already be caught by previous switch
+		default: // to keep compiler happy (issues caught by previous switch)
 			break;
 	}
 	return NULL;
 }
 ehretval_t array_get(ehvar_t **array, ehretval_t index) {
-	ehvar_t *curr;
 	ehretval_t ret;
 
-	curr = array_getmember(array, index);
-	if(curr == NULL)
+	const ehvar_t *curr = array_getmember(array, index);
+	if(curr == NULL) {
 		ret.type = null_e;
-	else {
+	} else {
 		ret = curr->value;
 	}
 	return ret;
 }
 int array_count(ehvar_t **array) {
 	// count the members of an array
-	ehvar_t *curr;
-	int i, count = 0;
+	int count = 0;
 
-	for(i = 0; i < VARTABLE_S; i++) {
-		curr = array[i];
-		while(curr != NULL) {
-			if(curr->value.type != null_e)
-				count++;
-			curr = curr->next;
+	for(int i = 0; i < VARTABLE_S; i++) {
+		for(ehvar_t *curr = array[i]; curr != NULL; curr = curr->next) {
+			count++;
 		}
 	}
 	return count;
@@ -2324,20 +2271,21 @@ int array_count(ehvar_t **array) {
  */
 static ehretval_t int_arrow_get(ehretval_t operand1, ehretval_t operand2) {
 	ehretval_t ret;
-	int mask;
 
 	ret.type = null_e;
-	// "array" access to integer returns the nth bit of the integer; for example (assuming sizeof(int) == 32), (2 -> 30) == 1, (2 -> 31) == 0
+	// "array" access to integer returns the nth bit of the integer; for example 
+	// (assuming sizeof(int) == 32), (2 -> 30) == 1, (2 -> 31) == 0
 	if(operand2.type != int_e) {
 		eh_error_type("bitwise access to integer", operand2.type, enotice_e);
 		return ret;
 	}
 	if(operand2.intval >= (int) sizeof(int) * 8) {
-		eh_error_int("Identifier too large for bitwise access to integer", operand2.intval, enotice_e);
+		eh_error_int("Identifier too large for bitwise access to integer", 	
+			operand2.intval, enotice_e);
 		return ret;
 	}
 	// get mask
-	mask = 1 << (sizeof(int) * 8 - 1);
+	int mask = 1 << (sizeof(int) * 8 - 1);
 	mask >>= operand2.intval;
 	// apply mask
 	ret.intval = (operand1.intval & mask) >> (sizeof(int) * 8 - 1 - mask);
@@ -2346,19 +2294,21 @@ static ehretval_t int_arrow_get(ehretval_t operand1, ehretval_t operand2) {
 }
 static ehretval_t string_arrow_get(ehretval_t operand1, ehretval_t operand2) {
 	ehretval_t ret;
-	int count;
 
 	ret.type = null_e;
 
-	// "array" access to a string returns an integer representing the nth character.
-	// In the future, perhaps replace this with a char datatype or with a "shortstring" datatype representing strings up to 3 or even 4 characters long
+	// "array" access to string returns integer representing nth character.
+	// In the future, perhaps replace this with a char datatype or with a 
+	// "shortstring" datatype representing strings up to 3 or even 4 characters 
+	// long
 	if(operand2.type != int_e) {
 		eh_error_type("character access to string", operand2.type, enotice_e);
 		return ret;
 	}
-	count = strlen(operand1.stringval);
+	int count = strlen(operand1.stringval);
 	if(operand2.intval >= count) {
-		eh_error_int("Identifier too large for character access to string", operand2.intval, enotice_e);
+		eh_error_int("Identifier too large for character access to string", 
+			operand2.intval, enotice_e);
 		return ret;
 	}
 	// get the nth character
@@ -2384,33 +2334,31 @@ static ehretval_t range_arrow_get(ehretval_t range, ehretval_t accessor) {
 			break;
 		default:
 			eh_error_int("invalid range accessor", accessor.intval, enotice_e);
+			break;
 	}
 	return ret;
 }
 static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue) {
-	int mask;
-
 	if(index.type != int_e) {
 		eh_error_type("bitwise access to integer", index.type, enotice_e);
 		return;
 	}
 	if(index.intval < 0 || (unsigned) index.intval >= sizeof(int) * 8) {
-		eh_error_int("Identifier too large for bitwise access to integer", index.intval, enotice_e);
+		eh_error_int("Identifier too large for bitwise access to integer", 
+			index.intval, enotice_e);
 		return;
 	}
 	// get mask
-	mask = (1 << (sizeof(int) * 8 - 1)) >> index.intval;
-	if(eh_xtobool(rvalue).boolval)
+	int mask = (1 << (sizeof(int) * 8 - 1)) >> index.intval;
+	if(eh_xtobool(rvalue).boolval) {
 		input.referenceval->intval |= mask;
-	else {
+	} else {
 		mask = ~mask;
 		input.referenceval->intval &= mask;
 	}
 	return;
 }
 static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue) {
-	int count;
-
 	if(rvalue.type != int_e) {
 		eh_error_type("character access to string", rvalue.type, enotice_e);
 		return;
@@ -2419,9 +2367,10 @@ static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rval
 		eh_error_type("setting a character in a string", index.type, enotice_e);
 		return;
 	}
-	count = strlen(input.referenceval->stringval);
+	int count = strlen(input.referenceval->stringval);
 	if(index.intval >= count) {
-		eh_error_int("Identifier too large for character access to string", index.intval, enotice_e);
+		eh_error_int("Identifier too large for character access to string", 
+			index.intval, enotice_e);
 		return;
 	}
 	// get the nth character
@@ -2461,13 +2410,10 @@ ehretval_t eh_make_range(const int min, const int max) {
  * Command line arguments
  */
 void eh_setarg(int argc, char **argv) {
-	ehvar_t *argc_v;
-	ehvar_t *argv_v;
-	int i;
 	ehretval_t ret, index;
 
 	// insert argc
-	argc_v = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *argc_v = (ehvar_t *) Malloc(sizeof(ehvar_t));
 	argc_v->value.type = int_e;
 	// global scope
 	argc_v->scope = 0;
@@ -2477,7 +2423,7 @@ void eh_setarg(int argc, char **argv) {
 	insert_variable(argc_v);
 
 	// insert argv
-	argv_v = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *argv_v = (ehvar_t *) Malloc(sizeof(ehvar_t));
 	argv_v->value.type = array_e;
 	argv_v->scope = 0;
 	argv_v->name = "argv";
@@ -2486,7 +2432,7 @@ void eh_setarg(int argc, char **argv) {
 	// all members of argv are strings
 	ret.type = string_e;
 	index.type = int_e;
-	for(i = 1; i < argc; i++) {
+	for(int i = 1; i < argc; i++) {
 		index.intval = i - 1;
 		ret.stringval = argv[i];
 		array_insert_retval(argv_v->value.arrayval, index, ret);

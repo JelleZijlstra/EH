@@ -1,5 +1,6 @@
 #!/usr/bin/ehi
 # The strict not-equal operator
+# All these echo true if ehi works as expected, but false if it doesn't.
 if 3 !== '3'
 	echo true
 else

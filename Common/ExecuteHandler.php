@@ -24,14 +24,13 @@ class ExecuteHandler extends EHICore {
 	protected $config = array(
 		'debug' => false,
 	);
-	// currently handled files
+	// currently handled files. Why is this in EH and not in FileList?
 	protected $current;
 	private static $ExecuteHandler_commands = array(
 		'execute_help' => array('name' => 'execute_help',
 			'aka' => array('h', 'help', 'man'),
 			'desc' => 'Get help information about the command line or a specific command',
-			'arg' => 'Command name',
-			'execute' => 'callmethod'),
+			'arg' => 'Command name'),
 		'listcommands' => array('name' => 'listcommands',
 			'desc' => 'List legal commands',
 			'arg' => 'None',
@@ -39,30 +38,26 @@ class ExecuteHandler extends EHICore {
 		'shell' => array('name' => 'shell',
 			'aka' => 'exec_catch',
 			'desc' => 'Execute a command from the shell',
-			'arg' => 'Shell command',
-			'execute' => 'callmethod'),
+			'arg' => 'Shell command'),
 		'configset' => array('name' => 'configset',
 			'aka' => 'setconfig',
 			'desc' => 'Set a configuration variable',
-			'arg' => 'Variables to be set',
-			'execute' => 'callmethod'),
+			'arg' => 'Variables to be set'),
 		'switchcli' => array('name' => 'switchcli',
 			'aka' => array('switch'),
 			'desc' => 'Switch to a different command line',
-			'arg' => 'Name of command line to switch to',
-			'execute' => 'callmethod'),
+			'arg' => 'Name of command line to switch to'),
 		'print_paras' => array('name' => 'print_paras',
 			'desc' => 'Print its arguments',
-			'arg' => 'As many as you want',
-			'execute' => 'callmethod'),
+			'arg' => 'As many as you want'),
 		'return_para' => array('name' => 'return_para',
 			'desc' => 'Returns its first argument',
 			'arg' => 'One; everything else is ignored'),
 		'test' => array('name' => 'test',
 			'desc' => 'Do something random',
-			'arg' => 'None',
-			'execute' => 'callmethod'),
+			'arg' => 'None'),
 	);
+	/* Setting up the EH interface */
 	public function __construct($commands = array()) {
 		parent::__construct();
 		$this->setup_ExecuteHandler($commands);
@@ -78,6 +73,11 @@ class ExecuteHandler extends EHICore {
 		if($commands) foreach($commands as $command)
 			$this->addcommand($command);
 	}
+	public function cli() { 
+	// sets up command line
+		$this->setup_commandline(get_called_class());
+	}
+	/* Handling commands and execution */
 	public function addcommand($command, array $paras = array()) {
 	// adds a command to the object's library
 	// @param command Array of data forming a command
@@ -124,6 +124,24 @@ class ExecuteHandler extends EHICore {
 			trigger_error('No listing of arguments given for new command ' . $command['name'], E_USER_NOTICE);
 		}
 		return true;
+	}
+	private function listcommands() {
+		// sort commands and synonyms first
+		ksort($this->commands);
+		ksort($this->synonyms);
+		echo 'Commands:' . PHP_EOL;
+		foreach($this->commands as $command => $content)
+			echo "\t" . $command . PHP_EOL;
+		echo 'Synonyms:' . PHP_EOL;
+		foreach($this->synonyms as $from => $to)
+			echo "\t" . $from . ' -> ' . $to . PHP_EOL;
+	}
+	protected function hascommand($cmd) {
+		if(isset($this->commands[$cmd]))
+			return true;
+		if(isset($this->synonyms[$cmd]))
+			return true;
+		return false;
 	}
 	public function execute_cmd($rawcmd, $paras) {
 		// for some reason, accessing rawcmd in ehi mode botches the variable. This works around that.
@@ -228,6 +246,7 @@ class ExecuteHandler extends EHICore {
 		else
 			return false;
 	}
+	/* Help functions */
 	private function execute_help(array $paras = array()) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -260,12 +279,6 @@ class ExecuteHandler extends EHICore {
 			return false;
 		}
 	}
-	static protected function setifneeded(&$paras, $field) {
-	// deprecated; use process_paras instead
-		if(isset($paras[$field]))
-			return;
-		$paras[$field] = getinput_label(ucfirst($field));
-	}
 	static protected function printvar($in) {
 		// print a variable in human-readable form.
 		if($in === true) {
@@ -280,6 +293,12 @@ class ExecuteHandler extends EHICore {
 			print_r($in);
 		}
 	}
+	private function debugecho($var) {
+	// For debugging: adds output to a log file. Useful when debugging methods like fgetc()
+		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
+		shell_exec("echo '$var' >> $file");
+	}
+	/* Input validation */
 	protected function process_paras(&$paras, $pp_paras, &$split = NULL) {
 		/*
 		 *    int ExecuteHandler::process_paras(array &$paras, array $pp_paras,
@@ -555,87 +574,7 @@ class ExecuteHandler extends EHICore {
 		else
 			return 0;
 	}
-	private function debugecho($var) {
-	// For debugging: adds output to a log file. Useful when debugging methods like fgetc()
-		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
-		shell_exec("echo '$var' >> $file");
-	}
-	private function stty($opt) {
-		$cmd = "/bin/stty " . $opt;
-		exec($cmd, $output, $return);
-		if($return !== 0) {
-			trigger_error("Failed to execute " . $cmd);
-			return false;
-		}
-		return implode("\n", $output);
-	}
-	protected function configset(array $paras) {
-	// sets something in the $this->config array, which configures the EH instance
-		foreach($paras as $key => $value) {
-			if(array_key_exists($key, $this->config))
-				$this->config[$key] = $value;
-		}
-	}
-	public function cli() { 
-	// sets up command line
-		$this->setup_commandline(get_called_class());
-	}
-	private function undo() {
-		$blacklist = array('tmp', 'commands', 'synonyms', 'p', 'props');
-		$vars = get_object_vars($this);
-		foreach($vars as $key => $var) {
-			if(in_array($key, $blacklist)) continue;
-			$this->$key = $this->tmp->$key;
-		}
-	}
-	private function listcommands() {
-		// sort commands and synonyms first
-		ksort($this->commands);
-		ksort($this->synonyms);
-		echo 'Commands:' . PHP_EOL;
-		foreach($this->commands as $command => $content)
-			echo "\t" . $command . PHP_EOL;
-		echo 'Synonyms:' . PHP_EOL;
-		foreach($this->synonyms as $from => $to)
-			echo "\t" . $from . ' -> ' . $to . PHP_EOL;
-	}
-	protected function hascommand($cmd) {
-		if(isset($this->commands[$cmd]))
-			return true;
-		if(isset($this->synonyms[$cmd]))
-			return true;
-		return false;
-	}
-	static protected function testregex($in) {
-	// tests whether a regex pattern is valid
-		ob_start();
-		$t = @preg_match($in, 'test');
-		ob_end_clean();
-		// if regex was invalid, preg_match returned FALSE
-		if($t === false)
-			return false;
-		else
-			return true;
-	}
-	private function shell(array $paras) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(0 => 'cmd'),
-			'errorifempty' => array('cmd'),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		// cd won't actually change the shell until we do some special magic
-		if(preg_match('/^cd /', $paras['cmd'])) {
-			$dir = substr($paras['cmd'], 3);
-			// handle home directory
-			if($dir[0] === '~') {
-				$home = trim(shell_exec('echo $HOME'));
-				$dir = preg_replace('/^~/u', $home, $dir);
-			}
-			chdir($dir);
-		}
-		else
-			echo shell_exec($paras['cmd']);
-	}
+	/* Input for EH methods */
 	protected function fgetc($infile) {
 	// re-implementation of fgetc that allows multi-byte characters
 		// internal version of fgetc(), converting number into integer
@@ -884,6 +823,15 @@ class ExecuteHandler extends EHICore {
 			$showcursor();
 		}
 	}
+	private function stty($opt) {
+		$cmd = "/bin/stty " . $opt;
+		exec($cmd, $output, $return);
+		if($return !== 0) {
+			trigger_error("Failed to execute " . $cmd);
+			return false;
+		}
+		return implode("\n", $output);
+	}
 	protected function menu(array $paras) {
 	// Function that creates a menu and gets input
 		if($this->process_paras($paras, array(
@@ -981,21 +929,7 @@ class ExecuteHandler extends EHICore {
 			},
 		));
 	}
-	public function switchcli(array $paras) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(0 => 'to'),
-			'checklist' => array('to' => 'CLI to switch to'),
-			'errorifempty' => array('to'),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$to = $paras['to'];
-		global ${$to};
-		if(!${$to} or !is_object(${$to}) or !method_exists(${$to}, 'cli')) {
-			echo 'No such variable or CLI' . PHP_EOL;
-			return false;
-		}
-		return ${$to}->cli();
-	}
+	/* Testing the EH framework */
 	public function print_paras(array $paras) {
 	// dump the arguments it gets, useful for debugging ehphp
 		var_dump($paras);
@@ -1014,5 +948,71 @@ class ExecuteHandler extends EHICore {
 	// Currently, returning its argument
 		return $paras[0];
 	}
+	/* Miscellaneous stuff */
+	public function switchcli(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'to'),
+			'checklist' => array('to' => 'CLI to switch to'),
+			'errorifempty' => array('to'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$to = $paras['to'];
+		global ${$to};
+		if(!${$to} or !is_object(${$to}) or !method_exists(${$to}, 'cli')) {
+			echo 'No such variable or CLI' . PHP_EOL;
+			return false;
+		}
+		return ${$to}->cli();
+	}
+	static protected function setifneeded(&$paras, $field) {
+	// deprecated; use process_paras instead
+		if(isset($paras[$field]))
+			return;
+		$paras[$field] = getinput_label(ucfirst($field));
+	}
+	static protected function testregex($in) {
+	// tests whether a regex pattern is valid
+		ob_start();
+		$t = @preg_match($in, 'test');
+		ob_end_clean();
+		// if regex was invalid, preg_match returned FALSE
+		if($t === false)
+			return false;
+		else
+			return true;
+	}
+	private function undo() {
+		$blacklist = array('tmp', 'commands', 'synonyms', 'p', 'props');
+		$vars = get_object_vars($this);
+		foreach($vars as $key => $var) {
+			if(in_array($key, $blacklist)) continue;
+			$this->$key = $this->tmp->$key;
+		}
+	}
+	protected function configset(array $paras) {
+	// sets something in the $this->config array, which configures the EH instance
+		foreach($paras as $key => $value) {
+			if(array_key_exists($key, $this->config))
+				$this->config[$key] = $value;
+		}
+	}
+	private function shell(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'cmd'),
+			'errorifempty' => array('cmd'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		// cd won't actually change the shell until we do some special magic
+		if(preg_match('/^cd /', $paras['cmd'])) {
+			$dir = substr($paras['cmd'], 3);
+			// handle home directory
+			if($dir[0] === '~') {
+				$home = trim(shell_exec('echo $HOME'));
+				$dir = preg_replace('/^~/u', $home, $dir);
+			}
+			chdir($dir);
+		}
+		else
+			echo shell_exec($paras['cmd']);
+	}
 }
-?>

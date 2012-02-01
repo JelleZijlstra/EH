@@ -239,12 +239,13 @@ class ExecuteHandler extends EHICore {
 	}
 	private function expand_cmd($in) {
 		// search for commands
-		if(isset($this->synonyms[$in]))
+		if(isset($this->synonyms[$in])) {
 			$in = $this->synonyms[$in];
-		if(isset($this->commands[$in]))
+		} if(isset($this->commands[$in])) {
 			return $this->commands[$in];
-		else
+		} else {
 			return false;
+		}
 	}
 	/* Help functions */
 	private function execute_help(array $paras = array()) {
@@ -256,19 +257,20 @@ class ExecuteHandler extends EHICore {
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// array of functions with info
 		if($paras['cmd'] === '') {
-			echo 'In command line, various options can be used to manipulate the list or its files. The following commands are available:' . PHP_EOL;
+			echo 'The following commands are available in this ExecuteHandler interface:' . PHP_EOL;
 			$this->listcommands();
-			echo 'Type "help <command>" to get more information about that commmand. Commands will sometimes take an argument, often a filename.' . PHP_EOL;
+			echo 'Type "help <command>" or "<command> --help" to get more information about that commmand.' . PHP_EOL;
 			return true;
 		}
 		$cmd = $this->expand_cmd($paras['cmd']);
 		if($cmd) {
 			echo PHP_EOL . 'Function: ' . $cmd['name'] . PHP_EOL;
 			if(isset($cmd['aka'])) {
-				if(is_array($cmd['aka']))
+				if(is_array($cmd['aka'])) {
 					echo 'Aliases: ' . implode(', ', $cmd['aka']) . PHP_EOL;
-				else if(is_string($cmd['aka']))
+				} elseif(is_string($cmd['aka'])) {
 					echo 'Aliases: ' . $cmd['aka'] . PHP_EOL;
+				}
 			}
 			echo 'Description: ' . $cmd['desc'] . PHP_EOL;
 			echo 'Arguments: ' . $cmd['arg'] . PHP_EOL;
@@ -404,6 +406,7 @@ class ExecuteHandler extends EHICore {
 			// return "false": caller should stop after process_paras call
 			return PROCESS_PARAS_ERROR_FOUND;
 		}
+		// variable used in checking input
 		$founderror = false;
 		$showerror = function($msg) use($pp_paras, &$founderror) {
 			if(isset($pp_paras['name'])) {
@@ -412,6 +415,7 @@ class ExecuteHandler extends EHICore {
 			echo 'error: ' . $msg . PHP_EOL;
 			$founderror = true;
 		};
+		// perform the checks
 		foreach($pp_paras as $pp_key => $pp_value) {
 			switch($pp_key) {
 				case 'synonyms': // rename paras
@@ -569,10 +573,11 @@ class ExecuteHandler extends EHICore {
 					break;
 			}
 		}
-		if($founderror)
+		if($founderror) {
 			return PROCESS_PARAS_ERROR_FOUND;
-		else
+		} else {
 			return 0;
+		}
 	}
 	/* Input for EH methods */
 	protected function fgetc($infile) {
@@ -872,14 +877,16 @@ class ExecuteHandler extends EHICore {
 				echo "-'" . $cmd . "': " . $desc . PHP_EOL;
 			}
 		};
-		if($paras['printoptions'])
+		if($paras['printoptions']) {
 			$printoptions();
+		}
 		$options = array_keys($paras['options']);
 		while(true) {
 			// get command
 			$cmd = $this->getline(array('lines' => $options));
-			if($cmd === false)
+			if($cmd === false) {
 				return false;
+			}
 			// provide help if necessary
 			if($paras['helpcommand']) {
 				// just 'help' prints all options
@@ -890,25 +897,27 @@ class ExecuteHandler extends EHICore {
 				// help about a specific command
 				if(substr($cmd, 0, 5) === 'help ') {
 					$option = substr($cmd, 5);
-					if($paras['options'][$option])
+					if(isset($paras['options'][$option])) {
 						echo $option . ': ' . $paras['options'][$option] . PHP_EOL;
-					else
+					} else {
 						echo 'Option ' . $option . ' does not exist.' . PHP_EOL;
+					}
 					continue;
 				}
 			}
-			if($paras['processcommand'])
+			if($paras['processcommand']) {
 				$cmd = $paras['processcommand']($cmd);
+			}
 			// return command if valid
 			if($paras['validfunction']($cmd, $options)) {
 				if(array_key_exists($cmd, $paras['process'])) {
 					$paras['process'][$cmd]();
-				}
-				else
+				} else {
 					return $cmd;
-			}
-			else
+				}
+			} else {
 				echo 'Invalid value ' . $cmd . PHP_EOL;
+			}
 		}
 	}
 	protected function ynmenu($head, $process = NULL) {
@@ -958,7 +967,7 @@ class ExecuteHandler extends EHICore {
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$to = $paras['to'];
 		global ${$to};
-		if(!${$to} or !is_object(${$to}) or !method_exists(${$to}, 'cli')) {
+		if(!is_object(${$to}) or !method_exists(${$to}, 'cli')) {
 			echo 'No such variable or CLI' . PHP_EOL;
 			return false;
 		}

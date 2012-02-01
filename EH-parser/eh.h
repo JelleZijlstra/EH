@@ -126,9 +126,9 @@ typedef struct ehvar_t {
 	// the scope of a variable, the index-type of an array member, or the
 	// attributes of an object member
 	union {
+		memberattribute_t attribute;
 		int scope;
 		type_enum indextype;
-		memberattribute_t attribute;
 	};
 	struct ehretval_t value;
 	struct ehvar_t *next;
@@ -281,6 +281,7 @@ ehretval_t array_get(ehvar_t **array, ehretval_t index);
 int array_count(ehvar_t **array);
 void insert_class(ehclass_t *classobj);
 ehclass_t *get_class(const char *name);
+void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i);
 void class_insert(ehvar_t **classarr, ehretval_t *in, ehcontext_t context);
 ehvar_t *class_insert_retval(ehvar_t **classarr, const char *name, memberattribute_t attribute, ehretval_t value);
 ehvar_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context);

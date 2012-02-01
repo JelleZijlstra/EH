@@ -8,7 +8,9 @@
 #include "eh.h"
 EHI *interpreter;
 ehretval_t EHI::execute_cmd(const char *name, ehvar_t **paras) {
-	return (ehretval_t) { null_e, {0} };
+	ehretval_t ret;
+	ret.type = null_e;
+	return ret;
 }
 char *EHI::eh_getline(void) {
 	return NULL;
@@ -124,7 +126,28 @@ ehretval_t zvaltoeh(zval *in) {
 			ret.stringval = strdup(in->value.str.val);
 			break;
 		case IS_ARRAY:
-			// TODO
+			// initialize array
+			ret.type = array_e;
+			ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+			HashTable *hash = in->value.ht;
+			// variables for our new array
+			ehretval_t index, value;
+			for(Bucket *curr = hash->pListHead; curr != NULL; curr = curr->pListNext) {
+				// determine index type and value
+				if(curr->nKeyLength == 0) {
+					// numeric index
+					index.type = int_e;
+					index.intval = curr->h;
+				} else {
+					// string index
+					index.type = string_e;
+					index.stringval = strdup(curr->arKey);
+				}
+				// apparently the pDataPtr actually points to the zval
+				// see Zend/zend_hash.h for definition of the Bucket. No idea
+				// what the pData actually points to.
+				value = zvaltoeh((zval *)curr->pDataPtr);
+			}
 			break;
 		case IS_LONG:
 			ret.type = int_e;

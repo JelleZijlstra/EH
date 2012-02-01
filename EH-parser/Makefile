@@ -13,7 +13,7 @@ SYMBOLS = -Wl,-flat_namespace,-U,_zend_register_resource,-U,_zend_rsrc_list_get_
 all: ehc ehphp ehi
 
 eh_wrap.o: eh_wrap.cpp
-	$(CC) `php-config --includes` -fPIC -c $< -o $@
+	$(CC) `php-config --includes` -ggdb -fPIC -c $< -o $@
 
 eh.h: ehi.h eh.bison.hpp
 

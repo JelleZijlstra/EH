@@ -115,7 +115,7 @@ abstract class FileList extends ExecuteHandler {
 		$this->c[$file->name] = $file;
 		return true;
 	}
-	public function remove_entry($file, $paras = array()) {
+	public function remove_entry($file, array $paras = array()) {
 		if(!$this->has($file)) {
 			echo 'File ' . $file . ' does not exist' . PHP_EOL;
 			return false;

@@ -23,6 +23,10 @@ class Taxon extends ListEntry {
 	public $nspec;
 	public $isextant;
 	public $citation; // citation to the original description
+	// flag to $this->p->add_entry() that this entry should not be added.
+	// Should get rid of it; perhaps instead just set $this->name to NULL, or
+	// use a StopException
+	public $discardthis;
 	protected static $Taxon_commands = array(
 		'populatecitation' => array('name' => 'populatecitation',
 			'desc' => 'Attempt to populate the citation field',

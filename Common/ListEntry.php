@@ -33,19 +33,16 @@ abstract class ListEntry extends ExecuteHandler {
 		$this->setup_execute = true;
 	}
 	abstract public function toarray();
-	public $discardthis; // flag to $this->p->add_entry() that this entry should not be added
-	protected $setup_execute;
+	private $setup_execute;
 	protected static $ListEntry_commands = array(
 		'inform' => array('name' => 'inform',
 			'aka' => array('i'),
 			'desc' => 'Give information about an entry',
-			'arg' => 'None',
-			'execute' => 'callmethod'),
+			'arg' => 'None'),
 		'setempty' => array('name' => 'setempty',
 			'aka' => array('empty'),
 			'desc' => 'Empty a property of the entry',
-			'arg' => 'Property to be emptied',
-			'execute' => 'callmethod'),
+			'arg' => 'Property to be emptied'),
 	);
 	// array of variables that shouldn't get dynamically defined set commands
 	private static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');

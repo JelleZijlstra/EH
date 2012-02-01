@@ -147,6 +147,7 @@
 ">="		return T_GE;
 "<="		return T_LE;
 "!="		return T_NE;
+"!=="		return T_SNE;
 "=="		return T_SE;
 "=>"		return T_DOUBLEARROW;
 "->"		{

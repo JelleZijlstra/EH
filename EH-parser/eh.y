@@ -79,7 +79,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %left ':'
 %left '|' '^' '&'
 %left '+' '-'
-%left '=' '>' '<' T_GE T_LE T_NE T_SE
+%left '=' '>' '<' T_GE T_LE T_NE T_SE T_SNE
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
 %right '@'
@@ -221,6 +221,8 @@ expression:
 							{ $$ = eh_addnode(T_LE, 2, $1, $3); }
 	| expression T_NE expression
 							{ $$ = eh_addnode(T_NE, 2, $1, $3); }
+	| expression T_SNE expression
+							{ $$ = eh_addnode(T_SNE, 2, $1, $3); }
 	| expression '+' expression
 							{ $$ = eh_addnode('+', 2, $1, $3); }
 	| expression '-' expression
@@ -288,6 +290,8 @@ simple_expr:
 							{ $$ = eh_addnode(T_LE, 2, $1, $3); }
 	| simple_expr T_NE simple_expr
 							{ $$ = eh_addnode(T_NE, 2, $1, $3); }
+	| simple_expr T_SNE simple_expr
+							{ $$ = eh_addnode(T_SNE, 2, $1, $3); }
 	| simple_expr '+' simple_expr
 							{ $$ = eh_addnode('+', 2, $1, $3); }
 	| simple_expr '*' simple_expr
@@ -357,6 +361,8 @@ line_expr:
 							{ $$ = eh_addnode(T_LE, 2, $1, $3); }
 	| line_expr T_NE expression
 							{ $$ = eh_addnode(T_NE, 2, $1, $3); }
+	| line_expr T_SNE expression
+							{ $$ = eh_addnode(T_SNE, 2, $1, $3); }
 	| line_expr '+' expression
 							{ $$ = eh_addnode('+', 2, $1, $3); }
 	| line_expr '-' expression

@@ -344,6 +344,12 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 				operand2 = eh_execute(node->opval->paras[1], context);
 				ret = eh_strictequals(operand1, operand2);
 				break;
+			case T_SNE: // strict non-equality
+				operand1 = eh_execute(node->opval->paras[0], context);
+				operand2 = eh_execute(node->opval->paras[1], context);
+				ret = eh_strictequals(operand1, operand2);
+				ret.boolval = !ret.boolval;
+				break;
 			EH_INTBOOL_CASE('>', >) // greater-than
 			EH_INTBOOL_CASE('<', <) // lesser-than
 			EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
@@ -2077,31 +2083,41 @@ ehretval_t eh_xtoarray(const ehretval_t in) {
 	}
 	return ret;
 }
+static inline bool eh_floatequals(float infloat, ehretval_t operand2) {
+	// checks whether a float equals an int. C handles this correctly.
+	if(operand2.type != int_e) {
+		operand2 = eh_xtoint(operand2);
+		if(operand2.type == null_e) {
+			return false;
+		}
+	}
+	return (infloat == operand2.intval);
+}
 ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2) {
 	ehretval_t ret;
 	ret.type = bool_e;
 
-	if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) {
+	if(operand1.type == int_e && operand2.type == int_e) {
 		ret.boolval = (operand1.intval == operand2.intval);
-	}
-	else if(EH_IS_STRING(operand1) && EH_IS_STRING(operand2)) {
+	} else if(operand1.type == string_e && operand2.type == string_e) {
 		ret.boolval = !strcmp(operand1.stringval, operand2.stringval);
-	}
-	else if(operand1.type == float_e && operand2.type == float_e) {
+	} else if(operand1.type == float_e && operand2.type == float_e) {
 		ret.boolval = (operand1.floatval == operand2.floatval);
-	}
-	// comparing a float with something else always returns false.
-	else if(operand1.type == float_e || operand2.type == float_e) {
-		ret.boolval = false;
-	}
-	else {
+	} else if(operand1.type == range_e && operand2.type == range_e) {
+		ret.boolval = (operand1.rangeval->min == operand2.rangeval->min)
+			&& (operand1.rangeval->max == operand2.rangeval->max);
+	} else if(operand1.type == float_e) {
+		ret.boolval = eh_floatequals(operand1.floatval, operand2);
+	} else if(operand2.type == float_e) {
+		ret.boolval = eh_floatequals(operand2.floatval, operand1);
+	} else {
 		operand1 = eh_xtoint(operand1);
 		operand2 = eh_xtoint(operand2);
-		if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) {
+		if(operand1.type == int_e && operand2.type == int_e) {
 			ret.boolval = (operand1.intval == operand2.intval);
-		}
-		else
+		} else {
 			ret.type = null_e;
+		}
 	}
 	return ret;
 }
@@ -2109,23 +2125,21 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2) {
 	ehretval_t ret;
 	ret.type = bool_e;
 
-	if(EH_IS_INT(operand1) && EH_IS_INT(operand2)) {
+	if(operand1.type == int_e && operand2.type == int_e) {
 		ret.boolval = (operand1.intval == operand2.intval);
-	}
-	else if(EH_IS_STRING(operand1) && EH_IS_STRING(operand2)) {
+	} else if(operand1.type == string_e && operand2.type == string_e) {
 		ret.boolval = !strcmp(operand1.stringval, operand2.stringval);
-	}
-	else if(EH_IS_BOOL(operand1) && EH_IS_BOOL(operand2)) {
+	} else if(operand1.type == bool_e && operand2.type == bool_e) {
 		ret.boolval = (operand1.boolval == operand2.boolval);
-	}
-	else if(EH_IS_NULL(operand1) && EH_IS_NULL(operand2)) {
+	} else if(operand1.type == null_e && operand2.type == null_e) {
 		// null always equals null
 		ret.boolval = true;
-	}
-	else if(operand1.type == float_e && operand2.type == float_e) {
+	} else if(operand1.type == float_e && operand2.type == float_e) {
 		ret.boolval = (operand1.floatval == operand2.floatval);
-	}
-	else {
+	} else if(operand1.type == range_e && operand2.type == range_e) {
+		ret.boolval = (operand1.rangeval->min == operand2.rangeval->min)
+			&& (operand1.rangeval->max == operand2.rangeval->max);
+	} else {
 		// strict comparison between different types always returns false
 		ret.boolval = false;
 		// TODO: array comparison

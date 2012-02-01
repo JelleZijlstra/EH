@@ -868,10 +868,8 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 }
 ehretval_t eh_op_new(const char *name) {
 	ehretval_t ret;
-	ehclass_t *classobj;
-	ehvar_t *classmember, *newmember;
 
-	classobj = get_class(name);
+	ehclass_t *classobj = get_class(name);
 	if(classobj == NULL) {
 		eh_error_unknown("class", name, efatal_e);
 		ret.type = null_e;
@@ -882,24 +880,8 @@ ehretval_t eh_op_new(const char *name) {
 	ret.objectval->classname = name;
 	ret.objectval->members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
 	for(int i = 0; i < VARTABLE_S; i++) {
-		classmember = classobj->obj.members[i];
-		while(classmember != NULL) {
-			newmember = (ehvar_t *) Malloc(sizeof(ehvar_t));
-			// copy the whole thing over
-			*newmember = *classmember;
-			// modify this pointer
-			if(!strcmp(newmember->name, "this")) {
-				newmember->value.type = object_e;
-				newmember->value.objectval = ret.objectval;
-			}
-			// handle static
-			else if(classmember->attribute.isstatic == static_e) {
-				newmember->value.type = reference_e;
-				newmember->value.referenceval = &classmember->value;
-			}
-			newmember->next = ret.objectval->members[i];
-			ret.objectval->members[i] = newmember;
-			classmember = classmember->next;
+		for(ehvar_t *m = classobj->obj.members[i]; m != NULL; m = m->next) {
+			class_copy_member(ret.objectval, m, i);
 		}
 	}
 	return ret;
@@ -1578,6 +1560,24 @@ ehclass_t *get_class(const char *name) {
 		currclass = currclass->next;
 	}
 	return NULL;
+}
+void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i) {
+	ehvar_t *newmember = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	// copy the whole thing over
+	*newmember = *classmember;
+	// modify this pointer
+	if(!strcmp(newmember->name, "this")) {
+		newmember->value.type = object_e;
+		newmember->value.objectval = classobj;
+	}
+	// handle static
+	else if(classmember->attribute.isstatic == static_e) {
+		newmember->value.type = reference_e;
+		newmember->value.referenceval = &classmember->value;
+	}
+	newmember->next = classobj->members[i];
+	classobj->members[i] = newmember;
+	return;
 }
 void class_insert(ehvar_t **classarr, ehretval_t *in, ehcontext_t context) {
 	// insert a member into a class

@@ -23,8 +23,10 @@ int scope = 0;
 static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node);
 static ehretval_t int_arrow_get(ehretval_t operand1, ehretval_t operand2);
 static ehretval_t string_arrow_get(ehretval_t operand1, ehretval_t operand2);
+static ehretval_t range_arrow_get(ehretval_t operand1, ehretval_t operand2);
 static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
 static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
+static void range_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
 // helper functions
 void print_retval(const ehretval_t in);
 ehretval_t eh_count(const ehretval_t in);
@@ -1238,6 +1240,9 @@ ehretval_t eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 			case string_e:
 				ret = string_arrow_get(*ret.referenceval, index);
 				break;
+			case range_e:
+				ret = range_arrow_get(*ret.referenceval, index);
+				break;
 			default:
 				eh_error_type("array-type dereference", ret.referenceval->type, eerror_e);
 				break;
@@ -1271,6 +1276,9 @@ void eh_op_set(ehretval_t **paras, ehcontext_t context) {
 				break;
 			case string_e:
 				string_arrow_set(lvalue, index, rvalue);
+				break;
+			case range_e:
+				range_arrow_set(lvalue, index, rvalue);
 				break;
 			default:
 				eh_error_type("array access", lvalue.referenceval->type, eerror_e);
@@ -2344,6 +2352,27 @@ static ehretval_t string_arrow_get(ehretval_t operand1, ehretval_t operand2) {
 	ret.type = int_e;
 	return ret;
 }
+static ehretval_t range_arrow_get(ehretval_t range, ehretval_t accessor) {
+	ehretval_t ret;
+	ret.type = null_e;
+	if(accessor.type != int_e) {
+		eh_error_type("arrow access to range", accessor.type, enotice_e);
+		return ret;
+	}
+	switch(accessor.intval) {
+		case 0:
+			ret.type = int_e;
+			ret.intval = range.rangeval->min;
+			break;
+		case 1:
+			ret.type = int_e;
+			ret.intval = range.rangeval->max;
+			break;
+		default:
+			eh_error_int("invalid range accessor", accessor.intval, enotice_e);
+	}
+	return ret;
+}
 static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue) {
 	int mask;
 
@@ -2383,6 +2412,24 @@ static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rval
 	}
 	// get the nth character
 	input.referenceval->stringval[index.intval] = rvalue.intval;
+	return;
+}
+static void range_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue) {
+	if(rvalue.type != int_e) {
+		eh_error_type("arrow access to range", rvalue.type, enotice_e);
+	} else if(index.type != int_e) {
+		eh_error_type("arrow access to range", index.type, enotice_e);
+	} else switch(index.intval) {
+		case 0:
+			input.referenceval->rangeval->min = rvalue.intval;
+			break;
+		case 1:
+			input.referenceval->rangeval->max = rvalue.intval;
+			break;
+		default:
+			eh_error_int("invalid range accessor", index.intval, enotice_e);
+			break;
+	}
 	return;
 }
 /*

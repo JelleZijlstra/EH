@@ -6,6 +6,7 @@
  */
 #include "eh.h"
 #include "eh_libfuncs.h"
+#include "eh_libclasses.h"
 #include <cctype>
 
 // number of loops we're currently in
@@ -73,6 +74,12 @@ ehlibfunc_t libfuncs[] = {
 	LIBFUNCENTRY(include)
 	LIBFUNCENTRY(pow)
 	{NULL, NULL}
+};
+
+#define LIBCLASSENTRY(c) { #c, {ehlc_new_ ## c, ehlc_l_ ## c }},
+ehlc_listentry_t libclasses[] = {
+	LIBCLASSENTRY(CountClass)
+	{NULL, {NULL, NULL}}
 };
 
 /*
@@ -168,6 +175,13 @@ void eh_init(void) {
 		func->f.ptr = libfuncs[i].code;
 		// other fields are irrelevant
 		insert_function(func);
+	}
+	for(int i = 0; libclasses[i].name != NULL; i++) {
+		ehclass_t *newclass = (ehclass_t *) Malloc(sizeof(ehclass_t));
+		newclass->type = lib_e;
+		newclass->obj.classname = libclasses[i].name;
+		newclass->obj.libinfo = libclasses[i].info;
+		insert_class(newclass);
 	}
 	return;
 }
@@ -988,6 +1002,7 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 		return;
 	}
 	classobj = (ehclass_t *) Malloc(sizeof(ehclass_t));
+	classobj->type = user_e;
 	classobj->obj.classname = classname_r.stringval;
 	classobj->obj.members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
 	// insert class members

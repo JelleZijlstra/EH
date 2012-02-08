@@ -4,6 +4,9 @@
  *
  * Main header file for the EH scripting language
  */
+#ifndef _EH_H
+#define _EH_H
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -139,10 +142,36 @@ typedef struct eharg_t {
 	const char *name;
 } eharg_t;
 
+// context
+typedef struct ehobj_t *ehcontext_t;
+
+typedef void *(*ehconstructor_t)();
+
+typedef void (*ehlibmethod_t)(void *, ehretval_t *, ehretval_t *, ehcontext_t);
+
+typedef struct ehlibentry_t {
+	const char *name;
+	ehlibmethod_t func;
+} ehlibentry_t;
+
+typedef struct ehlibclass_t {
+	ehconstructor_t constructor;
+	ehlibentry_t *members;
+} ehlibclass_t;
+
+typedef struct ehlc_listentry_t {
+	const char *name;
+	ehlibclass_t info;
+} ehlc_listentry_t;
+
 // EH object
 typedef struct ehobj_t {
 	const char *classname;
-	struct ehvar_t **members;
+	void *selfptr;
+	union {
+		struct ehvar_t **members;
+		ehlibclass_t libinfo;
+	};
 } ehobj_t;
 
 // range
@@ -151,12 +180,10 @@ typedef struct ehrange_t {
 	int max;
 } ehrange_t;
 
-// context
-typedef ehobj_t *ehcontext_t;
-
 // class
 typedef struct ehclass_t {
 	ehobj_t obj;
+	functype_enum type;
 	struct ehclass_t *next;
 } ehclass_t;
 
@@ -325,3 +352,4 @@ public:
 };
 // put this at the bottom because of dependencies
 #include "ehi.h"
+#endif

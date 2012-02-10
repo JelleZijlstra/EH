@@ -93,6 +93,9 @@ void printvar_retval(const ehretval_t in) {
 				case lib_e:
 					printf("library");
 					break;
+				case libmethod_e:
+					printf("library method");
+					break;
 			}
 			printf(">: ");
 			for(i = 0; i < in.funcval->argcount; i++) {

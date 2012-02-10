@@ -2,5 +2,6 @@
 # Test a library class
 # Currently segfaulting on new declaration
 counter := new CountClass
-echo $counter.count:
-echo $counter.count:
+printvar: $counter
+echo $counter.docount:
+echo $counter.docount:

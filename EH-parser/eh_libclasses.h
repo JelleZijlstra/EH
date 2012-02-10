@@ -9,7 +9,7 @@
 	return (void *)new name(); \
 }
 #define START_EHLC(name) ehlibentry_t ehlc_l_ ## name [] = {
-#define EHLC_ENTRY(classn, name) { "ehlm_" #classn "_" #name, &ehlm_ ## classn ## _ ## name },
+#define EHLC_ENTRY(classn, name) { #name, &ehlm_ ## classn ## _ ## name },
 #define END_EHLC() {NULL, NULL} };
 #define EXTERN_EHLC(name) extern ehlibentry_t ehlc_l_ ## name [];
 
@@ -26,7 +26,7 @@ public:
 		count = 0;
 	}
 };
-EH_METHOD(CountClass, count);
+EH_METHOD(CountClass, docount);
 
 EHLC_CONSTRUCTOR(CountClass)
 EXTERN_EHLC(CountClass)

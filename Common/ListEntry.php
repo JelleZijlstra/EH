@@ -230,7 +230,7 @@ abstract class ListEntry extends ExecuteHandler {
 		}
 		return NULL;
 	}
-	public function cli($paras = '') {
+	public function cli(array $paras = array()) {
 	// edit information associated with an entry
 		if(!$this->setup_execute) {
 			$this->setup_eh_ListEntry();

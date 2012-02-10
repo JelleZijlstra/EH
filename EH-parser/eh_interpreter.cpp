@@ -908,9 +908,30 @@ ehretval_t eh_op_new(const char *name) {
 	ret.objectval = (ehobj_t *) Malloc(sizeof(ehobj_t));
 	ret.objectval->classname = name;
 	ret.objectval->members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
-	for(int i = 0; i < VARTABLE_S; i++) {
-		for(ehvar_t *m = classobj->obj.members[i]; m != NULL; m = m->next) {
-			class_copy_member(ret.objectval, m, i);
+	if(classobj->type == user_e) {
+		for(int i = 0; i < VARTABLE_S; i++) {
+			for(ehvar_t *m = classobj->obj.members[i]; m != NULL; m = m->next) {
+				class_copy_member(ret.objectval, m, i);
+			}
+		}
+	} else {
+		// insert selfptr
+		ret.objectval->selfptr = classobj->obj.libinfo.constructor();
+		// library classes
+		ehlibentry_t *members = classobj->obj.libinfo.members;
+		// attributes for library methods
+		memberattribute_t attributes;
+		attributes.visibility = public_e;
+		attributes.isstatic = nonstatic_e;
+		attributes.isconst = nonconst_e;
+		// value
+		ehretval_t value;
+		value.type = func_e;
+		for(int i = 0; members[i].name != NULL; i++) {
+			value.funcval = new ehfm_t;
+			value.funcval->type = libmethod_e;
+			value.funcval->mptr = members[i].func;
+			class_insert_retval(ret.objectval->members, members[i].name, attributes, value);
 		}
 	}
 	return ret;
@@ -1453,6 +1474,13 @@ ehretval_t call_function(const ehfm_t *f, ehretval_t *args, ehcontext_t context,
 	if(f->type == lib_e) {
 		// library function
 		f->ptr(args, &ret, context);
+		return ret;
+	} else if(f->type == libmethod_e) {
+		if(newcontext == NULL) {
+			eh_error("Bare call of library method", eerror_e);
+			return ret;
+		}
+		f->mptr(newcontext->selfptr, args, &ret, newcontext);
 		return ret;
 	}
 	int i = 0;

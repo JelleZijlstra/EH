@@ -77,7 +77,8 @@ typedef enum attribute_enum {
 
 typedef enum functype_enum {
 	user_e = 0,
-	lib_e = 1
+	lib_e = 1,
+	libmethod_e = 2
 } functype_enum;
 
 typedef enum accessor_enum {
@@ -195,6 +196,7 @@ typedef struct ehfm_t {
 	union {
 		ehretval_t *code;
 		void (*ptr)(ehretval_t *, ehretval_t *, ehcontext_t);
+		ehlibmethod_t mptr;
 	};
 } ehfm_t;
 

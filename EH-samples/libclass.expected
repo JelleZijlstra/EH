@@ -1,0 +1,5 @@
+@object <CountClass> [
+docount <public,non-static,non-constant>: @function <library method>: 
+]
+1
+2

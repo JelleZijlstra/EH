@@ -100,7 +100,7 @@ class FacsEntry extends ListEntry {
 	public $isonfac; // Bool used internally and not saved; whether it's on current version of FAC
 	public $isnew; // Bool used internally; whether it was found on current update()
 	public $id; // ID on FAC
-	public function cli() {
+	public function cli(array $paras = array()) {
 		$this->setup_commandline($this->name);
 	}
 	public function __construct($in = '', $code = '') {

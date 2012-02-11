@@ -1886,6 +1886,12 @@ char *eh_floattostring(const float in) {
 
 	return buffer;
 }
+char *eh_rangetostring(const ehrange_t *const range) {
+	char *buffer = new char[27];
+	snprintf(buffer, 27, "%d to %d", range->min, range->max);
+	
+	return buffer;
+}
 ehretval_t eh_rangetoarray(const ehrange_t *const range) {
 	ehretval_t ret, index, member;
 	ret.type = array_e;
@@ -1987,6 +1993,12 @@ ehretval_t eh_xtostring(const ehretval_t in) {
 		case float_e:
 			ret.stringval = eh_floattostring(in.floatval);
 			break;
+		case range_e:
+			ret.stringval = eh_rangetostring(in.rangeval);
+			break;
+		case array_e: // Should implode the array
+		case object_e: // Should call __toString-type method
+		case func_e: // Can't think of anything useful
 		default:
 			CASTERROR(string);
 			break;
@@ -2012,8 +2024,13 @@ ehretval_t eh_xtobool(const ehretval_t in) {
 			ret.boolval = (array_count(in.arrayval) != 0);
 			break;
 		case range_e:
-			// 0..0 is false, everything else true
-			ret.boolval = (in.rangeval->min != 0 || in.rangeval->max != 0);
+			// range of length zero is false, everything else is true
+			ret.boolval = (in.rangeval->min == in.rangeval->max);
+			break;
+		case object_e:
+		case func_e:
+			// objects and functions are true if they exist
+			ret.boolval = true;
 			break;
 		default:
 			// other types are always false
@@ -2064,6 +2081,15 @@ ehretval_t eh_xtorange(const ehretval_t in) {
 		case int_e:
 			ret = eh_make_range(in.intval, in.intval);
 			break;
+		case float_e:
+			ret = eh_make_range((int) in.floatval, (int) in.floatval);
+			break;
+		case bool_e:
+			ret = eh_make_range(0, (int) in.boolval);
+			break;
+		case null_e:
+			ret = eh_make_range(0, 0);
+			break;
 		default:
 			CASTERROR(range);
 			break;
@@ -2110,17 +2136,12 @@ static inline bool eh_floatequals(float infloat, ehretval_t operand2) {
 ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2) {
 	ehretval_t ret;
 	ret.type = bool_e;
-
-	if(operand1.type == int_e && operand2.type == int_e) {
-		ret.boolval = (operand1.intval == operand2.intval);
-	} else if(operand1.type == string_e && operand2.type == string_e) {
-		ret.boolval = !strcmp(operand1.stringval, operand2.stringval);
-	} else if(operand1.type == float_e && operand2.type == float_e) {
-		ret.boolval = (operand1.floatval == operand2.floatval);
-	} else if(operand1.type == range_e && operand2.type == range_e) {
-		ret.boolval = (operand1.rangeval->min == operand2.rangeval->min)
-			&& (operand1.rangeval->max == operand2.rangeval->max);
-	} else if(operand1.type == float_e) {
+	// first try strict comparison
+	if(eh_strictequals(operand1, operand2).boolval == true) {
+		ret.boolval = true;
+		return ret;
+	}
+	if(operand1.type == float_e) {
 		ret.boolval = eh_floatequals(operand1.floatval, operand2);
 	} else if(operand2.type == float_e) {
 		ret.boolval = eh_floatequals(operand2.floatval, operand1);
@@ -2138,25 +2159,37 @@ ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2) {
 ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2) {
 	ehretval_t ret;
 	ret.type = bool_e;
-
-	if(operand1.type == int_e && operand2.type == int_e) {
-		ret.boolval = (operand1.intval == operand2.intval);
-	} else if(operand1.type == string_e && operand2.type == string_e) {
-		ret.boolval = !strcmp(operand1.stringval, operand2.stringval);
-	} else if(operand1.type == bool_e && operand2.type == bool_e) {
-		ret.boolval = (operand1.boolval == operand2.boolval);
-	} else if(operand1.type == null_e && operand2.type == null_e) {
-		// null always equals null
-		ret.boolval = true;
-	} else if(operand1.type == float_e && operand2.type == float_e) {
-		ret.boolval = (operand1.floatval == operand2.floatval);
-	} else if(operand1.type == range_e && operand2.type == range_e) {
-		ret.boolval = (operand1.rangeval->min == operand2.rangeval->min)
-			&& (operand1.rangeval->max == operand2.rangeval->max);
-	} else {
+	
+	if(operand1.type != operand2.type) {
 		// strict comparison between different types always returns false
 		ret.boolval = false;
-		// TODO: array comparison
+		return ret;
+	}
+	switch(operand1.type) {
+		case int_e:
+			ret.boolval = (operand1.intval == operand2.intval);
+			break;
+		case string_e:
+			ret.boolval = !strcmp(operand1.stringval, operand2.stringval);
+			break;
+		case bool_e:
+			ret.boolval = (operand1.boolval == operand2.boolval);
+			break;
+		case null_e:
+			// null always equals null
+			ret.boolval = true;
+			break;
+		case float_e:
+			ret.boolval = (operand1.floatval == operand2.floatval);
+			break;
+		case range_e:
+			ret.boolval = (operand1.rangeval->min == operand2.rangeval->min)
+				&& (operand1.rangeval->max == operand2.rangeval->max);
+			break;
+		default:
+			// TODO: array comparison
+			ret.boolval = false;
+			break;
 	}
 	return ret;
 }

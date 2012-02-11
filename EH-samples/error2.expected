@@ -1,2 +1,2 @@
 3
-syntax error, unexpected '+': EH parsing error
+syntax error, unexpected '+', expecting T_SEPARATOR: EH parsing error

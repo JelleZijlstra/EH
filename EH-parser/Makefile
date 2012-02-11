@@ -3,7 +3,7 @@ CCFLAGS = -ggdb -Wall -pedantic
 SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
-INTERPRETER = $(SOURCES) eh_libfuncs.cpp eh_libclasses.cpp eh_hash.cpp eh_interpreter.cpp
+INTERPRETER = $(SOURCES) eh_libfuncs.cpp eh_libclasses.cpp eh_libcmds.cpp eh_hash.cpp eh_interpreter.cpp
 EHI = $(INTERPRETER) eh_cli.cpp
 EHI_O = $(EHI:.cpp=.o)
 EHPHP = $(INTERPRETER) eh_php.cpp eh_wrap.cpp

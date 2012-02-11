@@ -6,7 +6,7 @@
 echo 42
 if 2 = 2
 	3 + 3
-	echo 2 - 3
+	echo (2 - 3)
 endif
 echo 43
 if 3 - 3

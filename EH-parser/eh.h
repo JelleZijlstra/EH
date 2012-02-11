@@ -181,6 +181,20 @@ typedef struct ehrange_t {
 	int max;
 } ehrange_t;
 
+// function executing a command
+typedef ehretval_t (*ehcmd_f_t)(ehvar_t **paras);
+
+// command
+typedef struct ehcmd_t {
+	const char *name;
+	ehcmd_f_t code;
+} ehcmd_t;
+
+typedef struct ehcmd_bucket_t {
+	ehcmd_t cmd;
+	ehcmd_bucket_t *next;
+} ehcmd_bucket_t;
+
 // class
 typedef struct ehclass_t {
 	ehobj_t obj;
@@ -236,7 +250,7 @@ void eh_error_argcount_lib(const char *name, int expected, int received);
  * Other global functions
  */
 const char *get_typestring(type_enum type);
-
+int eh_outer_exit(int exitval);
 
 /*
  * Macros for type checking
@@ -290,6 +304,7 @@ extern int is_interactive;
 extern ehvar_t *vartable[];
 extern ehfunc_t *functable[];
 extern ehclass_t *classtable[];
+extern ehcmd_bucket_t *cmdtable[];
 
 // current variable scope
 extern int scope;
@@ -344,6 +359,7 @@ ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
  * Helper
  */
 int eh_getargs(ehretval_t *paras, int n, ehretval_t *args, ehcontext_t context, const char *name);
+void print_retval(const ehretval_t in);
 
 /*
  * The EH parser

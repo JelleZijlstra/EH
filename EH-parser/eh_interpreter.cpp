@@ -7,6 +7,7 @@
 #include "eh.h"
 #include "eh_libfuncs.h"
 #include "eh_libclasses.h"
+#include "eh_libcmds.h"
 #include <cctype>
 
 // number of loops we're currently in
@@ -17,6 +18,7 @@ static int continuing = 0;
 ehvar_t *vartable[VARTABLE_S];
 ehfunc_t *functable[VARTABLE_S];
 ehclass_t *classtable[VARTABLE_S];
+ehcmd_bucket_t *cmdtable[VARTABLE_S];
 
 // current object, gets passed around
 static ehcontext_t newcontext = NULL;
@@ -29,7 +31,6 @@ static void int_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue)
 static void string_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
 static void range_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalue);
 // helper functions
-void print_retval(const ehretval_t in);
 ehretval_t eh_count(const ehretval_t in);
 ehretval_t eh_op_tilde(ehretval_t in);
 ehretval_t eh_op_uminus(ehretval_t in);
@@ -53,6 +54,9 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context);
 ehretval_t eh_op_dollar(ehretval_t *node, ehcontext_t context);
 void eh_op_set(ehretval_t **paras, ehcontext_t context);
 ehretval_t eh_op_accessor(ehretval_t **paras, ehcontext_t context);
+ehcmd_t *get_command(const char *name);
+void insert_command(const ehcmd_t cmd);
+void redirect_command(const char *redirect, const char *target);
 
 ehretval_t eh_make_range(const int min, const int max);
 
@@ -81,6 +85,20 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(CountClass)
 	LIBCLASSENTRY(File)
 	{NULL, {NULL, NULL}}
+};
+
+#define LIBCMDENTRY(c) { #c, ehlcmd_ ## c },
+ehcmd_t libcmds[] = {
+	LIBCMDENTRY(quit)
+	LIBCMDENTRY(echo)
+	LIBCMDENTRY(put)
+	{NULL, NULL}
+};
+
+#define LIBCMDREDENTRY(r, t) { #r, #t },
+char *libredirs[][2] = {
+	LIBCMDREDENTRY(q, quit)
+	{NULL, NULL}
 };
 
 /*
@@ -184,6 +202,12 @@ void eh_init(void) {
 		newclass->obj.libinfo = libclasses[i].info;
 		insert_class(newclass);
 	}
+	for(int i = 0; libcmds[i].name != NULL; i++) {
+		insert_command(libcmds[i]);
+	}
+	for(int i = 0; libredirs[i][0] != NULL; i++) {
+		redirect_command(libredirs[i][0], libredirs[i][1]);
+	}
 	return;
 }
 void eh_exit(void) {
@@ -208,13 +232,6 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 		/*
 		 * Unary operators
 		 */
-			case T_ECHO:
-				print_retval(eh_execute(node->opval->paras[0], context));
-				printf("\n");
-				break;
-			case T_PUT:
-				print_retval(eh_execute(node->opval->paras[0], context));
-				break;
 			case '@': // type casting
 				ret = eh_cast(
 					node->opval->paras[0]->typeval,
@@ -734,7 +751,13 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 			count++;
 		}
 	}
-	ehretval_t ret = interpreter->execute_cmd(name, paras);
+	const ehcmd_t *libcmd = get_command(name);
+	ehretval_t ret;
+	if(libcmd != NULL) {
+		ret = libcmd->code(paras);
+	} else {
+		ret = interpreter->execute_cmd(name, paras);
+	}
 	// we're not returning anymore
 	returning = false;
 	return ret;
@@ -2476,4 +2499,34 @@ void eh_setarg(int argc, char **argv) {
 		array_insert_retval(argv_v->value.arrayval, index, ret);
 	}
 	insert_variable(argv_v);
+}
+/*
+ * Commands
+ */
+ehcmd_t *get_command(const char *name) {
+	const unsigned int vhash = hash(name, 0);
+	
+	for(ehcmd_bucket_t *curr = cmdtable[vhash]; curr != NULL; curr = curr->next) {
+		if(!strcmp(curr->cmd.name, name)) {
+			return &curr->cmd;
+		}
+	}
+	return NULL;
+}
+void insert_command(const ehcmd_t cmd) {
+	const unsigned int vhash = hash(cmd.name, 0);
+	ehcmd_bucket_t *bucket = new ehcmd_bucket_t;
+	bucket->cmd = cmd;
+	bucket->next = cmdtable[vhash];
+	cmdtable[vhash] = bucket;
+}
+void redirect_command(const char *redirect, const char *target) {
+	ehcmd_t *targetcmd = get_command(target);
+	if(targetcmd == NULL) {
+		eh_error("Unknown redirect target", eerror_e);
+	}
+	ehcmd_t newcmd;
+	newcmd.name = redirect;
+	newcmd.code = targetcmd->code;
+	insert_command(newcmd);
 }

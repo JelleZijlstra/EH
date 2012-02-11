@@ -64,8 +64,6 @@
 				yylval_param->tValue = range_e;
 				return T_TYPE;
 			}
-"echo"		return T_ECHO;
-"put"		return T_PUT;
 "if"		return T_IF;
 "else"		return T_ELSE;
 "set"		return T_SET;
@@ -81,7 +79,6 @@
 "call"		return T_CALL;
 "func"		return T_FUNC;
 "endfunc"	return T_ENDFUNC;
-"quit"		return T_QUIT;
 "ret"		return T_RET;
 "null"		return T_NULL;
 "class"		return T_CLASS;

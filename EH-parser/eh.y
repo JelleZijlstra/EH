@@ -12,7 +12,6 @@
 extern FILE *yyin;
 #define YYERROR_VERBOSE
 #define YYLEX_PARAM scanner
-int eh_outer_exit(int exitval);
 int yylex (YYSTYPE *, void *);
 int yylex_init(void**);
 int yylex_destroy(void *);
@@ -55,9 +54,6 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_FUNC
 %token T_ENDFUNC
 %token T_RET
-%token T_ECHO
-%token T_PUT
-%token T_QUIT
 %token T_SEPARATOR
 %token T_SET
 %token T_CALL
@@ -112,10 +108,6 @@ statement_list:
 statement:
 	T_SEPARATOR				{ $$ = 0; }
 	| line_expr T_SEPARATOR	{ $$ = $1; }
-	| T_ECHO expression T_SEPARATOR
-							{ $$ = eh_addnode(T_ECHO, 1, $2); }
-	| T_PUT expression T_SEPARATOR
-							{ $$ = eh_addnode(T_PUT, 1, $2); }
 	| T_SET lvalue_set '=' expression T_SEPARATOR
 							{ $$ = eh_addnode(T_SET, 2, $2, $4); }
 	| lvalue_set T_ASSIGNMENT expression T_SEPARATOR
@@ -156,11 +148,6 @@ statement:
 							{ $$ = eh_addnode(T_FUNC, 3, $2, $4, $6); }
 	| T_RET expression T_SEPARATOR
 							{ $$ = eh_addnode(T_RET, 1, $2); }
-	| T_QUIT T_SEPARATOR
-							{
-								/* "quit" is equivalent to "ret 0" */
-								$$ = eh_addnode(T_RET, 1, eh_get_int(0));
-							}
 	| T_CLASS bareword T_SEPARATOR classlist T_END T_SEPARATOR
 							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
 	| T_CLASS bareword T_SEPARATOR classlist T_ENDCLASS T_SEPARATOR
@@ -317,6 +304,8 @@ simple_expr:
 	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
 	| T_COUNT simple_expr	{ $$ = eh_addnode(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = eh_addnode(T_NEW, 1, $2); }
+	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
+							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
 	;

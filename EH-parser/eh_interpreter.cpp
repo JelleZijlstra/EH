@@ -79,6 +79,7 @@ ehlibfunc_t libfuncs[] = {
 #define LIBCLASSENTRY(c) { #c, {ehlc_new_ ## c, ehlc_l_ ## c }},
 ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(CountClass)
+	LIBCLASSENTRY(File)
 	{NULL, {NULL, NULL}}
 };
 

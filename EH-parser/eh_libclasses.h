@@ -13,7 +13,7 @@
 #define END_EHLC() {NULL, NULL} };
 #define EXTERN_EHLC(name) extern ehlibentry_t ehlc_l_ ## name [];
 
-#define EH_METHOD(classn,name) void ehlm_ ## classn ## _ ## name(void *obj, ehretval_t *args, ehretval_t *retval, ehcontext_t context)
+#define EH_METHOD(classn,name) void ehlm_ ## classn ## _ ## name(void *obj, ehretval_t *paras, ehretval_t *retval, ehcontext_t context)
 
 
 /*
@@ -31,3 +31,19 @@ EH_METHOD(CountClass, docount);
 EHLC_CONSTRUCTOR(CountClass)
 EXTERN_EHLC(CountClass)
 
+/*
+ * File library class
+ */
+class File {
+public:
+	FILE *descriptor;
+	File() {
+		descriptor = NULL;
+	}
+};
+EH_METHOD(File, open);
+EH_METHOD(File, getc);
+EH_METHOD(File, close);
+
+EHLC_CONSTRUCTOR(File)
+EXTERN_EHLC(File)

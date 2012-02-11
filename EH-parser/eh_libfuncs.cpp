@@ -16,7 +16,7 @@ static void printvar_object(ehvar_t **in);
 // get arguments, and error if there are too many or few
 // Args should have enough memory malloc'ed to it to house n arguments.
 // Return 0 on success, -1 on too few, 1 on too many arguments.
-static int eh_getargs(ehretval_t *paras, int n, ehretval_t *args, ehcontext_t context, const char *name) {
+int eh_getargs(ehretval_t *paras, int n, ehretval_t *args, ehcontext_t context, const char *name) {
 	int i = n;
 	while(i) {
 		if(paras->opval->nparas == 0) {

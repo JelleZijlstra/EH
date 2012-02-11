@@ -341,6 +341,11 @@ ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2);
 ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
 
 /*
+ * Helper
+ */
+int eh_getargs(ehretval_t *paras, int n, ehretval_t *args, ehcontext_t context, const char *name);
+
+/*
  * The EH parser
  */
 struct EHParser {

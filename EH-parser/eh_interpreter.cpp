@@ -1160,6 +1160,7 @@ ehretval_t eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t ret;
 	ret.type = null_e;
 
+	newcontext = NULL;
 	const ehretval_t function = eh_execute(paras[0], context);
 	// operand1 will be either a string (indicating a normal function call) or a 
 	// func_e (indicating a method or closure call)

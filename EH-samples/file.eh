@@ -2,8 +2,8 @@
 # Illustrates the File class
 $ f = new File
 $f.open: "file.eh.helper"
-$ c = null
-while $c !== -1
+$ c = false
+while $c !== null
 	$ c = $f.getc:
 	echo $c
 end

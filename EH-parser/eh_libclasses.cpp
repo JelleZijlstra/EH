@@ -46,13 +46,20 @@ EH_METHOD(File, open) {
 
 EH_METHOD(File, getc) {
 	File *selfptr = (File *) obj;
-	retval->type = int_e;
-	
+
 	if(selfptr->descriptor == NULL) {
-		retval->intval = -1;
+		retval->type = null_e;
 		return;
 	}
-	retval->intval = fgetc(selfptr->descriptor);
+	int c = fgetc(selfptr->descriptor);
+	if(c == -1) {
+		retval->type = null_e;
+		return;
+	}
+	retval->type = string_e;
+	retval->stringval = new char[2];
+	retval->stringval[0] = c;
+	retval->stringval[1] = '\0';
 }
 
 EH_METHOD(File, close) {

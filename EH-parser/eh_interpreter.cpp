@@ -760,6 +760,7 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 	}
 	// we're not returning anymore
 	returning = false;
+	free(paras);
 	return ret;
 }
 ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
@@ -1487,7 +1488,7 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node) {
 	// add arguments to arglist
 	currarg = 0;
 	for(ehretval_t *tmp = node; tmp->opval->nparas != 0; 
-	  tmp = tmp->opval->paras[0]) {
+		tmp = tmp->opval->paras[0]) {
 		(*arglist)[currarg].name = tmp->opval->paras[1]->stringval;
 		currarg++;
 	}

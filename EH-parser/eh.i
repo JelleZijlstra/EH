@@ -147,6 +147,7 @@ ehretval_t zvaltoeh(zval *in) {
 				// see Zend/zend_hash.h for definition of the Bucket. No idea
 				// what the pData actually points to.
 				value = zvaltoeh((zval *)curr->pDataPtr);
+				array_insert_retval(ret.arrayval, index, value);
 			}
 			break;
 		case IS_LONG:

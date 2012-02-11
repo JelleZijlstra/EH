@@ -1,0 +1,5 @@
+@string '1 to 3'
+@bool true
+@bool true
+@range 3..3
+syntax error, unexpected $end: EH parsing error

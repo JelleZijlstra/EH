@@ -2110,6 +2110,8 @@ ehretval_t eh_xtoarray(const ehretval_t in) {
 		case bool_e:
 		case string_e:
 		case func_e:
+		case null_e:
+		case object_e:
 			// create an array with just this variable in it
 			ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
 			ehretval_t index;

@@ -359,9 +359,9 @@ class Bot extends Snoopy {
 		while(true) {
 			echo 'Trying to locate TFA for ' . $date->format('Y-m-d') . PHP_EOL;
 			$newpage = $this->gettfa(array('date' => $date));
-			$date->modify('+1 day');
 			if(!is_array($newpage)) // no more TFAs
 				break;
+			$date->modify('+1 day');
 			if(!$newpage['name']) // could not find TFA name
 				continue;
 			$pages[] = $newpage;

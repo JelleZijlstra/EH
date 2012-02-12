@@ -59,6 +59,7 @@ void insert_command(const ehcmd_t cmd);
 void redirect_command(const char *redirect, const char *target);
 
 ehretval_t eh_make_range(const int min, const int max);
+static inline int count_nodes(ehretval_t *node);
 
 #define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
 // library functions supported by ehi
@@ -1470,14 +1471,7 @@ ehfunc_t *get_function(const char *name) {
 	return NULL;
 }
 static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node) {
-	*argcount = 0;
-	// traverse linked list to determine argument count
-	int currarg = 0;
-
-	for(ehretval_t *tmp = node; tmp->opval->nparas != 0; 
-	  tmp = tmp->opval->paras[0]) {
-		currarg++;
-	}
+	int currarg = count_nodes(node);
 	*argcount = currarg;
 	// if there are no arguments, the arglist can be NULL
 	if(currarg) {
@@ -2503,6 +2497,16 @@ ehretval_t eh_make_range(const int min, const int max) {
 	ret.rangeval->min = min;
 	ret.rangeval->max = max;
 	return ret;
+}
+static inline int count_nodes(ehretval_t *node) {
+	// count a list like an argument list. Assumes correct layout.
+	int i = 0;
+	for(ehretval_t *tmp = node; 
+		tmp->opval->nparas != 0; 
+		tmp = tmp->opval->paras[0], i++
+	);
+	return i;
+
 }
 /*
  * Command line arguments

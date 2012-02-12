@@ -889,7 +889,7 @@ abstract class FileList extends ExecuteHandler {
 			'name' => __FUNCTION__,
 			'checklist' => array('return' => 'Type of return value'),
 			'default' => array('return' => 'value'),
-			'checkparas' => array(
+			'listoptions' => array(
 				'return' => array('object', 'value'),
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;

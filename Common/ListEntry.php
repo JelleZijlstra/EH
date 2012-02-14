@@ -160,11 +160,15 @@ abstract class ListEntry extends ExecuteHandler {
 		}
 		return false;
 	}
-	protected static $inform_exclude = array();
+	protected static $inform_exclude = array(
+		'synonyms', 
+		'commands', 
+		'setup_execute',
+	);
 	public function inform() {
 	// provide information for an entry
 		foreach($this as $key => $value) {
-			if(in_array($key, static::$inform_exclude) or $key === 'synonyms' or $key === 'commands')
+			if(in_array($key, static::$inform_exclude, true))
 				continue;
 			if(is_array($value)) {
 				foreach($value as $akey => $prop)

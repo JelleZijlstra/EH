@@ -595,7 +595,8 @@ abstract class FileList extends ExecuteHandler {
 				'printresult' => true,
 				'printproperties' => false,
 				'setcurrent' => true,
-				'return' => 'objectarray',
+				'return' => 
+					isset($paras['_ehphp']) ? 'namearray' : 'objectarray',
 				'openfiles' => false,
 				'array' => 'c',
 				'function' => false,

@@ -752,6 +752,13 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 			count++;
 		}
 	}
+	// insert indicator that this is an EH-PHP command
+	value_r.type = bool_e;
+	value_r.boolval = true;
+	index_r.type = string_e;
+	index_r.stringval = "_ehphp";
+	array_insert_retval(paras, index_r, value_r);
+	// get the command to execute
 	const ehcmd_t *libcmd = get_command(name);
 	ehretval_t ret;
 	if(libcmd != NULL) {

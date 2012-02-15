@@ -301,6 +301,8 @@ class ExecuteHandler extends EHICore {
 		shell_exec("echo '$var' >> $file");
 	}
 	/* Input validation */
+	// paras that process_paras's checklist ignores
+	private static $pp_checklist_ignore = array('_ehphp');
 	protected function process_paras(&$paras, $pp_paras, &$split = NULL) {
 		/*
 		 *    int ExecuteHandler::process_paras(array &$paras, array $pp_paras,
@@ -484,6 +486,10 @@ class ExecuteHandler extends EHICore {
 					}
 					foreach($paras as $key => $result) {
 						if(!array_key_exists($key, $pp_value)) {
+							// ignore some
+							if(in_array($key, self::$pp_checklist_ignore, true)) {
+								continue;
+							}
 							// if the check function returns true, do not warn
 							if(isset($pp_paras['checkfunc']) and $pp_paras['checkfunc']($key)) {
 								continue;

@@ -5,6 +5,8 @@ class TaxonList extends FileList {
 	public $par; // array of arrays that list the children for each parent
 	protected static $fileloc = LISTFILE;
 	protected static $childclass = 'Taxon';
+	// parsers
+	public $wref_p;
 	static $TaxonList_commands = array(
 		'outputhtml' => array('name' => 'outputhtml',
 			'aka' => array('html'),

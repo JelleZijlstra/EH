@@ -243,11 +243,12 @@ abstract class FileList extends ExecuteHandler {
 	}
 	// prevent access to non-existent properties
 	public function __get($prop) {
-		throw new EHException('Attempt to read non-existent property ' . $prop);
+		throw new EHException('Attempt to read non-existent property ' . $prop,
+			EHException::E_RECOVERABLE);
 	}
 	public function __set($prop, $value) {
 		throw new EHException('Attempt to write to non-existent property ' 
-			. $prop);
+			. $prop, EHException::E_RECOVERABLE);
 	}
 	public function doall(array $paras) {
 	// execute a function on all files in the list. Don't actually execute a 

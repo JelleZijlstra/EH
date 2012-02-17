@@ -95,11 +95,14 @@ abstract class FileList extends ExecuteHandler {
 	public function __construct($commands = array()) {
 		echo "processing CSV catalog... ";
 		$cat = fopen(static::$fileloc, "r");
-		if(!$cat) mydie('Failed to open input file');
+		if($cat === false) {
+			throw new EHException('Failed to open input file');
+		}
 		// consume first line (column labels)
 		$this->labels = fgets($cat);
-		while($line = fgetcsv($cat))
+		while($line = fgetcsv($cat)) {
 			$this->add_entry(new static::$childclass($line, 'f'));
+		}
 		// close
 		fclose($cat);
 		echo "done" . PHP_EOL;
@@ -233,12 +236,24 @@ abstract class FileList extends ExecuteHandler {
 			echo 'No such file: ' . $file . PHP_EOL;
 			return false;
 		}
-		if(method_exists(static::$childclass, 'resolve_redirect'))
+		if(method_exists(static::$childclass, 'resolve_redirect')) {
 			$file = $this->c[$file]->resolve_redirect();
+		}
 		return $this->c[$file]();
 	}
+	// prevent access to non-existent properties
+	public function __get($prop) {
+		throw new EHException('Attempt to read non-existent property ' . $prop);
+	}
+	public function __set($prop, $value) {
+		throw new EHException('Attempt to write to non-existent property ' 
+			. $prop);
+	}
 	public function doall(array $paras) {
-	// execute a function on all files in the list. Don't actually execute the command, since that is prohibitively expensive (requires EH to be initialized on every single ListEntry).
+	// execute a function on all files in the list. Don't actually execute a 
+	// command, since that is prohibitively expensive (requires EH to be 
+	// initialized on every single ListEntry).
+		$childclass = static::$childclass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
@@ -252,6 +267,11 @@ abstract class FileList extends ExecuteHandler {
 			'checkfunc' => function($in) {
 				return true;
 			},
+			'checkparas' => array(
+				0 => function($in) use($childclass) {
+					return method_exists($childclass, $in);
+				}
+			),
 			'errorifempty' => array(0),
 			'default' => array(
 				'continueiffalse' => false,
@@ -260,16 +280,13 @@ abstract class FileList extends ExecuteHandler {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$func = $paras[0];
-		if(!method_exists(static::$childclass, $func)) {
-			echo 'Method does not exist: ' . $func . PHP_EOL;
-			return false;
-		}
 		$askafter = $paras['askafter'];
 		$continueiffalse = $paras['continueiffalse'];
 		$countfalse = $paras['countfalse'];
-		unset($paras['askafter'], $paras['continueiffalse'], $paras['countfalse'], $paras[0]);
+		unset($paras['askafter'], $paras['continueiffalse'], 
+			$paras['countfalse'], $paras[0]);
 		if(isset($paras['arg'])) {
-			$arg = $paras[0] = $paras['arg'];
+			$paras[0] = $paras['arg'];
 			unset($paras['arg']);
 		}
 		$i = 0;
@@ -284,22 +301,21 @@ abstract class FileList extends ExecuteHandler {
 				}
 			}
 			try {
-				if(isset($arg))
-					$ret = $file->$func($arg, $paras);
-				else
-					$ret = $file->$func($paras);
-			}
-			catch(EHException $e) {
+				$ret = $file->$func($paras);
+			} catch(EHException $e) {
 				echo $e->getMessage();
-				if(!$continueiffalse) return;
-			}
-			catch(StopException $e) {
+				if(!$continueiffalse) {
+					return;
+				}
+			} catch(StopException $e) {
 				echo 'Stopping doall at ' . $file->name . PHP_EOL;
 			}
-			if($countfalse or $ret)
+			if($countfalse or $ret) {
 				$i++;
-			if(!$continueiffalse and !$ret)
+			}
+			if(!$continueiffalse and !$ret) {
 				return;
+			}
 		}
 	}
 	static protected function is_childproperty($field) {
@@ -808,7 +824,11 @@ abstract class FileList extends ExecuteHandler {
 			),
 			'askifempty' => array('field', 'value'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		return $this->bfind(array($paras['field'] => $paras['value']));
+		$bfindparas = array($paras['field'] => $paras['value']);
+		if(isset($paras['_ehphp'])) {
+			$bfindparas['_ehphp'] = true;
+		}
+		return $this->bfind($bfindparas);
 	}
 	/* statistics */
 	public function average($files, $field) {

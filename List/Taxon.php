@@ -491,9 +491,17 @@ class Taxon extends ListEntry {
 		return false;
 	}
 	public function newadd() {
-		$fields = array('parent', 'rank', 'authority', 'year', 'movedgenus', 'comments', 'status');
-		if($pos = strpos($this->name, ' '))
-			$this->set(array('parent' => substr($this->name, 0, $pos), 'verbose' => true, 'easy' => true));
+		$fields = array(
+			'parent', 'rank', 'authority', 'year', 'movedgenus', 'comments', 
+			'status', 'citation',
+		);
+		if($pos = strpos($this->name, ' ')) {
+			$this->set(array(
+				'parent' => substr($this->name, 0, $pos), 
+				'verbose' => true, 
+				'easy' => true
+			));
+		}
 		foreach($fields as $field) {
 			if($this->$field) continue;
 			if($field === 'parent' and $this->detectparent()) continue;
@@ -503,9 +511,9 @@ class Taxon extends ListEntry {
 			if($paras[$field] === 'q') {
 				$this->discardthis = true;
 				return false;
-			}
-			else if($paras[$field])
+			} else if($paras[$field]) {
 				$this->$field = $paras[$field];
+			}
 		}
 	}
 	private function detectparent() {

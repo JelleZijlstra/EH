@@ -105,11 +105,31 @@ class Taxon extends ListEntry {
 	public function format() {
 		/* FORMATTING */
 		$this->comments = trim($this->comments);
+		if(preg_match("/^A new species \([^)]+\)\{[^}]+\}\.?$/u", 
+			$this->comments) and $this->citation) {
+			$this->comments = 'A new species.';
+		}
+		if(preg_match(
+			'/^A new genus,? split from <i>[^<]+<\/i> \([^)]+\)\{[^}]+\}\.?$/u', 
+			$this->comments) and $this->citation) {
+			$this->comments = preg_replace(
+				'/^A new genus,? split from (<i>[^<]+<\/i>).*$/u',
+				'A new genus split from $1.',
+				$this->comments
+			);
+		}
 		/* WARNINGS */
 		if(!$this->p->has($this->parent))
 			$this->warn('Non-existent taxon', 'parent');
 		if($this->rank === 'species' and !$this->status)
 			$this->warn('No content for species', 'status');
+		if($this->citation) {
+			$regex = '/' . preg_quote($this->citation) . '/u';
+			if(preg_match($regex, $this->comments)) {
+				$this->warn('Original citation is cited', 'comments');
+			}
+		}
+		return true;
 	}
 	public function set(array $paras) {
 		if($this->process_paras($paras, array(

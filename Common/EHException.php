@@ -3,7 +3,7 @@ class EHException extends Exception {
 	const E_USER = 0x1;
 	const E_RECOVERABLE = 0x2;
 	const E_FATAL = 0x3;
-	public function __construct($message, $code = 0, Exception $previous = NULL) {
+	public function __construct($message, $code, Exception $previous = NULL) {
 		parent::__construct($message, $code, $previous);
 		$this->handle();
 	}
@@ -25,15 +25,21 @@ class EHException extends Exception {
 		return;
 	}
 	private function handle_user() {
-	// do nothing for now
+		echo "EH user error: " . $this->getMessage() . " in " 
+			. $this->getFile() . " on line " 
+			. $this->getLine() . PHP_EOL;
 		return;
 	}
 	private function handle_recoverable() {
-	// do nothing for now
+		echo "EH recoverable error: " . $this->getMessage() . " in " 
+			. $this->getFile() . " on line " 
+			. $this->getLine() . PHP_EOL;
 		return;
 	}
 	private function handle_fatal() {
-		echo "EH fatal error: " . $this->getMessage() . " in " . $this->getFile() . " on line " . $this->getLine() . PHP_EOL;
+		echo "EH fatal error: " . $this->getMessage() . " in " 
+			. $this->getFile() . " on line " 
+			. $this->getLine() . PHP_EOL;
 		// allow cleanup, like saveifneeded(), with __destruct() methods
 		exit(1);
 	}

@@ -712,7 +712,7 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 						);
 					}
 					break;
-				case '>':
+				case T_REDIRECT:
 					index_r.type = string_e;
 					index_r.stringval = (char *) Malloc(sizeof(">"));
 					strcpy(index_r.stringval, ">");

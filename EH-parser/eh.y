@@ -404,6 +404,8 @@ para:
 							{ $$ = eh_addnode(T_LONGPARA, 2, $2, $4); }
 	| T_MINMIN string		{ $$ = eh_addnode(T_LONGPARA, 1, $2); }
 	| '-' string			{ $$ = eh_addnode(T_SHORTPARA, 1, $2); }
+	| '-' string '=' expression
+							{ $$ = eh_addnode(T_SHORTPARA, 2, $2, $4); }
 	| '>' string			{ $$ = eh_addnode(T_REDIRECT, 1, $2); }
 	| '}' string			{ $$ = eh_addnode('}', 1, $2); }
 	;

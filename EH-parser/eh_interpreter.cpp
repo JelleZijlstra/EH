@@ -682,15 +682,21 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 		if(node2->type == op_e) {
 			switch(node2->opval->op) {
 				case T_SHORTPARA:
-					// short paras: set each letter to true
+					// short paras: set each short-form option to the same thing
+					if(node2->opval->nparas == 2) {
+						// set to something else if specified
+						value_r = eh_execute(node2->opval->paras[1], context);
+					} else {
+						// set to true by default
+						value_r.type = bool_e;
+						value_r.boolval = true;					
+					}
 					node2 = node2->opval->paras[0];
 					for(int i = 0, len = strlen(node2->stringval); i < len; i++) {
 						index_r.type = string_e;
 						index_r.stringval = (char *) Malloc(2);
 						index_r.stringval[0] = node2->stringval[i];
 						index_r.stringval[1] = '\0';
-						value_r.type = bool_e;
-						value_r.boolval = true;
 						array_insert_retval(paras, index_r, value_r);
 					}
 					break;

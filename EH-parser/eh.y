@@ -557,7 +557,7 @@ int EHI::eh_interactive(void) {
 		ret = parser->parse_string(cmd);
 	}
 	catch(...) {
-		return -1;
+		// do nothing
 	}
 	delete parser;
 	interpreter = oldinterpreter;

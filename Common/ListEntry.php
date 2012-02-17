@@ -168,7 +168,7 @@ abstract class ListEntry extends ExecuteHandler {
 	public function inform() {
 	// provide information for an entry
 		foreach($this as $key => $value) {
-			if(in_array($key, static::$inform_exclude, true))
+			if(in_array($key, self::$inform_exclude, true))
 				continue;
 			if(is_array($value)) {
 				foreach($value as $akey => $prop)

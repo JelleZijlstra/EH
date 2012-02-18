@@ -58,7 +58,7 @@ abstract class ListEntry extends ExecuteHandler {
 			$func = $paras['func'];
 		else
 			$func = 'json_encode';
-		return (count($out) > 0) ? $func($this->$var) : NULL;
+		return (count($out) > 0) ? $func($out) : NULL;
 	}
 	protected function warn($text, $field) {
 		echo 'Warning (entry: ' . $this->name . '): ' . $text . ' in field ' . $field . ': ' . $this->$field . PHP_EOL;

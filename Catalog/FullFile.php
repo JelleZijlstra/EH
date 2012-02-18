@@ -491,26 +491,31 @@ class FullFile extends ListEntry {
 				$this->title = preg_replace('@^/([^/]+)/.*$@u', '/$1/' . $this->p->resolve_redirect($target), $this->title);
 
 		}
-		if($this->parturl)
-			$this->parturl = 1;
-		else
-			unset($this->parturl);
-		if($this->editedtitle)
-			$this->editedtitle = 1;
-		else
-			$this->editedtitle = NULL;
+		foreach(array(
+			'parturl', 'editedtitle', 'triedfindurl', 'triedfinddoi', 
+			'triedaddata'
+		) as $field) {
+			if($this->$field) {
+				$this->$field = 1;
+			} else {
+				unset($this->$field);
+			}
+		}
 		// replace with DOI
 		if($this->jstor) {
 			$this->doi = '10.2307/' . $this->jstor;
 			$this->jstor = NULL;
 		}
 		// those are unnecessary
-		if($this->url)
-			$this->triedfindurl = NULL;
-		if($this->doi)
-			$this->triedfinddoi = NULL;
-		if(!$this->needsdata() and $this->doi)
-			$this->triedadddata = NULL;
+		if($this->url) {
+			unset($this->triedfindurl);
+		}
+		if($this->doi) {
+			unset($this->triedfinddoi);
+		}
+		if(!$this->needsdata() and $this->doi) {
+			unset($this->triedadddata);
+		}
 		// this indicates it's in press
 		if($this->start === 'no') {
 			$this->start = 'in press';

@@ -14,7 +14,7 @@ if(!$testfiles) {
 }
 $executer = trim(fgets($testfiles));
 if(!is_readable($executer)) {
-	echo 'Invalid executer' . PHP_EOL;
+	echo 'Invalid executer: ' . $executer . PHP_EOL;
 	exit(1);
 }
 while($file = trim(fgets($testfiles))) {

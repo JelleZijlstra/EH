@@ -126,24 +126,31 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 		case op_e:
 			//printf("Executing opcode: %d\n", node->opval->op);
 			switch(node->opval->op) {
-				case T_ECHO:
-					switch(node->opval->paras[0]->type) {
-						case int_e:
-						case op_e:
-							// make sure stack is aligned
-							fprintf(outfile, "subl $4, %%esp\n");
-							eh_execute(node->opval->paras[0], context);
-							// argument will already be on top of stack
-							fprintf(outfile, "pushl $printfnum\n");
-							fprintf(outfile, "call _printf\n");
-							fprintf(outfile, "addl $8, %%esp\n");
+				case T_COMMAND:
+					if(node->opval->paras[0]-> type == string_e 
+						&& !strcmp(node->opval->paras[0]->stringval, "echo")) {
+						node = node->opval->paras[1];
+						if(node->opval->nparas != 2) {
 							break;
-						case string_e:
-							printf("Constant %d\n", node->opval->paras[0]->intval);
-							break;
-						default:
-							fprintf(stderr, "Unsupported argument for echo\n");
-							break;
+						}
+						switch(node->opval->paras[0]->type) {
+							case int_e:
+							case op_e:
+								// make sure stack is aligned
+								fprintf(outfile, "subl $4, %%esp\n");
+								eh_execute(node->opval->paras[0], context);
+								// argument will already be on top of stack
+								fprintf(outfile, "pushl $printfnum\n");
+								fprintf(outfile, "call _printf\n");
+								fprintf(outfile, "addl $8, %%esp\n");
+								break;
+							case string_e:
+								printf("Constant %d\n", node->opval->paras[0]->intval);
+								break;
+							default:
+								fprintf(stderr, "Unsupported argument for echo\n");
+								break;
+						}
 					}
 					break;
 				case T_IF:

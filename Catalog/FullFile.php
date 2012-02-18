@@ -38,9 +38,9 @@ class FullFile extends ListEntry {
 	public $bools; // array of boolean flags
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
 	static $n_comm = array('pages', 'newtaxa', 'draft', 'muroids'); // names of commentary fields supported
-	static $n_bools = array('editedtitle', 'parturl', 'fullissue', 'triedfindurl', 'triedfinddoi', 'triedadddata'); // variables (mostly boolean) supported
+	static $n_bools = array('parturl', 'fullissue', 'triedfindurl', 'triedfinddoi', 'triedadddata'); // variables (mostly boolean) supported
 	static $parentlist = 'csvlist';
-	static protected $set_exclude_child = array('editedtitle', 'triedfindurl', 'triedfinddoi', 'triedadddata');
+	static protected $set_exclude_child = array('triedfindurl', 'triedfinddoi', 'triedadddata');
 	private $pdfcontent; // holds text of first page of PDF
 	private $adddata_return; // private flag used in FullFile::adddata()
 	static $FullFile_commands = array(
@@ -492,8 +492,7 @@ class FullFile extends ListEntry {
 
 		}
 		foreach(array(
-			'parturl', 'editedtitle', 'triedfindurl', 'triedfinddoi', 
-			'triedaddata'
+			'parturl', 'triedfindurl', 'triedfinddoi',  'triedaddata'
 		) as $field) {
 			if($this->$field) {
 				$this->$field = 1;
@@ -916,15 +915,6 @@ class FullFile extends ListEntry {
 		return ($this->url or $this->doi or $this->jstor or $this->hdl or $this->pmid or $this->pmc);
 	}
 	/* MANUAL EDITING */
-	public function editalltitles() {
-	// wrapper function for use in the editalltitles command
-		if($this->editedtitle or $this->isor('redirect', 'supplement'))
-			return true;
-		else {
-			echo 'Editing title of file ' . $this->name . PHP_EOL;
-			return $this->edittitle();
-		}
-	}
 	public function edittitle(array $paras = array()) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -1027,7 +1017,7 @@ class FullFile extends ListEntry {
 						echo 'Invalid title' . PHP_EOL;
 					break;
 				case 'q': return false;
-				case 'a': $this->editedtitle = 1; return true;
+				case 'a': return true;
 				case 't':
 					if(!isset($n)) break;
 					$splittitle[$n] .= $splittitle[$n + 1];
@@ -1046,7 +1036,6 @@ class FullFile extends ListEntry {
 					$this->format();
 					echo 'New title: ' . $this->title . PHP_EOL;
 					$this->log('Edited title');
-					$this->editedtitle = 1;
 					$this->p->needsave();
 					return true;
 				case 'e':
@@ -1073,7 +1062,6 @@ class FullFile extends ListEntry {
 									$this->title = $newtitle;
 									$this->log('Edited title');
 								case 'a':
-									$this->editedtitle = 1;
 									$this->p->needsave();
 									return true;
 								case 'r':
@@ -1108,7 +1096,6 @@ class FullFile extends ListEntry {
 				if($this->$field === $content) continue;
 				switch($field) {
 					case 'title':
-						$this->editedtitle = 1;
 						$this->title = $content;
 						break;
 					case 'name':
@@ -2029,7 +2016,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		else
 			$successful = ($this->doiamnhinput() or $this->trymanual());
-		if(!$this->editedtitle and !$paras['noedittitle']) $this->edittitle();
+		if(!$paras['noedittitle']) $this->edittitle();
 		return $successful;
 	}
 	public function adddata() {
@@ -2790,8 +2777,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 			}
 		}
-		// we assume that the title is input correctly now
-		$this->editedtitle = 1;
 		return true;
 	}
 	// Expanding AMNH data and DOIs

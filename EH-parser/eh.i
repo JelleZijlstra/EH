@@ -19,6 +19,8 @@ EHI::~EHI(void) {
 	return;
 }
 
+ehvar_t **zvaltoeh_array(HashTable *hash);
+
 zval *arrtozval(ehvar_t **paras) {
 	zval *arr = (zval *)Malloc(sizeof(zval));
 	// need to initialize refcount in order to prevent PHP from segfaulting on this.
@@ -128,27 +130,7 @@ ehretval_t zvaltoeh(zval *in) {
 		case IS_ARRAY:
 			// initialize array
 			ret.type = array_e;
-			ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
-			HashTable *hash = in->value.ht;
-			// variables for our new array
-			ehretval_t index, value;
-			for(Bucket *curr = hash->pListHead; curr != NULL; curr = curr->pListNext) {
-				// determine index type and value
-				if(curr->nKeyLength == 0) {
-					// numeric index
-					index.type = int_e;
-					index.intval = curr->h;
-				} else {
-					// string index
-					index.type = string_e;
-					index.stringval = strdup(curr->arKey);
-				}
-				// apparently the pDataPtr actually points to the zval
-				// see Zend/zend_hash.h for definition of the Bucket. No idea
-				// what the pData actually points to.
-				value = zvaltoeh((zval *)curr->pDataPtr);
-				array_insert_retval(ret.arrayval, index, value);
-			}
+			ret.arrayval = zvaltoeh_array(in->value.ht);
 			break;
 		case IS_LONG:
 			ret.type = int_e;
@@ -161,6 +143,29 @@ ehretval_t zvaltoeh(zval *in) {
 			break;
 	}
 	return ret;
+}
+
+ehvar_t **zvaltoeh_array(HashTable *hash) {
+    ehvar_t** retval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	// variables for our new array
+	ehretval_t index, value;
+	for(Bucket *curr = hash->pListHead; curr != NULL; curr = curr->pListNext) {
+		// determine index type and value
+		if(curr->nKeyLength == 0) {
+	    	// numeric index
+			index.type = int_e;
+			index.intval = curr->h;
+		} else {
+			// string index
+			index.type = string_e;
+			index.stringval = strdup(curr->arKey);
+		}
+		// apparently the pDataPtr actually points to the zval
+		// see Zend/zend_hash.h for definition of the Bucket. No idea
+		// what the pData actually points to.
+		value = zvaltoeh((zval *)curr->pDataPtr);
+		array_insert_retval(retval, index, value);
+    }
 }
 %}
 %module(directors="1") ehphp

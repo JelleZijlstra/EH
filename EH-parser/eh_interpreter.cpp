@@ -97,7 +97,7 @@ ehcmd_t libcmds[] = {
 };
 
 #define LIBCMDREDENTRY(r, t) { #r, #t },
-char *libredirs[][2] = {
+const char *libredirs[][2] = {
 	LIBCMDREDENTRY(q, quit)
 	{NULL, NULL}
 };
@@ -550,10 +550,10 @@ ehretval_t eh_count(const ehretval_t in) {
 	ret.type = int_e;
 	switch(in.type) {
 		case int_e:
-			ret.intval = sizeof(typeof(in.intval)) * 8;
+			ret.intval = sizeof(int) * 8;
 			break;
 		case float_e:
-			ret.intval = sizeof(typeof(in.floatval)) * 8;
+			ret.intval = sizeof(float) * 8;
 			break;
 		case string_e:
 			ret.intval = strlen(in.stringval);
@@ -762,7 +762,7 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 	value_r.type = bool_e;
 	value_r.boolval = true;
 	index_r.type = string_e;
-	index_r.stringval = "_ehphp";
+	index_r.stringval = strdup("_ehphp");
 	array_insert_retval(paras, index_r, value_r);
 	// get the command to execute
 	const ehcmd_t *libcmd = get_command(name);

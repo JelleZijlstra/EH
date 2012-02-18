@@ -166,6 +166,7 @@ ehvar_t **zvaltoeh_array(HashTable *hash) {
 		value = zvaltoeh((zval *)curr->pDataPtr);
 		array_insert_retval(retval, index, value);
     }
+    return retval;
 }
 %}
 %module(directors="1") ehphp

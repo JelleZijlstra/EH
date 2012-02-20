@@ -8,7 +8,7 @@ class Foo
 endclass
 $ foo = new Foo
 call printvar: $foo
-$ baz = $foo.bar
+$ baz = $foo->bar
 call printvar: $baz
 call $baz: 2
 printvar: $baz

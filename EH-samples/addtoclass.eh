@@ -8,5 +8,5 @@ set Foo::baz = 2
 set bar = new Foo
 printvar: $foo
 printvar: $bar
-set bar.meh = 4
+set bar->meh = 4
 printvar: $bar

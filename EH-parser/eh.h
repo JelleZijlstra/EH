@@ -83,7 +83,6 @@ typedef enum functype_enum {
 
 typedef enum accessor_enum {
 	arrow_e,
-	dot_e,
 	doublecolon_e
 } accessor_enum;
 

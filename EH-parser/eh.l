@@ -151,10 +151,6 @@
 				yylval_param->aValue = arrow_e;
 				return T_ACCESSOR;
 			}
-"\."		{
-				yylval_param->aValue = dot_e;
-				return T_ACCESSOR;
-			}
 [@=$+\-*/<>(),:\[\]&\|^%~!{}]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{

@@ -1043,17 +1043,18 @@ ehretval_t eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
 	attributes.visibility = public_e;
 	attributes.isconst = nonconst_e;
 	attributes.isstatic = nonstatic_e;
+	ehvar_t **members = ret.objectval->members;
 
-	for(ehretval_t *node2 = node; node2->opval->nparas != 0; node2 = node2->opval->paras[0]) {
-		ehretval_t *mynode = node2->opval->paras[1];
+	for( ; node->opval->nparas != 0; node = node->opval->paras[0]) {
+		ehretval_t **myparas = node->opval->paras[1]->opval->paras;
 		// nodes here will always have the name in para 0 and value in para 1
-		ehretval_t namev = eh_execute(mynode->opval->paras[0], context);
+		ehretval_t namev = eh_execute(myparas[0], context);
 		if(namev.type != string_e) {
 			eh_error_type("Class member label", namev.type, eerror_e);
 			continue;
 		}
-		ehretval_t value = eh_execute(mynode->opval->paras[1], context);
-		class_insert_retval(ret.objectval->members, namev.stringval, attributes, value);
+		ehretval_t value = eh_execute(myparas[1], context);
+		class_insert_retval(members, namev.stringval, attributes, value);
 	}
 	return ret;
 }
@@ -1238,8 +1239,8 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	 * the variable referred to, so that T_SET can do its bitwise magic with
 	 * ints and similar stuff.
 	 */
-	ehretval_t ret, index;
-	ehvar_t *var, *member;
+	ehretval_t ret;
+	ehvar_t *var;
 
 	const ehretval_t basevar = eh_execute(op->paras[0], context);
 	ret.type = null_e;
@@ -1260,39 +1261,6 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 		case 3:
 			switch(op->paras[1]->accessorval) {
 				case arrow_e:
-					var = get_variable(basevar.stringval, scope, context);
-					if(var == NULL) {
-						eh_error("Cannot access member of non-existing variable", eerror_e);
-						ret.referenceval = (ehretval_t *) 0x1;
-						return ret;
-					}
-					if(var->value.type == array_e) {
-						index = eh_execute(op->paras[2], context);
-						member = array_getmember(var->value.arrayval, index);
-						// if there is no member yet and we are
-						// setting, insert it with a null value
-						if(member == NULL) {
-							if(op->op == T_LVALUE_SET) {
-								member = array_insert_retval(
-									var->value.arrayval,
-									index,
-									ret
-								);
-								ret.type = reference_e;
-								ret.referenceval = &member->value;
-							}
-							// else use default return value
-						} else {
-							ret.type = reference_e;
-							ret.referenceval = &member->value;
-						}
-					}
-					else {
-						ret.type = attribute_e;
-						ret.referenceval = &var->value;
-					}
-					break;
-				case dot_e:
 					ret = object_access(basevar, op->paras[2], context, op->op);
 					break;
 				case doublecolon_e:
@@ -1733,57 +1701,78 @@ ehretval_t object_access(
 ) {
 	ehretval_t label, ret;
 	ehvar_t *var;
-	ehvar_t *classmember;
+	ehvar_t *member;
 	ehobj_t *object;
 	memberattribute_t attribute;
 
 	// default value
 	ret.type = null_e;
 
-	label = eh_execute(index, context);
-	if(label.type != string_e) {
-		eh_error_type("object member label", label.type, eerror_e);
-		return ret;
-	}
-
 	var = get_variable(operand1.stringval, scope, context);
 	if(var == NULL) {
-		eh_error("cannot access nonexistent variable", eerror_e);
+		eh_error("cannot access member of nonexistent variable", eerror_e);
 		return ret;
 	}
-	if(var->value.type != object_e) {
-		eh_error_type("object access", var->value.type, eerror_e);
-		return ret;
-	}
-	object = var->value.objectval;
+	label = eh_execute(index, context);
 
-	classmember = class_getmember(object, label.stringval, context);
-	if(classmember == NULL) {
-		// add new member if we're setting
-		if(token == T_LVALUE_SET) {
-			// default is public, non-static, non-constant
-			attribute.visibility = public_e;
-			attribute.isstatic = nonstatic_e;
-			attribute.isconst = nonconst_e;
-			classmember = class_insert_retval(
-				object->members,
-				label.stringval,
-				attribute,
-				ret
-			);
-		} else {
-			eh_error_unknown("object member", label.stringval, eerror_e);
-			return ret;
-		}
+	switch(var->value.type) {
+		case array_e:
+			member = array_getmember(var->value.arrayval, label);
+			// if there is no member yet and we are
+			// setting, insert it with a null value
+			if(member == NULL) {
+				if(token == T_LVALUE_SET) {
+					member = array_insert_retval(
+						var->value.arrayval, label, ret
+					);
+					ret.type = reference_e;
+					ret.referenceval = &member->value;
+				}
+				// else use default return value
+			} else {
+				ret.type = reference_e;
+				ret.referenceval = &member->value;
+			}
+			break;
+		case object_e:
+			if(label.type != string_e) {
+				eh_error_type("object member label", label.type, eerror_e);
+				return ret;
+			}
+			object = var->value.objectval;
+		
+			member = class_getmember(object, label.stringval, context);
+			if(member == NULL) {
+				// add new member if we're setting
+				if(token == T_LVALUE_SET) {
+					// default is public, non-static, non-constant
+					attribute.visibility = public_e;
+					attribute.isstatic = nonstatic_e;
+					attribute.isconst = nonconst_e;
+					member = class_insert_retval(
+						object->members, label.stringval, attribute, ret
+					);
+				} else {
+					eh_error_unknown(
+						"object member", label.stringval, eerror_e
+					);
+					return ret;
+				}
+			}
+			// respect const specifier
+			if(member->attribute.isconst == const_e) {
+				ret.type = creference_e;
+			} else {
+				ret.type = reference_e;
+			}
+			ret.referenceval = &member->value;
+			newcontext = object;
+			break;
+		default:
+			ret.type = attribute_e;
+			ret.referenceval = &var->value;
+			break;
 	}
-	// respect const specifier
-	if(classmember->attribute.isconst == const_e) {
-		ret.type = creference_e;
-	} else {
-		ret.type = reference_e;
-	}
-	ret.referenceval = &classmember->value;
-	newcontext = object;
 	return ret;
 }
 ehretval_t colon_access(

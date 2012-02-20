@@ -98,3 +98,4 @@ libcmds.eh
 testarray.eh
 anonclass.eh
 concat.eh
+ackermann.eh

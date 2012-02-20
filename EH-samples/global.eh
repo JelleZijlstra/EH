@@ -4,7 +4,7 @@ class Foo
 	public bar
 	public baz: n
 		global myvar
-		put (@string $n) + ' '
+		put $n . ' '
 		echo $myvar
 	end
 end

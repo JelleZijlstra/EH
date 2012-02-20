@@ -8,7 +8,7 @@ printvar: $bar && $foo
 printvar: $bar or $foo
 printvar: $bar || $foo
 func test: n
-	echo 'This is a function ' + @string $n
+	echo 'This is a function ' . $n
 endfunc
 false and test: 1
 true and test: 2

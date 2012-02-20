@@ -74,7 +74,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %left T_AND T_OR T_XOR
 %left ':'
 %left '|' '^' '&'
-%left '+' '-'
+%left '+' '-' '.'
 %left '=' '>' '<' T_GE T_LE T_NE T_SE T_SNE
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
@@ -226,6 +226,8 @@ expression:
 							{ $$ = eh_addnode('|', 2, $1, $3); }
 	| expression '&' expression
 							{ $$ = eh_addnode('&', 2, $1, $3); }
+	| expression '.' expression
+							{ $$ = eh_addnode('.', 2, $1, $3); }
 	| expression T_AND expression
 							{ $$ = eh_addnode(T_AND, 2, $1, $3); }
 	| expression T_OR expression
@@ -294,6 +296,8 @@ simple_expr:
 							{ $$ = eh_addnode('|', 2, $1, $3); }
 	| simple_expr '&' simple_expr
 							{ $$ = eh_addnode('&', 2, $1, $3); }
+	| simple_expr '.' simple_expr
+							{ $$ = eh_addnode('.', 2, $1, $3); }
 	| simple_expr T_AND simple_expr
 							{ $$ = eh_addnode(T_AND, 2, $1, $3); }
 	| simple_expr T_OR simple_expr
@@ -370,6 +374,8 @@ line_expr:
 							{ $$ = eh_addnode('|', 2, $1, $3); }
 	| line_expr '&' expression
 							{ $$ = eh_addnode('&', 2, $1, $3); }
+	| line_expr '.' expression
+							{ $$ = eh_addnode('.', 2, $1, $3); }
 	| line_expr T_AND expression
 							{ $$ = eh_addnode(T_AND, 2, $1, $3); }
 	| line_expr T_OR expression

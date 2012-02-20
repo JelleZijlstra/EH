@@ -3,7 +3,7 @@
 echo 'Int access:'
 $ bar = 1
 for (count $bar) count i
-	echo (@string $i) + ': ' + @string ($bar -> $i)
+	echo $i . ': ' . $bar -> $i
 endfor
 echo 'Int modification:'
 for (count $bar) count i
@@ -13,7 +13,7 @@ echo $bar
 echo 'String access:'
 $ foo = 'test'
 for (count $foo) count i
-	echo (@string $i) + ': ' + @string ($foo -> $i)
+	echo $i . ': ' . $foo -> $i
 endfor
 echo 'String modification:'
 for (count $foo) count i

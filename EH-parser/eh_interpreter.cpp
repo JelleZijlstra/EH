@@ -34,7 +34,7 @@ static void range_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalu
 ehretval_t eh_count(const ehretval_t in);
 ehretval_t eh_op_tilde(ehretval_t in);
 ehretval_t eh_op_uminus(ehretval_t in);
-ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2);
+ehretval_t eh_op_dot(ehretval_t operand1, ehretval_t operand2);
 void eh_op_global(const char *name, ehcontext_t context);
 ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
 ehretval_t eh_op_for(opnode_t *op, ehcontext_t context);
@@ -399,9 +399,9 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 			EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
 			EH_INTBOOL_CASE(T_LE, <=) // lesser-than or equal
 			EH_INTBOOL_CASE(T_NE, !=) // not equal
-			// doing addition on two strings performs concatenation
-			case '+':
-				ret = eh_op_plus(
+			EH_FLOATINT_CASE('+', +) // addition
+			case '.': // string concatenation
+				ret = eh_op_dot(
 					eh_execute(node->opval->paras[0], context),
 					eh_execute(node->opval->paras[1], context)
 				);
@@ -633,8 +633,10 @@ ehretval_t eh_op_uminus(ehretval_t in) {
 	}
 	return ret;
 }
-ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2) {
+ehretval_t eh_op_dot(ehretval_t operand1, ehretval_t operand2) {
 	ehretval_t ret;
+	operand1 = eh_xtostring(operand1);
+	operand2 = eh_xtostring(operand2);
 	if(operand1.type == string_e && operand2.type == string_e) {
 		// concatenate them
 		ret.type = string_e;
@@ -643,18 +645,8 @@ ehretval_t eh_op_plus(ehretval_t operand1, ehretval_t operand2) {
 		ret.stringval = (char *) Malloc(len1 + len2 + 1);
 		strcpy(ret.stringval, operand1.stringval);
 		strcpy(ret.stringval + len1, operand2.stringval);
-	} else if(operand1.type == float_e && operand2.type == float_e) {
-		ret.type = float_e;
-		ret.floatval = operand1.floatval + operand2.floatval;
 	} else {
-		operand1 = eh_xtoint(operand1);
-		operand2 = eh_xtoint(operand2);
-		if(operand1.type == int_e && operand2.type == int_e) {
-			ret.type = int_e;
-			ret.intval = operand1.intval + operand2.intval;
-		} else {
-			ret.type = null_e;
-		}
+		ret.type = null_e;
 	}
 	return ret;
 }

@@ -7,7 +7,7 @@ class Foo
 	endfunc
 endclass
 echo foo
-echo foo + bar
+echo foo . bar
 echo $foo
 set foo = new Foo
 set baz = $foo->'foo'

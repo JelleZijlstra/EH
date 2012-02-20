@@ -11,10 +11,10 @@ endwhile
 echo 'We got out of the infinite loop'
 
 while 1
-	echo 'Outer: ' + @string $n
+	echo 'Outer: ' . $n
 	$ n++
 	while 1
-		echo 'Inner: ' + @string $n
+		echo 'Inner: ' . $n
 		$ n++
 		if $n > 8
 			echo 'Breaking 2'

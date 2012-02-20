@@ -3,11 +3,11 @@
 class Foo
 	private var = 1
 	private bar: n
-		echo 'Private method ' + @string $n
-		echo 'Private property var is: ' + @string $this->var
+		echo 'Private method ' . $n
+		echo 'Private property var is: ' . $this->var
 	endfunc
 	public baz: n
-		echo 'Public method ' + @string $n
+		echo 'Public method ' . $n
 		$ this->var = 2
 		$this->bar: $n
 	endfunc

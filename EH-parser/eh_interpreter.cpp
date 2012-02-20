@@ -298,9 +298,6 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 				}
 				ret = eh_execute(node->opval->paras[1], context);
 				break;
-			case T_EXPRESSION: // wrapper for special case
-				ret = eh_execute(node->opval->paras[0], context);
-				break;
 			case T_CALL: // call: execute argument and discard it
 				eh_execute(node->opval->paras[0], context);
 				break;

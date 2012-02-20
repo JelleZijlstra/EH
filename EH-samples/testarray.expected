@@ -1,0 +1,11 @@
+@array [
+0 => @int 1
+1 => @int 2
+]
+@array [
+0 => @int 1
+]
+@array [
+0 => @int 1
+]
+syntax error, unexpected T_INTEGER, expecting ']': EH parsing error

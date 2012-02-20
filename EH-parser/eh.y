@@ -87,7 +87,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %nonassoc '[' ']'
 %nonassoc '(' ')' T_DOLLARPAREN
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraymemberwrap expressionwrap classlist classmember lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i classlist classmember lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
 %%
 global_list: /* NULL */		{ }
 	| global_list statement	{
@@ -245,6 +245,7 @@ expression:
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
+	| '{' arraylist '}'		{ $$ = eh_addnode('{', 1, $2); }
 	;
 
 simple_expr:
@@ -420,20 +421,23 @@ string:
 	;
 
 arraylist:
-	arraylist arraymemberwrap
+	arraylist_i arraymember ','
+							{ $$ = eh_addnode(',', 2, $1, $2); }
+	| arraylist_i arraymember
 							{ $$ = eh_addnode(',', 2, $1, $2); }
 	| /* NULL */			{ $$ = eh_addnode(',', 0); }
 	;
 
-arraymemberwrap:
-	arraymember				{ $$ = $1; }
-	| arraymember ','		{ $$ = $1; }
+arraylist_i:
+	arraylist_i arraymember ','
+							{ $$ = eh_addnode(',', 2, $1, $2); }
+	| /* NULL */			{ $$ = eh_addnode(',', 0); }
 	;
 
 arraymember:
-	expressionwrap T_DOUBLEARROW expressionwrap
+	expression T_DOUBLEARROW expression
 							{ $$ = eh_addnode(T_ARRAYMEMBER, 2, $1, $3); }
-	| expressionwrap		{ $$ = eh_addnode(T_ARRAYMEMBER, 1, $1); }
+	| expression			{ $$ = eh_addnode(T_ARRAYMEMBER, 1, $1); }
 	;
 
 arglist:
@@ -478,10 +482,6 @@ exprcase:
 							{ $$ = eh_addnode(T_CASE, 2, $2, $4); }
 	| T_DEFAULT T_SEPARATOR expression T_SEPARATOR
 							{ $$ = eh_addnode(T_CASE, 1, $3); }
-	;
-
-expressionwrap:
-	expression				{ $$ = eh_addnode(T_EXPRESSION, 1, $1); }
 	;
 
 classlist:

@@ -44,6 +44,7 @@ ehretval_t eh_op_new(const char *name);
 void eh_op_continue(opnode_t *op, ehcontext_t context);
 void eh_op_break(opnode_t *op, ehcontext_t context);
 ehretval_t eh_op_array(ehretval_t *node, ehcontext_t context);
+ehretval_t eh_op_anonclass(ehretval_t *node, ehcontext_t context);
 void eh_op_declarefunc(ehretval_t **paras);
 ehretval_t eh_op_declareclosure(ehretval_t **paras);
 void eh_op_declareclass(ehretval_t **paras, ehcontext_t context);
@@ -367,6 +368,9 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 				break;
 			case '[': // array declaration
 				ret = eh_op_array(node->opval->paras[0], context);
+				break;
+			case '{': // anonymous class
+				ret = eh_op_anonclass(node->opval->paras[0], context);
 				break;
 		/*
 		 * Binary operators
@@ -1025,6 +1029,31 @@ ehretval_t eh_op_array(ehretval_t *node, ehcontext_t context) {
 	}
 	for(ehretval_t *node2 = node; node2->opval->nparas != 0; node2 = node2->opval->paras[0]) {
 		array_insert(ret.arrayval, node2->opval->paras[1], --count, context);
+	}
+	return ret;
+}
+ehretval_t eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
+	ehretval_t ret;
+	ret.type = object_e;
+	ret.objectval = new ehobj_t;
+	ret.objectval->classname = "AnonClass";
+	ret.objectval->members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	// all members are public, non-static, non-const
+	memberattribute_t attributes;
+	attributes.visibility = public_e;
+	attributes.isconst = nonconst_e;
+	attributes.isstatic = nonstatic_e;
+
+	for(ehretval_t *node2 = node; node2->opval->nparas != 0; node2 = node2->opval->paras[0]) {
+		ehretval_t *mynode = node2->opval->paras[1];
+		// nodes here will always have the name in para 0 and value in para 1
+		ehretval_t namev = eh_execute(mynode->opval->paras[0], context);
+		if(namev.type != string_e) {
+			eh_error_type("Class member label", namev.type, eerror_e);
+			continue;
+		}
+		ehretval_t value = eh_execute(mynode->opval->paras[1], context);
+		class_insert_retval(ret.objectval->members, namev.stringval, attributes, value);
 	}
 	return ret;
 }

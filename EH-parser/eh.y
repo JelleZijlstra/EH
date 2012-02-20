@@ -84,10 +84,10 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %nonassoc '$' T_REFERENCE '~' '!' T_NEGATIVE T_COUNT
 %nonassoc T_NEW
 %nonassoc '`'
-%nonassoc '[' ']'
+%nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i classlist classmember lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i classlist classmember lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
 %%
 global_list: /* NULL */		{ }
 	| global_list statement	{
@@ -245,7 +245,7 @@ expression:
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
-	| '{' arraylist '}'		{ $$ = eh_addnode('{', 1, $2); }
+	| '{' anonclasslist '}'	{ $$ = eh_addnode('{', 1, $2); }
 	;
 
 simple_expr:
@@ -309,6 +309,7 @@ simple_expr:
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
+	| '{' anonclasslist '}'	{ $$ = eh_addnode('{', 1, $2); }
 	;
 
 line_expr:
@@ -388,6 +389,7 @@ line_expr:
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
+	| '{' anonclasslist '}'	{ $$ = eh_addnode('{', 1, $2); }
 	;
 
 command:
@@ -438,6 +440,25 @@ arraymember:
 	expression T_DOUBLEARROW expression
 							{ $$ = eh_addnode(T_ARRAYMEMBER, 2, $1, $3); }
 	| expression			{ $$ = eh_addnode(T_ARRAYMEMBER, 1, $1); }
+	;
+
+anonclasslist:
+	anonclasslist_i anonclassmember ','
+							{ $$ = eh_addnode(',', 2, $1, $2); }
+	| anonclasslist_i anonclassmember
+							{ $$ = eh_addnode(',', 2, $1, $2); }
+	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+	;
+
+anonclasslist_i:
+	anonclasslist_i anonclassmember ','
+							{ $$ = eh_addnode(',', 2, $1, $2); }
+	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+	;
+
+anonclassmember:
+	expression T_DOUBLEARROW expression
+							{ $$ = eh_addnode(T_ARRAYMEMBER, 2, $1, $3); }
 	;
 
 arglist:

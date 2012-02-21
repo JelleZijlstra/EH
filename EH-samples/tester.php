@@ -13,7 +13,7 @@ if(!$testfiles) {
 	exit(1);
 }
 $executer = trim(fgets($testfiles));
-if(!is_readable($executer)) {
+if(!file_exists($executer)) {
 	echo 'Invalid executer: ' . $executer . PHP_EOL;
 	exit(1);
 }

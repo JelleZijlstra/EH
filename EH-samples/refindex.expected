@@ -1,0 +1,6 @@
+Unsupported type reference for array access: EH runtime error
+@int 3
+@int 3
+Unsupported type reference for bitwise access to integer: EH notice
+(null)
+0

@@ -101,3 +101,5 @@ concat.eh
 ackermann.eh
 rangeaccess.eh
 globref.eh
+refindex.eh
+setcount.eh

@@ -1093,7 +1093,7 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 			break;
 		}
 	}
-	// insert this pointer
+	// insert "this" pointer
 	memberattribute_t thisattributes;
 	thisattributes.visibility = private_e;
 	thisattributes.isstatic = nonstatic_e;
@@ -1101,7 +1101,9 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t thisvalue;
 	thisvalue.type = object_e;
 	thisvalue.objectval = &(classobj->obj);
-	class_insert_retval(classobj->obj.members, "this", thisattributes, thisvalue);
+	class_insert_retval(
+		classobj->obj.members, "this", thisattributes, thisvalue
+	);
 	insert_class(classobj);
 	return;
 }
@@ -1174,7 +1176,9 @@ ehretval_t eh_op_given(ehretval_t **paras, ehcontext_t context) {
 		casevar = eh_execute(op->paras[0], context);
 		ehretval_t decider;
 		if(casevar.type == func_e) {
-			decider = call_function_args(casevar.funcval, context, newcontext, 1, &switchvar);
+			decider = call_function_args(
+				casevar.funcval, context, newcontext, 1, &switchvar
+			);
 			if(decider.type != bool_e) {
 				eh_error("Given case method does not return bool", eerror_e);
 				ret.type = null_e;
@@ -1192,24 +1196,34 @@ ehretval_t eh_op_given(ehretval_t **paras, ehcontext_t context) {
 }
 ehretval_t eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t ret;
+	ehfunc_t *func;
 	ret.type = null_e;
 
 	newcontext = NULL;
 	const ehretval_t function = eh_execute(paras[0], context);
 	// operand1 will be either a string (indicating a normal function call) or a 
 	// func_e (indicating a method or closure call)
-	if(function.type == string_e) {
-		const ehfunc_t *func = get_function(function.stringval);
-		if(func == NULL) {
-			eh_error_unknown("function", function.stringval, efatal_e);
-			return ret;
-		}
-		ret = call_function(&func->f, paras[1], context, context);
-	} else if(function.type == func_e) {
-		ret = call_function(function.funcval, paras[1], context, newcontext);
-	} else if(function.type != null_e) {
-		// ignore null_e, because private method calls otherwise get confused
-		eh_error_type("function call", function.type, eerror_e);
+	switch(function.type) {
+		case string_e:
+			func = get_function(function.stringval);
+			if(func == NULL) {
+				eh_error_unknown("function", function.stringval, efatal_e);
+				return ret;
+			}
+			ret = call_function(&func->f, paras[1], context, context);
+			break;
+		case func_e:
+			ret = call_function(
+				function.funcval, paras[1], context, newcontext
+			);
+			break;
+		case null_e:
+			// ignore null_e, because private method calls otherwise get 
+			// confused
+			break;
+		default:
+			eh_error_type("function call", function.type, eerror_e);
+			break;
 	}
 	return ret;
 }
@@ -1229,7 +1243,6 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	 * ints and similar stuff.
 	 */
 	ehretval_t ret;
-	ehvar_t *var;
 
 	const ehretval_t basevar = eh_execute(op->paras[0], context);
 	ret.type = null_e;
@@ -1239,7 +1252,7 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	ret.referenceval = NULL;
 	switch(op->nparas) {
 		case 1:
-			var = get_variable(basevar.stringval, scope, context);
+			ehvar_t *var = get_variable(basevar.stringval, scope, context);
 			// dereference variable
 			if(var != NULL) {
 				ret.type = reference_e;

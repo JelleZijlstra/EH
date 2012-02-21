@@ -337,11 +337,8 @@ line_expr:
 							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| bareword ':' arglist
 							{ $$ = eh_addnode(':', 2, $1, $3); }
-	| '$' lvalue_get ':' arglist
-							{ $$ = eh_addnode(':', 2,
-								eh_addnode('$', 1, $2),
-								$4);
-							}
+	| line_expr ':' arglist
+							{ $$ = eh_addnode(':', 2, $1, $3); }
 	| line_expr '=' expression
 							{ $$ = eh_addnode('=', 2, $1, $3); }
 	| line_expr '>' expression

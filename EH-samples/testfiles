@@ -100,3 +100,4 @@ anonclass.eh
 concat.eh
 ackermann.eh
 rangeaccess.eh
+globref.eh

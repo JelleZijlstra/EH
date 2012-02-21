@@ -4,6 +4,7 @@
 *.dylib
 # Directories used for data that doesn't go into the repo
 data/
+dev/
 Backup/
 # Settings files shouldn't get into the repo
 *settings.php
@@ -29,3 +30,6 @@ EH-parser/ehi
 EH-parser/ehphp.php
 EH-parser/ehphp.php.save
 EH-parser/php_ehphp.h
+# File hierarchies that aren't ready yet
+PHPmap/
+Measurements/

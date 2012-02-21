@@ -1233,6 +1233,9 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 
 	const ehretval_t basevar = eh_execute(op->paras[0], context);
 	ret.type = null_e;
+	// We need this because of code in eh_op_set checking for this. Removing
+	// the check for NULL there yields a problem where $ foo->2 = 0 produces 
+	// $foo = @int 0.
 	ret.referenceval = NULL;
 	switch(op->nparas) {
 		case 1:
@@ -1255,9 +1258,6 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 				case doublecolon_e:
 					ret = colon_access(basevar, op->paras[2], context, op->op);
 					break;
-				default:
-					eh_error("Unsupported accessor", efatal_e);
-				break;
 			}
 			break;
 	}
@@ -1266,9 +1266,9 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 ehretval_t eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 	ehretval_t ret, index;
 	ret = eh_execute(node, context);
-	if(ret.type == null_e)
+	if(ret.type == null_e) {
 		return ret;
-	else if(ret.type == attribute_e) {
+	} else if(ret.type == attribute_e) {
 		// get operands
 		index = eh_execute(node->opval->paras[2], context);
 		if(index.type == reference_e)

@@ -7,6 +7,7 @@
 
 START_EHLC(CountClass)
 EHLC_ENTRY(CountClass, docount)
+EHLC_ENTRY(CountClass, setcount)
 END_EHLC()
 
 EH_METHOD(CountClass, docount) {
@@ -14,17 +15,39 @@ EH_METHOD(CountClass, docount) {
 	retval->type = int_e;
 	retval->intval = ++selfptr->count;
 }
+EH_METHOD(CountClass, setcount) {
+	CountClass *selfptr = (CountClass *)obj;
+	retval->type = bool_e;
+
+	ehretval_t *args = new ehretval_t[1];
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
+		retval->boolval = false;
+		delete[] args;
+		return;
+	}
+	ehretval_t newcounter = eh_xtoint(args[0]);
+	if(newcounter.type != int_e) {
+		retval->boolval = false;
+		delete[] args;
+		return;
+	}
+
+	selfptr->count = newcounter.intval;
+	retval->boolval = true;
+	return;
+}
 
 START_EHLC(File)
 EHLC_ENTRY(File, open)
 EHLC_ENTRY(File, getc)
+EHLC_ENTRY(File, gets)
 EHLC_ENTRY(File, close)
 END_EHLC()
 
 EH_METHOD(File, open) {
 	File *selfptr = (File *) obj;
 	retval->type = bool_e;
-	
+
 	ehretval_t *args = new ehretval_t[1];
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
 		retval->boolval = false;

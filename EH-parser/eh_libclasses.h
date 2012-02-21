@@ -27,6 +27,7 @@ public:
 	}
 };
 EH_METHOD(CountClass, docount);
+EH_METHOD(CountClass, setcount);
 
 EHLC_CONSTRUCTOR(CountClass)
 EXTERN_EHLC(CountClass)

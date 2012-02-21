@@ -1624,7 +1624,7 @@ void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i) {
 	classobj->members[i] = newmember;
 	return;
 }
-void class_insert(ehvar_t **classarr, ehretval_t *in, ehcontext_t context) {
+void class_insert(ehvar_t **classarr, const ehretval_t *in, ehcontext_t context) {
 	// insert a member into a class
 	ehretval_t value;
 
@@ -1671,7 +1671,7 @@ ehvar_t *class_insert_retval(
 	classarr[vhash] = member;
 	return member;
 }
-ehvar_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context) {
+ehvar_t *class_getmember(const ehobj_t *classobj, const char *name, ehcontext_t context) {
 	for(ehvar_t *curr = classobj->members[hash(name, 0)]; curr != NULL; 
 	  curr = curr->next) {
 		if(!strcmp(curr->name, name)) {
@@ -1687,7 +1687,7 @@ ehvar_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t contex
 	}
 	return NULL;
 }
-ehretval_t class_get(ehobj_t *classobj, const char *name, ehcontext_t context) {
+ehretval_t class_get(const ehobj_t *classobj, const char *name, ehcontext_t context) {
 	ehretval_t ret;
 
 	ehvar_t *curr = class_getmember(classobj, name, context);
@@ -1700,7 +1700,7 @@ ehretval_t class_get(ehobj_t *classobj, const char *name, ehcontext_t context) {
 }
 ehretval_t object_access(
 	ehretval_t operand1,
-	ehretval_t *index,
+	const ehretval_t *index,
 	ehcontext_t context,
 	int token
 ) {
@@ -1782,7 +1782,7 @@ ehretval_t object_access(
 }
 ehretval_t colon_access(
 	ehretval_t operand1,
-	ehretval_t *index,
+	const ehretval_t *index,
 	ehcontext_t context,
 	int token
 ) {

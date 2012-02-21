@@ -143,7 +143,7 @@ typedef struct eharg_t {
 } eharg_t;
 
 // context
-typedef struct ehobj_t *ehcontext_t;
+typedef const struct ehobj_t *ehcontext_t;
 
 typedef void *(*ehconstructor_t)();
 
@@ -207,7 +207,7 @@ typedef struct ehfm_t {
 	int argcount;
 	eharg_t *args;
 	union {
-		ehretval_t *code;
+		const ehretval_t *code;
 		void (*ptr)(ehretval_t *, ehretval_t *, ehcontext_t);
 		ehlibmethod_t mptr;
 	};
@@ -250,15 +250,6 @@ void eh_error_argcount_lib(const char *name, int expected, int received);
  */
 const char *get_typestring(type_enum type);
 int eh_outer_exit(int exitval);
-
-/*
- * Macros for type checking
- */
-#define EH_IS_INT(var) (var.type == int_e)
-#define EH_IS_STRING(var) (var.type == string_e)
-#define EH_IS_ARRAY(var) (var.type == array_e)
-#define EH_IS_BOOL(var) (var.type == bool_e)
-#define EH_IS_NULL(var) (var.type == null_e)
 
 /*
  * Top-level functions
@@ -325,12 +316,12 @@ int array_count(ehvar_t **array);
 void insert_class(ehclass_t *classobj);
 ehclass_t *get_class(const char *name);
 void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i);
-void class_insert(ehvar_t **classarr, ehretval_t *in, ehcontext_t context);
+void class_insert(ehvar_t **classarr, const ehretval_t *in, ehcontext_t context);
 ehvar_t *class_insert_retval(ehvar_t **classarr, const char *name, memberattribute_t attribute, ehretval_t value);
-ehvar_t *class_getmember(ehobj_t *classobj, const char *name, ehcontext_t context);
-ehretval_t class_get(ehobj_t *classobj, const char *name, ehcontext_t context);
-ehretval_t object_access(ehretval_t name, ehretval_t *index, ehcontext_t context, int token);
-ehretval_t colon_access(ehretval_t operand1, ehretval_t *index, ehcontext_t context, int token);
+ehvar_t *class_getmember(const ehobj_t *classobj, const char *name, ehcontext_t context);
+ehretval_t class_get(const ehobj_t *classobj, const char *name, ehcontext_t context);
+ehretval_t object_access(ehretval_t name, const ehretval_t *index, ehcontext_t context, int token);
+ehretval_t colon_access(ehretval_t operand1, const ehretval_t *index, ehcontext_t context, int token);
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
 
 

@@ -1219,13 +1219,13 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	 * reference_e: a pointer to an ehretval_t that can be modified by the
 	 * calling code.
 	 *
-	 * Because of special needs of calling code, this case actually returns
-	 * useful data in the second field of the ehretval_t struct if its type is
-	 * null_e: either NULL (if referring to a non-existing  variable) or 0x1
-	 * (if referring to a member of a non-existent variable).
+	 * Because of special needs of calling code, this function sometimes breaks
+	 * the normal conventions associating ehretval_t::type values with the
+	 * values in the ehretval_t::value union. If the lvalue does not exist,
+	 * it returns null_e.
 	 *
 	 * Otherwise, it returns an attribute_e with a pointer to the ehretval_t of
-	 * the variable referred to, so that T_SET can do its bitwise magic with
+	 * the variable referred to, so that eh_op_set can do its bitwise magic with
 	 * ints and similar stuff.
 	 */
 	ehretval_t ret;

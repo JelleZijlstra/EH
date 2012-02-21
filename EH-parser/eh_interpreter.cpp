@@ -1243,6 +1243,7 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	 * ints and similar stuff.
 	 */
 	ehretval_t ret;
+	ehvar_t *var;
 
 	const ehretval_t basevar = eh_execute(op->paras[0], context);
 	ret.type = null_e;
@@ -1252,7 +1253,7 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	ret.referenceval = NULL;
 	switch(op->nparas) {
 		case 1:
-			ehvar_t *var = get_variable(basevar.stringval, scope, context);
+			var = get_variable(basevar.stringval, scope, context);
 			// dereference variable
 			if(var != NULL) {
 				ret.type = reference_e;

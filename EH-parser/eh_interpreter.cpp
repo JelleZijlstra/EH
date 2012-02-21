@@ -1221,7 +1221,7 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	 *
 	 * Because of special needs of calling code, this case actually returns
 	 * useful data in the second field of the ehretval_t struct if its type is
-	 * null_e: either NULL (if referring to a non-existing  variable) and 0x1
+	 * null_e: either NULL (if referring to a non-existing  variable) or 0x1
 	 * (if referring to a member of a non-existent variable).
 	 *
 	 * Otherwise, it returns an attribute_e with a pointer to the ehretval_t of
@@ -1362,6 +1362,9 @@ ehretval_t eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 				break;
 			case string_e:
 				ret = string_arrow_get(basevar, index);
+				break;
+			case range_e:
+				ret = range_arrow_get(basevar, index);
 				break;
 			case array_e:
 				// array access to an array works as expected.

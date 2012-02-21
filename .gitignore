@@ -2,6 +2,7 @@
 *.o
 *.so
 *.dylib
+*.save
 # Directories used for data that doesn't go into the repo
 data/
 dev/

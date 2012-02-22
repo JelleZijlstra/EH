@@ -90,30 +90,35 @@ class Parser {
 			// if there is a { in here, it's not a cite, but a template, and we can ignore it
 			if(strpos($cite, '{') !== false) continue;
 			$citename = parsecite($cite, 'main');
-			if($csvlist->has($citename))
-			// there is already a citation
+			if($csvlist->has($citename)) {
+				// there is already a citation
 				$this->refs[$cite] = $this->cite($cite);
-			else {
-				makemenu(array('<enter>' => 'add source',
-					'q' => 'quit adding sources',
-					'r' => 'make into redirect',
-					'i' => 'ignore this citation',
-					), 'Source not found: ' . $citename);
-				switch(getinput()) {
+			} else {
+				$cmd = $this->menu(array(
+					'head' => 'Source not found: ' . $citename,
+					'options' => array(
+						'' => 'add source',
+						'q' => 'quit adding sources',
+						'r' => 'make into redirect',
+						'i' => 'ignore this citation',
+					),
+				));
+				switch($cmd) {
 					case 'q': $this->shutdown();
 					case 'r':
 						if(!$csvlist->add_redirect(array('handle' => $citename)))
 							$this->shutdown();
 						$this->refs[$cite] = $this->cite($target);
 						break;
-					default:
+					case 'i': continue 2;
+					case '':
 						if($csvlist->add_entry(new FullFile($citename, 'n'), array('isnew' => true))) {
 							$this->refs[$cite] = $this->cite($cite);
-							break;
 						}
-						else
+						else {
 							echo 'Could not resolve source: ' . $citename . PHP_EOL;
-					case 'i': continue 2;
+						}
+						break;
 				}
 			}
 		}

@@ -393,7 +393,7 @@ class FullFile extends ListEntry {
 					continue;
 				}
 				$this->p->needsave();
-				logwrite("File " . $this->name . " renamed to " . $newname . " (check)." . PHP_EOL);
+				$this->p->log("File " . $this->name . " renamed to " . $newname . " (check)." . PHP_EOL);
 				if($paras['domove']) {
 					if(!exec_catch("mv -n " . $this->path() . " " . $searchres->path()))
 						echo "Error moving file $this->name to $searchres->name." . PHP_EOL;

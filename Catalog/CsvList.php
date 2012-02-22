@@ -130,6 +130,7 @@ class CsvList extends FileList {
 			'execute' => 'callmethod'),
 	);
 	protected static $fileloc = CATALOG;
+	protected static $logfile = CATALOG_LOG;
 	protected static $childclass = 'FullFile';
 	/* core utils */
 	function __construct() {
@@ -375,7 +376,7 @@ class CsvList extends FileList {
 			return false;
 		}
 		$date = new DateTime();
-		logwrite(PHP_EOL . PHP_EOL . 'check() session ' . $date->format('Y-m-d H:i:s') . PHP_EOL);
+		$this->log(PHP_EOL . PHP_EOL . 'check() session ' . $date->format('Y-m-d H:i:s') . PHP_EOL);
 		try {
 			// check whether all files in the catalog are in the actual library
 			$this->csvcheck();

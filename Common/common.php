@@ -31,19 +31,6 @@ if(mb_internal_encoding('UTF-8') === false) {
 	echo "Unable to set encoding" . PHP_EOL;
 	exit(1);
 }
-function logwrite($in) {
-// writes something to the log file; requires $logfile to be set to a file
-	global $log, $logfile;
-	if(!$logfile)
-		mydie("Call to " . __FUNCTION__ . " without a set logfile");
-	if(!$log)
-		$log = fopen($logfile, "a");
-	// write array as CSV
-	if(is_array($in))
-		fputcsv($log, $in);
-	else
-		fwrite($log, $in);
-}
 $eclog = BPATH . '/Misc/log';
 function exec_catch($cmd, $debug = false) {
 // makes command and catches output; returns TRUE if successful (i.e., return status = 0), FALSE if unsuccessful

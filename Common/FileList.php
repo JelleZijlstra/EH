@@ -25,6 +25,7 @@ abstract class FileList extends ExecuteHandler {
 	protected $c; //array of children
 	protected $labels; // first line of CSV file
 	protected static $fileloc; // where the file lives that we get our list from
+	protected static $logfile; // location of the log file
 	protected static $childclass; // name of the class that children need to be a member of
 	// array of functions for which __call should not resolve redirects. Entries are in the form array('FullFile', 'isredirect')
 	public static $resolve_redirect_exclude = array();
@@ -1087,6 +1088,32 @@ abstract class FileList extends ExecuteHandler {
 			if($listz_paras['into']) {
 				$file->set(array($listz_paras['into'] => $z));
 			}
+		}
+		return true;
+	}
+	/* logging */
+	public function log($msg) {
+		if(static::$logfile === NULL) {
+			throw new EHException(
+				"Call to " . __METHOD__ . " without a set logfile",
+				EHException::E_ERROR
+			);
+		}
+		static $log = false;
+		if($log === false) {
+			$log = fopen(static::$logfile, "a");
+			if($log === false) {
+				throw new EHException(
+					"Unable to open logfile",
+					EHException::E_ERROR
+				);
+			}
+		}
+		// write array as CSV
+		if(is_array($msg)) {
+			fputcsv($log, $msg);
+		} else {
+			fwrite($log, $msg);
 		}
 		return true;
 	}

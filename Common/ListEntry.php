@@ -190,8 +190,10 @@ abstract class ListEntry extends ExecuteHandler {
 		return $this->cli($paras);
 	}
 	public function log($msg, $writefull = true) {
-		logwrite($msg . ' (file ' . $this->name . '):' . PHP_EOL);
-		if($writefull) logwrite($this->toarray());
+		$this->p->log($msg . ' (file ' . $this->name . ')' . PHP_EOL);
+		if($writefull) {
+			$this->p->log($this->toarray());
+		}
 	}
 	protected function listproperties() {
 	// list the user-visible properties of the object

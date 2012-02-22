@@ -402,7 +402,9 @@ function parse_paper($infile) {
 	return fileparse('paper', $infile);
 	global $csvlist, $paper_p;
 	if(!$csvlist->citetype) $citetype = 'paper';
-	if(!($text = @file_get_contents($infile))) mydie('Failed to open file');
+	if(!($text = file_get_contents($infile))) {
+		throw new EHException('Failed to open file', EHException::E_FATAL);
+	}
 	if(!$paper_p) $paper_p = new Parser('paper');
 	$parsed = $paper_p($text);
 	$newname = str_replace('.', '-parsed.', $infile);

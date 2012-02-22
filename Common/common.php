@@ -25,6 +25,8 @@ else {
 	require_once("EHICore.php");
 	define('EHI_LOADED', 0);
 }
+// load exceptions
+require_once(BPATH . '/Common/EHException.php');
 
 // set encoding
 if(mb_internal_encoding('UTF-8') === false) {
@@ -56,12 +58,6 @@ function escape_shell($in) {
 	$in = escapeshellcmd($in);
 	$in = preg_replace("/ /", "\ ", $in);
 	return $in;
-}
-function mydie($message) {
-	global $debug;
-	if($debug) debug_print_backtrace();
-	echo $message . PHP_EOL;
-	die(1);
 }
 function revert($list) {
 // reverts to most recently edited file in Backup folder

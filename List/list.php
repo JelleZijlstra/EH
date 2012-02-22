@@ -20,6 +20,6 @@ else switch($argv[1]) {
 		require_once('TaxonList.php');
 		TaxonList::wikipublish(); break;
 	// die
-	default: mydie("Invalid argument");
+	default: throw new EHException("Invalid argument", EHException::E_FATAL);
 }
 ?>

@@ -2,7 +2,7 @@
 <?
 require_once(__DIR__ . '/../Common/common.php');
 // don't load catalog when we have an argument that doesn't need it
-if(!isset($argv[1]) or !in_array($argv[1], array('backup', 'revert', 'diff', 'findcode', 'test')))
+if(!isset($argv[1]) or !in_array($argv[1], array('backup', 'revert', 'diff', 'test')))
 	require_once(BPATH . '/Catalog/load.php');
 else
 	require_once(BPATH . '/Catalog/settings.php');
@@ -18,7 +18,6 @@ else switch($argv[1]) {
 		break;
 	case 'revert': revert($catalog); break;
 	case 'diff': diff($catalog); break;
-	case 'findcode': findcode($argv[2]); break;
 	case 'test': break;
 	default:
 		// execute arguments as command

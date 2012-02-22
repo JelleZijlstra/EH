@@ -77,9 +77,6 @@ function getbackup($list) {
 		$file = explode(' ', $file);
 	return array_pop($backuplist[1]);
 }
-function findcode($pattern) {
-	echo shell_exec('grep -n \'' . $pattern . '\' *.php');
-}
 function makemenu($in, $head = 'MENU') {
 	echo $head . PHP_EOL;
 	foreach($in as $cmd => $desc) {

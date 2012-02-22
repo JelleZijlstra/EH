@@ -1096,7 +1096,7 @@ abstract class FileList extends ExecuteHandler {
 		if(static::$logfile === NULL) {
 			throw new EHException(
 				"Call to " . __METHOD__ . " without a set logfile",
-				EHException::E_ERROR
+				EHException::E_RECOVERABLE
 			);
 		}
 		static $log = false;
@@ -1105,7 +1105,7 @@ abstract class FileList extends ExecuteHandler {
 			if($log === false) {
 				throw new EHException(
 					"Unable to open logfile",
-					EHException::E_ERROR
+					EHException::E_RECOVERABLE
 				);
 			}
 		}

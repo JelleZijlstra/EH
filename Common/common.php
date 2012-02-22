@@ -47,10 +47,6 @@ function exec_catch($cmd, $debug = false) {
 function getinput($limit = 500) {
 	return trim(fgets(STDIN, $limit));
 }
-function getinput_label($label, $limit = 500) {
-	echo $label . ': ';
-	return getinput($limit);
-}
 function escape_shell($in) {
 // escapes a string for use as a shell argument
 	$in = escapeshellcmd($in);

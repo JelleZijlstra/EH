@@ -449,7 +449,7 @@ class ExecuteHandler extends EHICore {
 							}
 							// else accept anything
 							else {
-								$menu_paras['validfunc'] = function($in) {
+								$menu_paras['validfunction'] = function($in) {
 									return true;
 								};
 							}
@@ -985,12 +985,6 @@ class ExecuteHandler extends EHICore {
 			return false;
 		}
 		return ${$to}->cli();
-	}
-	static protected function setifneeded(&$paras, $field) {
-	// deprecated; use process_paras instead
-		if(isset($paras[$field]))
-			return;
-		$paras[$field] = getinput_label(ucfirst($field));
 	}
 	static protected function testregex($in) {
 	// tests whether a regex pattern is valid

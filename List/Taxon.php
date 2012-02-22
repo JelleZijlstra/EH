@@ -39,8 +39,9 @@ class Taxon extends ListEntry {
 	// $in: input data (array or string)
 	// $code: kind of FullFile to make
 		global $csvlist;
-		if($csvlist) $this->p = $csvlist;
-		if(!$code) return;
+		if($csvlist) {
+			$this->p = $csvlist;
+		}
 		switch($code) {
 			case 'f': // loading from file
 				if(!is_array($in)) {
@@ -66,8 +67,7 @@ class Taxon extends ListEntry {
 				$this->misc = json_decode($in[13], true);
 				break;
 			case 'n': // new file
-				$this->name = $in;
-				$this->newadd();
+				$this->newadd($in);
 				break;
 		}
 	}
@@ -510,87 +510,101 @@ class Taxon extends ListEntry {
 		}
 		return false;
 	}
-	public function newadd() {
+	public function newadd(array $paras) {
+		// fields to fill
 		$fields = array(
-			'parent', 'rank', 'authority', 'year', 'movedgenus', 'comments', 
-			'status', 'citation',
+			'name', 'parent', 'rank', 'authority', 'year', 'movedgenus', 
+			'comments', 'status', 'citation',
 		);
-		if($pos = strpos($this->name, ' ')) {
-			$this->set(array(
-				'parent' => substr($this->name, 0, $pos), 
-				'verbose' => true, 
-				'easy' => true
-			));
-		}
-		foreach($fields as $field) {
-			if($this->$field) continue;
-			if($field === 'parent' and $this->detectparent()) continue;
-			if($field === 'rank' and $this->detectrank()) continue;
-			if($field === 'movedgenus' and $this->rank !== 'species') continue;
-			self::setifneeded($paras, $field);
-			if($paras[$field] === 'q') {
-				$this->discardthis = true;
-				return false;
-			} else if($paras[$field]) {
-				$this->$field = $paras[$field];
+		// set things for species
+		if(isset($paras['name'])) {
+			$pos = strpos($paras['name'], ' ');
+			// if there is a space, this is a species
+			if($pos !== false) {
+				$paras['rank'] = 'species';
+				$paras['parent'] = substr($paras['name'], 0, $pos);
 			}
 		}
+		// detect rank
+		if(!isset($paras['rank'])) {
+			$rank = $this->detectrank($paras);
+			if($rank !== false) {
+				$paras['rank'] = $rank;
+			}
+		}
+		// movedgenus == 0 if this is not a species
+		if(!isset($paras['movedgenus']) and isset($paras['rank']) 
+			and $paras['rank'] !== 'species') {
+			$paras['movedgenus'] = 0;
+		}
+		// so that we kill this if the user interrupts during pp call
+		$this->discardthis = true;
+		// ask user
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checkfunc' => function($in) use($fields) {
+				return in_array($in, $fields, true);
+			},
+			'askifempty' => $fields,
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$this->discardthis = false;
+		$paras['verbose'] = true;
+		$paras['easy'] = true;
+		$this->set($paras);
+		return true;
 	}
-	private function detectparent() {
-		if($this->rank === 'species') {
-			$parent = substr($this->name, 0, strpos($this->name, ' '));
-			if($this->p->has($parent)) {
-				$this->parent = $parent;
-				return true;
+	private function detectrank(array $paras) {
+		if(isset($paras['parent'])) {
+			$parent = $paras['parent'];
+			$sisrank = $this->setranktosisters($parent);
+			if($sisrank !== false) {
+				return $sisrank;
 			}
-			else
-				return false;
+			$parentrank = $this->p->get($parent, 'rank');
+			if($parentrank === 'genus') {
+				return 'species';
+			} else if($parentrank === 'subtribe') {
+				return 'genus';
+			}
+		}
+		if(isset($paras['name'])) {
+			$name = $paras['name'];
+			if(substr($name, -3) === 'ina') {
+				return 'subtribe';
+			} else if(substr($name, -3) === 'ini') {
+				return 'tribe';
+			} else if(substr($name, -4) === 'inae') {
+				return 'subfamily';
+			} else if(substr($name, -4) === 'idae') {
+				return 'family';
+			} else if(substr($name, -5) === 'oidea') {
+				return 'superfamily';
+			}
 		}
 		return false;
 	}
-	private function detectrank() {
-		if($this->rank) return true;
-		if($this->setranktosisters()) return true;
-		$parentrank = $this->p->get($this->parent, 'rank');
-		if($parentrank === 'genus')
-			$this->rank = 'species';
-		else if($parentrank === 'subtribe')
-			$this->rank = 'genus';
-		else if(substr($this->name, -3) === 'ina')
-			$this->rank = 'subtribe';
-		else if(substr($this->name, -3) === 'ini')
-			$this->rank = 'tribe';
-		else if(substr($this->name, -4) === 'inae')
-			$this->rank = 'subfamily';
-		else if(substr($this->name, -4) === 'idae')
-			$this->rank = 'family';
-		else if(substr($this->name, -5) === 'oidea')
-			$this->rank = 'superfamily';
-		return $this->rank ? true : false;
-	}
-	private function setranktosisters() {
-		$sisters = $this->p->getchildren($this->parent);
-		if(!$sisters)
+	private function setranktosisters($parent) {
+		$sisters = $this->p->getchildren($parent);
+		if(!$sisters) {
 			return false;
+		}
 		foreach($sisters as $key => $sister) {
 			$nrank = $this->p->get($sister, 'rank');
-			if(!$nrank)
+			if(!$nrank) {
 				return false;
-			if(!isset($rank))
+			}
+			if(!isset($rank)) {
 				$rank = $nrank;
-			else if($rank !== $nrank)
+			} else if($rank !== $nrank) {
 				return false;
+			}
 		}
 		if(!isset($rank))
 			return false;
-		$this->set(array(
-			'rank' => $rank,
-			'verbose' => true,
-			'easy' => true
-		));
-		return true;
+		return $rank;
 	}
-	static $rankendings = array('superfamily' => 'oidea',
+	static $rankendings = array(
+		'superfamily' => 'oidea',
 		'family' => 'idae',
 		'subfamily' => 'inae',
 		'tribe' => 'ini',

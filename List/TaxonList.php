@@ -92,7 +92,8 @@ class TaxonList extends FileList {
 		$this->c[$paras['name']] = $file;
 		$this->par[$file->parent][$paras['name']] = $paras['name'];
 		if($paras['isnew']) {
-			$this->log($file->name, 'Added file to catalog');
+			// No logging in List for now
+			//$this->log($file->name, 'Added file to catalog');
 			echo "Added to catalog!" . PHP_EOL;
 			$this->needsave();
 			$this->format($file->name);
@@ -237,6 +238,9 @@ class TaxonList extends FileList {
 			'name' => __FUNCTION__,
 			'synonyms' => array(0 => 'name'),
 			'checklist' => array('name' => 'Name of new taxon'),
+			'checkfunc' => function($in) {
+				return property_exists('Taxon', $in);
+			},
 			'askifempty' => array('name'),
 			'checkparas' => array(
 				'name' => function($in) {
@@ -251,7 +255,7 @@ class TaxonList extends FileList {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		return $this->add_entry(
-			new Taxon($paras['name'], 'n'),
+			new Taxon($paras, 'n'),
 			array('isnew' => true)
 		);
 	}

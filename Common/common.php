@@ -88,14 +88,6 @@ function wikify($in) {
 	return preg_replace(array("/'/", "/<\/?i>/", "/(?<!')<nowiki>'<\/nowiki>(?!')/"), array("<nowiki>'</nowiki>", "''", "'"), $in);
 }
 /* small utilities */
-function trimplus($in) {
-// trims all cruft from a field
-	return trim(preg_replace("/[\.;\(]$/", "", trim($in)));
-}
-function trimdoi($in) {
-// similar, for DOIs specifically
-	return trim(preg_replace("/([\.;\(]$|^[:]|^doi:)/", "", trim($in)));
-}
 function simplify($in) {
 	return strtolower(preg_replace('/[^a-zA-Z0-9]|<\/?i>/u', '', $in));
 }

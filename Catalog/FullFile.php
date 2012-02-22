@@ -2569,7 +2569,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(preg_match_all("/(doi|DOI)\s*(\/((full|abs|pdf)\/)?|:|\.org\/)?\s*(?!URL:)([^\s]*?),?\s/su", $this->pdfcontent, $matches)) {
 			echo "Detected possible DOI." . PHP_EOL;
 			foreach($matches[5] as $match) {
-				$doi = trimdoi($match);
+				$doi = self::trimdoi($match);
 				// PNAS tends to return this
 				if(preg_match('/^10.\d{4}\/?$/', $doi))
 					$doi = preg_replace("/.*?10\.(\d{4})\/? ([^\s]+).*/s", "10.$1/$2", $this->pdfcontent);
@@ -2694,7 +2694,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				'r' => "re-use a citation from a NOFILE entry",
 			),
 			'processcommand' => function($in) {
-				return trimdoi(preg_replace("/doi:\s*/", "", $in));
+				return FullFile::trimdoi($in);
 			},
 			'validfunction' => function($in, $options) {
 				if(in_array($in, $options))
@@ -3166,6 +3166,9 @@ Content-Disposition: attachment
 			}
 		}
 		return true;
+	}
+	public static function trimdoi($in) {
+		return trim(preg_replace("/([\.;\(]$|^[:]|^doi:\s*)/", "", trim($in)));
 	}
 }
 ?>

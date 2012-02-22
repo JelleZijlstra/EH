@@ -956,6 +956,9 @@ class FullFile extends ListEntry {
 		), 'Command syntax:');
 		while(true) {
 			$cmd = $this->getline('edittitle> ');
+			if($cmd === '') {
+				continue;
+			}
 			if(preg_match('/^([a-z]\d+(-\d+)?|m.*)$/', $cmd)) {
 				$n = substr($cmd, 1);
 				if(strpos($n, '-') !== false) {

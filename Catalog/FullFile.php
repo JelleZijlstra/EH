@@ -1827,7 +1827,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				if($this->p->has($newname))
 					echo 'Warning: file already exists' . PHP_EOL;
 				$this->name = $newname;
-				$cmd = 'mv ' . TEMPPATH . '/' . escape_shell($oldname) . ' ' . TEMPPATH . '/' . escape_shell($newname);
+				$cmd = 'mv ' 
+					. escapeshellarg(TEMPPATH . '/' . $oldname) . ' ' 
+					. escapeshellarg(TEMPPATH . '/' . $newname);
 				if(!$this->shell($cmd)) {
 					echo "Error moving file" . PHP_EOL;
 				}

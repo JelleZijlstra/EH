@@ -57,12 +57,6 @@ function escape_shell($in) {
 	$in = preg_replace("/ /", "\ ", $in);
 	return $in;
 }
-function escape_regex($in) {
-	return str_replace(
-		array("/",  "[",  "]",  "|",  ".",  "*",  "?",  "(",  ")",  "+",  "{",  "}",  "^",  "$"),
-		array("\/", "\[", "\]", "\|", "\.", "\*", "\?", "\(", "\)", "\+", "\{", "\}", "\^", "\$"),
-		$in);
-}
 function mydie($message) {
 	global $debug;
 	if($debug) debug_print_backtrace();

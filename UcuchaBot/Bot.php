@@ -340,7 +340,7 @@ class Bot extends Snoopy {
 		echo "Done: ". $tfa . PHP_EOL;
 		echo "Editing $writepage... " . PHP_EOL;
 		$wpfa = $this->fetchwp(array($writepage));
-		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?)/";
+		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". preg_quote($tfa, '/') . "(\|[^\]]+)?\]\](''|\")?)/";
 		$wpfa = preg_replace($pattern, "{{FA/BeenOnMainPage|$1}}", $wpfa);
 		$this->writewp(array(
 				'page' => $writepage,
@@ -563,7 +563,7 @@ class Bot extends Snoopy {
 		echo "Done: ". $tfa . PHP_EOL;
 		echo "Editing $writepage..." . PHP_EOL;
 		$wpfa = $this->fetchwp(array($writepage));
-		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". escape_regex($tfa) . "(\|[^\]]+)?\]\](''|\")?)/";
+		$pattern = "/(?<!BeenOnMainPage\||BeenOnMainPage\|\"|BeenOnMainPage\|'')((''|\")?\[\[". preg_quote($tfa, '/') . "(\|[^\]]+)?\]\](''|\")?)/";
 		$wpfa = preg_replace($pattern, "{{FA/BeenOnMainPage|$1}}", $wpfa);
 		$this->writewp(array(
 			'page' => $writepage,
@@ -674,7 +674,7 @@ class Bot extends Snoopy {
 			$fac);
 		// put in new line
 		$fac = preg_replace(
-			'/(?={{' . escape_regex($newloc) . '}})/u',
+			'/(?={{' . preg_quote($newloc, '/') . '}})/u',
 			"\n== Older nominations ==\n",
 			$fac,
 			1,

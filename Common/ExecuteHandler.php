@@ -1012,23 +1012,80 @@ class ExecuteHandler extends EHICore {
 				$this->config[$key] = $value;
 		}
 	}
-	private function shell(array $paras) {
+	protected function shell(array $paras) {
+		// TODO: set up our own shell process with a persistent pipe, so we can
+		// keep state in the shell.
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
-			'synonyms' => array(0 => 'cmd'),
+			'toarray' => 'cmd',
+			'synonyms' => array(
+				0 => 'cmd',
+				'o' => 'stdout',
+				'e' => 'stderr',
+			),
+			'checklist' => array(
+				'cmd' => 'Command to be executed',
+				'stdout' => 'Place to send stdout to',
+				'append-out' => 'Whether to append to the stdout file',
+				'stderr' => 'Place to send stderr to',
+				'append-err' => 'Whether to append to the stderr file',
+				'input' => 'Place to get input from',
+				'input-string' => 'String to send as stdin input',
+				'return' => 'What to return. Options are "success" (whether the command returned exit status 0, "output" (the stdout output), and "exitvalue" (the exit code of the command).'
+			),
+			'default' => array(
+				'stdout' => false,
+				'append-out' => true,
+				'stderr' => isset($paras['_ehphp']) ? false : '/dev/null',
+				'append-err' => true,
+				'input' => false,
+				'input-string' => false,
+				'return' => 'success',
+			),
+			'checkparas' => array(
+				'return' => function($in) {
+					return in_array(
+						$in, array('success', 'output', 'exitvalue'), true
+					);
+				},
+			),
 			'errorifempty' => array('cmd'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$cmd = $paras['cmd'];
 		// cd won't actually change the shell until we do some special magic
-		if(preg_match('/^cd /', $paras['cmd'])) {
-			$dir = substr($paras['cmd'], 3);
+		if(substr($cmd, 0, 3) === 'cd ') {
+			$dir = substr($cmd, 3);
 			// handle home directory
 			if($dir[0] === '~') {
 				$home = trim(shell_exec('echo $HOME'));
 				$dir = preg_replace('/^~/u', $home, $dir);
 			}
-			chdir($dir);
+			return chdir($dir);
+		} else {
+			if($paras['stdout'] !== false) {
+				$cmd .= $paras['append-out'] ? ' >> ' : ' > ';
+				$cmd .= $paras['stdout'];
+			}
+			if($paras['stderr'] !== false) {
+				$cmd .= $paras['append-err'] ? ' 2>> ' : ' 2> ';
+				$cmd .= $paras['stderr'];
+			}
+			if($paras['input'] !== false) {
+				$cmd .= ' < ' . $paras['input'];
+			}
+			if($paras['input-string'] !== false) {
+				$cmd .= " <<INPUT\n" . $paras['input-string'] . "\nINPUT";
+			}
+			exec($cmd, $output, $exitval);
+			echo implode(PHP_EOL, $output) . PHP_EOL;
+			switch($paras['return']) {
+				case 'success':
+					return ($exitval === 0);
+				case 'output':
+					return $output;
+				case 'exitvalue':
+					return $exitval;
+			}
 		}
-		else
-			echo shell_exec($paras['cmd']);
 	}
 }

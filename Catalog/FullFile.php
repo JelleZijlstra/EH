@@ -224,38 +224,34 @@ class FullFile extends ListEntry {
 		if(!$this->isfile()) {
 			return false;
 		}
-		switch($paras['type']) {
-			case 'shell':
-				$process = function($in) {
-					return escape_shell($in);
-				};
-				break;
-			case 'url':
-				$process = function($in) {
-					return str_replace('%2F', '/', rawurlencode($in));
-				};
-				break;
-			case 'none':
-				$process = function($in) {
-					return $in;
-				};
-				break;
-		}
 		// if there is no folder, just return filename and hope for the best
-		if($this->folder === NULL)
-			$out = $process($this->name);
-		else {
-			$out = $process(LIBRARY) . "/" . $process($this->folder);
+		if($this->folder === NULL) {
+			$out = $this->name;
+		} else {
+			$out = LIBRARY . "/" . $this->folder;
 			if($this->sfolder) {
-				$out .= "/" . $process($this->sfolder);
+				$out .= "/" . $this->sfolder;
 				if($this->ssfolder)
-					$out .= "/" . $process($this->ssfolder);
+					$out .= "/" . $this->ssfolder;
 			}
 			if(!$paras['folder'])
-				$out .= "/" . $process($this->name);
+				$out .= "/" . $this->name;
 		}
-		if($paras['print'])
+		// process output
+		switch($paras['type']) {
+			case 'shell':
+				$out = escapeshellarg($out);
+				break;
+			case 'url':
+				$out = str_replace('%2F', '/', rawurlencode($out));
+				break;
+			case 'none':
+				break;
+		}		
+
+		if($paras['print']) {
 			echo $out . PHP_EOL;
+		}
 		return $out;
 	}
 	public function openf(array $paras = array()) {
@@ -2974,7 +2970,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 	}
 	public function removefirstpage() {
-		$tmppath = $this->path(array('folder' => true)) . "/tmp.pdf";
+		$path = $this->path(array('folder' => true, 'type' => 'none'));
+		$tmppath =  escapeshellarg($path . "/tmp.pdf");
 		$cmd = "gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dFirstPage=2 -sOUTPUTFILE=$tmppath {$this->path()}";
 		exec_catch($cmd);
 		// open files for review

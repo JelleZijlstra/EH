@@ -716,7 +716,8 @@ class ExecuteHandler extends EHICore {
 		$cmd = array();
 		$cmdlen = 0;
 		$keypos = 0;
-		echo $paras['prompt'];
+		// always put cursor at beginning of line, and print prompt
+		echo "\033[200D" . $paras['prompt'];
 		while(true) {
 			// get input
 			$c = $this->fgetc(STDIN);
@@ -961,6 +962,11 @@ class ExecuteHandler extends EHICore {
 	public function test($paras) {
 	// Test function that might do anything I currently want to test
 	// Currently, returning its argument
+		// and telling us what functions etcetera we have defined
+		var_dump(get_defined_vars());
+		var_dump(get_defined_functions());
+		var_dump(get_defined_constants());
+		var_dump(get_declared_classes());
 		return $paras[0];
 	}
 	/* Miscellaneous stuff */

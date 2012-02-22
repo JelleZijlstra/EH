@@ -45,9 +45,7 @@ function exec_catch($cmd, $debug = false) {
 	return (trim($result) == 0);
 }
 function getinput($limit = 500) {
-	global $stdin;
-	if(!$stdin) $stdin = fopen('php://stdin', 'r');
-	return trim(fgets($stdin, $limit));
+	return trim(fgets(STDIN, $limit));
 }
 function getinput_label($label, $limit = 500) {
 	echo $label . ': ';

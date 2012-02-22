@@ -273,10 +273,12 @@ class FullFile extends ListEntry {
 		}
 		switch($paras['place']) {
 			case 'catalog':
-				exec_catch('open ' . $this->path());
+				$this->shell('open ' . $this->path());
 				break;
 			case 'temp':
-				exec_catch("open " . TEMPPATH . "/" . escape_shell($this->name));
+				$this->shell(
+					"open " . escapeshellarg(TEMPPATH . "/" . $this->name)
+				);
 				break;
 		}
 		return true;
@@ -295,11 +297,14 @@ class FullFile extends ListEntry {
 			$cmd = $this->ynmenu('Are you sure you want to remove file ' . $this->name . '?');
 		switch($cmd) {
 			case 'y':
-				if($this->isfile()) exec_catch('rm ' . $this->path());
+				if($this->isfile()) {
+					$this->shell('rm ' . $this->path());
+				}
 				$this->log('Removed file');
 				$this->p->remove_entry($this->name);
 				echo "File $this->name removed." . PHP_EOL;
-				unset($this->name); // this will prevent CsvList::save() from writing this file
+				// this will prevent CsvList::save() from writing this file
+				unset($this->name);
 				$this->p->needsave();
 				break;
 			case 'n': break;
@@ -335,7 +340,7 @@ class FullFile extends ListEntry {
 		// move the physical file
 		if($this->isfile() && ($newpath = $this->path())) {
 			$cmd = 'mv -n ' . $oldpath . ' ' . $newpath;
-			if(!exec_catch($cmd)) {
+			if(!$this->shell($cmd)) {
 				echo 'Error moving file ' . $oldname;
 				return false;
 			}
@@ -391,7 +396,7 @@ class FullFile extends ListEntry {
 				$this->p->needsave();
 				$this->p->log("File " . $this->name . " renamed to " . $newname . " (check)." . PHP_EOL);
 				if($paras['domove']) {
-					if(!exec_catch("mv -n " . $this->path() . " " . $searchres->path()))
+					if(!$this->shell("mv -n " . $this->path() . " " . $searchres->path()))
 						echo "Error moving file $this->name to $searchres->name." . PHP_EOL;
 				}
 				$oldname = $this->name;
@@ -1823,12 +1828,19 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					echo 'Warning: file already exists' . PHP_EOL;
 				$this->name = $newname;
 				$cmd = 'mv ' . TEMPPATH . '/' . escape_shell($oldname) . ' ' . TEMPPATH . '/' . escape_shell($newname);
-				if(!exec_catch($cmd)) echo "Error moving file" . PHP_EOL;
+				if(!$this->shell($cmd)) {
+					echo "Error moving file" . PHP_EOL;
+				}
 				break;
 			case 'n':
-				$cmd = 'mv ' . TEMPPATH . '/' . escape_shell($this->name) . ' ' . TEMPPATH . '/Not\ to\ be\ cataloged/' . escape_shell($this->name);
-				if(!exec_catch($cmd))
+				$cmd = 'mv ' 
+					. escapeshellarg(TEMPPATH . '/' . $this->name) . ' '
+					. escapeshellarg(
+						TEMPPATH . '/Not to be cataloged/' . $this->name
+					);
+				if(!$this->shell($cmd)) {
 					echo "Error moving file" . PHP_EOL;
+				}
 				return 1;
 			case '': break 2;
 		}
@@ -1849,15 +1861,18 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$paras['lslist'][$this->name]->openf();
 						break;
 					case 'r':
-						$cmd = 'mv ' . TEMPPATH . '/' .
-							escape_shell($this->name) . ' ' .
-							$paras['lslist'][$this->name]->path();
-						if(!exec_catch($cmd))
+						$cmd = 'mv '
+							. escapeshellarg(TEMPPATH . '/' . $this->name) . ' ' 
+							. $paras['lslist'][$this->name]->path();
+						if(!$this->shell($cmd)) {
 							echo "Error moving file" . PHP_EOL;
+						}
 						$this->p->edit($this->name);
 						return 1;
 					case 'd':
-						exec_catch('rm ' . TEMPPATH . '/' . escape_shell($this->name));
+						$this->shell('rm '
+							. escapeshellarg(TEMPPATH . '/' . $this->name)
+						);
 						return 1;
 					case 'q': return 0;
 					default:
@@ -1959,12 +1974,14 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 			}
 
-			$command = "mv -n " . TEMPPATH . "/" . escape_shell($oldname) . " " . $this->path();
+			$command = 'mv -n ' . escapeshellarg(TEMPPATH . '/' . $oldname) 
+				. ' ' . $this->path();
 			// move file
-			if(!exec_catch($command))
-				echo "Error moving file $this->name into library. Type 'q' for \"Folder\" to quit this file." . PHP_EOL;
-			else
+			if($this->shell($command)) {
 				break;
+			} else {
+				echo "Error moving file {$this->name} into library. Type 'q' for \"Folder\" to quit this file." . PHP_EOL;
+			}
 		}
 		return $this->add() ? 2 : 1;
 	}
@@ -2113,7 +2130,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$this->triedfindurl = true;
 						return false;
 					case 'o':
-						exec_catch("open '" . str_replace("'", "\'", $result->link) . "'");
+						$this->shell('open ' . escapeshellarg($result->link));
 						break;
 					case 'i':
 						$this->inform();
@@ -2196,7 +2213,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$this->hdl = '2246/' . $matches[1];
 		}
 		else {
-			exec_catch('open \'' . $url . '\'');
+			$this->shell('open ' . escapeshellarg($url));
 			$hdl = $this->getline('HDL: ');
 			if($hdl === 'q') return false;
 			if(strpos($hdl, 'http') !== false) {
@@ -2624,7 +2641,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				),
 				'process' => array(
 					'o' => function() use(&$url) {
-						exec_catch("open '" . str_replace("'", "\'", $url) . "'");
+						$this->shell('open ' . escapeshellarg($url));
 					},
 				),
 			));
@@ -2927,16 +2944,18 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	public function burst() {
 	// bursts a PDF file into several files
 		echo 'Bursting file ' . $this->name . '. Opening file.' . PHP_EOL;
-		$cmd = 'open \'' . BURSTPATH . '/' . $this->name . '\'';
-		exec_catch($cmd);
+		$cmd = 'open ' . escapeshellarg(BURSTPATH . '/' . $this->name);
+		$this->shell($cmd);
 		makemenu(array('q' => 'quit',
 			'c' => 'continue with the next file'),
 			'Enter file names and page ranges');
 		while(true) {
 			switch($name = $this->getline('File name: ')) {
 				case 'c':
-					$cmd = 'mv -n \'' . BURSTPATH . '/' . $this->name . '\' \'' . BURSTPATH . '/Old/' . $this->name . '\'';
-					if(!exec_catch($cmd))
+					$cmd = 'mv -n ' 
+						. escapeshellarg(BURSTPATH . '/' . $this->name) . ' ' 
+						. escapeshellarg(BURSTPATH . '/Old/' . $this->name);
+					if(!$this->shell($cmd))
 						echo 'Error moving file ' . $this->name . ' to Old' . PHP_EOL;
 					return true;
 				case 'q': throw new StopException('burst');
@@ -2960,8 +2979,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$to = $srange[1];
 				break;
 			}
-			$cmd = 'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dFirstPage=' . $from . ' -dLastPage=' . $to . ' -sOUTPUTFILE=\'' . TEMPPATH . '/' . $name . '\' \'' . BURSTPATH . '/' . $this->name . '\'';
-			if(!exec_catch($cmd)) {
+			$cmd = 'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dFirstPage=' 
+				. escapeshellarg($from) . ' -dLastPage=' . escapeshellarg($to) 
+				. ' -sOUTPUTFILE=' . escapeshellarg(TEMPPATH . '/' . $name)
+				. ' ' . BURSTPATH . '/' . $this->name . '\'';
+			if(!$this->shell($cmd)) {
 				echo 'Could not burst PDF' . PHP_EOL;
 				return false;
 			}
@@ -2971,18 +2993,18 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	public function removefirstpage() {
 		$path = $this->path(array('folder' => true, 'type' => 'none'));
-		$tmppath =  escapeshellarg($path . "/tmp.pdf");
+		$tmppath = escapeshellarg($path . "/tmp.pdf");
 		$cmd = "gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dFirstPage=2 -sOUTPUTFILE=$tmppath {$this->path()}";
-		exec_catch($cmd);
+		$this->shell($cmd);
 		// open files for review
-		exec_catch("open $tmppath");
+		$this->shell("open $tmppath");
 		$this->openf();
 		$cmd = $this->ynmenu("Do you want to replace the file?");
 		switch($cmd) {
 			case 'y':
-				return exec_catch("mv $tmppath {$this->path()}");
+				return $this->shell("mv $tmppath {$this->path()}");
 			case 'n':
-				exec_catch('rm ' . $tmppath);
+				$this->shell('rm ' . $tmppath);
 				return false;
 		}
 	}
@@ -3063,12 +3085,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			echo 'No URL to open' . PHP_EOL;
 			return false;
 		}
-		return exec_catch("open '" . $url . "'");
+		return $this->shell("open '" . $url . "'");
 	}
 	public function searchgoogletitle() {
 	// searches for the title of the article in Google
 		$url = 'http://www.google.com/search?q=' . $this->googletitle();
-		return exec_catch("open '" . $url . "'");
+		return $this->shell("open '" . $url . "'");
 	}
 	public function gethost() {
 	// get the host part of the URL

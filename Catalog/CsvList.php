@@ -155,7 +155,10 @@ class CsvList extends FileList {
 			'checklist' => array( /* No paras */ ),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$date = new DateTime();
-		exec_catch('cp ' . CATALOG . ' ' . BPATH . '/Catalog/Backup/catalog.csv.' . $date->format('YmdHis'));
+		$this->shell('cp ' . escapeshellarg(CATALOG) . ' ' 
+			. escapeshellarg(BPATH . '/Catalog/Backup/catalog.csv.' 
+				. $date->format('YmdHis'))
+		);
 		return true;
 	}
 	/* load related lists */

@@ -94,11 +94,11 @@ class AvidaInterface extends ExecuteHandler {
 		return true;
 	}
 	public function avida_config_default() {
-		if(!exec_catch("cp " . AVIDACONFIG . ".default " . AVIDACONFIG)) {
+		if(!$this->shell("cp " . AVIDACONFIG . ".default " . AVIDACONFIG)) {
 			echo "Error restoring default configuration" . PHP_EOL;
 			return false;
 		}
-		if(!exec_catch("cp " . AVIDAEVENTS . ".default " . AVIDAEVENTS)) {
+		if(!$this->shell("cp " . AVIDAEVENTS . ".default " . AVIDAEVENTS)) {
 			echo "Error restoring default configuration" . PHP_EOL;
 			return false;
 		}
@@ -234,10 +234,7 @@ class AvidaInterface extends ExecuteHandler {
 			'errorifempty' => array('org'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$cmd = "cp " . AVIDADIR . "/data/$org/$org " . AVIDADIR . "/" . $paras['org'];
-		if(!exec_catch($cmd))
-			$success = false;
-		else
-			$success = true;
+		$success = $this->shell($cmd);
 		// report organism fitness
 		$fp = file_get_contents(AVIDADIR . '/' . $paras['org']);
 		$count = preg_match("/# Fitness\.\.\.\.\.\.\.\.\.: (\d+\.\d+)/u", $fp, $matches);

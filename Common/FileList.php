@@ -339,19 +339,23 @@ abstract class FileList extends ExecuteHandler {
 			'default' => array('w' => false),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$this->saveifneeded();
-		exec_catch('cp ' . static::$fileloc . ' ' . static::$fileloc . '.save');
+		$this->shell('cp ' . escapeshellarg(static::$fileloc) . ' '
+			. escapeshellarg(static::$fileloc . '.save')
+		);
 		if($paras['w']) ob_start();
 		$this->doall(array(0 => 'format', 'askafter' => 0));
 		if($paras['w']) {
 			// TODO: get DATAPATH straight
 			file_put_contents(DATAPATH . 'formatoutput.txt', preg_replace('/Warning \(file: (.*?)\): /', '$1' . PHP_EOL, ob_get_contents()));
 			ob_end_clean();
-			exec_catch('edit ' . DATAPATH . 'formatoutput.txt');
+			$this->shell(
+				'edit ' . escapeshellarg(DATAPATH . 'formatoutput.txt')
+			);
 		}
 		// need to save here for the diff to work
 		$this->save();
-		echo shell_exec('diff ' . static::$fileloc . ' ' . static::$fileloc . '.save');
-		exec_catch('rm ' . static::$fileloc . '.save');
+		$this->shell('diff ' . static::$fileloc . ' ' . static::$fileloc . '.save');
+		$this->shell('rm ' . static::$fileloc . '.save');
 	}
 	/* listing, manipulating, and summarizing the whole list */
 	public function listmembers(array $paras) {

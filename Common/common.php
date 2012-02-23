@@ -34,16 +34,6 @@ if(mb_internal_encoding('UTF-8') === false) {
 	exit(1);
 }
 $eclog = BPATH . '/Misc/log';
-function exec_catch($cmd, $debug = false) {
-// makes command and catches output; returns TRUE if successful (i.e., return status = 0), FALSE if unsuccessful
-	global $eclog;
-	if($debug) echo $cmd . PHP_EOL;
-	$tmp = shell_exec("$cmd 2>$eclog");
-	if($debug) echo $tmp . PHP_EOL;
-	$result = shell_exec('echo $?');
-	if($debug) echo $result . PHP_EOL;
-	return (trim($result) == 0);
-}
 function getinput($limit = 500) {
 	return trim(fgets(STDIN, $limit));
 }
@@ -73,7 +63,7 @@ function convertfile($in, $out) {
 		shell_exec('/Applications/OpenOffice.org.app/Contents/MacOS/soffice -headless \'-accept="socket,host=127.0.0.1,port=8100;urp;"\' -nofirststartwizard &');
 		$started = true;
 	}
-	exec_catch('java -jar /Users/jellezijlstra/Documents/Programs/jodconverter-2.2.2/lib/jodconverter-cli-2.2.2.jar ' . $in . ' ' . $out);
+	shell_exec('java -jar /Users/jellezijlstra/Documents/Programs/jodconverter-2.2.2/lib/jodconverter-cli-2.2.2.jar ' . $in . ' ' . $out);
 	return true;
 }
 /* some stuff standard PHP mb is missing */

@@ -120,9 +120,6 @@ class ExecuteHandler extends EHICore {
 		if(!isset($command['desc'])) {
 			trigger_error('No documentation given for new command ' . $command['name'], E_USER_NOTICE);
 		}
-		if(!isset($command['arg'])) {
-			trigger_error('No listing of arguments given for new command ' . $command['name'], E_USER_NOTICE);
-		}
 		return true;
 	}
 	private function listcommands() {
@@ -273,7 +270,6 @@ class ExecuteHandler extends EHICore {
 				}
 			}
 			echo 'Description: ' . $cmd['desc'] . PHP_EOL;
-			echo 'Arguments: ' . $cmd['arg'] . PHP_EOL;
 			return true;
 		}
 		else {

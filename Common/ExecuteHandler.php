@@ -1034,6 +1034,7 @@ class ExecuteHandler extends EHICore {
 			),
 			'checklist' => array(
 				'cmd' => 'Command to be executed',
+				'arg' => 'Array of arguments to the command. These arguments are escaped by this command.',
 				'stdout' => 'Place to send stdout to',
 				'append-out' => 'Whether to append to the stdout file',
 				'stderr' => 'Place to send stderr to',
@@ -1045,6 +1046,7 @@ class ExecuteHandler extends EHICore {
 				'printout' => 'Whether to print the output',
 			),
 			'default' => array(
+				'arg' => false,
 				'stdout' => false,
 				'append-out' => true,
 				'stderr' => isset($paras['_ehphp']) ? false : '/dev/null',
@@ -1061,10 +1063,17 @@ class ExecuteHandler extends EHICore {
 						$in, array('success', 'output', 'exitvalue'), true
 					);
 				},
+				'args' => function($in) {
+					return is_array($in);
+				},
 			),
 			'errorifempty' => array('cmd'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$cmd = $paras['cmd'];
+		if($paras['arg']) {
+			$args = array_map('escapeshellarg', $paras['arg']);
+			$cmd .= ' ' . implode(' ', $args);
+		}
 		// cd won't actually change the shell until we do some special magic
 		if(substr($cmd, 0, 3) === 'cd ') {
 			$dir = substr($cmd, 3);

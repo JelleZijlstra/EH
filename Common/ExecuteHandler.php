@@ -437,12 +437,13 @@ class ExecuteHandler extends EHICore {
 							// paras for the menu() call
 							$menu_paras = array(
 								'head' => $key . ': ',
-								'options' => array('q'),
+								'options' => array(),
 								'headasprompt' => true,
 							);
 							// use checkparas validation if possible
 							if(isset($pp_paras['checkparas'][$key])) {
-								$menu_paras['validfunction'] = $pp_paras['checkparas'][$key];
+								$menu_paras['validfunction'] = 
+									$pp_paras['checkparas'][$key];
 							}
 							// else accept anything
 							else {
@@ -450,9 +451,15 @@ class ExecuteHandler extends EHICore {
 									return true;
 								};
 							}
-							$paras[$key] = $this->menu($menu_paras);
-							if($paras[$key] === 'q')
-								$founderror = true;
+							if(isset($pp_paras['checklist'][$key])) {
+								$menu_paras['helpinfo'] =
+									$pp_paras['checklist'][$key];
+							}
+							try {
+								$paras[$key] = $this->menu($menu_paras);
+							} catch(StopException $e) {
+								return PROCESS_PARAS_ERROR_FOUND;
+							}
 						}
 					}
 					break;
@@ -566,8 +573,8 @@ class ExecuteHandler extends EHICore {
 						}
 					}
 					break;
-				case 'checkfunc': // function used to check paras that are not matched by checklist
-				case 'name': // name of method calling process_paras
+				case 'checkfunc':
+				case 'name':
 				case 'toarray':
 					// ignore, used internally in other places
 					break;
@@ -856,6 +863,8 @@ class ExecuteHandler extends EHICore {
 					'Whether options should always be printed',
 				'helpcommand' =>
 					'Whether to make the help command available. (If set to true, commands beginning with "help" will not get returned.)',
+				'helpinfo' =>
+					'Information that gets shown to the user when they type "help"',
 				'validfunction' =>
 					'Function to determine validity of command',
 				'process' =>
@@ -873,6 +882,7 @@ class ExecuteHandler extends EHICore {
 				'process' => array(),
 				'processcommand' => false,
 				'headasprompt' => false,
+				'helpinfo' => false,
 			),
 			'errorifempty' => array('options'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
@@ -881,6 +891,9 @@ class ExecuteHandler extends EHICore {
 			echo $paras['head'] . PHP_EOL;
 		}
 		$printoptions = function() use($paras) {
+			if(count($paras['options']) === 0) {
+				return;
+			}
 			echo 'Options available:' . PHP_EOL;
 			foreach($paras['options'] as $cmd => $desc) {
 				echo "-'" . $cmd . "': " . $desc . PHP_EOL;
@@ -903,6 +916,9 @@ class ExecuteHandler extends EHICore {
 			if($paras['helpcommand']) {
 				// just 'help' prints all options
 				if($cmd === 'help') {
+					if($paras['helpinfo'] !== false) {
+						echo $paras['helpinfo'] . PHP_EOL;
+					}
 					$printoptions();
 					continue;
 				}

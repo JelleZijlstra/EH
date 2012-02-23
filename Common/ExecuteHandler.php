@@ -442,6 +442,7 @@ class ExecuteHandler extends EHICore {
 							$menu_paras = array(
 								'head' => $key . ': ',
 								'options' => array('q'),
+								'headasprompt' => true,
 							);
 							// use checkparas validation if possible
 							if(isset($pp_paras['checkparas'][$key])) {
@@ -851,6 +852,8 @@ class ExecuteHandler extends EHICore {
 			'checklist' => array(
 				'head' =>
 					'Menu heading',
+				'headasprompt' =>
+					'Whether to show the heading as the prompt for input',
 				'options' =>
 					'List of options. Associative array, with option in key and description in value',
 				'printoptions' =>
@@ -873,11 +876,14 @@ class ExecuteHandler extends EHICore {
 				},
 				'process' => array(),
 				'processcommand' => false,
+				'headasprompt' => false,
 			),
 			'errorifempty' => array('options'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// print menu heading
-		echo $paras['head'] . PHP_EOL;
+		if(!$paras['headasprompt']) {
+			echo $paras['head'] . PHP_EOL;
+		}
 		$printoptions = function() use($paras) {
 			echo 'Options available:' . PHP_EOL;
 			foreach($paras['options'] as $cmd => $desc) {
@@ -887,10 +893,13 @@ class ExecuteHandler extends EHICore {
 		if($paras['printoptions']) {
 			$printoptions();
 		}
-		$options = array_keys($paras['options']);
+		$getlineparas = array('lines' => array_keys($paras['options']));
+		if($paras['headasprompt']) {
+			$getlineparas['prompt'] = $paras['head'];
+		}
 		while(true) {
 			// get command
-			$cmd = $this->getline(array('lines' => $options));
+			$cmd = $this->getline($getlineparas);
 			if($cmd === false) {
 				return false;
 			}

@@ -1141,18 +1141,24 @@ abstract class FileList extends ExecuteHandler {
 		$backupdir = dirname($file) . '/../Backup/';
 		$lastbackup = $this->getbackup($backupdir);
 		if($paras['revert']) {
-			$cmd = 'cp ' . $lastbackup . ' ' . $file;
-			return $this->shell($cmd);
+			return $this->shell(array(
+				'cmd' => 'cp', 
+				'arg' => array($lastbackup, $file)
+			));
 		} else if($paras['diff']) {
-			$cmd = 'diff ' . $lastbackup . ' ' . $file;
-			return $this->shell($cmd);
+			return $this->shell(array(
+				'cmd' => 'diff',
+				'arg' => array($lastbackup, $file),
+			));
 		} else {
 			$date = new DateTime();
-			return $this->shell('cp ' 
-				. escapeshellarg($file) . ' ' 
-				. escapeshellarg($backupdir . 
-					basename($file) . '.' . $date->format('YmdHis'))
-			);
+			return $this->shell(array(
+				'cmd' => 'cp',
+				'arg' => array(
+					$file,
+					$backupdir . basename($file) . '.' . $date->format('YmdHis')
+				),
+			));
 		}
 	}
 	private function getbackup($backupdir) {

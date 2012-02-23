@@ -12,13 +12,14 @@ else switch($argv[1]) {
 		$taxonlist->cli(); break;
 	case 'backup':
 		$date = new DateTime();
-		exec_catch('cp ' . __DIR__ . '/data/list.csv' . ' ' . BPATH . '/List/Backup/list.csv.' . $date->format('YmdHis'));
+		shell_exec('cp ' . __DIR__ . '/data/list.csv' . ' ' . BPATH . '/List/Backup/list.csv.' . $date->format('YmdHis'));
 		break;
 	case 'revert': revert($list); break;
 	// edit all comments
 	case 'wikipublish':
 		require_once('TaxonList.php');
-		TaxonList::wikipublish(); break;
+		TaxonList::wikipublish();
+		break;
 	// die
 	default: throw new EHException("Invalid argument", EHException::E_FATAL);
 }

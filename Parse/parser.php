@@ -432,7 +432,7 @@ function fileparse($mode, $infile) {
 	$newname = str_replace('.', '-parsed.', $infile);
 	file_put_contents($newname, $parsed);
 	$n = escape_shell($newname);
-	exec_catch("edit " . $n);
+	shell_exec("edit " . $n);
 	return $parsed;
 }
 ?>

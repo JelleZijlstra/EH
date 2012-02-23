@@ -53,24 +53,6 @@ function escape_shell($in) {
 	$in = preg_replace("/ /", "\ ", $in);
 	return $in;
 }
-function revert($list) {
-// reverts to most recently edited file in Backup folder
-// $list: name of file to be reverted to
-	exec_catch('cp Backup/' . getbackup($list) . ' ' . $list);
-}
-function diff($list) {
-	$listp = preg_replace('/[^\/]+$/', '', $list);
-	echo shell_exec('diff ' . $list . ' ' . $listp . 'Backup/' . getbackup($list));
-}
-function getbackup($list) {
-// gets most recent backup file
-	$listp = preg_replace('/[^\/]+$/', '', $list);
-	$backuplist = shell_exec('ls -lt ' . $listp . 'Backup');
-	$backuplist = preg_split("/\n/", $backuplist);
-	foreach($backuplist as &$file)
-		$file = explode(' ', $file);
-	return array_pop($backuplist[1]);
-}
 function makemenu($in, $head = 'MENU') {
 	echo $head . PHP_EOL;
 	foreach($in as $cmd => $desc) {

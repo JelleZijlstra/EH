@@ -92,6 +92,10 @@ abstract class FileList extends ExecuteHandler {
 			'desc' => 'Edit information associated with an entry',
 			'arg' => 'Entry name',
 			'execute' => 'callmethod'),
+		'backup' => array('name' => 'backup',
+			'desc' => 'Save a backup of the catalog',
+			'arg' => 'None',
+			'execute' => 'callmethod'),
 	);
 	public function __construct($commands = array()) {
 		echo "processing CSV catalog... ";
@@ -1095,7 +1099,7 @@ abstract class FileList extends ExecuteHandler {
 		}
 		return true;
 	}
-	/* logging */
+	/* logging and backups */
 	public function log($msg) {
 		if(static::$logfile === NULL) {
 			throw new EHException(
@@ -1120,6 +1124,44 @@ abstract class FileList extends ExecuteHandler {
 			fwrite($log, $msg);
 		}
 		return true;
+	}
+	public function backup(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'revert' => 'Revert to the last backup',
+				'diff' => 'Show a diff with the last backup',
+			),
+			'default' => array(
+				'revert' => false,
+				'diff' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$file = static::$fileloc;
+		$backupdir = dirname($file) . '/../Backup/';
+		$lastbackup = $this->getbackup($backupdir);
+		if($paras['revert']) {
+			$cmd = 'cp ' . $lastbackup . ' ' . $file;
+			return $this->shell($cmd);
+		} else if($paras['diff']) {
+			$cmd = 'diff ' . $lastbackup . ' ' . $file;
+			return $this->shell($cmd);
+		} else {
+			$date = new DateTime();
+			return $this->shell('cp ' 
+				. escapeshellarg($file) . ' ' 
+				. escapeshellarg($backupdir . 
+					basename($file) . '.' . $date->format('YmdHis'))
+			);
+		}
+	}
+	private function getbackup($backupdir) {
+		$backuplist = $this->shell(array(
+			'cmd' => 'ls -t ' . escapeshellarg($backupdir),
+			'return' => 'output',
+			'printout' => false,
+		));
+		return $backupdir . array_shift($backuplist);		
 	}
 }
 ?>

@@ -1021,7 +1021,7 @@ class ExecuteHandler extends EHICore {
 				$this->config[$key] = $value;
 		}
 	}
-	protected function shell(array $paras) {
+	protected function shell($paras) {
 		// TODO: set up our own shell process with a persistent pipe, so we can
 		// keep state in the shell.
 		if($this->process_paras($paras, array(
@@ -1040,7 +1040,9 @@ class ExecuteHandler extends EHICore {
 				'append-err' => 'Whether to append to the stderr file',
 				'input' => 'Place to get input from',
 				'input-string' => 'String to send as stdin input',
-				'return' => 'What to return. Options are "success" (whether the command returned exit status 0, "output" (the stdout output), and "exitvalue" (the exit code of the command).'
+				'return' => 'What to return. Options are "success" (whether the command returned exit status 0, "output" (the stdout output), and "exitvalue" (the exit code of the command).',
+				'printcmd' => 'Print the command as it is executed',
+				'printout' => 'Whether to print the output',
 			),
 			'default' => array(
 				'stdout' => false,
@@ -1050,6 +1052,8 @@ class ExecuteHandler extends EHICore {
 				'input' => false,
 				'input-string' => false,
 				'return' => 'success',
+				'printcmd' => false,
+				'printout' => true,
 			),
 			'checkparas' => array(
 				'return' => function($in) {
@@ -1085,8 +1089,13 @@ class ExecuteHandler extends EHICore {
 			if($paras['input-string'] !== false) {
 				$cmd .= " <<INPUT\n" . $paras['input-string'] . "\nINPUT";
 			}
+			if($paras['printcmd']) {
+				echo $cmd . PHP_EOL;
+			}
 			exec($cmd, $output, $exitval);
-			echo implode(PHP_EOL, $output) . PHP_EOL;
+			if($paras['printout']) {
+				echo implode(PHP_EOL, $output) . PHP_EOL;
+			}
 			switch($paras['return']) {
 				case 'success':
 					return ($exitval === 0);

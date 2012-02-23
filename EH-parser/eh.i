@@ -62,7 +62,7 @@ zval *arrtozval(ehvar_t **paras) {
 						add_index_null(arr, currvar->index);
 						break;
 					default:
-						eh_error_type("convert to PHP", currvar->value.type, enotice_e);
+						eh_error_type("conversion to PHP", currvar->value.type, enotice_e);
 						break;
 				}
 			}

@@ -86,7 +86,6 @@ abstract class EHICore {
 	private $evaluate_ret = 0;
 	// array of functions that shell code is allowed to call
 	private static $php_funcs = array(
-		'getinput',
 		'strlen',
 		'substr',
 	);

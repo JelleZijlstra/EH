@@ -857,17 +857,9 @@ class ExecuteHandler extends EHICore {
 		}
 	}
 	private function stty($opt) {
-		if(posix_isatty(STDIN)) {
-			$cmd = "/bin/stty " . $opt;
-			exec($cmd, $output, $return);
-			if($return !== 0) {
-				trigger_error("Failed to execute " . $cmd);
-				return false;
-			}
-			return implode("\n", $output);
-		} else {
-			return true;
-		}
+		$cmd = "/bin/stty " . $opt . ' 2> /dev/null';
+		exec($cmd, $output, $return);
+		return implode("\n", $output);
 	}
 	protected function menu(array $paras) {
 	// Function that creates a menu and gets input

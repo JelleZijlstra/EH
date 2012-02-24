@@ -332,6 +332,9 @@ class ExecuteHandler extends EHICore {
 		 *   'default': An associative array where the key is a $paras key and
 		 *      the value is a default value. If the key is not set in $paras,
 		 *      the default value is inserted.
+		 *   'defaultfunc': Similar to 'default', but the value in the array is
+		 *		a function instead of a raw value. This function is executed 
+		 *		and its return value is put in $paras.
 		 *   'errorifempty': An array of keys. If any of the keys in this array
 		 *      is not set in $paras, an error is thrown.
 		 *   'askifempty': Similar to 'errorifempty', but instead of throwing
@@ -479,8 +482,22 @@ class ExecuteHandler extends EHICore {
 						break;
 					}
 					foreach($pp_value as $key => $result) {
-						if(!isset($paras[$key]))
+						if(!isset($paras[$key])) {
 							$paras[$key] = $result;
+						}
+					}
+					break;
+				case 'defaultfunc':
+					// set default values for paras using information in the 
+					// rest of the paras array
+					if(!is_array($pp_value)) {
+						$showerror('defaultfunc parameter is not an array');
+						break;
+					}
+					foreach($pp_value as $key => $result) {
+						if(!isset($paras[$key])) {
+							$paras[$key] = $result($paras);
+						}
 					}
 					break;
 				case 'checklist': // check that all paras given are legal
@@ -840,13 +857,17 @@ class ExecuteHandler extends EHICore {
 		}
 	}
 	private function stty($opt) {
-		$cmd = "/bin/stty " . $opt;
-		exec($cmd, $output, $return);
-		if($return !== 0) {
-			trigger_error("Failed to execute " . $cmd);
-			return false;
+		if(posix_isatty(STDIN)) {
+			$cmd = "/bin/stty " . $opt;
+			exec($cmd, $output, $return);
+			if($return !== 0) {
+				trigger_error("Failed to execute " . $cmd);
+				return false;
+			}
+			return implode("\n", $output);
+		} else {
+			return true;
 		}
-		return implode("\n", $output);
 	}
 	protected function menu(array $paras) {
 	// Function that creates a menu and gets input

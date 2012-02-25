@@ -22,10 +22,8 @@ EHI::~EHI(void) {
 ehvar_t **zvaltoeh_array(HashTable *hash);
 
 zval *arrtozval(ehvar_t **paras) {
-	zval *arr = (zval *)Malloc(sizeof(zval));
-	// need to initialize refcount in order to prevent PHP from segfaulting on this.
-	arr->refcount__gc = 1;
-	arr->is_ref__gc = 0;
+	zval *arr;
+	MAKE_STD_ZVAL(arr);
 	ehvar_t *currvar;
 	int i;
 

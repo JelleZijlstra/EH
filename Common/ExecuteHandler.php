@@ -641,7 +641,7 @@ class ExecuteHandler extends EHICore {
 		if($test1($c1)) {
 			// Ctrl+D
 			if($c1 === 4)
-				return false;
+				return chr($c1);
 			// special-case KEY_UP etcetera
 			if($c1 === 27) {
 				$c2 = $fgetc(STDIN);
@@ -831,7 +831,8 @@ class ExecuteHandler extends EHICore {
 				case "\033": // Ctrl+[
 				case "\035": // Ctrl+]
 					break;
-				case "\022": // Ctrl+R: stop
+				case "\004":
+				case "\022": // Ctrl+D/R: stop
 					echo PHP_EOL; // make newline
 					throw new StopException("fgetc");
 					break;
@@ -890,7 +891,7 @@ class ExecuteHandler extends EHICore {
 				'printoptions' => false,
 				'helpcommand' => true,
 				'validfunction' => function($in, $options) {
-					return in_array($in, $options);
+					return array_key_exists($in, $options);
 				},
 				'process' => array(),
 				'processcommand' => false,

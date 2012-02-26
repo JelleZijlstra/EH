@@ -34,11 +34,16 @@ abstract class EHICore extends EHI {
 	public function eh_getline() {
 		$cmd = '';
 		static $history = array();
-		$cmd = $this->getline(array(
-			'prompt' => $this->prompt,
-			'lines' => $history,
-			'includenewlines' => true,
-		));
+		try {
+			$cmd = $this->getline(array(
+				'prompt' => $this->prompt,
+				'lines' => $history,
+				'includenewlines' => true,
+			));
+		} catch(StopException $e) {
+			// make StopException here equivalent to typing 'quit'
+			return "quit\n";
+		}
 		$history[] = $cmd;
 		return $cmd;
 	}

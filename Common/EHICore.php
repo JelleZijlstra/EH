@@ -913,7 +913,7 @@ abstract class EHICore {
 		}
 		return true;
 	}
-	public function setup_commandline($name, $paras = array()) {
+	public function setup_commandline($name, array $paras = array()) {
 	// Performs various functions in a pseudo-command line. A main entry point.
 	// stty stuff inspired by sfinktah at http://php.net/manual/en/function.fgetc.php
 		// can't use process_paras now because that is in ExecuteHandler

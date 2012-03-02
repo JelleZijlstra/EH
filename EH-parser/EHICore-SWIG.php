@@ -17,7 +17,7 @@ abstract class EHICore extends EHI {
 	public function __construct() {
 		parent::__construct();
 	}
-	public function setup_commandline($name, $paras = array()) {
+	public function setup_commandline($name, array $paras = array()) {
 		// set up if necessary
 		if($this->_cPtr === NULL)
 			parent::__construct();

@@ -90,13 +90,14 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i classlist classmember lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
 %%
 global_list: /* NULL */		{ }
-	| global_list statement	{
-								ehretval_t ret = eh_execute($2, NULL);
+	| statement	{
+								ehretval_t ret = eh_execute($1, NULL);
 								// flush stdout after executing each statement
 								fflush(stdout);
-								if(returning)
+								if(returning) {
 									return ret.intval;
-							}
+								}
+							} global_list
 	;
 
 statement_list:
@@ -551,11 +552,10 @@ attributelist:
 	;
 %%
 char *eh_getinput(void) {
-	char *buf;
-
-	if(is_interactive == 2)
+	if(is_interactive == 2) {
 		printf("> ");
-	buf = new char[512];
+	}
+	char *buf = new char[512];
 	return fgets(buf, 511, stdin);
 }
 int eh_outer_exit(int exitval) {
@@ -572,17 +572,18 @@ int EHI::eh_interactive(void) {
 	parser = new EHParser;
 	oldinterpreter = interpreter;
 	interpreter = this;
-	if(!is_interactive)
+	if(is_interactive == 0) {
 		is_interactive = 2;
+	}
 	eh_init();
 	cmd = interpreter->eh_getline();
-	if(!cmd)
+	if(!cmd) {
 		return eh_outer_exit(0);
+	}
 	// if a syntax error occurs, stop parsing and return -1
 	try {
 		ret = parser->parse_string(cmd);
-	}
-	catch(...) {
+	} catch(...) {
 		// do nothing
 	}
 	delete parser;
@@ -606,9 +607,8 @@ void EHI::exec_file(const char *name) {
 	// if a syntax error occurs, stop parsing and return -1
 	try {
 		parser->parse_file(infile);
-	}
-	// TODO: actually do something useful with exceptions
-	catch(...) {
+	} catch(...) {
+		// TODO: actually do something useful with exceptions
 	}
 	delete parser;
 	interpreter = oldinterpreter;

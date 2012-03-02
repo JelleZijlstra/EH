@@ -1,6 +1,6 @@
 CC = g++
 CCFLAGS = -ggdb -Wall -pedantic -fPIC -c
-SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp
+SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp eh_gc.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
 INTERPRETER = $(SOURCES) eh_libfuncs.cpp eh_libclasses.cpp eh_libcmds.cpp eh_hash.cpp eh_interpreter.cpp

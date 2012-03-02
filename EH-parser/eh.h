@@ -128,7 +128,11 @@ typedef struct ehretval_t {
 	}
 	void dec_rc() {
 		refcount--;
+		if(refcount == 0) {
+			free();
+		}
 	}
+	void free();
 private:
 	short refcount;
 } ehretval_t;

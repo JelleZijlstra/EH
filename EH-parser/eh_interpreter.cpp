@@ -190,7 +190,7 @@ const char *libredirs[][2] = {
  */
 void eh_init(void) {
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
-		ehfunc_t *func = (ehfunc_t *) Malloc(sizeof(ehfunc_t));
+		ehfunc_t *func = new ehfunc_t;
 		func->name = libfuncs[i].name;
 		func->f.type = lib_e;
 		func->f.ptr = libfuncs[i].code;
@@ -198,7 +198,7 @@ void eh_init(void) {
 		insert_function(func);
 	}
 	for(int i = 0; libclasses[i].name != NULL; i++) {
-		ehclass_t *newclass = (ehclass_t *) Malloc(sizeof(ehclass_t));
+		ehclass_t *newclass = new ehclass_t;
 		newclass->type = lib_e;
 		newclass->obj.classname = libclasses[i].name;
 		newclass->obj.libinfo = libclasses[i].info;
@@ -639,7 +639,7 @@ ehretval_t eh_op_dot(ehretval_t operand1, ehretval_t operand2) {
 		ret.type = string_e;
 		size_t len1 = strlen(operand1.stringval);
 		size_t len2 = strlen(operand2.stringval);
-		ret.stringval = (char *) Malloc(len1 + len2 + 1);
+		ret.stringval = new char[len1 + len2 + 1];
 		strcpy(ret.stringval, operand1.stringval);
 		strcpy(ret.stringval + len1, operand2.stringval);
 	} else {
@@ -653,7 +653,7 @@ void eh_op_global(const char *name, ehcontext_t context) {
 		eh_error_unknown("global variable", name, enotice_e);
 		return;
 	}
-	ehvar_t *newvar = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *newvar = new ehvar_t;
 	newvar->name = name;
 	newvar->scope = scope;
 	newvar->value.type = reference_e;
@@ -687,7 +687,7 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 					node2 = node2->opval->paras[0];
 					for(int i = 0, len = strlen(node2->stringval); i < len; i++) {
 						index_r.type = string_e;
-						index_r.stringval = (char *) Malloc(2);
+						index_r.stringval = new char[2];
 						index_r.stringval[0] = node2->stringval[i];
 						index_r.stringval[1] = '\0';
 						array_insert_retval(paras, index_r, value_r);
@@ -713,7 +713,7 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 					break;
 				case T_REDIRECT:
 					index_r.type = string_e;
-					index_r.stringval = (char *) Malloc(sizeof(">"));
+					index_r.stringval = new char[sizeof(">")];
 					strcpy(index_r.stringval, ">");
 					// output redirector
 					array_insert_retval(
@@ -724,7 +724,7 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 					break;
 				case '}':
 					index_r.type = string_e;
-					index_r.stringval = (char *) Malloc(sizeof("}"));
+					index_r.stringval = new char[sizeof("}")];
 					strcpy(index_r.stringval, "}");
 					// output redirector
 					array_insert_retval(
@@ -804,7 +804,7 @@ ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 		ehvar_t *var = get_variable(name, scope, context);
 		// variable is not yet set, so set it
 		if(var == NULL) {
-			var = (ehvar_t *) Malloc(sizeof(ehvar_t));
+			var = new ehvar_t;
 			var->name = op->paras[1]->stringval;
 			var->scope = scope;
 			insert_variable(var);
@@ -863,7 +863,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 	// create variables
 	membervar = get_variable(membername, scope, context);
 	if(membervar == NULL) {
-		membervar = (ehvar_t *) Malloc(sizeof(ehvar_t));
+		membervar = new ehvar_t;
 		membervar->name = membername;
 		membervar->scope = scope;
 		insert_variable(membervar);
@@ -871,7 +871,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 	if(indexname != NULL) {
 		indexvar = get_variable(indexname, scope, context);
 		if(indexvar == NULL) {
-			indexvar = (ehvar_t *) Malloc(sizeof(ehvar_t));
+			indexvar = new ehvar_t;
 			indexvar->name = indexname;
 			indexvar->scope = scope;
 			insert_variable(indexvar);
@@ -937,7 +937,7 @@ ehretval_t eh_op_new(const char *name) {
 		return ret;
 	}
 	ret.type = object_e;
-	ret.objectval = (ehobj_t *) Malloc(sizeof(ehobj_t));
+	ret.objectval = new ehobj_t;
 	ret.objectval->classname = name;
 	ret.objectval->members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
 	if(classobj->type == user_e) {
@@ -1055,7 +1055,7 @@ void eh_op_declarefunc(ehretval_t **paras) {
 		eh_error_redefine("function", name, efatal_e);
 		return;
 	}
-	func = (ehfunc_t *) Malloc(sizeof(ehfunc_t));
+	func = new ehfunc_t;
 	func->name = name;
 	// determine argcount
 	make_arglist(&func->f.argcount, &func->f.args, paras[1]);
@@ -1067,7 +1067,7 @@ void eh_op_declarefunc(ehretval_t **paras) {
 ehretval_t eh_op_declareclosure(ehretval_t **paras) {
 	ehretval_t ret;
 	ret.type = func_e;
-	ret.funcval = (ehfm_t *) Malloc(sizeof(ehfm_t));
+	ret.funcval = new ehfm_t;
 	ret.funcval->type = user_e;
 	make_arglist(&ret.funcval->argcount, &ret.funcval->args, paras[0]);
 	ret.funcval->code = paras[1];
@@ -1080,7 +1080,7 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 		eh_error_redefine("class", classname_r.stringval, efatal_e);
 		return;
 	}
-	classobj = (ehclass_t *) Malloc(sizeof(ehclass_t));
+	classobj = new ehclass_t;
 	classobj->type = user_e;
 	classobj->obj.classname = classname_r.stringval;
 	classobj->obj.members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
@@ -1313,7 +1313,7 @@ void eh_op_set(ehretval_t **paras, ehcontext_t context) {
 	if(lvalue.type == null_e) {
 		if(lvalue.referenceval == NULL) {
 			// set new variable
-			ehvar_t *var = (ehvar_t *) Malloc(sizeof(ehvar_t));
+			ehvar_t *var = new ehvar_t;
 			var->name = paras[0]->opval->paras[0]->stringval;
 			var->scope = scope;
 			var->value = rvalue;
@@ -1491,7 +1491,7 @@ static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node) {
 	*argcount = currarg;
 	// if there are no arguments, the arglist can be NULL
 	if(currarg) {
-		*arglist = (eharg_t *) Malloc(currarg * sizeof(eharg_t));
+		*arglist = new eharg_t;
 	} else {
 		*arglist = NULL;
 	}
@@ -1528,7 +1528,7 @@ ehretval_t call_function(const ehfm_t *f, ehretval_t *args, ehcontext_t context,
 		}
 	}
 	else while(args->opval->nparas != 0) {
-		ehvar_t *var = (ehvar_t *) Malloc(sizeof(ehvar_t));
+		ehvar_t *var = new ehvar_t;
 		var->name = f->args[i].name;
 		var->scope = scope + 1;
 		insert_variable(var);
@@ -1572,7 +1572,7 @@ ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, 
 	}
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {
-		ehvar_t *var = (ehvar_t *) Malloc(sizeof(ehvar_t));
+		ehvar_t *var = new ehvar_t;
 		var->name = f->args[i].name;
 		var->scope = scope + 1;
 		var->value = eh_execute(&args[i], context);
@@ -1609,7 +1609,7 @@ ehclass_t *get_class(const char *name) {
 	return NULL;
 }
 void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i) {
-	ehvar_t *newmember = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *newmember = new ehvar_t;
 	// copy the whole thing over
 	*newmember = *classmember;
 	// modify this pointer
@@ -1661,7 +1661,7 @@ ehvar_t *class_insert_retval(
 ) {
 	// insert a member into a class
 
-	ehvar_t *member = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *member = new ehvar_t;
 	// rely on standard layout of the input ehretval_t
 	member->attribute = attribute;
 	member->name = name;
@@ -1907,13 +1907,13 @@ ehretval_t eh_stringtofloat(const char *const in) {
 char *eh_inttostring(const int in) {
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and 
 	// null terminator) should suffice for the result string
-	char *buffer = (char *) Malloc(12);
+	char *buffer = new char[12];
 	snprintf(buffer, 12, "%d", in);
 
 	return buffer;
 }
 char *eh_floattostring(const float in) {
-	char *buffer = (char *) Malloc(12);
+	char *buffer = new char[12];
 	snprintf(buffer, 12, "%f", in);
 
 	return buffer;
@@ -2009,16 +2009,16 @@ ehretval_t eh_xtostring(const ehretval_t in) {
 			break;
 		case null_e:
 			// empty string
-			ret.stringval = (char *) Malloc(1);
+			ret.stringval = new char[1];
 			ret.stringval[0] = '\0';
 			break;
 		case bool_e:
 			if(in.boolval) {
-				ret.stringval = (char *) Malloc(5);
+				ret.stringval = new char[5];
 				strcpy(ret.stringval, "true");
 			}
 			else {
-				ret.stringval = (char *) Malloc(6);
+				ret.stringval = new char[6];
 				strcpy(ret.stringval, "false");
 			}
 			break;
@@ -2129,7 +2129,7 @@ ehretval_t eh_xtorange(const ehretval_t in) {
 	return ret;
 }
 ehretval_t eh_xtoarray(const ehretval_t in) {
-	ehretval_t ret;
+	ehretval_t ret, index;
 	ret.type = array_e;
 	switch(in.type) {
 		case array_e:
@@ -2146,7 +2146,6 @@ ehretval_t eh_xtoarray(const ehretval_t in) {
 		case object_e:
 			// create an array with just this variable in it
 			ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
-			ehretval_t index;
 			index.type = int_e;
 			index.intval = 0;
 			array_insert_retval(ret.arrayval, index, in);
@@ -2236,7 +2235,7 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 	ehretval_t label;
 
 	// new array member
-	ehvar_t *member = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *member = new ehvar_t;
 
 	/*
 	 * We'll assume we're always getting a correct ehretval_t *, referring to a
@@ -2316,7 +2315,7 @@ ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) 
 	// Assumes that the member is not yet present in the array.
 	unsigned int vhash;
 
-	ehvar_t *const newvar = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *const newvar = new ehvar_t;
 	newvar->indextype = index.type;
 	switch(index.type) {
 		case int_e:
@@ -2531,7 +2530,7 @@ static void range_arrow_set(ehretval_t input, ehretval_t index, ehretval_t rvalu
 ehretval_t eh_make_range(const int min, const int max) {
 	ehretval_t ret;
 	ret.type = range_e;
-	ret.rangeval = (ehrange_t *) Malloc(sizeof(ehrange_t));
+	ret.rangeval = new ehrange_t;
 	ret.rangeval->min = min;
 	ret.rangeval->max = max;
 	return ret;
@@ -2553,7 +2552,7 @@ void eh_setarg(int argc, char **argv) {
 	ehretval_t ret, index;
 
 	// insert argc
-	ehvar_t *argc_v = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *argc_v = new ehvar_t;
 	argc_v->value.type = int_e;
 	// global scope
 	argc_v->scope = 0;
@@ -2563,7 +2562,7 @@ void eh_setarg(int argc, char **argv) {
 	insert_variable(argc_v);
 
 	// insert argv
-	ehvar_t *argv_v = (ehvar_t *) Malloc(sizeof(ehvar_t));
+	ehvar_t *argv_v = new ehvar_t;
 	argv_v->value.type = array_e;
 	argv_v->scope = 0;
 	argv_v->name = "argv";

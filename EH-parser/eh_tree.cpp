@@ -30,7 +30,7 @@ void free_node(ehretval_t *in) {
 
 #define GETFUNC(name, vtype) ehretval_t *eh_get_ ## name (vtype value) { \
 	ehretval_t *ret; \
-	ret = (ehretval_t *) Malloc(sizeof(ehretval_t)); \
+	ret = new ehretval_t; \
 	ret->type = name ## _e; \
 	ret-> name ## val = value; \
 	return ret; \
@@ -40,7 +40,7 @@ GETFUNC(string, char *)
 GETFUNC(float, float)
 ehretval_t *eh_get_null(void) {
 	ehretval_t *ret;
-	ret = (ehretval_t *) Malloc(sizeof(ehretval_t));
+	ret = new ehretval_t;
 
 	ret->type = null_e;
 
@@ -54,23 +54,21 @@ GETFUNC(attribute, attribute_enum)
 ehretval_t *eh_addnode(int operation, int nparas, ...) {
 	va_list args;
 	ehretval_t *ret;
-	int i;
 
-	ret = (ehretval_t *) Malloc(sizeof(ehretval_t));
-	ret->opval = (opnode_t *) Malloc(sizeof(opnode_t));
-	if(nparas)
-		ret->opval->paras = (ehretval_t **) Malloc(nparas * sizeof(ehretval_t *));
-	else
+	ret = new ehretval_t;
+	ret->opval = new opnode_t;
+	if(nparas) {
+		ret->opval->paras = new ehretval_t *[nparas];
+	} else {
 		ret->opval->paras = NULL;
+	}
 
 	ret->type = op_e;
 	ret->opval->op = operation;
 	ret->opval->nparas = nparas;
-	//printf("Adding operation %d with %d paras\n", ret->opval->op, ret->opval->nparas);
 	va_start(args, nparas);
-	for(i = 0; i < nparas; i++) {
+	for(int i = 0; i < nparas; i++) {
 		ret->opval->paras[i] = va_arg(args, ehretval_t *);
-		//printf("Para %d is of type %d\n", i, ret->opval->paras[i]->type);
 	}
 	va_end(args);
 

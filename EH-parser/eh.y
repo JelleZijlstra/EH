@@ -555,7 +555,7 @@ char *eh_getinput(void) {
 
 	if(is_interactive == 2)
 		printf("> ");
-	buf = (char *) Malloc(512);
+	buf = new char[512];
 	return fgets(buf, 511, stdin);
 }
 int eh_outer_exit(int exitval) {

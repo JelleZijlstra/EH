@@ -45,7 +45,7 @@ EHLIBFUNC(printvar) {
 	retval->type = null_e;
 
 	// check argument count
-	ehretval_t *args = (ehretval_t *) Malloc(1 * sizeof(ehretval_t));
+	ehretval_t args[1];
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
 		return;
 	printvar_retval(args[0]);
@@ -195,7 +195,7 @@ static void printvar_array(ehvar_t **in) {
  */
 #define TYPEFUNC(typev) EHLIBFUNC(is_ ## typev) { \
 	retval->type = bool_e; \
-	ehretval_t *args = (ehretval_t *) Malloc(1 * sizeof(ehretval_t)); \
+	ehretval_t args[1]; \
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) \
 		EHLF_RETFALSE; \
 	ehretval_t value = args[0]; \
@@ -213,7 +213,7 @@ TYPEFUNC(object)
 TYPEFUNC(range)
 // check whether a variable is a member of a specified class
 EHLIBFUNC(class_is) {
-	ehretval_t *args = (ehretval_t *) Malloc(2 * sizeof(ehretval_t));
+	ehretval_t args[2];
 	if(eh_getargs(paras, 2, args, context, __FUNCTION__))
 		EHLF_RETFALSE;
 	if(args[0].type != string_e) {
@@ -231,7 +231,7 @@ EHLIBFUNC(class_is) {
 }
 // get the type of a variable
 EHLIBFUNC(get_type) {
-	ehretval_t *args = (ehretval_t *)Malloc(1 * sizeof(ehretval_t));
+	ehretval_t args[1];
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
 		EHLF_RETFALSE;
 	}
@@ -244,7 +244,6 @@ EHLIBFUNC(get_type) {
  */
 ehretval_t eh_include_file(FILE *file);
 EHLIBFUNC(include) {
-	ehretval_t *args;
 	FILE *infile;
 	EHParser *parser;
 
@@ -252,7 +251,7 @@ EHLIBFUNC(include) {
 	int old_is_interactive = is_interactive;
 	is_interactive = 0;
 
-	args = (ehretval_t *) Malloc(1 * sizeof(ehretval_t));
+	ehretval_t args[1];
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
 		EHLF_RETFALSE;
 	if(args[0].type != string_e) {
@@ -280,7 +279,7 @@ EHLIBFUNC(include) {
 
 // power
 EHLIBFUNC(pow) {
-	ehretval_t *args = (ehretval_t *) Malloc(2 * sizeof(ehretval_t));
+	ehretval_t args[2];
 	if(eh_getargs(paras, 2, args, context, __FUNCTION__))
 		EHLF_RETFALSE;
 	if(args[0].type == int_e && args[1].type == int_e) {

@@ -4,8 +4,8 @@
  *
  * Main header file for the EH scripting language
  */
-#ifndef _EH_H
-#define _EH_H
+#ifndef EH_H_
+#define EH_H_
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,6 +16,8 @@
 #include <errno.h>
 #include <exception>
 #include <iostream>
+
+#include "eh_gc.h"
 
 /*
  * The EH AST
@@ -118,6 +120,17 @@ typedef struct ehretval_t {
 		memberattribute_t attributestrval;
 		accessor_enum accessorval;
 	};
+	ehretval_t() {
+		refcount = 0;
+	}
+	void inc_rc() {
+		refcount++;
+	}
+	void dec_rc() {
+		refcount--;
+	}
+private:
+	short refcount;
 } ehretval_t;
 
 typedef struct ehvar_t {
@@ -365,4 +378,4 @@ public:
 };
 // put this at the bottom because of dependencies
 #include "ehi.h"
-#endif
+#endif /* EH_H_ */

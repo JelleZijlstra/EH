@@ -18,7 +18,7 @@
 ['][^']*[']	{
 				int len;
 				len = strlen(yytext);
-				yylval_param->sValue = (char *) Malloc(len - 1);
+				yylval_param->sValue = new char[len - 1];
 				strncpy(yylval_param->sValue, yytext + 1, len - 2);
 				yylval_param->sValue[len - 2] = '\0';
 				return T_STRING;
@@ -26,7 +26,7 @@
 ["][^"]*["]	{
 				int len;
 				len = strlen(yytext);
-				yylval_param->sValue = (char *) Malloc(len - 1);
+				yylval_param->sValue = new char[len - 1];
 				strncpy(yylval_param->sValue, yytext + 1, len - 2);
 				yylval_param->sValue[len - 2] = '\0';
 				return T_STRING;
@@ -135,7 +135,7 @@
 [a-zA-Z][a-zA-Z0-9_]*	{
 				int len;
 				len = strlen(yytext);
-				yylval_param->sValue = (char *) Malloc(len + 1);
+				yylval_param->sValue = new char[len + 1];
 				strncpy(yylval_param->sValue, yytext, len);
 				yylval_param->sValue[len] = '\0';
 				return T_VARIABLE;

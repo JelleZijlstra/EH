@@ -3189,7 +3189,10 @@ Content-Disposition: attachment
 		return true;
 	}
 	public static function trimdoi($in) {
-		return trim(preg_replace("/([\.;\(]$|^[:]|^doi:\s*)/", "", trim($in)));
+		return trim(preg_replace(
+			"/([\.;\(]$|^[:]|^doi:\s*)|^http:\/\/dx\.doi\.org\//", 
+			"", trim($in)
+		));
 	}
 }
 ?>

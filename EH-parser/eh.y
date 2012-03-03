@@ -89,15 +89,25 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 
 %type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i classlist classmember lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
 %%
-global_list: /* NULL */		{ }
-	| statement	{
+program:
+	global_list				{ 
+								// free stuff, somehow.
+								// Actually doing free_node($1) at this moment
+								// breaks include:
+							}
+
+global_list:
+	/* NULL */				{ $$ = eh_addnode(T_SEPARATOR, 0); }
+	| statement				{
 								ehretval_t ret = eh_execute($1, NULL);
 								// flush stdout after executing each statement
 								fflush(stdout);
 								if(returning) {
 									return ret.intval;
 								}
-							} global_list
+							} global_list {
+								$$ = eh_addnode(T_SEPARATOR, 2, $1, $3); 
+							}
 	;
 
 statement_list:

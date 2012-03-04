@@ -150,7 +150,7 @@ typedef struct ehvar_t {
 		struct ehscope_t *scope;
 		type_enum indextype;
 	};
-	struct ehretval_t value;
+	struct ehretval_t *value;
 	struct ehvar_t *next;
 } ehvar_t;
 
@@ -208,7 +208,7 @@ typedef struct ehcmd_t {
 
 typedef struct ehcmd_bucket_t {
 	ehcmd_t cmd;
-	ehcmd_bucket_t *next;
+	struct ehcmd_bucket_t *next;
 } ehcmd_bucket_t;
 
 // class
@@ -231,12 +231,6 @@ typedef struct ehfm_t {
 } ehfm_t;
 
 // EH procedure
-typedef struct ehfunc_t {
-	const char *name;
-	struct ehfm_t f;
-	struct ehfunc_t *next;
-} ehfunc_t;
-
 typedef struct ehlibfunc_t {
 	void (*code)(ehretval_t *, ehretval_t *, ehcontext_t);
 	const char *name;
@@ -324,8 +318,6 @@ bool insert_variable(ehvar_t *var);
 ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context);
 void remove_variable(const char *name, ehscope_t *scope);
 void list_variables(void);
-bool insert_function(ehfunc_t *func);
-ehfunc_t *get_function(const char *name);
 ehretval_t call_function(const ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext);
 ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, const ehretval_t *const args);
 void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t context);

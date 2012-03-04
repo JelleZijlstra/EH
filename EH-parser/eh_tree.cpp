@@ -7,15 +7,15 @@
 #include "eh.h"
 
 void free_node(ehretval_t *in) {
-	if(in == NULL)
+	if(in == NULL) {
 		return;
-	int i;
+	}
 	switch(in->type) {
 		case string_e:
-			free(in->stringval);
+			delete[] in->stringval;
 			break;
 		case op_e:
-			for(i = 0; i < in->opval->nparas; i++) {
+			for(int i = 0; i < in->opval->nparas; i++) {
 				free_node(in->opval->paras[i]);
 			}
 			break;
@@ -25,12 +25,11 @@ void free_node(ehretval_t *in) {
 			// memory allocated by the parser)
 			break;
 	}
-	free(in);
+	delete in;
 }
 
 #define GETFUNC(name, vtype) ehretval_t *eh_get_ ## name (vtype value) { \
-	ehretval_t *ret; \
-	ret = new ehretval_t; \
+	ehretval_t *ret = new ehretval_t; \
 	ret->type = name ## _e; \
 	ret-> name ## val = value; \
 	return ret; \
@@ -39,8 +38,7 @@ GETFUNC(int, int)
 GETFUNC(string, char *)
 GETFUNC(float, float)
 ehretval_t *eh_get_null(void) {
-	ehretval_t *ret;
-	ret = new ehretval_t;
+	ehretval_t *ret = new ehretval_t;
 
 	ret->type = null_e;
 

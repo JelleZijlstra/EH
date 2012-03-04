@@ -34,64 +34,64 @@ zval *arrtozval(ehvar_t **paras) {
 		while(currvar != NULL) {
 			// convert an EH array member to a PHP array member
 			if(currvar->indextype == int_e) {
-				switch(currvar->value.type) {
+				switch(currvar->value->type) {
 					case int_e:
 						add_index_long(arr,
-							currvar->index, currvar->value.intval);
+							currvar->index, currvar->value->intval);
 						break;
 					case string_e:
 						add_index_string(arr,
-							currvar->index, currvar->value.stringval, 0);
+							currvar->index, currvar->value->stringval, 0);
 						break;
 					case bool_e:
 						add_index_bool(arr,
-							currvar->index, currvar->value.boolval);
+							currvar->index, currvar->value->boolval);
 						break;
 					case array_e:
 						add_index_zval(arr,
 							currvar->index,
-							arrtozval(currvar->value.arrayval));
+							arrtozval(currvar->value->arrayval));
 						break;
 					case float_e:
 						add_index_double(arr,
-							currvar->index, currvar->value.floatval);
+							currvar->index, currvar->value->floatval);
 						break;
 					case null_e:
 						add_index_null(arr, currvar->index);
 						break;
 					default:
-						eh_error_type("conversion to PHP", currvar->value.type, enotice_e);
+						eh_error_type("conversion to PHP", currvar->value->type, enotice_e);
 						break;
 				}
 			}
 			else if(currvar->indextype == string_e) {
-				switch(currvar->value.type) {
+				switch(currvar->value->type) {
 					case int_e:
 						add_assoc_long(arr,
-							currvar->name, currvar->value.intval);
+							currvar->name, currvar->value->intval);
 						break;
 					case string_e:
 						add_assoc_string(arr,
-							currvar->name, currvar->value.stringval, 0);
+							currvar->name, currvar->value->stringval, 0);
 						break;
 					case bool_e:
 						add_assoc_bool(arr,
-							currvar->name, currvar->value.boolval);
+							currvar->name, currvar->value->boolval);
 						break;
 					case array_e:
 						add_assoc_zval(arr,
 							currvar->name,
-							arrtozval(currvar->value.arrayval));
+							arrtozval(currvar->value->arrayval));
 						break;
 					case float_e:
 						add_assoc_double(arr,
-							currvar->name, currvar->value.floatval);
+							currvar->name, currvar->value->floatval);
 						break;
 					case null_e:
 						add_assoc_null(arr, currvar->name);
 						break;
 					default:
-						eh_error_type("conversion to PHP", currvar->value.type, enotice_e);
+						eh_error_type("conversion to PHP", currvar->value->type, enotice_e);
 						break;
 				}
 			}

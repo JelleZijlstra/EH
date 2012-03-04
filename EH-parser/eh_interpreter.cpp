@@ -193,10 +193,11 @@ void eh_init(void) {
 		ehvar_t *func = new ehvar_t;
 		func->name = libfuncs[i].name;
 		func->scope = global_scope;
-		func->value.type = func_e;
-		func->value.funcval = new ehfm_t;
-		func->value.funcval->type = lib_e;
-		func->value.funcval->ptr = libfuncs[i].code;
+		func->value = new ehretval_t;
+		func->value->type = func_e;
+		func->value->funcval = new ehfm_t;
+		func->value->funcval->type = lib_e;
+		func->value->funcval->ptr = libfuncs[i].code;
 		// other fields are irrelevant
 		insert_variable(func);
 	}
@@ -749,7 +750,7 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 	}
 	// we're not returning anymore
 	returning = false;
-	free(paras);
+	delete paras;
 	return ret;
 }
 ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
@@ -787,13 +788,14 @@ ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 		// variable is not yet set, so set it
 		if(var == NULL) {
 			var = new ehvar_t;
-			var->name = op->paras[1]->stringval;
+			var->value = new ehretval_t;
+			var->name = name;
 			var->scope = curr_scope;
 			insert_variable(var);
 		}
 		// count variable always gets to be an int
-		var->value.type = int_e;
-		for(var->value.intval = range.min; var->value.intval <= range.max; var->value.intval++) {
+		var->value->type = int_e;
+		for(var->value->intval = range.min; var->value->intval <= range.max; var->value->intval++) {
 			ret = eh_execute(op->paras[2], context);
 			LOOPCHECKS;
 		}
@@ -846,6 +848,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 	membervar = get_variable(membername, curr_scope, context);
 	if(membervar == NULL) {
 		membervar = new ehvar_t;
+		membervar->value = new ehretval_t;
 		membervar->name = membername;
 		membervar->scope = curr_scope;
 		insert_variable(membervar);
@@ -854,6 +857,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 		indexvar = get_variable(indexname, curr_scope, context);
 		if(indexvar == NULL) {
 			indexvar = new ehvar_t;
+			indexvar->value = new ehretval_t;
 			indexvar->name = indexname;
 			indexvar->scope = curr_scope;
 			insert_variable(indexvar);
@@ -862,7 +866,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 	if(object.type == object_e) {
 		// object index is always a string
 		if(indexname) {
-			indexvar->value.type = string_e;
+			indexvar->value->type = string_e;
 		}
 		ehvar_t **members = object.objectval->members;
 		// check whether we're allowed to access private things
@@ -874,8 +878,8 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 					continue;
 				}
 				if(currmember->attribute.isconst == const_e) {
-					membervar->value.type = creference_e;
-					membervar->value.referenceval = &currmember->value;
+					membervar->value->type = creference_e;
+					membervar->value->referenceval = currmember->value;
 				} else {
 					membervar->value = currmember->value;
 				}
@@ -883,7 +887,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 					// need the strdup here because currmember->name is const
 					// and a string_e is not. Perhaps solve this instead by
 					// creating a new cstring_e type?
-					indexvar->value.stringval = strdup(currmember->name);
+					indexvar->value->stringval = strdup(currmember->name);
 				}
 				ret = eh_execute(code, context);
 				LOOPCHECKS;
@@ -896,11 +900,11 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 			for(ehvar_t *currmember = members[i]; currmember != NULL; currmember = currmember->next) {
 				membervar->value = currmember->value;
 				if(indexname) {
-					indexvar->value.type = currmember->indextype;
+					indexvar->value->type = currmember->indextype;
 					if(currmember->indextype == string_e) {
-						indexvar->value.stringval = strdup(currmember->name);
+						indexvar->value->stringval = strdup(currmember->name);
 					} else {
-						indexvar->value.intval = currmember->index;
+						indexvar->value->intval = currmember->index;
 					}
 				}
 				ret = eh_execute(code, context);
@@ -947,7 +951,9 @@ ehretval_t eh_op_new(const char *name) {
 			value.funcval = new ehfm_t;
 			value.funcval->type = libmethod_e;
 			value.funcval->mptr = members[i].func;
-			class_insert_retval(ret.objectval->members, members[i].name, attributes, value);
+			class_insert_retval(
+				ret.objectval->members, members[i].name, attributes, value
+			);
 		}
 	}
 	return ret;
@@ -1177,12 +1183,12 @@ ehretval_t eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 				eh_error_unknown("function", function.stringval, efatal_e);
 				return ret;
 			}
-			if(func->value.type != func_e) {
-				eh_error_type("function call", func->value.type, eerror_e);
+			if(func->value->type != func_e) {
+				eh_error_type("function call", func->value->type, eerror_e);
 				return ret;
 			}
 			ret = call_function(
-				func->value.funcval, paras[1], context, context
+				func->value->funcval, paras[1], context, context
 			);
 			break;
 		case func_e:
@@ -1230,7 +1236,7 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 			// dereference variable
 			if(var != NULL) {
 				ret.type = reference_e;
-				ret.referenceval = &var->value;
+				ret.referenceval = var->value;
 			}
 			/*
 			 * If there is no variable of this name, and it is a
@@ -1289,7 +1295,8 @@ void eh_op_set(ehretval_t **paras, ehcontext_t context) {
 			ehvar_t *var = new ehvar_t;
 			var->name = paras[0]->opval->paras[0]->stringval;
 			var->scope = curr_scope;
-			var->value = rvalue;
+			var->value = new ehretval_t;
+			*var->value = rvalue;
 			insert_variable(var);
 		}
 		// else do nothing; T_LVALUE will already have complained
@@ -1413,23 +1420,17 @@ ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context) {
 	return NULL;
 }
 void remove_variable(const char *name, ehscope_t *scope) {
-	//printf("Removing variable %s of scope %d\n", name, scope);
-	//list_variables();
-	unsigned int vhash;
-	ehvar_t *currvar;
-	ehvar_t *prevvar;
-
-	vhash = hash(name, (uint32_t) scope);
-	currvar = vartable[vhash];
-	prevvar = NULL;
+	const unsigned int vhash = hash(name, (uint32_t) scope);
+	ehvar_t *currvar = vartable[vhash];
+	ehvar_t *prevvar = NULL;
 	while(currvar != NULL) {
 		if(strcmp(currvar->name, name) == 0 && currvar->scope == scope) {
-			if(prevvar == NULL)
+			if(prevvar == NULL) {
 				vartable[vhash] = currvar->next;
-			else
+			} else {
 				prevvar->next = currvar->next;
-			free(currvar);
-			//list_variables();
+			}
+			delete currvar;
 			return;
 		}
 		prevvar = currvar;
@@ -1445,7 +1446,7 @@ void list_variables(void) {
 		while(tmp != NULL) {
 			printf(
 				"Variable %s of type %d at scope %d in hash %d at address %x\n", 
-				tmp->name, tmp->value.type, (uint32_t) tmp->scope, i, 
+				tmp->name, tmp->value->type, (uint32_t) tmp->scope, i, 
 				(int) tmp
 			);
 			tmp = tmp->next;
@@ -1510,7 +1511,8 @@ ehretval_t call_function(const ehfm_t *f, ehretval_t *args, ehcontext_t context,
 			eh_error_argcount(f->argcount, i);
 			return ret;
 		}
-		var->value = eh_execute(args->opval->paras[1], context);
+		var->value = new ehretval_t;
+		*var->value = eh_execute(args->opval->paras[1], context);
 		args = args->opval->paras[0];
 	}
 	// functions get their own scope (not incremented before because execution of arguments needs parent scope)
@@ -1554,7 +1556,8 @@ ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, 
 		ehvar_t *var = new ehvar_t;
 		var->name = f->args[i].name;
 		var->scope = new_scope;
-		var->value = eh_execute(&args[i], context);
+		var->value = new ehretval_t;
+		*var->value = eh_execute(&args[i], context);
 		insert_variable(var);
 	}
 	// functions get their own scope (not incremented before because execution 
@@ -1592,15 +1595,19 @@ ehclass_t *get_class(const char *name) {
 void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i) {
 	ehvar_t *newmember = new ehvar_t;
 	// copy the whole thing over
-	*newmember = *classmember;
+	newmember->name = classmember->name;
+	newmember->attribute = classmember->attribute;
+	newmember->value = new ehretval_t;
 	// modify this pointer
 	if(!strcmp(newmember->name, "this")) {
-		newmember->value.type = object_e;
-		newmember->value.objectval = classobj;
+		newmember->value->type = object_e;
+		newmember->value->objectval = classobj;
 	} else if(classmember->attribute.isstatic == static_e) {
 		// handle static
-		newmember->value.type = reference_e;
-		newmember->value.referenceval = &classmember->value;
+		newmember->value->type = reference_e;
+		newmember->value->referenceval = classmember->value;
+	} else {
+		*newmember->value = *classmember->value;
 	}
 	newmember->next = classobj->members[i];
 	classobj->members[i] = newmember;
@@ -1643,10 +1650,11 @@ ehvar_t *class_insert_retval(
 	// insert a member into a class
 
 	ehvar_t *member = new ehvar_t;
+	member->value = new ehretval_t;
 	// rely on standard layout of the input ehretval_t
 	member->attribute = attribute;
 	member->name = name;
-	member->value = value;
+	*member->value = value;
 
 	// insert into hash table
 	unsigned int vhash = hash(member->name, 0);
@@ -1677,7 +1685,7 @@ ehretval_t class_get(const ehobj_t *classobj, const char *name, ehcontext_t cont
 	if(curr == NULL) {
 		ret.type = null_e;
 	} else {
-		ret = curr->value;
+		ret = *curr->value;
 	}
 	return ret;
 }
@@ -1703,23 +1711,23 @@ ehretval_t object_access(
 	}
 	label = eh_execute(index, context);
 
-	switch(var->value.type) {
+	switch(var->value->type) {
 		case array_e:
-			member = array_getmember(var->value.arrayval, label);
+			member = array_getmember(var->value->arrayval, label);
 			// if there is no member yet and we are
 			// setting, insert it with a null value
 			if(member == NULL) {
 				if(token == T_LVALUE_SET) {
 					member = array_insert_retval(
-						var->value.arrayval, label, ret
+						var->value->arrayval, label, ret
 					);
 					ret.type = reference_e;
-					ret.referenceval = &member->value;
+					ret.referenceval = member->value;
 				}
 				// else use default return value
 			} else {
 				ret.type = reference_e;
-				ret.referenceval = &member->value;
+				ret.referenceval = member->value;
 			}
 			break;
 		case object_e:
@@ -1727,7 +1735,7 @@ ehretval_t object_access(
 				eh_error_type("object member label", label.type, eerror_e);
 				return ret;
 			}
-			object = var->value.objectval;
+			object = var->value->objectval;
 		
 			member = class_getmember(object, label.stringval, context);
 			if(member == NULL) {
@@ -1753,12 +1761,12 @@ ehretval_t object_access(
 			} else {
 				ret.type = reference_e;
 			}
-			ret.referenceval = &member->value;
+			ret.referenceval = member->value;
 			newcontext = object;
 			break;
 		default:
 			ret.type = attribute_e;
-			ret.referenceval = &var->value;
+			ret.referenceval = var->value;
 			break;
 	}
 	return ret;
@@ -1815,7 +1823,7 @@ ehretval_t colon_access(
 	} else {
 		ret.type = reference_e;
 	}
-	ret.referenceval = &member->value;
+	ret.referenceval = member->value;
 	newcontext = &classobj->obj;
 	return ret;
 }
@@ -2246,14 +2254,15 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 				break;
 			default:
 				eh_error_type("array member label", label.type, enotice_e);
-				free(member);
+				delete member;
 				return;
 		}
 		var = eh_execute(in->opval->paras[1], context);
 	}
 
 	// create array member
-	member->value = var;
+	member->value = new ehretval_t;
+	*member->value = var;
 	// set next to NULL by default
 	member->next = NULL;
 
@@ -2266,7 +2275,7 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 				  && (*currptr)->index == member->index) {
 					// replace this array member
 					member->next = (*currptr)->next;
-					free(*currptr);
+					delete (*currptr);
 					*currptr = member;
 					return;
 				}
@@ -2278,7 +2287,7 @@ void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t contex
 				if((*currptr)->indextype == string_e 
 				  && !strcmp((*currptr)->name, member->name)) {
 					member->next = (*currptr)->next;
-					free(*currptr);
+					delete (*currptr);
 					*currptr = member;
 					return;
 				}
@@ -2309,12 +2318,13 @@ ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret) 
 			break;
 		default:
 			eh_error_type("array index", index.type, enotice_e);
-			free(newvar);
+			delete newvar;
 			return NULL;
 	}
 	newvar->next = array[vhash];
 	array[vhash] = newvar;
-	newvar->value = ret;
+	newvar->value = new ehretval_t;
+	*newvar->value = ret;
 	return newvar;
 }
 ehvar_t *array_getmember(ehvar_t **array, ehretval_t index) {
@@ -2361,7 +2371,7 @@ ehretval_t array_get(ehvar_t **array, ehretval_t index) {
 	if(curr == NULL) {
 		ret.type = null_e;
 	} else {
-		ret = curr->value;
+		ret = *curr->value;
 	}
 	return ret;
 }
@@ -2534,20 +2544,22 @@ void eh_setarg(int argc, char **argv) {
 
 	// insert argc
 	ehvar_t *argc_v = new ehvar_t;
-	argc_v->value.type = int_e;
+	argc_v->value = new ehretval_t;
+	argc_v->value->type = int_e;
 	// global scope
 	argc_v->scope = global_scope;
 	argc_v->name = "argc";
 	// argc - 1, because argv[0] is ehi itself
-	argc_v->value.intval = argc - 1;
+	argc_v->value->intval = argc - 1;
 	insert_variable(argc_v);
 
 	// insert argv
 	ehvar_t *argv_v = new ehvar_t;
-	argv_v->value.type = array_e;
+	argv_v->value = new ehretval_t;
+	argv_v->value->type = array_e;
 	argv_v->scope = global_scope;
 	argv_v->name = "argv";
-	argv_v->value.arrayval = new ehvar_t *[VARTABLE_S]();
+	argv_v->value->arrayval = new ehvar_t *[VARTABLE_S]();
 
 	// all members of argv are strings
 	ret.type = string_e;
@@ -2555,7 +2567,7 @@ void eh_setarg(int argc, char **argv) {
 	for(int i = 1; i < argc; i++) {
 		index.intval = i - 1;
 		ret.stringval = argv[i];
-		array_insert_retval(argv_v->value.arrayval, index, ret);
+		array_insert_retval(argv_v->value->arrayval, index, ret);
 	}
 	insert_variable(argv_v);
 }

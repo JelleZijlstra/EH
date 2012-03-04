@@ -9,7 +9,7 @@
 #include "eh.bison.hpp"
 #include <math.h>
 
-void printvar_retval(ehretval_t in);
+void printvar_retval(const ehretval_t *in);
 static void printvar_array(ehvar_t **in);
 static void printvar_object(ehvar_t **in);
 
@@ -48,45 +48,45 @@ EHLIBFUNC(printvar) {
 	ehretval_t args[1];
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
 		return;
-	printvar_retval(args[0]);
+	printvar_retval(&args[0]);
 	return;
 }
 // helper functions for printvar
-void printvar_retval(const ehretval_t in) {
+void printvar_retval(const ehretval_t *in) {
 	int i;
-	switch(in.type) {
+	switch(in->type) {
 		case null_e:
 			printf("null\n");
 			break;
 		case int_e:
-			printf("@int %d\n", in.intval);
+			printf("@int %d\n", in->intval);
 			break;
 		case string_e:
-			printf("@string '%s'\n", in.stringval);
+			printf("@string '%s'\n", in->stringval);
 			break;
 		case array_e:
 			printf("@array [\n");
-			printvar_array(in.arrayval);
+			printvar_array(in->arrayval);
 			printf("]\n");
 			break;
 		case bool_e:
-			if(in.boolval)
+			if(in->boolval)
 				printf("@bool true\n");
 			else
 				printf("@bool false\n");
 			break;
 		case object_e:
-			printf("@object <%s> [\n", in.objectval->classname);
-			printvar_object(in.objectval->members);
+			printf("@object <%s> [\n", in->objectval->classname);
+			printvar_object(in->objectval->members);
 			printf("]\n");
 			break;
 		case creference_e:
 		case reference_e:
-			printvar_retval(*in.referenceval);
+			printvar_retval(in->referenceval);
 			break;
 		case func_e:
 			printf("@function <");
-			switch(in.funcval->type) {
+			switch(in->funcval->type) {
 				case user_e:
 					printf("user");
 					break;
@@ -98,33 +98,33 @@ void printvar_retval(const ehretval_t in) {
 					break;
 			}
 			printf(">: ");
-			for(i = 0; i < in.funcval->argcount; i++) {
-				printf("%s", in.funcval->args[i].name);
-				if(i + 1 < in.funcval->argcount)
+			for(i = 0; i < in->funcval->argcount; i++) {
+				printf("%s", in->funcval->args[i].name);
+				if(i + 1 < in->funcval->argcount)
 					printf(", ");
 			}
 			printf("\n");
 			break;
 		case accessor_e:
-			printf("@accesor %d\n", in.accessorval);
+			printf("@accesor %d\n", in->accessorval);
 			break;
 		case type_e:
-			printf("@type %s\n", get_typestring(in.typeval));
+			printf("@type %s\n", get_typestring(in->typeval));
 			break;
 		case op_e:
-			printf("@op %d\n", in.opval->op);
+			printf("@op %d\n", in->opval->op);
 			break;
 		case attribute_e:
-			printf("@attribute %d\n", in.attributeval);
+			printf("@attribute %d\n", in->attributeval);
 			break;
 		case attributestr_e:
 			printf("@attributestr\n");
 			break;
 		case range_e:
-			printf("@range %d..%d\n", in.rangeval->min, in.rangeval->max);
+			printf("@range %d..%d\n", in->rangeval->min, in->rangeval->max);
 			break;
 		case float_e:
-			printf("@float %f\n", in.floatval);
+			printf("@float %f\n", in->floatval);
 			break;
 	}
 	return;

@@ -22,7 +22,9 @@ ehcmd_bucket_t *cmdtable[VARTABLE_S];
 
 // current object, gets passed around
 static ehcontext_t newcontext = NULL;
-int scope = 0;
+ehscope_t *global_scope = NULL;
+ehscope_t *curr_scope = global_scope;
+
 static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node);
 static ehretval_t int_arrow_get(ehretval_t operand1, ehretval_t operand2);
 static ehretval_t string_arrow_get(ehretval_t operand1, ehretval_t operand2);
@@ -35,7 +37,6 @@ ehretval_t eh_count(const ehretval_t in);
 ehretval_t eh_op_tilde(ehretval_t in);
 ehretval_t eh_op_uminus(ehretval_t in);
 ehretval_t eh_op_dot(ehretval_t operand1, ehretval_t operand2);
-void eh_op_global(const char *name, ehcontext_t context);
 ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
 ehretval_t eh_op_for(opnode_t *op, ehcontext_t context);
 ehretval_t eh_op_while(ehretval_t **paras, ehcontext_t context);
@@ -252,9 +253,6 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 			case '!': // Boolean not
 				ret = eh_xtobool(eh_execute(node->opval->paras[0], context));
 				ret.boolval = !ret.boolval;
-				break;
-			case T_GLOBAL: // global variable declaration
-				eh_op_global(node->opval->paras[0]->stringval, context);
 				break;
 		/*
 		 * Control flow
@@ -647,20 +645,6 @@ ehretval_t eh_op_dot(ehretval_t operand1, ehretval_t operand2) {
 	}
 	return ret;
 }
-void eh_op_global(const char *name, ehcontext_t context) {
-	ehvar_t *globalvar = get_variable(name, 0, context);
-	if(globalvar == NULL) {
-		eh_error_unknown("global variable", name, enotice_e);
-		return;
-	}
-	ehvar_t *newvar = new ehvar_t;
-	newvar->name = name;
-	newvar->scope = scope;
-	newvar->value.type = reference_e;
-	newvar->value.referenceval = &globalvar->value;
-	insert_variable(newvar);
-	return;
-}
 ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context) {
 	ehretval_t index_r, value_r;
 	ehvar_t **paras;
@@ -801,12 +785,12 @@ ehretval_t eh_op_for(opnode_t *op, ehcontext_t context) {
 	else {
 		// "for 5 count i; do stuff; endfor" construct
 		char *name = op->paras[1]->stringval;
-		ehvar_t *var = get_variable(name, scope, context);
+		ehvar_t *var = get_variable(name, curr_scope, context);
 		// variable is not yet set, so set it
 		if(var == NULL) {
 			var = new ehvar_t;
 			var->name = op->paras[1]->stringval;
-			var->scope = scope;
+			var->scope = curr_scope;
 			insert_variable(var);
 		}
 		// count variable always gets to be an int
@@ -847,7 +831,7 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 	char *membername;
 	ehvar_t *membervar;
 	char *indexname;
-	ehvar_t *indexvar;
+	ehvar_t *indexvar = NULL;
 	ehretval_t *code;
 	if(op->nparas == 3) {
 		// no index
@@ -861,25 +845,27 @@ ehretval_t eh_op_as(opnode_t *op, ehcontext_t context) {
 		code = op->paras[3];
 	}
 	// create variables
-	membervar = get_variable(membername, scope, context);
+	membervar = get_variable(membername, curr_scope, context);
 	if(membervar == NULL) {
 		membervar = new ehvar_t;
 		membervar->name = membername;
-		membervar->scope = scope;
+		membervar->scope = curr_scope;
 		insert_variable(membervar);
 	}
 	if(indexname != NULL) {
-		indexvar = get_variable(indexname, scope, context);
+		indexvar = get_variable(indexname, curr_scope, context);
 		if(indexvar == NULL) {
 			indexvar = new ehvar_t;
 			indexvar->name = indexname;
-			indexvar->scope = scope;
+			indexvar->scope = curr_scope;
 			insert_variable(indexvar);
 		}
 	}
 	if(object.type == object_e) {
 		// object index is always a string
-		indexvar->value.type = string_e;
+		if(indexname) {
+			indexvar->value.type = string_e;
+		}
 		ehvar_t **members = object.objectval->members;
 		// check whether we're allowed to access private things
 		const bool doprivate = ehcontext_compare(object.objectval, context);
@@ -1253,7 +1239,7 @@ ehretval_t eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	ret.referenceval = NULL;
 	switch(op->nparas) {
 		case 1:
-			var = get_variable(basevar.stringval, scope, context);
+			var = get_variable(basevar.stringval, curr_scope, context);
 			// dereference variable
 			if(var != NULL) {
 				ret.type = reference_e;
@@ -1315,7 +1301,7 @@ void eh_op_set(ehretval_t **paras, ehcontext_t context) {
 			// set new variable
 			ehvar_t *var = new ehvar_t;
 			var->name = paras[0]->opval->paras[0]->stringval;
-			var->scope = scope;
+			var->scope = curr_scope;
 			var->value = rvalue;
 			insert_variable(var);
 		}
@@ -1400,7 +1386,7 @@ ehretval_t eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 bool insert_variable(ehvar_t *var) {
 	unsigned int vhash;
 	//printf("Inserting variable %s with value %d at scope %d\n", var->name, var->intval, var->scope);
-	vhash = hash(var->name, var->scope);
+	vhash = hash(var->name, (uint32_t) var->scope);
 	if(vartable[vhash] == NULL) {
 		vartable[vhash] = var;
 		var->next = NULL;
@@ -1411,35 +1397,42 @@ bool insert_variable(ehvar_t *var) {
 	}
 	return true;
 }
-ehvar_t *get_variable(const char *name, int scope, ehcontext_t context) {
-	unsigned int vhash;
+ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context) {
 	ehvar_t *currvar;
 
-	vhash = hash(name, scope);
-	currvar = vartable[vhash];
-	while(currvar != NULL) {
-		//printf("name: %x, currvar->name, %x\n", name, currvar->name);
-		if(strcmp(currvar->name, name) == 0 && currvar->scope == scope) {
+	// try the object first
+	if(context != NULL) {
+		currvar = class_getmember(context, name, context);
+		if(currvar != NULL) {
 			return currvar;
 		}
-		currvar = currvar->next;
 	}
-	// else try the object
-	if(context) {
-		if((currvar = class_getmember(context, name, context))) {
-			return currvar;
+	// look in this scope, then the parent scope
+	while(1) {
+		unsigned int vhash = hash(name, (uint32_t) scope);
+		currvar = vartable[vhash];
+		while(currvar != NULL) {
+			if(strcmp(currvar->name, name) == 0 && currvar->scope == scope) {
+				return currvar;
+			}
+			currvar = currvar->next;
+		}
+		if(scope == NULL) {
+			break;
+		} else {
+			scope = scope->parent;
 		}
 	}
 	return NULL;
 }
-void remove_variable(const char *name, int scope) {
+void remove_variable(const char *name, ehscope_t *scope) {
 	//printf("Removing variable %s of scope %d\n", name, scope);
 	//list_variables();
 	unsigned int vhash;
 	ehvar_t *currvar;
 	ehvar_t *prevvar;
 
-	vhash = hash(name, scope);
+	vhash = hash(name, (uint32_t) scope);
 	currvar = vartable[vhash];
 	prevvar = NULL;
 	while(currvar != NULL) {
@@ -1463,7 +1456,11 @@ void list_variables(void) {
 	for(i = 0; i < VARTABLE_S; i++) {
 		tmp = vartable[i];
 		while(tmp != NULL) {
-			printf("Variable %s of type %d at scope %d in hash %d at address %x\n", tmp->name, tmp->value.type, tmp->scope, i, (int) tmp);
+			printf(
+				"Variable %s of type %d at scope %d in hash %d at address %x\n", 
+				tmp->name, tmp->value.type, (uint32_t) tmp->scope, i, 
+				(int) tmp
+			);
 			tmp = tmp->next;
 		}
 	}
@@ -1520,6 +1517,10 @@ ehretval_t call_function(const ehfm_t *f, ehretval_t *args, ehcontext_t context,
 		return ret;
 	}
 	int i = 0;
+	// create new scope
+	ehscope_t *new_scope = new ehscope_t;
+	new_scope->parent = curr_scope;
+	
 	// set parameters as necessary
 	if(f->args == NULL) {
 		if(args->opval->nparas != 0) {
@@ -1530,7 +1531,7 @@ ehretval_t call_function(const ehfm_t *f, ehretval_t *args, ehcontext_t context,
 	else while(args->opval->nparas != 0) {
 		ehvar_t *var = new ehvar_t;
 		var->name = f->args[i].name;
-		var->scope = scope + 1;
+		var->scope = new_scope;
 		insert_variable(var);
 		i++;
 		if(i > f->argcount) {
@@ -1541,7 +1542,7 @@ ehretval_t call_function(const ehfm_t *f, ehretval_t *args, ehcontext_t context,
 		args = args->opval->paras[0];
 	}
 	// functions get their own scope (not incremented before because execution of arguments needs parent scope)
-	scope++;
+	curr_scope = new_scope;
 	if(f->argcount != i) {
 		eh_error_argcount(f->argcount, i);
 		return ret;
@@ -1549,10 +1550,13 @@ ehretval_t call_function(const ehfm_t *f, ehretval_t *args, ehcontext_t context,
 	// set new context (only useful for methods)
 	ret = eh_execute(f->code, newcontext);
 	returning = false;
+	
+	/* comment out removing variables for now until we have proper GC
 	for(i = 0; i < f->argcount; i++) {
-		remove_variable(f->args[i].name, scope);
-	}
-	scope--;
+		remove_variable(f->args[i].name, curr_scope);
+	} */
+	curr_scope = curr_scope->parent;
+	delete new_scope;
 	return ret;
 }
 ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, const ehretval_t *const args) {
@@ -1570,24 +1574,29 @@ ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, 
 		eh_error_argcount(f->argcount, nargs);
 		return ret;
 	}
+	// create new scope
+	ehscope_t *new_scope = new ehscope_t;
+	new_scope->parent = curr_scope;
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {
 		ehvar_t *var = new ehvar_t;
 		var->name = f->args[i].name;
-		var->scope = scope + 1;
+		var->scope = new_scope;
 		var->value = eh_execute(&args[i], context);
 		insert_variable(var);
 	}
 	// functions get their own scope (not incremented before because execution 
 	// of arguments needs parent scope)
-	scope++;
+	curr_scope = new_scope;
 	// set new context (only useful for methods)
 	ret = eh_execute(f->code, newcontext);
 	returning = false;
-	for(int i = 0; i < nargs; i++) {
-		remove_variable(f->args[i].name, scope);
-	}
-	scope--;
+	/* comment out removing variables for now until we have proper GC
+	for(i = 0; i < f->argcount; i++) {
+		remove_variable(f->args[i].name, curr_scope);
+	} */
+	curr_scope = curr_scope->parent;
+	delete new_scope;
 	return ret;
 }
 /*
@@ -1715,7 +1724,7 @@ ehretval_t object_access(
 	// default value
 	ret.type = null_e;
 
-	var = get_variable(operand1.stringval, scope, context);
+	var = get_variable(operand1.stringval, curr_scope, context);
 	if(var == NULL) {
 		eh_error("cannot access member of nonexistent variable", eerror_e);
 		return ret;
@@ -2555,7 +2564,7 @@ void eh_setarg(int argc, char **argv) {
 	ehvar_t *argc_v = new ehvar_t;
 	argc_v->value.type = int_e;
 	// global scope
-	argc_v->scope = 0;
+	argc_v->scope = global_scope;
 	argc_v->name = "argc";
 	// argc - 1, because argv[0] is ehi itself
 	argc_v->value.intval = argc - 1;
@@ -2564,7 +2573,7 @@ void eh_setarg(int argc, char **argv) {
 	// insert argv
 	ehvar_t *argv_v = new ehvar_t;
 	argv_v->value.type = array_e;
-	argv_v->scope = 0;
+	argv_v->scope = global_scope;
 	argv_v->name = "argv";
 	argv_v->value.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
 

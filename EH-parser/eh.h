@@ -147,7 +147,7 @@ typedef struct ehvar_t {
 	// attributes of an object member
 	union {
 		memberattribute_t attribute;
-		int scope;
+		struct ehscope_t *scope;
 		type_enum indextype;
 	};
 	struct ehretval_t value;
@@ -242,6 +242,11 @@ typedef struct ehlibfunc_t {
 	const char *name;
 } ehlibfunc_t;
 
+// scope
+struct ehscope_t {
+	struct ehscope_t *parent;
+};
+
 /*
  * EH error system
  */
@@ -314,12 +319,13 @@ extern ehclass_t *classtable[];
 extern ehcmd_bucket_t *cmdtable[];
 
 // current variable scope
-extern int scope;
+extern ehscope_t *global_scope;
+extern ehscope_t *curr_scope;
 
 // prototypes
 bool insert_variable(ehvar_t *var);
-ehvar_t *get_variable(const char *name, int scope, ehcontext_t context);
-void remove_variable(const char *name, int scope);
+ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context);
+void remove_variable(const char *name, ehscope_t *scope);
 void list_variables(void);
 bool insert_function(ehfunc_t *func);
 ehfunc_t *get_function(const char *name);

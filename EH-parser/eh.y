@@ -60,7 +60,6 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_NULL
 %token T_CLASS
 %token T_ENDCLASS
-%token T_GLOBAL
 %token T_LVALUE_GET T_LVALUE_SET
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
@@ -94,6 +93,10 @@ program:
 								// free stuff, somehow.
 								// Actually doing free_node($1) at this moment
 								// breaks include:
+								// One solution may be to make a linked list of
+								// ASTs that gets started in main(); an entry
+								// will get added by every include: call and at
+								// program shutdown we kill them all.
 							}
 
 global_list:
@@ -163,8 +166,6 @@ statement:
 							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
 	| T_CLASS bareword T_SEPARATOR classlist T_ENDCLASS T_SEPARATOR
 							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
-	| T_GLOBAL bareword	T_SEPARATOR
-							{ $$ = eh_addnode(T_GLOBAL, 1, $2); }
 	| T_CONTINUE T_SEPARATOR
 							{ $$ = eh_addnode(T_CONTINUE, 0); }
 	| T_CONTINUE expression T_SEPARATOR

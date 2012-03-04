@@ -3,7 +3,6 @@
 class Foo
 	public bar
 	public baz: n
-		global myvar
 		put $n . ' '
 		echo $myvar
 	end
@@ -17,7 +16,6 @@ $newvar: 19
 put @string 19
 echo @string 19
 func unknownglobal:
-	global nosuchvar
 	printvar: $nosuchvar
 end
 unknownglobal:

@@ -4,12 +4,10 @@
 var := 3
 var2 := 3
 func foo: n
-	global var
 	var := &n
 	ret $var
 end
 func bar: n
-	global var2
 	var2 := &n
 end
 b := foo: 2

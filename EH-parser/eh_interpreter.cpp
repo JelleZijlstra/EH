@@ -1597,17 +1597,18 @@ void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i) {
 	// copy the whole thing over
 	newmember->name = classmember->name;
 	newmember->attribute = classmember->attribute;
-	newmember->value = new ehretval_t;
-	// modify this pointer
-	if(!strcmp(newmember->name, "this")) {
-		newmember->value->type = object_e;
-		newmember->value->objectval = classobj;
-	} else if(classmember->attribute.isstatic == static_e) {
+	if(classmember->attribute.isstatic == static_e) {
 		// handle static
-		newmember->value->type = reference_e;
-		newmember->value->referenceval = classmember->value;
+		newmember->value = classmember->value;
 	} else {
-		*newmember->value = *classmember->value;
+		newmember->value = new ehretval_t;
+		// modify this pointer
+		if(!strcmp(newmember->name, "this")) {
+			newmember->value->type = object_e;
+			newmember->value->objectval = classobj;
+		} else {
+			*newmember->value = *classmember->value;
+		}
 	}
 	newmember->next = classobj->members[i];
 	classobj->members[i] = newmember;

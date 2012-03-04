@@ -16,7 +16,6 @@ static int inloop = 0;
 static int breaking = 0;
 static int continuing = 0;
 ehvar_t *vartable[VARTABLE_S];
-ehfunc_t *functable[VARTABLE_S];
 ehclass_t *classtable[VARTABLE_S];
 ehcmd_bucket_t *cmdtable[VARTABLE_S];
 
@@ -191,12 +190,15 @@ const char *libredirs[][2] = {
  */
 void eh_init(void) {
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
-		ehfunc_t *func = new ehfunc_t;
+		ehvar_t *func = new ehvar_t;
 		func->name = libfuncs[i].name;
-		func->f.type = lib_e;
-		func->f.ptr = libfuncs[i].code;
+		func->scope = global_scope;
+		func->value.type = func_e;
+		func->value.funcval = new ehfm_t;
+		func->value.funcval->type = lib_e;
+		func->value.funcval->ptr = libfuncs[i].code;
 		// other fields are irrelevant
-		insert_function(func);
+		insert_variable(func);
 	}
 	for(int i = 0; libclasses[i].name != NULL; i++) {
 		ehclass_t *newclass = new ehclass_t;
@@ -327,11 +329,7 @@ ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context) {
 		 * Object definitions
 		 */
 			case T_FUNC: // function definition
-				if(node->opval->nparas == 3) {
-					eh_op_declarefunc(node->opval->paras);
-				} else {
-					ret = eh_op_declareclosure(node->opval->paras);
-				}
+				ret = eh_op_declareclosure(node->opval->paras);
 				break;
 			case T_CLASS: // class declaration
 				eh_op_declareclass(node->opval->paras, context);
@@ -1033,23 +1031,6 @@ ehretval_t eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
 	}
 	return ret;
 }
-void eh_op_declarefunc(ehretval_t **paras) {
-	const char *name = paras[0]->stringval;
-	ehfunc_t *func = get_function(name);
-	// function definition
-	if(func != NULL) {
-		eh_error_redefine("function", name, efatal_e);
-		return;
-	}
-	func = new ehfunc_t;
-	func->name = name;
-	// determine argcount
-	make_arglist(&func->f.argcount, &func->f.args, paras[1]);
-	func->f.code = paras[2];
-	func->f.type = user_e;
-	insert_function(func);
-	return;
-}
 ehretval_t eh_op_declareclosure(ehretval_t **paras) {
 	ehretval_t ret;
 	ret.type = func_e;
@@ -1182,7 +1163,7 @@ ehretval_t eh_op_given(ehretval_t **paras, ehcontext_t context) {
 }
 ehretval_t eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t ret;
-	ehfunc_t *func;
+	ehvar_t *func;
 	ret.type = null_e;
 
 	newcontext = NULL;
@@ -1191,12 +1172,18 @@ ehretval_t eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 	// func_e (indicating a method or closure call)
 	switch(function.type) {
 		case string_e:
-			func = get_function(function.stringval);
+			func = get_variable(function.stringval, curr_scope, context);
 			if(func == NULL) {
 				eh_error_unknown("function", function.stringval, efatal_e);
 				return ret;
 			}
-			ret = call_function(&func->f, paras[1], context, context);
+			if(func->value.type != func_e) {
+				eh_error_type("function call", func->value.type, eerror_e);
+				return ret;
+			}
+			ret = call_function(
+				func->value.funcval, paras[1], context, context
+			);
 			break;
 		case func_e:
 			ret = call_function(
@@ -1468,21 +1455,6 @@ void list_variables(void) {
 /*
  * Functions
  */
-bool insert_function(ehfunc_t *func) {
-	unsigned int vhash = hash(func->name, HASH_INITVAL);
-	func->next = functable[vhash];
-	functable[vhash] = func;
-	return true;
-}
-ehfunc_t *get_function(const char *name) {
-	for(ehfunc_t *currfunc = functable[hash(name, HASH_INITVAL)]; 
-	  currfunc != NULL; currfunc = currfunc->next) {
-		if(strcmp(currfunc->name, name) == 0) {
-			return currfunc;
-		}
-	}
-	return NULL;
-}
 static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node) {
 	int currarg = count_nodes(node);
 	*argcount = currarg;

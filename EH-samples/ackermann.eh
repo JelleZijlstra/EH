@@ -12,8 +12,8 @@ func ackermann: m, n
 	end
 end
 
-for 0..3 count m
-	for 0..(9 - $m) count n
+for 0..2 count m
+	for 0..(3 - $m) count n
 		echo 'A(' . $m . ',' . $n . ') = ' . (ackermann: $m, $n)
 	end
 end

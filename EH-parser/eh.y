@@ -157,9 +157,13 @@ statement:
 	| T_CALL expression T_SEPARATOR
 							{ $$ = eh_addnode(T_CALL, 1, $2); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_FUNC, 3, $2, $4, $6); }
+							{ $$ = eh_addnode(T_SET, 2, 
+								eh_addnode(T_LVALUE_SET, 1, $2), 
+								eh_addnode(T_FUNC, 2, $4, $6)); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
-							{ $$ = eh_addnode(T_FUNC, 3, $2, $4, $6); }
+							{ $$ = eh_addnode(T_SET, 2,
+								eh_addnode(T_LVALUE_SET, 1, $2),
+								eh_addnode(T_FUNC, 2, $4, $6)); }
 	| T_RET expression T_SEPARATOR
 							{ $$ = eh_addnode(T_RET, 1, $2); }
 	| T_CLASS bareword T_SEPARATOR classlist T_END T_SEPARATOR

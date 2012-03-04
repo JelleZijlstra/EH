@@ -1288,6 +1288,7 @@ ehretval_t eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 void eh_op_set(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t lvalue = eh_execute(paras[0], context);
 	ehretval_t rvalue = eh_execute(paras[1], context);
+	rvalue.inc_rc();
 	ehretval_t index;
 	if(lvalue.type == null_e) {
 		if(lvalue.referenceval == NULL) {
@@ -1419,6 +1420,25 @@ ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context) {
 	}
 	return NULL;
 }
+// remove all variables in scope scope
+void remove_scope(ehscope_t *scope) {
+	for(int i = 0; i < VARTABLE_S; i++) {
+		ehvar_t *c = vartable[i];
+		ehvar_t *p = NULL;
+		while(c != NULL) {
+			if(c->scope == scope) {
+				if(p == NULL) {
+					vartable[i] = c->next;
+				} else {
+					p->next = c->next;
+				}
+				delete c;
+			}
+			p = c;
+			c = c->next;
+		}
+	}
+}
 void remove_variable(const char *name, ehscope_t *scope) {
 	const unsigned int vhash = hash(name, (uint32_t) scope);
 	ehvar_t *currvar = vartable[vhash];
@@ -1525,10 +1545,7 @@ ehretval_t call_function(const ehfm_t *f, ehretval_t *args, ehcontext_t context,
 	ret = eh_execute(f->code, newcontext);
 	returning = false;
 	
-	/* comment out removing variables for now until we have proper GC
-	for(i = 0; i < f->argcount; i++) {
-		remove_variable(f->args[i].name, curr_scope);
-	} */
+	remove_scope(curr_scope);
 	curr_scope = curr_scope->parent;
 	delete new_scope;
 	return ret;
@@ -1566,10 +1583,8 @@ ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, 
 	// set new context (only useful for methods)
 	ret = eh_execute(f->code, newcontext);
 	returning = false;
-	/* comment out removing variables for now until we have proper GC
-	for(i = 0; i < f->argcount; i++) {
-		remove_variable(f->args[i].name, curr_scope);
-	} */
+	
+	remove_scope(curr_scope);
 	curr_scope = curr_scope->parent;
 	delete new_scope;
 	return ret;

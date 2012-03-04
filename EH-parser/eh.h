@@ -129,7 +129,8 @@ typedef struct ehretval_t {
 	void dec_rc() {
 		refcount--;
 		if(refcount == 0) {
-			free();
+			printf("Freeing ehretval_t at address %p\n", (void *)this);
+			//free();
 		}
 	}
 	void free();
@@ -152,6 +153,12 @@ typedef struct ehvar_t {
 	};
 	struct ehretval_t *value;
 	struct ehvar_t *next;
+	
+	// destructor
+	~ehvar_t() {
+		// decrement refcount of the value
+		value->dec_rc();
+	}
 } ehvar_t;
 
 // in future, add type for type checking

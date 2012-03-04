@@ -650,7 +650,7 @@ ehretval_t eh_op_command(const char *name, ehretval_t *node, ehcontext_t context
 	// count for simple parameters
 	int count = 0;
 	// we're making an array of parameters
-	paras = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t));
+	paras = new ehvar_t *[VARTABLE_S]();
 	// loop through the paras given
 	for( ; node->opval->nparas != 0; node = node->opval->paras[1]) {
 		node2 = node->opval->paras[0];
@@ -923,7 +923,7 @@ ehretval_t eh_op_new(const char *name) {
 	ret.type = object_e;
 	ret.objectval = new ehobj_t;
 	ret.objectval->classname = name;
-	ret.objectval->members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	ret.objectval->members = new ehvar_t *[VARTABLE_S]();
 	if(classobj->type == user_e) {
 		for(int i = 0; i < VARTABLE_S; i++) {
 			for(ehvar_t *m = classobj->obj.members[i]; m != NULL; m = m->next) {
@@ -993,7 +993,7 @@ void eh_op_continue(opnode_t *op, ehcontext_t context) {
 ehretval_t eh_op_array(ehretval_t *node, ehcontext_t context) {
 	ehretval_t ret;
 	ret.type = array_e;
-	ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	ret.arrayval = new ehvar_t *[VARTABLE_S]();
 	// need to count array members first, because they are reversed in our node.
 	// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
 	int count = 0;
@@ -1010,7 +1010,7 @@ ehretval_t eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
 	ret.type = object_e;
 	ret.objectval = new ehobj_t;
 	ret.objectval->classname = "AnonClass";
-	ret.objectval->members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	ret.objectval->members = new ehvar_t *[VARTABLE_S]();
 	// all members are public, non-static, non-const
 	memberattribute_t attributes;
 	attributes.visibility = public_e;
@@ -1050,7 +1050,7 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	classobj = new ehclass_t;
 	classobj->type = user_e;
 	classobj->obj.classname = classname_r.stringval;
-	classobj->obj.members = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	classobj->obj.members = new ehvar_t *[VARTABLE_S]();
 	// insert class members
 	for(ehretval_t *node = paras[1]; node != NULL; node = node->opval->paras[1]) {
 		if(node->type == op_e && node->opval->op == ',') {
@@ -1911,7 +1911,7 @@ ehretval_t eh_rangetoarray(const ehrange_t *const range) {
 	index.type = int_e;
 	member.type = int_e;
 
-	ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	ret.arrayval = new ehvar_t *[VARTABLE_S]();
 	index.intval = 0;
 	member.intval = range->min;
 	array_insert_retval(ret.arrayval, index, member);
@@ -2126,7 +2126,7 @@ ehretval_t eh_xtoarray(const ehretval_t in) {
 		case null_e:
 		case object_e:
 			// create an array with just this variable in it
-			ret.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+			ret.arrayval = new ehvar_t *[VARTABLE_S]();
 			index.type = int_e;
 			index.intval = 0;
 			array_insert_retval(ret.arrayval, index, in);
@@ -2547,7 +2547,7 @@ void eh_setarg(int argc, char **argv) {
 	argv_v->value.type = array_e;
 	argv_v->scope = global_scope;
 	argv_v->name = "argv";
-	argv_v->value.arrayval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+	argv_v->value.arrayval = new ehvar_t *[VARTABLE_S]();
 
 	// all members of argv are strings
 	ret.type = string_e;

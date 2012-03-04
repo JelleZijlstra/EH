@@ -144,7 +144,7 @@ ehretval_t zvaltoeh(zval *in) {
 }
 
 ehvar_t **zvaltoeh_array(HashTable *hash) {
-    ehvar_t** retval = (ehvar_t **) Calloc(VARTABLE_S, sizeof(ehvar_t *));
+    ehvar_t** retval = new ehvar_t *[VARTABLE_S]();
 	// variables for our new array
 	ehretval_t index, value;
 	for(Bucket *curr = hash->pListHead; curr != NULL; curr = curr->pListNext) {

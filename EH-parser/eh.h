@@ -279,8 +279,6 @@ int eh_outer_exit(int exitval);
 void eh_init(void);
 void eh_exit(void);
 void yyerror(void *, const char *s);
-void *Malloc(size_t size);
-void *Calloc(size_t count, size_t size);
 void free_node(ehretval_t *in);
 ehretval_t *eh_addnode(int operations, int noperations, ...);
 ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context);
@@ -314,7 +312,6 @@ extern int is_interactive;
 // symbol table for variables and functions
 #define VARTABLE_S 1024
 extern ehvar_t *vartable[];
-extern ehfunc_t *functable[];
 extern ehclass_t *classtable[];
 extern ehcmd_bucket_t *cmdtable[];
 

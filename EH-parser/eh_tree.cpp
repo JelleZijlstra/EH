@@ -75,25 +75,6 @@ ehretval_t *eh_addnode(int operation, int nparas, ...) {
 	return ret;
 }
 
-void *Malloc(size_t size) {
-	void *ret;
-	ret = malloc(size);
-	if(ret == NULL) {
-		yyerror(NULL, "Unable to allocate memory");
-		throw new std::exception;
-	}
-	return ret;
-}
-void *Calloc(size_t count, size_t size) {
-	void *ret;
-	ret = calloc(count, size);
-	if(ret == NULL) {
-		yyerror(NULL, "Unable to allocate memory");
-		throw new std::exception;
-	}
-	return ret;
-}
-
 static void printntabs(const int n) {
 	for(int i = 0; i < n; i++) {
 		printf("\t");

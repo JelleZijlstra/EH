@@ -89,6 +89,7 @@ EH_METHOD(File, gets) {
 	if(ptr == NULL) {
 		delete[] (*retval)->stringval;
 		delete *retval;
+		*retval = NULL;
 	}
 }
 

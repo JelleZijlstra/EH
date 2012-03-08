@@ -1507,10 +1507,8 @@ ehretval_t *call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehco
 		f->ptr(args, &ret, context);
 		return ret;
 	} else if(f->type == libmethod_e) {
-		ret = new ehretval_t;
 		if(newcontext == NULL) {
 			eh_error("Bare call of library method", eerror_e);
-			delete ret;
 			return NULL;
 		}
 		f->mptr(newcontext->selfptr, args, &ret, newcontext);

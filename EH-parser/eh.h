@@ -211,6 +211,10 @@ typedef struct ehretval_t {
 	ehretval_t *overwrite(ehretval_t *in) {
 		if(is_shared == 0) {
 			// overwrite
+			if(in == NULL) {
+				type = null_e;
+				return this;
+			}
 			type = in->type;
 			switch(type) {
 #define COPY(type) case type ## _e: type ## val = in->type ## val; break

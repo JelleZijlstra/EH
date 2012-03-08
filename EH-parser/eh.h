@@ -149,6 +149,8 @@ typedef struct ehretval_t {
 	void dec_rc() {
 		refcount--;
 		if(refcount == 0) {
+			// Commenting out the actual freeing until we actually keep track of 
+			// refcounts correctly.
 			//printf("Freeing ehretval_t at address %p\n", (void *)this);
 			//free();
 		}

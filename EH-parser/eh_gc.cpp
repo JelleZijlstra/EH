@@ -17,7 +17,8 @@ void ehretval_t::free() {
 			delete rangeval;
 			break;
 		case string_e:
-			delete[] stringval;
+			// string may not be dynamically allocated
+			//delete[] stringval;
 			break;
 		case reference_e:
 		case creference_e:

@@ -468,7 +468,7 @@ ehretval_t *eh_cast(const type_enum type, ehretval_t *in);
 ehretval_t *eh_stringtoint(const char *const in);
 ehretval_t *eh_stringtofloat(const char *const in);
 ehretval_t *eh_stringtorange(const char *const in);
-ehretval_t *eh_rangetoarray(const ehrange_t *const range);
+ehvar_t **eh_rangetoarray(const ehrange_t *const range);
 char *eh_inttostring(const int in);
 ehretval_t *eh_xtoarray(ehretval_t *in);
 ehretval_t *eh_xtoint(ehretval_t *in);

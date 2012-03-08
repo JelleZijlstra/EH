@@ -1681,7 +1681,6 @@ ehvar_t *class_insert_retval(
 	// insert a member into a class
 
 	ehvar_t *member = new ehvar_t;
-	member->value = new ehretval_t;
 	// rely on standard layout of the input ehretval_t
 	member->attribute = attribute;
 	member->name = name;
@@ -1944,18 +1943,17 @@ char *eh_rangetostring(const ehrange_t *const range) {
 	
 	return buffer;
 }
-ehretval_t *eh_rangetoarray(const ehrange_t *const range) {
-	ehretval_t *ret = new ehretval_t(array_e);
+ehvar_t **eh_rangetoarray(const ehrange_t *const range) {
 	ehretval_t *index;
 	ehretval_t *member;
 
-	ret->arrayval = new ehvar_t *[VARTABLE_S]();
+	ehvar_t **ret = new ehvar_t *[VARTABLE_S]();
 	index = new ehretval_t(0);
 	member = new ehretval_t(range->min);
-	array_insert_retval(ret->arrayval, index, member);
+	array_insert_retval(ret, index, member);
 	index = new ehretval_t(1);
 	member = new ehretval_t(range->max);
-	array_insert_retval(ret->arrayval, index, member);
+	array_insert_retval(ret, index, member);
 
 	return ret;
 }
@@ -2144,7 +2142,8 @@ ehretval_t *eh_xtoarray(ehretval_t *in) {
 			ret = in;
 			break;
 		case range_e:
-			ret = eh_rangetoarray(in->rangeval);
+			ret = new ehretval_t(array_e);
+			ret->arrayval = eh_rangetoarray(in->rangeval);
 			break;
 		case int_e:
 		case bool_e:

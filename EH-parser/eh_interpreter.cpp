@@ -1391,7 +1391,12 @@ ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context, i
 	if(context != NULL) {
 		currvar = class_getmember(context, name, context);
 		if(currvar != NULL) {
-			return currvar;
+			if(token == T_LVALUE_SET && currvar->attribute.isconst == const_e) {
+				eh_error("Attempt to write to constant variable", eerror_e);
+				return NULL;
+			} else {
+				return currvar;
+			}
 		}
 	}
 	// look in this scope, then the parent scope

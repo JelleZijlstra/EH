@@ -1184,10 +1184,6 @@ ehretval_t *eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 				function->funcval, paras[1], context, newcontext
 			);
 			break;
-/*		case null_e:
-			// ignore null_e, because private method calls otherwise get 
-			// confused
-			break;*/
 		default:
 			eh_error_type("function call", function->type, eerror_e);
 			break;
@@ -2136,7 +2132,7 @@ ehretval_t *eh_xtorange(ehretval_t *in) {
 }
 ehretval_t *eh_xtoarray(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	ehretval_t *index;
+	ehretval_t index(0);
 	switch(in->type) {
 		case array_e:
 			ret = in;
@@ -2152,11 +2148,9 @@ ehretval_t *eh_xtoarray(ehretval_t *in) {
 		case null_e:
 		case object_e:
 			// create an array with just this variable in it
-			ret = new ehretval_t;
-			ret->type = array_e;
+			ret = new ehretval_t(array_e);
 			ret->arrayval = new ehvar_t *[VARTABLE_S]();
-			index = new ehretval_t(0);
-			array_insert_retval(ret->arrayval, index, in);
+			array_insert_retval(ret->arrayval, &index, in);
 			break;
 		default:
 			CASTERROR(array);
@@ -2535,8 +2529,7 @@ static inline int count_nodes(ehretval_t *node) {
 void eh_setarg(int argc, char **argv) {
 	// insert argc
 	ehvar_t *argc_v = new ehvar_t;
-	argc_v->value = new ehretval_t;
-	argc_v->value->type = int_e;
+	argc_v->value = new ehretval_t(int_e);
 	// global scope
 	argc_v->scope = global_scope;
 	argc_v->name = "argc";
@@ -2546,17 +2539,16 @@ void eh_setarg(int argc, char **argv) {
 
 	// insert argv
 	ehvar_t *argv_v = new ehvar_t;
-	argv_v->value = new ehretval_t;
-	argv_v->value->type = array_e;
+	argv_v->value = new ehretval_t(array_e);
 	argv_v->scope = global_scope;
 	argv_v->name = "argv";
 	argv_v->value->arrayval = new ehvar_t *[VARTABLE_S]();
 
 	// all members of argv are strings
 	for(int i = 1; i < argc; i++) {
-		ehretval_t *index = new ehretval_t(i - 1);
+		ehretval_t index(i - 1);
 		ehretval_t *ret = new ehretval_t(argv[i]);
-		array_insert_retval(argv_v->value->arrayval, index, ret);
+		array_insert_retval(argv_v->value->arrayval, &index, ret);
 	}
 	insert_variable(argv_v);
 }

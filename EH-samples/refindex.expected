@@ -1,4 +1,4 @@
-Unsupported type reference for array access: EH runtime error
+Unsupported type reference for bitwise access to integer: EH notice
 @int 3
 @int 3
 Unsupported type reference for bitwise access to integer: EH notice

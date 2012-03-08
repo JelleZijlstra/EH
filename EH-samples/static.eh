@@ -16,8 +16,8 @@ $ Foo::bar = 2
 echo $foo->bar
 # ... And this will change bar as it appears in the class
 $ foo->bar = 3
-echo $Foo::bar
+echo Foo::bar
 # Should both generate an error
 $ Foo::muh = 42
 $ foo->muh = 42
-echo $Foo::muh
+echo Foo::muh

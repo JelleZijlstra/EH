@@ -5,17 +5,15 @@
  * Function definitions for EH library functions
  */
 #define EHLF_RETFALSE do { \
-	retval->type = bool_e; \
-	retval->boolval = false; \
+	*retval = new ehretval_t(false); \
 	return; \
 } while(0)
 #define EHLF_RETTRUE do { \
-	retval->type = bool_e; \
-	retval->boolval = true; \
+	*retval = new ehretval_t(true); \
 	return; \
 } while(0)
 
-#define EHLIBFUNC(f) void ehlf_ ## f(ehretval_t *paras, ehretval_t *retval, ehcontext_t context)
+#define EHLIBFUNC(f) void ehlf_ ## f(ehretval_t *paras, ehretval_t **retval, ehcontext_t context)
 
 EHLIBFUNC(getinput);
 EHLIBFUNC(printvar);
@@ -32,4 +30,4 @@ EHLIBFUNC(get_type);
 EHLIBFUNC(include);
 EHLIBFUNC(pow);
 
-void printvar_retval(const ehretval_t in);
+void printvar_retval(const ehretval_t *in);

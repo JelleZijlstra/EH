@@ -31,7 +31,8 @@ void free_node(ehretval_t *in) {
 #define GETFUNC(name, vtype) ehretval_t *eh_get_ ## name (vtype value) { \
 	ehretval_t *ret = new ehretval_t; \
 	ret->type = name ## _e; \
-	ret-> name ## val = value; \
+	ret->name ## val = value; \
+	ret->inc_rc(); \
 	return ret; \
 }
 GETFUNC(int, int)
@@ -41,6 +42,7 @@ ehretval_t *eh_get_null(void) {
 	ehretval_t *ret = new ehretval_t;
 
 	ret->type = null_e;
+	ret->inc_rc();
 
 	return ret;
 }
@@ -62,6 +64,7 @@ ehretval_t *eh_addnode(int operation, int nparas, ...) {
 	}
 
 	ret->type = op_e;
+	ret->inc_rc();
 	ret->opval->op = operation;
 	ret->opval->nparas = nparas;
 	va_start(args, nparas);

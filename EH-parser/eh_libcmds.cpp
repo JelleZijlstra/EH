@@ -6,9 +6,7 @@
 
 EH_LIBCMD(quit) {
 	throw new std::exception;
-	ehretval_t ret;
-	ret.type = null_e;
-	return ret;
+	return NULL;
 }
 
 EH_LIBCMD(echo) {
@@ -16,13 +14,11 @@ EH_LIBCMD(echo) {
 	index.intval = 0;
 	index.type = int_e;
 	
-	ehretval_t arg = array_get(paras, index);
+	ehretval_t *arg = array_get(paras, &index);
 	print_retval(arg);
 	printf("\n");
 
-	ehretval_t ret;
-	ret.type = null_e;
-	return ret;
+	return NULL;
 }
 
 EH_LIBCMD(put) {
@@ -30,10 +26,8 @@ EH_LIBCMD(put) {
 	index.intval = 0;
 	index.type = int_e;
 	
-	ehretval_t arg = array_get(paras, index);
+	ehretval_t *arg = array_get(paras, &index);
 	print_retval(arg);
 
-	ehretval_t ret;
-	ret.type = null_e;
-	return ret;
+	return NULL;
 }

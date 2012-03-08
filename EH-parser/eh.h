@@ -120,22 +120,129 @@ typedef struct ehretval_t {
 		memberattribute_t attributestrval;
 		accessor_enum accessorval;
 	};
+	// constructors
 	ehretval_t() {
-		refcount = 0;
+		refcount = 1;
+		is_shared = 0;
 	}
+	ehretval_t(type_enum mtype) {
+		type = mtype;
+		refcount = 1;
+		is_shared = 0;
+	}
+#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) { \
+	type = ehtype ## _e; \
+	ehtype ## val = in; \
+	refcount = 1; \
+	is_shared = 0; \
+}
+	EHRV_CONS(bool, bool)
+	EHRV_CONS(double, float)
+	EHRV_CONS(float, float)
+	EHRV_CONS(char *, string)
+	EHRV_CONS(int, int)
+
+	// manipulate the refcount
 	void inc_rc() {
 		refcount++;
 	}
 	void dec_rc() {
 		refcount--;
 		if(refcount == 0) {
-			printf("Freeing ehretval_t at address %p\n", (void *)this);
+			//printf("Freeing ehretval_t at address %p\n", (void *)this);
 			//free();
 		}
 	}
 	void free();
+	ehretval_t *clone() {
+		ehretval_t *out = new ehretval_t;
+		out->type = type;
+		switch(type) {
+#define COPY(type) case type ## _e: out->type ## val = type ## val; break
+			COPY(int);
+			COPY(string);
+			COPY(bool);
+			COPY(float);
+			COPY(array);
+			COPY(object);
+			case creference_e:
+			COPY(reference);
+			COPY(func);
+			COPY(range);
+			COPY(op);
+			COPY(type);
+			COPY(attribute);
+			COPY(attributestr);
+			COPY(accessor);
+			case null_e: break;
+#undef COPY
+		}
+		return out;
+	}
+	// share this value with a new variable
+	ehretval_t *share() {
+		// can share if it's already shared or if there is only one reference
+		if(is_shared || (refcount == 1)) {
+			inc_rc();
+			is_shared++;
+			return this;
+		} else {
+			ehretval_t *out = clone();
+			return out;
+		}
+	}
+	// make a reference to this object, overwriting the ehretval_t * pointed to by in.
+	ehretval_t *reference(ehretval_t **in) {
+		if(is_shared == 0) {
+			inc_rc();
+			return this;
+		} else {
+			ehretval_t *out = clone();
+			is_shared--;
+			dec_rc();
+			*in = out;
+			// one for the reference, one for the actual object
+			out->inc_rc();
+			return out;
+		}
+	}
+	ehretval_t *overwrite(ehretval_t *in) {
+		if(is_shared == 0) {
+			// overwrite
+			type = in->type;
+			switch(type) {
+#define COPY(type) case type ## _e: type ## val = in->type ## val; break
+				COPY(int);
+				COPY(string);
+				COPY(bool);
+				COPY(float);
+				COPY(array);
+				COPY(object);
+				case creference_e:
+				COPY(reference);
+				COPY(func);
+				COPY(range);
+				COPY(op);
+				COPY(type);
+				COPY(attribute);
+				COPY(attributestr);
+				COPY(accessor);
+				case null_e: break;
+#undef COPY
+			}
+			return this;
+		} else {
+			is_shared--;
+			dec_rc();
+			return in->reference(&in);
+		}
+	}
+	void make_shared() {
+		is_shared++;
+	}
 private:
 	short refcount;
+	short is_shared;
 } ehretval_t;
 
 typedef struct ehvar_t {
@@ -157,7 +264,9 @@ typedef struct ehvar_t {
 	// destructor
 	~ehvar_t() {
 		// decrement refcount of the value
-		value->dec_rc();
+		if(value != NULL) {
+			value->dec_rc();
+		}
 	}
 } ehvar_t;
 
@@ -171,7 +280,7 @@ typedef const struct ehobj_t *ehcontext_t;
 
 typedef void *(*ehconstructor_t)();
 
-typedef void (*ehlibmethod_t)(void *, ehretval_t *, ehretval_t *, ehcontext_t);
+typedef void (*ehlibmethod_t)(void *, ehretval_t *, ehretval_t **, ehcontext_t);
 
 typedef struct ehlibentry_t {
 	const char *name;
@@ -205,7 +314,7 @@ typedef struct ehrange_t {
 } ehrange_t;
 
 // function executing a command
-typedef ehretval_t (*ehcmd_f_t)(ehvar_t **paras);
+typedef ehretval_t *(*ehcmd_f_t)(ehvar_t **paras);
 
 // command
 typedef struct ehcmd_t {
@@ -231,15 +340,15 @@ typedef struct ehfm_t {
 	int argcount;
 	eharg_t *args;
 	union {
-		const ehretval_t *code;
-		void (*ptr)(ehretval_t *, ehretval_t *, ehcontext_t);
+		ehretval_t *code;
+		void (*ptr)(ehretval_t *, ehretval_t **, ehcontext_t);
 		ehlibmethod_t mptr;
 	};
 } ehfm_t;
 
 // EH procedure
 typedef struct ehlibfunc_t {
-	void (*code)(ehretval_t *, ehretval_t *, ehcontext_t);
+	void (*code)(ehretval_t *, ehretval_t **, ehcontext_t);
 	const char *name;
 } ehlibfunc_t;
 
@@ -282,7 +391,7 @@ void eh_exit(void);
 void yyerror(void *, const char *s);
 void free_node(ehretval_t *in);
 ehretval_t *eh_addnode(int operations, int noperations, ...);
-ehretval_t eh_execute(const ehretval_t *node, const ehcontext_t context);
+ehretval_t *eh_execute(ehretval_t *node, const ehcontext_t context);
 void print_tree(const ehretval_t *const in, const int n);
 void eh_setarg(int argc, char **argv);
 
@@ -322,25 +431,25 @@ extern ehscope_t *curr_scope;
 
 // prototypes
 bool insert_variable(ehvar_t *var);
-ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context);
+ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context, int token);
 void remove_variable(const char *name, ehscope_t *scope);
 void list_variables(void);
-ehretval_t call_function(const ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext);
-ehretval_t call_function_args(const ehfm_t *const f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, const ehretval_t *const args);
+ehretval_t *call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext);
+ehretval_t *call_function_args(ehfm_t *f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, ehretval_t *args);
 void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t context);
-ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t index, ehretval_t ret);
-ehvar_t *array_getmember(ehvar_t **array, ehretval_t index);
-ehretval_t array_get(ehvar_t **array, ehretval_t index);
+ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t *index, ehretval_t *ret);
+ehvar_t *array_getmember(ehvar_t **array, ehretval_t *index);
+ehretval_t *array_get(ehvar_t **array, ehretval_t *index);
 int array_count(ehvar_t **array);
 void insert_class(ehclass_t *classobj);
 ehclass_t *get_class(const char *name);
 void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i);
 void class_insert(ehvar_t **classarr, const ehretval_t *in, ehcontext_t context);
-ehvar_t *class_insert_retval(ehvar_t **classarr, const char *name, memberattribute_t attribute, ehretval_t value);
+ehvar_t *class_insert_retval(ehvar_t **classarr, const char *name, memberattribute_t attribute, ehretval_t *value);
 ehvar_t *class_getmember(const ehobj_t *classobj, const char *name, ehcontext_t context);
-ehretval_t class_get(const ehobj_t *classobj, const char *name, ehcontext_t context);
-ehretval_t object_access(ehretval_t name, const ehretval_t *index, ehcontext_t context, int token);
-ehretval_t colon_access(ehretval_t operand1, const ehretval_t *index, ehcontext_t context, int token);
+ehretval_t *class_get(const ehobj_t *classobj, const char *name, ehcontext_t context);
+ehretval_t **object_access(ehretval_t *name, ehretval_t *index, ehcontext_t context, int token);
+ehretval_t **colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token);
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
 
 
@@ -349,26 +458,26 @@ bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
 unsigned int hash(const char *data, int scope);
 
 // type casting
-ehretval_t eh_cast(const type_enum type, const ehretval_t in);
-ehretval_t eh_stringtoint(const char *const in);
-ehretval_t eh_stringtofloat(const char *const in);
-ehretval_t eh_stringtorange(const char *const in);
-ehretval_t eh_rangetoarray(const ehrange_t *const range);
+ehretval_t *eh_cast(const type_enum type, ehretval_t *in);
+ehretval_t *eh_stringtoint(const char *const in);
+ehretval_t *eh_stringtofloat(const char *const in);
+ehretval_t *eh_stringtorange(const char *const in);
+ehretval_t *eh_rangetoarray(const ehrange_t *const range);
 char *eh_inttostring(const int in);
-ehretval_t eh_xtoarray(const ehretval_t in);
-ehretval_t eh_xtoint(const ehretval_t in);
-ehretval_t eh_xtofloat(const ehretval_t in);
-ehretval_t eh_xtostring(const ehretval_t in);
-ehretval_t eh_xtobool(const ehretval_t in);
-ehretval_t eh_xtorange(const ehretval_t in);
-ehretval_t eh_looseequals(ehretval_t operand1, ehretval_t operand2);
-ehretval_t eh_strictequals(ehretval_t operand1, ehretval_t operand2);
+ehretval_t *eh_xtoarray(ehretval_t *in);
+ehretval_t *eh_xtoint(ehretval_t *in);
+ehretval_t *eh_xtofloat(ehretval_t *in);
+ehretval_t *eh_xtostring(ehretval_t *in);
+bool eh_xtobool(ehretval_t *in);
+ehretval_t *eh_xtorange(ehretval_t *in);
+ehretval_t *eh_looseequals(ehretval_t *operand1, ehretval_t *operand2);
+bool eh_strictequals(ehretval_t *operand1, ehretval_t *operand2);
 
 /*
  * Helper
  */
-int eh_getargs(ehretval_t *paras, int n, ehretval_t *args, ehcontext_t context, const char *name);
-void print_retval(const ehretval_t in);
+int eh_getargs(ehretval_t *paras, int n, ehretval_t **args, ehcontext_t context, const char *name);
+void print_retval(const ehretval_t *in);
 
 /*
  * The EH parser

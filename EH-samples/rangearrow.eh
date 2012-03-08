@@ -9,4 +9,4 @@ echo $rangev->0
 echo $rangev->1
 # Errors
 rangev->2 := 9000
-echo $rangev->-1
+echo $rangev->(-1)

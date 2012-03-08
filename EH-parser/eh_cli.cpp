@@ -60,11 +60,9 @@ int main(int argc, char **argv) {
 	}
 }
 
-ehretval_t EHI::execute_cmd(const char *name, ehvar_t **array) {
+ehretval_t *EHI::execute_cmd(const char *name, ehvar_t **array) {
 	eh_error("Use of commands outside of EH-PHP context", eerror_e);
-	ehretval_t ret;
-	ret.type = null_e;
-	return ret;
+	return NULL;
 }
 EHI::~EHI(void) {
 	return;

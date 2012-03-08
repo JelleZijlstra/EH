@@ -16,14 +16,14 @@ end
 set o = new Foo
 # 0
 echo $o->bar
-$Foo::set1:
+(Foo::set1:)
 # 1
-echo $Foo::bar
+echo Foo::bar
 # 0
 echo $o->bar
 $o->set2:
 # 1
-echo $Foo::bar
+echo Foo::bar
 # 2
 echo $o->bar
 # 2

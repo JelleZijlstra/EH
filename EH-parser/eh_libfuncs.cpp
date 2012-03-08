@@ -16,7 +16,7 @@ static void printvar_object(ehvar_t **in);
 // get arguments, and error if there are too many or few
 // Args should have enough memory malloc'ed to it to house n arguments.
 // Return 0 on success, -1 on too few, 1 on too many arguments.
-int eh_getargs(ehretval_t *paras, int n, ehretval_t *args, ehcontext_t context, const char *name) {
+int eh_getargs(ehretval_t *paras, int n, ehretval_t **args, ehcontext_t context, const char *name) {
 	int i = n;
 	while(i) {
 		if(paras->opval->nparas == 0) {
@@ -35,26 +35,28 @@ int eh_getargs(ehretval_t *paras, int n, ehretval_t *args, ehcontext_t context, 
 
 EHLIBFUNC(getinput) {
 	// more accurately, getint
-	retval->type = int_e;
-	fscanf(stdin, "%d", &retval->intval);
+	*retval = new ehretval_t(int_e);
+	fscanf(stdin, "%d", &((*retval)->intval));
 	return;
 }
 
 EHLIBFUNC(printvar) {
 	// this function always returns NULL
-	retval->type = null_e;
+	*retval = NULL;
 
 	// check argument count
-	ehretval_t args[1];
+	ehretval_t *args[1];
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
 		return;
-	printvar_retval(&args[0]);
+	printvar_retval(args[0]);
 	return;
 }
 // helper functions for printvar
 void printvar_retval(const ehretval_t *in) {
 	int i;
-	switch(in->type) {
+	if(in == NULL) {
+		printf("null\n");
+	} else switch(in->type) {
 		case null_e:
 			printf("null\n");
 			break;
@@ -194,12 +196,12 @@ static void printvar_array(ehvar_t **in) {
  * Type checking functions
  */
 #define TYPEFUNC(typev) EHLIBFUNC(is_ ## typev) { \
-	retval->type = bool_e; \
-	ehretval_t args[1]; \
+	*retval = new ehretval_t(bool_e); \
+	ehretval_t *args[1]; \
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) \
 		EHLF_RETFALSE; \
-	ehretval_t value = args[0]; \
-	retval->boolval = (value.type == typev ## _e); \
+	ehretval_t *value = args[0]; \
+	(*retval)->boolval = (value->type == typev ## _e); \
 	return; \
 }
 
@@ -213,30 +215,29 @@ TYPEFUNC(object)
 TYPEFUNC(range)
 // check whether a variable is a member of a specified class
 EHLIBFUNC(class_is) {
-	ehretval_t args[2];
+	ehretval_t *args[2];
 	if(eh_getargs(paras, 2, args, context, __FUNCTION__))
 		EHLF_RETFALSE;
-	if(args[0].type != string_e) {
-		eh_error_type("argument 0 to class_is", args[0].type, enotice_e);
+	if(args[0]->type != string_e) {
+		eh_error_type("argument 0 to class_is", args[0]->type, enotice_e);
 		EHLF_RETFALSE;
 	}
-	if(args[1].type != object_e) {
-		eh_error_type("argument 1 to class_is", args[1].type, enotice_e);
+	if(args[1]->type != object_e) {
+		eh_error_type("argument 1 to class_is", args[1]->type, enotice_e);
 		EHLF_RETFALSE;
 	}
-	if(!strcmp(args[0].stringval, args[1].objectval->classname))
+	if(!strcmp(args[0]->stringval, args[1]->objectval->classname))
 		EHLF_RETTRUE;
 	else
 		EHLF_RETFALSE;
 }
 // get the type of a variable
 EHLIBFUNC(get_type) {
-	ehretval_t args[1];
+	ehretval_t *args[1];
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
 		EHLF_RETFALSE;
 	}
-	retval->type = string_e;
-	retval->stringval = strdup(get_typestring(args[0].type));
+	*retval = new ehretval_t(strdup(get_typestring(args[0]->type)));
 }
 
 /*
@@ -251,17 +252,17 @@ EHLIBFUNC(include) {
 	int old_is_interactive = is_interactive;
 	is_interactive = 0;
 
-	ehretval_t args[1];
+	ehretval_t *args[1];
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
 		EHLF_RETFALSE;
-	if(args[0].type != string_e) {
-		eh_error_type("argument 0 to include", args[0].type, enotice_e);
+	if(args[0]->type != string_e) {
+		eh_error_type("argument 0 to include", args[0]->type, enotice_e);
 		is_interactive = old_is_interactive;
 		returning = false;
 		EHLF_RETFALSE;
 	}
 	// do the work
-	infile = fopen(args[0].stringval, "r");
+	infile = fopen(args[0]->stringval, "r");
 	if(!infile) {
 		eh_error("Unable to open included file", enotice_e);
 		is_interactive = old_is_interactive;
@@ -269,7 +270,8 @@ EHLIBFUNC(include) {
 		EHLF_RETFALSE;
 	}
 	parser = new EHParser();
-	*retval = parser->parse_file(infile);
+	ehretval_t parse_return = parser->parse_file(infile);
+	*retval = (new ehretval_t)->overwrite(&parse_return);
 	// we're no longer returning
 	returning = false;
 	is_interactive = old_is_interactive;
@@ -279,28 +281,24 @@ EHLIBFUNC(include) {
 
 // power
 EHLIBFUNC(pow) {
-	ehretval_t args[2];
+	ehretval_t *args[2];
 	if(eh_getargs(paras, 2, args, context, __FUNCTION__))
 		EHLF_RETFALSE;
-	if(args[0].type == int_e && args[1].type == int_e) {
-		retval->type = int_e;
-		retval->intval = (int) pow((float) args[0].intval, (float) args[1].intval);
+	if(args[0]->type == int_e && args[1]->type == int_e) {
+		*retval = new ehretval_t((int) pow((float) args[0]->intval, (float) args[1]->intval));
 	}
-	else if(args[0].type == int_e && args[1].type == float_e) {
-		retval->type = float_e;
-		retval->floatval = pow((float) args[0].intval, args[1].floatval);
+	else if(args[0]->type == int_e && args[1]->type == float_e) {
+		*retval = new ehretval_t(pow((float) args[0]->intval, args[1]->floatval));
 	}
-	else if(args[0].type == float_e && args[1].type == int_e) {
-		retval->type = float_e;
-		retval->floatval = pow(args[0].floatval, (float) args[1].intval);
+	else if(args[0]->type == float_e && args[1]->type == int_e) {
+		*retval = new ehretval_t(pow(args[0]->floatval, (float) args[1]->intval));
 	}
-	else if(args[0].type == float_e && args[1].type == float_e) {
-		retval->type = float_e;
-		retval->floatval = pow(args[0].floatval, args[1].floatval);
+	else if(args[0]->type == float_e && args[1]->type == float_e) {
+		*retval = new ehretval_t(pow(args[0]->floatval, args[1]->floatval));
 	}
 	else {
-		eh_error_type("argument 0 to pow", args[0].type, enotice_e);
-		eh_error_type("argument 1 to pow", args[1].type, enotice_e);
+		eh_error_type("argument 0 to pow", args[0]->type, enotice_e);
+		eh_error_type("argument 1 to pow", args[1]->type, enotice_e);
 		EHLF_RETFALSE;
 	}
 }

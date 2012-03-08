@@ -12,28 +12,24 @@ END_EHLC()
 
 EH_METHOD(CountClass, docount) {
 	CountClass *selfptr = (CountClass *)obj;
-	retval->type = int_e;
-	retval->intval = ++selfptr->count;
+	*retval = new ehretval_t((int) ++selfptr->count);
 }
 EH_METHOD(CountClass, setcount) {
 	CountClass *selfptr = (CountClass *)obj;
-	retval->type = bool_e;
 
-	ehretval_t *args = new ehretval_t[1];
+	ehretval_t *args[1];
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
-		retval->boolval = false;
-		delete[] args;
+		*retval = new ehretval_t(false);
 		return;
 	}
-	ehretval_t newcounter = eh_xtoint(args[0]);
-	if(newcounter.type != int_e) {
-		retval->boolval = false;
-		delete[] args;
+	ehretval_t *newcounter = eh_xtoint(args[0]);
+	if(newcounter->type != int_e) {
+		*retval = new ehretval_t(false);
 		return;
 	}
 
-	selfptr->count = newcounter.intval;
-	retval->boolval = true;
+	selfptr->count = newcounter->intval;
+	*retval = new ehretval_t(true);
 	return;
 }
 
@@ -46,64 +42,54 @@ END_EHLC()
 
 EH_METHOD(File, open) {
 	File *selfptr = (File *) obj;
-	retval->type = bool_e;
 
-	ehretval_t *args = new ehretval_t[1];
+	ehretval_t *args[1];
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
-		retval->boolval = false;
-		delete[] args;
+		*retval = new ehretval_t(false);
 		return;
 	}
-	ehretval_t filename = eh_xtostring(args[0]);
-	if(filename.type != string_e) {
-		retval->boolval = false;
-		delete[] args;
+	ehretval_t *filename = eh_xtostring(args[0]);
+	if(filename->type != string_e) {
+		*retval = new ehretval_t(false);
 		return;
 	}
-	FILE *mfile = fopen(filename.stringval, "r");
+	FILE *mfile = fopen(filename->stringval, "r");
 	if(mfile == NULL) {
-		retval->boolval = false;
-		delete[] args;
+		*retval = new ehretval_t(false);
 		return;
 	}
 	selfptr->descriptor = mfile;
-	retval->boolval = true;
-	delete[] args;
+	*retval = new ehretval_t(true);
 }
 
 EH_METHOD(File, getc) {
 	File *selfptr = (File *) obj;
 
 	if(selfptr->descriptor == NULL) {
-		retval->type = null_e;
 		return;
 	}
 	int c = fgetc(selfptr->descriptor);
 	if(c == -1) {
-		retval->type = null_e;
 		return;
 	}
-	retval->type = string_e;
-	retval->stringval = new char[2];
-	retval->stringval[0] = c;
-	retval->stringval[1] = '\0';
+	*retval = new ehretval_t(new char[2]);
+	(*retval)->stringval[0] = c;
+	(*retval)->stringval[1] = '\0';
 }
 
 EH_METHOD(File, gets) {
 	File *selfptr = (File *) obj;
 	if(selfptr->descriptor == NULL) {
-		retval->type = null_e;
 		return;
 	}
 	
-	retval->stringval = new char[512];
+	*retval = new ehretval_t(new char[512]);
 	
-	char *ptr = fgets(retval->stringval, 511, selfptr->descriptor);
+	char *ptr = fgets((*retval)->stringval, 511, selfptr->descriptor);
 	if(ptr == NULL) {
-		delete[] retval->stringval;
-		retval->type = null_e;
+		delete[] (*retval)->stringval;
+		delete *retval;
 	}
-	retval->type = string_e;
 }
 
 EH_METHOD(File, close) {

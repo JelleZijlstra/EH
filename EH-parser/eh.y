@@ -102,11 +102,11 @@ program:
 global_list:
 	/* NULL */				{ $$ = eh_addnode(T_SEPARATOR, 0); }
 	| statement				{
-								ehretval_t ret = eh_execute($1, NULL);
+								ehretval_t *ret = eh_execute($1, NULL);
 								// flush stdout after executing each statement
 								fflush(stdout);
 								if(returning) {
-									return ret.intval;
+									return (ret == NULL) ? 0 : ret->intval;
 								}
 							} global_list {
 								$$ = eh_addnode(T_SEPARATOR, 2, $1, $3); 
@@ -203,7 +203,8 @@ expression:
 							{
 								$$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3);
 							}
-	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
+	| '$' expression %prec '$'
+							{ $$ = eh_addnode('$', 1, $2); }
 	| '&' lvalue_get %prec T_REFERENCE
 							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
 	| '@' T_TYPE expression %prec '@'	
@@ -277,7 +278,8 @@ simple_expr:
 	| '!' simple_expr		{ $$ = eh_addnode('!', 1, $2); }
 	| simple_expr T_ACCESSOR simple_expr
 							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
-	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
+	| '$' simple_expr %prec '$'
+							{ $$ = eh_addnode('$', 1, $2); }
 	| '&' lvalue_get %prec T_REFERENCE
 							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
 	| '@' T_TYPE expression %prec '@'	
@@ -345,8 +347,15 @@ line_expr:
 	| '-' expression %prec T_NEGATIVE
 							{ $$ = eh_addnode(T_NEGATIVE, 1, $2); }
 	| line_expr T_ACCESSOR expression
-							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
-	| '$' lvalue_get		{ $$ = eh_addnode('$', 1, $2); }
+							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, 
+								eh_get_accessor($2), $3); 
+							}
+	| bareword T_ACCESSOR expression
+							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, 
+								eh_get_accessor($2), $3); 
+							}
+	| '$' expression %prec '$'
+							{ $$ = eh_addnode('$', 1, $2); }
 	| '&' lvalue_get %prec T_REFERENCE
 							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
 	| '@' T_TYPE expression %prec '@'	

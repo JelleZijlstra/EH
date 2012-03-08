@@ -7,10 +7,8 @@
 %{
 #include "eh.h"
 EHI *interpreter;
-ehretval_t EHI::execute_cmd(const char *name, ehvar_t **paras) {
-	ehretval_t ret;
-	ret.type = null_e;
-	return ret;
+ehretval_t *EHI::execute_cmd(const char *name, ehvar_t **paras) {
+	return NULL;
 }
 char *EHI::eh_getline(void) {
 	return NULL;
@@ -101,38 +99,34 @@ zval *arrtozval(ehvar_t **paras) {
 	return arr;
 }
 
-ehretval_t zvaltoeh(zval *in) {
-	ehretval_t ret;
-	ret.type = null_e;
+ehretval_t *zvaltoeh(zval *in) {
+	ehretval_t *ret = NULL;
 	switch(in->type) {
 		case IS_NULL:
-			// don't do anything
+			ret = new ehretval_t(null_e);
 			break;
 		case IS_BOOL:
 			// apparently, a bool is stored as a long
-			ret.type = bool_e;
+			ret = new ehretval_t(bool_e);
 			if(in->value.lval)
-				ret.boolval = true;
+				ret->boolval = true;
 			else
-				ret.boolval = false;
+				ret->boolval = false;
 			break;
 		case IS_DOUBLE:
-			ret.type = float_e;
-			ret.floatval = in->value.dval;
+			ret = new ehretval_t(in->value.dval);
 			break;
 		case IS_STRING:
-			ret.type = string_e;
 			// would be nice to use strndup with in->value.str.len, can't get it though
-			ret.stringval = strdup(in->value.str.val);
+			ret = new ehretval_t(strdup(in->value.str.val));
 			break;
 		case IS_ARRAY:
 			// initialize array
-			ret.type = array_e;
-			ret.arrayval = zvaltoeh_array(in->value.ht);
+			ret = new ehretval_t(array_e);
+			ret->arrayval = zvaltoeh_array(in->value.ht);
 			break;
 		case IS_LONG:
-			ret.type = int_e;
-			ret.intval = in->value.lval;
+			ret = new ehretval_t((int) in->value.lval);
 			break;
 		case IS_RESOURCE:
 		case IS_OBJECT:
@@ -144,19 +138,18 @@ ehretval_t zvaltoeh(zval *in) {
 }
 
 ehvar_t **zvaltoeh_array(HashTable *hash) {
-    ehvar_t** retval = new ehvar_t *[VARTABLE_S]();
+    ehvar_t **retval = new ehvar_t *[VARTABLE_S]();
 	// variables for our new array
-	ehretval_t index, value;
+	ehretval_t *index, *value;
 	for(Bucket *curr = hash->pListHead; curr != NULL; curr = curr->pListNext) {
 		// determine index type and value
 		if(curr->nKeyLength == 0) {
 	    	// numeric index
-			index.type = int_e;
-			index.intval = curr->h;
+			index = new ehretval_t(int_e);
+			index->intval = curr->h;
 		} else {
 			// string index
-			index.type = string_e;
-			index.stringval = strdup(curr->arKey);
+			index = new ehretval_t(strdup(curr->arKey));
 		}
 		// apparently the pDataPtr actually points to the zval
 		// see Zend/zend_hash.h for definition of the Bucket. No idea
@@ -185,7 +178,7 @@ ehvar_t **zvaltoeh_array(HashTable *hash) {
 }
 
 // Typemap for returning stuff from execute_cmd
-%typemap(directorout) ehretval_t {
+%typemap(directorout) ehretval_t * {
 	// provisional, we'll want to work on making it actually do something useful with what PHP returns
 	c_result = zvaltoeh(result);
 }
@@ -193,7 +186,7 @@ ehvar_t **zvaltoeh_array(HashTable *hash) {
 class EHI {
 public:
 	int eh_interactive(void);
-	virtual ehretval_t execute_cmd(const char *name, ehvar_t **paras);
+	virtual ehretval_t *execute_cmd(const char *name, ehvar_t **paras);
 	virtual void exec_file(const char *name);
 	virtual char *eh_getline(void);
 	virtual ~EHI();

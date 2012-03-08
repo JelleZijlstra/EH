@@ -210,7 +210,25 @@ void eh_init(void) {
 		ehclass_t *newclass = new ehclass_t;
 		newclass->type = lib_e;
 		newclass->obj.classname = libclasses[i].name;
-		newclass->obj.libinfo = libclasses[i].info;
+		newclass->obj.constructor = libclasses[i].info.constructor;
+		newclass->obj.members = new ehvar_t *[VARTABLE_S];
+		ehlibentry_t *members = libclasses[i].info.members;
+		// attributes for library methods
+		memberattribute_t attributes;
+		attributes.visibility = public_e;
+		attributes.isstatic = nonstatic_e;
+		attributes.isconst = nonconst_e;
+		// value
+		ehretval_t *value;
+		for(int i = 0; members[i].name != NULL; i++) {
+			value = new ehretval_t(func_e);
+			value->funcval = new ehfm_t;
+			value->funcval->type = libmethod_e;
+			value->funcval->mptr = members[i].func;
+			class_insert_retval(
+				newclass->obj.members, members[i].name, attributes, value
+			);
+		}
 		insert_class(newclass);
 	}
 	for(int i = 0; libcmds[i].name != NULL; i++) {
@@ -916,32 +934,13 @@ ehretval_t *eh_op_new(const char *name) {
 	ret->objectval = new ehobj_t;
 	ret->objectval->classname = name;
 	ret->objectval->members = new ehvar_t *[VARTABLE_S]();
-	if(classobj->type == user_e) {
-		for(int i = 0; i < VARTABLE_S; i++) {
-			for(ehvar_t *m = classobj->obj.members[i]; m != NULL; m = m->next) {
-				class_copy_member(ret->objectval, m, i);
-			}
-		}
-	} else {
+	if(classobj->type == lib_e) {
 		// insert selfptr
-		ret->objectval->selfptr = classobj->obj.libinfo.constructor();
-		// library classes
-		ehlibentry_t *members = classobj->obj.libinfo.members;
-		// attributes for library methods
-		memberattribute_t attributes;
-		attributes.visibility = public_e;
-		attributes.isstatic = nonstatic_e;
-		attributes.isconst = nonconst_e;
-		// value
-		ehretval_t *value;
-		for(int i = 0; members[i].name != NULL; i++) {
-			value = new ehretval_t(func_e);
-			value->funcval = new ehfm_t;
-			value->funcval->type = libmethod_e;
-			value->funcval->mptr = members[i].func;
-			class_insert_retval(
-				ret->objectval->members, members[i].name, attributes, value
-			);
+		ret->objectval->selfptr = classobj->obj.constructor();
+	}
+	for(int i = 0; i < VARTABLE_S; i++) {
+		for(ehvar_t *m = classobj->obj.members[i]; m != NULL; m = m->next) {
+			class_copy_member(ret->objectval, m, i);
 		}
 	}
 	return ret;

@@ -306,11 +306,11 @@ typedef struct ehlc_listentry_t {
 // EH object
 typedef struct ehobj_t {
 	const char *classname;
-	void *selfptr;
 	union {
-		struct ehvar_t **members;
-		ehlibclass_t libinfo;
+		void *selfptr;
+		ehconstructor_t constructor;
 	};
+	struct ehvar_t **members;
 } ehobj_t;
 
 // range

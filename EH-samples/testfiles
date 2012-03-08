@@ -106,3 +106,4 @@ setcount.eh
 useargs.eh
 editlibclass.eh
 modifyconst.eh
+assignthis.eh

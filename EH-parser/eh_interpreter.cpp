@@ -1583,7 +1583,6 @@ ehretval_t *call_function_args(ehfm_t *f, const ehcontext_t context, const ehcon
 		ehvar_t *var = new ehvar_t;
 		var->name = f->args[i].name;
 		var->scope = new_scope;
-		var->value = new ehretval_t;
 		var->value = eh_execute(&args[i], context);
 		// if it's a reference, dereference it
 		if(var->value->type == reference_e) {

@@ -711,7 +711,7 @@ class CsvList extends FileList {
 		$this->citetype = $paras['new'];
 		return $this->citetype;
 	}
-	protected function validcitetype($in = '') {
+	public function validcitetype($in = '') {
 		if(!$in) $in = $this->citetype;
 		return method_exists('FullFile', 'cite' . $in);
 	}

@@ -398,7 +398,7 @@ class Bot extends Snoopy {
 					'kind' => 'appendtext',
 					'summary' => 'Failed to write maindate: ' .
 						$page['name'],
-					'text' => '==Failed to insert maindate on [[Talk:' .
+					'text' => "\n==Failed to write maindate on [[Talk:" .
 						$page['name'] . "]]==\n" .
 						' I was unable to insert a ' .
 						'<code>|maindate=</code> on the page [[Talk:' .

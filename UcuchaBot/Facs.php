@@ -118,7 +118,7 @@ class FacsEntry extends ListEntry {
 				$this->id = $in[7];
 				break;
 			case 'n': // associative array
-				if(!$in['name']) {
+				if(!isset($in['name'])) {
 					echo 'Error: name must be provided' . PHP_EOL;
 					return false;
 				}
@@ -157,7 +157,34 @@ class FacsEntry extends ListEntry {
 		$factext = $this->p->bot->fetchwp(array('page' => $this->name));
 		$name = $this->name;
 		$bot = $this->p->bot;
-		$failure = function() use($name, $bot) {
+		$noms = array();
+		preg_match(
+			'/(?<=\n)\s*:\s*<small>\'\'Nominator(\(?s\)?)?: (.*)(?=\n)/u',
+			$factext,
+			$matches
+		);
+		if(isset($matches[0])) {
+			$nomstext = $matches[0];
+			preg_match_all('/\[\[\s*[uU]ser( talk)?:\s*([^\|\]\/]+)/u',
+				$nomstext,
+				$matches,
+				PREG_PATTERN_ORDER
+			);
+			if(isset($matches[2])) {
+				foreach($matches[2] as $nom) {
+					$noms[trim($nom)] = true;
+				}
+			}
+		}
+		// try again
+		if(count($noms) === 0) {
+			preg_match('/\[\[User:(.*?)[|\]]/u', $factext, $matches);
+			if(isset($matches[1])) {
+				$noms[trim($matches[1])] = true;
+			}
+		}
+		// and now we give up
+		if(count($noms) === 0) {
 			echo 'Unable to retrieve nominators for page ' . $name . PHP_EOL;
 			$bot->writewp(array(
 				'page' => 'User talk:Ucucha',
@@ -168,30 +195,11 @@ I was unable to find the list of nominators for the FAC [[' . $name . ']]. Pleas
 				'donotmarkasbot' => true,
 				'summary' => 'Unable to retrieve nominators',
 			));
-		};
-		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator(\(?s\)?)?: (.*)(?=\n)/u',
-			$factext,
-			$matches
-		);
-		if(!isset($matches[0])) {
-			$failure();
 			return false;
 		}
-		$nomstext = $matches[0];
-		preg_match_all('/\[\[\s*[uU]ser( talk)?:\s*([^\|\]\/]+)/u',
-			$nomstext,
-			$matches,
-			PREG_PATTERN_ORDER
-		);
-		if(!isset($matches[2])) {
-			$failure();
-			return false;
-		}
-		$noms = array();
-		foreach($matches[2] as $nom)
-			$noms[trim($nom)] = true;
-		foreach($noms as $key => $value)
+		foreach($noms as $key => $value) {
 			$this->nominators[] = $key;
+		}
 		return true;
 	}
 }

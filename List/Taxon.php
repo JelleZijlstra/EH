@@ -583,7 +583,10 @@ class Taxon extends ListEntry {
 		}
 		return false;
 	}
-	private function setranktosisters($parent) {
+	private function setranktosisters($parent = NULL) {
+		if($parent === NULL) {
+			$parent = $this->parent;
+		}
 		$sisters = $this->p->getchildren($parent);
 		if(!$sisters) {
 			return false;

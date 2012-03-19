@@ -1661,14 +1661,6 @@ void class_insert(ehvar_t **classarr, const ehretval_t *in, ehcontext_t context)
 		case 3: // set property
 			value = eh_execute(in->opval->paras[2], context);
 			break;
-		case 4: // method
-			value = new ehretval_t(func_e);
-			value->funcval = new ehfm_t;
-			value->funcval->type = user_e;
-			value->funcval->code = in->opval->paras[3];
-			make_arglist(&value->funcval->argcount, &value->funcval->args, 
-				in->opval->paras[2]);
-			break;
 	}
 	class_insert_retval(classarr, name, attribute, value);
 }

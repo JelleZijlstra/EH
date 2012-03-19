@@ -563,9 +563,11 @@ classmember:
 	| attributelist bareword '=' expression
 							{ $$ = eh_addnode(',', 3, $1, $2, $4); }
 	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(',', 4, $1, $2, $4, $6); }
+							{ $$ = eh_addnode(',', 3, $1, $2, 
+									eh_addnode(T_FUNC, 2, $4, $6)); }
 	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC
-							{ $$ = eh_addnode(',', 4, $1, $2, $4, $6); }
+							{ $$ = eh_addnode(',', 3, $1, $2, 
+									eh_addnode(T_FUNC, 2, $4, $6)); }
 	;
 
 attributelist:

@@ -7,6 +7,7 @@
 #ifndef EH_H_
 #define EH_H_
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>

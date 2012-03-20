@@ -109,3 +109,5 @@ modifyconst.eh
 assignthis.eh
 smalltest.eh
 scope.eh
+recurse.eh
+usearg.eh

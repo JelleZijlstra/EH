@@ -21,8 +21,8 @@ ehcmd_bucket_t *cmdtable[VARTABLE_S];
 
 // current object, gets passed around
 static ehcontext_t newcontext = NULL;
-ehscope_t *global_scope = NULL;
-ehscope_t *curr_scope = global_scope;
+ehscope_t global_scope;
+ehscope_t *curr_scope = &global_scope;
 
 static void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node);
 static ehretval_t *int_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
@@ -197,12 +197,13 @@ void eh_init(void) {
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
 		ehvar_t *func = new ehvar_t;
 		func->name = libfuncs[i].name;
-		func->scope = global_scope;
+		func->scope = global_scope.top();
 		func->value = new ehretval_t;
 		func->value->type = func_e;
 		func->value->funcval = new ehfm_t;
 		func->value->funcval->type = lib_e;
 		func->value->funcval->ptr = libfuncs[i].code;
+		func->value->funcval->scope.parent = curr_scope;
 		// other fields are irrelevant
 		insert_variable(func);
 	}
@@ -225,6 +226,7 @@ void eh_init(void) {
 			value->funcval = new ehfm_t;
 			value->funcval->type = libmethod_e;
 			value->funcval->mptr = members[i].func;
+			value->funcval->scope.parent = curr_scope;
 			class_insert_retval(
 				newclass->obj.members, members[i].name, attributes, value
 			);
@@ -1034,6 +1036,7 @@ ehretval_t *eh_op_declareclosure(ehretval_t **paras) {
 	ret->funcval->type = user_e;
 	make_arglist(&ret->funcval->argcount, &ret->funcval->args, paras[0]);
 	ret->funcval->code = paras[1];
+	ret->funcval->scope.parent = curr_scope;
 	return ret;
 }
 void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
@@ -1399,27 +1402,30 @@ ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context, i
 			}
 		}
 	}
+	// current variable scope
+	ehscope_t::varscope_t *my_scope = scope->top_pointer();
+	
 	// look in this scope, then the parent scope
 	while(1) {
-		unsigned int vhash = hash(name, (uint32_t) scope);
+		unsigned int vhash = hash(name, (uint32_t) my_scope);
 		currvar = vartable[vhash];
 		while(currvar != NULL) {
-			if(strcmp(currvar->name, name) == 0 && currvar->scope == scope) {
+			if(strcmp(currvar->name, name) == 0 && currvar->scope == (unsigned long) my_scope) {
 				return currvar;
 			}
 			currvar = currvar->next;
 		}
-		if(scope == NULL) {
+		if(my_scope->parent == NULL) {
 			break;
 		} else {
-			scope = scope->parent;
+			my_scope = my_scope->parent;
 		}
 	}
 	if(token == T_LVALUE_SET) {
 		currvar = new ehvar_t;
 		currvar->value = new ehretval_t(null_e);
 		currvar->name = name;
-		currvar->scope = curr_scope;
+		currvar->scope = curr_scope->top();
 		insert_variable(currvar);
 		return currvar;
 	} else {
@@ -1428,11 +1434,12 @@ ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context, i
 }
 // remove all variables in scope scope
 void remove_scope(ehscope_t *scope) {
+	unsigned long var_scope = scope->top();
 	for(int i = 0; i < VARTABLE_S; i++) {
 		ehvar_t *c = vartable[i];
 		ehvar_t *p = NULL;
 		while(c != NULL) {
-			if(c->scope == scope) {
+			if(c->scope == var_scope) {
 				if(p == NULL) {
 					vartable[i] = c->next;
 				} else {
@@ -1446,11 +1453,12 @@ void remove_scope(ehscope_t *scope) {
 	}
 }
 void remove_variable(const char *name, ehscope_t *scope) {
-	const unsigned int vhash = hash(name, (uint32_t) scope);
+	unsigned long var_scope = scope->top();
+	const unsigned int vhash = hash(name, (uint32_t) var_scope);
 	ehvar_t *currvar = vartable[vhash];
 	ehvar_t *prevvar = NULL;
 	while(currvar != NULL) {
-		if(strcmp(currvar->name, name) == 0 && currvar->scope == scope) {
+		if(strcmp(currvar->name, name) == 0 && currvar->scope == var_scope) {
 			if(prevvar == NULL) {
 				vartable[vhash] = currvar->next;
 			} else {
@@ -1515,14 +1523,15 @@ ehretval_t *call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehco
 		return ret;
 	}
 	int i = 0;
-	// create new scope
-	ehscope_t *new_scope = new ehscope_t;
-	new_scope->parent = curr_scope;
+	
+	// create new scope in this function
+	unsigned long new_scope = f->scope.deferred_push();
 	
 	// set parameters as necessary
 	if(f->args == NULL) {
 		if(args->opval->nparas != 0) {
 			eh_error_argcount(f->argcount, 1);
+			f->scope.pop();
 			return ret;
 		}
 	}
@@ -1534,6 +1543,7 @@ ehretval_t *call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehco
 		i++;
 		if(i > f->argcount) {
 			eh_error_argcount(f->argcount, i);
+			f->scope.pop();
 			return ret;
 		}
 		var->value = eh_execute(args->opval->paras[1], context);
@@ -1547,19 +1557,22 @@ ehretval_t *call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehco
 		}
 		args = args->opval->paras[0];
 	}
-	// functions get their own scope (not incremented before because execution of arguments needs parent scope)
-	curr_scope = new_scope;
 	if(f->argcount != i) {
 		eh_error_argcount(f->argcount, i);
 		return ret;
 	}
+	// move global scope into this function
+	f->scope.complete_push(new_scope);
+	ehscope_t *old_scope = curr_scope;
+	curr_scope = &f->scope;
+
 	// set new context (only useful for methods)
 	ret = eh_execute(f->code, newcontext);
 	returning = false;
 	
-	remove_scope(curr_scope);
-	curr_scope = curr_scope->parent;
-	delete new_scope;
+	// kill scope
+	curr_scope->pop();
+	curr_scope = old_scope;
 	return ret;
 }
 ehretval_t *call_function_args(ehfm_t *f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, ehretval_t *args) {
@@ -1576,8 +1589,8 @@ ehretval_t *call_function_args(ehfm_t *f, const ehcontext_t context, const ehcon
 		return ret;
 	}
 	// create new scope
-	ehscope_t *new_scope = new ehscope_t;
-	new_scope->parent = curr_scope;
+	unsigned long new_scope = f->scope.deferred_push();
+	
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {
 		ehvar_t *var = new ehvar_t;
@@ -1594,16 +1607,17 @@ ehretval_t *call_function_args(ehfm_t *f, const ehcontext_t context, const ehcon
 		}
 		insert_variable(var);
 	}
-	// functions get their own scope (not incremented before because execution 
-	// of arguments needs parent scope)
-	curr_scope = new_scope;
+	// create new scope
+	f->scope.complete_push(new_scope);
+	ehscope_t *old_scope = curr_scope;
+	curr_scope = &f->scope;
+
 	// set new context (only useful for methods)
 	ret = eh_execute(f->code, newcontext);
 	returning = false;
 	
-	remove_scope(curr_scope);
-	curr_scope = curr_scope->parent;
-	delete new_scope;
+	curr_scope->pop();
+	curr_scope = old_scope;
 	return ret;
 }
 /*
@@ -2527,7 +2541,7 @@ void eh_setarg(int argc, char **argv) {
 	ehvar_t *argc_v = new ehvar_t;
 	argc_v->value = new ehretval_t(int_e);
 	// global scope
-	argc_v->scope = global_scope;
+	argc_v->scope = global_scope.top();
 	argc_v->name = "argc";
 	// argc - 1, because argv[0] is ehi itself
 	argc_v->value->intval = argc - 1;
@@ -2536,7 +2550,7 @@ void eh_setarg(int argc, char **argv) {
 	// insert argv
 	ehvar_t *argv_v = new ehvar_t;
 	argv_v->value = new ehretval_t(array_e);
-	argv_v->scope = global_scope;
+	argv_v->scope = global_scope.top();
 	argv_v->name = "argv";
 	argv_v->value->arrayval = new ehvar_t *[VARTABLE_S]();
 

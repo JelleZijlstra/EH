@@ -261,7 +261,7 @@ typedef struct ehvar_t {
 	// attributes of an object member
 	union {
 		memberattribute_t attribute;
-		struct ehscope_t *scope;
+		unsigned long scope;
 		type_enum indextype;
 	};
 	struct ehretval_t *value;
@@ -333,6 +333,64 @@ typedef struct ehcmd_bucket_t {
 	struct ehcmd_bucket_t *next;
 } ehcmd_bucket_t;
 
+// scope
+struct ehscope_t {
+public:
+	struct varscope_t {
+		struct varscope_t *next;
+		struct varscope_t *parent;
+		varscope_t(varscope_t *in) {
+			next = in;
+		}
+		varscope_t() {
+			next = new varscope_t(NULL);
+		}
+	};
+private:
+	// current scope for this method
+	varscope_t *var_scope;
+public:
+	struct ehscope_t *parent;
+	// push and pop a new scope from the stack
+	unsigned long push() {
+		varscope_t *new_scope = new varscope_t(var_scope);
+		new_scope->parent = parent->top_pointer();
+		var_scope = new_scope;
+		return (unsigned long) new_scope;
+	}
+	void pop() {
+		assert(var_scope->next != NULL);
+		varscope_t *tmp = var_scope->next;
+		delete var_scope;
+		var_scope = tmp;
+	}
+	// deferred push: create a new scope, but don't put it in yet
+	unsigned long deferred_push() {
+		varscope_t *new_scope = new varscope_t(var_scope);
+		new_scope->parent = parent->top_pointer();
+		return (unsigned long) new_scope;
+	}
+	void complete_push(unsigned long new_scope) {
+		var_scope = (varscope_t *) new_scope;
+	}
+	unsigned long top() {
+		return (unsigned long) var_scope;
+	}
+	varscope_t *top_pointer() {
+		return var_scope;
+	}
+	// constructors
+	ehscope_t(ehscope_t *n_parent) {
+		parent = n_parent;
+	}
+	ehscope_t() {
+		// used as constructor for the global_scope
+		parent = NULL;
+		var_scope = new varscope_t();
+		var_scope->parent = NULL;
+	}
+};
+
 // class
 typedef struct ehclass_t {
 	ehobj_t obj;
@@ -345,6 +403,7 @@ typedef struct ehfm_t {
 	functype_enum type;
 	int argcount;
 	eharg_t *args;
+	ehscope_t scope;
 	union {
 		ehretval_t *code;
 		void (*ptr)(ehretval_t *, ehretval_t **, ehcontext_t);
@@ -357,11 +416,6 @@ typedef struct ehlibfunc_t {
 	void (*code)(ehretval_t *, ehretval_t **, ehcontext_t);
 	const char *name;
 } ehlibfunc_t;
-
-// scope
-struct ehscope_t {
-	struct ehscope_t *parent;
-};
 
 /*
  * EH error system
@@ -432,7 +486,7 @@ extern ehclass_t *classtable[];
 extern ehcmd_bucket_t *cmdtable[];
 
 // current variable scope
-extern ehscope_t *global_scope;
+extern ehscope_t global_scope;
 extern ehscope_t *curr_scope;
 
 // prototypes

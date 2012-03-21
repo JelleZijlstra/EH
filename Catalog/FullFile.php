@@ -2398,15 +2398,15 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$this->journal = $source[0];
 		$this->volume = $source[1];
 		// issue may have been omitted
-		$this->issue = $source[4] ? $source[2] : NULL;
+		$this->issue = isset($source[4]) ? $source[2] : NULL;
 		// year
-		$year = $source[4] ? $source[3] : $source[2];
+		$year = isset($source[4]) ? $source[3] : $source[2];
 		$this->year = preg_replace("/^.*, /", "", $year);
 		// start and end pages
-		$pages = $source[4] ? $source[4] : $source[3];
+		$pages = isset($source[4]) ? $source[4] : $source[3];
 		$pages = explode('-', $pages);
 		$this->start = $pages[0];
-		$this->end = $pages[1] ? $pages[1] : $pages[0];
+		$this->end = isset($pages[1]) ? $pages[1] : $pages[0];
 		/*
 		 * Process "authors" field
 		 * Will fail with various variants, including double surnames
@@ -3071,19 +3071,19 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			'name' => __FUNCTION__,
 			'checklist' => array( /* No parameters accepted */ ),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if($this->url)
+		if($this->url) {
 			$url = $this->url;
-		else if($this->doi)
+		} else if($this->doi) {
 			$url = 'http://dx.doi.org.ezp-prod1.hul.harvard.edu/' . $this->doi;
-		else if($this->jstor)
+		} else if($this->jstor) {
 			$url = 'http://www.jstor.org.ezp-prod1.hul.harvard.edu/stable/' . $this->jstor;
-		else if($this->hdl)
+		} else if($this->hdl) {
 			$url = 'http://hdl.handle.net/' . $this->hdl;
-		else if($this->pmid)
+		} else if($this->pmid) {
 			$url = 'http://www.ncbi.nlm.nih.gov/pubmed/' . $this->pmid;
-		else if($this->pmc)
+		} else if($this->pmc) {
 			$url = 'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC' . $this->pmc . '/';
-		else {
+		} else {
 			echo 'No URL to open' . PHP_EOL;
 			return false;
 		}

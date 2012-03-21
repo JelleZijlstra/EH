@@ -1067,7 +1067,7 @@ class ExecuteHandler extends EHICore {
 				'append-err' => 'Whether to append to the stderr file',
 				'input' => 'Place to get input from',
 				'input-string' => 'String to send as stdin input',
-				'return' => 'What to return. Options are "success" (whether the command returned exit status 0, "output" (the stdout output), and "exitvalue" (the exit code of the command).',
+				'return' => 'What to return. Options are "success" (whether the command returned exit status 0), "output" (the stdout output), and "exitvalue" (the exit code of the command).',
 				'printcmd' => 'Print the command as it is executed',
 				'printout' => 'Whether to print the output',
 			),

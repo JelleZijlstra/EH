@@ -1215,31 +1215,55 @@ class FullFile extends ListEntry {
 		/*
 		 * stuff related to {{cite doi}} and friends
 		 */
-		// determines whether only one citation is returned or two if {{cite doi}} or friends can be used
+		// determines whether only one citation is returned or two if 
+		// {{cite doi}} or friends can be used
 		$verbosecite = $this->p->verbosecite;
-		if($this->doi)
-			// to fix bug 28212
-			$doi = str_replace(array('<', '>'), array('.3C', '.3E'), $this->doi);
+		if($this->doi) {
+			// to fix bug 28212. Commented out for now since it seems we don't
+			// need it.
+			// $doi = str_replace(array('<', '>'), array('.3C', '.3E'), $this->doi);
+			$doi = $this->doi;
+		}
 		$out1 = '';
 		if(!$this->parturl) {
 			// {{cite doi}}
-			if($this->doi)
+			if($this->doi) {
 				$out1 = "{{cite doi|" . $doi . "}}";
 			// {{cite jstor}}
-			else if($this->jstor)
+			} elseif($this->jstor) {
 				$out1 = "{{cite jstor|" . $this->jstor . "}}";
 			// {{cite hdl}}
-			else if($this->hdl)
+			} else if($this->hdl) {
 				$out1 = "{{cite hdl|" . $this->hdl . "}}";
-			if(!$verbosecite && $out1) return $out1;
+			}
+			if($verbosecite === false && $out1 !== '') {
+				return $out1;
+			}
 		}
 		switch($class = $this->cite_getclass()) {
-			case 'journal': $temp = 'journal'; break;
-			case 'book': case 'chapter': $temp = 'book'; break;
-			case 'thesis': $temp = 'thesis'; break;
-			case 'unknown': if($out1) return $out1; else return false;
-			case 'web': $temp = 'web'; break;
-			default: trigger_error('Unrecognized class in ' . __FUNCTION__, E_USER_NOTICE);
+			case 'journal': 
+				$temp = 'journal'; 
+					break;
+			case 'book': case 'chapter': 
+				$temp = 'book'; 
+				break;
+			case 'thesis': 
+				$temp = 'thesis'; 
+				break;
+			case 'unknown': 
+				if($out1) {
+					return $out1;
+				} else {
+					return false;
+				}
+			case 'web': 
+				$temp = 'web'; 
+				break;
+			default: 
+				trigger_error(
+					'Unrecognized class in ' . __FUNCTION__, E_USER_NOTICE
+				);
+				break;
 		}
 		$paras = array();
 		// authors
@@ -1249,20 +1273,25 @@ class FullFile extends ListEntry {
 			// templates only support up to 9 authors
 				$author = explode(", ", $author);
 				$paras['last' . ($key + 1)] = $author[0];
-				if(isset($author[1]))
+				if(isset($author[1])) {
 					$paras['first' . ($key + 1)] = $author[1];
+				}
 			}
 			else {
-				if(!isset($paras['coauthors']))
+				if(!isset($paras['coauthors'])) {
 					$paras['coauthors'] = '';
+				}
 				$paras['coauthors'] .= $author . '; ';
 			}
 		}
-		if(isset($paras['coauthors']))
+		if(isset($paras['coauthors'])) {
 			$paras['coauthors'] = preg_replace('/; $/u', '', $paras['coauthors']);
+		}
 		// easy stuff we need in all classes
 		$paras['year'] = $this->year;
-		if($this->hdl) $paras['id'] = '{{hdl|' . $this->hdl . '}}';
+		if($this->hdl) {
+			$paras['id'] = '{{hdl|' . $this->hdl . '}}';
+		}
 		$paras['jstor'] = $this->jstor;
 		$paras['pmid'] = $this->pmid;
 		$paras['url'] = $this->url;
@@ -1271,27 +1300,31 @@ class FullFile extends ListEntry {
 		$paras['publisher'] = $this->publisher;
 		$paras['location'] = $this->location;
 		$paras['isbn'] = $this->isbn;
-		if(($this->start === $this->end) or $this->end === NULL)
+		if(($this->start === $this->end) or $this->end === NULL) {
 			$paras['pages'] = $this->start;
-		else
+		} else {
 			$paras['pages'] = $this->start . "–". $this->end;
+		}
 		if($temp === 'journal') {
 			$paras['title'] = $this->title;
 			$paras['journal'] = $this->journal;
 			$paras['volume'] = $this->volume;
 			$paras['issue'] = $this->issue;
-		}
-		else if($temp === 'book') {
-			if(!$this->booktitle)
+		} elseif($temp === 'book') {
+			if(!$this->booktitle) {
 				$paras['title'] = $this->title;
-				if(!$paras['pages']) $paras['pages'] = $this->bookpages;
-			else {
+				if(!$paras['pages']) {
+					$paras['pages'] = $this->bookpages;
+				}
+			} else {
 				$paras['chapter'] = $this->title;
 				$paras['title'] = $this->booktitle;
 			}
 			$paras['edition'] = $this->edition;
 			if($this->bookauthors) {
-				$bauthors = explode("; ", preg_replace('/ \([Ee]ds?\.\)$/', '', $this->bookauthors));
+				$bauthors = explode("; ", 
+					preg_replace('/ \([Ee]ds?\.\)$/', '', $this->bookauthors)
+				);
 				foreach($bauthors as $key => $author) {
 				// only four editors supported
 					if($key < 4) {
@@ -1309,35 +1342,45 @@ class FullFile extends ListEntry {
 					}
 				}
 				// double period bug
-				if(isset($paras['editor4-last']) and strpos($paras['editor4-last'], ';') !== false)
-					$paras['editor4-last'] = preg_replace(array('/; $/u', '/\.$/u'), array('', ''), $paras['editor4-last']);
-				else
-					$paras['editor' . count($bauthors) . '-first'] = preg_replace('/\.$/u', '', $paras['editor' . ($key + 1) . '-first']);
+				if(isset($paras['editor4-last']) and strpos($paras['editor4-last'], ';') !== false) {
+					$paras['editor4-last'] = preg_replace(
+						array('/; $/u', '/\.$/u'), 
+						array('', ''), 
+						$paras['editor4-last']
+					);
+				} else {
+					$paras['editor' . count($bauthors) . '-first'] = 
+						preg_replace('/\.$/u', '', 
+							$paras['editor' . ($key + 1) . '-first']
+						);
+				}
 			}
-		}
-		else if($temp === 'thesis') {
+		} elseif($temp === 'thesis') {
 			$paras['title'] = $this->title;
 			$tmp = explode(' thesis, ', $this->publisher);
 			$paras['degree'] = $tmp[0];
 			$paras['publisher'] = $tmp[1];
 			$paras['pages'] = $this->bookpages;
-		}
-		else if($temp === 'web') {
+		} elseif($temp === 'web') {
 			$paras['title'] = $this->title;
 			$paras['publisher'] = $this->publisher;
 		}
-		if($this->p->includerefharv)
+		if($this->p->includerefharv) {
 			$paras['ref'] = 'harv';
+		}
 		$out = $sfn = '';
-		if($this->p->includesfn)
+		if($this->p->includesfn) {
 			$out = $sfn = '<!--' . $this->getsfn() . '-->';
+		}
 		$out .= '{{cite ' . $temp;
 		foreach($paras as $key => $value) {
 			if($value) $out .= ' | ' . $key . ' = ' . $value;
 		}
 		$out .= '}}';
 		// final cleanup
-		$out = preg_replace(array("/\s\s/u", "/\.\./u"), array(" ", "."), wikify($out));
+		$out = preg_replace(
+			array("/\s\s/u", "/\.\./u"), array(" ", "."), wikify($out)
+		);
 		return ($verbosecite and $out1) ? array($sfn . $out1, $out) : $out;
 	}
 	public function getsfn() {
@@ -1723,7 +1766,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	public function get_citedoiurl($var = 'doi') {
 	// returns URL to Wikipedia cite doi-family template for this FullFile
 	// by default uses cite doi; by setting var to something else, jstor and a few others can be set
-		$url = 'http://secure.wikimedia.org/wikipedia/en/w/index.php?action=edit&title=Template:Cite_';
+		$url = 'http://en.wikipedia.org/w/index.php?action=edit&title=Template:Cite_';
 		switch($var) {
 			case 'doi':
 				// TODO: need some encoding here
@@ -3065,29 +3108,42 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		);
 		return $title;
 	}
+	private function geturl() {
+	// get the URL for this file from the data given
+		if($this->url) {
+			return $this->url;
+		} elseif($this->doi) {
+			return 'http://dx.doi.org.ezp-prod1.hul.harvard.edu/' . $this->doi;
+		} elseif($this->jstor) {
+			return 'http://www.jstor.org.ezp-prod1.hul.harvard.edu/stable/' 
+				. $this->jstor;
+		} elseif($this->hdl) {
+			return 'http://hdl.handle.net/' . $this->hdl;
+		} elseif($this->pmid) {
+			return 'http://www.ncbi.nlm.nih.gov/pubmed/' . $this->pmid;
+		} elseif($this->pmc) {
+			return 'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC' 
+				. $this->pmc . '/';
+		} else {
+			return false;
+		}	
+	}
 	public function openurl(array $paras = array()) {
 	// open the URL associated with the file
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array( /* No parameters accepted */ ),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if($this->url) {
-			$url = $this->url;
-		} else if($this->doi) {
-			$url = 'http://dx.doi.org.ezp-prod1.hul.harvard.edu/' . $this->doi;
-		} else if($this->jstor) {
-			$url = 'http://www.jstor.org.ezp-prod1.hul.harvard.edu/stable/' . $this->jstor;
-		} else if($this->hdl) {
-			$url = 'http://hdl.handle.net/' . $this->hdl;
-		} else if($this->pmid) {
-			$url = 'http://www.ncbi.nlm.nih.gov/pubmed/' . $this->pmid;
-		} else if($this->pmc) {
-			$url = 'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC' . $this->pmc . '/';
-		} else {
+		$url = $this->geturl();
+		if($url === false) {
 			echo 'No URL to open' . PHP_EOL;
-			return false;
+			return false;		
+		} else {
+			return $this->shell(array(
+				'cmd' => 'open',
+				'arg' => array($url),
+			));
 		}
-		return $this->shell("open '" . $url . "'");
 	}
 	public function searchgoogletitle() {
 	// searches for the title of the article in Google

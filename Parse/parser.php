@@ -387,30 +387,36 @@ function parsecite($in, $part = '') {
 		return $out[$part];
 	return $out;
 }
-function parse_wlist($in = '') {
+function parse_wlist($in) {
 	// make possible call from callfunc
 	if(is_array($in)) {
 		$in = $in[0];
+	} elseif(!is_string($in)) {
+		echo 'parse_wlist: invalid input' . PHP_EOL;
+		return false;
 	}
 	global $wlist_p, $csvlist;
-	if(!$in) {
-		echo 'Text to parse: ';
-		$in = getinput();
-		if($in === 'q') return false;
+	if(!$csvlist->citetype) {
+		$csvlist->citetype = 'wp';
 	}
-	if(!$csvlist->citetype) $csvlist->citetype = 'wp';
-	if(!$wlist_p) $wlist_p = new Parser('wlist', array('echolong' => true));
+	if(!$wlist_p) {
+		$wlist_p = new Parser('wlist', array('echolong' => true));
+	}
 	echo 'REFERENCE LIST' . PHP_EOL . $wlist_p($in);
 	return true;
 }
 function parse_paper($infile) {
 	return fileparse('paper', $infile);
 	global $csvlist, $paper_p;
-	if(!$csvlist->citetype) $citetype = 'paper';
+	if(!$csvlist->citetype) {
+		$csvlist->citetype = 'paper';
+	}
 	if(!($text = file_get_contents($infile))) {
 		throw new EHException('Failed to open file', EHException::E_FATAL);
 	}
-	if(!$paper_p) $paper_p = new Parser('paper');
+	if(!$paper_p) {
+		$paper_p = new Parser('paper');
+	}
 	$parsed = $paper_p($text);
 	$newname = str_replace('.', '-parsed.', $infile);
 	file_put_contents($newname, $parsed);

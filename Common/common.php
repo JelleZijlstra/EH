@@ -33,9 +33,6 @@ if(mb_internal_encoding('UTF-8') === false) {
 	echo "Unable to set encoding" . PHP_EOL;
 	exit(1);
 }
-function getinput($limit = 500) {
-	return trim(fgets(STDIN, $limit));
-}
 function escape_shell($in) {
 // escapes a string for use as a shell argument
 	$in = escapeshellcmd($in);

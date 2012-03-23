@@ -19,9 +19,9 @@ ini_set("display_errors", '1');
 // try to get the C++ EHI loaded
 require_once(BPATH . "/EH-parser/EHICore-SWIG.php");
 // if we failed, use pure-PHP solutions
-if(extension_loaded("ehphp"))
+if(extension_loaded("ehphp")) {
 	define('EHI_LOADED', 1);
-else {
+} else {
 	require_once("EHICore.php");
 	define('EHI_LOADED', 0);
 }
@@ -33,7 +33,6 @@ if(mb_internal_encoding('UTF-8') === false) {
 	echo "Unable to set encoding" . PHP_EOL;
 	exit(1);
 }
-$eclog = BPATH . '/Misc/log';
 function getinput($limit = 500) {
 	return trim(fgets(STDIN, $limit));
 }

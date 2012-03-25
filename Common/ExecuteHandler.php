@@ -1047,7 +1047,7 @@ class ExecuteHandler extends EHICore {
 				$this->config[$key] = $value;
 		}
 	}
-	protected function shell($paras) {
+	public function shell($paras) {
 		// TODO: set up our own shell process with a persistent pipe, so we can
 		// keep state in the shell.
 		if($this->process_paras($paras, array(

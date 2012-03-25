@@ -3024,10 +3024,15 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$to = $srange[1];
 				break;
 			}
-			$cmd = 'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dFirstPage=' 
-				. escapeshellarg($from) . ' -dLastPage=' . escapeshellarg($to) 
-				. ' -sOUTPUTFILE=' . escapeshellarg(TEMPPATH . '/' . $name)
-				. ' ' . BURSTPATH . '/' . $this->name . '\'';
+			$cmd = array(
+				'cmd' => 'gs',
+				'arg' => array(
+					'-dBATCH', '-dNOPAUSE', '-q', '-sDEVICE=pdfwrite',
+					'-dFirstPage=' . $from, '-dLastPage=' . $to,
+					'-sOUTPUTFILE=' . TEMPPATH . '/' . $name,
+					BURSTPATH . '/' . $this->name,
+				),
+			);
 			if(!$this->shell($cmd)) {
 				echo 'Could not burst PDF' . PHP_EOL;
 				return false;

@@ -43,6 +43,9 @@ abstract class ListEntry extends ExecuteHandler {
 			'aka' => array('empty'),
 			'desc' => 'Empty a property of the entry',
 			'arg' => 'Property to be emptied'),
+		'set' => array('name' => 'set',
+			'aka' => array('setprops'),
+			'desc' => 'Set a property of a file'),
 	);
 	// array of variables that shouldn't get dynamically defined set commands
 	private static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');

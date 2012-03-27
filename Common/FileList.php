@@ -36,6 +36,7 @@ abstract class FileList extends ExecuteHandler {
 			'arg' => 'Entry handle',
 			'execute' => 'callmethod'),
 		'set' => array('name' => 'set',
+			'aka' => array('setprops'),
 			'desc' => 'Set a property of a file',
 			'arg' => 'Entry handle, plus fields to be changed in the form "--<field>=<content>"',
 			'execute' => 'callmethod'),

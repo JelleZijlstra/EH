@@ -1100,6 +1100,9 @@ class ExecuteHandler extends EHICore {
 			$args = array_map('escapeshellarg', $paras['arg']);
 			$cmd .= ' ' . implode(' ', $args);
 		}
+		if($paras['printcmd']) {
+			echo $cmd . PHP_EOL;
+		}
 		// cd won't actually change the shell until we do some special magic
 		if(substr($cmd, 0, 3) === 'cd ') {
 			$dir = substr($cmd, 3);
@@ -1123,9 +1126,6 @@ class ExecuteHandler extends EHICore {
 			}
 			if($paras['input-string'] !== false) {
 				$cmd .= " <<INPUT\n" . $paras['input-string'] . "\nINPUT";
-			}
-			if($paras['printcmd']) {
-				echo $cmd . PHP_EOL;
 			}
 			exec($cmd, $output, $exitval);
 			if($paras['printout']) {

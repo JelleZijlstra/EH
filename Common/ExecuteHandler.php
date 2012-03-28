@@ -1106,6 +1106,10 @@ class ExecuteHandler extends EHICore {
 		// cd won't actually change the shell until we do some special magic
 		if(substr($cmd, 0, 3) === 'cd ') {
 			$dir = substr($cmd, 3);
+			// more hack
+			if($dir[0] === "'") {
+				$dir = substr($dir, 1, -1);
+			}
 			// handle home directory
 			if($dir[0] === '~') {
 				$home = trim(shell_exec('echo $HOME'));

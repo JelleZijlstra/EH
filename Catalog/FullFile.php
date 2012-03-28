@@ -1621,8 +1621,10 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		// lambda function to add a property to the output
 		$add = function($key, $value, $mandatory = false) use(&$out) {
 			if(is_null($value)) {
-				if($mandatory)
-					echo 'Bibtex error: required property ' . $key . ' is empty' . PHP_EOL;
+				if($mandatory) {
+					echo 'Bibtex error: required property ' . $key 
+						. ' is empty' . PHP_EOL;
+				}
 				return;
 			}
 			$out .= "\t" . $key . ' = "' . $value . "\",\n";
@@ -1658,11 +1660,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		// stuff that goes in every citation type
 		$add('author', $authors, true);
 		$add('year', $this->year, true);
-		$title = str_replace(
+		$title = '{' . str_replace(
 			array('<i>', '</i>'),
 			array('\textit{', '}'),
 			$this->title
-		);
+		) . '}';
 		$add('title', $title, true);
 		switch($class) {
 			case 'thesis':

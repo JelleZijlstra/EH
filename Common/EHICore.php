@@ -8,7 +8,7 @@
  */
 
 define('IS_PUREPHP', 0);
-abstract class EHICore {
+abstract class EHICore implements EHICoreInterface {
 	/* Class constants (partly duplicated) */
 	const EXECUTE_NEXT = 0x0; // execute says: go on with next
 	const EXECUTE_PC = 0x1; // execute whatever is in the PC now
@@ -136,7 +136,7 @@ abstract class EHICore {
 	public function __construct() {
 		return;
 	}
-	protected function setvar($var, $value) {
+	public function setvar($var, $value) {
 	// set a variable in the internal language
 		$this->vars[$this->currhist][$this->curr('currscope')][$var] = $value;
 	}

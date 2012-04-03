@@ -16,6 +16,9 @@ define('BPATH', __DIR__ . '/..');
 // show all errors
 error_reporting(E_ALL | E_STRICT);
 ini_set("display_errors", '1');
+
+// load interface
+require_once(BPATH . '/Common/EHICore.interface.php');
 // try to get the C++ EHI loaded
 require_once(BPATH . "/EH-parser/EHICore-SWIG.php");
 // if we failed, use pure-PHP solutions

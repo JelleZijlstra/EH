@@ -616,7 +616,7 @@ int EHI::eh_interactive(void) {
 	interpreter = oldinterpreter;
 	return ret.intval;
 }
-void EHI::exec_file(const char *name) {
+void EHI::exec_file_name(const char *name) {
 	FILE *infile = fopen(name, "r");
 	if(!infile) {
 		fprintf(stderr, "Could not open input file\n");

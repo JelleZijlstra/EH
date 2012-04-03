@@ -8,7 +8,7 @@
 @include_once(BPATH . "/EH-parser/ehphp.php");
 if(!class_exists("EHI")) return;
 define('IS_EHPHP', 0);
-abstract class EHICore extends EHI {
+abstract class EHICore extends EHI implements EHICoreInterface {
 	private $prompt;
 	/* core commands */
 	protected static $core_commands = array(
@@ -46,6 +46,19 @@ abstract class EHICore extends EHI {
 		}
 		$history[] = $cmd;
 		return $cmd;
+	}
+	public function exec_file(array $paras = array()) {
+		$file = NULL;
+		if(isset($paras[0])) {
+			$file = $paras[0];
+		} elseif(isset($paras['file'])) {
+			$file = $paras['file'];
+		}
+		if($file === NULL) {
+			return false;
+		} else {
+			return parent::exec_file_name($file);
+		}
 	}
 	/* workarounds to prevent EH from blowing up when using the PHP implementation's features */
 	public function setvar($var, $value) {

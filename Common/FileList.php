@@ -164,19 +164,20 @@ abstract class FileList extends ExecuteHandler {
 		$this->needsave = false;
 		return true;
 	}
-	public function get($file, $field = '') {
+	public function get($file, $field = NULL) {
 	// returns FullFile with name $file, or a particular field of that file
 		if($this->has($file)) {
-			if($field) {
-				if(self::is_childproperty($field))
+			if($field !== NULL) {
+				if(self::is_childproperty($field)) {
 					return $this->c[$file]->$field;
-				else {
+				} else {
 					echo 'Invalid field: ' . $field . PHP_EOL;
 					return NULL;
 				}
 			}
-			else
-				return clone $this->c[$file];
+			else {
+				return $this->c[$file];
+			}
 		}
 		else {
 			echo 'Invalid file: ' . $file . PHP_EOL;

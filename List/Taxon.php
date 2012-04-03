@@ -16,7 +16,6 @@ class Taxon extends ListEntry {
 	static $n_ids = array('iucn');
 	public $misc;
 	static $n_misc = array('rawr', 'originalref');
-	public $props;
 	static $parentlist = 'taxonlist';
 	protected static $arrays_to_check = array('ids', 'endemic', 'misc');
 	public $ngen;

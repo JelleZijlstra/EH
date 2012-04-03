@@ -242,8 +242,8 @@ abstract class FileList extends ExecuteHandler {
 				// resolve redirect if desired
 				if($func !== 'resolve_redirect' and 
 					method_exists(static::$childclass, 'resolve_redirect') and 
-					!in_array(self::$resolve_redirect_exclude,
-						array(static::$childclass, $func), true)) {
+					!in_array(array(static::$childclass, $func), 
+						self::$resolve_redirect_exclude, true)) {
 					$value = $this->get($value)->resolve_redirect();
 				}
 				// check validity (again)

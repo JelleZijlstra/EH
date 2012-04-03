@@ -140,7 +140,6 @@ class CsvList extends FileList {
 	}
 	public function makeredirect($handle, $target) {
 	// redirect one file to another
-		
 		if(!$this->has($handle)) {
 			return false;
 		}
@@ -711,16 +710,14 @@ class CsvList extends FileList {
 			),
 			'checkparas' => array(
 				'new' => function($in) {
-					global $csvlist;
-					return $csvlist->validcitetype($in);
+					return CsvList::validcitetype($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$this->citetype = $paras['new'];
 		return $this->citetype;
 	}
-	public function validcitetype($in = '') {
-		if(!$in) $in = $this->citetype;
+	public static function validcitetype($in) {
 		return method_exists('FullFile', 'cite' . $in);
 	}
 	/* first kind of suggestions: full paths */

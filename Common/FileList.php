@@ -184,10 +184,11 @@ abstract class FileList extends ExecuteHandler {
 		}
 	}
 	public function saveifneeded() {
-		if($this->needsave)
+		if($this->needsave) {
 			return $this->save();
-		else
+		} else {
 			return false;
+		}
 	}
 	public function needsave() {
 		// Tell the FileList that we need to save the catalog.
@@ -197,9 +198,11 @@ abstract class FileList extends ExecuteHandler {
 	// call method for appropriate FullFile
 	// example: $csvlist->edit('Agathaeromys nov.pdf'); equals $csvlist->c['Agathaeromys nov.pdf']->edit();
 		// check method validity
-		if(!$func or !method_exists(static::$childclass, $func)) {
-			throw new EHException('Invalid call to ' . __METHOD__ . ' (method ' . $func . ' invalid)', EHException::E_RECOVERABLE);
-			return false;
+		if(!method_exists(static::$childclass, $func)) {
+			throw new EHException(
+				'Invalid call to ' . __METHOD__ . ' (method ' . $func 
+					. ' invalid)', 
+				EHException::E_RECOVERABLE);
 		}
 		// parameters to send to called function
 		$paras = $args[0];
@@ -214,16 +217,22 @@ abstract class FileList extends ExecuteHandler {
 			if(is_int($key)) {
 				// check validity
 				if(!$this->has($value)) {
-					echo 'Entry ' . $paras[$key] . ' does not exist (method ' . $func . ')' . PHP_EOL;
+					echo 'Entry ' . $paras[$key] . ' does not exist (method ' 
+						. $func . ')' . PHP_EOL;
 					unset($paras[$key]);
 					continue;
 				}
 				// resolve redirect if desired
-				if($func !== 'resolve_redirect' and method_exists(static::$childclass, 'resolve_redirect') and !in_array(array(static::$childclass, $func), self::$resolve_redirect_exclude))
+				if($func !== 'resolve_redirect' and 
+					method_exists(static::$childclass, 'resolve_redirect') and 
+					!in_array(self::$resolve_redirect_exclude,
+						array(static::$childclass, $func), true)) {
 					$value = $this->c[$value]->resolve_redirect();
+				}
 				// check validity (again)
 				if($value === false or !$this->has($value)) {
-					echo 'Entry ' . $paras[$key] . ' does not exist (method ' . $func . ')' . PHP_EOL;
+					echo 'Entry ' . $paras[$key] . ' does not exist (method ' 
+						. $func . ')' . PHP_EOL;
 					unset($paras[$key]);
 					continue;
 				}
@@ -233,8 +242,9 @@ abstract class FileList extends ExecuteHandler {
 			}
 		}
 		$ret = NULL;
-		foreach($files as $file)
+		foreach($files as $file) {
 			$ret = call_user_func(array($this->c[$file], $func), $paras);
+		}
 		return $ret;
 	}
 	public function __invoke($file) {
@@ -331,6 +341,7 @@ abstract class FileList extends ExecuteHandler {
 		return $childclass::hasproperty($field);
 	}
 	public function unsetf($file) {
+		// TODO: why do we have both this and remove_entry?
 		if($this->has($file)) {
 			unset($this->c[$file]);
 			return true;
@@ -1172,4 +1183,3 @@ abstract class FileList extends ExecuteHandler {
 		return $backupdir . array_shift($backuplist);		
 	}
 }
-?>

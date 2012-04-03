@@ -140,9 +140,13 @@ class CsvList extends FileList {
 	}
 	public function makeredirect($handle, $target) {
 	// redirect one file to another
-		if(!$this->has($handle) or !$this->has($target)) return false;
-		$this->c[$handle]->name = 'SEE ' . $target;
-		$this->c[$handle]->format();
+		
+		if(!$this->has($handle)) {
+			return false;
+		}
+		$redirected = $this->get($handle);
+		$redirected->name = 'SEE ' . $target;
+		$redirected->format();
 		return true;
 	}
 	/* load related lists */
@@ -245,7 +249,7 @@ class CsvList extends FileList {
 					break;
 			}
 		}
-		$this->c[$paras['name']] = $file;
+		parent::add_entry($file);
 		if($paras['isnew']) {
 			$this->log($file->name, 'Added file to catalog');
 			echo "Added to catalog!" . PHP_EOL;
@@ -559,34 +563,36 @@ class CsvList extends FileList {
 		'i: give information about the files' . PHP_EOL;
 		$history = array();
 		while(true) {
-			$file = '';
+			$fileName = '';
 			$in = $this->getline(array(
 				'lines' => $history,
 				'prompt' => 'dups_core> ',
 			));
 			$history[] = $in;
 			if(strlen($in) > 2) {
-				$file = substr($in, 2);
-				if($this->has($file))
-					$file = $this->c[$file]->resolve_redirect();
-				else
-					$file = false;
+				$fileName = substr($in, 2);
+				if($this->has($file)) {
+					$fileName = $this->get($fileName)->resolve_redirect();
+				} else {
+					$fileName = false;
+				}
 				// if there is no file or the redirect is broken
-				if($file === false) {
+				if($fileName === false) {
 					echo 'File does not exist' . PHP_EOL;
 					continue;
 				}
 			}
+			$file = $this->get($fileName);
 			switch($in[0]) {
 				case 'e':
-					$this->c[$file]->edit();
+					$file->edit();
 					break;
 				case 'm':
 					$newname = $this->getline(array(
 						'prompt' => 'New name of file: '
 					));
 					if($newname === 'q') break;
-					$this->c[$file]->move($newname);
+					$file->move($newname);
 					$this->needsave();
 					break;
 				case 'o':
@@ -598,7 +604,7 @@ class CsvList extends FileList {
 						$fileo->inform();
 					break;
 				case 'r':
-					$this->c[$file]->remove();
+					$file->remove();
 					// add redirect from old file
 					$targets = array();
 					foreach($files as $fileo) {
@@ -606,12 +612,14 @@ class CsvList extends FileList {
 							$targets[] = $fileo->name;
 						}
 					}
-					if(count($targets) === 1)
+					if(count($targets) === 1) {
 						$target = array_pop($targets);
-					else {
-						echo 'Could not determine redirect target. Options:' . PHP_EOL;
-						foreach($targets as $target)
+					} else {
+						echo 'Could not determine redirect target. Options:' 
+							. PHP_EOL;
+						foreach($targets as $target) {
 							echo '- ' . $target . PHP_EOL;
+						}
 						$target = $this->menu(array(
 							'head' => 'Type the redirect target below',
 							'options' => array('q' => 'Quit this file'),

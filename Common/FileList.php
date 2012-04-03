@@ -355,15 +355,6 @@ abstract class FileList extends ExecuteHandler {
 		$childclass = static::$childclass;
 		return $childclass::hasproperty($field);
 	}
-	public function unsetf($file) {
-		// TODO: why do we have both this and remove_entry?
-		if($this->has($file)) {
-			unset($this->c[$file]);
-			return true;
-		}
-		else
-			return false;
-	}
 	public function formatall(array $paras) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,

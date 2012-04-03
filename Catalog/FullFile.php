@@ -348,9 +348,8 @@ class FullFile extends ListEntry {
 		}
 		// change the catalog
 		if($this->p->has($oldname)) {
-			$this->p->add_entry($this);
+			$this->p->move_entry($oldname, $this->name);
 			// make redirect
-			$this->p->unsetf($oldname);
 			$this->p->add_redirect(array(
 				'handle' => $oldname,
 				'target' => $newname,
@@ -404,9 +403,8 @@ class FullFile extends ListEntry {
 				$this->folder = $searchres->folder;
 				$this->sfolder = $searchres->sfolder;
 				$this->ssfolder = $searchres->ssfolder;
-				$this->p->add_entry($this);
+				$this->p->move_entry($oldname, $this->name);
 				// make redirect
-				$this->p->unsetf($oldname);
 				$this->p->add_redirect(array(
 					'handle' => $oldname,
 					'target' => $newname,

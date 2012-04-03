@@ -132,6 +132,15 @@ abstract class FileList extends ExecuteHandler {
 		unset($this->c[$file]);
 		return true;
 	}
+	public function move_entry($file, $newName, array $paras = array()) {
+		if(!$this->has($file)) {
+			echo 'File ' . $file . ' does not exist' . PHP_EOL;
+			return false;
+		}
+		$this->c[$newName] = $this->c[$file];
+		unset($this->c[$file]);
+		return true;
+	}
 	public function has($file) {
 		return isset($this->c[$file]);
 	}

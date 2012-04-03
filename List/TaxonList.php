@@ -89,7 +89,7 @@ class TaxonList extends FileList {
 					break;
 			}
 		}
-		$this->c[$paras['name']] = $file;
+		parent::add_entry($file);
 		$this->par[$file->parent][$paras['name']] = $paras['name'];
 		if($paras['isnew']) {
 			// No logging in List for now
@@ -105,17 +105,17 @@ class TaxonList extends FileList {
 		$func = array_shift($args);
 		// not quite sure why we need current here
 		$tax = current($this->par['root']);
-		return call_user_func_array(array($this->c[$tax], $func), $args);
+		return call_user_func_array(array($this->get($tax), $func), $args);
 	}
 	public function moveinlist($oldname, $newname) {
 		if($oldname === $newname) {
 			echo 'Error: old name ' . $oldname . ' and new name ' . $newname . ' are the same.' . PHP_EOL;
 			return false;
 		}
-		$this->c[$newname] = $this->c[$oldname];
-		unset($this->c[$oldname]);
-		$this->par[$this->c[$newname]->parent][$newname] = $newname;
-		unset($this->par[$this->c[$newname]->parent][$oldname]);
+		$this->move_entry($oldname, $newname);
+		$parent = $this->get($newname)->parent;
+		$this->par[$parent][$newname] = $newname;
+		unset($this->par[$parent][$oldname]);
 		return true;
 	}
 	// static stuff for output
@@ -131,11 +131,12 @@ class TaxonList extends FileList {
 			'checklist' => array('taxon' => 'Taxon to output'),
 			'errorifempty' => array('taxon'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if($this->c[$paras['taxon']]->rank !== 'genus') {
+		$obj = $this->get($paras['taxon']);
+		if($obj->rank !== 'genus') {
 			echo 'Invalid taxon' . PHP_EOL;
 			return false;
 		}
-		$text = $this->c[$paras['taxon']]->text();
+		$text = $obj->text();
 		if($text) {
 			echo $text;
 			return true;
@@ -201,12 +202,16 @@ class TaxonList extends FileList {
 		fwrite($this->wiki_out[$paras['taxon']], self::$start_wiki);
 		if($paras['taxon'] === 'list') {
 			$this->call_root('completedata');
-			fwrite($this->wiki_out[$paras['taxon']], "*Total number of genera: " . $this->c['Mammalia']->ngen . PHP_EOL . "*Total number of species: " . $this->c['Mammalia']->nspec . PHP_EOL);
+			$mamm = $this->get('Mammalia');
+			fwrite($this->wiki_out[$paras['taxon']], 
+				"*Total number of genera: " . $mamm->ngen . PHP_EOL 
+				. "*Total number of species: " . $mamm->nspec . PHP_EOL);
 			$this->call_root('wiki', array('taxon' => 'list'));
 		}
 		else {
-			$this->c[$paras['taxon']]->completedata();
-			$this->c[$paras['taxon']]->wiki(array('taxon' => $paras['taxon']));
+			$taxon = $this->get($paras['taxon']);
+			$taxon->completedata();
+			$taxon->wiki(array('taxon' => $paras['taxon']));
 		}
 		fwrite($this->wiki_out[$paras['taxon']], self::$end_wiki);
 	}
@@ -271,8 +276,8 @@ class TaxonList extends FileList {
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		unset($this->par[$this->c[$paras['name']]->parent][$paras['name']]);
-		unset($this->c[$paras['name']]);
+		unset($this->par[$this->get($paras['name'])->parent][$paras['name']]);
+		$this->remove_entry($paras['name']);
 	}
 	public function sortchildren($name) {
 		if(!$this->par[$name]) return false;

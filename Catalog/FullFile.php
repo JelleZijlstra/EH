@@ -1984,11 +1984,15 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				echo 'Suggestions: ';
 				$suggs = $sugg_lister($this->p->foldertree);
 				$cmd = $this->getline('Folder: ');
-				if($cmd === 'q')
+				if($cmd === 'q') {
 					continue 2;
-				if(is_numeric($cmd))
+				}
+				if(is_numeric($cmd)) {
 					$this->folder = $suggs[$cmd];
-				else $this->folder = $cmd;
+				} else {
+					// TODO: re-ask if input is invalid
+					$this->folder = $cmd;
+				}
 				/* subfolder */
 				if(count($this->p->foldertree[$this->folder]) !== 0) {
 					echo 'Suggestions: ';

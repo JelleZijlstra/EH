@@ -22,7 +22,7 @@ abstract class FileList extends ExecuteHandler {
 	 * modify this directly.
 	 */
 	private $needsave = false;
-	protected $c; //array of children
+	private $c; //array of children
 	protected $labels; // first line of CSV file
 	protected static $fileloc; // where the file lives that we get our list from
 	protected static $logfile; // location of the log file
@@ -119,8 +119,9 @@ abstract class FileList extends ExecuteHandler {
 	}
 	public function add_entry(ListEntry $file, array $paras = array()) {
 	// very basic add_entry function. Possibly some of the complex stuff that TaxonList and CsvList have should be moved to FileList somehow.
-		if($this->has($file->name))
+		if($this->has($file->name)) {
 			return false;
+		}
 		$this->c[$file->name] = $file;
 		return true;
 	}
@@ -174,9 +175,10 @@ abstract class FileList extends ExecuteHandler {
 		return true;
 	}
 	public function get($file, $field = NULL) {
-	// returns FullFile with name $file, or a particular field of that file
+	// returns FullFile with name $file, or a particular field of that file.
+	// If $field === true, resolves redirects.
 		if($this->has($file)) {
-			if($field !== NULL) {
+			if($field !== NULL && $field !== true) {
 				if(self::is_childproperty($field)) {
 					return $this->c[$file]->$field;
 				} else {
@@ -185,7 +187,12 @@ abstract class FileList extends ExecuteHandler {
 				}
 			}
 			else {
-				return $this->c[$file];
+				$file = $this->c[$file];
+				if($field === true 
+					&& method_exists(static::$childclass, 'resolve_redirect')) {
+					$file = $this->c[$file->resolve_redirect()];
+				}
+				return $file;
 			}
 		}
 		else {
@@ -237,7 +244,7 @@ abstract class FileList extends ExecuteHandler {
 					method_exists(static::$childclass, 'resolve_redirect') and 
 					!in_array(self::$resolve_redirect_exclude,
 						array(static::$childclass, $func), true)) {
-					$value = $this->c[$value]->resolve_redirect();
+					$value = $this->get($value)->resolve_redirect();
 				}
 				// check validity (again)
 				if($value === false or !$this->has($value)) {
@@ -253,7 +260,7 @@ abstract class FileList extends ExecuteHandler {
 		}
 		$ret = NULL;
 		foreach($files as $file) {
-			$ret = call_user_func(array($this->c[$file], $func), $paras);
+			$ret = call_user_func(array($this->get($file), $func), $paras);
 		}
 		return $ret;
 	}
@@ -263,10 +270,8 @@ abstract class FileList extends ExecuteHandler {
 			echo 'No such file: ' . $file . PHP_EOL;
 			return false;
 		}
-		if(method_exists(static::$childclass, 'resolve_redirect')) {
-			$file = $this->c[$file]->resolve_redirect();
-		}
-		return $this->c[$file]();
+		$obj = $this->get($file, true);
+		return $obj();
 	}
 	// prevent access to non-existent properties
 	public function __get($prop) {

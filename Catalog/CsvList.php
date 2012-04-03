@@ -272,8 +272,9 @@ class CsvList extends FileList {
 			'checkparas' => array(
 				'handle' => function($in) {
 					// NOFILEs can't have dots in their names
-					if(strpos($in, '.') !== false)
+					if(strpos($in, '.') !== false) {
 						return false;
+					}
 					// when we're in PHP 5.4, use $this->has instead here
 					global $csvlist;
 					return !$csvlist->has($in);
@@ -340,7 +341,7 @@ class CsvList extends FileList {
 	// Performs various functions in a pseudo-command line. A main entry point.
 		$this->setup_commandline('Catalog');
 	}
-	function listinfo() {
+	public function listinfo() {
 		foreach($this as $property => $value) {
 			echo $property . ': '; echo $value . PHP_EOL;
 		}
@@ -389,11 +390,11 @@ class CsvList extends FileList {
 	 */
 		echo 'checking whether cataloged articles are in library... ';
 		foreach($this->c as $file) {
+			// if file already exists in right place
 			if(isset($this->lslist[$file->name])) {
 				// update path
 				$file->setpath(array('fromfile' => $this->lslist[$file->name]));
-			}
-			else if($file->isfile() && !$file->isredirect()) {
+			} elseif($file->isfile() && !$file->isredirect()) {
 				echo PHP_EOL;
 				$cmd = $this->menu(array(
 					'options' => array(
@@ -416,20 +417,22 @@ class CsvList extends FileList {
 					),
 				));
 				switch($cmd) {
-					case 'q': throw new StopException('csvcheck');
-					case 'm': return true;
+					case 'q': 
+						throw new StopException('csvcheck');
+					case 'm': 
+						return true;
 					case 'l': 
 						$file->effect_rename(array(
 							'elist' => $this->c,
 							'searchlist' => $this->lslist,
 						)); 
 						break;
-					case 's': break;
+					case 's': 
+						break;
 					case 'r':
-						// set name to NULL; putcsvlist() will then not write the file
 						$file->log('Removed');
 						$this->needsave();
-						$file->name = NULL;
+						$this->remove_entry($file->name);
 						return true;
 				}
 			}
@@ -453,18 +456,23 @@ class CsvList extends FileList {
 						'q' => 'quit the program',
 						'm' => 'move to the next component of the catalog',
 					),
-					'head' => 'Could not find file ' . $lsfile->name . ' in catalog',
+					'head' => 
+						'Could not find file ' . $lsfile->name . ' in catalog',
 				));
 				switch($cmd) {
-					case 'q': throw new StopException('lscheck');
-					case 'm': return true;
+					case 'q': 
+						throw new StopException('lscheck');
+					case 'm': 
+						return true;
 					case 'l': 
 						$lsfile->effect_rename(array(
 							'elist' => $this->lslist,
 							'searchlist' => $this->c,
 							'domove' => true,
-						)); break;
-					case 's': break;
+						)); 
+						break;
+					case 's': 
+						break;
 					case 'a':
 						$lsfile->add();
 						$this->add_entry($lsfile, array('isnew' => true));
@@ -478,10 +486,11 @@ class CsvList extends FileList {
 	private function burstcheck() {
 		echo 'checking for files to be bursted... ';
 		$this->build_newlist(BURSTPATH, 'burstlist');
-		if($this->burstlist)
+		if($this->burstlist) {
 			foreach($this->burstlist as $file) {
 				$file->burst();
 			}
+		}
 		echo 'done' . PHP_EOL;
 		return true;
 	}
@@ -492,13 +501,18 @@ class CsvList extends FileList {
 		if($this->newlist) {
 			foreach($this->newlist as $file) {
 				switch($file->newadd(array('lslist' => $this->lslist))) {
-					case 0: return;
-					case 1: continue 2;
-					case 2: $this->add_entry($file, array('isnew' => true));
+					case 0: 
+						return true;
+					case 1: 
+						continue 2;
+					case 2: 
+						$this->add_entry($file, array('isnew' => true));
+						break;
 				}
 			}
 		}
 		echo 'done' . PHP_EOL;
+		return true;
 	}
 	private function find_dups($key, $needle, array $paras = array()) {
 		if(!isset($paras['quiet']))
@@ -525,8 +539,12 @@ class CsvList extends FileList {
 			if($n > 1 && $doi) {
 				echo "Found $n instances of DOI $doi" . PHP_EOL;
 				$files = $this->find_dups('doi', $doi);
-				if($files === false) continue;
-				if(!$this->dups_core($files)) return;
+				if($files === false) {
+					continue;
+				}
+				if(!$this->dups_core($files)) {
+					return;
+				}
 			}
 		}
 		/*
@@ -544,10 +562,12 @@ class CsvList extends FileList {
 			if($n > 1 && $title) {
 				echo "Found $n instances of title $title" . PHP_EOL;
 				$files = $this->find_dups('getsimpletitle()', $title);
-				if($files === false)
+				if($files === false) {
 					continue;
-				if(!$this->dups_core($files))
+				}
+				if(!$this->dups_core($files)) {
 					return;
+				}
 			}
 		}
 	}

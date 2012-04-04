@@ -28,18 +28,21 @@ class EHException extends Exception {
 		echo "EH user error: " . $this->getMessage() . " in " 
 			. $this->getFile() . " on line " 
 			. $this->getLine() . PHP_EOL;
+		echo $this->getTraceAsString() . PHP_EOL;
 		return;
 	}
 	private function handle_recoverable() {
 		echo "EH recoverable error: " . $this->getMessage() . " in " 
 			. $this->getFile() . " on line " 
 			. $this->getLine() . PHP_EOL;
+		echo $this->getTraceAsString() . PHP_EOL;
 		return;
 	}
 	private function handle_fatal() {
 		echo "EH fatal error: " . $this->getMessage() . " in " 
 			. $this->getFile() . " on line " 
 			. $this->getLine() . PHP_EOL;
+		echo $this->getTraceAsString();
 		// allow cleanup, like saveifneeded(), with __destruct() methods
 		exit(1);
 	}

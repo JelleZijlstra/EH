@@ -54,3 +54,11 @@ class StopException extends Exception {
 		parent::__construct($message, $code, $previous);
 	}
 }
+
+// Catch as many errors as possible
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+	$msg = $errstr . ' (errno ' . $errno . ') at ' . $errfile . ', line ' 
+		. $errline;
+	throw new EHException($msg, EHException::E_RECOVERABLE);
+	return true;
+});

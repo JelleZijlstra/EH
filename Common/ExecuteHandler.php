@@ -998,6 +998,8 @@ class ExecuteHandler extends EHICore {
 	// Test function that might do anything I currently want to test
 	// Currently, returning its argument
 		// and telling us what functions etcetera we have defined
+		eval($paras[0]);
+		return;
 		var_dump(array_keys($GLOBALS));
 		$funcs = get_defined_functions();
 		var_dump($funcs['user']);

@@ -22,7 +22,7 @@ abstract class FileList extends ExecuteHandler {
 	 * modify this directly.
 	 */
 	private $needsave = false;
-	private $c; //array of children
+	protected $c; //array of children
 	protected $labels; // first line of CSV file
 	protected static $fileloc; // where the file lives that we get our list from
 	protected static $logfile; // location of the log file

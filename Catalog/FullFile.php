@@ -1218,9 +1218,8 @@ class FullFile extends ListEntry {
 		$verbosecite = $this->p->verbosecite;
 		if($this->doi) {
 			// to fix bug 28212. Commented out for now since it seems we don't
-			// need it.
-			// $doi = str_replace(array('<', '>'), array('.3C', '.3E'), $this->doi);
-			$doi = $this->doi;
+			// need it. Or perhaps we do; I never know.
+			$doi = str_replace(array('<' /*, '>' */), array('.3C' /*, '.3E' */), $this->doi);
 		}
 		$out1 = '';
 		if(!$this->parturl) {
@@ -1377,7 +1376,7 @@ class FullFile extends ListEntry {
 		$out .= '}}';
 		// final cleanup
 		$out = preg_replace(
-			array("/\s\s/u", "/\.\./u"), array(" ", "."), wikify($out)
+			array("/\s\s/u", "/(?<!\.)\.\.(?!\.)/u"), array(" ", "."), wikify($out)
 		);
 		return ($verbosecite and $out1) ? array($sfn . $out1, $out) : $out;
 	}

@@ -1539,13 +1539,14 @@ ehretval_t *call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehco
 		ehvar_t *var = new ehvar_t;
 		var->name = f->args[i].name;
 		var->scope = new_scope;
-		insert_variable(var);
 		i++;
 		if(i > f->argcount) {
 			eh_error_argcount(f->argcount, i);
 			f->scope.pop();
+			delete var;
 			return ret;
 		}
+		insert_variable(var);
 		var->value = eh_execute(args->opval->paras[1], context);
 		// if it's a reference, dereference it
 		if(var->value->type == reference_e) {

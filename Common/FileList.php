@@ -351,6 +351,12 @@ abstract class FileList extends ExecuteHandler {
 			}
 		}
 	}
+	public function each(/* callable */ $f) {
+	// performs function f on each entry
+		foreach($this->c as $entry) {
+			$f($entry);
+		}
+	}
 	static protected function is_childproperty($field) {
 		$childclass = static::$childclass;
 		return $childclass::hasproperty($field);

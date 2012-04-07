@@ -670,34 +670,42 @@ class CsvList extends FileList {
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$results = array();
 		$nredirects = $nnonfiles = 0;
-		foreach($this->c as $file) {
-			if($file->isredirect())
+		$this->each(function($file) use(&$results, &$nnonfiles, &$nredirects) {
+			if($file->isredirect()) {
 				$nredirects++;
-			else {
+			} else {
 				foreach($file as $key => $property) {
 					if($property) {
-						if(!isset($results[$key])) $results[$key] = 0;
+						if(!isset($results[$key])) {
+							$results[$key] = 0;
+						}
 						$results[$key]++;
 					}
 					if(is_array($property)) {
 						foreach($property as $key => $prop) {
 							if($prop) {
-								if(!isset($results[$key])) $results[$key] = 0;
+								if(!isset($results[$key])) {
+									$results[$key] = 0;
+								}
 								$results[$key]++;
 							}
 						}
 					}
 				}
-				if(!$file->isfile())
+				if(!$file->isfile()) {
 					$nnonfiles++;
+				}
 			}
-		}
+		});
 		$total = count($this->c);
-		echo 'Total number of files is ' . $total . '. Of these, ' . $nredirects . ' are redirects and ' . $nnonfiles . ' are not actual files.' . PHP_EOL;
+		echo 'Total number of files is ' . $total . '. Of these, ' 
+			. $nredirects . ' are redirects and ' 
+			. $nnonfiles . ' are not actual files.' . PHP_EOL;
 		$total -= $nredirects;
 		ksort($results);
 		foreach($results as $field => $number) {
-			echo $field . ': ' . $number . ' of ' . $total . ' (' . round($number/$total*100, 1) . '%)' . PHP_EOL;
+			echo $field . ': ' . $number . ' of ' . $total . ' (' 
+				. round($number/$total*100, 1) . '%)' . PHP_EOL;
 		}
 		if($paras['includefoldertree']) {
 			$this->build_foldertree_n();
@@ -708,7 +716,8 @@ class CsvList extends FileList {
 					echo $folder . '/' . $sfolder . ': ' . $sfc[0] . PHP_EOL;
 					foreach($sfc as $ssfolder => $ssfc) {
 						if(!$ssfolder) continue;
-						echo $folder . '/' . $sfolder . '/' . $ssfolder . ': ' . $ssfc . PHP_EOL;
+						echo $folder . '/' . $sfolder . '/' . $ssfolder . ': ' 
+							. $ssfc . PHP_EOL;
 					}
 				}
 			}
@@ -772,7 +781,7 @@ class CsvList extends FileList {
 	private function build_foldertree_n() {
 	// as build_foldertree(), but include number of files
 		foreach($this->c as $file) {
-			//exclude non-files and redirects
+			// exclude non-files and redirects
 			if($file->isor('nofile', 'redirect')) continue;
 			// we'll use these so much, the short forms will be easier
 			$f = $file->folder;

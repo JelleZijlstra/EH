@@ -6,6 +6,9 @@
  * real work.
  */
 abstract class ContainerList extends ExecuteHandler {
+	// array of functions for which __call should not resolve redirects. Entries 
+	// are in the form array('FullFile', 'isredirect')
+	public static $resolve_redirect_exclude = array();
 	static private $ContainerList_commands = array(
 		'inform' => array('name' => 'inform',
 			'aka' => array('i'),
@@ -631,5 +634,34 @@ abstract class ContainerList extends ExecuteHandler {
 			$bfindparas['_ehphp'] = true;
 		}
 		return $this->bfind($bfindparas);
+	}
+	
+	/*
+	 * Log a message
+	 */
+	public function log($msg) {
+		if(static::$logfile === NULL) {
+			throw new EHException(
+				"Call to " . __METHOD__ . " without a set logfile",
+				EHException::E_RECOVERABLE
+			);
+		}
+		static $log = false;
+		if($log === false) {
+			$log = fopen(static::$logfile, "a");
+			if($log === false) {
+				throw new EHException(
+					"Unable to open logfile",
+					EHException::E_RECOVERABLE
+				);
+			}
+		}
+		// write array as CSV
+		if(is_array($msg)) {
+			fputcsv($log, $msg);
+		} else {
+			fwrite($log, $msg);
+		}
+		return true;
 	}
 }

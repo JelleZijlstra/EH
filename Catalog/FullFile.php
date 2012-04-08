@@ -6,7 +6,7 @@
  * A FullFile should be a member of the $p array of a CsvList object.
  */
 // methods that should not get redirects resolved by ContainerList
-CsvContainerList::$resolve_redirect_exclude[] = array('FullFile', 'isredirect');
+ContainerList::$resolve_redirect_exclude[] = array('FullFile', 'isredirect');
 
 class FullFile extends CsvListEntry {
 	public $name; //name of file (or handle of citation)
@@ -165,7 +165,7 @@ class FullFile extends CsvListEntry {
 		// add additional data
 		$this->add();
 	}
-	public function toarray() {
+	public function toArray() {
 		$out = array();
 		$out[] = $this->addmonth;
 		$out[] = $this->addday;
@@ -196,12 +196,14 @@ class FullFile extends CsvListEntry {
 		$out[] = $this->getarray('bools');
 		return $out;
 	}
-	public function inform() {
+	public function inform(array $paras = array()) {
 	// provide information for a file
 		// call the parent's basic inform() method
-		parent::inform();
+		parent::inform($paras);
 		// provide ls data
-		if($this->isfile()) echo shell_exec('ls -l ' . $this->path()) . PHP_EOL;
+		if($this->isfile()) {
+			echo shell_exec('ls -l ' . $this->path()) . PHP_EOL;
+		}
 	}
 	public function path(array $paras = array()) {
 	// returns path to file

@@ -8,48 +8,15 @@ require_once(BPATH . '/Container/ListEntry.interface.php');
  * contains methods that enable saving the collection into and retrieving it
  * from a CSV file, as well as editing its properties at runtime.
  */
-abstract class CsvListEntry extends ExecuteHandler implements ListEntry {
+abstract class CsvListEntry extends ListEntry {
 	protected static $parentlist;
 	protected static $arrays_to_check;
 	protected $props; // properties that are not otherwise specified
 	public function __construct($commands) {
-		parent::__construct(array_merge(self::$ListEntry_commands, $commands));
+		parent::__construct(array_merge(self::$CsvListEntry_commands, $commands));
 	}
-	protected function setup_eh_ListEntry() {
-	// set up EH handler for a ListEntry
-		$this->setup_ExecuteHandler(array_merge(
-			self::$ListEntry_commands,
-			static::${get_called_class() . '_commands'}
-		));
-		foreach($this->listproperties() as $property) {
-			if(is_array($property)) continue;
-			$this->addcommand(array(
-				'name' => 'set' . $property,
-				'aka' => $property,
-				'desc' => 'Edit the field "' . $property . '"',
-				'arg' => 'Optionally, new content of field',
-				'execute' => 'callmethod',
-			));
-		}
-		$this->setup_execute = true;
-	}
-	abstract public function toarray();
-	private $setup_execute;
 	protected static $ListEntry_commands = array(
-		'inform' => array('name' => 'inform',
-			'aka' => array('i'),
-			'desc' => 'Give information about an entry',
-			'arg' => 'None'),
-		'setempty' => array('name' => 'setempty',
-			'aka' => array('empty'),
-			'desc' => 'Empty a property of the entry',
-			'arg' => 'Property to be emptied'),
-		'set' => array('name' => 'set',
-			'aka' => array('setprops'),
-			'desc' => 'Set a property of a file'),
 	);
-	// array of variables that shouldn't get dynamically defined set commands
-	private static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');
 	protected function getarray($var, $paras = array()) {
 	// helper for toarray(), to prepare array variables for storage
 		if(!is_array($this->$var)) return NULL;
@@ -147,7 +114,7 @@ abstract class CsvListEntry extends ExecuteHandler implements ListEntry {
 		// Like hasmethodps, but without the parentheses
 		return method_exists(get_called_class(), $method);
 	}
-	protected function findarray_dyn($property) {
+	private function findarray_dyn($property) {
 		$out = self::findarray($property);
 		if($out)
 			return $out;
@@ -156,48 +123,13 @@ abstract class CsvListEntry extends ExecuteHandler implements ListEntry {
 		else
 			return false;
 	}
-	static protected function findarray($property) {
+	static private function findarray($property) {
 	// used in overloading methods
 		foreach(static::$arrays_to_check as $array) {
 			if(in_array($property, static::${'n_' . $array}))
 				return $array;
 		}
 		return false;
-	}
-	protected static $inform_exclude = array(
-		'synonyms', 
-		'commands', 
-		'setup_execute',
-	);
-	public function inform() {
-	// provide information for an entry
-		foreach($this as $key => $value) {
-			if(in_array($key, self::$inform_exclude, true))
-				continue;
-			if(is_array($value)) {
-				foreach($value as $akey => $prop)
-					if($prop and !is_array($prop) and !is_object($prop))
-						echo $akey . ': ' . $prop . PHP_EOL;
-			}
-			else if(is_string($value) or is_double($value) or is_int($value)) {
-				if($value)
-					echo $key . ': ' . $value . PHP_EOL;
-			}
-			else if(is_bool($value)) {
-				echo $key . ': ';
-				echo $value ? 'true' : 'false';
-				echo PHP_EOL;
-			}
-		}
-	}
-	public function edit($paras = array()) {
-		return $this->cli($paras);
-	}
-	public function log($msg, $writefull = true) {
-		$this->p->log($msg . ' (file ' . $this->name . ')' . PHP_EOL);
-		if($writefull) {
-			$this->p->log($this->toarray());
-		}
 	}
 	protected function listproperties() {
 	// list the user-visible properties of the object
@@ -221,51 +153,5 @@ abstract class CsvListEntry extends ExecuteHandler implements ListEntry {
 		else
 			$out = array_diff($out, self::$set_exclude);
 		return $out;
-	}
-	public function __call($name, $arguments) {
-		// allow setting properties
-		if(substr($name, 0, 3) === 'set') {
-			$prop = substr($name, 3);
-			if(static::hasproperty($prop)) {
-				$paras = $arguments[0];
-				$new = isset($paras['new']) ? $paras['new'] :
-					(isset($paras[0]) ? $paras[0] : false);
-				if($new === false or $new === '') {
-					if($this->$prop)
-						echo 'Current value: ' . $this->$prop . PHP_EOL;
-					$new = $this->getline('New value: ');
-				}
-				return $this->set(array($prop => $new));
-			}
-		}
-		return NULL;
-	}
-	public function cli(array $paras = array()) {
-	// edit information associated with an entry
-		if(!$this->setup_execute) {
-			$this->setup_eh_ListEntry();
-			$this->setup_execute = true;
-		}
-		$this->setup_commandline($this->name, array('undoable' => true));
-	}
-	public function set(array $paras) {
-	// default method; should be overridden by child classes with more precise needs
-		foreach($paras as $field => $content) {
-			if(self::hasproperty($field)) {
-				if($this->$field === $content) continue;
-				$this->$field = $content;
-				$this->p->needsave();
-			}
-		}
-	}
-	public function setempty(array $paras) {
-	// sets field to empty by calling set()
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(0 => 'field'),
-			'checklist' => array('field' => 'Field to be emptied'),
-			'errorifempty' => array('field'),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		return $this->set(array($paras['field'] => NULL));
 	}
 }

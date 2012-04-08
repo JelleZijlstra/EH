@@ -2,71 +2,182 @@
 /*
  * Interface for a ListEntry.
  */
-interface ListEntry {
+abstract class ListEntry extends ExecuteHandler {
+	private $setup_execute = false;
+	// array of variables that shouldn't get dynamically defined set commands
+	private static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');
+	protected static $ListEntry_commands = array(
+		'inform' => array('name' => 'inform',
+			'aka' => array('i'),
+			'desc' => 'Give information about an entry',
+			'arg' => 'None'),
+		'setempty' => array('name' => 'setempty',
+			'aka' => array('empty'),
+			'desc' => 'Empty a property of the entry',
+			'arg' => 'Property to be emptied'),
+		'set' => array('name' => 'set',
+			'aka' => array('setprops'),
+			'desc' => 'Set a property of a file'),
+	);
 	/*
 	 * Constructor merely calls parent with commands.
 	 * Commented out for now as it's not clear to me that we should enforce
 	 * this constructor signature on children.
 	 */
-	/* function __construct($commands); */
+	public function __construct($commands) {
+		parent::__construct(array_merge(self::$ListEntry_commands, $commands));
+	}
+
+	/*
+	 * Set up the EH interface.
+	 */
+	protected function setup_eh_ListEntry() {
+	// set up EH handler for a ListEntry
+		$this->setup_ExecuteHandler(array_merge(
+			self::$ListEntry_commands,
+			static::${get_called_class() . '_commands'}
+		));
+		foreach($this->listproperties() as $property) {
+			if(is_array($property)) {
+				continue;
+			}
+			$this->addcommand(array(
+				'name' => 'set' . $property,
+				'aka' => $property,
+				'desc' => 'Edit the field "' . $property . '"',
+			));
+		}
+		$this->setup_execute = true;
+	}
 
 	/*
 	 * Convert this object into an array.
 	 */
-	function toarray();
+	abstract public function toArray();
 
-	/* OVERLOADING */
-	function __set($property, $value);
-	function __get($property);
-	function __isset($property);
-	function __unset($property);
-	
 	/*
 	 * Various stuff to determine properties and methods that exist. Probably
 	 * needs harmonization.
 	 */
-	static function haspm($in);
-	static function hasproperty($property);
-	static function hasmethodps($method);
-	static function hasmethod($method);
+	static function haspm($in) {}
+	static function hasproperty($property) {}
+	static function hasmethodps($method) {}
+	static function hasmethod($method) {}
 	
 	/*
 	 * Give information about a ListEntry.
 	 */
-	function inform();
+	protected static $inform_exclude = array(
+		'synonyms', 
+		'commands', 
+		'setup_execute',
+	);
+	public function inform(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		foreach($this as $key => $value) {
+			if(in_array($key, self::$inform_exclude, true)) {
+				continue;
+			}
+			if(is_array($value)) {
+				foreach($value as $akey => $prop) {
+					if($prop and !is_array($prop) and !is_object($prop)) {
+						echo $akey . ': ' . $prop . PHP_EOL;
+					}
+				}
+			}
+			else {
+				echo $key . ': ';
+				self::printvar($value);
+			}
+		}
+	}
 	
 	/*
 	 * Edit an entry.
 	 */
-	function edit($paras = array());
+	public function edit($paras = array()) {
+		return $this->cli($paras);
+	}
 	
 	/*
 	 * Log something.
 	 */
-	function log($msg, $writefull = true);
+	public function log($msg, $writefull = true) {
+		$this->p->log($msg . ' (file ' . $this->name . ')' . PHP_EOL);
+		if($writefull) {
+			$this->p->log($this->toArray());
+		}
+	}
 	
 	/*
 	 * Implements settitle-like commands.
 	 */
-	function __call($name, $arguments);
+	public function __call($name, $arguments) {
+		// allow setting properties
+		if(substr($name, 0, 3) === 'set') {
+			$prop = substr($name, 3);
+			if(static::hasproperty($prop)) {
+				$paras = $arguments[0];
+				$new = isset($paras['new']) ? $paras['new'] :
+					(isset($paras[0]) ? $paras[0] : false);
+				if($new === false or $new === '') {
+					if($this->$prop)
+						echo 'Current value: ' . $this->$prop . PHP_EOL;
+					$new = $this->getline('New value: ');
+				}
+				return $this->set(array($prop => $new));
+			}
+		}
+		return NULL;
+	}
 
 	/*
 	 * Sets up a CLI. Similar and perhaps redundant to edit().
 	 */
-	function cli(array $paras = array());
+	public function cli(array $paras = array()) {
+	// edit information associated with an entry
+		if(!$this->setup_execute) {
+			$this->setup_eh_ListEntry();
+			$this->setup_execute = true;
+		}
+		$this->setup_commandline($this->name, array('undoable' => true));
+	}
 	
 	/*
 	 * Set properties.
 	 */
-	function set(array $paras);
+	public function set(array $paras) {
+	// default method; should be overridden by child classes with more precise needs
+		foreach($paras as $field => $content) {
+			if(self::hasproperty($field)) {
+				if($this->$field === $content) continue;
+				$this->$field = $content;
+				$this->p->needsave();
+			}
+		}
+	}
 	
 	/*
 	 * Empty properties.
 	 */
-	function setempty(array $paras);
+	public function setempty(array $paras) {
+	// sets field to empty by calling set()
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'field'),
+			'checklist' => array('field' => 'Field to be emptied'),
+			'errorifempty' => array('field'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		return $this->set(array($paras['field'] => NULL));
+	}
 	
 	/*
-	 * Resolve a redirect.
+	 * Resolve a redirect. Default implementation simply returns name.
 	 */
-	/* string */ function resolve_redirect();
+	public /* string */ function resolve_redirect() {
+		return $this->name;
+	}
 }

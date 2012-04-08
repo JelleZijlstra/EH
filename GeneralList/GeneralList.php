@@ -135,7 +135,7 @@ class {$classname}Entry extends CsvListEntry {
 "); break;
 			}
 		}
-		// close __construct(), start toarray()
+		// close __construct(), start toArray()
 		fwrite($outclass,
 "				break;
 			case 'n': // associative array
@@ -153,7 +153,7 @@ class {$classname}Entry extends CsvListEntry {
 				break;
 		}
 	}
-	function toarray() {
+	function toArray() {
 		\$out = array();
 ");
 		foreach($fields as $field) {
@@ -169,7 +169,7 @@ class {$classname}Entry extends CsvListEntry {
 "); break;
 			}
 		}
-		// close toarray(), start format()
+		// close toArray(), start format()
 		fwrite($outclass,
 "		return \$out;
 	}

@@ -132,7 +132,7 @@ class FacsEntry extends CsvListEntry {
 		}
 		parent::__construct(self::$FacsEntry_commands);
 	}
-	function toarray() {
+	public function toArray() {
 		$out = array();
 		$out[] = $this->name;
 		$out[] = $this->getarray('nominators');

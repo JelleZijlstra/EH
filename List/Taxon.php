@@ -70,7 +70,7 @@ class Taxon extends CsvListEntry {
 				break;
 		}
 	}
-	function toarray() {
+	public function toArray() {
 		$out = array();
 		$out[] = $this->name;
 		$out[] = $this->authority;

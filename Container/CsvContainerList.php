@@ -29,8 +29,6 @@ abstract class CsvContainerList extends ContainerList {
 	protected static $fileloc; // where the file lives that we get our list from
 	protected static $logfile; // location of the log file
 	protected static $childclass; // name of the class that children need to be a member of
-	// array of functions for which __call should not resolve redirects. Entries are in the form array('FullFile', 'isredirect')
-	public static $resolve_redirect_exclude = array();
 	private static $CsvContainerList_commands = array(
 		'getstats' => array('name' => 'getstats',
 			'desc' => 'Give numerical statistics about entries fulfilling the given criteria'),
@@ -89,15 +87,17 @@ abstract class CsvContainerList extends ContainerList {
 		foreach($this->c as $file) {
 			// do not put back in files where name has been set to NULL
 			if($file->name !== NULL) {
-				$line = $file->toarray();
-				if(!fputcsv($cat, $line))
+				$line = $file->toArray();
+				if(!fputcsv($cat, $line)) {
 					echo "Error writing data for " . $file->name . ".";
+				}
 			}
 		}
 		echo "done" . PHP_EOL;
 		// HACK: replace this with a hook system when we're ready for it
-		if(method_exists($this, 'putpdfcontentcache'))
+		if(method_exists($this, 'putpdfcontentcache')) {
 			$this->putpdfcontentcache();
+		}
 		// we saved it, so we don't need to right now
 		$this->needsave = false;
 		return true;
@@ -618,31 +618,6 @@ abstract class CsvContainerList extends ContainerList {
 		return true;
 	}
 	/* logging and backups */
-	public function log($msg) {
-		if(static::$logfile === NULL) {
-			throw new EHException(
-				"Call to " . __METHOD__ . " without a set logfile",
-				EHException::E_RECOVERABLE
-			);
-		}
-		static $log = false;
-		if($log === false) {
-			$log = fopen(static::$logfile, "a");
-			if($log === false) {
-				throw new EHException(
-					"Unable to open logfile",
-					EHException::E_RECOVERABLE
-				);
-			}
-		}
-		// write array as CSV
-		if(is_array($msg)) {
-			fputcsv($log, $msg);
-		} else {
-			fwrite($log, $msg);
-		}
-		return true;
-	}
 	public function backup(array $paras = array()) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,

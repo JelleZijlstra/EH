@@ -12,8 +12,8 @@
  */
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/ExecuteHandler.php');
-require_once(BPATH . '/Common/FileList.interface.php');
-require_once(BPATH . '/Common/CsvListEntry.php');
+require_once(BPATH . '/Container/FileList.interface.php');
+require_once(BPATH . '/Container/CsvListEntry.php');
 abstract class CsvFileList extends ExecuteHandler implements FileList {
 // this is an abstract class for classes that implement lists of entries, whether references or taxa.
 	/*

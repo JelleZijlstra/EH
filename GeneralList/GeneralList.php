@@ -74,7 +74,7 @@ class GeneralList extends ExecuteHandler {
 		if(!$outload) return false;
 		fwrite($outload, "<?php
 require_once(__DIR__ . '/../Common/common.php');
-define('GLISTREPO', BPATH . '/Common/GeneralList');
+define('GLISTREPO', BPATH . '/GeneralList');
 require_once(GLISTREPO . '/$classname.php');
 \${$classname}List = new {$classname}List();
 \${$classname}List->cli();
@@ -86,7 +86,7 @@ require_once(GLISTREPO . '/$classname.php');
 		$realpath = realpath($file);
 		fwrite($outclass, "<?php
 require_once(__DIR__ . '/../Common/common.php');
-require_once(BPATH . '/Common/CsvFileList.php');
+require_once(BPATH . '/Container/CsvFileList.php');
 class {$classname}List extends CsvFileList {
 	protected static \$fileloc = '$realpath';
 	protected static \$childclass = '{$classname}Entry';

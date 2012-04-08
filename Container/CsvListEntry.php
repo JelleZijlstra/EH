@@ -4,7 +4,7 @@ require_once(BPATH . '/Container/ListEntry.interface.php');
  * CsvListEntry.php
  *
  * Defines a PHP class that can be used to implement objects that are part of
- * some kind of collection (implemented as a FileList). This class mostly
+ * some kind of collection (implemented as a ContainerList). This class mostly
  * contains methods that enable saving the collection into and retrieving it
  * from a CSV file, as well as editing its properties at runtime.
  */

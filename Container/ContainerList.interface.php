@@ -1,8 +1,8 @@
 <?php
 /*
- * Interface for a FileList
+ * Interface for a ContainerList
  */
-interface FileList {
+interface ContainerList {
 	/*
 	 * Constructor takes in commands to be passed to EH core.
 	 *

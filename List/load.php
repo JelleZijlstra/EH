@@ -4,7 +4,7 @@
  * require_once('load.php'); will load the catalog
  */
 require_once(__DIR__ . '/../Common/common.php');
-require_once(BPATH . '/Container/CsvFileList.php');
+require_once(BPATH . '/Container/CsvContainerList.php');
 require_once(BPATH . '/Parse/parser.php');
 require_once(BPATH . '/List/settings.php');
 require_once(BPATH . '/List/Country.php');

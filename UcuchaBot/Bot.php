@@ -5,8 +5,7 @@
  * License: PHP license
  */
 require_once(__DIR__ . '/../Common/common.php');
-require_once(BPATH . '/Common/FileList.php');
-require_once(BPATH . '/Common/ListEntry.php');
+require_once(BPATH . '/Container/CsvContainerList.php');
 require_once(BPATH . '/UcuchaBot/Snoopy.class.php');
 function getbot($paras = array()) {
 	if(isset($paras['new']) and $paras['new'] === true)

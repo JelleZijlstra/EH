@@ -1,5 +1,5 @@
 <?php
-class CsvList extends CsvFileList {
+class CsvList extends CsvContainerList {
 	public $citetype; // default citation type
 	public $verbosecite; // whether citation functions need to be verbose
 	public $includesfn; // whether Sfn needs to be included in FullFile::citewp()

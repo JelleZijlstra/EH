@@ -1,5 +1,5 @@
 <?
-class TaxonList extends CsvFileList {
+class TaxonList extends CsvContainerList {
 	public $extantonly; // whether output includes extinct species
 	public $par; // array of arrays that list the children for each parent
 	protected static $fileloc = LISTFILE;

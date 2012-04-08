@@ -1,20 +1,21 @@
 <?php
 /*
- * CsvFileList.php
+ * CsvContainerList.php
  *
- * A class that holds a collection of entries (represented by FileList objects).
- * This class contains the all-important $c property—an array of FileList
+ * A class that holds a collection of entries (represented by ListEntry 
+ * objects).
+ * This class contains the all-important $c property—an array of ListEntry
  * objects indexed by name, as well as a variety of method used to manage the
- * list. There is code to retrieve data from a CSV file to form a FileList, and
- * to save a modified FileList back into CSV. This class also contains methods
- * to find child ListEntries and summarize data in them, such as the bfind
- * method to query the list for children satisfying particular criteria.
+ * list. There is code to retrieve data from a CSV file to form a ContainerList, 
+ * and to save a modified ContainerList back into CSV. This class also contains 
+ * methods to find child ListEntries and summarize data in them, such as the 
+ * bfind method to query the list for children satisfying particular criteria.
  */
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/ExecuteHandler.php');
-require_once(BPATH . '/Container/FileList.interface.php');
+require_once(BPATH . '/Container/ContainerList.interface.php');
 require_once(BPATH . '/Container/CsvListEntry.php');
-abstract class CsvFileList extends ExecuteHandler implements FileList {
+abstract class CsvContainerList extends ExecuteHandler implements ContainerList {
 // this is an abstract class for classes that implement lists of entries, whether references or taxa.
 	/*
 	 * Whether we need to save the data on destruction. This is set to false
@@ -30,7 +31,7 @@ abstract class CsvFileList extends ExecuteHandler implements FileList {
 	protected static $childclass; // name of the class that children need to be a member of
 	// array of functions for which __call should not resolve redirects. Entries are in the form array('FullFile', 'isredirect')
 	public static $resolve_redirect_exclude = array();
-	private static $FileList_commands = array(
+	private static $ContainerList_commands = array(
 		'inform' => array('name' => 'inform',
 			'aka' => array('i'),
 			'desc' => 'Give information about an entry',
@@ -113,13 +114,13 @@ abstract class CsvFileList extends ExecuteHandler implements FileList {
 		// close
 		fclose($cat);
 		echo "done" . PHP_EOL;
-		parent::__construct(array_merge(self::$FileList_commands, $commands));
+		parent::__construct(array_merge(self::$ContainerList_commands, $commands));
 	}
 	public function __destruct() {
 		$this->saveifneeded();
 	}
 	public function add_entry(ListEntry $file, array $paras = array()) {
-	// very basic add_entry function. Possibly some of the complex stuff that TaxonList and CsvList have should be moved to FileList somehow.
+	// very basic add_entry function. Possibly some of the complex stuff that TaxonList and CsvList have should be moved to ContainerList somehow.
 		if($this->has($file->name)) {
 			return false;
 		}
@@ -209,7 +210,7 @@ abstract class CsvFileList extends ExecuteHandler implements FileList {
 		}
 	}
 	public function needsave() {
-		// Tell the FileList that we need to save the catalog.
+		// Tell the ContainerList that we need to save the catalog.
 		$this->needsave = true;
 	}
 	public function __call($func, $args) {

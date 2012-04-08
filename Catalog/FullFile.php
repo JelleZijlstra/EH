@@ -5,8 +5,8 @@
  * A class to represent a single library file with its bibliographic data.
  * A FullFile should be a member of the $p array of a CsvList object.
  */
-// methods that should not get redirects resolved by FileList
-CsvFileList::$resolve_redirect_exclude[] = array('FullFile', 'isredirect');
+// methods that should not get redirects resolved by ContainerList
+CsvContainerList::$resolve_redirect_exclude[] = array('FullFile', 'isredirect');
 
 class FullFile extends CsvListEntry {
 	public $name; //name of file (or handle of citation)

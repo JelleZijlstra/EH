@@ -1,6 +1,6 @@
 <?php
 /*
- * GeneralList - generates a FileList/ListEntry-type set of classes to handle an input CSV file.
+ * GeneralList - generates a ContainerList/ListEntry-type set of classes to handle an input CSV file.
  */
 require_once(__DIR__ . '/../Common/common.php');
 define('GLISTREPO', BPATH . '/GeneralList');
@@ -86,8 +86,8 @@ require_once(GLISTREPO . '/$classname.php');
 		$realpath = realpath($file);
 		fwrite($outclass, "<?php
 require_once(__DIR__ . '/../Common/common.php');
-require_once(BPATH . '/Container/CsvFileList.php');
-class {$classname}List extends CsvFileList {
+require_once(BPATH . '/Container/CsvContainerList.php');
+class {$classname}List extends CsvContainerList {
 	protected static \$fileloc = '$realpath';
 	protected static \$childclass = '{$classname}Entry';
 	public function __construct() {

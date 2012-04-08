@@ -24,7 +24,7 @@ class ExecuteHandler extends EHICore {
 	protected $config = array(
 		'debug' => false,
 	);
-	// currently handled files. Why is this in EH and not in FileList?
+	// currently handled files. Why is this in EH and not in ContainerList?
 	protected $current;
 	private static $ExecuteHandler_commands = array(
 		'execute_help' => array('name' => 'execute_help',

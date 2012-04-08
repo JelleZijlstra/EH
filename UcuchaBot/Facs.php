@@ -1,9 +1,8 @@
 <?php
 require_once(__DIR__  . '/../Common/common.php');
-require_once(BPATH . '/Common/FileList.php');
-require_once(BPATH . '/Common/ListEntry.php');
+require_once(BPATH . '/Container/CsvContainerList.php');
 require_once(BPATH . '/UcuchaBot/Bot.php');
-class FacsList extends FileList {
+class FacsList extends CsvContainerList {
 	protected static $fileloc;
 	protected static $childclass = 'FacsEntry';
 	public $bot;
@@ -77,7 +76,7 @@ class FacsList extends FileList {
 		echo 'done' . PHP_EOL;
 	}
 }
-class FacsEntry extends ListEntry {
+class FacsEntry extends CsvListEntry {
 	// stuff that is standard across GeneralList outputs
 	protected static $parentlist = 'FacsList';
 	protected static $FacsEntry_commands = array(

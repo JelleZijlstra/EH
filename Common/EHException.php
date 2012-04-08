@@ -3,7 +3,7 @@ class EHException extends Exception {
 	const E_USER = 0x1;
 	const E_RECOVERABLE = 0x2;
 	const E_FATAL = 0x3;
-	public function __construct($message, $code, Exception $previous = NULL) {
+	public function __construct($message, $code = self::E_RECOVERABLE, Exception $previous = NULL) {
 		parent::__construct($message, $code, $previous);
 		$this->handle();
 	}

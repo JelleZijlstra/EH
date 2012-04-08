@@ -6,9 +6,9 @@
 require_once(BPATH . '/Container/ListEntry.interface.php');
 
 abstract class SqlListEntry extends ListEntry {
-	static const CONSTR_ID = 0;
-	static const CONSTR_NAME = 1;
-	static const CONSTR_FULL = 2;
+	const CONSTR_ID = 0;
+	const CONSTR_NAME = 1;
+	const CONSTR_FULL = 2;
 	
 	private $needsave = false;
 	private $filledProperties = false;

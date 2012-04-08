@@ -3,6 +3,7 @@
  * Interface for a ListEntry.
  */
 abstract class ListEntry extends ExecuteHandler {
+	protected $p = NULL;
 	private $setup_execute = false;
 	// array of variables that shouldn't get dynamically defined set commands
 	private static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');

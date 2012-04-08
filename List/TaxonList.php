@@ -50,7 +50,7 @@ class TaxonList extends CsvContainerList {
 		// initial settings
 		$this->extantonly = true;
 	}
-	public function add_entry(ListEntry $file, array $paras = array()) {
+	public function addEntry(ListEntry $file, array $paras = array()) {
 	// Adds a FullFile to this object
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -88,7 +88,7 @@ class TaxonList extends CsvContainerList {
 					break;
 			}
 		}
-		parent::add_entry($file);
+		parent::addEntry($file);
 		$this->par[$file->parent][$paras['name']] = $paras['name'];
 		if($paras['isnew']) {
 			// No logging in List for now
@@ -111,7 +111,7 @@ class TaxonList extends CsvContainerList {
 			echo 'Error: old name ' . $oldname . ' and new name ' . $newname . ' are the same.' . PHP_EOL;
 			return false;
 		}
-		$this->move_entry($oldname, $newname);
+		$this->moveEntry($oldname, $newname);
 		$parent = $this->get($newname)->parent;
 		$this->par[$parent][$newname] = $newname;
 		unset($this->par[$parent][$oldname]);
@@ -258,7 +258,7 @@ class TaxonList extends CsvContainerList {
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		return $this->add_entry(
+		return $this->addEntry(
 			new Taxon($paras, 'n'),
 			array('isnew' => true)
 		);
@@ -276,7 +276,7 @@ class TaxonList extends CsvContainerList {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		unset($this->par[$this->get($paras['name'])->parent][$paras['name']]);
-		$this->remove_entry($paras['name']);
+		$this->removeEntry($paras['name']);
 	}
 	public function sortchildren($name) {
 		if(!$this->par[$name]) return false;

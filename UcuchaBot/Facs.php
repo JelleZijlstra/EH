@@ -42,7 +42,7 @@ class FacsList extends CsvContainerList {
 					'isonfac' => true, 
 					'archived' => false
 				));
-				$id = $this->get($fac, 'id');
+				$id = $this->get($fac)->id;
 				if($id < $lastid)
 					$this->set(array(
 						0 => $fac,
@@ -59,7 +59,7 @@ class FacsList extends CsvContainerList {
 				$paras['isnew'] = true;
 				$paras['date'] = $facdate;
 				$paras['id'] = ++$lastid;
-				if(!$this->add_entry(new FacsEntry($paras, 'n'))) {
+				if(!$this->addEntry(new FacsEntry($paras, 'n'))) {
 					echo 'Error adding entry ' . $fac . PHP_EOL;
 					continue;
 				}

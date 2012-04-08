@@ -28,11 +28,6 @@ class CsvList extends CsvContainerList {
 			'desc' => 'Format an individual reference',
 			'arg' => 'File handle',
 			'execute' => 'callmethod'),
-		'formatall' => array('name' => 'formatall',
-			'aka' => array('b'),
-			'desc' => 'Format all references',
-			'arg' => 'None',
-			'execute' => 'callmethod'),
 		'echocite' => array('name' => 'echocite',
 			'aka' => array('c', 'cite'),
 			'desc' => 'Cite a file',
@@ -207,7 +202,7 @@ class CsvList extends CsvContainerList {
 		echo "done" . PHP_EOL;
 	}
 	/* adding stuff to the list */
-	public function add_entry(ListEntry $file, array $paras = array()) {
+	public function addEntry(ListEntry $file, array $paras = array()) {
 	// Adds a FullFile to this CsvList object
 	// Type hint is ListEntry instead of FullFile to keep E_STRICT happy
 		if($this->process_paras($paras, array(
@@ -248,7 +243,7 @@ class CsvList extends CsvContainerList {
 					break;
 			}
 		}
-		parent::add_entry($file);
+		parent::addEntry($file);
 		if($paras['isnew']) {
 			$this->log($file->name, 'Added file to catalog');
 			echo "Added to catalog!" . PHP_EOL;
@@ -281,7 +276,7 @@ class CsvList extends CsvContainerList {
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		return $this->add_entry(
+		return $this->addEntry(
 			new FullFile($paras['handle'], 'n'),
 			array('isnew' => true)
 		);
@@ -310,7 +305,7 @@ class CsvList extends CsvContainerList {
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		return $this->add_entry(
+		return $this->addEntry(
 			new FullFile(array($paras['handle'], $paras['target']), 'r'),
 			array('isnew' => true)
 		);
@@ -432,7 +427,7 @@ class CsvList extends CsvContainerList {
 					case 'r':
 						$file->log('Removed');
 						$this->needsave();
-						$this->remove_entry($file->name);
+						$this->removeEntry($file->name);
 						return true;
 				}
 			}
@@ -475,7 +470,7 @@ class CsvList extends CsvContainerList {
 						break;
 					case 'a':
 						$lsfile->add();
-						$this->add_entry($lsfile, array('isnew' => true));
+						$this->addEntry($lsfile, array('isnew' => true));
 						break;
 				}
 			}
@@ -506,7 +501,7 @@ class CsvList extends CsvContainerList {
 					case 1: 
 						continue 2;
 					case 2: 
-						$this->add_entry($file, array('isnew' => true));
+						$this->addEntry($file, array('isnew' => true));
 						break;
 				}
 			}
@@ -645,7 +640,7 @@ class CsvList extends CsvContainerList {
 						));
 						if($target === 'q') break;
 					}
-					$this->add_entry(new FullFile(array($file, $target), 'r'));
+					$this->addEntry(new FullFile(array($file, $target), 'r'));
 					break;
 				case 's':
 					return true;
@@ -697,7 +692,7 @@ class CsvList extends CsvContainerList {
 				}
 			}
 		});
-		$total = count($this->c);
+		$total = $this->count();
 		echo 'Total number of files is ' . $total . '. Of these, ' 
 			. $nredirects . ' are redirects and ' 
 			. $nnonfiles . ' are not actual files.' . PHP_EOL;

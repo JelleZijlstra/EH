@@ -112,7 +112,7 @@ class Parser {
 						break;
 					case 'i': continue 2;
 					case '':
-						if($csvlist->add_entry(new FullFile($citename, 'n'), array('isnew' => true))) {
+						if($csvlist->addEntry(new FullFile($citename, 'n'), array('isnew' => true))) {
 							$this->refs[$cite] = $this->cite($cite);
 						}
 						else {
@@ -365,7 +365,7 @@ class Parser {
 	}
 	function shutdown() {
 		global $csvlist;
-		$csvlist->saveifneeded();
+		$csvlist->saveIfNeeded();
 		exit;
 	}
 }

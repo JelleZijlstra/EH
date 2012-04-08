@@ -64,4 +64,9 @@ interface ListEntry {
 	 * Empty properties.
 	 */
 	function setempty(array $paras);
+	
+	/*
+	 * Resolve a redirect.
+	 */
+	/* string */ function resolve_redirect();
 }

@@ -962,7 +962,7 @@ class ExecuteHandler extends EHICore {
 			}
 		}
 	}
-	protected function ynmenu($head, $process = NULL) {
+	public function ynmenu($head, $process = NULL) {
 	// Make a yes-no menu
 		return $this->menu(array(
 			'options' => array(

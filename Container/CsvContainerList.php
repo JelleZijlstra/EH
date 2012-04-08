@@ -15,7 +15,7 @@ require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/ExecuteHandler.php');
 require_once(BPATH . '/Container/ContainerList.interface.php');
 require_once(BPATH . '/Container/CsvListEntry.php');
-abstract class CsvContainerList extends ExecuteHandler implements ContainerList {
+abstract class CsvContainerList extends ContainerList {
 // this is an abstract class for classes that implement lists of entries, whether references or taxa.
 	/*
 	 * Whether we need to save the data on destruction. This is set to false
@@ -47,11 +47,9 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 			'desc' => 'Save the catalog to disk',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
-		'listmembers' => array('name' => 'listmembers',
+		'listMembers' => array('name' => 'listMembers',
 			'aka' => array('ls'),
-			'desc' => 'List the members of this list',
-			'arg' => 'None',
-			'execute' => 'callmethod'),
+			'desc' => 'List the members of this list'),
 		'find_cmd' => array('name' => 'find_cmd',
 			'aka' => array('f', 'find'),
 			'desc' => "Find files that fulfil the condition given in the argument. An argument consists of a field name plus a text or regex pattern (separated by slashes) the field name should fulfil. Examples:\n\tfind_cmd year '1984'\nwill find all files published in 1984\n\tfind_cmd title '/Sudamerica/'\nwill find all files with \"Sudamerica\" in the title",
@@ -74,10 +72,6 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 			'desc' => 'List Z value for entries found in a getstats query',
 			'arg' => 'As for getstats, plus --index=<field given as index>',
 			'execute' => 'callmethod'),
-		'formatall' => array('name' => 'formatall',
-			'desc' => 'Format all entries',
-			'arg' => 'None',
-			'execute' => 'callmethod'),
 		'stats' => array('name' => 'stats',
 			'desc' => 'Print statistics about the library',
 			'arg' => '"-f" will also print the number of files in each folder',
@@ -99,6 +93,8 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 			'desc' => 'Save a backup of the catalog',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
+		'formatAll' => array('name' => 'formatAll',
+			'desc' => 'Format all entries'),
 	);
 	public function __construct(array $commands = array()) {
 		echo "processing CSV catalog... ";
@@ -109,37 +105,22 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 		// consume first line (column labels)
 		$this->labels = fgets($cat);
 		while($line = fgetcsv($cat)) {
-			$this->add_entry(new static::$childclass($line, 'f'));
+			$this->addEntry(new static::$childclass($line, 'f'));
 		}
 		// close
 		fclose($cat);
 		echo "done" . PHP_EOL;
 		parent::__construct(array_merge(self::$ContainerList_commands, $commands));
 	}
-	public function __destruct() {
-		$this->saveifneeded();
-	}
-	public function add_entry(ListEntry $file, array $paras = array()) {
-	// very basic add_entry function. Possibly some of the complex stuff that TaxonList and CsvList have should be moved to ContainerList somehow.
-		if($this->has($file->name)) {
-			return false;
-		}
+	protected function _addEntry(ListEntry $file, array $paras) {
 		$this->c[$file->name] = $file;
 		return true;
 	}
-	public function remove_entry($file, array $paras = array()) {
-		if(!$this->has($file)) {
-			echo 'File ' . $file . ' does not exist' . PHP_EOL;
-			return false;
-		}
+	public function _removeEntry(/* string */ $file, array $paras) {
 		unset($this->c[$file]);
 		return true;
 	}
-	public function move_entry($file, $newName, array $paras = array()) {
-		if(!$this->has($file)) {
-			echo 'File ' . $file . ' does not exist' . PHP_EOL;
-			return false;
-		}
+	public function _moveEntry($file, $newName, array $paras) {
 		$this->c[$newName] = $this->c[$file];
 		unset($this->c[$file]);
 		return true;
@@ -176,182 +157,27 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 		$this->needsave = false;
 		return true;
 	}
-	public function get($file, $field = NULL) {
+	public function get($file) {
 	// returns FullFile with name $file, or a particular field of that file.
 	// If $field === true, resolves redirects.
 		if($this->has($file)) {
-			if($field !== NULL && $field !== true) {
-				if(self::is_childproperty($field)) {
-					return $this->c[$file]->$field;
-				} else {
-					echo 'Invalid field: ' . $field . PHP_EOL;
-					return NULL;
-				}
-			}
-			else {
-				$file = $this->c[$file];
-				if($field === true 
-					&& method_exists(static::$childclass, 'resolve_redirect')) {
-					$file = $this->c[$file->resolve_redirect()];
-				}
-				return $file;
-			}
+			return $this->c[$file];
 		}
 		else {
 			echo 'Invalid file: ' . $file . PHP_EOL;
-			return NULL;
+			return false;
 		}
 	}
-	public function saveifneeded() {
+	public function saveIfNeeded() {
 		if($this->needsave) {
 			return $this->save();
 		} else {
 			return false;
 		}
 	}
-	public function needsave() {
+	public function needSave() {
 		// Tell the ContainerList that we need to save the catalog.
 		$this->needsave = true;
-	}
-	public function __call($func, $args) {
-	// call method for appropriate FullFile
-	// example: $csvlist->edit('Agathaeromys nov.pdf'); equals $csvlist->c['Agathaeromys nov.pdf']->edit();
-		// check method validity
-		if(!method_exists(static::$childclass, $func)) {
-			throw new EHException(
-				'Invalid call to ' . __METHOD__ . ' (method ' . $func 
-					. ' invalid)', 
-				EHException::E_RECOVERABLE);
-		}
-		// parameters to send to called function
-		$paras = $args[0];
-		// if we're called with a string argument, place it in $paras[0]
-		if(!is_array($paras)) {
-			$paras = array($paras);
-		}
-		// files to call
-		$files = array();
-		// retrieve files, which are numeric entries in the paras array
-		foreach($paras as $key => $value) {
-			if(is_int($key)) {
-				// check validity
-				if(!$this->has($value)) {
-					echo 'Entry ' . $paras[$key] . ' does not exist (method ' 
-						. $func . ')' . PHP_EOL;
-					unset($paras[$key]);
-					continue;
-				}
-				// resolve redirect if desired
-				if($func !== 'resolve_redirect' and 
-					method_exists(static::$childclass, 'resolve_redirect') and 
-					!in_array(array(static::$childclass, $func), 
-						self::$resolve_redirect_exclude, true)) {
-					$value = $this->get($value)->resolve_redirect();
-				}
-				// check validity (again)
-				if($value === false or !$this->has($value)) {
-					echo 'Entry ' . $paras[$key] . ' does not exist (method ' 
-						. $func . ')' . PHP_EOL;
-					unset($paras[$key]);
-					continue;
-				}
-				// add the file to the array of files to be called
-				$files[] = $value;
-				unset($paras[$key]);
-			}
-		}
-		$ret = NULL;
-		foreach($files as $file) {
-			$ret = call_user_func(array($this->get($file), $func), $paras);
-		}
-		return $ret;
-	}
-	public function __invoke($file) {
-		// invoke calls the child and invokes it
-		if(!$this->has($file)) {
-			echo 'No such file: ' . $file . PHP_EOL;
-			return false;
-		}
-		$obj = $this->get($file, true);
-		return $obj();
-	}
-	// prevent access to non-existent properties
-	public function __get($prop) {
-		throw new EHException('Attempt to read non-existent property ' . $prop,
-			EHException::E_RECOVERABLE);
-	}
-	public function __set($prop, $value) {
-		throw new EHException('Attempt to write to non-existent property ' 
-			. $prop, EHException::E_RECOVERABLE);
-	}
-	public function doall(array $paras) {
-	// execute a function on all files in the list. Don't actually execute a 
-	// command, since that is prohibitively expensive (requires EH to be 
-	// initialized on every single ListEntry).
-		$childclass = static::$childclass;
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'checklist' => array(
-				0 => 'Function to execute',
-				'continueiffalse' => 'Whether the command should continue calling child objects if one call returns "false"',
-				'askafter' => 'Ask the user whether he wants to continue after n child objects',
-				'countfalse' => 'Whether to count calls that return false for the purposes of askafter',
-				'arg' => 'Argument to be passed to called object',
-			),
-			// can take arbitrary arguments, which are passed to child
-			'checkfunc' => function($in) {
-				return true;
-			},
-			'checkparas' => array(
-				0 => function($in) use($childclass) {
-					return method_exists($childclass, $in);
-				}
-			),
-			'errorifempty' => array(0),
-			'default' => array(
-				'continueiffalse' => false,
-				'countfalse' => false,
-				'askafter' => 100,
-			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$func = $paras[0];
-		$askafter = $paras['askafter'];
-		$continueiffalse = $paras['continueiffalse'];
-		$countfalse = $paras['countfalse'];
-		unset($paras['askafter'], $paras['continueiffalse'], 
-			$paras['countfalse'], $paras[0]);
-		if(isset($paras['arg'])) {
-			$paras[0] = $paras['arg'];
-			unset($paras['arg']);
-		}
-		$i = 0;
-		foreach($this->c as $file) {
-			if($askafter and $i and ($i % $askafter === 0)) {
-				switch($this->ynmenu('Do you still want to continue?')) {
-					case 'y':
-						// otherwise we'll sometimes ask this twice in a row
-						$i++;
-						break;
-					case 'n': return;
-				}
-			}
-			try {
-				$ret = $file->$func($paras);
-			} catch(EHException $e) {
-				echo $e->getMessage();
-				if(!$continueiffalse) {
-					return;
-				}
-			} catch(StopException $e) {
-				echo 'Stopping doall at ' . $file->name . PHP_EOL;
-			}
-			if($countfalse or $ret) {
-				$i++;
-			}
-			if(!$continueiffalse and !$ret) {
-				return;
-			}
-		}
 	}
 	public function each(/* callable */ $f) {
 	// performs function f on each entry
@@ -363,13 +189,7 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 		$childclass = static::$childclass;
 		return $childclass::hasproperty($field);
 	}
-	public function formatall(array $paras) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'checklist' => array('w' => 'Write output to a file'),
-			'default' => array('w' => false),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$this->saveifneeded();
+	protected function _formatAll(array $paras) {
 		$this->shell('cp ' . escapeshellarg(static::$fileloc) . ' '
 			. escapeshellarg(static::$fileloc . '.save')
 		);
@@ -389,11 +209,13 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 		$this->shell('rm ' . static::$fileloc . '.save');
 	}
 	/* listing, manipulating, and summarizing the whole list */
-	public function listmembers(array $paras) {
-		foreach($this->c as $child)
-			echo $child->name . PHP_EOL;
+	protected function _listMembers(array $paras) {
+		$this->each(function($entry) {
+			echo $entry->name . PHP_EOL;
+		});
+		return true;	
 	}
-	public function stats(array $paras = array()) {
+	protected function _stats(array $paras) {
 		$results = array();
 		foreach($this->c as $file) {
 			foreach($file as $key => $property) {
@@ -411,13 +233,16 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 				}
 			}
 		}
-		$total = count($this->c);
+		$total = $this->count();
 		echo 'Total number of files is ' . $total . '.' . PHP_EOL;
 		ksort($results);
 		foreach($results as $field => $number) {
 			echo $field . ': ' . $number . ' of ' . $total . ' (' . round($number/$total*100, 1) . '%)' . PHP_EOL;
 		}
-		return;
+		return true;
+	}
+	public function count() {
+		return count($this->c);
 	}
 	public function sort(array $paras = array()) {
 		if($this->process_paras($paras, array(
@@ -484,90 +309,8 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 			return uasort($this->c, $func);
 	}
 	/* finding files and making lists */
-	public function mlist(array $paras) {
-	// Make a list of possible values for a field with their frequency.
-	// TODO: make this more efficient; especially with 'groupby' used, this may
-	// entail lots of calls to mlist itself and to bfind. Both should probably
-	// accept a 'files' parameter to search in a smaller array of files instead
-	// of the whole $this->c.
+	protected function _mlist(array $paras) {
 		$childclass = static::$childclass;
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(0 => 'field'),
-			'checklist' => array(
-				'field' => 'Field to separate by',
-				'sort' => 'Sort function to be applied to results',
-				'function' => 'Function to be applied to results',
-				'isfunc' => 'Is the query a function?',
-				'print' => 'Whether to print results',
-				'groupby' => 'Column to group results by',
-				'array' => 'Array to search in',
-			),
-			'checkfunc' => function($in) use($childclass) {
-				return $childclass::haspm($in);
-			},
-			'default' => array(
-				'print' => true,
-				'array' => 'c',
-				'function' => '',
-				'isfunc' => false,
-				'groupby' => '',
-				'sort' => 'ksort',
-			),
-			'errorifempty' => array(
-				'field',
-			),
-			'checkparas' => array(
-				'function' => function($in) {
-					return function_exists($in);
-				},
-				'sort' => function($in) {
-					return function_exists($in);
-				},
-				'field' => function($in, $paras) use($childclass) {
-					if($paras['isfunc']) {
-						if(!$childclass::hasmethod($in)) {
-							echo 'No such method: ' . $in . PHP_EOL;
-							return false;
-						}
-					}
-					else if(!$childclass::haspm($in)) {
-						echo 'No such property or method: ' . $in . PHP_EOL;
-						return false;
-					}
-					return true;
-				},
-				'groupby' => function($in) use($childclass) {
-					return $childclass::hasproperty($in);
-				},
-			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$arr = $paras['array'];
-		$field = $paras['field'];
-		if(!is_array($this->$arr)) {
-			echo 'Invalid array' . PHP_EOL;
-			return false;
-		}
-		// check for groupby
-		if($paras['groupby']) {
-			$childparas = $paras;
-			unset($childparas['groupby']);
-			$childparas['field'] = $paras['groupby'];
-			$values = $this->mlist($childparas);
-			if(!is_array($values)) {
-				echo 'Error retrieving value list' . PHP_EOL;
-				return false;
-			}
-			$out = array();
-			$childparas['field'] = $field;
-			foreach($values as $value => $ignore) {
-				$childparas[$paras['groupby']] = $value;
-				if($paras['print'])
-					echo PHP_EOL . $paras['groupby'] . ': ' . $value . PHP_EOL;
-				$out[$value] = $this->mlist($childparas);
-			}
-			return $out;
-		}
 		// test whether we need bfind
 		$dobfind = false;
 		$bfindparas = array();
@@ -578,198 +321,41 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 			}
 		}
 		if($dobfind) {
-			$bfindparas['array'] = $arr;
+			$bfindparas['array'] = $paras['array'];
 			$bfindparas['quiet'] = true;
 			$files = $this->bfind($bfindparas);
-			if(!$files)
+			if(!$files) {
 				return false;
+			}
+		} else {
+			$files = $this->{$paras['array']};
 		}
-		else
-			$files = $this->$arr;
 		// array of values for the field; $values["<value>"] gives the number of occurrences
 		$values = array();
+		$field = $paras['field'];
 		// fill array
 		foreach($files as $file) {
 			$value = $paras['isfunc'] ? $file->$field() : $file->$field;
-			if($paras['function'])
+			if($paras['function']) {
 				$value = $paras['function']($value);
-			if(!isset($values[$value]))
+			}
+			if(!isset($values[$value])) {
 				$values[$value] = 0;
+			}
 			$values[$value]++;
-		}
-		// sort (arsort to list by number, ksort to list alphabetically)
-		$paras['sort']($values);
-		if($paras['print']) {
-			echo strtoupper($field) . PHP_EOL;
-			foreach($values as $value => $number)
-				echo $value . " — " . $number . PHP_EOL;
 		}
 		return $values;
 	}
-	public function bfind(array $paras) {
-	// Query the database.
-		$childclass = static::$childclass;
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(
-				'q' => 'quiet',
-			),
-			'checklist' => array(
-				'function' =>
-					'Name of function applied to text found',
-				'openfiles' =>
-					'Whether files found by the function should be opened',
-				'isfunc' =>
-					'Whether the query parameter is a function',
-				'quiet' =>
-					'If this parameter is set, nothing is printed, regardless of whether printentries, printresult, and printvalues are set',
-				'printvalues' =>
-					'Whether the values of the entries found should be printed',
-				'printentries' =>
-					'Whether the names of the entries found should be printed',
-				'printresult' =>
-					'Whether the count of entries found should be printed',
-				'printproperties' =>
-					'Array of properties of entries found that should be printed',
-				'setcurrent' =>
-					'Whether $this->current should be set',
-				'return' =>
-					'What to return. Options are "objectarray" (an array containing the entries found), "namearray" (an array containing the names of the entries found) and "count" (the count of entries found)',
-				'array' =>
-					'The array to search in',
-			),
-			'checkfunc' => function($in) use($childclass) {
-				return $childclass::haspm($in);
-			},
-			'default' => array(
-				'quiet' => false,
-				'printentries' => true,
-				'printvalues' => false,
-				'printresult' => true,
-				'printproperties' => false,
-				'setcurrent' => true,
-				'return' => 
-					isset($paras['_ehphp']) ? 'namearray' : 'objectarray',
-				'openfiles' => false,
-				'array' => 'c',
-				'function' => false,
-				'isfunc' => false,
-			),
-			'checkparas' => array(
-				'openfiles' => function($in) use($childclass) {
-					return method_exists($childclass, 'openf');
-				},
-				'printproperties' => function($in) use($childclass) {
-					// check whether it's even an array
-					if(!is_array($in)) {
-						return false;
-					}
-					// check all array entries
-					foreach($in as $prop) {
-						if(!is_string($prop) or !$childclass::hasproperty($prop)) {
-							echo 'bfind: invalid printproperties entry: ';
-							self::printvar($prop);
-							return false;
-						}
-					}
-					return true;
-				},
-			),
-			'listoptions' => array(
-				'return' => array('objectarray', 'namearray', 'count'),
-			),
-		)) === PROCESS_PARAS_ERROR_FOUND)
-			return false;
-		// be really quiet
-		if($paras['quiet']) {
-			$paras['printentries'] = false;
-			$paras['printvalues'] = false;
-			$paras['printresult'] = false;
-			$paras['printproperties'] = false;
-		}
-		// function to show error
-		$error = function($msg) {
-			echo 'bfind: error: ' . $msg . PHP_EOL;
-		};
-		// allow searching different arrays than $this->c;
-		$arr = $paras['array'];
-		if(!is_array($this->$arr)) {
-			$error('invalid array');
-			return false;
-		}
-		// process input
-		$queries = array();
-		foreach($paras as $key => $para) {
-			$query = array();
-			if($childclass::hasproperty($key)) {
-				$query['field'] = $key;
-				$query['content'] = $para;
-				// test special syntax
-				if(strlen($para)) switch($para[0]) {
-					case '/':
-						if(!self::testregex($para)) {
-							$error('invalid regex: ' . $para);
-							continue 2;
-						}
-						$query['regex'] = true;
-						break;
-					case '>':
-						if($para[1] === '=') {
-							$query['content'] = substr($para, 2);
-							$query['>='] = true;
-						}
-						else {
-							$query['content'] = substr($para, 1);
-							$query['>'] = true;
-						}
-						break;
-					case '<':
-						if($para[1] === '=') {
-							$query['content'] = substr($para, 2);
-							$query['<='] = true;
-						}
-						else {
-							$query['content'] = substr($para, 1);
-							$query['<'] = true;
-						}
-						break;
-					case '\\':
-						// espace
-						$query['content'] = substr($para, 1);
-						break;
-				}
-				$queries[] = $query;
-			}
-			else if(substr($key, -2) === '()') {
-				$func = substr($key, 0, -2);
-				if(method_exists($childclass, $func)) {
-					$query['field'] = $func;
-					$query['func'] = true;
-					$query['content'] = $para;
-					if($para[0] === '/') {
-						if(!self::testregex($para)) {
-							$error('invalid regex: ' . $para);
-							continue;
-						}
-						$query['regex'] = true;
-					}
-					$queries[] = $query;
-				}
-			}
-		}
-		if(count($queries) === 0) {
-			if($paras['printresult'])
-				$error('invalid query');
-			if($this->config['debug'])
-				print_r($paras);
-			return false;
-		}
+	protected function _bfind(array $queries, array $paras) {
 		// do the search
 		$out = array();
-		foreach($this->$arr as $file) {
-			if($file->isredirect()) continue;
-			if($paras['printvalues'])
+		foreach($this->{$paras['array']} as $file) {
+			if($file->isredirect()) {
+				continue;
+			}
+			if($paras['printvalues']) {
 				$values = array();
+			}
 			foreach($queries as $query) {
 				$hay = isset($query['func'])
 					? $file->{$query['field']}()
@@ -804,12 +390,14 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 			if($paras['printentries']) {
 				echo $file->name . PHP_EOL;
 				// need to change this for broader applicability
-				if(method_exists($file, 'citepaper'))
+				if(method_exists($file, 'citepaper')) {
 					echo $file->citepaper() . PHP_EOL;
+				}
 			}
 			if($paras['printvalues']) {
-				foreach($values as $key => $value)
+				foreach($values as $key => $value) {
 					echo $key . ': ' . $value . PHP_EOL;
+				}
 			}
 			if($paras['printproperties']) {
 				foreach($paras['printproperties'] as $prop) {
@@ -823,49 +411,7 @@ abstract class CsvContainerList extends ExecuteHandler implements ContainerList 
 				$file->openf();
 			}
 		}
-		$count = count($out);
-		if($paras['printresult']) {
-			if($count === 0) {
-				echo 'No entries found' . PHP_EOL;
-			} else {
-				echo $count . ' entries found' . PHP_EOL;
-			}
-		}
-		if($count !== 0 and $paras['setcurrent']) {
-			$this->current = array();
-			foreach($out as $result) {
-				$this->current[] = $result->name;
-			}
-		}
-		switch($paras['return']) {
-			case 'objectarray': return $out;
-			case 'namearray':
-				$namearray = array();
-				foreach($out as $file)
-					$namearray[] = $file->name;
-				return $namearray;
-			case 'count': return $count;
-		}
-	}
-	public function find_cmd(array $paras) {
-	// Simple wrapper for bfind
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(
-				0 => 'field',
-				1 => 'value',
-			),
-			'checklist' => array(
-				'field' => 'Field to search in',
-				'value' => 'Value to search for',
-			),
-			'askifempty' => array('field', 'value'),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$bfindparas = array($paras['field'] => $paras['value']);
-		if(isset($paras['_ehphp'])) {
-			$bfindparas['_ehphp'] = true;
-		}
-		return $this->bfind($bfindparas);
+		return $out;
 	}
 	/* statistics */
 	public function average($files, $field) {

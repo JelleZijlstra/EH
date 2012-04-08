@@ -22,7 +22,7 @@ class Taxon extends CsvListEntry {
 	public $nspec;
 	public $isextant;
 	public $citation; // citation to the original description
-	// flag to $this->p->add_entry() that this entry should not be added.
+	// flag to $this->p->addEntry() that this entry should not be added.
 	// Should get rid of it; perhaps instead just set $this->name to NULL, or
 	// use a StopException
 	public $discardthis;
@@ -171,7 +171,7 @@ class Taxon extends CsvListEntry {
 					case 'name':
 						$oldname = $this->name;
 						$this->name = $content;
-						$this->p->add_entry($this);
+						$this->p->addEntry($this);
 						$this->p->remove(array($oldname));
 						break;
 					default:
@@ -321,7 +321,7 @@ class Taxon extends CsvListEntry {
 				if(!$children) break;
 				$this->sortchildren();
 				foreach($children as $child) {
-					if($this->p->get($child, 'status') !== 'FO') {
+					if($this->p->get($child)->status !== 'FO') {
 						$this->nspec++;
 						$this->isextant = true;
 					}
@@ -337,9 +337,9 @@ class Taxon extends CsvListEntry {
 				if($this->rank !== 'class') $this->sortchildren();
 				foreach($children as $child) {
 					$this->p->completedata($child);
-					if($this->p->get($child, 'isextant') === true) {
-						$this->ngen += $this->p->get($child, 'ngen');
-						$this->nspec += $this->p->get($child, 'nspec');
+					if($this->p->get($child)->isextant === true) {
+						$this->ngen += $this->p->get($child)->ngen;
+						$this->nspec += $this->p->get($child)->nspec;
 						$this->isextant = true;
 					}
 				}
@@ -559,7 +559,7 @@ class Taxon extends CsvListEntry {
 			if($sisrank !== false) {
 				return $sisrank;
 			}
-			$parentrank = $this->p->get($parent, 'rank');
+			$parentrank = $this->p->get($parent)->rank;
 			if($parentrank === 'genus') {
 				return 'species';
 			} else if($parentrank === 'subtribe') {
@@ -591,7 +591,7 @@ class Taxon extends CsvListEntry {
 			return false;
 		}
 		foreach($sisters as $key => $sister) {
-			$nrank = $this->p->get($sister, 'rank');
+			$nrank = $this->p->get($sister)->rank;
 			if(!$nrank) {
 				return false;
 			}

@@ -301,7 +301,7 @@ class FullFile extends CsvListEntry {
 					$this->shell('rm ' . $this->path());
 				}
 				$this->log('Removed file');
-				$this->p->remove_entry($this->name);
+				$this->p->removeEntry($this->name);
 				echo "File $this->name removed." . PHP_EOL;
 				// this will prevent CsvList::save() from writing this file
 				unset($this->name);
@@ -348,7 +348,7 @@ class FullFile extends CsvListEntry {
 		}
 		// change the catalog
 		if($this->p->has($oldname)) {
-			$this->p->move_entry($oldname, $this->name);
+			$this->p->moveEntry($oldname, $this->name);
 			// make redirect
 			$this->p->add_redirect(array(
 				'handle' => $oldname,
@@ -403,7 +403,7 @@ class FullFile extends CsvListEntry {
 				$this->folder = $searchres->folder;
 				$this->sfolder = $searchres->sfolder;
 				$this->ssfolder = $searchres->ssfolder;
-				$this->p->move_entry($oldname, $this->name);
+				$this->p->moveEntry($oldname, $this->name);
 				// make redirect
 				$this->p->add_redirect(array(
 					'handle' => $oldname,

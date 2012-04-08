@@ -578,7 +578,7 @@ class Bot extends Snoopy {
 		$this->do_wikicup_notice();
 		$this->do_move_marker();
 		global $FacsList;
-		$FacsList->saveifneeded();
+		$FacsList->saveIfNeeded();
 	}
 	public function do_wikicup_notice() {
 		global $FacsList;

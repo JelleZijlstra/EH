@@ -6,18 +6,49 @@
 require_once(BPATH . '/Container/ListEntry.interface.php');
 
 abstract class SqlListEntry extends ListEntry {
+	static const CONSTR_ID = 0;
+	static const CONSTR_NAME = 1;
+	static const CONSTR_FULL = 2;
+	
 	private $needsave = false;
 	private $filledProperties = false;
 	
-	private static $DatabaseEntry_commands = array(
+	private static $SqlListEntry_commands = array(
 	
 	);
 	
 	/*
 	 * Constructor: only does EH setup stuff.
 	 */
-	public function __construct($cmds) {
-		parent::__construct(array_merge($mcds, self::$DatabaseEntry_commands));
+	public function __construct($data, $code, &$parent) {
+		$this->p =& $parent;
+		switch($code) {
+			case self::CONSTR_ID:
+				$this->id = $data;
+				break;
+			case self::CONSTR_NAME:
+				$this->name = $data;
+				break;
+			case self::CONSTR_FULL:
+				$fields = $this->fields();
+				foreach($data as $key => $value) {
+					if(!in_array($key, $fields, true)) {
+						throw new EHException(
+							'Invalid data key ' . $key
+						);
+					}
+					$this->$key = $value;
+				}
+				break;
+			default:
+				throw new EHException(
+					'Invalid code for SqlListEntry constructor', 
+					EHException::E_RECOVERABLE
+				);
+		}
+
+		// TODO: figure out how to get the commands all right
+		// parent::__construct(array_merge($mcds, self::$SqlListEntry_commands));
 	}
 	
 	/*

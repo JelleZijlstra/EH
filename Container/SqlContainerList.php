@@ -50,7 +50,7 @@ abstract class SqlContainerList extends ContainerList {
 		if(count($res) === 0) {
 			return false;
 		} elseif(count($res) === 1) {
-			$obj = new static::$childClass($res[0], 'f');
+			$obj = new static::$childClass($res[0], SqlListEntry::CONSTR_FULL);
 			$this->c[$obj->id()] = $obj;
 			$this->cByName[$name] = $obj;
 		} else {
@@ -70,7 +70,8 @@ abstract class SqlContainerList extends ContainerList {
 		));
 		foreach($entries as $entry) {
 			if(!isset($this->c[$entry['id']])) {
-				$obj = new static::$childClass($entry, 'f');
+				$obj = new static::$childClass(
+					$entry, SqlListEntry::CONSTR_FULL);
 				$this->c[$obj->id()] = $obj;
 				$this->cByName[$obj->name()] = $obj;
 			}

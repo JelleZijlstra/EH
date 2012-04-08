@@ -1,5 +1,5 @@
 <?php
-class CsvList extends FileList {
+class CsvList extends CsvFileList {
 	public $citetype; // default citation type
 	public $verbosecite; // whether citation functions need to be verbose
 	public $includesfn; // whether Sfn needs to be included in FullFile::citewp()
@@ -129,7 +129,7 @@ class CsvList extends FileList {
 	protected static $logfile = CATALOG_LOG;
 	protected static $childclass = 'FullFile';
 	/* core utils */
-	function __construct() {
+	public function __construct(array $commands = array()) {
 		parent::__construct(self::$CsvList_commands);
 		// set some stuff initially
 		$this->citetype = 'wp';

@@ -1,6 +1,6 @@
 <?php
 /*
- * FileList.php
+ * CsvFileList.php
  *
  * A class that holds a collection of entries (represented by FileList objects).
  * This class contains the all-important $c property—an array of FileList
@@ -12,8 +12,9 @@
  */
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Common/ExecuteHandler.php');
-require_once(BPATH . '/Common/ListEntry.php');
-abstract class FileList extends ExecuteHandler {
+require_once(BPATH . '/Common/FileList.interface.php');
+require_once(BPATH . '/Common/CsvListEntry.php');
+abstract class CsvFileList extends ExecuteHandler implements FileList {
 // this is an abstract class for classes that implement lists of entries, whether references or taxa.
 	/*
 	 * Whether we need to save the data on destruction. This is set to false
@@ -98,7 +99,7 @@ abstract class FileList extends ExecuteHandler {
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 	);
-	public function __construct($commands = array()) {
+	public function __construct(array $commands = array()) {
 		echo "processing CSV catalog... ";
 		$cat = fopen(static::$fileloc, "r");
 		if($cat === false) {

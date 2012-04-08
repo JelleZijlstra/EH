@@ -1,5 +1,5 @@
 <?php
-class Taxon extends ListEntry {
+class Taxon extends CsvListEntry {
 	public $rank;
 	public $name;
 	public $authority;

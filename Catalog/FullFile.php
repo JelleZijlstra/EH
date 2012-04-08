@@ -6,9 +6,9 @@
  * A FullFile should be a member of the $p array of a CsvList object.
  */
 // methods that should not get redirects resolved by FileList
-FileList::$resolve_redirect_exclude[] = array('FullFile', 'isredirect');
+CsvFileList::$resolve_redirect_exclude[] = array('FullFile', 'isredirect');
 
-class FullFile extends ListEntry {
+class FullFile extends CsvListEntry {
 	public $name; //name of file (or handle of citation)
 	public $folder; //folder (NOFILE when "file" is not a file)
 	public $sfolder; //subfolder

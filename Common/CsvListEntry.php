@@ -1,13 +1,14 @@
 <?php
+require_once(BPATH . '/Common/ListEntry.interface.php');
 /*
- * ListEntry.php
+ * CsvListEntry.php
  *
  * Defines a PHP class that can be used to implement objects that are part of
  * some kind of collection (implemented as a FileList). This class mostly
  * contains methods that enable saving the collection into and retrieving it
  * from a CSV file, as well as editing its properties at runtime.
  */
-abstract class ListEntry extends ExecuteHandler {
+abstract class CsvListEntry extends ExecuteHandler implements ListEntry {
 	protected static $parentlist;
 	protected static $arrays_to_check;
 	protected $props; // properties that are not otherwise specified

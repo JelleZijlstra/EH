@@ -86,9 +86,8 @@ require_once(GLISTREPO . '/$classname.php');
 		$realpath = realpath($file);
 		fwrite($outclass, "<?php
 require_once(__DIR__ . '/../Common/common.php');
-require_once(BPATH . '/Common/FileList.php');
-require_once(BPATH . '/Common/ListEntry.php');
-class {$classname}List extends FileList {
+require_once(BPATH . '/Common/CsvFileList.php');
+class {$classname}List extends CsvFileList {
 	protected static \$fileloc = '$realpath';
 	protected static \$childclass = '{$classname}Entry';
 	public function __construct() {
@@ -99,7 +98,7 @@ class {$classname}List extends FileList {
 		\$this->setup_commandline('$classname');
 	}
 }
-class {$classname}Entry extends ListEntry {
+class {$classname}Entry extends CsvListEntry {
 	// stuff that is standard across GeneralList outputs
 	protected static \$parentlist = '{$classname}List';
 	protected static \$arrays_to_check = array();

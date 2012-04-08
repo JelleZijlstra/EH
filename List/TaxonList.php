@@ -1,6 +1,6 @@
 <?
-require_once(BPATH . '/Common/FileList.php');
-class TaxonList extends FileList {
+require_once(BPATH . '/Common/CsvFileList.php');
+class TaxonList extends CsvFileList {
 	public $extantonly; // whether output includes extinct species
 	public $par; // array of arrays that list the children for each parent
 	protected static $fileloc = LISTFILE;

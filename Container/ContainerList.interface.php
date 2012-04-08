@@ -6,12 +6,46 @@
  * real work.
  */
 abstract class ContainerList extends ExecuteHandler {
+	static private $ContainerList_commands = array(
+		'inform' => array('name' => 'inform',
+			'aka' => array('i'),
+			'desc' => 'Give information about an entry'),
+		'set' => array('name' => 'set',
+			'aka' => array('setprops'),
+			'desc' => 'Set a property of a file'),
+		'save' => array('name' => 'save',
+			'aka' => array('v'),
+			'desc' => 'Save the catalog to disk'),
+		'listMembers' => array('name' => 'listMembers',
+			'aka' => array('ls'),
+			'desc' => 'List the members of this list'),
+		'find_cmd' => array('name' => 'find_cmd',
+			'aka' => array('f', 'find'),
+			'desc' => "Find files that fulfil the condition given in the argument. An argument consists of a field name plus a text or regex pattern (separated by slashes) the field name should fulfil. Examples:\n\tfind_cmd year '1984'\nwill find all files published in 1984\n\tfind_cmd title '/Sudamerica/'\nwill find all files with \"Sudamerica\" in the title"),
+		'mlist' => array('name' => 'mlist',
+			'aka' => array('list'),
+			'desc' => 'List content for a given field'),
+		'bfind' => array('name' => 'bfind',
+			'desc' => 'Find files according to multiple criteria'),
+		'stats' => array('name' => 'stats',
+			'desc' => 'Print statistics about the library'),
+		'doall' => array('name' => 'doall',
+			'desc' => 'Execute a command on all list entries'),
+		'edit' => array('name' => 'edit',
+			'aka' => array('e'),
+			'desc' => 'Edit information associated with an entry'),
+		'formatAll' => array('name' => 'formatAll',
+			'desc' => 'Format all entries'),
+	);
+
 	/*
 	 * Constructor takes in commands to be passed to EH core.
 	 *
 	 * Constructor will also pre-populate the list of children.
 	 */
-	/* function __construct(array $commands = array()); */
+	public function __construct(array $commands = array()) {
+		parent::__construct(array_merge(self::$ContainerList_commands, $commands));
+	}
 
 	/*
 	 * Destructor will save any data still in memory.

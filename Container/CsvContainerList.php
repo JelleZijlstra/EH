@@ -31,70 +31,15 @@ abstract class CsvContainerList extends ContainerList {
 	protected static $childclass; // name of the class that children need to be a member of
 	// array of functions for which __call should not resolve redirects. Entries are in the form array('FullFile', 'isredirect')
 	public static $resolve_redirect_exclude = array();
-	private static $ContainerList_commands = array(
-		'inform' => array('name' => 'inform',
-			'aka' => array('i'),
-			'desc' => 'Give information about an entry',
-			'arg' => 'Entry handle',
-			'execute' => 'callmethod'),
-		'set' => array('name' => 'set',
-			'aka' => array('setprops'),
-			'desc' => 'Set a property of a file',
-			'arg' => 'Entry handle, plus fields to be changed in the form "--<field>=<content>"',
-			'execute' => 'callmethod'),
-		'save' => array('name' => 'save',
-			'aka' => array('v'),
-			'desc' => 'Save the catalog to disk',
-			'arg' => 'None',
-			'execute' => 'callmethod'),
-		'listMembers' => array('name' => 'listMembers',
-			'aka' => array('ls'),
-			'desc' => 'List the members of this list'),
-		'find_cmd' => array('name' => 'find_cmd',
-			'aka' => array('f', 'find'),
-			'desc' => "Find files that fulfil the condition given in the argument. An argument consists of a field name plus a text or regex pattern (separated by slashes) the field name should fulfil. Examples:\n\tfind_cmd year '1984'\nwill find all files published in 1984\n\tfind_cmd title '/Sudamerica/'\nwill find all files with \"Sudamerica\" in the title",
-			'arg' => 'Field plus pattern; see description',
-			'execute' => 'callmethod'),
-		'mlist' => array('name' => 'mlist',
-			'aka' => array('list'),
-			'desc' => 'List content for a given field',
-			'arg' => 'Field',
-			'execute' => 'callmethod'),
-		'bfind' => array('name' => 'bfind',
-			'desc' => 'Find files according to multiple criteria',
-			'arg' => 'Set of arguments according to the syntax --<field>=<content>',
-			'execute' => 'callmethod'),
+	private static $CsvContainerList_commands = array(
 		'getstats' => array('name' => 'getstats',
-			'desc' => 'Give numerical statistics about entries fulfilling the given criteria',
-			'arg' => 'Field, plus a series of criteria in the form --<field>=<content>',
-			'execute' => 'callmethod'),
+			'desc' => 'Give numerical statistics about entries fulfilling the given criteria'),
 		'listz' => array('name' => 'listz',
-			'desc' => 'List Z value for entries found in a getstats query',
-			'arg' => 'As for getstats, plus --index=<field given as index>',
-			'execute' => 'callmethod'),
-		'stats' => array('name' => 'stats',
-			'desc' => 'Print statistics about the library',
-			'arg' => '"-f" will also print the number of files in each folder',
-			'execute' => 'callmethod'),
-		'doall' => array('name' => 'doall',
-			'desc' => 'Execute a command on all list entries',
-			'arg' => 'Command',
-			'execute' => 'callmethod'),
+			'desc' => 'List Z value for entries found in a getstats query'),
 		'sort' => array('name' => 'sort',
-			'desc' => 'Sort the c array',
-			'arg' => 'Field to sort by',
-			'execute' => 'callmethod'),
-		'edit' => array('name' => 'edit',
-			'aka' => array('e'),
-			'desc' => 'Edit information associated with an entry',
-			'arg' => 'Entry name',
-			'execute' => 'callmethod'),
+			'desc' => 'Sort the c array'),
 		'backup' => array('name' => 'backup',
-			'desc' => 'Save a backup of the catalog',
-			'arg' => 'None',
-			'execute' => 'callmethod'),
-		'formatAll' => array('name' => 'formatAll',
-			'desc' => 'Format all entries'),
+			'desc' => 'Save a backup of the catalog'),
 	);
 	public function __construct(array $commands = array()) {
 		echo "processing CSV catalog... ";
@@ -110,7 +55,7 @@ abstract class CsvContainerList extends ContainerList {
 		// close
 		fclose($cat);
 		echo "done" . PHP_EOL;
-		parent::__construct(array_merge(self::$ContainerList_commands, $commands));
+		parent::__construct(array_merge(self::$CsvContainerList_commands, $commands));
 	}
 	protected function _addEntry(ListEntry $file, array $paras) {
 		$this->c[$file->name] = $file;

@@ -15,7 +15,7 @@ abstract class CsvListEntry extends ListEntry {
 	public function __construct($commands) {
 		parent::__construct(array_merge(self::$CsvListEntry_commands, $commands));
 	}
-	protected static $ListEntry_commands = array(
+	protected static $CsvListEntry_commands = array(
 	);
 	protected function getarray($var, $paras = array()) {
 	// helper for toarray(), to prepare array variables for storage

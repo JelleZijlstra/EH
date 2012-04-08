@@ -2022,7 +2022,7 @@ ehretval_t *eh_xtoint(ehretval_t *in) {
 }
 ehretval_t *eh_xtostring(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->type) {
+	switch(EH_TYPE(in)) {
 		case string_e:
 			ret = in;
 			break;

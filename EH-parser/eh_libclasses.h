@@ -45,6 +45,7 @@ public:
 EH_METHOD(File, open);
 EH_METHOD(File, getc);
 EH_METHOD(File, gets);
+EH_METHOD(File, puts);
 EH_METHOD(File, close);
 
 EHLC_CONSTRUCTOR(File)

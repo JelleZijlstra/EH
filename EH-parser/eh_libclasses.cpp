@@ -37,6 +37,7 @@ START_EHLC(File)
 EHLC_ENTRY(File, open)
 EHLC_ENTRY(File, getc)
 EHLC_ENTRY(File, gets)
+EHLC_ENTRY(File, puts)
 EHLC_ENTRY(File, close)
 END_EHLC()
 
@@ -53,7 +54,7 @@ EH_METHOD(File, open) {
 		*retval = new ehretval_t(false);
 		return;
 	}
-	FILE *mfile = fopen(filename->stringval, "r");
+	FILE *mfile = fopen(filename->stringval, "r+");
 	if(mfile == NULL) {
 		*retval = new ehretval_t(false);
 		return;
@@ -90,6 +91,32 @@ EH_METHOD(File, gets) {
 		delete[] (*retval)->stringval;
 		delete *retval;
 		*retval = NULL;
+	}
+}
+
+EH_METHOD(File, puts) {
+	File *selfptr = (File *) obj;
+	if(selfptr->descriptor == NULL) {
+		return;
+	}
+	
+	ehretval_t *args[1];
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
+		*retval = new ehretval_t(false);
+		return;
+	}
+	ehretval_t *str = eh_xtostring(args[0]);
+	if(str->type != string_e) {
+		*retval = new ehretval_t(false);
+		return;
+	}
+
+	int ret = fputs(str->stringval, selfptr->descriptor);
+	
+	if(ret == EOF) {
+		*retval = new ehretval_t(false);
+	} else {
+		*retval = new ehretval_t(true);
 	}
 }
 

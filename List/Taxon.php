@@ -37,9 +37,9 @@ class Taxon extends CsvListEntry {
 	function __construct($in, $code) {
 	// $in: input data (array or string)
 	// $code: kind of FullFile to make
-		global $csvlist;
-		if($csvlist) {
-			$this->p = $csvlist;
+		global $taxonlist;
+		if($taxonlist) {
+			$this->p = $taxonlist;
 		}
 		switch($code) {
 			case 'f': // loading from file
@@ -482,8 +482,8 @@ class Taxon extends CsvListEntry {
 			}
 		}
 	}
-	public function inform() {
-		parent::inform();
+	public function inform(array $paras = array()) {
+		parent::inform($paras);
 		$this->informrange();
 		$this->informchildren();
 	}

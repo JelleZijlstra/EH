@@ -3,7 +3,8 @@
  * Interface for a ListEntry.
  */
 abstract class ListEntry extends ExecuteHandler {
-	protected $p = NULL;
+	// $p is not a property, because it is set with __get magic
+	// protected $p = NULL;
 	private $setup_execute = false;
 	// array of variables that shouldn't get dynamically defined set commands
 	private static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');
@@ -91,8 +92,7 @@ abstract class ListEntry extends ExecuteHandler {
 						echo $akey . ': ' . $prop . PHP_EOL;
 					}
 				}
-			}
-			else {
+			} elseif($value !== '' && $value !== NULL) {
 				echo $key . ': ';
 				self::printvar($value);
 				echo PHP_EOL;

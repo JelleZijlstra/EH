@@ -639,7 +639,7 @@ ehretval_t *eh_op_tilde(ehretval_t *in) {
 }
 ehretval_t *eh_op_uminus(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->type) {
+	switch(EH_TYPE(in)) {
 		// negation
 		case bool_e:
 			ret = new ehretval_t(!in->boolval);
@@ -649,7 +649,7 @@ ehretval_t *eh_op_uminus(ehretval_t *in) {
 			break;
 		default:
 			in = eh_xtoint(in);
-			if(in->type != int_e) {
+			if(EH_TYPE(in) != int_e) {
 				eh_error_type("negation", in->type, eerror_e);
 				return ret;
 			}

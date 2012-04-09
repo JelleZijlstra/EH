@@ -9,14 +9,14 @@ abstract class SqlListEntry extends ListEntry {
 	const CONSTR_ID = 0;
 	const CONSTR_NAME = 1;
 	const CONSTR_FULL = 2;
-	
+
 	private $needsave = false;
 	private $filledProperties = false;
-	
+
 	private static $SqlListEntry_commands = array(
-	
+
 	);
-	
+
 	/*
 	 * Constructor: only does EH setup stuff.
 	 */
@@ -30,15 +30,7 @@ abstract class SqlListEntry extends ListEntry {
 				$this->name = $data;
 				break;
 			case self::CONSTR_FULL:
-				$fields = $this->fields();
-				foreach($data as $key => $value) {
-					if(!in_array($key, $fields, true)) {
-						throw new EHException(
-							'Invalid data key ' . $key
-						);
-					}
-					$this->$key = $value;
-				}
+				$this->setProperties($data);
 				break;
 			default:
 				throw new EHException(
@@ -55,7 +47,7 @@ abstract class SqlListEntry extends ListEntry {
 	 * Return all the fields of the object that are filled from the DB.
 	 */
 	abstract protected function fields();
-	
+
 	/*
 	 * Getter: fills properties if necessary.
 	 */
@@ -71,7 +63,7 @@ abstract class SqlListEntry extends ListEntry {
 		}
 		return $this->$key;
 	}
-	
+
 	/*
 	 * Setter: sets properties and sets dirty bit.
 	 */
@@ -85,14 +77,14 @@ abstract class SqlListEntry extends ListEntry {
 		$this->$key = $value;
 		$this->needSave();
 	}
-	
+
 	/*
 	 * Isset: does property exist?
 	 */
 	public function __isset(/* string */ $key) {
 		return property_exists($this, $key);
 	}
-	
+
 	/*
 	 * Unset: do we need this at all? Perhaps it can be useful in some way.
 	 */
@@ -102,7 +94,7 @@ abstract class SqlListEntry extends ListEntry {
 				. get_called_class(),
 			EHException::E_RECOVERABLE);
 	}
-	
+
 	/*
 	 * Function to fill properties through a DB query.
 	 */
@@ -134,10 +126,7 @@ abstract class SqlListEntry extends ListEntry {
 			}
 		}
 		if(count($vars) === 1) {
-			foreach($vars[0] as $key => $value) {
-				$this->$key = $value;
-			}
-			return true;
+			return $this->setProperties($vars[0]);
 		} else {
 			throw new EHException(
 				"Multiple instances of id " . $id . " detected in table "
@@ -146,14 +135,44 @@ abstract class SqlListEntry extends ListEntry {
 			);
 		}
 	}
-	
+
+	/*
+	 * Set properties from an array.
+	 */
+	private /* bool */ function setProperties(array $in) {
+		$fields = $this->fields();
+		foreach($in as $key => $value) {
+			if(substr($key, -3, 3) === '_id') {
+				// Get the relevant names. We don't actually need to care about
+				// case, because PHP class names are case-insensitive, but let's
+				// be precise.
+				$name = substr($key, 0, -3);
+				if(!in_array($name, $fields, true)) {
+					throw new EHException('Invalid data key ' . $key);
+				}
+				$className = ucfirst($name);
+				$containerClassName = $className . 'List';
+				$list = $containerClassName::singleton();
+				$id = (int) $value;
+
+				$this->$name = $list->fromId($id);
+			} else {
+				if(!in_array($key, $fields, true)) {
+					throw new EHException('Invalid data key ' . $key);
+				}
+				$this->$key = $value;
+			}
+		}
+		return true;
+	}
+
 	/*
 	 * Saving changes in the properties of the object.
 	 */
 	public function needSave() {
 		$this->needsave = true;
 	}
-	
+
 	public function save() {
 		if($this->needsave === false) {
 			return true;
@@ -176,7 +195,7 @@ abstract class SqlListEntry extends ListEntry {
 		}
 		return $out;
 	}
-	
+
 	/*
 	 * Return an identifier to be used as an array key. We assume that these are
 	 * the "name" and "id" properties of the object, but child classes may make
@@ -188,7 +207,7 @@ abstract class SqlListEntry extends ListEntry {
 	public function id() {
 		return $this->id;
 	}
-	
+
 	/* 
 	 * Destructor makes sure changes are committed.
 	 */

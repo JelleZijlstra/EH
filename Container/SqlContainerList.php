@@ -118,6 +118,19 @@ abstract class SqlContainerList extends ContainerList {
 		}
 		return $obj;
 	}
+	
+	/*
+	 * Return an object on the basis of ID.
+	 */
+	public function fromId(/* int */ $id) {
+		if(isset($this->c[$id])) {
+			return $this->c[$id];
+		} else {
+			$obj = new static::$childclass($id, SqlListEntry::CONSTR_ID, $list);
+			$this->addEntry($obj);
+			return $obj;
+		}
+	}
 
 	/*
 	 * Save anything necessary.

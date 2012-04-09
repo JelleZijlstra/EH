@@ -7,7 +7,10 @@ abstract class ListEntry extends ExecuteHandler {
 	// protected $p = NULL;
 	private $setup_execute = false;
 	// array of variables that shouldn't get dynamically defined set commands
-	protected static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');
+	protected static $set_exclude = array(
+		'_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 
+		'setup_execute', 'commands', 'synonyms'
+	);
 	protected static $ListEntry_commands = array(
 		'inform' => array('name' => 'inform',
 			'aka' => array('i'),
@@ -157,12 +160,13 @@ abstract class ListEntry extends ExecuteHandler {
 		}
 		$this->setup_commandline($label, array('undoable' => true));
 	}
-	
+
 	/*
 	 * Set properties.
 	 */
-	public function set(array $paras) {
-	// default method; should be overridden by child classes with more precise needs
+	public /* bool */ function set(array $paras) {
+	// default method; should be overridden by child classes with more precise 
+	// needs
 		foreach($paras as $field => $content) {
 			if(self::hasproperty($field)) {
 				if($this->$field === $content) continue;
@@ -170,12 +174,13 @@ abstract class ListEntry extends ExecuteHandler {
 				$this->p->needsave();
 			}
 		}
+		return true;
 	}
 
 	/*
 	 * Empty properties.
 	 */
-	public function setempty(array $paras) {
+	public /* bool */ function setempty(array $paras) {
 	// sets field to empty by calling set()
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -196,12 +201,12 @@ abstract class ListEntry extends ExecuteHandler {
 	/*
 	 * Return array of all the object's properties.
 	 */
-	abstract protected function listproperties();
-	
+	abstract protected /* array */ function listproperties();
+
 	/*
 	 * Return a particular field.
 	 */
-	public function getField(array $paras) {
+	public /* mixed */ function getField(array $paras) {
 		$class = get_called_class();
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,

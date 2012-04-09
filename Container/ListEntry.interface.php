@@ -60,6 +60,7 @@ abstract class ListEntry extends ExecuteHandler {
 	 * Various stuff to determine properties and methods that exist. Probably
 	 * needs harmonization.
 	 */
+	// TODO: determine what those should do here
 	static function haspm($in) {}
 	static function hasproperty($property) {}
 	static function hasmethodps($method) {}
@@ -72,6 +73,8 @@ abstract class ListEntry extends ExecuteHandler {
 		'synonyms', 
 		'commands', 
 		'setup_execute',
+		'p',
+		'_cPtr',
 	);
 	public function inform(array $paras = array()) {
 		if($this->process_paras($paras, array(
@@ -92,6 +95,7 @@ abstract class ListEntry extends ExecuteHandler {
 			else {
 				echo $key . ': ';
 				self::printvar($value);
+				echo PHP_EOL;
 			}
 		}
 	}
@@ -160,7 +164,7 @@ abstract class ListEntry extends ExecuteHandler {
 			}
 		}
 	}
-	
+
 	/*
 	 * Empty properties.
 	 */
@@ -174,11 +178,16 @@ abstract class ListEntry extends ExecuteHandler {
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		return $this->set(array($paras['field'] => NULL));
 	}
-	
+
 	/*
 	 * Resolve a redirect. Default implementation simply returns name.
 	 */
 	public /* string */ function resolve_redirect() {
 		return $this->name;
 	}
+
+	/*
+	 * Return array of all the object's properties.
+	 */
+	abstract protected function listproperties();
 }

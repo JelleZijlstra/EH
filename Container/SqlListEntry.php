@@ -203,4 +203,7 @@ abstract class SqlListEntry extends ListEntry {
 		return $this->name;
 	}
 
+	protected function listproperties() {
+		return $this->fields();
+	}
 }

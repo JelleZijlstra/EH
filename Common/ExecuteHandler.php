@@ -1057,6 +1057,7 @@ class ExecuteHandler extends EHICore {
 			'toarray' => 'cmd',
 			'synonyms' => array(
 				0 => 'cmd',
+				1 => 'arg',
 				'o' => 'stdout',
 				'e' => 'stderr',
 				'v' => 'printcmd',
@@ -1092,7 +1093,7 @@ class ExecuteHandler extends EHICore {
 						$in, array('success', 'output', 'exitvalue'), true
 					);
 				},
-				'args' => function($in) {
+				'arg' => function($in) {
 					return is_array($in);
 				},
 			),

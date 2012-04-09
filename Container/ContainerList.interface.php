@@ -666,4 +666,15 @@ abstract class ContainerList extends ExecuteHandler {
 		}
 		return true;
 	}
+	
+	/*
+	 * Get an instance.
+	 */
+	public static function singleton() {
+		static $instance = NULL;
+		if($instance === NULL) {
+			$instance = new self();
+		}
+		return $instance;
+	}
 }

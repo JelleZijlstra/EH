@@ -7,7 +7,7 @@ abstract class ListEntry extends ExecuteHandler {
 	// protected $p = NULL;
 	private $setup_execute = false;
 	// array of variables that shouldn't get dynamically defined set commands
-	private static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');
+	protected static $set_exclude = array('_cPtr', '_pData', 'current', 'config', 'bools', 'props', 'discardthis', 'setup_execute', 'commands', 'synonyms');
 	protected static $ListEntry_commands = array(
 		'inform' => array('name' => 'inform',
 			'aka' => array('i'),
@@ -20,6 +20,8 @@ abstract class ListEntry extends ExecuteHandler {
 		'set' => array('name' => 'set',
 			'aka' => array('setprops'),
 			'desc' => 'Set a property of a file'),
+		'getField' => array('name' => 'getField',
+			'desc' => 'Get a particular field in a file'),
 	);
 	/*
 	 * Constructor merely calls parent with commands.
@@ -195,4 +197,23 @@ abstract class ListEntry extends ExecuteHandler {
 	 * Return array of all the object's properties.
 	 */
 	abstract protected function listproperties();
+	
+	/*
+	 * Return a particular field.
+	 */
+	public function getField(array $paras) {
+		$class = get_called_class();
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'field' => 'Field to get',
+			),
+			'checkparas' => array(
+				'field' => function($in) use($class) {
+					return $class::hasproperty($in);
+				}
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		return $this->{$paras['field']};
+	}
 }

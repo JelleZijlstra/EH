@@ -33,6 +33,8 @@ class Taxon extends CsvListEntry {
 			'arg' => 'None',
 			'execute' => 'callmethod',
 		),
+		'getChildren' => array('name' => 'getChildren',
+			'desc' => 'Return an array of a taxon\'s children'),
 	);
 	function __construct($in, $code) {
 	// $in: input data (array or string)
@@ -185,11 +187,23 @@ class Taxon extends CsvListEntry {
 		}
 		return true;
 	}
-	public function getchildren() {
+	public function children() {
 		if(!isset($this->p->par[$this->name]))
 			return NULL;
 		else
 			return $this->p->par[$this->name];
+	}
+	public function getChildren(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$children = $this->children();
+		if($children === NULL) {
+			return array();
+		} else {
+			return array_keys($children);
+		}
 	}
 	private function call_children($func, array $paras) {
 		if(!isset($this->p->par[$this->name]))
@@ -223,7 +237,7 @@ class Taxon extends CsvListEntry {
 			$tmp .= "\t<ngen>Number of genera: " . $this->ngen . "</ngen>" . PHP_EOL;
 		fwrite($out, $tmp);
 		// print children
-		if($children = $this->getchildren()) foreach($children as $child)
+		if($children = $this->children()) foreach($children as $child)
 			$this->p->html($child);
 		fwrite($out, "</" . $this->rank . ">" . PHP_EOL);
 	}
@@ -244,7 +258,7 @@ class Taxon extends CsvListEntry {
 		if($this->comments)
 			$out .= $pre . 'Comments: ' . $this->parse('comments', 'refend');
 		$out .= PHP_EOL;
-		if($children = $this->getchildren()) foreach($children as $child) {
+		if($children = $this->children()) foreach($children as $child) {
 			$out .= $this->p->text($child);
 		}
 		return $out;
@@ -317,7 +331,7 @@ class Taxon extends CsvListEntry {
 		switch($this->rank) {
 			case "genus":
 				$this->ngen = 1;
-				$children = $this->getchildren();
+				$children = $this->children();
 				if(!$children) break;
 				$this->sortchildren();
 				foreach($children as $child) {
@@ -331,7 +345,7 @@ class Taxon extends CsvListEntry {
 				$this->movedgenus = $this->movedgenus ? 1 : '';
 				break;
 			default:
-				$children = $this->getchildren();
+				$children = $this->children();
 				if(!$children) break;
 				// don't sort the orders
 				if($this->rank !== 'class') $this->sortchildren();
@@ -500,7 +514,7 @@ class Taxon extends CsvListEntry {
 		return false;
 	}
 	function informchildren() {
-		$children = $this->getchildren();
+		$children = $this->children();
 		if($children) {
 			echo 'CHILDREN:' . PHP_EOL;
 			foreach($children as $child)
@@ -586,7 +600,7 @@ class Taxon extends CsvListEntry {
 		if($parent === NULL) {
 			$parent = $this->parent;
 		}
-		$sisters = $this->p->getchildren($parent);
+		$sisters = $this->p->children($parent);
 		if(!$sisters) {
 			return false;
 		}
@@ -657,7 +671,7 @@ class Taxon extends CsvListEntry {
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$children = $this->getchildren();
+		$children = $this->children();
 		foreach($children as $child)
 			$this->p->set(array(0 => $child, 'parent' => $paras['into']));
 		$this->p->remove(array($this->name));

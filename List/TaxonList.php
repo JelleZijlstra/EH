@@ -44,6 +44,8 @@ class TaxonList extends CsvContainerList {
 			'desc' => 'Merge a taxon into another',
 			'arg' => 'Taxon name; optionally --into=<taxon to be merged into>',
 			'execute' => 'callmethod'),
+		'getChildren' => array('name' => 'getChildren',
+			'desc' => 'Return an array of a taxon\'s children'),
 	);
 	function __construct() {
 		parent::__construct(self::$TaxonList_commands);

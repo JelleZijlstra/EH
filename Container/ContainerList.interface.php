@@ -39,6 +39,8 @@ abstract class ContainerList extends ExecuteHandler {
 			'desc' => 'Edit information associated with an entry'),
 		'formatAll' => array('name' => 'formatAll',
 			'desc' => 'Format all entries'),
+		'getField' => array('name' => 'getField',
+			'desc' => 'Get a particular field in a file'),
 	);
 
 	/*

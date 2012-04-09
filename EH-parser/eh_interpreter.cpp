@@ -586,7 +586,7 @@ void print_retval(const ehretval_t *ret) {
 ehretval_t *eh_count(const ehretval_t *in) {
 	ehretval_t *ret = new ehretval_t;
 	ret->type = int_e;
-	switch(in->type) {
+	switch(EH_TYPE(in)) {
 		case int_e:
 			ret->intval = sizeof(int) * 8;
 			break;
@@ -618,7 +618,7 @@ ehretval_t *eh_count(const ehretval_t *in) {
 ehretval_t *eh_op_tilde(ehretval_t *in) {
 	// no const argument because it's modified below
 	ehretval_t *ret = NULL;
-	switch(in->type) {
+	switch(EH_TYPE(in)) {
 		// bitwise negation of a bool is just normal negation
 		case bool_e:
 			ret = new ehretval_t(!in->boolval);
@@ -626,7 +626,7 @@ ehretval_t *eh_op_tilde(ehretval_t *in) {
 		// else try to cast to int
 		default:
 			in = eh_xtoint(in);
-			if(in->type != int_e) {
+			if(EH_TYPE(in) != int_e) {
 				eh_error_type("bitwise negation", in->type, eerror_e);
 				return ret;
 			}
@@ -1993,7 +1993,7 @@ ehretval_t *eh_stringtorange(const char *const in) {
 /* Casts from arbitrary types */
 ehretval_t *eh_xtoint(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->type) {
+	switch(EH_TYPE(in)) {
 		case int_e:
 			ret = in;
 			break;
@@ -2088,7 +2088,7 @@ bool eh_xtobool(ehretval_t *in) {
 }
 ehretval_t *eh_xtofloat(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->type) {
+	switch(EH_TYPE(in)) {
 		case float_e:
 			ret = in;
 			break;
@@ -2116,7 +2116,7 @@ ehretval_t *eh_xtofloat(ehretval_t *in) {
 }
 ehretval_t *eh_xtorange(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->type) {
+	switch(EH_TYPE(in)) {
 		case range_e:
 			ret = in;
 			break;
@@ -2144,7 +2144,7 @@ ehretval_t *eh_xtorange(ehretval_t *in) {
 ehretval_t *eh_xtoarray(ehretval_t *in) {
 	ehretval_t *ret = NULL;
 	ehretval_t index(0);
-	switch(in->type) {
+	switch(EH_TYPE(in)) {
 		case array_e:
 			ret = in;
 			break;

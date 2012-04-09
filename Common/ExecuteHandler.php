@@ -1059,6 +1059,7 @@ class ExecuteHandler extends EHICore {
 				0 => 'cmd',
 				'o' => 'stdout',
 				'e' => 'stderr',
+				'v' => 'printcmd',
 			),
 			'checklist' => array(
 				'cmd' => 'Command to be executed',

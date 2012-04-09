@@ -150,12 +150,23 @@ abstract class SqlListEntry extends ListEntry {
 				if(!in_array($name, $fields, true)) {
 					throw new EHException('Invalid data key ' . $key);
 				}
-				$className = ucfirst($name);
-				$containerClassName = $className . 'List';
-				$list = $containerClassName::singleton();
 				$id = (int) $value;
 
-				$this->$name = $list->fromId($id);
+				if($id === 0) {
+					$this->$name = NULL;
+				} else {
+					$className = ucfirst($name);
+					$containerClassName = $className . 'List';
+					$list = $containerClassName::singleton();
+					$this->$name = $list->fromId($id);
+				}
+			} elseif($key === 'parent') {
+				$id = (int) $value;
+				if($id === 0) {
+					$this->parent = NULL;
+				} else {
+					$this->parent = $this->p->fromId($id);
+				}
 			} else {
 				if(!in_array($key, $fields, true)) {
 					throw new EHException('Invalid data key ' . $key);

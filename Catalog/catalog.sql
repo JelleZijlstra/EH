@@ -21,7 +21,7 @@ CREATE TABLE `article` (
 	`url` VARCHAR(512) DEFAULT NULL,
 	`doi` VARCHAR(255) DEFAULT NULL,
 	-- Book for book chapter
-	`enclosing_id` INT UNSIGNED DEFAULT NULL,
+	`parent` INT UNSIGNED DEFAULT NULL,
 	`publisher_id` INT UNSIGNED DEFAULT NULL,
 	-- Indicate that an identifier does not have a 1-to-1 relationship to this work.
 	`part_identifier` TINYINT(1) DEFAULT FALSE,
@@ -109,7 +109,7 @@ DROP TABLE IF EXISTS `article_identifiers`;
 CREATE TABLE `article_identifiers` (
 	`article_id` INT UNSIGNED NOT NULL,
 	-- E.g., 'jstor'
-	`identifier_id` VARCHAR(255) NOT NULL,
+	`identifier_name` VARCHAR(255) NOT NULL,
 	`identifier` VARCHAR(255) NOT NULL,
 	INDEX(`article_id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
@@ -140,13 +140,13 @@ CREATE TABLE `name` (
 	`base_name` VARCHAR(512) DEFAULT NULL,
 	`year` VARCHAR(255) DEFAULT NULL,
 	`page_described` VARCHAR(255) DEFAULT NULL,
-	`citation_id` INT UNSIGNED DEFAULT NULL,
+	`article_id` INT UNSIGNED DEFAULT NULL,
 	`verbatim_citation` VARCHAR(1024) DEFAULT NULL,
 	-- ID of type genus/species for family, genus group
 	`type_id` INT UNSIGNED DEFAULT NULL,
 	`verbatim_type` VARCHAR(512) DEFAULT NULL,
 	-- ID representing place (i.e., state/country) where type locality is
-	`typelocality_id` INT UNSIGNED DEFAULT NULL,
+	`location_id` INT UNSIGNED DEFAULT NULL,
 	`typelocality` VARCHAR(1024) DEFAULT NULL,
 	`nomenclature_comments` VARCHAR(4096) DEFAULT NULL,
 	`taxonomy_comments` VARCHAR(4096) DEFAULT NULL,
@@ -164,7 +164,7 @@ CREATE TABLE `name` (
 DROP TABLE IF EXISTS `location`;
 CREATE TABLE `location` (
 	`id` INT UNSIGNED AUTO_INCREMENT,
-	`enclosing_id` INT UNSIGNED,
+	`parent` INT UNSIGNED,
 	`name` VARCHAR(255) NOT NULL,
 	PRIMARY KEY(`id`),
 	INDEX(`name`)
@@ -173,7 +173,7 @@ CREATE TABLE `location` (
 DROP TABLE IF EXISTS `age`;
 CREATE TABLE `age` (
 	`id` INT UNSIGNED AUTO_INCREMENT,
-	`enclosing_id` INT UNSIGNED,
+	`parent` INT UNSIGNED,
 	-- In thousands of years
 	`end` INT UNSIGNED,
 	`start` INT UNSIGNED,
@@ -187,6 +187,6 @@ CREATE TABLE `occurrence` (
 	`taxon_id` INT UNSIGNED,
 	`location_id` INT UNSIGNED,
 	`age_id` INT UNSIGNED,
-	`citation_id` INT UNSIGNED,
+	`article_id` INT UNSIGNED,
 	INDEX(`taxon_id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;

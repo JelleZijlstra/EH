@@ -3,6 +3,14 @@
  * SqlContainerList.php
  *
  * SQL-based implementation of a ContainerList.
+ *
+ * This class works together with the SqlListEntry class. It makes a number of
+ * assumptions about the layout of the underlying database:
+ *	- Records have a numeric field `id` and a string `name` that are both 
+ *		unique. (Possibly the uniqueness of `name` will not be necessary.)
+ *	- Fields with names of the form X_id are references to records in the table
+ *		X with id corresponding to X_id. These are represented as objects of 
+ *		class X, part of an XList container class.
  */
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/MySQL/Database.php');

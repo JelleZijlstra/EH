@@ -271,8 +271,7 @@ class ArticleList extends CsvContainerList {
 						return false;
 					}
 					// when we're in PHP 5.4, use $this->has instead here
-					global $csvlist;
-					return !$csvlist->has($in);
+					return !ArticleList::singleton()->has($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
@@ -296,12 +295,10 @@ class ArticleList extends CsvContainerList {
 			'askifempty' => array('handle', 'target'),
 			'checkparas' => array(
 				'handle' => function($in) {
-					global $csvlist;
-					return !$csvlist->has($in);
+					return !ArticleList::singleton()->has($in);
 				},
 				'target' => function($in) {
-					global $csvlist;
-					return $csvlist->has($in);
+					return ArticleList::singleton()->has($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;

@@ -162,7 +162,7 @@ class Parser {
 	}
 	public $mode; // string: parsing mode
 	public $includesfn; // bool: whether or not Sfn should be included in short-form citations
-	function usemode() {
+	public function usemode() {
 		global $csvlist;
 		switch($this->mode) {
 			case 'wlist':
@@ -209,8 +209,9 @@ class Parser {
 			case 'simple':
 				$this->replacement = 5;
 				$csvlist->citetype = 'paper';
+				break;
 			default:
-				echo 'Unrecognized mode: ' . $mode . PHP_EOL;
+				echo 'Unrecognized mode: ' . $this->mode . PHP_EOL;
 				break;
 		}
 		if(!isset($this->liststyle)) switch($csvlist->citetype) {

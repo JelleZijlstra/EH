@@ -10,6 +10,6 @@ require_once(BPATH . '/List/settings.php');
 require_once(BPATH . '/List/Country.php');
 require_once(BPATH . '/List/Taxon.php');
 require_once(BPATH . '/List/TaxonList.php');
-$taxonlist = array(); // this line is needed to remove some bugs involving __set and FullFile::p. Without it, fatal errors may occur randomly.
+$taxonlist = array(); // needed to make ListEntry::$p kind of work.
 $taxonlist = new TaxonList();
 ?>

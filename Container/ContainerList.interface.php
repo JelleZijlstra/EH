@@ -7,7 +7,7 @@
  */
 abstract class ContainerList extends ExecuteHandler {
 	// array of functions for which __call should not resolve redirects. Entries 
-	// are in the form array('FullFile', 'isredirect')
+	// are in the form array('Article', 'isredirect')
 	public static $resolve_redirect_exclude = array();
 	static private $ContainerList_commands = array(
 		'inform' => array('name' => 'inform',

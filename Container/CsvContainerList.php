@@ -103,7 +103,7 @@ abstract class CsvContainerList extends ContainerList {
 		return true;
 	}
 	public function get($file) {
-	// returns FullFile with name $file, or a particular field of that file.
+	// returns ListEntry with name $file, or a particular field of that file.
 	// If $field === true, resolves redirects.
 		if($this->has($file)) {
 			return $this->c[$file];

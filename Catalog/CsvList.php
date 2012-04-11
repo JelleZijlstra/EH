@@ -2,16 +2,16 @@
 class CsvList extends CsvContainerList {
 	public $citetype; // default citation type
 	public $verbosecite; // whether citation functions need to be verbose
-	public $includesfn; // whether Sfn needs to be included in FullFile::citewp()
-	public $includerefharv; // whether |ref=harv needs to be included in FullFile::citewp()
+	public $includesfn; // whether Sfn needs to be included in Article::citewp()
+	public $includerefharv; // whether |ref=harv needs to be included in Article::citewp()
 	public $addmanual; // whether we want data adding functions to ask for manual input
 	private $lslist;
 	private $newlist;
 	private $burstlist;
-	public $sugglist; // list of suggestions used in FullFile::newadd()
+	public $sugglist; // list of suggestions used in Article::newadd()
 	public $foldertree; // tree of folders used in the List
 	public $foldertree_n;
-	public $pdfcontentcache = array(); // cache for FullFile::$pdfcontent
+	public $pdfcontentcache = array(); // cache for Article::$pdfcontent
 	protected static $inform_exclude = array('pdfcontent');
 	private static $CsvList_commands = array(
 		'adddata' => array('name' => 'adddata',
@@ -116,13 +116,13 @@ class CsvList extends CsvContainerList {
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 		'testtitles' => array('name' => 'testtitles',
-			'desc' => 'Test FullFile::findtitle_pdfcontent()\'s capabilities',
+			'desc' => 'Test Article::findtitle_pdfcontent()\'s capabilities',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 	);
 	protected static $fileloc = CATALOG;
 	protected static $logfile = CATALOG_LOG;
-	protected static $childclass = 'FullFile';
+	protected static $childclass = 'Article';
 	/* core utils */
 	public function __construct(array $commands = array()) {
 		parent::__construct(self::$CsvList_commands);
@@ -146,7 +146,7 @@ class CsvList extends CsvContainerList {
 	/* load related lists */
 	private function build_lslist() {
 	/*
-	 * Gets list of files into $this->lslist, an array of results (FullFile form).
+	 * Gets list of files into $this->lslist, an array of results (Article form).
 	 */
 		echo "acquiring list of files... ";
 		// ls output as string
@@ -169,7 +169,7 @@ class CsvList extends CsvContainerList {
 			foreach($filelist as $file) {
 				// do not handle directories
 				if(!preg_match("/\/$/", $file) && $file) {
-					$this->lslist[$file] = new FullFile(array($file, $path[1], $path[2], $path[3]), 'l');
+					$this->lslist[$file] = new Article(array($file, $path[1], $path[2], $path[3]), 'l');
 				}
 			}
 		}
@@ -191,7 +191,7 @@ class CsvList extends CsvContainerList {
 		$list = preg_split("/\n/", $list);
 		foreach($list as $file) {
 			if(!preg_match("/\/$/", $file) && $file) {
-				$this->{$out}[$file] = new FullFile();
+				$this->{$out}[$file] = new Article();
 				$this->{$out}[$file]->name = $file;
 			}
 		}
@@ -203,8 +203,8 @@ class CsvList extends CsvContainerList {
 	}
 	/* adding stuff to the list */
 	public function addEntry(ListEntry $file, array $paras = array()) {
-	// Adds a FullFile to this CsvList object
-	// Type hint is ListEntry instead of FullFile to keep E_STRICT happy
+	// Adds a Article to this CsvList object
+	// Type hint is ListEntry instead of Article to keep E_STRICT happy
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
@@ -277,7 +277,7 @@ class CsvList extends CsvContainerList {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		return $this->addEntry(
-			new FullFile($paras['handle'], 'n'),
+			new Article($paras['handle'], 'n'),
 			array('isnew' => true)
 		);
 	}
@@ -306,7 +306,7 @@ class CsvList extends CsvContainerList {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		return $this->addEntry(
-			new FullFile(array($paras['handle'], $paras['target']), 'r'),
+			new Article(array($paras['handle'], $paras['target']), 'r'),
 			array('isnew' => true)
 		);
 	}
@@ -640,7 +640,7 @@ class CsvList extends CsvContainerList {
 						));
 						if($target === 'q') break;
 					}
-					$this->addEntry(new FullFile(array($file, $target), 'r'));
+					$this->addEntry(new Article(array($file, $target), 'r'));
 					break;
 				case 's':
 					return true;
@@ -742,7 +742,7 @@ class CsvList extends CsvContainerList {
 		return $this->citetype;
 	}
 	public static function validcitetype($in) {
-		return method_exists('FullFile', 'cite' . $in);
+		return method_exists('Article', 'cite' . $in);
 	}
 	/* first kind of suggestions: full paths */
 	public function build_sugglist() {

@@ -53,7 +53,7 @@ class TaxonList extends CsvContainerList {
 		$this->extantonly = true;
 	}
 	public function addEntry(ListEntry $file, array $paras = array()) {
-	// Adds a FullFile to this object
+	// Adds a Taxon to this object
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(

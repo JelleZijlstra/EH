@@ -38,7 +38,7 @@ class Taxon extends CsvListEntry {
 	);
 	function __construct($in, $code) {
 	// $in: input data (array or string)
-	// $code: kind of FullFile to make
+	// $code: kind of Taxon to make
 		global $taxonlist;
 		if($taxonlist) {
 			$this->p = $taxonlist;

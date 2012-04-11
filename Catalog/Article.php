@@ -349,6 +349,14 @@ class Article extends CsvListEntry {
 			else
 				return false;
 		}
+		// fix any enclosings
+		$enclosings = $this->p->bfind(array(
+			'enclosing' => $this->name,
+			'quiet' => true,
+		));
+		foreach($enclosings as $enclosing) {
+			$enclosing->enclosing = $newname;
+		}
 		// change the name internally
 		$oldname = $this->name;
 		$oldpath = $this->path();
@@ -2049,6 +2057,14 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		return $this->add() ? 2 : 1;
 	}
+	private function setCurrentDate() {
+		// add time added
+		$time = getdate();
+		$this->addmonth = $time["mon"];
+		$this->addday = $time["mday"];
+		$this->addyear = $time["year"];
+		return true;
+	}
 	public function add(array $paras = array()) {
 	// fill in data
 		if($this->process_paras($paras, array(
@@ -2064,11 +2080,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		/*
 		 * start adding data
 		 */
-		// add time added
-		$time = getdate();
-		$this->addmonth = $time["mon"];
-		$this->addday = $time["mday"];
-		$this->addyear = $time["year"];
+		$this->setCurrentDate();
 		if($this->isredirect()) return true;
 		if($this->isfile()) {
 			switch(substr($this->name, -4)) {
@@ -3287,5 +3299,81 @@ Content-Disposition: attachment
 			'series', 'volume', 'issue', 'start_page', 'end_page', 'pages', 
 			'url', 'doi', 'parent', 'publisher', 'part_identifier', 'misc_data'
 		);
+	}
+	/*
+	 * Fill the Enclosing field.
+	 */
+	public function fillEnclosing() {
+		if($this->booktitle === NULL or $this->booktitle === '') {
+			return true;
+		}
+		echo 'Resolving enclosing for file ' . $this->name . PHP_EOL;
+		$this->inform();
+		$copy = function($from, $to) {
+			if(!isset($to->year)) {
+				$to->year = $from->year;
+			}
+			if(!isset($to->title)) {
+				$to->title = $from->booktitle;
+			}
+			$from->booktitle = NULL;
+			if(!isset($to->authors)) {
+				$to->authors = $from->bookauthors;
+			}
+			$from->bookauthors = NULL;
+			if(!isset($to->publisher)) {
+				$to->publisher = $from->publisher;
+			}
+			if(!isset($to->location)) {
+				$to->location = $from->location;
+			}
+			if(!isset($to->isbn)) {
+				$to->isbn = $from->isbn;
+			}
+			$from->enclosing = $to->name;
+		};
+		$candidates = $this->p->bfind(array(
+			'title' => $this->booktitle,
+		));
+		foreach($candidates as $candidate) {
+			$candidate->inform();
+			switch($this->ynmenu("Is this the correct book?")) {
+				case 'y':
+					$copy($this, $candidate);
+					return true;
+				case 'n':
+					break;
+			}
+		}
+		// now, ask the user
+		$cmd = $this->menu(array(
+			'head' => 'If possible, enter the handle of the enclosing entry',
+			'options' => array('n' => 'Make a new entry'),
+			'validfunction' => function($in) {
+				if($in === 'n') {
+					return true;
+				} else {
+					return ArticleList::singleton()->has($in);
+				}
+			}
+		));
+		if($cmd !== 'n') {
+			$copy($this, $this->p->get($cmd));
+			return true;
+		}
+		// now, make a new one
+		$newName = $this->menu(array(
+			'head' => 'We will create a new entry for the enclosing. Enter a handle:',
+			'validfunction' => function($in) {
+				return !ArticleList::singleton()->has($in);
+			}
+		));
+		$entry = new self(NULL, 'e', $this->p);
+		$entry->setCurrentDate();
+		$entry->folder = 'NOFILE';
+		$entry->name = $newName;
+		$copy($this, $entry);
+		$this->p->addEntry($entry, array('isnew' => true));
+		return true;
 	}
 }

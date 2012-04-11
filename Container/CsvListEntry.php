@@ -12,9 +12,6 @@ abstract class CsvListEntry extends ListEntry {
 	protected static $parentlist;
 	protected static $arrays_to_check;
 	protected $props; // properties that are not otherwise specified
-	public function __construct($commands) {
-		parent::__construct(array_merge(self::$CsvListEntry_commands, $commands));
-	}
 	protected static $CsvListEntry_commands = array(
 	);
 	protected function getarray($var, $paras = array()) {
@@ -48,27 +45,15 @@ abstract class CsvListEntry extends ListEntry {
 			$this->props[$property] = $value;
 	}
 	public function __get($property) {
-		if($property === 'p') {
-			global ${static::$parentlist};
-			if(${static::$parentlist}) {
-				$this->p = ${static::$parentlist};
-				return ${static::$parentlist};
-			}
-			else {
-				trigger_error('Undefined p property', E_USER_NOTICE);
-				debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-				var_dump(static::$parentlist);
-				return new StdClass();
-			}
-		}
 		switch($arr = $this->findarray_dyn($property)) {
 			case false:
 				return NULL;
 			default:
-				if(isset($this->{$arr}[$property]))
+				if(isset($this->{$arr}[$property])) {
 					return $this->{$arr}[$property];
-				else
+				} else {
 					return NULL;
+				}
 		}
 	}
 	public function __isset($property) {

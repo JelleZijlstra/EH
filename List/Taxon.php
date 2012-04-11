@@ -29,25 +29,20 @@ class Taxon extends CsvListEntry {
 	protected static $Taxon_commands = array(
 		'populatecitation' => array('name' => 'populatecitation',
 			'desc' => 'Attempt to populate the citation field',
-			'aka' => 'addcite',
-			'arg' => 'None',
-			'execute' => 'callmethod',
-		),
+			'aka' => 'addcite'),
 		'getChildren' => array('name' => 'getChildren',
 			'desc' => 'Return an array of a taxon\'s children'),
 	);
-	function __construct($in, $code) {
+	function __construct($in, $code, &$parent) {
 	// $in: input data (array or string)
 	// $code: kind of Taxon to make
-		global $taxonlist;
-		if($taxonlist) {
-			$this->p = $taxonlist;
-		}
+		$this->p =& $parent;
 		switch($code) {
 			case 'f': // loading from file
 				if(!is_array($in)) {
-					trigger_error('Invalid input to ' . __METHOD__, E_USER_NOTICE);
-					return;
+					throw new EHException(
+						"Input to Article constructor is not an array"
+					);
 				}
 				/* Elements of class Taxon are stored in CSV as follows:
 				NAME,AUTHORITY,MOVEDGENUS,YEAR,RANK,PARENT,COMMENTS,STATUS,CITATION,ENDEMIC [as JSON'd array],RANGE [as JSON'd array],IDS [as serialized array, not JSON'd because of better object handling in serialize],MISC [as JSON'd array, miscellaneous properties]
@@ -70,6 +65,8 @@ class Taxon extends CsvListEntry {
 			case 'n': // new file
 				$this->newadd($in);
 				break;
+			default:
+				throw new EHException("Invalid input to Taxon constructor");
 		}
 	}
 	public function toArray() {

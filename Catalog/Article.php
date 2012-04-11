@@ -96,17 +96,16 @@ class Article extends CsvListEntry {
 	// fields not printed by inform()
 	protected static $inform_exclude = array('pdfcontent');
 	/* OBJECT CONSTRUCTION AND BASIC OPERATIONS */
-	public function __construct($in = '', $code = '') {
+	public function __construct($in, $code, &$parent) {
 	// $in: input data (array or string)
 	// $code: kind of Article to make
-		global $csvlist;
-		if($csvlist) $this->p = $csvlist;
-		if(!$code) return;
+		$this->p =& $parent;
 		switch($code) {
 			case 'f': // loading from file
 				if(!is_array($in)) {
-					trigger_error('Invalid input to ' . __METHOD__, E_USER_NOTICE);
-					return;
+					throw new EHException(
+						"Input to Article constructor is not an array"
+					);
 				}
 				$this->name = $in[6];
 				$this->folder = $in[3];
@@ -138,29 +137,41 @@ class Article extends CsvListEntry {
 				return;
 			case 'r': // make new redirect
 				if(!is_array($in)) {
-					trigger_error('Invalid input to ' . __METHOD__, E_USER_NOTICE);
-					return;
+					throw new EHException(
+						"Input to Article constructor is not an array"
+					);
 				}
 				$this->name = $in[0];
 				$this->folder = 'SEE ' . $in[1];
 				break;
 			case 'n': // new NOFILE entry
 				if(!is_string($in)) {
-					trigger_error('Invalid input to ' . __METHOD__, E_USER_NOTICE);
-					return;
+					throw new EHException(
+						"Input to Article constructor is not a string"
+					);
 				}
 				$this->folder = 'NOFILE';
 				$this->name = $in;
 				break;
 			case 'b': case 'l': // add new entry from basic information. 'l' if calling Article::add() is not desired
+				if(!is_array($in)) {
+					throw new EHException(
+						"Input to Article constructor is not an array"
+					);
+				}
 				$this->name = $in[0];
 				$this->folder = $in[1];
 				$this->sfolder = $in[2];
 				$this->ssfolder = $in[3];
-				if($code === 'l')
+				if($code === 'l') {
 					return;
-				else
+				} else {
 					break;
+				}
+			case 'e': // empty Article
+				return;
+			default:
+				throw new EHException("Invalid code for Article constructor");
 		}
 		// add additional data
 		$this->add();

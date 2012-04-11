@@ -169,7 +169,9 @@ class ArticleList extends CsvContainerList {
 			foreach($filelist as $file) {
 				// do not handle directories
 				if(!preg_match("/\/$/", $file) && $file) {
-					$this->lslist[$file] = new Article(array($file, $path[1], $path[2], $path[3]), 'l');
+					$this->lslist[$file] = new Article(
+						array($file, $path[1], $path[2], $path[3]), 'l', $this
+					);
 				}
 			}
 		}
@@ -191,7 +193,7 @@ class ArticleList extends CsvContainerList {
 		$list = preg_split("/\n/", $list);
 		foreach($list as $file) {
 			if(!preg_match("/\/$/", $file) && $file) {
-				$this->{$out}[$file] = new Article();
+				$this->{$out}[$file] = new Article(NULL, 'e', $this);
 				$this->{$out}[$file]->name = $file;
 			}
 		}
@@ -276,7 +278,7 @@ class ArticleList extends CsvContainerList {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		return $this->addEntry(
-			new Article($paras['handle'], 'n'),
+			new Article($paras['handle'], 'n', $this),
 			array('isnew' => true)
 		);
 	}
@@ -303,7 +305,7 @@ class ArticleList extends CsvContainerList {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		return $this->addEntry(
-			new Article(array($paras['handle'], $paras['target']), 'r'),
+			new Article(array($paras['handle'], $paras['target']), 'r', $this),
 			array('isnew' => true)
 		);
 	}
@@ -637,7 +639,9 @@ class ArticleList extends CsvContainerList {
 						));
 						if($target === 'q') break;
 					}
-					$this->addEntry(new Article(array($file, $target), 'r'));
+					$this->addEntry(
+						new Article(array($file, $target), 'r', $this)
+					);
 					break;
 				case 's':
 					return true;

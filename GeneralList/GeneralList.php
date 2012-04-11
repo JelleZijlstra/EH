@@ -116,9 +116,8 @@ class {$classname}Entry extends CsvListEntry {
 ");
 		}
 		fwrite($outclass,
-"	public function __construct(\$in = '', \$code = '') {
-		global \${self::\$parentlist};
-		if(!\${self::\$parentlist}) \$this->p = \${self::\$parentlist};
+"	public function __construct(\$in, \$code, &\$parent) {
+		\$this->p =& \$parent;
 		switch(\$code) {
 			case 'f': // loading from file
 ");
@@ -139,13 +138,14 @@ class {$classname}Entry extends CsvListEntry {
 		fwrite($outclass,
 "				break;
 			case 'n': // associative array
-				if(!\$in['name']) {
+				if(!isset(\$in['name'])) {
 					echo 'Error: name must be provided' . PHP_EOL;
 					return false;
 				}
 				foreach(\$in as \$key => \$value) {
-					if(self::has_property(\$key))
+					if(self::has_property(\$key)) {
 						\$this->\$key = \$value;
+					}
 				}
 				break;
 			default:

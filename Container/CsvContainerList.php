@@ -48,7 +48,7 @@ abstract class CsvContainerList extends ContainerList {
 		// consume first line (column labels)
 		$this->labels = fgets($cat);
 		while($line = fgetcsv($cat)) {
-			$this->addEntry(new static::$childclass($line, 'f'));
+			$this->addEntry(new static::$childclass($line, 'f', $this));
 		}
 		// close
 		fclose($cat);

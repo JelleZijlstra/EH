@@ -103,15 +103,20 @@ class Parser {
 					),
 				));
 				switch($cmd) {
-					case 'q': $this->shutdown();
+					case 'q': 
+						$this->shutdown();
 					case 'r':
 						if(!$csvlist->add_redirect(array('handle' => $citename)))
 							$this->shutdown();
 						$this->refs[$cite] = $this->cite($target);
 						break;
-					case 'i': continue 2;
+					case 'i': 
+						continue 2;
 					case '':
-						if($csvlist->addEntry(new Article($citename, 'n'), array('isnew' => true))) {
+						if($csvlist->addEntry(
+							new Article($citename, 'n', $this), 
+							array('isnew' => true)
+						)) {
 							$this->refs[$cite] = $this->cite($cite);
 						}
 						else {

@@ -3,8 +3,7 @@
  * Interface for a ListEntry.
  */
 abstract class ListEntry extends ExecuteHandler {
-	// $p is not a property, because it is set with __get magic
-	// protected $p = NULL;
+	protected $p = NULL;
 	private $setup_execute = false;
 	// array of variables that shouldn't get dynamically defined set commands
 	protected static $set_exclude = array(

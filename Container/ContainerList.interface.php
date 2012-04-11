@@ -673,7 +673,7 @@ abstract class ContainerList extends ExecuteHandler {
 	public static function singleton() {
 		static $instance = NULL;
 		if($instance === NULL) {
-			$instance = new self();
+			$instance = new static();
 		}
 		return $instance;
 	}

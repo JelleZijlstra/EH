@@ -36,6 +36,7 @@ class Article extends CsvListEntry {
 	public $ids; //array of properties for various less-common identifiers
 	public $comm; //array of properties for comments, notes, and other secondary stuff
 	public $bools; // array of boolean flags
+	public $enclosing; // enclosing article
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
 	static $n_comm = array('pages', 'newtaxa', 'draft', 'muroids'); // names of commentary fields supported
 	static $n_bools = array('parturl', 'fullissue', 'triedfindurl', 'triedfinddoi', 'triedadddata'); // variables (mostly boolean) supported
@@ -43,7 +44,7 @@ class Article extends CsvListEntry {
 	static protected $set_exclude_child = array('triedfindurl', 'triedfinddoi', 'triedadddata');
 	private $pdfcontent; // holds text of first page of PDF
 	private $adddata_return; // private flag used in Article::adddata()
-	static $Article_commands = array(
+	protected static $Article_commands = array(
 		'edittitle' => array('name' => 'edittitle',
 			'aka' => array('t'),
 			'desc' => 'Edit the title',
@@ -134,6 +135,7 @@ class Article extends CsvListEntry {
 				if($in[24]) $this->ids = json_decode($in[24], true);
 				if($in[25]) $this->comm = json_decode($in[25], true);
 				if($in[26]) $this->bools = json_decode($in[26], true);
+				if(isset($in[27])) $this->enclosing = $in[27];
 				return;
 			case 'r': // make new redirect
 				if(!is_array($in)) {
@@ -205,6 +207,7 @@ class Article extends CsvListEntry {
 		$out[] = $this->getarray('ids');
 		$out[] = $this->getarray('comm');
 		$out[] = $this->getarray('bools');
+		$out[] = $this->enclosing;
 		return $out;
 	}
 	public function inform(array $paras = array()) {

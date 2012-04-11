@@ -112,4 +112,3 @@ if(!function_exists('cal_days_in_month')) {
 		}
 	}
 }
-?>

@@ -441,4 +441,3 @@ function fileparse($mode, $infile) {
 	shell_exec("edit " . $n);
 	return $parsed;
 }
-?>

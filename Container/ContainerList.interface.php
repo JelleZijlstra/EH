@@ -231,7 +231,7 @@ abstract class ContainerList extends ExecuteHandler {
 			'default' => array(
 				'continueiffalse' => false,
 				'countfalse' => false,
-				'askafter' => 100,
+				'askafter' => false,
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$func = $paras[0];
@@ -247,7 +247,7 @@ abstract class ContainerList extends ExecuteHandler {
 		$i = 0;
 		try {
 			$obj = $this;
-			$this->each(function($file) use(&$i, $askafter, $countfalse, $continueiffalse, $obj) {
+			$this->each(function($file) use(&$i, $askafter, $countfalse, $continueiffalse, $obj, $func, $paras) {
 				if($askafter and $i and ($i % $askafter === 0)) {
 					switch($obj->ynmenu('Do you still want to continue?')) {
 						case 'y':

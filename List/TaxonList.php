@@ -6,6 +6,8 @@ class TaxonList extends CsvContainerList {
 	protected static $childclass = 'Taxon';
 	// parsers
 	public $wref_p;
+	public $refend_p;
+	public $simple_p;
 	static $TaxonList_commands = array(
 		'outputhtml' => array('name' => 'outputhtml',
 			'aka' => array('html'),
@@ -283,5 +285,12 @@ class TaxonList extends CsvContainerList {
 	public function sortchildren($name) {
 		if(!$this->par[$name]) return false;
 		ksort($this->par[$name]);
+	}
+	
+	/*
+	 * SqlContainerList methods.
+	 */
+	protected function table() {
+		return 'taxon';
 	}
 }

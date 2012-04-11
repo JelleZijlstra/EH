@@ -883,6 +883,13 @@ class ArticleList extends CsvContainerList {
 			);
 		}
 	}
+	
+	/*
+	 * SqlContainerList things.
+	 */
+	protected function table() {
+		return 'article';
+	}
 }
 class Suggester {
 // cf. ArticleList::$sugglist

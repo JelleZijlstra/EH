@@ -3261,4 +3261,15 @@ Content-Disposition: attachment
 			"", trim($in)
 		));
 	}
+	
+	/*
+	 * SqlListEntry stuff.
+	 */
+	public function fields() {
+		return array(
+			'id', 'name', 'folder', 'added', 'type', 'year', 'title', 'journal',
+			'series', 'volume', 'issue', 'start_page', 'end_page', 'pages', 
+			'url', 'doi', 'parent', 'publisher', 'part_identifier', 'misc_data'
+		);
+	}
 }

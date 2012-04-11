@@ -199,8 +199,7 @@ class TaxonList extends CsvContainerList {
 				'taxon' => 'list',
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		global $csvlist;
-		$csvlist->citetype = 'wp';
+		ArticleList::singleton()->citetype = 'wp';
 		$this->wiki_out[$paras['taxon']] = fopen(BPATH . '/List/data/' . $paras['taxon'] . '.mw', "w");
 		fwrite($this->wiki_out[$paras['taxon']], self::$start_wiki);
 		if($paras['taxon'] === 'list') {
@@ -252,8 +251,7 @@ class TaxonList extends CsvContainerList {
 			'askifempty' => array('name'),
 			'checkparas' => array(
 				'name' => function($in) {
-					global $taxonlist;
-					if($taxonlist->has($in)) {
+					if(TaxonList::singleton()->has($in)) {
 						echo 'A taxon with this name already exists.' . PHP_EOL;
 						return false;
 					} else {
@@ -274,8 +272,7 @@ class TaxonList extends CsvContainerList {
 			'checklist' => array('name' => 'Taxon to be removed'),
 			'checkparas' => array(
 				'name' => function($in) {
-					global $taxonlist;
-					return $taxonlist->has($in);
+					return TaxonList::singleton()->has($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;

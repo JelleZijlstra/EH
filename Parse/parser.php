@@ -8,7 +8,7 @@
 require_once(__DIR__ . "/../Common/common.php");
 require_once(BPATH . "/Catalog/load.php");
 class Citation {
-	public $handle; // handle for this citation in $csvlist
+	public $handle; // handle for this citation in the ArticleList
 	public $text; // text of the citation
 	public $long; // long-form text
 	public $url; // url for Wikipedia citation
@@ -32,8 +32,7 @@ class Citation {
 				echo 'Could not retrieve sfn (no handle)' . PHP_EOL;
 				return false;
 			}
-			global $csvlist;
-			$this->sfn = $csvlist->getsfn($this->handle);
+			$this->sfn = ArticleList::singleton()->getsfn($this->handle);
 		}
 		$out = substr($this->sfn, 0, -2);
 		if($this->p) $out .= '|p=' . $this->p;
@@ -47,8 +46,8 @@ class Citation {
 				echo 'Could not retrieve refname (no handle)' . PHP_EOL;
 				return false;
 			}
-			global $csvlist;
-			$this->refname = $csvlist->getrefname($this->handle);
+			$this->refname = 
+				ArticleList::singleton()->getrefname($this->handle);
 			if(!$this->refname) {
 				echo 'Could not retrieve refname' . PHP_EOL;
 				return false;
@@ -76,7 +75,7 @@ class Parser {
 		 * prepare for parsing
 		 */
 		$this->refs = array();
-		global $csvlist;
+		$csvlist = ArticleList::singleton();
 		$this->result = $this->input = $in;
 		$this->getcitetype();
 		$csvlist->verbosecite = true;
@@ -151,19 +150,17 @@ class Parser {
 		}
 	}
 	function getcitetype() {
-		global $csvlist;
 		preg_match('/<!--CITETYPE (.*?)-->/', $this->input, $matches);
 		if(isset($matches[1])) {
-			global $csvlist;
-			$csvlist->citetype = $matches[1];
+			ArticleList::singleton()->citetype = $matches[1];
 		}
 		else if(!isset($csvlist->citetype))
-			$csvlist->citetype = 'paper';
+			ArticleList::singleton()->citetype = 'paper';
 	}
 	public $mode; // string: parsing mode
 	public $includesfn; // bool: whether or not Sfn should be included in short-form citations
 	public function usemode() {
-		global $csvlist;
+		$csvlist = ArticleList::singleton();
 		switch($this->mode) {
 			case 'wlist':
 				$this->replacement = 1;
@@ -215,14 +212,18 @@ class Parser {
 				break;
 		}
 		if(!isset($this->liststyle)) switch($csvlist->citetype) {
-			case 'wp': case 'normal': $this->liststyle = 1; break;
-			default: $this->liststyle = 0; break;
+			case 'wp': case 'normal': 
+				$this->liststyle = 1; 
+				break;
+			default: 
+				$this->liststyle = 0; 
+				break;
 		}
 
 	}
 	public $resolveredirects; // bool: whether self::input should be edited to resolve redirects
 	function cite($cite) {
-		global $csvlist;
+		$csvlist = ArticleList::singleton();
 		$c = parsecite($cite);
 		$tmp = $csvlist($c['main']);
 		if(is_array($tmp)) {
@@ -298,7 +299,6 @@ class Parser {
 	public $liststyle; // list style to use: 0 = html; 1 = wiki; 2 = text
 	function makereflist() {
 		if(!$this->usereflist) return;
-		global $csvlist;
 		$replacement = $this->reflistbegin;
 		// weed out duplicates called with different Sfns
 		$refs = array();
@@ -365,8 +365,7 @@ class Parser {
 		);
 	}
 	function shutdown() {
-		global $csvlist;
-		$csvlist->saveIfNeeded();
+		ArticleList::singleton()->saveIfNeeded();
 		exit;
 	}
 }
@@ -396,7 +395,8 @@ function parse_wlist($in) {
 		echo 'parse_wlist: invalid input' . PHP_EOL;
 		return false;
 	}
-	global $wlist_p, $csvlist;
+	global $wlist_p;
+	$csvlist = ArticleList::singleton();
 	if(!$csvlist->citetype) {
 		$csvlist->citetype = 'wp';
 	}
@@ -408,7 +408,8 @@ function parse_wlist($in) {
 }
 function parse_paper($infile) {
 	return fileparse('paper', $infile);
-	global $csvlist, $paper_p;
+	global $paper_p;
+	$csvlist = ArticleList::singleton();
 	if(!$csvlist->citetype) {
 		$csvlist->citetype = 'paper';
 	}

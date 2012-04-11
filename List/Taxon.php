@@ -290,7 +290,7 @@ class Taxon extends CsvListEntry {
 		else {
 			if(isset($tmp)) {
 				if($this->citation and $this->citation !== 'Unknown') {
-					global $csvlist;
+					$csvlist = ArticleList::singleton();
 					$tmp .= ':::<small>Original description: ';
 					$csvlist->verbosecite = false;
 					$tmp .= $csvlist->cite($this->citation);
@@ -666,8 +666,7 @@ class Taxon extends CsvListEntry {
 			'askifempty' => array('into'),
 			'checkparas' => array(
 				'into' => function($in) {
-					global $taxonlist;
-					return $taxonlist->has($in);
+					return TaxonList::singleton()->has($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
@@ -711,7 +710,6 @@ class Taxon extends CsvListEntry {
 			$title .= '(?! [a-z]+ nov)\b.*\bnov\b/u';
 		else
 			$title .= ' \bnov\b/u';
-		global $csvlist;
 		$this->p->needsave();
 		echo 'Searching for possible citations for entry ' . $this->name . PHP_EOL;
 		echo 'Authority: ' . $this->authority . '; year: ' . $this->year. PHP_EOL;
@@ -719,6 +717,7 @@ class Taxon extends CsvListEntry {
 			$this->citation = 'Unknown';
 			return false;
 		}
+		$csvlist = ArticleList::singleton();
 		$cites = array_merge(
 			$csvlist->bfind(array(
 				'authors' => $authors,

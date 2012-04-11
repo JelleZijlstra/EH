@@ -890,6 +890,7 @@ class ExecuteHandler extends EHICore {
 				'head' => 'MENU',
 				'printoptions' => false,
 				'helpcommand' => true,
+				'options' => array(),
 				'validfunction' => function($in, $options) {
 					return array_key_exists($in, $options);
 				},
@@ -898,7 +899,6 @@ class ExecuteHandler extends EHICore {
 				'headasprompt' => false,
 				'helpinfo' => false,
 			),
-			'errorifempty' => array('options'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// print menu heading
 		if(!$paras['headasprompt']) {

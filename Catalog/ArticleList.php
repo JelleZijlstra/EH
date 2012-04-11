@@ -1,5 +1,5 @@
 <?php
-class CsvList extends CsvContainerList {
+class ArticleList extends CsvContainerList {
 	public $citetype; // default citation type
 	public $verbosecite; // whether citation functions need to be verbose
 	public $includesfn; // whether Sfn needs to be included in Article::citewp()
@@ -13,7 +13,7 @@ class CsvList extends CsvContainerList {
 	public $foldertree_n;
 	public $pdfcontentcache = array(); // cache for Article::$pdfcontent
 	protected static $inform_exclude = array('pdfcontent');
-	private static $CsvList_commands = array(
+	private static $ArticleList_commands = array(
 		'adddata' => array('name' => 'adddata',
 			'desc' => 'Add data to existing reference through API lookups',
 			'arg' => 'None',
@@ -98,7 +98,7 @@ class CsvList extends CsvContainerList {
 			'arg' => 'File handle',
 			'execute' => 'callmethod'),
 		'listinfo' => array('name' => 'listinfo',
-			'desc' => 'Give information about the CsvList object',
+			'desc' => 'Give information about the ArticleList object',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 		'removefirstpage' => array('name' => 'removefirstpage',
@@ -125,7 +125,7 @@ class CsvList extends CsvContainerList {
 	protected static $childclass = 'Article';
 	/* core utils */
 	public function __construct(array $commands = array()) {
-		parent::__construct(self::$CsvList_commands);
+		parent::__construct(self::$ArticleList_commands);
 		// set some stuff initially
 		$this->citetype = 'wp';
 		$this->verbosecite = true;
@@ -203,7 +203,7 @@ class CsvList extends CsvContainerList {
 	}
 	/* adding stuff to the list */
 	public function addEntry(ListEntry $file, array $paras = array()) {
-	// Adds a Article to this CsvList object
+	// Adds a Article to this ArticleList object
 	// Type hint is ListEntry instead of Article to keep E_STRICT happy
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -734,7 +734,7 @@ class CsvList extends CsvContainerList {
 			),
 			'checkparas' => array(
 				'new' => function($in) {
-					return CsvList::validcitetype($in);
+					return ArticleList::validcitetype($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
@@ -885,7 +885,7 @@ class CsvList extends CsvContainerList {
 	}
 }
 class Suggester {
-// cf. CsvList::$sugglist
+// cf. ArticleList::$sugglist
 	private $suggestions;
 	function __construct($folders) {
 		$this->suggestions[$folders] = 1;

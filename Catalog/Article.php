@@ -3,7 +3,7 @@
  * Article.php
  *
  * A class to represent a single library file with its bibliographic data.
- * A Article should be a member of the $p array of a CsvList object.
+ * A Article should be a member of the $p array of a ArticleList object.
  */
 // methods that should not get redirects resolved by ContainerList
 ContainerList::$resolve_redirect_exclude[] = array('Article', 'isredirect');
@@ -305,7 +305,7 @@ class Article extends CsvListEntry {
 				$this->log('Removed file');
 				$this->p->removeEntry($this->name);
 				echo "File $this->name removed." . PHP_EOL;
-				// this will prevent CsvList::save() from writing this file
+				// this will prevent ArticleList::save() from writing this file
 				unset($this->name);
 				$this->p->needsave();
 				break;
@@ -1845,7 +1845,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	/* ADDING DATA */
 	public function newadd(array $paras) {
-	// add from CsvList::newcheck(). This function gets the path and moves the file into the library.
+	// add from ArticleList::newcheck(). This function gets the path and moves the file into the library.
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array('lslist' => 'List of files found using ls'),

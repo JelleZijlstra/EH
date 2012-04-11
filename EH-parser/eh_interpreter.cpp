@@ -80,6 +80,7 @@ ehlibfunc_t libfuncs[] = {
 	LIBFUNCENTRY(get_type)
 	LIBFUNCENTRY(include)
 	LIBFUNCENTRY(pow)
+	LIBFUNCENTRY(log)
 	{NULL, NULL}
 };
 

@@ -7,7 +7,7 @@
 #include "eh.h"
 #include "eh_libfuncs.h"
 #include "eh.bison.hpp"
-#include <math.h>
+#include <cmath>
 
 void printvar_retval(const ehretval_t *in);
 static void printvar_array(ehvar_t **in);
@@ -301,4 +301,16 @@ EHLIBFUNC(pow) {
 		eh_error_type("argument 1 to pow", args[1]->type, enotice_e);
 		EHLF_RETFALSE;
 	}
+}
+
+EHLIBFUNC(log) {
+	ehretval_t *args[1];
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
+		EHLF_RETFALSE;
+	ehretval_t *arg = eh_xtofloat(args[0]);
+	if(arg->type != float_e) {
+		eh_error_type("argument 0 to log", args[0]->type, enotice_e);
+		EHLF_RETFALSE;
+	}
+	*retval = new ehretval_t(log(arg->floatval));
 }

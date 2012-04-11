@@ -13,5 +13,4 @@ require_once(BPATH . '/Catalog/settings.php');
 require_once(BPATH . '/Catalog/Article.php');
 require_once(BPATH . '/Catalog/ArticleList.php');
 require_once(BPATH . '/Parse/parser.php');
-$csvlist = array(); // this line is needed to remove some bugs involving __set and ListEntry::p. Without it, fatal errors may occur randomly.
 $csvlist = ArticleList::singleton();

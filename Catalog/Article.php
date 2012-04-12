@@ -676,6 +676,10 @@ class Article extends CsvListEntry {
 			$this->warn('double semicolon', 'authors');
 		if(preg_match('/; ([JS]r\.|[Ii]+)(;|$)/', $this->authors))
 			$this->warn('stray junior', 'authors');
+		// DOI
+		if(strlen($doi) && !preg_match('/^10\./u', $doi)) {
+			$this->warn('invalid content', 'doi');
+		}
 		// content of "year" is tightly constrained
 		if(!$this->isor('redirect', 'supplement', 'erratum', 'inpress') and !preg_match('/\d{4}|\d{4}–\d{4}|undated/', $this->year))
 			$this->warn('invalid content', 'year');

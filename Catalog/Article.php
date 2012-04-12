@@ -710,6 +710,9 @@ class Article extends CsvListEntry {
 			$this->warn('deprecated parameter', 'pages');
 		if(!$this->isor('inpress', 'nopagenumberjournal', 'fullissue') and $this->journal and !$this->start)
 			$this->warn('no content in "start" for journal article', 'journal');
+		if($this->enclosing and !$this->p->has($this->enclosing)) {
+			$this->warn('invalid enclosing article', 'enclosing');
+		}
 		$this->p->needsave();
 		return true;
 	}

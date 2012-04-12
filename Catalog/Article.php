@@ -2667,8 +2667,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$doi = preg_replace("/.*?10\.(\d{4})\/? ([^\s]+).*/s", "10.$1/$2", $this->pdfcontent);
 				// Elsevier accepted manuscripts
 				if(in_array($doi, array("Reference:", "Accepted Manuscript"))) {
-					preg_match("/Accepted date: [^\s]+ ([^\s]+)/s", $this->pdfcontent, $doi);
-					$doi = $doi[1];
+					if(preg_match("/Accepted date: [^\s]+ ([^\s]+)/s", $this->pdfcontent, $doi)) {
+						$doi = $doi[1];
+					} else {
+						echo 'Could not find DOI' . PHP_EOL;
+						return false;
+					}
 				}
 				// get rid of false positive DOIs containing only letters or numbers, or containing line breaks
 				if($doi && !preg_match("/^([a-z\(\)]*|\d*)$/", $doi) && !preg_match("/\n/", $doi)) {

@@ -8,7 +8,7 @@
  * the EH scripting language is handled by the parent EHI class, which has been
  * implemented both in PHP and more fully in C++.
  */
-define('PROCESS_PARAS_ERROR_FOUND', 0x1);
+define('PROCESS_PARAS_ERROR_FOUND', false);
 require_once(BPATH . "/Common/EHException.php");
 // TODO: more effectively ignore Ctrl+P and stuff like that.
 // Fix function definitions in exec_file. Currently, they just do random stuff when executed outside the exec_file context.
@@ -246,12 +246,12 @@ class ExecuteHandler extends EHICore {
 	}
 	/* Help functions */
 	private function execute_help(array $paras = array()) {
-		if($this->process_paras($paras, array(
+		if(!$this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(0 => 'cmd'),
 			'checklist' => array('cmd' => 'Command to explain'),
 			'default' => array('cmd' => ''),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		))) return false;
 		// array of functions with info
 		if($paras['cmd'] === '') {
 			echo 'The following commands are available in this ExecuteHandler interface:' . PHP_EOL;
@@ -307,7 +307,7 @@ class ExecuteHandler extends EHICore {
 		 * This method processes a function's $paras array in the way specified
 		 * in the $pp_paras parameter. In addition, it will print a summary of
 		 * the method's usage if $paras['help'] is set. process_paras() will
-		 * return 0 if it is successful and PROCESS_PARAS_ERROR_FOUND if it has
+		 * return true if it is successful and false if it has
 		 * detected an error in its input.
 		 *
 		 * $pp_paras is an associative array with the following members:
@@ -363,7 +363,7 @@ class ExecuteHandler extends EHICore {
 		if(!is_array($pp_paras)) {
 			// bogus input
 			echo 'process_paras: error: invalid pp_paras' . PHP_EOL;
-			return PROCESS_PARAS_ERROR_FOUND;
+			return false;
 		}
 		if(!is_array($paras)) {
 			// apply 'toarray'
@@ -371,7 +371,7 @@ class ExecuteHandler extends EHICore {
 				$paras = array($pp_paras['toarray'] => $paras);
 			} else {
 				echo 'process_paras: error: $paras is not an array' . PHP_EOL;
-				return PROCESS_PARAS_ERROR_FOUND;
+				return false;
 			}
 		}
 		// special parameter in all cases: help
@@ -381,7 +381,7 @@ class ExecuteHandler extends EHICore {
 			}
 			// without checklist, we can't do much
 			if(!isset($pp_paras['checklist']))
-				return PROCESS_PARAS_ERROR_FOUND;
+				return false;
 			echo 'Parameters:' . PHP_EOL;
 			foreach($pp_paras['checklist'] as $name => $description) {
 				echo '- ' . $name . PHP_EOL;
@@ -405,7 +405,7 @@ class ExecuteHandler extends EHICore {
 					echo $key . ' -> ' . $value . PHP_EOL;
 			}
 			// return "false": caller should stop after process_paras call
-			return PROCESS_PARAS_ERROR_FOUND;
+			return false;
 		}
 		// variable used in checking input
 		$founderror = false;
@@ -461,7 +461,7 @@ class ExecuteHandler extends EHICore {
 							try {
 								$paras[$key] = $this->menu($menu_paras);
 							} catch(StopException $e) {
-								return PROCESS_PARAS_ERROR_FOUND;
+								return false;
 							}
 						}
 					}
@@ -601,9 +601,9 @@ class ExecuteHandler extends EHICore {
 			}
 		}
 		if($founderror) {
-			return PROCESS_PARAS_ERROR_FOUND;
+			return false;
 		} else {
-			return 0;
+			return true;
 		}
 	}
 	/* Input for EH methods */
@@ -685,7 +685,7 @@ class ExecuteHandler extends EHICore {
 	protected function getline($paras = array()) {
 	// get a line from stdin, allowing for use of arrow keys, backspace, etc.
 	// Return false upon EOF or failure.
-		if($this->process_paras($paras, array(
+		if(!$this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'toarray' => 'prompt',
 			'checklist' => array(
@@ -701,8 +701,7 @@ class ExecuteHandler extends EHICore {
 				'prompt' => '> ',
 				'includenewlines' => false,
 			),
-		)) === PROCESS_PARAS_ERROR_FOUND)
-			return false;
+		))) return false;
 		$promptoffset = strlen($paras['prompt']);
 		// start value of the pointer
 		$histptr = count($paras['lines']);
@@ -864,7 +863,7 @@ class ExecuteHandler extends EHICore {
 	}
 	protected function menu(array $paras) {
 	// Function that creates a menu and gets input
-		if($this->process_paras($paras, array(
+		if(!$this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
 				'head' =>
@@ -899,7 +898,7 @@ class ExecuteHandler extends EHICore {
 				'headasprompt' => false,
 				'helpinfo' => false,
 			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		))) return false;
 		// print menu heading
 		if(!$paras['headasprompt']) {
 			echo $paras['head'] . PHP_EOL;
@@ -1015,12 +1014,12 @@ class ExecuteHandler extends EHICore {
 	}
 	/* Miscellaneous stuff */
 	public function switchcli(array $paras) {
-		if($this->process_paras($paras, array(
+		if(!$this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(0 => 'to'),
 			'checklist' => array('to' => 'CLI to switch to'),
 			'errorifempty' => array('to'),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		))) return false;
 		$to = $paras['to'];
 		global ${$to};
 		if(!is_object(${$to}) or !method_exists(${$to}, 'cli')) {
@@ -1058,7 +1057,7 @@ class ExecuteHandler extends EHICore {
 	public function shell($paras) {
 		// TODO: set up our own shell process with a persistent pipe, so we can
 		// keep state in the shell.
-		if($this->process_paras($paras, array(
+		if(!$this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'toarray' => 'cmd',
 			'synonyms' => array(
@@ -1104,7 +1103,7 @@ class ExecuteHandler extends EHICore {
 				},
 			),
 			'errorifempty' => array('cmd'),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		))) return false;
 		$cmd = $paras['cmd'];
 		if($paras['arg']) {
 			$args = array_map('escapeshellarg', $paras['arg']);

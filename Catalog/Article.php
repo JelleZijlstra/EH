@@ -27,8 +27,6 @@ class Article extends CsvListEntry {
 	public $end; //end page
 	public $url; //url where available
 	public $doi; //DOI
-	public $bookauthors; //authors of book (if file is a chapter)
-	public $booktitle; //title of book (if file is a chapter)
 	public $publisher; //publisher
 	public $location; //geographical location published
 	public $bookpages; //number of pages in book
@@ -126,8 +124,6 @@ class Article extends CsvListEntry {
 				$this->end = $in[15];
 				$this->url = $in[16];
 				$this->doi = $in[17];
-				$this->bookauthors = $in[18];
-				$this->booktitle = $in[19];
 				$this->publisher = $in[20];
 				$this->location = $in[21];
 				$this->bookpages = $in[22];
@@ -198,8 +194,8 @@ class Article extends CsvListEntry {
 		$out[] = $this->end;
 		$out[] = $this->url;
 		$out[] = $this->doi;
-		$out[] = $this->bookauthors;
-		$out[] = $this->booktitle;
+		$out[] = '';
+		$out[] = '';
 		$out[] = $this->publisher;
 		$out[] = $this->location;
 		$out[] = $this->bookpages;
@@ -539,7 +535,6 @@ class Article extends CsvListEntry {
 			$this->volume = $this->issue;
 			$this->issue = NULL;
 		}
-		$this->booktitle = preg_replace('/\.$/u', '', $this->booktitle);
 		// clean up titles a little: space before and after parentheses, but not in e.g. "origin(s)" (hidden as this is buggy)
 		//$this->title = trim(preg_replace(array("/(?<!\s|^)\((?!s\))/u", "/\)(?!\s|$|,|\.|:|<)/u"), array(" (", ") "), $this->title));
 		//$this->title = preg_replace("/(?<!\s|\(|-|^)([A-Z])/u", " $1", $this->title);
@@ -1361,7 +1356,10 @@ class Article extends CsvListEntry {
 				break;
 			case 'chapter':
 				$paras['chapter'] = $this->title;
-				$paras['title'] = $this->booktitle;
+				$enclosing = $this->getEnclosing();
+				$paras['title'] = $enclosing->title;
+				$paras['publisher'] = $enclosing->publisher;
+				$paras['location'] = $enclosing->location;
 				$paras['edition'] = $this->edition;
 				if($bauthors = $this->getEnclosingAuthors()) {
 					$bauthors = explode("; ", 
@@ -3030,7 +3028,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		 * process data
 		 */
 		// variables we process from the API result
-		$vars = array('volume', 'issue', 'start', 'end', 'year', 'title', 'journal', 'booktitle', 'isbn', 'authors');
+		$vars = array('volume', 'issue', 'start', 'end', 'year', 'title', 'journal', 'isbn', 'authors');
 		// kill leading zeroes
 		$volume = preg_replace("/^0/u", "", (string)$result->volume);
 		$issue = preg_replace("/^0/u", "", (string)$result->issue);
@@ -3067,6 +3065,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				else if(!$this->$var)
 					$this->$var = ${$var};
 			}
+		}
+		if($booktitle) {
+			$this->fillEnclosingFromTitle($booktitle);
 		}
 		return true;
 	}
@@ -3351,46 +3352,18 @@ Content-Disposition: attachment
 			'url', 'doi', 'parent', 'publisher', 'part_identifier', 'misc_data'
 		);
 	}
-	/*
+ 	/*
 	 * Fill the Enclosing field.
 	 */
-	public function fillEnclosing() {
-		if($this->booktitle === NULL or $this->booktitle === '') {
-			return true;
-		}
-		echo 'Resolving enclosing for file ' . $this->name . PHP_EOL;
-		$this->inform();
-		$copy = function($from, $to) {
-			if(!isset($to->year)) {
-				$to->year = $from->year;
-			}
-			if(!isset($to->title)) {
-				$to->title = $from->booktitle;
-			}
-			$from->booktitle = NULL;
-			if(!isset($to->authors)) {
-				$to->authors = $from->bookauthors;
-			}
-			$from->bookauthors = NULL;
-			if(!isset($to->publisher)) {
-				$to->publisher = $from->publisher;
-			}
-			if(!isset($to->location)) {
-				$to->location = $from->location;
-			}
-			if(!isset($to->isbn)) {
-				$to->isbn = $from->isbn;
-			}
-			$from->enclosing = $to->name;
-		};
+	private function fillEnclosingFromTitle($title) {
 		$candidates = $this->p->bfind(array(
-			'title' => $this->booktitle,
+			'title' => $title,
 		));
 		foreach($candidates as $candidate) {
 			$candidate->inform();
 			switch($this->ynmenu("Is this the correct book?")) {
 				case 'y':
-					$copy($this, $candidate);
+					$this->enclosing = $candidate->name;
 					return true;
 				case 'n':
 					break;
@@ -3409,7 +3382,7 @@ Content-Disposition: attachment
 			}
 		));
 		if($cmd !== 'n') {
-			$copy($this, $this->p->get($cmd));
+			$this->enclosing = $cmd;
 			return true;
 		}
 		// now, make a new one
@@ -3423,8 +3396,9 @@ Content-Disposition: attachment
 		$entry->setCurrentDate();
 		$entry->folder = 'NOFILE';
 		$entry->name = $newName;
-		$copy($this, $entry);
+		$entry->title = $title;
 		$this->p->addEntry($entry, array('isnew' => true));
+		$this->enclosing = $newName;
 		return true;
 	}
 	/*

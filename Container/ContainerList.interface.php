@@ -249,13 +249,11 @@ abstract class ContainerList extends ExecuteHandler {
 			$obj = $this;
 			$this->each(function($file) use(&$i, $askafter, $countfalse, $continueiffalse, $obj, $func, $paras) {
 				if($askafter and $i and ($i % $askafter === 0)) {
-					switch($obj->ynmenu('Do you still want to continue?')) {
-						case 'y':
-							// otherwise we'll sometimes ask this twice in a row
-							$i++;
-							break;
-						case 'n': 
-							throw new StopException;
+					if($obj->ynmenu('Do you still want to continue?')) {
+						// otherwise we'll sometimes ask this twice in a row
+						$i++;
+					} else {
+						throw new StopException;
 					}
 				}
 				try {

@@ -303,23 +303,21 @@ class Article extends CsvListEntry {
 			'checklist' => array('force' => 'Do not ask for confirmation'),
 			'default' => array('force' => false),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if($paras['force'])
-			$cmd = 'y';
-		else
+		if($paras['force']) {
+			$cmd = true;
+		} else {
 			$cmd = $this->ynmenu('Are you sure you want to remove file ' . $this->name . '?');
-		switch($cmd) {
-			case 'y':
-				if($this->isfile()) {
-					$this->shell('rm ' . $this->path());
-				}
-				$this->log('Removed file');
-				$this->p->removeEntry($this->name);
-				echo "File $this->name removed." . PHP_EOL;
-				// this will prevent ArticleList::save() from writing this file
-				unset($this->name);
-				$this->p->needsave();
-				break;
-			case 'n': break;
+		}
+		if($cmd) {
+			if($this->isfile()) {
+				$this->shell('rm ' . $this->path());
+			}
+			$this->log('Removed file');
+			$this->p->removeEntry($this->name);
+			echo "File $this->name removed." . PHP_EOL;
+			// this will prevent ArticleList::save() from writing this file
+			unset($this->name);
+			$this->p->needsave();
 		}
 		return true;
 	}
@@ -336,10 +334,8 @@ class Article extends CsvListEntry {
 		if($this->p->has($newname)) {
 			echo 'New name already exists: ' . $newname . PHP_EOL;
 			if($this->p->isredirect($newname)) {
-				$cmd = $this->ynmenu('The existing file is a redirect. Do you want to overwrite it?');
-				switch($cmd) {
-					case 'y': break;
-					case 'n': return false;
+				if(!$this->ynmenu('The existing file is a redirect. Do you want to overwrite it?')) {
+					return false;
 				}
 			}
 			else
@@ -3089,13 +3085,14 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					if(!$this->shell($cmd))
 						echo 'Error moving file ' . $this->name . ' to Old' . PHP_EOL;
 					return true;
-				case 'q': throw new StopException('burst');
+				case 'q':
+					throw new StopException('burst');
 				default:
 					if($this->p->has($name)) {
-						$cmd = $this->ynmenu('A file with this name already exists. Do you want to continue anyway?');
-						switch($cmd) {
-							case 'y': break 3;
-							case 'n': continue 3;
+						if($this->ynmenu('A file with this name already exists. Do you want to continue anyway?')) {
+							break 2;
+						} else {
+							continue 2;
 						}
 					}
 			}
@@ -3135,13 +3132,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		// open files for review
 		$this->shell("open $tmppath");
 		$this->openf();
-		$cmd = $this->ynmenu("Do you want to replace the file?");
-		switch($cmd) {
-			case 'y':
-				return $this->shell("mv $tmppath {$this->path()}");
-			case 'n':
-				$this->shell('rm ' . $tmppath);
-				return false;
+		if($this->ynmenu("Do you want to replace the file?")) {
+			return $this->shell("mv $tmppath {$this->path()}");
+		} else {
+			$this->shell('rm ' . $tmppath);
+			return false;
 		}
 	}
 	/* SMALL UTILITIES */
@@ -3352,8 +3347,8 @@ Content-Disposition: attachment
 			'url', 'doi', 'parent', 'publisher', 'part_identifier', 'misc_data'
 		);
 	}
- 	/*
-	 * Fill the Enclosing field.
+	/*
+	 * Helper functions to do with enclosing
 	 */
 	private function fillEnclosingFromTitle($title) {
 		$candidates = $this->p->bfind(array(
@@ -3361,12 +3356,9 @@ Content-Disposition: attachment
 		));
 		foreach($candidates as $candidate) {
 			$candidate->inform();
-			switch($this->ynmenu("Is this the correct book?")) {
-				case 'y':
-					$this->enclosing = $candidate->name;
-					return true;
-				case 'n':
-					break;
+			if($this->ynmenu("Is this the correct book?")) {
+				$this->enclosing = $candidate->name;
+				return true;
 			}
 		}
 		// now, ask the user
@@ -3401,9 +3393,6 @@ Content-Disposition: attachment
 		$this->enclosing = $newName;
 		return true;
 	}
-	/*
-	 * Helper functions to do with enclosing
-	 */
 	private function getEnclosing() {
 		if($this->enclosing) {
 			return $this->p->get($this->enclosing);

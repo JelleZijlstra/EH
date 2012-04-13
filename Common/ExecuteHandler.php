@@ -962,9 +962,11 @@ class ExecuteHandler extends EHICore {
 			}
 		}
 	}
-	public function ynmenu($head, $process = NULL) {
-	// Make a yes-no menu
-		return $this->menu(array(
+	/*
+	 * A specialization of ExecuteHandler::menu() to create a yes/no menu.
+	 */
+	public /* bool */ function ynmenu(/* string */ $head, /* callable */ $process = NULL) {
+		switch($this->menu(array(
 			'options' => array(
 				'y' => 'Yes',
 				'n' => 'No',
@@ -978,7 +980,11 @@ class ExecuteHandler extends EHICore {
 					default: return $in;
 				}
 			},
-		));
+		))) {
+			case 'y': return true;
+			case 'n': return false;
+		}
+		throw new EHException("Execution should never reach here");
 	}
 	/* Testing the EH framework */
 	public function print_paras(array $paras) {

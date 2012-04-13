@@ -445,46 +445,6 @@ class Article extends CsvListEntry {
 		/*
 		 * completion of partial citations
 		 */
-		// Natural History of Madagascar completion
-		if($this->booktitle === 'The Natural History of Madagascar' or $this->booktitle === 'nathistmad') {
-			$this->booktitle = 'The Natural History of Madagascar';
-			if(!$this->bookauthors) $this->bookauthors = 'Goodman, S.M.; Benstead, J.P. (eds.)';
-			if(!$this->year) $this->year = 2003;
-			if(!$this->publisher) $this->publisher = 'The University of Chicago Press';
-			if(!$this->bookpages) $this->bookpages = 1709;
-			if(!$this->isbn) $this->isbn = '9780226303079';
-			if(!$this->location) $this->location = 'Chicago, Illinois, and London, England';
-		}
-		// MSW 3 completion
-		if(in_array($this->booktitle, array('msw3', 'MSW3', 'Mammal Species of the World', 'Mammal Species of the World: A Taxonomic and Geographic Reference', 'Mammal Species of the World: A Taxonomic and Geographic Reference. 3rd ed.'))) {
-			$this->booktitle = 'Mammal Species of the World: A Taxonomic and Geographic Reference';
-			$this->bookauthors = 'Wilson, D.E.; Reeder, D.M. (eds.)';
-			if(!$this->year) $this->year = 2005;
-			$this->publisher = 'Johns Hopkins University Press';
-			if(!$this->bookpages) $this->bookpages = 2142;
-			if(!$this->isbn) $this->isbn = '978-0-8018-8221-0';
-			$this->location = 'Baltimore, Maryland';
-			if(!$this->url) $this->url = 'http://www.bucknell.edu/msw3';
-			if(!$this->edition) $this->edition = '3rd';
-		}
-		// Mammals of South America
-		if(in_array($this->booktitle, array('Mammals of South America', 'Mammals of South America. Volume 1: Marsupials, Xenarthrans, Shrews, and Bats'))) {
-			$this->booktitle = 'Mammals of South America. Volume 1: Marsupials, Xenarthrans, Shrews, and Bats';
-			$this->year = 2008;
-			$this->publisher = 'The University of Chicago Press';
-			$this->location = 'Chicago, Illinois';
-			$this->bookpages = 690;
-			$this->isbn = '9780226282404';
-		}
-		// Cenozoic Mammals of Africa
-		if(in_array($this->booktitle, array('Cenozoic Mammals of Africa'))) {
-			$this->booktitle = 'Cenozoic Mammals of Africa';
-			$this->year = 2010;
-			$this->publisher = 'University of California Press';
-			$this->location = 'Berkeley, California';
-			$this->bookpages = 1008;
-			$this->isbn = '9780520257214';
-		}
 		// expand journals
 		$this->expandjournal();
 		// automatically detect title in MS papers
@@ -495,7 +455,11 @@ class Article extends CsvListEntry {
 		 */
 		if($this->isredirect()) {
 			// no other data for redirects
-			$redirect_remove = array('sfolder', 'ssfolder', 'authors', 'year', 'title', 'journal', 'volume', 'series', 'issue', 'start', 'end', 'bookauthors', 'booktitle', 'pages', 'bookpages', 'ids', 'comm', 'doi', 'url', 'location', 'status', 'bools');
+			$redirect_remove = array('sfolder', 'ssfolder', 'authors', 'year', 
+				'title', 'journal', 'volume', 'series', 'issue', 'start', 'end', 
+				'pages', 'bookpages', 'ids', 'comm', 'doi', 'url', 'location', 
+				'status', 'bools'
+			);
 			foreach($redirect_remove as $key)
 				$this->$key = NULL;
 			$target = $this->resolve_redirect();
@@ -505,7 +469,10 @@ class Article extends CsvListEntry {
 				$this->folder = 'SEE ' . $this->p->resolve_redirect($target);
 		}
 		if($this->issupplement()) {
-			$supplement_remove = array('authors', 'year', 'journal', 'volume', 'series', 'issue', 'start', 'end', 'bookauthors', 'booktitle', 'pages', 'bookpages', 'ids', 'comm', 'doi', 'url', 'location', 'status', 'bools');
+			$supplement_remove = array('authors', 'year', 'journal', 'volume', 
+				'series', 'issue', 'start', 'end', 'pages', 'bookpages', 'ids', 
+				'comm', 'doi', 'url', 'location', 'status', 'bools'
+			);
 			foreach($supplement_remove as $key)
 				$this->$key = NULL;
 			$target = $this->supp_getbasic();
@@ -640,12 +607,6 @@ class Article extends CsvListEntry {
 			$this->publisher = $tmp[1];
 			$this->location = $tmp[0];
 		}
-		// eds. is added automatically by cite methods
-		$this->bookauthors = preg_replace(
-			'/\s*\(eds?\.\)$/u',
-			'',
-			$this->bookauthors
-		);
 		if(preg_match('/^(PhD|MSc) thesis, /', $this->journal)) {
 		// "PhD thesis" should be in "publisher" field
 			$this->publisher = $this->journal;
@@ -656,6 +617,52 @@ class Article extends CsvListEntry {
 			unset($this->pages);
 		}
 		if(!$this->pages) unset($this->pages);
+		// redundant stuff for books
+		if($this->enclosing) {
+			$obj = $this->getEnclosing();
+			if($this->publisher) {
+				if(!$obj->publisher) {
+					$obj->publisher = $this->publisher;
+					$this->publisher = '';
+				} else {
+					if($this->publisher !== $obj->publisher) {
+						$this->warn('Publisher for enclosing ("' .
+							$obj->publisher . '") is different from publisher',
+							'publisher');
+					} else {
+						$this->publisher = '';
+					}
+				}
+			}
+			if($this->location) {
+				if(!$obj->location) {
+					$obj->location = $this->location;
+					$this->location = '';
+				} else {
+					if($this->location !== $obj->location) {
+						$this->warn('Location for enclosing ("' .
+							$obj->location . '") is different from location',
+							'location');
+					} else {
+						$this->location = '';
+					}
+				}
+			}
+			if($this->bookpages) {
+				if(!$obj->bookpages) {
+					$obj->bookpages = $this->bookpages;
+					$this->bookpages = '';
+				} else {
+					if($this->bookpages !== $obj->location) {
+						$this->warn('Bookpages for enclosing ("' .
+							$obj->location . '") is different from bookpages',
+							'bookpages');
+					} else {
+						$this->bookpages = '';
+					}
+				}
+			}
+		}
 		/*
 		 * do things that are necessary for all properties
 		 */
@@ -677,7 +684,7 @@ class Article extends CsvListEntry {
 		if(preg_match('/; ([JS]r\.|[Ii]+)(;|$)/', $this->authors))
 			$this->warn('stray junior', 'authors');
 		// DOI
-		if(strlen($doi) && !preg_match('/^10\./u', $doi)) {
+		if(strlen($this->doi) && !preg_match('/^10\./u', $this->doi)) {
 			$this->warn('invalid content', 'doi');
 		}
 		// content of "year" is tightly constrained
@@ -694,8 +701,8 @@ class Article extends CsvListEntry {
 		if(preg_match("/\((?!ed\.\)|eds\.\))/", $this->authors))
 			$this->warn('parenthesis', 'authors');
 		// bug in previous code
-		if($this->bookauthors and ($this->bookauthors === $this->booktitle))
-			$this->warn('bookauthors equal with booktitle', 'bookauthors');
+		if($this->authors and ($this->authors === $this->title))
+			$this->warn('authors equal with title', 'authors');
 		// buggy Geodiversitas and AMNH code tends to cause this
 		// OpenOffice weirdness
 		if(preg_match("/\//", $this->issue))
@@ -1168,7 +1175,7 @@ class Article extends CsvListEntry {
 			return 'web';
 		if($this->journal)
 			return 'journal';
-		if($this->title && $this->booktitle)
+		if($this->enclosing)
 			return 'chapter';
 		if($this->isthesis())
 			return 'thesis';
@@ -1217,19 +1224,24 @@ class Article extends CsvListEntry {
 			else
 				$out .= $this->start . "–" . $this->end;
 			$out .= ".";
-		}
-		else if($this->booktitle) {
-			if($this->start === $this->end)
+		} elseif($enclosing = $this->getEnclosing()) {
+			if($this->start === $this->end) {
 				$out .= "P. $this->start in ";
-			else
+			} else {
 				$out .= "Pp. " . $this->start . "–" . $this->end . " in ";
-			$out .= preg_replace(array("/;(?=.*;)/", "/;/", "/\\\\/"), array(",", ", and", "\\"), $this->bookauthors) . " (eds.). ";
-			$out .= $this->booktitle . ". ";
-			$out .= $this->publisher;
-			if($this->bookpages)
-				$out .= ", " . $this->bookpages . " pp.";
-			else
-				$out .= ".";
+			}
+			$out .= preg_replace(
+				array("/;(?=.*;)/", "/;/", "/\\\\/"), 
+				array(",", ", and", "\\"), 
+				$this->getEnclosingAuthors()
+			);
+			$out .= " (eds.). ";
+			$out .= $enclosing->title . ". ";
+			$out .= $enclosing->publisher;
+			if($enclosing->bookpages) {
+				$out .= ", " . $enclosing->bookpages . " pp";
+			}
+			$out .= ".";
 		}
 		if(!$mw && $this->doi) {
 			$out .= ' doi:' . $this->doi;
@@ -1333,65 +1345,71 @@ class Article extends CsvListEntry {
 		} else {
 			$paras['pages'] = $this->start . "–". $this->end;
 		}
-		if($temp === 'journal') {
-			$paras['title'] = $this->title;
-			$paras['journal'] = $this->journal;
-			$paras['volume'] = $this->volume;
-			$paras['issue'] = $this->issue;
-		} elseif($temp === 'book') {
-			if(!$this->booktitle) {
+		switch($class) {
+			case 'journal':
+				$paras['title'] = $this->title;
+				$paras['journal'] = $this->journal;
+				$paras['volume'] = $this->volume;
+				$paras['issue'] = $this->issue;
+				break;
+			case 'book':
 				$paras['title'] = $this->title;
 				if(!$paras['pages']) {
 					$paras['pages'] = $this->bookpages;
 				}
-			} else {
+				$paras['edition'] = $this->edition;
+				break;
+			case 'chapter':
 				$paras['chapter'] = $this->title;
 				$paras['title'] = $this->booktitle;
-			}
-			$paras['edition'] = $this->edition;
-			if($this->bookauthors) {
-				$bauthors = explode("; ", 
-					preg_replace('/ \([Ee]ds?\.\)$/', '', $this->bookauthors)
-				);
-				foreach($bauthors as $key => $author) {
-				// only four editors supported
-					if($key < 4) {
-						$author = explode(', ', $author);
-						$paras['editor' . ($key + 1) . '-last'] = $author[0];
-						$paras['editor' . ($key + 1) . '-first'] = $author[1];
-					}
-					else {
-					// because cite book only supports four editors, we have to hack by putting the remaining editors in |editor4-last=
-						if($key === 4) {
-							unset($paras['editor4-first']);
-							$paras['editor4-last'] = $bauthors[3] . '; ';
-						}
-						$paras['editor4-last'] .= $author . '; ';
-					}
-				}
-				// double period bug
-				if(isset($paras['editor4-last']) and strpos($paras['editor4-last'], ';') !== false) {
-					$paras['editor4-last'] = preg_replace(
-						array('/; $/u', '/\.$/u'), 
-						array('', ''), 
-						$paras['editor4-last']
+				$paras['edition'] = $this->edition;
+				if($bauthors = $this->getEnclosingAuthors()) {
+					$bauthors = explode("; ", 
+						preg_replace('/ \([Ee]ds?\.\)$/', '', $bauthors)
 					);
-				} else {
-					$paras['editor' . count($bauthors) . '-first'] = 
-						preg_replace('/\.$/u', '', 
-							$paras['editor' . ($key + 1) . '-first']
+					foreach($bauthors as $key => $author) {
+					// only four editors supported
+						if($key < 4) {
+							$author = explode(', ', $author);
+							$paras['editor' . ($key + 1) . '-last'] = 
+								$author[0];
+							$paras['editor' . ($key + 1) . '-first'] = 
+								$author[1];
+						} else {
+						// because cite book only supports four editors, we have to hack by putting the remaining editors in |editor4-last=
+							if($key === 4) {
+								unset($paras['editor4-first']);
+								$paras['editor4-last'] = $bauthors[3] . '; ';
+							}
+							$paras['editor4-last'] .= $author . '; ';
+						}
+					}
+					// double period bug
+					if(isset($paras['editor4-last']) and strpos($paras['editor4-last'], ';') !== false) {
+						$paras['editor4-last'] = preg_replace(
+							array('/; $/u', '/\.$/u'), 
+							array('', ''), 
+							$paras['editor4-last']
 						);
+					} else {
+						$paras['editor' . count($bauthors) . '-first'] = 
+							preg_replace('/\.$/u', '', 
+								$paras['editor' . ($key + 1) . '-first']
+							);
+					}
 				}
-			}
-		} elseif($temp === 'thesis') {
-			$paras['title'] = $this->title;
-			$tmp = explode(' thesis, ', $this->publisher);
-			$paras['degree'] = $tmp[0];
-			$paras['publisher'] = $tmp[1];
-			$paras['pages'] = $this->bookpages;
-		} elseif($temp === 'web') {
-			$paras['title'] = $this->title;
-			$paras['publisher'] = $this->publisher;
+				break;
+			case 'thesis':
+				$paras['title'] = $this->title;
+				$tmp = explode(' thesis, ', $this->publisher);
+				$paras['degree'] = $tmp[0];
+				$paras['publisher'] = $tmp[1];
+				$paras['pages'] = $this->bookpages;
+				break;
+			case 'web':
+				$paras['title'] = $this->title;
+				$paras['publisher'] = $this->publisher;
+				break;
 		}
 		if($this->p->includerefharv) {
 			$paras['ref'] = 'harv';
@@ -1468,43 +1486,47 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		// replace last ; with " &"; others with ","
 		$out .= '<b>' . preg_replace(array("/;(?=.*;)/", "/;/", "/\\\\/"), array(",", " &", "\\"), $this->authors);
 		$out .= "</b> $this->year. ";
-		// journals (most common case)
-		if($class === 'journal') {
-			$out .= $this->title;
-			$out .= ". ";
-			$out .= '<i>' . $this->journal . '</i>, ';
-			if($this->series)
-				// need to catch "double series"
-				$out .= "(" . str_replace(";", ") (", $this->series) . ")";
-			$out .= '<b>' . $this->volume . '</b>: ';
-			if($this->start === $this->end)
-				$out .= $this->start;
-			else
-				$out .= $this->start . "–" . $this->end;
-			$out .= '.';
-		}
-		else if($class === 'chapter') {
-			$out .= $this->title . '. <i>in</i> ';
-			$out .= str_replace("(Ed", '(ed', $this->bookauthors);
-			$out .= ', <i>' . $this->booktitle . '</i>. ' . $this->bookpages . ' pp.';
-			$out .= ' ' . $this->publisher;
-			if($this->location) $out .= ', ' . $this->location;
-			$out .= '.';
-		}
-		else if($class === 'book') {
-			$title = $this->title ? $this->title : $this->booktitle;
-			$out .= '<i>' . $title . '.</i>';
-			if($this->bookpages)
-				$out .= ' ' . $this->bookpages . ' pp.';
-			if(preg_match('/: /', $this->publisher)) {
-				$tmp = preg_split('/: /', $this->publisher);
-				$out .= ' ' . $tmp[1] . ', ' . $tmp[0] . '.';
-			}
-			else {
-				$out .= ' ' . $this->publisher;
-				if($this->location) $out .= ', ' . $this->location;
-			}
-			$out .= '.';
+		switch($class) {
+			case 'journal':
+				$out .= $this->title;
+				$out .= ". ";
+				$out .= '<i>' . $this->journal . '</i>, ';
+				if($this->series) {
+					// need to catch "double series"
+					$out .= "(" . str_replace(";", ") (", $this->series) . ")";
+				}
+				$out .= '<b>' . $this->volume . '</b>: ';
+				if($this->start === $this->end) {
+					$out .= $this->start;
+				} else {
+					$out .= $this->start . "–" . $this->end;
+				}
+				$out .= '.';
+				break;
+			case 'chapter':
+				$enclosing = $this->getEnclosing();
+				$out .= $this->title . '. <i>in</i> ';
+				$out .= str_replace("(Ed", '(ed', $this->getEnclosingAuthors());
+				$out .= ', <i>' . $enclosing->title . '</i>. ' 
+					. $enclosing->bookpages . ' pp. ' . $enclosing->publisher;
+				if($enclosing->location) {
+					$out .= ', ' . $this->location;
+				}
+				$out .= '.';
+				break;
+			case 'book':
+				$out .= '<i>' . $this->title . '.</i>';
+				if($this->bookpages) {
+					$out .= ' ' . $this->bookpages . ' pp.';
+				}
+				if(preg_match('/: /', $this->publisher)) {
+					$tmp = preg_split('/: /', $this->publisher);
+					$out .= ' ' . $tmp[1] . ', ' . $tmp[0] . '.';
+				} else {
+					$out .= ' ' . $this->publisher;
+					if($this->location) $out .= ', ' . $this->location;
+				}
+				$out .= '.';
 		}
 		// final cleanup
 		$out = str_replace(array("  ", ".."), array(" ", "."), $out);
@@ -1542,14 +1564,15 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= "$this->bookpages pp.";
 				break;
 			case 'chapter':
+				$enclosing = $this->getEnclosing();
 				$out .= "$this->title. <i>In</i> ";
-				$out .= $processauthors($this->bookauthors);
+				$out .= $processauthors($this->getEnclosingAuthors());
 				$out .= " (eds). ";
-				$out .= "<i>$this->booktitle.</i> ";
-				$out .= "$this->publisher, ";
-				if($this->location)
-					$out .= "$this->location, ";
-				$out .= "$this->bookpages pp.";
+				$out .= "<i>$enclosing->title.</i> ";
+				$out .= "$enclosing->publisher, ";
+				if($enclosing->location)
+					$out .= "$enclosing->location, ";
+				$out .= "$enclosing->bookpages pp.";
 				break;
 			case 'thesis':
 				$out .= "<i>$this->title</i>. Unpublished ";
@@ -1624,16 +1647,22 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				break;
 			case 'chapter':
 				$out .= ', ' . $this->start . '–' . $this->end . '. <i>In</i> ';
-				$out .= $processauthors($this->bookauthors, 'editors');
-				if(strpos($this->bookauthors, ';') !== false)
+				$bauthors = $processauthors($this->getEnclosingAuthors(), 
+					'editors');
+				$out .= $bauthors;
+				if(strpos($bauthors, ';') !== false)
 					$out .= " (eds.), ";
 				else
 					$out .= " (ed.), ";
-				$out .= $this->booktitle;
+				$out .= $this->getEnclosing()->title;
 			case 'book':
 				$out .= ". $this->publisher";
-				if($this->location) $out .= ", $this->location";
-				if($this->bookpages) $out .= ", $this->bookpages p.";
+				if($this->location) {
+					$out .= ", $this->location";
+				}
+				if($this->bookpages) {
+					$out .= ", $this->bookpages p.";
+				}
 				break;
 			default:
 				$out .= "$this->title. ";
@@ -1739,13 +1768,21 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				break;
 			case 'chapter':
 				$out .= "$this->title. <i>In</i>: ";
-				$out .= $processauthors($this->bookauthors, 'editors');
-				$out .= ", <i>$this->booktitle</i>. $this->publisher, $this->location, pp. " . $this->start . '–' . $this->end;
+				$enclosing = $this->getEnclosing();
+				$out .= $processauthors($this->getEnclosingAuthors(), 
+					'editors');
+				$out .= ", <i>$enclosing->title</i>. $enclosing->publisher, "
+					. "$enclosing->location, pp. " . $this->start . '–' 
+					. $this->end;
 				break;
 			case 'book':
 				$out .= "<i>$this->title</i>. $this->publisher";
-				if($this->location) $out .= ", $this->location";
-				if($this->bookpages) $out .= ", $this->bookpages pp.";
+				if($this->location) {
+					$out .= ", $this->location";
+				}
+				if($this->bookpages) {
+					$out .= ", $this->bookpages pp.";
+				}
 				break;
 			default:
 				$out .= "$this->title. ";
@@ -2870,7 +2907,10 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		"'e': edit all information" . PHP_EOL .
 		"'d': try entering a DOI again" . PHP_EOL .
 		"'o': open the file" . PHP_EOL;
-		$params = array("authors", "year", "title", "journal", "volume", "issue", "start", "end", "pages", "url", "bookauthors", "booktitle", "publisher", "bookpages", "isbn", "location", "parturl");
+		$params = array("authors", "year", "title", "journal", "volume", 
+			"issue", "start", "end", "pages", "url", "enclosing", "publisher", 
+			"bookpages", "isbn", "location", "parturl"
+		);
 		foreach($params as $key) {
 			while(true) {
 				switch($cmd = $this->getline($key . ": ")) {
@@ -3386,5 +3426,28 @@ Content-Disposition: attachment
 		$copy($this, $entry);
 		$this->p->addEntry($entry, array('isnew' => true));
 		return true;
+	}
+	/*
+	 * Helper functions to do with enclosing
+	 */
+	private function getEnclosing() {
+		if($this->enclosing) {
+			return $this->p->get($this->enclosing);
+		} else {
+			return false;
+		}
+	}
+	private function getEnclosingAuthors() {
+		$obj = $this->getEnclosing();
+		if($obj === false) {
+			return false;
+		}
+		if(!$obj->authors) {
+			return false;
+		}
+		if($obj->authors === $this->authors) {
+			return false;
+		}
+		return $obj->authors;
 	}
 }

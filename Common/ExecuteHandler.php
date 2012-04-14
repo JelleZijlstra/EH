@@ -1080,12 +1080,10 @@ class ExecuteHandler extends EHICore {
 				'printcmd' => false,
 				'printout' => true,
 			),
+			'listoptions' => array(
+				'return' => array('success', 'output', 'exitvalue'),
+			),
 			'checkparas' => array(
-				'return' => function($in) {
-					return in_array(
-						$in, array('success', 'output', 'exitvalue'), true
-					);
-				},
 				'arg' => function($in) {
 					return is_array($in);
 				},

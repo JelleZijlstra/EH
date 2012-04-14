@@ -44,6 +44,22 @@ abstract class SqlListEntry extends ListEntry {
 	}
 	
 	/*
+	 * Either return the object with name $name or create a new object.
+	 */
+	public static function withName(/* string */ $name) {
+		$parent = static::parentClass();
+		$parentObj = $parent::singleton();
+		if($parentObj->has($name)) {
+			return $parentObj->get($name);
+		} else {
+			$obj = new static($name, self::CONSTR_NAME, $parentObj);
+			$obj->addNew();
+			$parentObj->addEntry($obj);
+			return $obj;
+		}
+	}
+	
+	/*
 	 * Return all the fields of the object that are filled from the DB.
 	 */
 	abstract protected function fields();
@@ -93,6 +109,52 @@ abstract class SqlListEntry extends ListEntry {
 			'Attempt to unset property "' . $key . '" of class '
 				. get_called_class(),
 			EHException::E_RECOVERABLE);
+	}
+
+	/*
+	 * Fill a new object. Default implementation merely asks the user; children
+	 * may do more.
+	 */
+	protected function addNew() {
+		return $this->fillPropertiesManually();
+	}
+	
+	/*
+	 * Fill properties manually from user input.
+	 */
+	protected function fillPropertiesManually() {
+		$fields = $this->fields();
+		$file = $this;
+		echo 'Filling data manually for object' . PHP_EOL;
+		foreach($fields as $field) {
+			if($this->$field !== NULL) {
+				break;
+			}
+			$cmd = $this->menu(array(
+				'head' => $field,
+				'headasprompt' => true,
+				'options' => array(
+					'e' => "Enter the file's command-line interface",
+					's' => "Save the file now",
+				),
+				'validfunction' => function() { return true; },
+				'process' => array(
+					'e' => function() use($file) {
+						$file->edit();
+						return true;
+					},
+					's' => function(&$cmd) {
+						$cmd = false;
+						return false;
+					},
+				),
+			));
+			if($cmd === false) {
+				return true;
+			}
+			$this->$key = $cmd;
+		}
+		return true;	
 	}
 
 	/*
@@ -235,5 +297,12 @@ abstract class SqlListEntry extends ListEntry {
 
 	protected function listproperties() {
 		return $this->fields();
+	}
+	
+	/*
+	 * Return the name of the parent class
+	 */
+	private static function parentClass() {
+		return get_called_class() . 'List';
 	}
 }

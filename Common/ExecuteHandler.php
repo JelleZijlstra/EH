@@ -54,6 +54,8 @@ class ExecuteHandler extends EHICore {
 		'test' => array('name' => 'test',
 			'desc' => 'Do something random',
 			'arg' => 'None'),
+		'menu' => array('name' => 'menu',
+			'desc' => 'Create a menu'),
 	);
 	/* Setting up the EH interface */
 	public function __construct($commands = array()) {
@@ -879,7 +881,11 @@ class ExecuteHandler extends EHICore {
 				'validfunction' =>
 					'Function to determine validity of command',
 				'process' =>
-					'Array of callbacks to execute when a given option is called',
+					'Array of callbacks to execute when a given option is'
+						. ' called. These function take no argument, and they'
+						. ' should return either true (indicating that menu'
+						. ' should continue) or false (indicating that menu'
+						. ' should return).',
 				'processcommand' =>
 					'Function used to process the command after input',
 			),
@@ -950,7 +956,9 @@ class ExecuteHandler extends EHICore {
 			// return command if valid
 			if($paras['validfunction']($cmd, $paras['options'])) {
 				if(array_key_exists($cmd, $paras['process'])) {
-					$paras['process'][$cmd]();
+					if(!$paras['process'][$cmd]()) {
+						return $cmd;
+					}
 				} else {
 					return $cmd;
 				}

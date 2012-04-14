@@ -1028,17 +1028,6 @@ class ExecuteHandler extends EHICore {
 		}
 		return ${$to}->cli();
 	}
-	static protected function testregex($in) {
-	// tests whether a regex pattern is valid
-		ob_start();
-		$t = @preg_match($in, 'test');
-		ob_end_clean();
-		// if regex was invalid, preg_match returned FALSE
-		if($t === false)
-			return false;
-		else
-			return true;
-	}
 	private function undo() {
 		$blacklist = array('tmp', 'commands', 'synonyms', 'p', 'props');
 		$vars = get_object_vars($this);

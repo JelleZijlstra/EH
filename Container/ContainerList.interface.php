@@ -527,7 +527,7 @@ abstract class ContainerList extends ExecuteHandler {
 				// test special syntax
 				if(strlen($para)) switch($para[0]) {
 					case '/':
-						if(!self::testregex($para)) {
+						if(!Sanitizer::testRegex($para)) {
 							$error('invalid regex: ' . $para);
 							continue 2;
 						}
@@ -567,7 +567,7 @@ abstract class ContainerList extends ExecuteHandler {
 					$query['func'] = true;
 					$query['content'] = $para;
 					if($para[0] === '/') {
-						if(!self::testregex($para)) {
+						if(!Sanitizer::testRegex($para)) {
 							$error('invalid regex: ' . $para);
 							continue;
 						}

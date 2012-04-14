@@ -60,9 +60,16 @@ abstract class SqlListEntry extends ListEntry {
 	}
 	
 	/*
-	 * Return all the fields of the object that are filled from the DB.
+	 * Return all the fields of the object that are filled from the DB, in the
+	 * form of an array of SqlProperty objects.
 	 */
 	abstract protected function fields();
+	
+	final protected function fieldsAsStrings() {
+		return array_map(function($in) {
+			return $in->name;
+		}, $fields);
+	}
 
 	/*
 	 * Getter: fills properties if necessary.
@@ -127,17 +134,18 @@ abstract class SqlListEntry extends ListEntry {
 		$file = $this;
 		echo 'Filling data manually for object' . PHP_EOL;
 		foreach($fields as $field) {
-			if($this->$field !== NULL) {
+			$fname = $field->name();
+			if($this->$fname !== NULL) {
 				break;
 			}
 			$cmd = $this->menu(array(
-				'head' => $field,
+				'head' => $fname,
 				'headasprompt' => true,
 				'options' => array(
 					'e' => "Enter the file's command-line interface",
 					's' => "Save the file now",
 				),
-				'validfunction' => function() { return true; },
+				'validfunction' => $field->getValidator(),
 				'process' => array(
 					'e' => function() use($file) {
 						$file->edit();
@@ -152,7 +160,7 @@ abstract class SqlListEntry extends ListEntry {
 			if($cmd === false) {
 				return true;
 			}
-			$this->$key = $cmd;
+			$this->$fname = $cmd;
 		}
 		return true;	
 	}
@@ -202,7 +210,7 @@ abstract class SqlListEntry extends ListEntry {
 	 * Set properties from an array.
 	 */
 	private /* bool */ function setProperties(array $in) {
-		$fields = $this->fields();
+		$fields = $this->fieldsAsStrings();
 		foreach($in as $key => $value) {
 			if(substr($key, -3, 3) === '_id') {
 				// Get the relevant names. We don't actually need to care about
@@ -218,8 +226,7 @@ abstract class SqlListEntry extends ListEntry {
 					$this->$name = NULL;
 				} else {
 					$className = ucfirst($name);
-					$containerClassName = $className . 'List';
-					$list = $containerClassName::singleton();
+					$list = $this->parentClass()::singleton();
 					$this->$name = $list->fromId($id);
 				}
 			} elseif($key === 'parent') {
@@ -263,8 +270,8 @@ abstract class SqlListEntry extends ListEntry {
 	public function toArray() {
 		$this->fillProperties();
 		$out = array();
-		foreach($this->fields() as $field) {
-			$out[$field] = $this->$field;
+		foreach($this->fieldsAsStrings() as $field) {
+			$out[$fname] = $this->$fieldsAsStrings;
 		}
 		return $out;
 	}
@@ -296,7 +303,7 @@ abstract class SqlListEntry extends ListEntry {
 	}
 
 	protected function listproperties() {
-		return $this->fields();
+		return $this->fieldsAsStrings();
 	}
 	
 	/*

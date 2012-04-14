@@ -25,7 +25,9 @@ class SqlProperty {
 	const INT = 0x1;
 	const STRING = 0x2;
 	const REFERENCE = 0x3; // a reference (id) to another object
+	const ID = 0x5; // identifier of this entry
 	const TIMESTAMP = 0x4;
+	const BOOL = 0x6;
 	private $type;
 	public function getType() {
 		return $this->type;
@@ -44,14 +46,6 @@ class SqlProperty {
 		} else {
 			throw new EHException('name not given in SqlProperty constructor');
 		}
-		if(isset($data['validator'])) {
-			$this->validator = $data['validator'];
-		} else {
-			// default validator accepts anything
-			$this->validator = function($in) {
-				return true;
-			};
-		}
 		if(isset($data['type'])) {
 			$this->type = $data['type'];
 		} else {
@@ -66,6 +60,36 @@ class SqlProperty {
 					'referredClass not specified for SqlProperty of type REFERENCE');
 			} else {
 				$this->referredClass = NULL;
+			}
+		}
+		if(isset($data['validator'])) {
+			$this->validator = $data['validator'];
+		} else {
+			// default validator accepts anything of the right type
+			switch($this->type) {
+				case self::INT:
+				case self::REFERENCE:
+				case self::ID:
+					$this->validator = function($in) {
+						return is_int($in) || preg_match('/^\d+$/', $in);
+					};
+					break;
+				case self::BOOL:
+					$this->validator = function($in) {
+						return is_bool($in);
+					};
+					break;
+				case self::STRING:
+					$this->validator = function($in) {
+						return is_string($in);
+					};
+					break;
+				case self::TIMESTAMP:
+					$this->validator = function($in) {
+						// TODO: check what MySQL actually returns here
+						return true;
+					};
+					break;
 			}
 		}
 	}

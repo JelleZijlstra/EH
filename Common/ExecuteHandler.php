@@ -58,20 +58,23 @@ class ExecuteHandler extends EHICore {
 			'desc' => 'Create a menu'),
 	);
 	/* Setting up the EH interface */
-	public function __construct($commands = array()) {
+	public function __construct(array $commands = array()) {
 		parent::__construct();
 		$this->setup_ExecuteHandler($commands);
 	}
-	public function setup_ExecuteHandler($commands = NULL) {
+	public function setup_ExecuteHandler(array $commands = array()) {
 	// sets up a handler.
 	// @param commands Array of commands to be added to the object's library
 		$this->current = array();
-		foreach(self::$ExecuteHandler_commands as $command)
+		foreach(self::$ExecuteHandler_commands as $command) {
 			$this->addcommand($command);
-		foreach(parent::$core_commands as $command)
+		}	
+		foreach(parent::$core_commands as $command) {
 			$this->addcommand($command);
-		if($commands) foreach($commands as $command)
+		}
+		foreach($commands as $command) {
 			$this->addcommand($command);
+		}
 	}
 	public function cli() { 
 	// sets up command line

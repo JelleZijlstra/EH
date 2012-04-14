@@ -174,6 +174,26 @@ class Article extends CsvListEntry {
 		// add additional data
 		$this->add();
 	}
+	/*
+	 * Factory methods.
+	 */
+	public static function makeEmpty(&$parent) {
+		return new self(NULL, 'e', $parent);
+	}
+	public static function makeNofile(/* string */ $name, &$parent) {
+		$obj = new self(NULL, 'e', $parent);
+		$obj->folder = 'NOFILE';
+		$obj->name = $name;
+		$obj->add();
+		return $obj;
+	}
+	public static function makeRedirect($name, $target) {
+		$obj = new self(NULL, 'e', $parent);
+		$obj->folder = 'SEE ' . $target;
+		$obj->name = $name;
+		$obj->setCurrentDate();
+		return $obj;
+	}
 	public function toArray() {
 		$out = array();
 		$out[] = $this->addmonth;

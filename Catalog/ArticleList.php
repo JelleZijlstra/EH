@@ -278,7 +278,7 @@ class ArticleList extends CsvContainerList {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		return $this->addEntry(
-			new Article($paras['handle'], 'n', $this),
+			Article::makeNofile($paras['handle'], $this),
 			array('isnew' => true)
 		);
 	}

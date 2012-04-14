@@ -130,6 +130,30 @@ statement:
 							{ $$ = eh_addnode(T_PLUSPLUS, 1, $2); }
 	| T_SET lvalue_set T_MINMIN T_SEPARATOR
 							{ $$ = eh_addnode(T_MINMIN, 1, $2); }
+		/* Using braces */
+	| T_IF expression '{' statement_list '}'
+							{ $$ = eh_addnode(T_IF, 2, $2, $4); }
+	| T_IF expression '{' statement_list '}' T_ELSE '{' statement_list '}'
+							{ $$ = eh_addnode(T_IF, 3, $2, $4, $8); }
+	| T_WHILE expression '{' statement_list '}'
+							{ $$ = eh_addnode(T_WHILE, 2, $2, $4); }
+	| T_FOR expression '{' statement_list '}'
+							{ $$ = eh_addnode(T_FOR, 2, $2, $4); }
+	| T_FOR expression T_COUNT bareword '{' statement_list '}'
+							{ $$ = eh_addnode(T_FOR, 3, $2, $4, $6); }
+	| T_FOR expression T_AS bareword '{' statement_list '}'
+							{ $$ = eh_addnode(T_AS, 3, $2, $4, $6); }
+	| T_FOR expression T_AS bareword T_DOUBLEARROW bareword '{' statement_list '}'
+							{ $$ = eh_addnode(T_AS, 4, $2, $4, $6, $8); }
+	| T_FUNC bareword ':' parglist '{' statement_list '}'
+							{ $$ = eh_addnode(T_SET, 2,
+								eh_addnode(T_LVALUE_SET, 1, $2),
+								eh_addnode(T_FUNC, 2, $4, $6)); }
+	| T_SWITCH expression '{' caselist '}'
+							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
+	| T_CLASS bareword '{' classlist '}'
+							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
+		/* Using T_END */
 	| T_IF expression T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = eh_addnode(T_IF, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_END T_SEPARATOR
@@ -144,6 +168,15 @@ statement:
 							{ $$ = eh_addnode(T_AS, 3, $2, $4, $6); }
 	| T_FOR expression T_AS bareword T_DOUBLEARROW bareword T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = eh_addnode(T_AS, 4, $2, $4, $6, $8); }
+	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
+							{ $$ = eh_addnode(T_SET, 2, 
+								eh_addnode(T_LVALUE_SET, 1, $2), 
+								eh_addnode(T_FUNC, 2, $4, $6)); }
+	| T_SWITCH expression T_SEPARATOR caselist T_END T_SEPARATOR
+							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
+	| T_CLASS bareword T_SEPARATOR classlist T_END T_SEPARATOR
+							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
+		/* Endif and endfor */
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
 							{ $$ = eh_addnode(T_IF, 2, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
@@ -154,22 +187,19 @@ statement:
 							{ $$ = eh_addnode(T_FOR, 2, $2, $4); }
 	| T_FOR expression T_COUNT bareword T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
 							{ $$ = eh_addnode(T_FOR, 3, $2, $4, $6); }
-	| T_CALL expression T_SEPARATOR
-							{ $$ = eh_addnode(T_CALL, 1, $2); }
-	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_SET, 2, 
-								eh_addnode(T_LVALUE_SET, 1, $2), 
-								eh_addnode(T_FUNC, 2, $4, $6)); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
 							{ $$ = eh_addnode(T_SET, 2,
 								eh_addnode(T_LVALUE_SET, 1, $2),
 								eh_addnode(T_FUNC, 2, $4, $6)); }
-	| T_RET expression T_SEPARATOR
-							{ $$ = eh_addnode(T_RET, 1, $2); }
-	| T_CLASS bareword T_SEPARATOR classlist T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
+	| T_SWITCH expression T_SEPARATOR caselist T_ENDSWITCH T_SEPARATOR
+							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
 	| T_CLASS bareword T_SEPARATOR classlist T_ENDCLASS T_SEPARATOR
 							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
+		/* Other statements */
+	| T_CALL expression T_SEPARATOR
+							{ $$ = eh_addnode(T_CALL, 1, $2); }
+	| T_RET expression T_SEPARATOR
+							{ $$ = eh_addnode(T_RET, 1, $2); }
 	| T_CONTINUE T_SEPARATOR
 							{ $$ = eh_addnode(T_CONTINUE, 0); }
 	| T_CONTINUE expression T_SEPARATOR
@@ -177,10 +207,6 @@ statement:
 	| T_BREAK T_SEPARATOR	{ $$ = eh_addnode(T_BREAK, 0); }
 	| T_BREAK expression T_SEPARATOR
 							{ $$ = eh_addnode(T_BREAK, 1, $2); }
-	| T_SWITCH expression T_SEPARATOR caselist T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
-	| T_SWITCH expression T_SEPARATOR caselist T_ENDSWITCH T_SEPARATOR
-							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
 	| command T_SEPARATOR	{ $$ = $1; }
 	| error T_SEPARATOR		{
 								yyerrok;
@@ -256,10 +282,14 @@ expression:
 	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
 	| T_COUNT expression	{ $$ = eh_addnode(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = eh_addnode(T_NEW, 1, $2); }
+	| T_FUNC ':' parglist '{' statement_list '}'
+							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
+	| T_GIVEN expression '{' exprcaselist '}'
+							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_DOLLARPAREN command ')'
@@ -327,6 +357,8 @@ simple_expr:
 	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
 	| T_COUNT simple_expr	{ $$ = eh_addnode(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = eh_addnode(T_NEW, 1, $2); }
+	| T_GIVEN expression '{' exprcaselist '}'
+							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_DOLLARPAREN command ')'
@@ -409,10 +441,14 @@ line_expr:
 	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
 	| T_COUNT expression	{ $$ = eh_addnode(T_COUNT, 1, $2); }
 	| T_NEW bareword		{ $$ = eh_addnode(T_NEW, 1, $2); }
+	| T_FUNC ':' parglist '{' statement_list '}'
+							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
+	| T_GIVEN expression '{' exprcaselist '}'
+							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_DOLLARPAREN command ')'
@@ -536,6 +572,7 @@ exprcase:
 classlist:
 	classmember T_SEPARATOR classlist
 							{ $$ = eh_addnode(',', 2, $1, $3); }
+	| T_SEPARATOR classlist	{ $$ = $2; }
 	| /* NULL */			{ $$ = 0; }
 	;
 
@@ -562,6 +599,9 @@ classmember:
 							}
 	| attributelist bareword '=' expression
 							{ $$ = eh_addnode(',', 3, $1, $2, $4); }
+	| attributelist bareword ':' parglist '{' statement_list '}'
+							{ $$ = eh_addnode(',', 3, $1, $2, 
+									eh_addnode(T_FUNC, 2, $4, $6)); }
 	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = eh_addnode(',', 3, $1, $2, 
 									eh_addnode(T_FUNC, 2, $4, $6)); }

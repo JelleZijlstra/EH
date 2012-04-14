@@ -87,23 +87,24 @@ class ExecuteHandler extends EHICore {
 	// - desc: String description of what the command does
 	// - arg: String description of the arguments the command takes
 		if(isset($this->commands[$command['name']])) {
-			if(!isset($paras['ignoreduplicates']))
-				trigger_error('Command ' . $command['name'] . ' already exists', E_USER_NOTICE);
-			return false;
+			throw new EHException(
+				'Command ' . $command['name'] . ' already exists'
+			);
 		}
-		if(!self::testcommand($command)) return false;
+		self::testcommand($command);
 		if(isset($command['aka'])) {
 			if(!is_array($command['aka'])) {
-				if(isset($this->synonyms[$command['aka']]))
-					trigger_error('Error: ' . $aka . ' already exists as a synonym for ' . $this->synonyms[$aka], E_USER_NOTICE);
-				else
-					$this->synonyms[$command['aka']] = $command['name'];
+				$command['aka'] = array($command['aka']);
 			}
-			else foreach($command['aka'] as $aka) {
-				if(isset($this->synonyms[$aka]))
-					trigger_error('Error: ' . $aka . ' already exists as a synonym for ' . $this->synonyms[$aka], E_USER_NOTICE);
-				else
+			foreach($command['aka'] as $aka) {
+				if(isset($this->synonyms[$aka])) {
+					throw new EHException(
+						$aka . ' already exists as a synonym for ' 
+						. $this->synonyms[$aka]
+					);
+				} else {
 					$this->synonyms[$aka] = $command['name'];
+				}
 			}
 		}
 		$this->commands[$command['name']] = $command;
@@ -113,12 +114,13 @@ class ExecuteHandler extends EHICore {
 		/* check and handle input */
 		// if we don't have those, little point in proceeding
 		if(!isset($command['name'])) {
-			trigger_error('No name given for new command', E_USER_NOTICE);
-			return false;
+			throw new EHException('No name given for new command');
 		}
 		// warn if no documentation
 		if(!isset($command['desc'])) {
-			trigger_error('No documentation given for new command ' . $command['name'], E_USER_NOTICE);
+			throw new EHException(
+				'No documentation given for new command ' . $command['name']
+			);
 		}
 		return true;
 	}
@@ -134,11 +136,7 @@ class ExecuteHandler extends EHICore {
 			echo "\t" . $from . ' -> ' . $to . PHP_EOL;
 	}
 	protected function hascommand($cmd) {
-		if(isset($this->commands[$cmd]))
-			return true;
-		if(isset($this->synonyms[$cmd]))
-			return true;
-		return false;
+		return isset($this->commands[$cmd]) || isset($this->synonyms[$cmd]);
 	}
 	public function execute_cmd($rawcmd, $paras) {
 		// for some reason, accessing rawcmd in ehi mode botches the variable. This works around that.
@@ -151,10 +149,11 @@ class ExecuteHandler extends EHICore {
 		$cmd = $this->expand_cmd($rawcmd2);
 		if(!$cmd) {
 			echo 'Invalid command: ' . $rawcmd2 . PHP_EOL;
-			if(defined('IS_EHPHP'))
+			if(defined('IS_EHPHP')) {
 				return NULL;
-			else
+			} else {
 				return self::EXECUTE_NEXT;
+			}
 		}
 		$redirection = array(
 			'>' => false,
@@ -172,8 +171,9 @@ class ExecuteHandler extends EHICore {
 		// handle shortcut
 		if(isset($paras[0]) and $paras[0] === '*') {
 			unset($paras[0]);
-			foreach($this->current as $file)
+			foreach($this->current as $file) {
 				$paras[] = $file;
+			}
 		}
 		// output redirection
 		if($redirection['>'] !== false or $redirection['>$'] !== false) {
@@ -201,10 +201,11 @@ class ExecuteHandler extends EHICore {
 		$this->setvar('ret', $ret);
 
 		// from here, return $ret if we're in ehphp, but EXECUTE_NEXT if we're in the pure-PHP implementation
-		if(defined('IS_EHPHP'))
+		if(defined('IS_EHPHP')) {
 			$returnvalue = $ret;
-		else
+		} else {
 			$returnvalue = self::EXECUTE_NEXT;
+		}
 		if($redirection['>'] !== false) {
 			$file = fopen($redirection['>'], 'w');
 			if(!$file) {
@@ -214,8 +215,7 @@ class ExecuteHandler extends EHICore {
 			}
 			fwrite($file, ob_get_contents());
 			ob_end_clean();
-		}
-		else if($redirection['>$'] !== false) {
+		} elseif($redirection['>$'] !== false) {
 			$this->setvar($redirection['>$'], ob_get_contents());
 			ob_end_clean();
 		}
@@ -238,7 +238,8 @@ class ExecuteHandler extends EHICore {
 		// search for commands
 		if(isset($this->synonyms[$in])) {
 			$in = $this->synonyms[$in];
-		} if(isset($this->commands[$in])) {
+		} 
+		if(isset($this->commands[$in])) {
 			return $this->commands[$in];
 		} else {
 			return false;

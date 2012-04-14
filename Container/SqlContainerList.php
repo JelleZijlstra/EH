@@ -16,6 +16,7 @@ require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/MySQL/Database.php');
 require_once(BPATH . '/Container/ContainerList.interface.php');
 require_once(BPATH . '/Container/SqlListEntry.php');
+require_once(BPATH . '/Container/SqlProperty.php');
 
 abstract class SqlContainerList extends ContainerList {
 	private $c = array();

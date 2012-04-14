@@ -1132,7 +1132,7 @@ class ExecuteHandler extends EHICore {
 				echo $cmd . PHP_EOL;
 			}
 			exec($cmd, $output, $exitval);
-			if($paras['printout']) {
+			if($paras['printout'] and count($output) > 0) {
 				echo implode(PHP_EOL, $output) . PHP_EOL;
 			}
 			switch($paras['return']) {

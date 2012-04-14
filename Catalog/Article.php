@@ -1827,7 +1827,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	public function get_citedoiurl($var = 'doi') {
 	// returns URL to Wikipedia cite doi-family template for this Article
 	// by default uses cite doi; by setting var to something else, jstor and a few others can be set
-		$url = 'http://en.wikipedia.org/w/index.php?action=edit&title=Template:Cite_';
+		$url = 'https://en.wikipedia.org/w/index.php?action=edit&title=Template:Cite_';
 		switch($var) {
 			case 'doi':
 				// TODO: need some encoding here

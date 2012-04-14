@@ -119,8 +119,6 @@ class ArticleList extends CsvContainerList {
 			'desc' => 'Test Article::findtitle_pdfcontent()\'s capabilities',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
-		'fillEnclosing' => array('name' => 'fillEnclosing',
-			'desc' => 'Fill the enclosing field of child entries'),
 	);
 	protected static $fileloc = CATALOG;
 	protected static $logfile = CATALOG_LOG;
@@ -892,17 +890,6 @@ class ArticleList extends CsvContainerList {
 	 */
 	protected function table() {
 		return 'article';
-	}
-	/*
-	 * Fill the Enclosing field of children.
-	 */
-	protected function fillEnclosing(array $paras) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'checklist' => array( /* No paras */ ),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$this->doall(array('fillEnclosing'));
-		return true;
 	}
 }
 class Suggester {

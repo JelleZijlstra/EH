@@ -49,7 +49,7 @@ class Article extends CsvListEntry {
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 		'echocite' => array('name' => 'echocite',
-			'aka' => array('c'),
+			'aka' => array('c', 'cite'),
 			'desc' => 'Get a citation for this file',
 			'arg' => 'Optionally, citation type to be used',
 			'execute' => 'callmethod'),
@@ -644,9 +644,9 @@ class Article extends CsvListEntry {
 					$obj->bookpages = $this->bookpages;
 					$this->bookpages = '';
 				} else {
-					if($this->bookpages !== $obj->location) {
+					if($this->bookpages !== $obj->bookpages) {
 						$this->warn('Bookpages for enclosing ("' .
-							$obj->location . '") is different from bookpages',
+							$obj->bookpages . '") is different from bookpages',
 							'bookpages');
 					} else {
 						$this->bookpages = '';

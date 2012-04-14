@@ -157,7 +157,7 @@ abstract class ListEntry extends ExecuteHandler {
 		} else {
 			$label = get_called_class();
 		}
-		$this->setup_commandline($label, array('undoable' => true));
+		$this->setup_commandline($label);
 	}
 
 	/*

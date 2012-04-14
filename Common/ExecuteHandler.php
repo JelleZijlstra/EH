@@ -1028,14 +1028,6 @@ class ExecuteHandler extends EHICore {
 		}
 		return ${$to}->cli();
 	}
-	private function undo() {
-		$blacklist = array('tmp', 'commands', 'synonyms', 'p', 'props');
-		$vars = get_object_vars($this);
-		foreach($vars as $key => $var) {
-			if(in_array($key, $blacklist)) continue;
-			$this->$key = $this->tmp->$key;
-		}
-	}
 	protected function configset(array $paras) {
 	// sets something in the $this->config array, which configures the EH instance
 		foreach($paras as $key => $value) {

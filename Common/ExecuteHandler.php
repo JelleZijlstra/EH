@@ -882,7 +882,8 @@ class ExecuteHandler extends EHICore {
 					'Function to determine validity of command',
 				'process' =>
 					'Array of callbacks to execute when a given option is'
-						. ' called. These function take no argument, and they'
+						. ' called. These function take the command given as a'
+						. ' reference argument, and they'
 						. ' should return either true (indicating that menu'
 						. ' should continue) or false (indicating that menu'
 						. ' should return).',
@@ -955,8 +956,8 @@ class ExecuteHandler extends EHICore {
 			}
 			// return command if valid
 			if($paras['validfunction']($cmd, $paras['options'])) {
-				if(array_key_exists($cmd, $paras['process'])) {
-					if(!$paras['process'][$cmd]()) {
+				if(isset($paras['process'][$cmd])) {
+					if($paras['process'][$cmd]($cmd) === false) {
 						return $cmd;
 					}
 				} else {

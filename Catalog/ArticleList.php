@@ -391,6 +391,7 @@ class ArticleList extends CsvContainerList {
 			} elseif($file->isfile() && !$file->isredirect()) {
 				echo PHP_EOL;
 				$cmd = $this->menu(array(
+					'head' => 'Could not find file ' . $file->name,
 					'options' => array(
 						'i' => 'give information about this file',
 						'l' => 'file has been renamed',
@@ -400,7 +401,6 @@ class ArticleList extends CsvContainerList {
 						'q' => 'quit the program',
 						'e' => 'edit the file',
 					),
-					'head' => 'Could not find file ' . $file->name,
 					'process' => array(
 						'i' => function() use($file) {
 							$file->inform();
@@ -408,26 +408,31 @@ class ArticleList extends CsvContainerList {
 						'e' => function() use($file) {
 							$file->edit();
 						},
+						'q' => function() {
+							throw new StopException('csvcheck');					
+						},
+						'm' => function(&$cmd) {
+							$cmd = true;
+							return false;
+						},
 					),
 				));
 				switch($cmd) {
-					case 'q': 
-						throw new StopException('csvcheck');
-					case 'm': 
-						return true;
 					case 'l': 
 						$file->effect_rename(array(
 							'elist' => $this->c,
 							'searchlist' => $this->lslist,
 						)); 
 						break;
-					case 's': 
-						break;
 					case 'r':
 						$file->log('Removed');
 						$this->needsave();
 						$this->removeEntry($file->name);
-						return true;
+						break;
+					case 's':
+						break;
+					default:
+						return $cmd;
 				}
 			}
 		}

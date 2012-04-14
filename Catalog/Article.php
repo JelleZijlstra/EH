@@ -2763,6 +2763,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 							'cmd' => 'open', 
 							'arg' => array($url),
 						));
+						return true;
+					},
+					'q' => function(&$cmd) {
+						$cmd = false;
+						return false;
 					},
 				),
 			));
@@ -2778,13 +2783,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$this->doi = trim($doi);
 						return $this->expanddoi();
 					}
-				case 'q':
-					return false;
 				case 'n':
 					break;
 				case 'r':
 					$this->adddata_return = true;
 					return false;
+				default:
+					return $cmd;
 			}
 		}
 	}
@@ -2841,6 +2846,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				'o' => function() use($that) {
 					// this is a hack, until we can actually use $this in an anonymous function
 					$that->openf();
+					return true;
 				},
 			),
 		));

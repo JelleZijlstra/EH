@@ -748,12 +748,15 @@ class Taxon extends CsvListEntry {
 				'process' => array(
 					'ic' => function() use($cite) {
 						$cite->inform();
+						return true;
 					},
 					'it' => function() use($taxon) {
 						$taxon->inform();
+						return true;
 					},
 					'o' => function() use($cite) {
 						$cite->openf();
+						return true;
 					}
 				),
 			));

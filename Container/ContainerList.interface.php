@@ -489,7 +489,7 @@ abstract class ContainerList extends ExecuteHandler {
 					foreach($in as $prop) {
 						if(!is_string($prop) or !$childclass::hasproperty($prop)) {
 							echo 'bfind: invalid printproperties entry: ';
-							self::printvar($prop);
+							Sanitizer::printVar($prop);
 							return false;
 						}
 					}

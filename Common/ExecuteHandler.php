@@ -277,20 +277,6 @@ class ExecuteHandler extends EHICore {
 			return false;
 		}
 	}
-	static protected function printvar($in) {
-		// print a variable in human-readable form.
-		if($in === true) {
-			echo '(true)';
-		} elseif($in === false) {
-			echo '(false)';
-		} elseif($in === NULL) {
-			echo '(null)';
-		} elseif($in === '') {
-			echo '(empty string)';
-		} else {
-			print_r($in);
-		}
-	}
 	private function debugecho($var) {
 	// For debugging: adds output to a log file. Useful when debugging methods like fgetc()
 		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
@@ -388,7 +374,7 @@ class ExecuteHandler extends EHICore {
 				echo $description . PHP_EOL;
 				if(isset($pp_paras['default'][$name])) {
 					echo 'Default: ';
-					self::printvar($pp_paras['default'][$name]);
+					Sanitizer::printVar($pp_paras['default'][$name]);
 					echo PHP_EOL;
 				}
 				if(isset($pp_paras['errorifempty']) and in_array($name, $pp_paras['errorifempty'], true)) {

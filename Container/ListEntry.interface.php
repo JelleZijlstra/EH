@@ -98,7 +98,7 @@ abstract class ListEntry extends ExecuteHandler {
 				}
 			} elseif($value !== '' && $value !== NULL) {
 				echo $key . ': ';
-				self::printvar($value);
+				Sanitizer::printVar($value);
 				echo PHP_EOL;
 			}
 		}

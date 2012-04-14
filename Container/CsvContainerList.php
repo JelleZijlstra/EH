@@ -347,7 +347,7 @@ abstract class CsvContainerList extends ContainerList {
 			if($paras['printproperties']) {
 				foreach($paras['printproperties'] as $prop) {
 					echo $prop . ': ';
-					self::printvar($file->$prop);
+					Sanitizer::printVar($file->$prop);
 					echo PHP_EOL;
 				}
 			}

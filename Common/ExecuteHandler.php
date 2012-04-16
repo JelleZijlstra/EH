@@ -851,7 +851,7 @@ class ExecuteHandler extends EHICore {
 		exec($cmd, $output, $return);
 		return implode("\n", $output);
 	}
-	protected function menu(array $paras) {
+	public function menu(array $paras) {
 	// Function that creates a menu and gets input
 		if(!$this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -878,7 +878,10 @@ class ExecuteHandler extends EHICore {
 						. ' should continue) or false (indicating that menu'
 						. ' should return).',
 				'processcommand' =>
-					'Function used to process the command after input',
+					'Function used to process the command after input. This'
+						. ' function may take a second reference  argument of'
+						. ' data that is given to processcommand or to the'
+						. ' caller.',
 			),
 			'default' => array(
 				'head' => 'MENU',
@@ -917,6 +920,7 @@ class ExecuteHandler extends EHICore {
 		while(true) {
 			// get command
 			$cmd = $this->getline($getlineparas);
+			$data = NULL;
 			if($cmd === false) {
 				return false;
 			}
@@ -942,20 +946,27 @@ class ExecuteHandler extends EHICore {
 				}
 			}
 			if($paras['processcommand']) {
-				$cmd = $paras['processcommand']($cmd);
+				$cmd = $paras['processcommand']($cmd, $data);
 			}
 			// return command if valid
-			if($paras['validfunction']($cmd, $paras['options'])) {
+			if($cmd !== false && array_key_exists($cmd, $paras['options']) 
+				&& $paras['validfunction']($cmd, $paras['options'])) {
 				if(isset($paras['process'][$cmd])) {
-					if($paras['process'][$cmd]($cmd) === false) {
-						return $cmd;
+					if($paras['process'][$cmd]($cmd, $data) === false) {
+						break;
 					}
 				} else {
-					return $cmd;
+					break;
 				}
 			} else {
 				echo 'Invalid value ' . $cmd . PHP_EOL;
 			}
+			$getlineparas['lines'][] = $cmd;
+		}
+		if($data === NULL) {
+			return $cmd;
+		} else {
+			return array($cmd, $data);
 		}
 	}
 	/*
@@ -1018,12 +1029,11 @@ class ExecuteHandler extends EHICore {
 			'errorifempty' => array('to'),
 		))) return false;
 		$to = $paras['to'];
-		global ${$to};
-		if(!is_object(${$to}) or !method_exists(${$to}, 'cli')) {
+		if(!class_exists($to) or !is_subclass_of($to, 'ContainerList')) {
 			echo 'No such variable or CLI' . PHP_EOL;
 			return false;
 		}
-		return ${$to}->cli();
+		return $to::singleton()->cli();
 	}
 	protected function configset(array $paras) {
 	// sets something in the $this->config array, which configures the EH instance

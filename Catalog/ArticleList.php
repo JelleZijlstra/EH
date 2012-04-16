@@ -571,62 +571,87 @@ class ArticleList extends CsvContainerList {
 		}
 	}
 	private function dups_core($files) {
-		echo 'Command syntax: ' . PHP_EOL .
-		'e <file>: edits file <file>' . PHP_EOL .
-		'm <file>: moves file <file>' . PHP_EOL .
-		'r <file>: removes file <file>' . PHP_EOL .
-		's: quit this duplicate set' . PHP_EOL .
-		'q: quit this function' . PHP_EOL .
-		'o: open the files' . PHP_EOL;
-		'i: give information about the files' . PHP_EOL;
-		$history = array();
-		while(true) {
-			$fileName = '';
-			$in = $this->getline(array(
-				'lines' => $history,
-				'prompt' => 'dups_core> ',
-			));
-			$history[] = $in;
-			if(strlen($in) > 2) {
-				$fileName = substr($in, 2);
-				if($this->has($file)) {
-					$fileName = $this->get($fileName)->resolve_redirect();
-				} else {
-					$fileName = false;
+		return $this->menu(array(
+			'head' => 'dups> ',
+			'headasprompt' => true,
+			'processcommand' => function(&$cmd, &$data) {
+				if(strlen($cmd) > 2) {
+					$data = array();
+					$fileName = substr($cmd, 2);
+					$list = ArticleList::singleton();
+					if($list->has($fileName)) {
+						$fileName = $list->get($fileName)->resolve_redirect();
+					}
+					// if there is no file or the redirect is broken
+					if($fileName === false) {
+						return false;
+					}
+					$file = $list->get($fileName);
+					$data['fileName'] = $fileName;
+					$data['file'] = $file;
+					$cmd = substr($cmd, 0, 1);
 				}
-				// if there is no file or the redirect is broken
-				if($fileName === false) {
-					echo 'File does not exist' . PHP_EOL;
-					continue;
+				if($cmd === 'e' || $cmd === 'm' || $cmd === 'r') {
+					if($data === NULL) {
+						return false;
+					}
 				}
-			}
-			$file = $this->get($fileName);
-			switch($in[0]) {
-				case 'e':
-					$file->edit();
-					break;
-				case 'm':
-					$newname = $this->getline(array(
-						'prompt' => 'New name of file: '
+				return $cmd;
+			},
+			'options' => array(
+				'e' => 'Edit file <file>',
+				'm' => 'Move file <file>',
+				'r' => 'Remove file <file>',
+				's' => 'Quit this duplicate set',
+				'q' => 'Quit this function',
+				'o' => 'Open the files',
+				'i' => 'Give information about the files',
+			),
+			'process' => array(
+				'e' => function($cmd, $data) {
+					$data['file']->edit();
+					return true;
+				},
+				'm' => function($cmd, $data) {
+					$newname = ArticleList::singleton()->menu(array(
+						'head' => 'New name of file: ',
+						'options' => array('q' => 'Quit'),
+						'validfunc' => function($in) {
+							return !ArticleList::singleton()->has($in);
+						},
+						'process' => array(
+							'q' => function(&$cmd) { 
+								$cmd = false; 
+								return false; 
+							},
+						),
 					));
-					if($newname === 'q') break;
-					$file->move($newname);
-					$this->needsave();
-					break;
-				case 'o':
-					foreach($files as $fileo)
-						$fileo->openf();
-					break;
-				case 'i':
-					foreach($files as $fileo)
-						$fileo->inform();
-					break;
-				case 'r':
-					$file->remove();
+					if($newname === false) {
+						break;
+					}
+					$data['file']->move($newname);
+					ArticleList::singleton()->needsave();				
+					return true;
+				},
+				'o' => function() use($files) {
+					foreach($files as $file) {
+						$file->openf();
+					}
+					return true;
+				},
+				'i' => function() use($files) {
+					foreach($files as $file) {
+						$file->inform();
+					}
+					return true;
+				},
+				'r' => function($cmd, $data) use($files) {
+					$data['file']->remove();
+					$list = ArticleList::singleton();
 					// add redirect from old file
 					$targets = array();
-					foreach($files as $fileo) {
-						if($fileo->name and ($fileo->name !== $file)) {
+					foreach($files as $file) {
+						if($file->name and ($file->name !== $data['file'])) {
 							$targets[] = $fileo->name;
 						}
 					}
@@ -638,22 +663,27 @@ class ArticleList extends CsvContainerList {
 						foreach($targets as $target) {
 							echo '- ' . $target . PHP_EOL;
 						}
-						$target = $this->menu(array(
+						$target = $list->menu(array(
 							'head' => 'Type the redirect target below',
 							'options' => array('q' => 'Quit this file'),
 						));
 						if($target === 'q') break;
 					}
-					$this->addEntry(
-						new Article(array($file, $target), 'r', $this)
+					$list->addEntry(
+						new Article(array($fileName, $target), 'r', $list)
 					);
-					break;
-				case 's':
 					return true;
-				case 'q':
+				},
+				's' => function(&$cmd) {
+					$cmd = true;
 					return false;
-			}
-		}
+				},
+				'q' => function(&$cmd) {
+					$cmd = false;
+					return false;
+				}
+			),
+		));
 	}
 	public function stats(array $paras = array()) {
 		if($this->process_paras($paras, array(

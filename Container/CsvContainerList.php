@@ -107,9 +107,8 @@ abstract class CsvContainerList extends ContainerList {
 	// If $field === true, resolves redirects.
 		if($this->has($file)) {
 			return $this->c[$file];
-		}
-		else {
-			echo 'Invalid file: ' . $file . PHP_EOL;
+		} else {
+			throw new EHException('Invalid file: ' . $file);
 			return false;
 		}
 	}

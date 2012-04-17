@@ -33,11 +33,6 @@ abstract class CsvListEntry extends ListEntry {
 	}
 	/* OVERLOADING */
 	public function __set($property, $value) {
-		if($property === 'p') {
-			global ${static::$parentlist};
-			if(${static::$parentlist})
-				$this->p = ${static::$parentlist};
-		}
 		$arr = static::findarray($property);
 		if($arr and $arr !== 'props')
 			$this->{$arr}[$property] = $value;

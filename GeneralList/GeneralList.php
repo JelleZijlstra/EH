@@ -4,7 +4,7 @@
  */
 require_once(__DIR__ . '/../Common/common.php');
 define('GLISTREPO', BPATH . '/GeneralList');
-require_once(BPATH . '/GeneralList/ExecuteHandler.php');
+require_once(BPATH . '/Common/ExecuteHandler.php');
 class GeneralList extends ExecuteHandler {
 	static private $switches = array('bool', 'json', 'serialize', 'normal');
 	static $GeneralList_commands = array(
@@ -74,8 +74,7 @@ class GeneralList extends ExecuteHandler {
 		if(!$outload) return false;
 		fwrite($outload, "<?php
 require_once(__DIR__ . '/../Common/common.php');
-define('GLISTREPO', BPATH . '/GeneralList');
-require_once(GLISTREPO . '/$classname.php');
+require_once(BPATH . '/GeneralList/$classname.php');
 \${$classname}List = new {$classname}List();
 \${$classname}List->cli();
 ");
@@ -83,7 +82,7 @@ require_once(GLISTREPO . '/$classname.php');
 		$classfile = GLISTREPO . '/' . $classname . '.php';
 		$outclass = fopen($classfile, 'w');
 		if(!$outclass) return false;
-		$realpath = realpath($file);
+		$realpath = realpath($paras['file']);
 		fwrite($outclass, "<?php
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Container/CsvContainerList.php');

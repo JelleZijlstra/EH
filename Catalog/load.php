@@ -13,4 +13,6 @@ require_once(BPATH . '/Catalog/settings.php');
 require_once(BPATH . '/Catalog/Article.php');
 require_once(BPATH . '/Catalog/ArticleList.php');
 require_once(BPATH . '/Parse/parser.php');
+// Without this line, switchcli doesn't work. Don't ask me why.
+$csvlist = NULL;
 $csvlist = ArticleList::singleton();

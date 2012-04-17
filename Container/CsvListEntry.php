@@ -9,7 +9,6 @@ require_once(BPATH . '/Container/ListEntry.interface.php');
  * from a CSV file, as well as editing its properties at runtime.
  */
 abstract class CsvListEntry extends ListEntry {
-	protected static $parentlist;
 	protected static $arrays_to_check;
 	protected $props; // properties that are not otherwise specified
 	protected static $CsvListEntry_commands = array(

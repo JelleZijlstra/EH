@@ -337,7 +337,10 @@ abstract class ContainerList extends ExecuteHandler {
 		$childclass = static::$childclass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
-			'synonyms' => array(0 => 'field'),
+			'synonyms' => array(
+				0 => 'field',
+				'p' => 'print',
+			),
 			'checklist' => array(
 				'field' => 'Field to separate by',
 				'sort' => 'Sort function to be applied to results',
@@ -374,8 +377,7 @@ abstract class ContainerList extends ExecuteHandler {
 							echo 'No such method: ' . $in . PHP_EOL;
 							return false;
 						}
-					}
-					else if(!$childclass::haspm($in)) {
+					} elseif(!$childclass::haspm($in)) {
 						echo 'No such property or method: ' . $in . PHP_EOL;
 						return false;
 					}

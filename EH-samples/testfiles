@@ -112,3 +112,4 @@ scope.eh
 recurse.eh
 usearg.eh
 braces.eh
+segfaults.eh

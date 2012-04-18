@@ -14,5 +14,5 @@ ehi core:
 - Make the math operators less happy to cast anything to an integer. `printvar: 
   1.0 / 3` should be (@float 0.3333), not (@int 0). In PHP even 1/3 becomes a 
   float, but I'd prefer to keep integer division, and I don't want to implement 
-  the magic that enables them to have 4/2 == 2, but 5/2 == 2.5.
+  the magic that enables them to have 4/2 === 2, but 5/2 === 2.5.
 - Enable something like `arr->$primaryindex->$secondaryindex := 5`

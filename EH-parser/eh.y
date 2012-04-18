@@ -78,7 +78,7 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
 %right '@'
-%right <aValue> T_ACCESSOR
+%left <aValue> T_ACCESSOR
 %nonassoc T_RANGE
 %nonassoc '$' T_REFERENCE '~' '!' T_NEGATIVE T_COUNT
 %nonassoc T_NEW

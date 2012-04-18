@@ -113,3 +113,4 @@ recurse.eh
 usearg.eh
 braces.eh
 segfaults.eh
+chained_accessors.eh

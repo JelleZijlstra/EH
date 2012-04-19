@@ -1,7 +1,6 @@
 #!/usr/bin/php
 <?php
 require_once(__DIR__ . "/../Common/common.php");
-require_once(BPATH . '/Common/ExecuteHandler.php');
 array_shift($argv);
 $arg = implode(' ', $argv);
 if($arg === '') {

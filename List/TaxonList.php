@@ -1,4 +1,6 @@
 <?
+require_once(AutoLoader::$BPATH . '/List/load.php');
+
 class TaxonList extends CsvContainerList {
 	public $extantonly; // whether output includes extinct species
 	public $par; // array of arrays that list the children for each parent

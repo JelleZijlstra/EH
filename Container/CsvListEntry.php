@@ -1,5 +1,4 @@
 <?php
-require_once(BPATH . '/Container/ListEntry.interface.php');
 /*
  * CsvListEntry.php
  *

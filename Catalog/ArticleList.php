@@ -1,4 +1,6 @@
 <?php
+require_once(BPATH . '/Catalog/load.php');
+
 class ArticleList extends CsvContainerList {
 	public $citetype; // default citation type
 	public $verbosecite; // whether citation functions need to be verbose

@@ -12,9 +12,6 @@
  * bfind method to query the list for children satisfying particular criteria.
  */
 require_once(__DIR__ . '/../Common/common.php');
-require_once(BPATH . '/Common/ExecuteHandler.php');
-require_once(BPATH . '/Container/ContainerList.interface.php');
-require_once(BPATH . '/Container/CsvListEntry.php');
 abstract class CsvContainerList extends ContainerList {
 // this is an abstract class for classes that implement lists of entries, whether references or taxa.
 	/*

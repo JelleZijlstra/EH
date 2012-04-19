@@ -17,7 +17,7 @@ define('BPATH', __DIR__ . '/..');
 error_reporting(E_ALL | E_STRICT);
 ini_set("display_errors", '1');
 
-require_once(BPATH . '/Common/Sanitizer.php');
+require_once(BPATH . '/Common/AutoLoader.php');
 // load interface
 require_once(BPATH . '/Common/EHICore.interface.php');
 // try to get the C++ EHI loaded

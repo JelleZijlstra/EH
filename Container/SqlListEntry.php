@@ -3,8 +3,6 @@
  * SqlListEntry.php
  * Defines a class for objects representing database rows
  */
-require_once(BPATH . '/Container/ListEntry.interface.php');
-
 abstract class SqlListEntry extends ListEntry {
 	const CONSTR_ID = 0;
 	const CONSTR_NAME = 1;
@@ -226,7 +224,8 @@ abstract class SqlListEntry extends ListEntry {
 					$this->$name = NULL;
 				} else {
 					$className = ucfirst($name);
-					$list = $this->parentClass()::singleton();
+					$parentClass = $this->parentClass();
+					$list = $parentClass::singleton();
 					$this->$name = $list->fromId($id);
 				}
 			} elseif($key === 'parent') {

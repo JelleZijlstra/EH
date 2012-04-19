@@ -7,14 +7,6 @@
 require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Container/CsvContainerList.php');
 require_once(BPATH . '/UcuchaBot/Snoopy.class.php');
-function getbot($paras = array()) {
-	if(isset($paras['new']) and $paras['new'] === true)
-		return new Bot();
-	global $bot;
-	if(!$bot)
-		$bot = new Bot();
-	return $bot;
-}
 class Bot extends Snoopy {
 	// debug level
 	private $botdebug = 0;
@@ -91,6 +83,13 @@ class Bot extends Snoopy {
 	}
 	public function cli() {
 		$this->setup_commandline('Bot');
+	}
+	public static function singleton() {
+		static $instance = NULL;
+		if($instance === NULL) {
+			$instance = new self();
+		}
+		return $instance;	
 	}
 	/* Bot library */
 	private function login() {
@@ -577,11 +576,9 @@ class Bot extends Snoopy {
 		$this->setup_facs();
 		$this->do_wikicup_notice();
 		$this->do_move_marker();
-		global $FacsList;
-		$FacsList->saveIfNeeded();
+		FacsList::singleton()->saveIfNeeded();
 	}
 	public function do_wikicup_notice() {
-		global $FacsList;
 		echo 'Checking for WikiCup participants... ';
 		// get WP:CUP and list of Cup participants
 		$date = new DateTime();
@@ -607,7 +604,7 @@ class Bot extends Snoopy {
 			return false;
 		}
 		// get FACs we need to check
-		$tocheck = $FacsList->bfind(array(
+		$tocheck = FacsList::singleton()->bfind(array(
 			'checkedcup' => '/^$/',
 			'quiet' => true,
 		));
@@ -639,17 +636,16 @@ class Bot extends Snoopy {
 		return true;
 	}
 	public function do_move_marker() {
-		global $FacsList;
 		$dt = new DateTime('-14 days');
 		$date = $dt->format('Ymd');
 		// get FAC that older noms needs to be above
-		$oldfacs = $FacsList->bfind(array(
+		$oldfacs = FacsList::singleton()->bfind(array(
 			'date' => '<' . $date,
 			'archived' => false,
 			'quiet' => true,
 		));
 		if(!is_array($oldfacs) or count($oldfacs) === 0) return false;
-		$newlocobj = $FacsList->largest($oldfacs, 'id', array('return' => 'object'));
+		$newlocobj = FacsList::singleton()->largest($oldfacs, 'id', array('return' => 'object'));
 		$newloc = $newlocobj->name;
 		// TODO
 		$fac = $this->fetchwp(array(FacsList::fac));
@@ -756,9 +752,7 @@ class Bot extends Snoopy {
 		$text = preg_replace('/==\s*Kept status\s*==.*(?=$|==\s*Removed status\s*==)/su', '', $text);
 		$tparas['FAs demoted'] = preg_match_all('/\{\{Wikipedia:Featured article review\//u', $text, $matches);
 		// Current FACs
-		global $FacsList;
-		if(!$FacsList) $this->setup_facs();
-		$tparas['current FACs'] = $FacsList->bfind(array(
+		$tparas['current FACs'] = FacsList::singleton()->bfind(array(
 			'archived' => '/^$/',
 			'return' => 'count',
 			'quiet' => true,
@@ -854,12 +848,7 @@ class Bot extends Snoopy {
 		return $newpage;
 	}
 	protected function setup_facs() {
-		global $FacsList;
-		if(!class_exists('FacsList') or !$FacsList instanceof FacsList) {
-			require_once(BPATH . '/UcuchaBot/Facs.php');
-			$FacsList = new FacsList();
-			$FacsList->update();
-		}
+		FacsList::singleton()->update();
 	}
 	public function set_debug(array $paras) {
 		if($this->process_paras($paras, array(

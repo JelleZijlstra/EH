@@ -221,9 +221,9 @@ class TaxonList extends CsvContainerList {
 	}
 	static public function wikipublish() {
 		require_once(BPATH . '/UcuchaBot/Bot.php');
-		$bot = getbot();
+		$bot = Bot::singleton();
 		// get pagename
-		foreach(glob(BPATH. "/List/data/*.mw") as $file) {
+		foreach(glob(BPATH . "/List/data/*.mw") as $file) {
 			$filename = preg_replace("/.*\//u", "", $file);
 			if($filename === 'list.mw')
 				$pagename = 'User:Ucucha/List_of_mammals';

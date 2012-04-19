@@ -12,7 +12,7 @@ class FacsList extends CsvContainerList {
 	public function __construct() {
 		self::$fileloc = BPATH . '/UcuchaBot/data/facs.csv';
 		parent::__construct(self::$FacsList_commands);
-		$this->bot = getbot();
+		$this->bot = Bot::singleton();
 	}
 	public function cli() {
 		$this->setup_commandline('Facs');
@@ -59,7 +59,7 @@ class FacsList extends CsvContainerList {
 				$paras['isnew'] = true;
 				$paras['date'] = $facdate;
 				$paras['id'] = ++$lastid;
-				if(!$this->addEntry(new FacsEntry($paras, 'n'))) {
+				if(!$this->addEntry(new FacsEntry($paras, 'n', $this))) {
 					echo 'Error adding entry ' . $fac . PHP_EOL;
 					continue;
 				}
@@ -102,9 +102,8 @@ class FacsEntry extends CsvListEntry {
 	public function cli(array $paras = array()) {
 		$this->setup_commandline($this->name);
 	}
-	public function __construct($in = '', $code = '') {
-		global ${self::$parentlist};
-		if(!${self::$parentlist}) $this->p = ${self::$parentlist};
+	public function __construct($in, $code, &$parent) {
+		$this->p =& $parent;
 		switch($code) {
 			case 'f': // loading from file (only one implemented by GeneralList)
 				$this->name = $in[0];

@@ -48,7 +48,7 @@ abstract class ContainerList extends ExecuteHandler {
 	 *
 	 * Constructor will also pre-populate the list of children.
 	 */
-	public function __construct(array $commands = array()) {
+	protected function __construct(array $commands = array()) {
 		parent::__construct(array_merge(self::$ContainerList_commands, $commands));
 	}
 

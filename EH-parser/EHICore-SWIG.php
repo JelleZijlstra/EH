@@ -14,7 +14,7 @@ abstract class EHICore extends EHI implements EHICoreInterface {
 	protected static $core_commands = array(
 
 	);
-	public function __construct() {
+	protected function __construct() {
 		parent::__construct();
 	}
 	public function setup_commandline($name, array $paras = array()) {

@@ -126,7 +126,7 @@ class ArticleList extends CsvContainerList {
 	protected static $logfile = CATALOG_LOG;
 	protected static $childclass = 'Article';
 	/* core utils */
-	public function __construct(array $commands = array()) {
+	protected function __construct(array $commands = array()) {
 		parent::__construct(self::$ArticleList_commands);
 		// set some stuff initially
 		$this->citetype = 'wp';

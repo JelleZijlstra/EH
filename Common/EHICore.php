@@ -133,7 +133,7 @@ abstract class EHICore implements EHICoreInterface {
 			'desc' => 'Includes a global variable',
 			),
 	);
-	public function __construct() {
+	protected function __construct() {
 		return;
 	}
 	public function setvar($var, $value) {

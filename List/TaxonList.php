@@ -51,7 +51,7 @@ class TaxonList extends CsvContainerList {
 		'getChildren' => array('name' => 'getChildren',
 			'desc' => 'Return an array of a taxon\'s children'),
 	);
-	function __construct() {
+	protected function __construct() {
 		parent::__construct(self::$TaxonList_commands);
 		// initial settings
 		$this->extantonly = true;

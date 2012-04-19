@@ -58,7 +58,7 @@ class ExecuteHandler extends EHICore {
 			'desc' => 'Create a menu'),
 	);
 	/* Setting up the EH interface */
-	public function __construct(array $commands = array()) {
+	protected function __construct(array $commands = array()) {
 		parent::__construct();
 		$this->setup_ExecuteHandler($commands);
 	}

@@ -36,7 +36,7 @@ abstract class CsvContainerList extends ContainerList {
 		'backup' => array('name' => 'backup',
 			'desc' => 'Save a backup of the catalog'),
 	);
-	public function __construct(array $commands = array()) {
+	protected function __construct(array $commands = array()) {
 		echo "processing CSV catalog... ";
 		$cat = fopen(static::$fileloc, "r");
 		if($cat === false) {

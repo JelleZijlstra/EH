@@ -1751,6 +1751,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$add('address', $this->location);
 				break;
 		}
+		if($this->isbn) {
+			$add('note', '{ISBN} ' . $this->isbn);
+		}
 		$out .= '}';
 		return $out;
 	}

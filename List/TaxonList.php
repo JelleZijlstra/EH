@@ -261,7 +261,7 @@ class TaxonList extends CsvContainerList {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		return $this->addEntry(
-			new Taxon($paras, 'n'),
+			new Taxon($paras, 'n', $this),
 			array('isnew' => true)
 		);
 	}

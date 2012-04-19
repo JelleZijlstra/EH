@@ -42,7 +42,7 @@ class ExecuteHandler extends EHICore {
 			'desc' => 'Set a configuration variable',
 			'arg' => 'Variables to be set'),
 		'switchcli' => array('name' => 'switchcli',
-			'aka' => array('switch'),
+			'aka' => array('switch', 'cli'),
 			'desc' => 'Switch to a different command line',
 			'arg' => 'Name of command line to switch to'),
 		'print_paras' => array('name' => 'print_paras',
@@ -1027,13 +1027,19 @@ class ExecuteHandler extends EHICore {
 			'synonyms' => array(0 => 'to'),
 			'checklist' => array('to' => 'CLI to switch to'),
 			'errorifempty' => array('to'),
+			'checkparas' => array(
+				'to' => function($to) {
+					// return false if class fails to load
+					try {
+						return (class_exists($to) 
+							&& is_subclass_of($to, 'ContainerList'));
+					} catch(EHException $e) {
+						return false;
+					}
+				}
+			),
 		))) return false;
-		$to = $paras['to'];
-		if(!class_exists($to) or !is_subclass_of($to, 'ContainerList')) {
-			echo 'No such variable or CLI' . PHP_EOL;
-			return false;
-		}
-		return $to::singleton()->cli();
+		return $paras['to']::singleton()->cli();
 	}
 	protected function configset(array $paras) {
 	// sets something in the $this->config array, which configures the EH instance

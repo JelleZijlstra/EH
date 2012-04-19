@@ -533,6 +533,7 @@ abstract class CsvContainerList extends ContainerList {
 		}
 		// only include things where the field is actually numeric
 		$paras[$gs_paras['field']] = '/^\s*\d+(\.\d+)?\s*$/';
+		$paras['return'] = 'objectarray';
 		// perform search
 		$files = $this->bfind($paras);
 		if(!$files) {

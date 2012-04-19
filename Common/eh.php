@@ -9,18 +9,20 @@ class EH extends ExecuteHandler {
 		}
 		return $instance;
 	}
+	public static function run($argv) {
+		array_shift($argv);
+		$arg = implode(' ', $argv);
+		if($arg === '') {
+			echo "Usage: eh <file>" . PHP_EOL;
+			exit(1);
+		}
+		$fe = EH::singleton();
+		if($arg === '-i') {
+			$fe->cli();
+		} else {
+			$fe->exec_file($arg);
+		}
+		exit(0);
+	}
 }
-
-array_shift($argv);
-$arg = implode(' ', $argv);
-if($arg === '') {
-	echo "Usage: eh <file>" . PHP_EOL;
-	exit(1);
-}
-$fe = EH::singleton();
-if($arg === '-i') {
-	$fe->cli();
-} else {
-	$fe->exec_file($arg);
-}
-exit(0);
+EH::run($argv);

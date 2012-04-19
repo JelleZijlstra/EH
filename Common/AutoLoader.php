@@ -64,7 +64,7 @@ abstract class AutoLoader {
 			require_once(self::$BPATH . self::$locations[$class]);
 			return true;
 		} else {
-			return false;
+			throw new EHException("Could not load class " . $class);
 		}
 	}
 }

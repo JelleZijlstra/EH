@@ -56,6 +56,21 @@ abstract class SqlListEntry extends ListEntry {
 			return $obj;
 		}
 	}
+
+	/*
+	 * Either return the object with name $name or create a new object.
+	 */
+	public static function withId(/* int */ $id) {
+		$parent = static::parentClass();
+		$parentObj = $parent::singleton();
+		if($parentObj->hasIdInMemory($id)) {
+			return $parentObj->get($name);
+		} else {
+			$obj = new static($id, self::CONSTR_ID, $parentObj);
+			$parentObj->addEntry($obj);
+			return $obj;
+		}
+	}
 	
 	/*
 	 * Return all the fields of the object that are filled from the DB, in the
@@ -240,6 +255,38 @@ abstract class SqlListEntry extends ListEntry {
 					throw new EHException('Invalid data key ' . $key);
 				}
 				$this->$key = $value;
+			}
+		}
+		return true;
+	}
+
+	/*
+	 * Set properties from an array returned by the database.
+	 */
+	private /* bool */ function setPropertiesFromSql(array $in) {
+		$fields = $this->fields();
+		foreach($fields as $field) {
+			$name = $field->getName();
+			switch($field->getType()) {
+				case SqlProperty::INT:
+				case SqlProperty::TIMESTAMP:
+				case SqlProperty::STRING:
+					$this->$name = $in[$name];
+					break;
+				case SqlProperty::BOOL:
+					$this->$name = (bool) $in[$name];
+					break;
+				case SqlProperty::REFERENCE:
+					$referredClass = $field->getReferredClass();
+					$this->$name = $referredClass::fromId($in[$name . '_id']);
+					break;
+				case SqlProperty::ID:
+					$this->id = $in['id'];
+					break;
+				case SqlProperty::CUSTOM:
+					$creator = $field->getCreator();
+					$this->$name = $creator($this->id);
+					break;
 			}
 		}
 		return true;

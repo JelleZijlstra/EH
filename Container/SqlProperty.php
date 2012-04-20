@@ -28,6 +28,7 @@ class SqlProperty {
 	const ID = 0x5; // identifier of this entry
 	const TIMESTAMP = 0x4;
 	const BOOL = 0x6;
+	const CUSTOM = 0x7; // custom type
 	private $type;
 	public function getType() {
 		return $this->type;
@@ -35,9 +36,15 @@ class SqlProperty {
 
 	// for properties of type SqlProperty::REFERENCE, name of the class they
 	// refer to
-	private $referredClass;
+	private $referredClass = NULL;
 	public function getReferredClass() {
 		return $this->referredClass;
+	}
+	
+	// for custom properties, function that fills the field
+	private $creator = NULL;
+	public function getCreator() {
+		return $this->creator;
 	}
 	
 	public function __construct($data) {
@@ -54,13 +61,9 @@ class SqlProperty {
 		}
 		if(isset($data['referredClass'])) {
 			$this->referredClass = $data['referredClass'];
-		} else {
-			if($this->type === self::REFERENCE) {
-				throw new EHException(
-					'referredClass not specified for SqlProperty of type REFERENCE');
-			} else {
-				$this->referredClass = NULL;
-			}
+		} elseif($this->type === self::REFERENCE) {
+			throw new EHException(
+				'referredClass not specified for SqlProperty of type REFERENCE');
 		}
 		if(isset($data['validator'])) {
 			$this->validator = $data['validator'];
@@ -91,6 +94,12 @@ class SqlProperty {
 					};
 					break;
 			}
+		}
+		if(isset($data['creator'])) {
+			$this->creator = $data['creator'];
+		} elseif($this->type === self::CUSTOM) {
+			throw new EHException('creator not specified for SqlProperty of '
+				. 'type CUSTOM');
 		}
 	}
 }

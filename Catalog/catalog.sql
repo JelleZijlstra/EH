@@ -36,7 +36,6 @@ DROP TABLE IF EXISTS `publisher`;
 CREATE TABLE `publisher` (
 	`id` INT UNSIGNED AUTO_INCREMENT,
 	`name` VARCHAR(512),
-	`location_id` INT UNSIGNED,
 	PRIMARY KEY(`id`),
 	INDEX(`name`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
@@ -175,8 +174,8 @@ CREATE TABLE `age` (
 	`id` INT UNSIGNED AUTO_INCREMENT,
 	`parent` INT UNSIGNED,
 	-- In thousands of years
-	`end` INT UNSIGNED,
-	`start` INT UNSIGNED,
+	`end_time` INT UNSIGNED,
+	`start_time` INT UNSIGNED,
 	`name` VARCHAR(255) NOT NULL,
 	PRIMARY KEY(`id`),
 	INDEX(`name`)

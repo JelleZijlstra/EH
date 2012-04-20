@@ -105,6 +105,13 @@ abstract class SqlContainerList extends ContainerList {
 	}
 	
 	/*
+	 * Like has(), but checks only whether we have it in memory.
+	 */
+	public function hasIdInMemory(/* int */ $id) {
+		return isset($this->c[$id]);
+	}
+	
+	/*
 	 * Get a particular child, or a field of that child.
 	 */
 	public function get(/* string */ $file) {

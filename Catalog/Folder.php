@@ -10,6 +10,17 @@ class Folder extends SqlListEntry {
 	);
 	
 	public function fields() {
-		return array('id', 'parent', 'name');
+		return array(
+			new SqlProperty(array(
+				'name' => 'id',
+				'type' => SqlProperty::ID)),
+			new SqlProperty(array(
+				'name' => 'parent',
+				'type' => SqlProperty::REFERENCE,
+				'referredClass' => 'Folder')),
+			new SqlProperty(array(
+				'name' => 'name',
+				'type' => SqlProperty::STRING)),
+		);
 	}
 }

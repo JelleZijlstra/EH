@@ -10,6 +10,13 @@ class Publisher extends SqlListEntry {
 	);
 	
 	public function fields() {
-		return array('id', 'name', 'location');
+		return array(
+			new SqlProperty(array(
+				'name' => 'id',
+				'type' => SqlProperty::ID)),
+			new SqlProperty(array(
+				'name' => 'name',
+				'type' => SqlProperty::STRING)),
+		);
 	}
 }

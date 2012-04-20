@@ -3364,9 +3364,95 @@ Content-Disposition: attachment
 	 */
 	public function fields() {
 		return array(
-			'id', 'name', 'folder', 'added', 'type', 'year', 'title', 'journal',
-			'series', 'volume', 'issue', 'start_page', 'end_page', 'pages', 
-			'url', 'doi', 'parent', 'publisher', 'part_identifier', 'misc_data'
+			new SqlProperty(array(
+				'name' => 'id',
+				'type' => SqlProperty::ID)),
+			new SqlProperty(array(
+				'name' => 'name',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'folder',
+				'type' => SqlProperty::REFERENCE,
+				'referredClass' => 'Folder')),
+			new SqlProperty(array(
+				'name' => 'added',
+				'type' => SqlProperty::TIMESTAMP)),
+			new SqlProperty(array(
+				'name' => 'type',
+				'validator' => function($in) {
+					// this is an enum, so check whether it has an allowed value
+					return true;
+				},
+				'type' => SqlProperty::INT)),
+			new SqlProperty(array(
+				'name' => 'authors',
+				'type' => SqlProperty::CUSTOM,
+				'creator' => function($id) {
+					$out = array();
+					$escaped_id = Database::escapeValue($id);
+					$sql = <<<SQL
+SELECT author_id 
+	FROM article_author 
+	WHERE article_id = $escaped_id
+	ORDER BY position
+SQL;
+					$authors = Database::singleton()->query($sql);
+					foreach($authors as $author) {
+						$out[] = Author::withId($author['article_id']);
+					}
+					return $out;
+				})),
+			new SqlProperty(array(
+				'name' => 'year',
+				'validator' => function($in) {
+					return preg_match('/^(\d+|undated|\d+–\d+)$/', $in);
+				},
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'title',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'journal',
+				'type' => SqlProperty::REFERENCE,
+				'referredClass' => 'journal')),
+			new SqlProperty(array(
+				'name' => 'series',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'volume',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'issue',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'start_page',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'end_page',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'pages',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'url',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'doi',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'parent',
+				'type' => SqlProperty::REFERENCE,
+				'referredClass' => 'Article')),
+			new SqlProperty(array(
+				'name' => 'publisher',
+				'type' => SqlProperty::REFERENCE,
+				'referredClass' => 'Publisher')),
+			new SqlProperty(array(
+				'name' => 'part_identifier',
+				'type' => SqlProperty::BOOL)),
+			new SqlProperty(array(
+				'name' => 'misc_data',
+				'type' => SqlProperty::STRING)),
 		);
 	}
 

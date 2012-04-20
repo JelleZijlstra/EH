@@ -315,7 +315,7 @@ class Database extends ExecuteHandler {
 	 * actually accepts.
 	 */
 	public static function escapeField(/* string */ $in) {
-		if(is_string($in) and preg_match('/^[a-z_]+$/', $in)) {
+		if(is_string($in) and preg_match('/^[a-z_][a-z0-9_]+$/', $in)) {
 			return '`' . $in . '`';
 		} else {
 			throw new DatabaseException('Invalid field "' . $in . '"');

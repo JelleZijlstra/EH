@@ -2945,6 +2945,10 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 			}
 		}
+		if($this->enclosing && !$this->p->has($this->enclosing)) {
+			echo 'Adding the enclosing file...' . PHP_EOL;
+			$this->p->add_nofile(array('handle' => $this->enclosing));
+		}
 		return true;
 	}
 	// Expanding AMNH data and DOIs

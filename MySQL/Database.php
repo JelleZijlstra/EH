@@ -136,6 +136,7 @@ class Database extends ExecuteHandler {
 				'fields' => 'Array of fields',
 				'from' => 'Table to select from',
 				'where' => 'Where clauses',
+				'order_by' => 'ORDER BY clause',
 			),
 			'errorifempty' => array(
 				'from',
@@ -143,6 +144,7 @@ class Database extends ExecuteHandler {
 			'default' => array(
 				'fields' => '*',
 				'where' => false,
+				'order_by' => false,
 			),
 			'checkparas' => array(
 				'fields' => function($val, $paras) {
@@ -154,6 +156,9 @@ class Database extends ExecuteHandler {
 				'where' => function($val, $paras) {
 					return is_array($val);
 				}
+				'order_by' => function($val, $paras) {
+					return is_string($val);
+				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$sql = 'SELECT ' 
@@ -163,6 +168,9 @@ class Database extends ExecuteHandler {
 			. ' FROM ' . self::escapeField($paras['from']);
 		if($paras['where'] !== false) {
 			$sql .= ' WHERE ' . self::where($paras['where']);
+		}
+		if($paras['order_by'] !== false) {
+			$sql .= ' ORDER BY ' . self::escapeField($paras['order_by']);
 		}
 		$result = $this->rawQuery($sql);
 		return self::arrayFromSql($result);

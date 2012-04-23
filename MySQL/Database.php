@@ -296,7 +296,9 @@ class Database extends ExecuteHandler {
 	 * Assemble a list of fields like `name`, `id`.
 	 */
 	private static function assembleFieldList(array $fields) {
-		return implode(', ', array_map(array($this, 'escapeField'), $fields));
+		return implode(', ', 
+			array_map(array('Database', 'escapeField'), $fields)
+		);
 	}
 	
 	/*

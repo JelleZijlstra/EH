@@ -3457,6 +3457,9 @@ Content-Disposition: attachment
 			new SqlProperty(array(
 				'name' => 'misc_data',
 				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'children',
+				'type' => SqlProperty::CHILDREN)),
 		);
 	}
 

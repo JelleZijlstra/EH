@@ -29,6 +29,7 @@ class SqlProperty {
 	const TIMESTAMP = 0x4;
 	const BOOL = 0x6;
 	const CUSTOM = 0x7; // custom type
+	const CHILDREN = 0x8; // list of children
 	private $type;
 	public function getType() {
 		return $this->type;
@@ -91,6 +92,11 @@ class SqlProperty {
 					$this->validator = function($in) {
 						// TODO: check what MySQL actually returns here
 						return true;
+					};
+					break;
+				case self::CHILDREN:
+					$this->validator = function($in) {
+						return is_array($in);
 					};
 					break;
 			}

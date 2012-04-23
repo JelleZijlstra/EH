@@ -21,6 +21,9 @@ class Folder extends SqlListEntry {
 			new SqlProperty(array(
 				'name' => 'name',
 				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'children',
+				'type' => SqlProperty::CHILDREN)),
 		);
 	}
 }

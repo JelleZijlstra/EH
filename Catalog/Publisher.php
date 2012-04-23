@@ -17,6 +17,23 @@ class Publisher extends SqlListEntry {
 			new SqlProperty(array(
 				'name' => 'name',
 				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'cities',
+				'type' => SqlProperty::CUSTOM,
+				'creator' => function($id) {
+					$entries = Database::singleton()->select(array(
+						'fields' => array('city_id'),
+						'from' => 'publisher_id',
+						'where' => array(
+							'publisher_id' => Database::escapeValue($id)
+						),
+					));
+					$out = array();
+					foreach($entries as $entry) {
+						$out[] = City::withId($author['city_id']);
+					}
+					return $out;
+				})),			
 		);
 	}
 }

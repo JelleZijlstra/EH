@@ -56,7 +56,7 @@ class Citation {
 		return $this->refname;
 	}
 }
-class Parser {
+class Parser extends ExecuteHandler {
 	public $input; // string: input text. Parser::parse() may edit this text.
 	public $result; // string: resulting (parsed) text.
 	public $refs; // refs found in input
@@ -114,7 +114,7 @@ class Parser {
 						continue 2;
 					case '':
 						if($csvlist->addEntry(
-							new Article($citename, 'n', $this), 
+							new Article($citename, 'n', $csvlist), 
 							array('isnew' => true)
 						)) {
 							$this->refs[$cite] = $this->cite($cite);

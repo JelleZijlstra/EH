@@ -3392,15 +3392,15 @@ Content-Disposition: attachment
 				'name' => 'authors',
 				'type' => SqlProperty::CUSTOM,
 				'creator' => function($id) {
+					$authors = Database::singleton()->select(array(
+						'fields' => array('author_id'),
+						'from' => 'article_author',
+						'where' => array(
+							'article_id' => Database::escapeValue($id)
+						),
+						'order_by' => 'position',
+					));
 					$out = array();
-					$escaped_id = Database::escapeValue($id);
-					$sql = <<<SQL
-SELECT author_id 
-	FROM article_author 
-	WHERE article_id = $escaped_id
-	ORDER BY position
-SQL;
-					$authors = Database::singleton()->query($sql);
 					foreach($authors as $author) {
 						$out[] = Author::withId($author['article_id']);
 					}

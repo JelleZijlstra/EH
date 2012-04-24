@@ -1,4 +1,5 @@
 <?php
+require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Catalog/load.php');
 
 class ArticleList extends CsvContainerList {

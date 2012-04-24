@@ -106,6 +106,7 @@ CREATE TABLE `journal` (
 -- Other IDs than DOI
 DROP TABLE IF EXISTS `article_identifiers`;
 CREATE TABLE `article_identifiers` (
+	`id` INT UNSIGNED AUTO_INCREMENT,
 	`article_id` INT UNSIGNED NOT NULL,
 	-- E.g., 'jstor'
 	`identifier_name` VARCHAR(255) NOT NULL,
@@ -183,9 +184,16 @@ CREATE TABLE `age` (
 
 DROP TABLE IF EXISTS `occurrence`;
 CREATE TABLE `occurrence` (
+	`id` INT UNSIGNED AUTO_INCREMENT,
 	`taxon_id` INT UNSIGNED,
 	`location_id` INT UNSIGNED,
 	`age_id` INT UNSIGNED,
-	`article_id` INT UNSIGNED,
+	`comments` VARCHAR(4096) DEFAULT NULL,
 	INDEX(`taxon_id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `occurrence_article`;
+CREATE TABLE `occurrence_article` (
+	`occurrence_id` INT UNSIGNED,
+	`article_id` INT UNSIGNED,
+);

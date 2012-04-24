@@ -155,7 +155,7 @@ class Database extends ExecuteHandler {
 				},
 				'where' => function($val, $paras) {
 					return is_array($val);
-				}
+				},
 				'order_by' => function($val, $paras) {
 					return is_string($val);
 				},
@@ -325,7 +325,7 @@ class Database extends ExecuteHandler {
 	 * actually accepts.
 	 */
 	public static function escapeField(/* string */ $in) {
-		if(is_string($in) and preg_match('/^[a-z_][a-z0-9_]+$/', $in)) {
+		if(is_string($in) and preg_match('/^[a-z_][a-z0-9_]*$/', $in)) {
 			return '`' . $in . '`';
 		} else {
 			throw new DatabaseException('Invalid field "' . $in . '"');

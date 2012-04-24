@@ -20,6 +20,12 @@ class SqlProperty {
 	public function getValidator() {
 		return $this->validator;
 	}
+	
+	// function that, given a value, returns a corrected version
+	private $processor;
+	public function getProcessor() {
+		return $this->processor;
+	}
 
 	// type of the field
 	const INT = 0x1;
@@ -30,6 +36,7 @@ class SqlProperty {
 	const BOOL = 0x6;
 	const CUSTOM = 0x7; // custom type
 	const CHILDREN = 0x8; // list of children
+	const JOINT_REFERENCE = 0x9; // list of references in a different table
 	private $type;
 	public function getType() {
 		return $this->type;
@@ -40,6 +47,12 @@ class SqlProperty {
 	private $referredClass = NULL;
 	public function getReferredClass() {
 		return $this->referredClass;
+	}
+	
+	// table name for JOINT_REFERENCEs
+	private $tableName = NULL;
+	public function getTableName() {
+		return $this->tableName;
 	}
 	
 	// for custom properties, function that fills the field
@@ -80,7 +93,8 @@ class SqlProperty {
 					break;
 				case self::BOOL:
 					$this->validator = function($in) {
-						return is_bool($in);
+						return is_bool($in) 
+							|| preg_match('/^(1|0|true|false)$/', $in);
 					};
 					break;
 				case self::STRING:
@@ -97,6 +111,50 @@ class SqlProperty {
 				case self::CHILDREN:
 					$this->validator = function($in) {
 						return is_array($in);
+					};
+					break;
+				case self::JOINT_REFERENCE:
+					$this->validator = function($in) {
+						return is_array($in);
+					};
+			}
+		}
+		if(isset($data['processor'])) {
+			$this->processor = $data['processor'];
+		} else {
+			switch($this->type) {
+				case self::INT:
+					$this->processor = function($in) {
+						return (int) $in;
+					};
+					break;
+				case self::STRING:
+					$this->processor = function($in) {
+						return (string) $in;
+					};
+					break;
+				case self::BOOL:
+					$this->processor = function($in) {
+						if($in === 'false' || $in === '0') {
+							return false;
+						} else {
+							return (bool) $in;
+						}
+					};
+					break;
+				case self::REFERENCE:
+					$referredClass = $this->referredClass;
+					$this->processor = function($in) use($referredClass) {
+						return $referredClass::fromName($in);
+					};
+					break;
+				case self::TIMESTAMP:
+				case self::ID:
+				case self::CHILDREN:
+				case self::JOINT_REFERENCE:
+				case self::CUSTOM:
+					$this->processor = function($in) {
+						return $in;
 					};
 					break;
 			}

@@ -50,10 +50,32 @@ abstract class SqlListEntry extends ListEntry {
 		if($parentObj->has($name)) {
 			return $parentObj->get($name);
 		} else {
-			$obj = new static($name, self::CONSTR_NAME, $parentObj);
-			$obj->addNew();
-			$parentObj->addEntry($obj);
-			return $obj;
+			$newName = $this->menu(array(
+				'head' =>
+					'There is no entry with the name ' . $name . '. Please '
+					. 'enter a correct name, or type "n" to create a new ' 
+					. 'entry.',
+				'options' => array(
+					'n' => 'Create a new entry',
+				),
+				'validfunction' => function($in) use($parentObj) {
+					return $parentObj->has($in);
+				},
+				'process' => array(
+					'n' => function(&$cmd) {
+						$cmd = false;
+						return false;
+					},
+				),
+			));
+			if($newName === false) {
+				$obj = new static($name, self::CONSTR_NAME, $parentObj);
+				$obj->addNew();
+				$parentObj->addEntry($obj);
+				return $obj;
+			} else {
+				return $parentObj->get($newName);
+			}
 		}
 	}
 
@@ -149,31 +171,59 @@ abstract class SqlListEntry extends ListEntry {
 		foreach($fields as $field) {
 			$fname = $field->name();
 			if($this->$fname !== NULL) {
-				break;
+				continue;
 			}
-			$cmd = $this->menu(array(
-				'head' => $fname,
-				'headasprompt' => true,
-				'options' => array(
-					'e' => "Enter the file's command-line interface",
-					's' => "Save the file now",
-				),
-				'validfunction' => $field->getValidator(),
-				'process' => array(
-					'e' => function() use($file) {
-						$file->edit();
+			$type = $field->getType();
+			switch($type) {
+				case SqlProperty::REFERENCE:
+				case SqlProperty::STRING:
+				case SqlProperty::INT:
+				case SqlProperty::BOOL:
+					$cmd = $this->menu(array(
+						'head' => $fname,
+						'headasprompt' => true,
+						'options' => array(
+							'e' => "Enter the file's command-line interface",
+							's' => "Save the file now",
+						),
+						'validfunction' => $field->getValidator(),
+						'process' => array(
+							'e' => function() use($file) {
+								$file->edit();
+								return true;
+							},
+							's' => function(&$cmd) {
+								$cmd = false;
+								return false;
+							},
+						),
+						'processcommand' => function($in) use($field) {
+							$out = $in;
+							// enable having 'e' or 's' as field by typing '\e'
+							if($in[0] === '\\') {
+								$out = substr($in, 1);
+							}
+							$processor = $field->getProcessor();
+							return $processor($out);
+						},
+					));
+					if($cmd === false) {
 						return true;
-					},
-					's' => function(&$cmd) {
-						$cmd = false;
-						return false;
-					},
-				),
-			));
-			if($cmd === false) {
-				return true;
-			}
-			$this->$fname = $cmd;
+					}
+					$this->$fname = $cmd;
+					break;
+				case SqlProperty::ID:
+					// ID is set by code actually adding the entry to the DB,
+					// using mysql_insert_id() somehow. Really 
+					// Database::insert() should return mysql_insert_id().
+					$this->$fname = NULL;
+					break;					
+				case SqlProperty::TIMESTAMP:
+				case SqlProperty::JOINT_REFERENCE:
+				case SqlProperty::CHILDREN:
+					// children get filled automatically, using the fillProperties code
+				case SqlProperty::CUSTOM:
+					break;
 		}
 		return true;	
 	}
@@ -287,6 +337,27 @@ abstract class SqlListEntry extends ListEntry {
 					$creator = $field->getCreator();
 					$this->$name = $creator($this->id);
 					break;
+				case SqlProperty::JOINT_REFERENCE:
+					if($this->id === NULL) {
+						throw new EHException(
+							"Unable to set JOINT_REFERENCE property");
+					}
+					$otherClass = $field->getReferredClass();
+					$thisClassId = get_called_class() . '_id';
+					$otherClassId = strtolower($otherClass) . '_id';
+					$entries = Database::singleton()->select(array(
+						'fields' => array($otherClassId),
+						'from' => $field->getTableName(),
+						'where' => array(
+							$thisClassId => Database::escapeValue($this->id),
+						),
+					));
+					$out = array();
+					foreach($entries as $entry) {
+						$out[] = $otherClass::withId($entry[$otherClassId]);
+					}
+					$this->$name = $out;
+					break;					
 				case SqlProperty::CHILDREN:
 					if($this->id === NULL) {
 						throw new EHException("Unable to set children array");
@@ -297,10 +368,11 @@ abstract class SqlListEntry extends ListEntry {
 							'parent' => Database::escapeValue($this->id),
 						),
 					));
-					$this->$name = array();
+					$out = array();
 					foreach($children as $child) {
-						$this->$name[] = self::fromId($in['id']);
+						$out[] = self::fromId($in['id']);
 					}
+					$this->$name = $out;
 					break;
 			}
 		}

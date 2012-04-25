@@ -26,6 +26,12 @@ class SqlProperty {
 	public function getProcessor() {
 		return $this->processor;
 	}
+	
+	// function that fills a property
+	private $filler;
+	public function getFiller() {
+		return $this->filler;	
+	}
 
 	// type of the field
 	const INT = 0x1;
@@ -164,6 +170,31 @@ class SqlProperty {
 		} elseif($this->type === self::CUSTOM) {
 			throw new EHException('creator not specified for SqlProperty of '
 				. 'type CUSTOM');
+		}
+		if(isset($data['filler'])) {
+			$this->filler = $data['filler'];
+		} elseif($this->type === self::CHILDREN) {
+			$this->filler = function(SqlListEntry $file, /* string */ $table) {
+				if($file->id() === NULL) {
+					throw new EHException("Unable to set children array");
+				}
+				$children = Database::singleton()->select(array(
+					'from' => $table,
+					'where' => array(
+						'parent' => Database::escapeValue($file->id()),
+					),
+				));
+				$out = array();
+				$class = ucfirst($table);
+				foreach($children as $child) {
+					$out[] = $class::fromId($in['id']);
+				}
+				return $out;
+			};
+		} else {
+			$this->filler = function() {
+				throw new EHException("Use of unspecified filler");
+			};
 		}
 	}
 }

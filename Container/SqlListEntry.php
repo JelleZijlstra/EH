@@ -359,20 +359,8 @@ abstract class SqlListEntry extends ListEntry {
 					$this->$name = $out;
 					break;					
 				case SqlProperty::CHILDREN:
-					if($this->id === NULL) {
-						throw new EHException("Unable to set children array");
-					}
-					$children = Database::singleton()->select(array(
-						'from' => $this->p->table(),
-						'where' => array(
-							'parent' => Database::escapeValue($this->id),
-						),
-					));
-					$out = array();
-					foreach($children as $child) {
-						$out[] = self::fromId($in['id']);
-					}
-					$this->$name = $out;
+					$filler = $field->getFiller();
+					$this->$name = $filler($this, $this->p->table());
 					break;
 			}
 		}

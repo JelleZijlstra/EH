@@ -28,9 +28,9 @@ class SqlProperty {
 	}
 	
 	// function that fills a property
-	private $filler;
-	public function getFiller() {
-		return $this->filler;	
+	private $manualFiller;
+	public function getManualFiller() {
+		return $this->manualFiller;	
 	}
 
 	// type of the field
@@ -151,7 +151,7 @@ class SqlProperty {
 				case self::REFERENCE:
 					$referredClass = $this->referredClass;
 					$this->processor = function($in) use($referredClass) {
-						return $referredClass::fromName($in);
+						return $referredClass::withName($in);
 					};
 					break;
 				case self::TIMESTAMP:
@@ -171,10 +171,10 @@ class SqlProperty {
 			throw new EHException('creator not specified for SqlProperty of '
 				. 'type CUSTOM');
 		}
-		if(isset($data['filler'])) {
-			$this->filler = $data['filler'];
+		if(isset($data['manualFiller'])) {
+			$this->manualFiller = $data['manualFiller'];
 		} elseif($this->type === self::CHILDREN) {
-			$this->filler = function(SqlListEntry $file, /* string */ $table) {
+			$this->manualFiller = function(SqlListEntry $file, /* string */ $table) {
 				if($file->id() === NULL) {
 					throw new EHException("Unable to set children array");
 				}
@@ -187,13 +187,26 @@ class SqlProperty {
 				$out = array();
 				$class = ucfirst($table);
 				foreach($children as $child) {
-					$out[] = $class::fromId($in['id']);
+					$out[] = $class::withId($in['id']);
 				}
 				return $out;
 			};
+		} elseif($this->type === self::JOINT_REFERENCE) {
+		$referred = array();
+		while(true) {
+			$cmd = $this->menu(array(
+				'head' => 
+					'Please provide entries for field ' . $name,
+				'options' => array('q' => 'Stop adding entries'),
+				'processcommand' => function(&$cmd, &$data) {
+					
+				},
+			));
+		}
+		
 		} else {
-			$this->filler = function() {
-				throw new EHException("Use of unspecified filler");
+			$this->manualFiller = function() {
+				throw new EHException("Use of unspecified manualFiller");
 			};
 		}
 	}

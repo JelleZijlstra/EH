@@ -117,22 +117,21 @@ abstract class SqlContainerList extends ContainerList {
 	public function get(/* string */ $file) {
 		$obj = $this->grabEntry($file);
 		if($obj === false) {
-			echo 'Invalid file: ' . $file;
+			echo 'Invalid entry: ' . $file;
 			return false;
 		}
 		return $obj;
 	}
 	
 	/*
-	 * Return an object on the basis of ID.
+	 * Add an object with only an ID to the c array.
 	 */
-	public function fromId(/* int */ $id) {
+	public function addEntryWithId(SqlListEntry $obj) {
+		$id = $obj->id();
 		if(isset($this->c[$id])) {
-			return $this->c[$id];
+			throw new EHException('Attempt to re-add object with id ' . $id);
 		} else {
-			$obj = new static::$childclass($id, SqlListEntry::CONSTR_ID, $list);
-			$this->addEntry($obj);
-			return $obj;
+			$this->c[$id] = $obj;
 		}
 	}
 

@@ -89,7 +89,7 @@ abstract class SqlListEntry extends ListEntry {
 			return $parentObj->get($name);
 		} else {
 			$obj = new static($id, self::CONSTR_ID, $parentObj);
-			$parentObj->addEntry($obj);
+			$parentObj->addEntryWithId($obj);
 			return $obj;
 		}
 	}
@@ -218,11 +218,14 @@ abstract class SqlListEntry extends ListEntry {
 					// Database::insert() should return mysql_insert_id().
 					$this->$fname = NULL;
 					break;					
-				case SqlProperty::TIMESTAMP:
-				case SqlProperty::JOINT_REFERENCE:
 				case SqlProperty::CHILDREN:
-					// children get filled automatically, using the fillProperties code
+				case SqlProperty::JOINT_REFERENCE:
 				case SqlProperty::CUSTOM:
+					$manualFiller = $field->getManualFiller();
+					$this->$name = $manualFiller($this, $this->p->table());
+					break;
+				case SqlProperty::TIMESTAMP:
+					// let it be filled in automatically by MySQL
 					break;
 		}
 		return true;	
@@ -288,17 +291,15 @@ abstract class SqlListEntry extends ListEntry {
 				if($id === 0) {
 					$this->$name = NULL;
 				} else {
-					$className = ucfirst($name);
-					$parentClass = $this->parentClass();
-					$list = $parentClass::singleton();
-					$this->$name = $list->fromId($id);
+					$this->$name = $className::withId($id);
 				}
 			} elseif($key === 'parent') {
 				$id = (int) $value;
 				if($id === 0) {
 					$this->parent = NULL;
 				} else {
-					$this->parent = $this->p->fromId($id);
+					$className = get_called_class();
+					$this->parent = $className::withId($id);
 				}
 			} else {
 				if(!in_array($key, $fields, true)) {
@@ -328,7 +329,7 @@ abstract class SqlListEntry extends ListEntry {
 					break;
 				case SqlProperty::REFERENCE:
 					$referredClass = $field->getReferredClass();
-					$this->$name = $referredClass::fromId($in[$name . '_id']);
+					$this->$name = $referredClass::withId($in[$name . '_id']);
 					break;
 				case SqlProperty::ID:
 					$this->id = $in['id'];
@@ -359,8 +360,8 @@ abstract class SqlListEntry extends ListEntry {
 					$this->$name = $out;
 					break;					
 				case SqlProperty::CHILDREN:
-					$filler = $field->getFiller();
-					$this->$name = $filler($this, $this->p->table());
+					$manualFiller = $field->getManualFiller();
+					$this->$name = $manualFiller($this, $this->p->table());
 					break;
 			}
 		}
@@ -382,7 +383,7 @@ abstract class SqlListEntry extends ListEntry {
 		if($this->filledProperties === false) {
 			$this->fillProperties();
 		}
-		// commit changes
+		// TODO: commit changes
 	}
 	/*
 	 * Converts itself into an array corresponding to the object's DB 
@@ -420,7 +421,7 @@ abstract class SqlListEntry extends ListEntry {
 	 * __toString() defaults to returning the name.
 	 */
 	public function __toString() {
-		return $this->name;
+		return $this->name();
 	}
 
 	protected function listproperties() {

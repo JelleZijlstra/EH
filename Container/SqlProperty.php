@@ -99,7 +99,8 @@ class SqlProperty {
 					break;
 				case self::BOOL:
 					$this->validator = function($in) {
-						return is_bool($in) 
+						return is_bool($in)
+							|| ($in === '')
 							|| preg_match('/^(1|0|true|false)$/', $in);
 					};
 					break;
@@ -173,7 +174,7 @@ class SqlProperty {
 		}
 		if(isset($data['manualFiller'])) {
 			$this->manualFiller = $data['manualFiller'];
-		} else switch($this->type)
+		} else switch($this->type) {
 			case self::CHILDREN:
 				$this->manualFiller = function(SqlListEntry $file, /* string */ $table) {
 					if($file->id() === NULL) {
@@ -212,27 +213,29 @@ class SqlProperty {
 			case SqlProperty::STRING:
 			case SqlProperty::INT:
 			case SqlProperty::BOOL:
-				$this->manualFiller = function(SqlListEntry $file, $table) {
+				$fname = $this->getName();
+				$validator = $this->getValidator();
+				$processor = $this->getProcessor();
+				$this->manualFiller = function(SqlListEntry $file, $table) use($fname, $validator, $processor) {
 					return $file->menu(array(
-						'head' => $fname,
+						'head' => $fname . ': ',
 						'headasprompt' => true,
 						'options' => array(
 							'e' => "Enter the file's command-line interface",
 						),
-						'validfunction' => $field->getValidator(),
+						'validfunction' => $validator,
 						'process' => array(
 							'e' => function() use($file) {
 								$file->edit();
 								return true;
 							},
 						),
-						'processcommand' => function($in) use($field) {
+						'processcommand' => function($in) use($processor) {
 							$out = $in;
 							// enable having 'e' or 's' as field by typing '\e'
-							if($in[0] === '\\') {
+							if(isset($in[0]) and ($in[0] === '\\')) {
 								$out = substr($in, 1);
 							}
-							$processor = $field->getProcessor();
 							return $processor($out);
 						},
 					));				

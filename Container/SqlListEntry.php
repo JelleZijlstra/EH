@@ -20,6 +20,14 @@ abstract class SqlListEntry extends ListEntry {
 	 */
 	public function __construct($data, $code, &$parent) {
 		$this->p =& $parent;
+		// hack needed to satisfy ListEntry::add() for now
+		$doAddNew = false;
+		if($code === 'n') {
+			$code = self::CONSTR_NAME;
+			$data = $data['name'];
+			$doAddNew = true;
+		}
+		
 		switch($code) {
 			case self::CONSTR_ID:
 				$this->id = $data;
@@ -35,6 +43,10 @@ abstract class SqlListEntry extends ListEntry {
 					'Invalid code for SqlListEntry constructor', 
 					EHException::E_RECOVERABLE
 				);
+		}
+		
+		if($doAddNew) {
+			$this->addNew();
 		}
 
 		// TODO: figure out how to get the commands all right
@@ -102,8 +114,8 @@ abstract class SqlListEntry extends ListEntry {
 	
 	final protected function fieldsAsStrings() {
 		return array_map(function($in) {
-			return $in->name;
-		}, $fields);
+			return $in->getName();
+		}, $this->fields());
 	}
 
 	/*
@@ -158,7 +170,10 @@ abstract class SqlListEntry extends ListEntry {
 	 * may do more.
 	 */
 	protected function addNew() {
-		return $this->fillPropertiesManually();
+		// there will be nothing left to fill
+		$this->fillPropertiesOnce = true;
+		$out = $this->fillPropertiesManually();
+		return $out;
 	}
 	
 	/*
@@ -171,7 +186,7 @@ abstract class SqlListEntry extends ListEntry {
 		$hasId = false;
 		try {
 			foreach($fields as $field) {
-				$fname = $field->name();
+				$fname = $field->getName();
 				if($this->$fname !== NULL) {
 					continue;
 				}
@@ -202,7 +217,7 @@ abstract class SqlListEntry extends ListEntry {
 		// insert into DB, record ID
 		$result = Database::singleton()->insert(array(
 			'into' => $this->p->table(),
-			'fields' => $this->toArray(),
+			'values' => $this->toArray(),
 		));
 		if($hasId !== false) {
 			$this->$hasId = $result;

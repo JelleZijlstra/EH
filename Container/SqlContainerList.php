@@ -19,7 +19,7 @@ abstract class SqlContainerList extends ContainerList {
 	private $cByName = array();
 	
 	// name of table corresponding to this object
-	abstract protected function table();
+	abstract public function table();
 
 	protected function _addEntry(ListEntry $file, array $paras) {
 		Database::singleton()->insert(array(
@@ -55,7 +55,7 @@ abstract class SqlContainerList extends ContainerList {
 		if(count($res) === 0) {
 			return false;
 		} elseif(count($res) === 1) {
-			$obj = new static::$childClass($res[0], SqlListEntry::CONSTR_FULL);
+			$obj = new static::$childClass($res[0], SqlListEntry::CONSTR_FULL, $this);
 			$this->c[$obj->id()] = $obj;
 			$this->cByName[$name] = $obj;
 		} else {
@@ -76,7 +76,7 @@ abstract class SqlContainerList extends ContainerList {
 		foreach($entries as $entry) {
 			if(!isset($this->c[$entry['id']])) {
 				$obj = new static::$childClass(
-					$entry, SqlListEntry::CONSTR_FULL);
+					$entry, SqlListEntry::CONSTR_FULL, $this);
 				$this->c[$obj->id()] = $obj;
 				$this->cByName[$obj->name()] = $obj;
 			}
@@ -139,9 +139,9 @@ abstract class SqlContainerList extends ContainerList {
 	 * Save anything necessary.
 	 */
 	public function saveIfNeeded() {
-		$this->each(function($file) {
+		foreach($this->c as $file) {
 			$file->save();
-		});
+		}
 	}
 	
 	/*

@@ -926,7 +926,7 @@ class ArticleList extends CsvContainerList {
 	/*
 	 * SqlContainerList things.
 	 */
-	protected function table() {
+	public function table() {
 		return 'article';
 	}
 }

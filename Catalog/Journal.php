@@ -17,7 +17,7 @@ class Journal extends SqlListEntry {
 	);
 
 	public function fields() {
-		static $fields = array(
+		return array(
 			new SqlProperty(array(
 				'name' => 'id',
 				'type' => SqlProperty::ID)),
@@ -34,6 +34,5 @@ class Journal extends SqlListEntry {
 				'name' => 'nopagenumber',
 				'type' => SqlProperty::BOOL)),
 		);
-		return $fields;
 	}
 }

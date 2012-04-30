@@ -168,66 +168,47 @@ abstract class SqlListEntry extends ListEntry {
 		$fields = $this->fields();
 		$file = $this;
 		echo 'Filling data manually for object' . PHP_EOL;
-		foreach($fields as $field) {
-			$fname = $field->name();
-			if($this->$fname !== NULL) {
-				continue;
+		$hasId = false;
+		try {
+			foreach($fields as $field) {
+				$fname = $field->name();
+				if($this->$fname !== NULL) {
+					continue;
+				}
+				$type = $field->getType();
+				switch($type) {
+					case SqlProperty::ID:
+						$hasId = $fname;
+						$this->$fname = NULL;
+						break;					
+					case SqlProperty::REFERENCE:
+					case SqlProperty::STRING:
+					case SqlProperty::INT:
+					case SqlProperty::BOOL:
+					case SqlProperty::CHILDREN:
+					case SqlProperty::JOINT_REFERENCE:
+					case SqlProperty::CUSTOM:
+						$manualFiller = $field->getManualFiller();
+						$this->$fname = $manualFiller($this, $this->p->table());
+						break;
+					case SqlProperty::TIMESTAMP:
+						// let it be filled in automatically by MySQL
+						break;
+				}
 			}
-			$type = $field->getType();
-			switch($type) {
-				case SqlProperty::REFERENCE:
-				case SqlProperty::STRING:
-				case SqlProperty::INT:
-				case SqlProperty::BOOL:
-					$cmd = $this->menu(array(
-						'head' => $fname,
-						'headasprompt' => true,
-						'options' => array(
-							'e' => "Enter the file's command-line interface",
-							's' => "Save the file now",
-						),
-						'validfunction' => $field->getValidator(),
-						'process' => array(
-							'e' => function() use($file) {
-								$file->edit();
-								return true;
-							},
-							's' => function(&$cmd) {
-								$cmd = false;
-								return false;
-							},
-						),
-						'processcommand' => function($in) use($field) {
-							$out = $in;
-							// enable having 'e' or 's' as field by typing '\e'
-							if($in[0] === '\\') {
-								$out = substr($in, 1);
-							}
-							$processor = $field->getProcessor();
-							return $processor($out);
-						},
-					));
-					if($cmd === false) {
-						return true;
-					}
-					$this->$fname = $cmd;
-					break;
-				case SqlProperty::ID:
-					// ID is set by code actually adding the entry to the DB,
-					// using mysql_insert_id() somehow. Really 
-					// Database::insert() should return mysql_insert_id().
-					$this->$fname = NULL;
-					break;					
-				case SqlProperty::CHILDREN:
-				case SqlProperty::JOINT_REFERENCE:
-				case SqlProperty::CUSTOM:
-					$manualFiller = $field->getManualFiller();
-					$this->$name = $manualFiller($this, $this->p->table());
-					break;
-				case SqlProperty::TIMESTAMP:
-					// let it be filled in automatically by MySQL
-					break;
+		} catch(StopException $e) {
+			// ignore it
 		}
+		// insert into DB, record ID
+		$result = Database::singleton()->insert(array(
+			'into' => $this->p->table(),
+			'fields' => $this->toArray(),
+		));
+		if($hasId !== false) {
+			$this->$hasId = $result;
+		}
+		// record success
+		echo 'Added to database' . PHP_EOL;
 		return true;	
 	}
 
@@ -383,9 +364,19 @@ abstract class SqlListEntry extends ListEntry {
 			return true;
 		}
 		// avoid committing changes while some properties are not filled
-		if($this->filledProperties === false) {
-			$this->fillProperties();
-		}
+		$this->fillProperties();
+		Database::singleton()->insert(array(
+			'into' => $this->p->table(),
+			'values' => $this->toArray(),
+			'replace' => true,
+		));
+	}
+	/*
+	 * Converts itself into an array corresponding to the object's DB 
+	 * representation.
+	 */
+	public function toArray() {
+		$this->fillProperties();
 		$fields = array();
 		foreach($this->fields() as $field) {
 			$name = $field->getName();
@@ -395,7 +386,9 @@ abstract class SqlListEntry extends ListEntry {
 				case SqlProperty::STRING:
 				case SqlProperty::BOOL:
 				case SqlProperty::ID:
-					$fields[$name] = $this->$name;
+					if($this->$name !== NULL) {
+						$fields[$name] = $this->$name;
+					}
 					break;
 				case SqlProperty::REFERENCE:
 					$fields[$name] = $this->$name->id();
@@ -406,23 +399,7 @@ abstract class SqlListEntry extends ListEntry {
 					break;
 			}
 		}
-		Database::singleton()->insert(array(
-			'into' => $this->p->table(),
-			'values' => $fields,
-			'replace' => true,
-		));
-	}
-	/*
-	 * Converts itself into an array corresponding to the object's DB 
-	 * representation.
-	 */
-	public function toArray() {
-		$this->fillProperties();
-		$out = array();
-		foreach($this->fieldsAsStrings() as $field) {
-			$out[$fname] = $this->$fieldsAsStrings;
-		}
-		return $out;
+		return $fields;
 	}
 
 	/*

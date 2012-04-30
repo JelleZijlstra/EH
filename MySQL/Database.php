@@ -221,7 +221,13 @@ class Database extends ExecuteHandler {
 			. implode(', ', array_map(
 				array('Database', 'escapeValue'), $paras['values']))
 			. ')';
-		return $this->rawQuery($sql);
+		$result = $this->rawQuery($sql);
+		// return mysql_insert_id() if necessary
+		if($paras['replace']) {
+			return $result;
+		} else {
+			return mysql_insert_id();
+		}
 	}
 	
 	/*

@@ -173,41 +173,76 @@ class SqlProperty {
 		}
 		if(isset($data['manualFiller'])) {
 			$this->manualFiller = $data['manualFiller'];
-		} elseif($this->type === self::CHILDREN) {
-			$this->manualFiller = function(SqlListEntry $file, /* string */ $table) {
-				if($file->id() === NULL) {
-					throw new EHException("Unable to set children array");
-				}
-				$children = Database::singleton()->select(array(
-					'from' => $table,
-					'where' => array(
-						'parent' => Database::escapeValue($file->id()),
-					),
-				));
-				$out = array();
-				$class = ucfirst($table);
-				foreach($children as $child) {
-					$out[] = $class::withId($in['id']);
-				}
-				return $out;
-			};
-		} elseif($this->type === self::JOINT_REFERENCE) {
-		$referred = array();
-		while(true) {
-			$cmd = $this->menu(array(
-				'head' => 
-					'Please provide entries for field ' . $name,
-				'options' => array('q' => 'Stop adding entries'),
-				'processcommand' => function(&$cmd, &$data) {
-					
-				},
-			));
-		}
-		
-		} else {
-			$this->manualFiller = function() {
-				throw new EHException("Use of unspecified manualFiller");
-			};
+		} else switch($this->type)
+			case self::CHILDREN:
+				$this->manualFiller = function(SqlListEntry $file, /* string */ $table) {
+					if($file->id() === NULL) {
+						throw new EHException("Unable to set children array");
+					}
+					$children = Database::singleton()->select(array(
+						'from' => $table,
+						'where' => array(
+							'parent' => Database::escapeValue($file->id()),
+						),
+					));
+					$out = array();
+					$class = ucfirst($table);
+					foreach($children as $child) {
+						$out[] = $class::withId($in['id']);
+					}
+					return $out;
+				};
+				break;
+			case self::JOINT_REFERENCE:
+				$this->manualFiller = function(SqlListEntry $file, /* string */ $table) {
+					$referred = array();
+					while(true) {
+						$cmd = $this->menu(array(
+							'head' => 
+								'Please provide entries for field ' . $name,
+							'options' => array('q' => 'Stop adding entries'),
+							'processcommand' => function(&$cmd, &$data) {
+								
+							},
+						));
+					}
+				};
+				break;
+			case SqlProperty::REFERENCE:
+			case SqlProperty::STRING:
+			case SqlProperty::INT:
+			case SqlProperty::BOOL:
+				$this->manualFiller = function(SqlListEntry $file, $table) {
+					return $file->menu(array(
+						'head' => $fname,
+						'headasprompt' => true,
+						'options' => array(
+							'e' => "Enter the file's command-line interface",
+						),
+						'validfunction' => $field->getValidator(),
+						'process' => array(
+							'e' => function() use($file) {
+								$file->edit();
+								return true;
+							},
+						),
+						'processcommand' => function($in) use($field) {
+							$out = $in;
+							// enable having 'e' or 's' as field by typing '\e'
+							if($in[0] === '\\') {
+								$out = substr($in, 1);
+							}
+							$processor = $field->getProcessor();
+							return $processor($out);
+						},
+					));				
+				};
+				break;
+			default:
+				$this->manualFiller = function() {
+					throw new EHException("Use of unspecified manualFiller");
+				};
+				break;
 		}
 	}
 }

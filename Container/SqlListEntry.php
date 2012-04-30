@@ -376,6 +376,9 @@ abstract class SqlListEntry extends ListEntry {
 	}
 
 	public function save() {
+		// Commits changes in simple properties, which are cached in memory.
+		// Changes in complicated structures like JOINT_REFERENCEs should be 
+		// sent to the DB immediately.
 		if($this->needsave === false) {
 			return true;
 		}
@@ -383,7 +386,31 @@ abstract class SqlListEntry extends ListEntry {
 		if($this->filledProperties === false) {
 			$this->fillProperties();
 		}
-		// TODO: commit changes
+		$fields = array();
+		foreach($this->fields() as $field) {
+			$name = $field->getName();
+			switch($field->getType()) {
+				case SqlProperty::INT:
+				case SqlProperty::TIMESTAMP:
+				case SqlProperty::STRING:
+				case SqlProperty::BOOL:
+				case SqlProperty::ID:
+					$fields[$name] = $this->$name;
+					break;
+				case SqlProperty::REFERENCE:
+					$fields[$name] = $this->$name->id();
+					break;
+				case SqlProperty::CUSTOM:
+				case SqlProperty::JOINT_REFERENCE:
+					// ignored
+					break;
+			}
+		}
+		Database::singleton()->insert(array(
+			'into' => $this->p->table(),
+			'values' => $fields,
+			'replace' => true,
+		));
 	}
 	/*
 	 * Converts itself into an array corresponding to the object's DB 

@@ -189,7 +189,7 @@ class Database extends ExecuteHandler {
 			'checklist' => array(
 				'into' => 'Table to insert into',
 				'values' => 'Associative array of values',
-				'onduplicate' => 'What to do with a duplicate',
+				'replace' => 'Whether to perform a REPLACE query rather than an INSERT one (i.e., replace existing values).',
 			),
 			'errorifempty' => array(
 				'into', 'values',
@@ -201,19 +201,26 @@ class Database extends ExecuteHandler {
 				'values' => function($val, $paras) {
 					return is_array($val);
 				},
+				'replace' => function($val, $paras) {
+					return is_bool($val);
+				},
 			),
 			'default' => array(
-				'onduplicate' => false,
+				'replace' => false,
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$sql = 'INSERT INTO ' . self::escapeField($paras['into']) . '('
+		if($paras['replace']) {
+			$sql = 'REPLACE';
+		} else {
+			$sql = 'INSERT';
+		}
+		$sql .= ' INTO ' . self::escapeField($paras['into']) . '('
 			. implode(', ', array_map(
 				array('Database', 'escapeField'), array_keys($paras['values'])))
 			. ') VALUES(' 
 			. implode(', ', array_map(
 				array('Database', 'escapeValue'), $paras['values']))
 			. ')';
-		// TODO: handle onduplicate
 		return $this->rawQuery($sql);
 	}
 	

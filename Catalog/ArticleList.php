@@ -125,7 +125,7 @@ class ArticleList extends CsvContainerList {
 	);
 	protected static $fileloc = CATALOG;
 	protected static $logfile = CATALOG_LOG;
-	protected static $childclass = 'Article';
+	protected static $childClass = 'Article';
 	/* core utils */
 	protected function __construct(array $commands = array()) {
 		parent::__construct(self::$ArticleList_commands);

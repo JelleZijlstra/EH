@@ -88,7 +88,7 @@ require_once(__DIR__ . '/../Common/common.php');
 require_once(BPATH . '/Container/CsvContainerList.php');
 class {$classname}List extends CsvContainerList {
 	protected static \$fileloc = '$realpath';
-	protected static \$childclass = '{$classname}Entry';
+	protected static \$childClass = '{$classname}Entry';
 	public function __construct() {
 	// all handled adequately in parent
 		parent::__construct();

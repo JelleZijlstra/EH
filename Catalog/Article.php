@@ -142,13 +142,21 @@ class Article extends CsvListEntry {
 				$this->folder = 'SEE ' . $in[1];
 				break;
 			case 'n': // new NOFILE entry
-				if(!is_string($in)) {
+				// revise so it can somewhat take into account ListEntry::add()
+				$this->folder = 'NOFILE';
+				if(is_string($in)) {
+					$this->name = $in;
+				} elseif(is_array($in)) {
+					// assume that ListEntry::add() gave us this input, and it makes sense
+					// Ultimately, Article's entire "adding" system should be revised.
+					foreach($in as $key => $value) {
+						$this->$key = $value;
+					}
+				} else {
 					throw new EHException(
 						"Input to Article constructor is not a string"
 					);
 				}
-				$this->folder = 'NOFILE';
-				$this->name = $in;
 				break;
 			case 'b': case 'l': // add new entry from basic information. 'l' if calling Article::add() is not desired
 				if(!is_array($in)) {

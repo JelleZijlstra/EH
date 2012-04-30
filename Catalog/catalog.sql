@@ -111,6 +111,7 @@ CREATE TABLE `article_identifiers` (
 	-- E.g., 'jstor'
 	`identifier_name` VARCHAR(255) NOT NULL,
 	`identifier` VARCHAR(255) NOT NULL,
+	PRIMARY KEY(`id`),
 	INDEX(`article_id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
 
@@ -189,6 +190,7 @@ CREATE TABLE `occurrence` (
 	`location_id` INT UNSIGNED,
 	`age_id` INT UNSIGNED,
 	`comments` VARCHAR(4096) DEFAULT NULL,
+	PRIMARY KEY(`id`),
 	INDEX(`taxon_id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
 
@@ -196,4 +198,6 @@ DROP TABLE IF EXISTS `occurrence_article`;
 CREATE TABLE `occurrence_article` (
 	`occurrence_id` INT UNSIGNED,
 	`article_id` INT UNSIGNED,
+	INDEX(`occurrence_id`),
+	INDEX(`article_id`)
 );

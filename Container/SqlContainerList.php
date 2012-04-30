@@ -206,12 +206,12 @@ abstract class SqlContainerList extends ContainerList {
 	 * Make a list of the possible values of a field.
 	 */
 	protected function _mlist(array $paras) {
-		$childclass = static::$childclass;
+		$childClass = static::$childClass;
 		// test whether we need to do a WHERE
 		$dowhere = false;
 		$whereparas = array();
 		foreach($paras as $para => $content) {
-			if($childclass::hasproperty($para)) {
+			if($childClass::hasproperty($para)) {
 				$dowhere = true;
 				$whereparas[$para] = $content;
 			}

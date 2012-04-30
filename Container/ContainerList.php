@@ -10,6 +10,8 @@ abstract class ContainerList extends ExecuteHandler {
 	// are in the form array('Article', 'isredirect')
 	public static $resolve_redirect_exclude = array();
 	static private $ContainerList_commands = array(
+		'add' => array('name' => 'add',
+			'desc' => 'Add an entry'),
 		'inform' => array('name' => 'inform',
 			'aka' => array('i'),
 			'desc' => 'Give information about an entry'),
@@ -71,6 +73,37 @@ abstract class ContainerList extends ExecuteHandler {
 	abstract protected function _addEntry(ListEntry $file, array $paras);
 
 	/*
+	 * Add a new entry.
+	 */
+	public function add(array $paras) {
+		$childClass = static::$childClass;
+		$myClass = get_called_class();
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'name'),
+			'checklist' => array('name' => 'Name of new entry'),
+			'checkfunc' => function($in) use($childClass) {
+				return property_exists($childClass, $in);
+			},
+			'askifempty' => array('name'),
+			'checkparas' => array(
+				'name' => function($in) use($myClass) {
+					if($myClass::singleton()->has($in)) {
+						echo 'An entry with this name already exists.' . PHP_EOL;
+						return false;
+					} else {
+						return true;
+					}
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		return $this->addEntry(
+			new $childClass($paras, 'n', $this),
+			array('isnew' => true)
+		);
+	}
+
+	/*
 	 * Remove an entry.
 	 */
 	public function removeEntry(/* string */ $file, array $paras = array()) {
@@ -125,7 +158,7 @@ abstract class ContainerList extends ExecuteHandler {
 	// call method for appropriate ListEntry
 	// example: $csvlist->edit('Agathaeromys nov.pdf'); equals $csvlist->c['Agathaeromys nov.pdf']->edit();
 		// check method validity
-		if(!method_exists(static::$childclass, $func)) {
+		if(!method_exists(static::$childClass, $func)) {
 			throw new EHException(
 				'Invalid call to ' . __METHOD__ . ' (method ' . $func 
 					. ' invalid)', 
@@ -151,8 +184,8 @@ abstract class ContainerList extends ExecuteHandler {
 				}
 				// resolve redirect if desired
 				if($func !== 'resolve_redirect' and 
-					method_exists(static::$childclass, 'resolve_redirect') and 
-					!in_array(array(static::$childclass, $func), 
+					method_exists(static::$childClass, 'resolve_redirect') and 
+					!in_array(array(static::$childClass, $func), 
 						self::$resolve_redirect_exclude, true)) {
 					$value = $this->get($value)->resolve_redirect();
 				}
@@ -208,7 +241,7 @@ abstract class ContainerList extends ExecuteHandler {
 	// execute a function on all files in the list. Don't actually execute a 
 	// command, since that is prohibitively expensive (requires EH to be 
 	// initialized on every single ListEntry).
-		$childclass = static::$childclass;
+		$childClass = static::$childClass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'checklist' => array(
@@ -223,8 +256,8 @@ abstract class ContainerList extends ExecuteHandler {
 				return true;
 			},
 			'checkparas' => array(
-				0 => function($in) use($childclass) {
-					return method_exists($childclass, $in);
+				0 => function($in) use($childClass) {
+					return method_exists($childClass, $in);
 				}
 			),
 			'errorifempty' => array(0),
@@ -334,7 +367,7 @@ abstract class ContainerList extends ExecuteHandler {
 	// entail lots of calls to mlist itself and to bfind. Both should probably
 	// accept a 'files' parameter to search in a smaller array of files instead
 	// of the whole $this->c.
-		$childclass = static::$childclass;
+		$childClass = static::$childClass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(
@@ -350,8 +383,8 @@ abstract class ContainerList extends ExecuteHandler {
 				'groupby' => 'Column to group results by',
 				'array' => 'Array to search in',
 			),
-			'checkfunc' => function($in) use($childclass) {
-				return $childclass::haspm($in);
+			'checkfunc' => function($in) use($childClass) {
+				return $childClass::haspm($in);
 			},
 			'default' => array(
 				'print' => true,
@@ -371,20 +404,20 @@ abstract class ContainerList extends ExecuteHandler {
 				'sort' => function($in) {
 					return function_exists($in);
 				},
-				'field' => function($in, $paras) use($childclass) {
+				'field' => function($in, $paras) use($childClass) {
 					if($paras['isfunc']) {
-						if(!$childclass::hasmethod($in)) {
+						if(!$childClass::hasmethod($in)) {
 							echo 'No such method: ' . $in . PHP_EOL;
 							return false;
 						}
-					} elseif(!$childclass::haspm($in)) {
+					} elseif(!$childClass::haspm($in)) {
 						echo 'No such property or method: ' . $in . PHP_EOL;
 						return false;
 					}
 					return true;
 				},
-				'groupby' => function($in) use($childclass) {
-					return $childclass::hasproperty($in);
+				'groupby' => function($in) use($childClass) {
+					return $childClass::hasproperty($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
@@ -431,7 +464,7 @@ abstract class ContainerList extends ExecuteHandler {
 	 */
 	public function bfind(array $paras) {
 	// Query the database.
-		$childclass = static::$childclass;
+		$childClass = static::$childClass;
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(
@@ -461,8 +494,8 @@ abstract class ContainerList extends ExecuteHandler {
 				'array' =>
 					'The array to search in',
 			),
-			'checkfunc' => function($in) use($childclass) {
-				return $childclass::haspm($in);
+			'checkfunc' => function($in) use($childClass) {
+				return $childClass::haspm($in);
 			},
 			'default' => array(
 				'quiet' => false,
@@ -479,17 +512,17 @@ abstract class ContainerList extends ExecuteHandler {
 				'isfunc' => false,
 			),
 			'checkparas' => array(
-				'openfiles' => function($in) use($childclass) {
-					return method_exists($childclass, 'openf');
+				'openfiles' => function($in) use($childClass) {
+					return method_exists($childClass, 'openf');
 				},
-				'printproperties' => function($in) use($childclass) {
+				'printproperties' => function($in) use($childClass) {
 					// check whether it's even an array
 					if(!is_array($in)) {
 						return false;
 					}
 					// check all array entries
 					foreach($in as $prop) {
-						if(!is_string($prop) or !$childclass::hasproperty($prop)) {
+						if(!is_string($prop) or !$childClass::hasproperty($prop)) {
 							echo 'bfind: invalid printproperties entry: ';
 							Sanitizer::printVar($prop);
 							return false;
@@ -523,7 +556,7 @@ abstract class ContainerList extends ExecuteHandler {
 		$queries = array();
 		foreach($paras as $key => $para) {
 			$query = array();
-			if($childclass::hasproperty($key)) {
+			if($childClass::hasproperty($key)) {
 				$query['field'] = $key;
 				$query['content'] = $para;
 				// test special syntax
@@ -564,7 +597,7 @@ abstract class ContainerList extends ExecuteHandler {
 			}
 			else if(substr($key, -2) === '()') {
 				$func = substr($key, 0, -2);
-				if(method_exists($childclass, $func)) {
+				if(method_exists($childClass, $func)) {
 					$query['field'] = $func;
 					$query['func'] = true;
 					$query['content'] = $para;

@@ -4,7 +4,7 @@ require_once(BPATH . '/Container/CsvContainerList.php');
 require_once(BPATH . '/UcuchaBot/Bot.php');
 class FacsList extends CsvContainerList {
 	protected static $fileloc;
-	protected static $childclass = 'FacsEntry';
+	protected static $childClass = 'FacsEntry';
 	public $bot;
 	const fac = 'Wikipedia:Featured article candidates';
 	protected static $FacsList_commands = array(

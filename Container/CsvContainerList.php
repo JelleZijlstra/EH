@@ -25,7 +25,7 @@ abstract class CsvContainerList extends ContainerList {
 	protected $labels; // first line of CSV file
 	protected static $fileloc; // where the file lives that we get our list from
 	protected static $logfile; // location of the log file
-	protected static $childclass; // name of the class that children need to be a member of
+	protected static $childClass; // name of the class that children need to be a member of
 	private static $CsvContainerList_commands = array(
 		'getstats' => array('name' => 'getstats',
 			'desc' => 'Give numerical statistics about entries fulfilling the given criteria'),
@@ -45,7 +45,7 @@ abstract class CsvContainerList extends ContainerList {
 		// consume first line (column labels)
 		$this->labels = fgets($cat);
 		while($line = fgetcsv($cat)) {
-			$this->addEntry(new static::$childclass($line, 'f', $this));
+			$this->addEntry(new static::$childClass($line, 'f', $this));
 		}
 		// close
 		fclose($cat);
@@ -127,8 +127,8 @@ abstract class CsvContainerList extends ContainerList {
 		}
 	}
 	static protected function is_childproperty($field) {
-		$childclass = static::$childclass;
-		return $childclass::hasproperty($field);
+		$childClass = static::$childClass;
+		return $childClass::hasproperty($field);
 	}
 	protected function _formatAll(array $paras) {
 		$this->shell('cp ' . escapeshellarg(static::$fileloc) . ' '
@@ -216,8 +216,8 @@ abstract class CsvContainerList extends ContainerList {
 				return ksort($this->c);
 		}
 		// check whether the field is valid
-		$childclass = static::$childclass;
-		if(!$childclass::hasproperty($field)) {
+		$childClass = static::$childClass;
+		if(!$childClass::hasproperty($field)) {
 			echo 'No such property';
 			return false;
 		}
@@ -251,12 +251,12 @@ abstract class CsvContainerList extends ContainerList {
 	}
 	/* finding files and making lists */
 	protected function _mlist(array $paras) {
-		$childclass = static::$childclass;
+		$childClass = static::$childClass;
 		// test whether we need bfind
 		$dobfind = false;
 		$bfindparas = array();
 		foreach($paras as $para => $content) {
-			if($childclass::hasproperty($para)) {
+			if($childClass::hasproperty($para)) {
 				$dobfind = true;
 				$bfindparas[$para] = $content;
 			}
@@ -358,8 +358,8 @@ abstract class CsvContainerList extends ContainerList {
 	public function average($files, $field) {
 		if(!is_array($files) or count($files) === 0)
 			return false;
-		$childclass = static::$childclass;
-		if(!$childclass::hasproperty($field)) {
+		$childClass = static::$childClass;
+		if(!$childClass::hasproperty($field)) {
 			echo 'Invalid property' . PHP_EOL;
 			return false;
 		}
@@ -377,8 +377,8 @@ abstract class CsvContainerList extends ContainerList {
 	}
 	public function stdev($files, $field) {
 		if(!is_array($files) or count($files) === 0) return false;
-		$childclass = static::$childclass;
-		if(!$childclass::hasproperty($field)) {
+		$childClass = static::$childClass;
+		if(!$childClass::hasproperty($field)) {
 			echo 'Invalid property' . PHP_EOL;
 			return false;
 		}
@@ -406,8 +406,8 @@ abstract class CsvContainerList extends ContainerList {
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!is_array($files) or count($files) === 0)
 			return false;
-		$childclass = static::$childclass;
-		if(!$childclass::hasproperty($field)) {
+		$childClass = static::$childClass;
+		if(!$childClass::hasproperty($field)) {
 			echo 'Invalid property' . PHP_EOL;
 			return false;
 		}
@@ -439,8 +439,8 @@ abstract class CsvContainerList extends ContainerList {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!is_array($files) or count($files) === 0) return false;
-		$childclass = static::$childclass;
-		if(!$childclass::hasproperty($field)) {
+		$childClass = static::$childClass;
+		if(!$childClass::hasproperty($field)) {
 			echo 'Invalid property' . PHP_EOL;
 			return false;
 		}
@@ -462,7 +462,7 @@ abstract class CsvContainerList extends ContainerList {
 		}
 	}
 	public function getstats(array $paras) {
-		$childclass = static::$childclass;
+		$childClass = static::$childClass;
 		// paras for this method
 		$gs_paras = array();
 		if($this->process_paras($paras, array(
@@ -485,11 +485,11 @@ abstract class CsvContainerList extends ContainerList {
 				'quiet' => true, // be quiet when we're in mlist and bfind
 			),
 			'checkparas' => array(
-				'field' => function($in) use ($childclass) {
-					return $childclass::hasproperty($in);
+				'field' => function($in) use ($childClass) {
+					return $childClass::hasproperty($in);
 				},
-				'groupby' => function($in) use ($childclass) {
-					return $childclass::hasproperty($in);
+				'groupby' => function($in) use ($childClass) {
+					return $childClass::hasproperty($in);
 				},
 			),
 			'split' => true,
@@ -554,9 +554,9 @@ abstract class CsvContainerList extends ContainerList {
 	public function listz(array $paras) {
 		// initialize variables used in process_paras call
 		$listz_paras = array();
-		$childclass = static::$childclass;
-		$checkparas_f = function($in) use($childclass) {
-			return $childclass::hasproperty($in);
+		$childClass = static::$childClass;
+		$checkparas_f = function($in) use($childClass) {
+			return $childClass::hasproperty($in);
 		};
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,

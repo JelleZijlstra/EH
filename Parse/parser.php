@@ -156,11 +156,12 @@ class Parser extends ExecuteHandler {
 	}
 	function getcitetype() {
 		preg_match('/<!--CITETYPE (.*?)-->/', $this->input, $matches);
+		$csvlist = ArticleList::singleton();
 		if(isset($matches[1])) {
-			ArticleList::singleton()->citetype = $matches[1];
+			$csvlist->citetype = $matches[1];
+		} elseif(!isset($csvlist->citetype)) {
+			$csvlist->citetype = 'paper';
 		}
-		else if(!isset($csvlist->citetype))
-			ArticleList::singleton()->citetype = 'paper';
 	}
 	public $mode; // string: parsing mode
 	public $includesfn; // bool: whether or not Sfn should be included in short-form citations

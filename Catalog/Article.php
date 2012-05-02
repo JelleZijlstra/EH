@@ -2205,7 +2205,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			return true;
 		}
 		echo "Adding data for file $this->name... ";
-		$tmp = new Fullfile(array($this->name, $this->folder, $this->sfolder, $this->ssfolder), 'l');
+		$tmp = new Article(array($this->name, $this->folder, $this->sfolder, $this->ssfolder), 'l');
 		if(!$tmp->add(array('noedittitle' => true)))
 			echo "nothing found" . PHP_EOL;
 		else {

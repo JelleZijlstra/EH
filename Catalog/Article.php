@@ -2970,16 +2970,23 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			return false;
 		// load document. Suppress errors because it's not our fault if the AMNH's HTML is messed up.
 		$doc = new DOMDocument();
-		if($paras['text'] !== false)
-			@$doc->loadHTML($paras['text']);
-		else if(!@$doc->loadHTMLFile(
-			'http://digitallibrary.amnh.org/dspace/handle/' .
-			$this->hdl . '?show=full')) {
-			echo 'Unable to load data from AMNH' . PHP_EOL;
-			return false;
+		if($paras['text'] !== false) {
+			try {
+				$doc->loadHTML($paras['text']);
+			} catch(Exception $e) {
+				echo 'Unable to load data from AMNH' . PHP_EOL;
+				return false;				
+			}
+		} else {
+			try {
+				$doc->loadHTMLFile(
+					'http://digitallibrary.amnh.org/dspace/handle/' .
+					$this->hdl . '?show=full');
+			} catch(Exception $e) {
+				echo 'Unable to load data from AMNH' . PHP_EOL;
+				return false;
+			}
 		}
-		else
-			echo 'Loaded data from AMNH' . PHP_EOL;
 		$list = $doc->getElementsByTagName('tr');
 		$authors = '';
 		for($i = 0; $i < $list->length; $i++) {

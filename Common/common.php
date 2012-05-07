@@ -1,4 +1,4 @@
-<?
+<?php
 /*
  * common.php
  * Jelle Zijlstra, March 2011

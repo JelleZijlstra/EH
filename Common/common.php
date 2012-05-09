@@ -37,6 +37,11 @@ if(mb_internal_encoding('UTF-8') === false) {
 	echo "Unable to set encoding" . PHP_EOL;
 	exit(1);
 }
+// set timezone
+if(date_default_timezone_set("UTC") === false) {
+	throw new EHException("Unable to set timezone");
+}
+
 function escape_shell($in) {
 // escapes a string for use as a shell argument
 	$in = escapeshellcmd($in);

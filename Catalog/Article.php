@@ -764,6 +764,7 @@ class Article extends CsvListEntry {
 			case 'AC': $o = 'Acta Chiropterologica'; break;
 			case 'AGH': case 'Acta Geologica Hispanica': $o = 'Acta Geológica Hispánica'; break;
 			case 'AJPA': $o = 'American Journal of Physical Anthropology'; break;
+			case 'Alcheringa: An Australasian Journal of Palaeontology': $o = 'Alcheringa'; break;
 			case 'AMN': case 'American Museum novitates': $o = 'American Museum Novitates'; break;
 			case 'AMNR': case 'Arquivos do Museu Nacional, Rio de Janeiro': $o = 'Arquivos do Museu Nacional'; break;
 			case 'ANMW': $o = 'Annales des Naturhistorischen Museums in Wien'; break;
@@ -985,11 +986,23 @@ class Article extends CsvListEntry {
 			}
 		};
 		// and another to convert it back into a good title
-		$unite = function() use (&$splittitle) {
+		$unite = function($splittitle) {
 			$title = implode(' ', $splittitle);
 			$title = preg_replace('/^\s+|\s+$|\s+(?= )/u', '', $title);
 			return $title;
 		};
+		// smartly convert a word to lowercase
+		$tolower = 'mb_strtolower';
+		// and uppercase
+		$toupper = function(/* string */ $word) {
+			if(isset($word[1]) && $word[0] === '(') {
+				$word[1] = mb_ucfirst($word[1]);
+			} else {
+				$word = mb_ucfirst($word);
+			}
+			return $word;
+		};
+		
 		echo 'Current title: ' . $this->title . PHP_EOL;
 		$makesplit($this->title);
 		// The edittitle() menu is too complicated for menu() to handle at the moment.
@@ -1009,7 +1022,7 @@ class Article extends CsvListEntry {
 			's' => 'save the changed title',
 			'm<filename>' => 'move to editing the title of file <filename>',
 		), 'Command syntax:');
-		while(true) {
+		for( ; ; $nbeg = NULL, $nend = NULL, $n = NULL) {
 			$cmd = $this->getline('edittitle> ');
 			if($cmd === '') {
 				continue;
@@ -1033,27 +1046,29 @@ class Article extends CsvListEntry {
 			switch($cmd[0]) {
 				case 'l':
 					if(isset($nbeg)) {
-						for($i = $nbeg; $i <= $nend; $i++)
-							$splittitle[$i] = mb_strtolower($splittitle[$i]);
+						for($i = $nbeg; $i <= $nend; $i++) {
+							$splittitle[$i] = $tolower($splittitle[$i]);
+						}
+					} elseif(isset($n)) {
+						$splittitle[$n] = $tolower($splittitle[$n]);
 					}
-					else if(isset($n))
-						$splittitle[$n] = mb_strtolower($splittitle[$n]);
 					break;
 				case 'u':
 					if(isset($nbeg)) {
-						for($i = $nbeg; $i <= $nend; $i++)
-							$splittitle[$i] = mb_ucfirst($splittitle[$i]);
+						for($i = $nbeg; $i <= $nend; $i++) {
+							$splittitle[$i] = $toupper($splittitle[$i]);
+						}
+					} elseif(isset($n)) {
+						$splittitle[$n] = $toupper($splittitle[$n]);
 					}
-					else if(isset($n))
-						$splittitle[$n] = mb_ucfirst($splittitle[$n]);
 					break;
 				case 'i':
 					if(isset($nbeg)) {
 						$splittitle[$nbeg] = '<i>' . $splittitle[$nbeg];
 						$splittitle[$nend] .= '</i>';
-					}
-					else if(isset($n))
+					} else if(isset($n)) {
 						$splittitle[$n] = '<i>' . $splittitle[$n] . '</i>';
+					}
 					break;
 				case 'o':
 					$this->openf();
@@ -1062,35 +1077,40 @@ class Article extends CsvListEntry {
 					$this->edit();
 					break;
 				case 'p':
-					echo $unite() . PHP_EOL;
+					echo $unite($splittitle) . PHP_EOL;
 					break;
 				case 'c':
-					$newtitle = $unite();
+					$newtitle = $unite($splittitle);
 					$makesplit($newtitle);
 					break;
 				case 'm':
-					if($this->p->has($n))
+					if($this->p->has($n)) {
 						$this->p->edittitle($n);
-					else
+					} else {
 						echo 'Invalid title' . PHP_EOL;
+					}
 					break;
-				case 'q': return false;
-				case 'a': return true;
+				case 'q': 
+					return false;
+				case 'a': 
+					return true;
 				case 't':
-					if(!isset($n)) break;
-					$splittitle[$n] .= $splittitle[$n + 1];
-					$splittitle[$n + 1] = '';
+					if(isset($n)) {
+						$splittitle[$n] .= $splittitle[$n + 1];
+						$splittitle[$n + 1] = '';
+					}
 					break;
 				case 'r':
 					if(isset($nbeg)) {
-						for($i = $nbeg; $i <= $nend; $i++)
+						for($i = $nbeg; $i <= $nend; $i++) {
 							$splittitle[$i] = '';
-					}
-					else if(isset($n))
+						}
+					} else if(isset($n)) {
 						$splittitle[$n] = '';
+					}
 					break;
 				case 's':
-					$this->title = $unite();
+					$this->title = $unite($splittitle);
 					$this->format();
 					echo 'New title: ' . $this->title . PHP_EOL;
 					$this->log('Edited title');
@@ -1101,8 +1121,7 @@ class Article extends CsvListEntry {
 						echo 'Current value of word ' . $n . ': ' . $splittitle[$n] . PHP_EOL;
 						$splittitle[$n] = $this->getline('New value: ');
 						break;
-					}
-					else {
+					} else {
 						echo 'Current title: ' . implode(' ', $splittitle) . PHP_EOL;
 						makemenu(array('r' => 'save new title and return to word-by-word editing',
 							's' => 'save as is',
@@ -1135,7 +1154,6 @@ class Article extends CsvListEntry {
 						}
 					}
 			}
-			unset($nbeg, $nend, $n);
 		}
 	}
 	public function set(array $paras) {
@@ -3109,8 +3127,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$this->$var = ${$var};
 			}
 		}
-		if($booktitle) {
-			$this->fillEnclosingFromTitle($booktitle);
+		if($booktitle !== '') {
+			if(strpos($booktitle, '/') === false and strpos($this->doi, 'bhl') !== false) {
+				$this->fillEnclosingFromTitle($booktitle);
+			} elseif(!$this->title) {
+				$this->title = $booktitle;
+			}
 		}
 		return true;
 	}
@@ -3482,6 +3504,7 @@ Content-Disposition: attachment
 	 * Helper functions to do with enclosing
 	 */
 	private function fillEnclosingFromTitle($title) {
+		echo 'Enclosing title: ' . $title . PHP_EOL;
 		$candidates = $this->p->bfind(array(
 			'title' => $title,
 		));

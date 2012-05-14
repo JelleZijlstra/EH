@@ -21,3 +21,12 @@ work.)
 
 Other methods and properties should have as low visibility as possible. Much
 work is still needed to fix unnecessarily public class members.
+
+== PHP version ==
+I am running parts of this code on my own computer, which has PHP 5.4, as well 
+as the Wikimedia Toolserver, which is still on PHP 5.3. Therefore, the portions 
+of the code involved in the bot (EH core, Bot class, SqlContainer) should not 
+use any new PHP 5.4 features. Other parts of the code should still not use new 
+PHP 5.4 features that would cause parse errors in earlier versions (e.g., short 
+array syntax), but may use other features that cause errors only at runtime 
+(e.g., $this references in closures).

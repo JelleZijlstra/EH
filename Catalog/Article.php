@@ -2038,15 +2038,18 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$sugg_lister = function($in) {
 		// in folder suggestions part 2, print a list of suggestions and return useful array
 		// input: array of folders
-			if(!is_array($in))
+			if(!is_array($in)) {
 				return;
+			}
 			// input is array with key: name of folder; value: array with contents
 			// discard value, use key as value for out array
-			foreach($in as $key => $value)
+			foreach($in as $key => $value) {
 				$out[] = $key;
-			// print new keys (ints) to be used in user input
-			foreach($out as $key => $value)
+			}
+			foreach($out as $key => $value) {
+				// print new keys (ints) to be used in user input
 				echo $key . ': ' . $value . '; ';
+			}
 			echo PHP_EOL;
 			return $out;
 		};
@@ -2085,49 +2088,68 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 			}
 			if(!$this->folder) {
-				if(!$this->p->foldertree)
+				if(!$this->p->foldertree) {
 					$this->p->build_foldertree();
+				}
+				$foldertree = $this->p->foldertree;
 				/* folder */
 				echo 'Suggestions: ';
-				$suggs = $sugg_lister($this->p->foldertree);
-				$cmd = $this->getline('Folder: ');
-				if($cmd === 'q') {
+				$suggs = $sugg_lister($foldertree);
+				$menuOptions = array(
+					'head' => 'Folder: ',
+					'headasprompt' => true,
+					'options' => array(
+						'q' => 'Quit',
+						'o' => 'Open this file',
+					),
+					'process' => array(
+						'o' => function() {
+							$this->openf(array('place' => 'temp'));
+							return true;
+						},
+					),
+					'processcommand' => function($cmd) use(&$suggs) {
+						if(is_numeric($cmd) && isset($suggs[$cmd])) {
+							return $suggs[$cmd];
+						} else {
+							return $cmd;
+						}
+					},
+					'validfunction' => function($cmd) use(&$foldertree) {
+						return isset($foldertree[$cmd]);
+					},
+				);
+				$folder = $this->menu($menuOptions);
+				if($folder === 'q') {
 					continue 2;
-				}
-				if(is_numeric($cmd)) {
-					$this->folder = $suggs[$cmd];
 				} else {
-					// TODO: re-ask if input is invalid
-					$this->folder = $cmd;
+					$this->folder = $folder;
 				}
 				/* subfolder */
-				if(count($this->p->foldertree[$this->folder]) !== 0) {
+				if(count($foldertree[$folder]) !== 0) {
 					echo 'Suggestions: ';
+					$foldertree = $this->p->foldertree[$this->folder];
 					$suggs = $sugg_lister($this->p->foldertree[$this->folder]);
-					$cmd = $this->getline('Subfolder: ');
-					if($cmd === 'q')
+					// update menu options
+					$menuOptions['head'] = 'Subfolder: ';
+					$sfolder = $this->menu($menuOptions);
+					if($sfolder === 'q') {
 						continue 2;
-					if(is_numeric($cmd))
-						$this->sfolder = $suggs[$cmd];
-					else
-						$this->sfolder = $cmd;
+					} else {
+						$this->sfolder = $sfolder;
+					}
 					/* sub-subfolder */
-					if(isset($this->p->foldertree
-							[$this->folder]
-							[$this->sfolder])
-						and count($this->p->foldertree
-							[$this->folder]
-							[$this->sfolder]) !== 0) {
+					if(count($foldertree[$sfolder]) !== 0) {
 						echo 'Suggestions: ';
-						$suggs = $sugg_lister(
-							$this->p->foldertree[$this->folder][$this->sfolder]
-						);
-						$cmd = $this->getline('Sub-subfolder: ');
-						if($cmd === 'q')
+						$foldertree = $foldertree[$sfolder];
+						$suggs = $sugg_lister($foldertree);
+						$menuOptions['head'] = 'Sub-subfolder: ';
+						$ssfolder = $this->menu($menuOptions);
+						if($ssfolder === 'q') {
 							continue 2;
-						if(is_numeric($cmd))
-							$this->ssfolder = $suggs[$cmd];
-						else $this->ssfolder = $cmd;
+						} else { 	
+							$this->ssfolder = $ssfolder;
+						}
 					}
 				}
 			}

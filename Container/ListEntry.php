@@ -212,6 +212,7 @@ abstract class ListEntry extends ExecuteHandler {
 			'checklist' => array(
 				'field' => 'Field to get',
 			),
+			'errorifempty' => array('field'),
 			'checkparas' => array(
 				'field' => function($in) use($class) {
 					return $class::hasproperty($in);

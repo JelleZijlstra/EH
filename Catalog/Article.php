@@ -2116,7 +2116,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						}
 					},
 					'validfunction' => function($cmd) use(&$foldertree) {
-						return isset($foldertree[$cmd]);
+						return ($cmd === '') || isset($foldertree[$cmd]);
 					},
 				);
 				$folder = $this->menu($menuOptions);
@@ -2126,7 +2126,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$this->folder = $folder;
 				}
 				/* subfolder */
-				if(count($foldertree[$folder]) !== 0) {
+				if($folder !== '' && count($foldertree[$folder]) !== 0) {
 					echo 'Suggestions: ';
 					$foldertree = $this->p->foldertree[$this->folder];
 					$suggs = $sugg_lister($this->p->foldertree[$this->folder]);
@@ -2139,7 +2139,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$this->sfolder = $sfolder;
 					}
 					/* sub-subfolder */
-					if(count($foldertree[$sfolder]) !== 0) {
+					if($sfolder !== '' && count($foldertree[$sfolder]) !== 0) {
 						echo 'Suggestions: ';
 						$foldertree = $foldertree[$sfolder];
 						$suggs = $sugg_lister($foldertree);

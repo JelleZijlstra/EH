@@ -1,4 +1,4 @@
-<?
+<?php
 /*
  * Part of this code based on http://www.google.com/codesearch/p?hl=en#WwoXSuQk0PM/trunk/expandFns.php
  * Author: Smith609

@@ -1014,6 +1014,7 @@ class Article extends CsvListEntry {
 				'e' => 'Edit an individual word',
 				't' => 'Merge a word with the next word',
 				'r' => 'Remove a word',
+				'v' => 'Smartly divide an individual word',
 				'w' => 'Edit the whole title',
 				'p' => 'Preview the edited title',
 				'c' => 'Recalculate the words',
@@ -1110,6 +1111,19 @@ class Article extends CsvListEntry {
 					}
 					for($i = $data[0]; $i <= $data[1]; $i++) {
 						$splitTitle[$i] = '';
+					}
+					return true;
+				},
+				'v' => function($cmd, array $data) use(&$splitTitle, $tolower) {
+					if(count($data) !== 2) {
+						echo 'Invalid argument' . PHP_EOL;
+						return true;
+					}
+					for($i = $data[0]; $i <= $data[1]; $i++) {
+						$splitTitle[$i] = preg_replace(
+							array('/(?<=[a-z,\.\)])(?=[A-Z])/u', '/(?=\()/u'),
+							array(' ', ' '),
+							$splitTitle[$i]);
 					}
 					return true;
 				},

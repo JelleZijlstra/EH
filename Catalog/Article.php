@@ -976,18 +976,17 @@ class Article extends CsvListEntry {
 			'name' => __FUNCTION__,
 			'checklist' => array( /* No paras */ ),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		// the array to hold the title
-		$splittitle = array();
 		// function to create the internal title array
-		$makesplit = function($title) use (&$splittitle) {
-			$splittitle = explode(' ', $title);
-			foreach($splittitle as $key => $word) {
+		$makeSplit = function(/* string */ $title) {
+			$splitTitle = explode(' ', $title);
+			foreach($splitTitle as $key => $word) {
 				echo $key . ': ' . $word . PHP_EOL;
 			}
+			return $splitTitle;
 		};
 		// and another to convert it back into a good title
-		$unite = function($splittitle) {
-			$title = implode(' ', $splittitle);
+		$unite = function(array $splitTitle) {
+			$title = implode(' ', $splitTitle);
 			$title = preg_replace('/^\s+|\s+$|\s+(?= )/u', '', $title);
 			return $title;
 		};
@@ -1004,157 +1003,223 @@ class Article extends CsvListEntry {
 		};
 		
 		echo 'Current title: ' . $this->title . PHP_EOL;
-		$makesplit($this->title);
-		// The edittitle() menu is too complicated for menu() to handle at the moment.
-		makemenu(array('l<n>' => 'make word <n> lowercase',
-			'u<n>' => 'make word <n> uppercase',
-			'i<n>' => 'make word <n> italicized',
-			'e<n>' => 'edit word <n> only',
-			't<n>' => 'merge word <n> with the next word',
-			'r<n>' => 'remove word <n>',
-			'e' => 'edit the entire title',
-			'p' => 'preview the edited title',
-			'c' => 'recalculate the words',
-			'o' => 'open this file',
-			'f' => 'edit this file',
-			'a' => 'quit this file without saving changes',
-			'q' => 'quit this program',
-			's' => 'save the changed title',
-			'm<filename>' => 'move to editing the title of file <filename>',
-		), 'Command syntax:');
-		for( ; ; $nbeg = NULL, $nend = NULL, $n = NULL) {
-			$cmd = $this->getline('edittitle> ');
-			if($cmd === '') {
-				continue;
-			}
-			if(preg_match('/^([a-z]\d+(-\d+)?|m.*)$/', $cmd)) {
-				$n = substr($cmd, 1);
-				if(strpos($n, '-') !== false) {
-					$sp = explode('-', $n);
-					$nbeg = (int) $sp[0];
-					$nend = (int) $sp[1];
-					if($nbeg > $nend or !isset($splittitle[$nend])) {
-						echo 'Invalid range' . PHP_EOL;
-						continue;
+		// the array to hold the title
+		$splitTitle = $makeSplit($this->title);
+		$this->menu(array(
+			'prompt' => 'edittitle> ',
+			'options' => array(
+				'l' => 'Make a word lowercase',
+				'u' => 'Make a word uppercase',
+				'i' => 'Italicize a word',
+				'e' => 'Edit an individual word',
+				't' => 'Merge a word with the next word',
+				'r' => 'Remove a word',
+				'w' => 'Edit the whole title',
+				'p' => 'Preview the edited title',
+				'c' => 'Recalculate the words',
+				'o' => 'Open this file',
+				'f' => 'Edit this file',
+				'a' => 'Quit this file without saving changes',
+				's' => 'Save the changed title',
+			),
+			'processcommand' => function($cmd, &$data) use(&$splitTitle) {
+				$cmd = trim($cmd);
+				if(preg_match('/^[a-z]$/', $cmd)) {
+					$data = array();
+					return $cmd;
+				} elseif(preg_match('/^([a-z])\s*(\d+)\s*-\s*(\d+)\s*$/u', $cmd, $matches)) {
+					$beg = (int) $matches[2];
+					$end = (int) $matches[3];
+					if($beg > $end) {
+						echo 'Range invalid: beginning > end' . PHP_EOL;
+						return false;
+					} elseif(!isset($splitTitle[$end])) {
+						echo 'Range invalid: no word ' . $end . PHP_EOL;
+						return false;
+					} elseif(!isset($splitTitle[$beg])) {
+						echo 'Range invalid: no word ' . $beg . PHP_EOL;
+						return false;
 					}
-				}
-				if(preg_match('/^\d+$/', $n) and !isset($splittitle[$n])) {
-					echo 'Invalid word' . PHP_EOL;
-					continue;
-				}
-			}
-			switch($cmd[0]) {
-				case 'l':
-					if(isset($nbeg)) {
-						for($i = $nbeg; $i <= $nend; $i++) {
-							$splittitle[$i] = $tolower($splittitle[$i]);
-						}
-					} elseif(isset($n)) {
-						$splittitle[$n] = $tolower($splittitle[$n]);
+					$data = array($beg, $end);
+					return $matches[1];
+				} elseif(preg_match('/^([a-z])\s*(\d+)$/', $cmd, $matches)) {
+					$n = (int) $matches[2];
+					if(!isset($splitTitle[$n])) {
+						echo 'Range invalid: no word ' . $n . PHP_EOL;
+						return false;
 					}
-					break;
-				case 'u':
-					if(isset($nbeg)) {
-						for($i = $nbeg; $i <= $nend; $i++) {
-							$splittitle[$i] = $toupper($splittitle[$i]);
-						}
-					} elseif(isset($n)) {
-						$splittitle[$n] = $toupper($splittitle[$n]);
-					}
-					break;
-				case 'i':
-					if(isset($nbeg)) {
-						$splittitle[$nbeg] = '<i>' . $splittitle[$nbeg];
-						$splittitle[$nend] .= '</i>';
-					} else if(isset($n)) {
-						$splittitle[$n] = '<i>' . $splittitle[$n] . '</i>';
-					}
-					break;
-				case 'o':
-					$this->openf();
-					break;
-				case 'f':
-					$this->edit();
-					break;
-				case 'p':
-					echo $unite($splittitle) . PHP_EOL;
-					break;
-				case 'c':
-					$newtitle = $unite($splittitle);
-					$makesplit($newtitle);
-					break;
-				case 'm':
-					if($this->p->has($n)) {
-						$this->p->edittitle($n);
-					} else {
-						echo 'Invalid title' . PHP_EOL;
-					}
-					break;
-				case 'q': 
+					$data = array($n, $n);
+					return $matches[1];
+				} else {
 					return false;
-				case 'a': 
+				}
+			},
+			'process' => array(
+				'l' => function($cmd, array $data) use(&$splitTitle, $tolower) {
+					if(count($data) !== 2) {
+						echo 'Invalid argument' . PHP_EOL;
+						return true;
+					}
+					for($i = $data[0]; $i <= $data[1]; $i++) {
+						$splitTitle[$i] = $tolower($splitTitle[$i]);
+					}
 					return true;
-				case 't':
-					if(isset($n)) {
-						$splittitle[$n] .= $splittitle[$n + 1];
-						$splittitle[$n + 1] = '';
+				},
+				'u' => function($cmd, array $data) use(&$splitTitle, $toupper) {
+					if(count($data) !== 2) {
+						echo 'Invalid argument' . PHP_EOL;
+						return true;
 					}
-					break;
-				case 'r':
-					if(isset($nbeg)) {
-						for($i = $nbeg; $i <= $nend; $i++) {
-							$splittitle[$i] = '';
-						}
-					} else if(isset($n)) {
-						$splittitle[$n] = '';
+					for($i = $data[0]; $i <= $data[1]; $i++) {
+						$splitTitle[$i] = $toupper($splitTitle[$i]);
 					}
-					break;
-				case 's':
-					$this->title = $unite($splittitle);
+					return true;
+				},
+				'i' => function($cmd, array $data) use(&$splitTitle) {
+					if(count($data) !== 2) {
+						echo 'Invalid argument' . PHP_EOL;
+						return true;
+					}
+					$splitTitle[$data[0]] = '<i>' . $splitTitle[$data[0]];
+					$splitTitle[$data[1]] .= '</i>';
+					return true;				
+				},
+				'e' => function($cmd, array $data) use(&$splitTitle) {
+					if(count($data) !== 2 || $data[0] !== $data[1]) {
+						echo 'Invalid argument' . PHP_EOL;
+						return true;
+					}
+					echo 'Current value of word ' . $data[0] . ': ' 
+						. $splitTitle[$data[0]] . PHP_EOL;
+					$splitTitle[$data[0]] = $this->getline('New value: ');
+				},
+				't' => function($cmd, array $data) use(&$splitTitle) {
+					if(count($data) !== 2 || $data[0] !== $data[1]) {
+						echo 'Invalid argument' . PHP_EOL;
+						return true;
+					}
+					$n = $data[0];
+					$splitTitle[$n] .= $splitTitle[$n + 1];
+					$splitTitle[$n + 1] = '';
+					return true;
+				},
+				'r' => function($cmd, array $data) use(&$splitTitle) {
+					if(count($data) !== 2) {
+						echo 'Invalid argument' . PHP_EOL;
+						return true;
+					}
+					for($i = $data[0]; $i <= $data[1]; $i++) {
+						$splitTitle[$i] = '';
+					}
+					return true;
+				},
+				'w' => function() use(&$splitTitle, $unite, $makeSplit) {
+					$ret = $this->editWholeTitle(array(
+						'new' => $unite($splitTitle),
+					));
+					if($ret === false) {
+						return false;
+					} else {
+						$splitTitle = $makeSplit($this->title);
+						return true;
+					}
+				},
+				'p' => function() use($unite, &$splitTitle) {
+					echo $unite($splitTitle) . PHP_EOL;
+					return true;
+				},
+				'c' => function() use($makeSplit, $unite, &$splitTitle) {
+					$splitTitle = $makeSplit($unite($splitTitle));
+					return true;
+				},
+				'o' => function() {
+					$this->openf();
+					return true;
+				},
+				'f' => function() {
+					$this->edit();
+					return true;
+				},
+				'a' => function() {
+					return false;
+				},
+				's' => function() use($unite, &$splitTitle) {
+					$this->title = $unite($splitTitle);
 					$this->format();
 					echo 'New title: ' . $this->title . PHP_EOL;
 					$this->log('Edited title');
 					$this->p->needsave();
+					return false;
+				},
+			),
+		));
+	}
+	private function editWholeTitle(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'new' => 'New title to start with',
+			),
+			'default' => array(
+				'new' => $this->title,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$newTitle = $paras['new'];
+		echo 'Current title: ' . $newTitle . PHP_EOL;
+		$options = array(
+			'r' => 'Save new title, return to word-by-word editing',
+			'b' => 'Do not save title, return to word-by-word editing',
+			's' => 'Save new title',
+			'a' => 'Do not save new title',
+			'p' => 'Preview title',
+			'e' => 'Edit title',
+		);
+		return $this->menu(array(
+			'prompt' => 'editWholeTitle> ',
+			'options' => $options,
+			'processcommand' => function($cmd, &$data) use($options) {
+				if(array_key_exists($cmd, $options)) {
+					return $cmd;
+				} else {
+					// else pretend it is the 'e' command
+					$data = $cmd;
+					return 'e';
+				}
+			},
+			'process' => array(
+				'r' => function(&$cmd) use(&$newTitle) {
+					$this->log('Edited title');
+					$this->title = $newTitle;
+					$cmd = true;
+					return false;
+				},
+				'b' => function(&$cmd) {
+					$cmd = true;
+					return false;
+				},
+				's' => function(&$cmd) use(&$newTitle) {
+					$this->log('Edited title');
+					$this->title = $newTitle;
+					$cmd = false;
+					return false;				
+				},
+				'a' => function(&$cmd) {
+					$cmd = false;
+					return false;
+				},
+				'p' => function() use(&$newTitle) {
+					echo $newTitle . PHP_EOL;
 					return true;
-				case 'e':
-					if(isset($n)) {
-						echo 'Current value of word ' . $n . ': ' . $splittitle[$n] . PHP_EOL;
-						$splittitle[$n] = $this->getline('New value: ');
-						break;
-					} else {
-						echo 'Current title: ' . implode(' ', $splittitle) . PHP_EOL;
-						makemenu(array('r' => 'save new title and return to word-by-word editing',
-							's' => 'save as is',
-							'a' => 'quit this file without saving changes',
-							'q' => 'quit this program',
-							'b' => 'return to word-by-word editing without saving new title',
-						), 'Enter new title. Other commands:');
-						while(true) {
-							$cmd2 = $this->getline();
-							if(strlen($cmd2) > 1) $newtitle = $cmd2;
-							else switch($cmd2) {
-								case 'q':
-									return false;
-								case 's':
-									$this->title = $newtitle;
-									$this->log('Edited title');
-								case 'a':
-									$this->p->needsave();
-									return true;
-								case 'r':
-									if(!$newtitle)
-										break 2;
-									$this->log('Edited title');
-									$this->title = $newtitle;
-									return $this->edittitle();
-								case 'b':
-									echo 'Quit full-title editing' . PHP_EOL;
-									break 2;
-							}
-						}
+				},
+				'e' => function($cmd, $data) use(&$newTitle) {
+					if($data === NULL) {
+						$data = $this->getline('New title: ');
 					}
-			}
-		}
+					$newTitle = $data;
+					return true;
+				},
+			),
+		));
 	}
 	public function set(array $paras) {
 		if($this->process_paras($paras, array(
@@ -3413,8 +3478,12 @@ Content-Disposition: attachment
 						echo 'Updating folders for file ' . $this->name . PHP_EOL;
 						$once = true;
 					}
-					echo 'Stored ' . $v . ': ' . $this->$v . PHP_EOL;
-					echo 'New ' . $v . ': ' . $paras['fromfile']->$v . PHP_EOL;
+					echo 'Stored ' . $v . ': ';
+					Sanitizer::printVar($this->$v);
+					echo PHP_EOL;
+					echo 'New ' . $v . ': '; 
+					Sanitizer::printVar($paras['fromfile']->$v); 
+					echo PHP_EOL;
 				}
 				$this->$v = $paras['fromfile']->$v;
 			}

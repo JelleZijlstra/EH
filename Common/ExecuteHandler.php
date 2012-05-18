@@ -874,16 +874,18 @@ class ExecuteHandler extends EHICore {
 					'Function to determine validity of command',
 				'process' =>
 					'Array of callbacks to execute when a given option is'
-						. ' called. These function take the command given as a'
-						. ' reference argument, and they'
+						. ' called. These function take the command given and'
+						. ' the data produced by processcommand as arguments,'
+						. ' and they'
 						. ' should return either true (indicating that menu'
 						. ' should continue) or false (indicating that menu'
 						. ' should return).',
 				'processcommand' =>
 					'Function used to process the command after input. This'
-						. ' function may take a second reference  argument of'
+						. ' function may take a second reference argument of'
 						. ' data that is given to processcommand or to the'
-						. ' caller.',
+						. ' caller. This function may return false if the'
+						. ' command is invalid.',
 			),
 			'default' => array(
 				'head' => 'MENU',

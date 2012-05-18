@@ -332,7 +332,7 @@ abstract class CsvContainerList extends ContainerList {
 				echo $file->name . PHP_EOL;
 				// need to change this for broader applicability
 				if(method_exists($file, 'citepaper')) {
-					echo $file->citepaper() . PHP_EOL;
+					echo ' ' . $file->citepaper() . PHP_EOL;
 				}
 			}
 			if($paras['printvalues']) {

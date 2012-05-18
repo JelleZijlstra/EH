@@ -1081,6 +1081,7 @@ class ExecuteHandler extends EHICore {
 				'return' => 'What to return. Options are "success" (whether the command returned exit status 0), "output" (the stdout output), and "exitvalue" (the exit code of the command).',
 				'printcmd' => 'Print the command as it is executed',
 				'printout' => 'Whether to print the output',
+				'exceptiononerror' => 'Whether to throw an exception when an error occurs',
 			),
 			'default' => array(
 				'arg' => false,
@@ -1093,6 +1094,7 @@ class ExecuteHandler extends EHICore {
 				'return' => 'success',
 				'printcmd' => false,
 				'printout' => true,
+				'exceptiononerror' => true,
 			),
 			'listoptions' => array(
 				'return' => array('success', 'output', 'exitvalue'),
@@ -1146,6 +1148,12 @@ class ExecuteHandler extends EHICore {
 			exec($cmd, $output, $exitval);
 			if($paras['printout'] and count($output) > 0) {
 				echo implode(PHP_EOL, $output) . PHP_EOL;
+			}
+			if($paras['exceptiononerror'] && ($exitval !== 0)) {
+				throw new EHException(
+					'Error (exit value = ' . $exitval . ') occurred while '
+						. 'executing command ' . $cmd
+				);
 			}
 			switch($paras['return']) {
 				case 'success':

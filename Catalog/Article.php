@@ -312,14 +312,16 @@ class Article extends CsvListEntry {
 		}
 		switch($paras['place']) {
 			case 'catalog':
-				$this->shell('open ' . $this->path());
+				$place = $this->path(array('type' => 'none'));
 				break;
 			case 'temp':
-				$this->shell(
-					"open " . escapeshellarg(TEMPPATH . "/" . $this->name)
-				);
+				$place = TEMPPATH . "/" . $this->name;
 				break;
 		}
+		$this->shell(array(
+			'cmd' => 'open',
+			'arg' => array($place),
+		));
 		return true;
 	}
 	public function remove(array $paras = array()) {
@@ -2038,82 +2040,126 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			'checklist' => array('lslist' => 'List of files found using ls'),
 			'errorifempty' => array('lslist'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		makemenu(array('o' => 'open this file',
+		switch($this->menu(array(
+			'head' => 'Adding file ' . $this->name,
+			'options' => array(
+				'o' => 'open this file',
 				'q' => 'quit',
 				's' => 'skip this file',
 				'n' => 'move this file to "Not to be cataloged"',
 				'r' => 'rename this file',
-				'<enter>' => 'add this file to the catalog',
-			), "Adding file $this->name");
-		while(true) switch($this->getline()) {
-			case 'o': $this->openf(array('place' => 'temp')); break;
+				'' => 'add this file to the catalog',				
+			),
+			'process' => array(
+				'o' => function() {
+					$this->openf(array('place' => 'temp'));
+					return true;
+				},
+				'r' => function() {
+					$oldname = $this->name;
+					$newname = $this->getline('New name: ');
+					if($newname === 'q') {
+						break;
+					}
+					// allow renaming to existing name, for example to replace in-press files, but warn
+					if($this->p->has($newname)) {
+						echo 'Warning: file already exists' . PHP_EOL;
+					}
+					$this->name = $newname;
+					if(!$this->shell(array(
+						'cmd' => 'mv',
+						'arg' => array(
+							TEMPPATH . '/' . $oldname, 
+							TEMPPATH . '/' . $newname
+						),
+					))) {
+						echo "Error moving file" . PHP_EOL;
+					}
+					return true;
+				},
+				'n' => function() {
+					if(!$this->shell(array(
+						'cmd' => 'mv',
+						'arg' => array(
+							TEMPPATH . '/' . $this->name,
+							TEMPPATH . '/Not to be cataloged/' . $this->name,
+						),
+					))) {
+						echo "Error moving file" . PHP_EOL;				
+					}
+					return false;
+				},
+			),
+		))) {
 			case 'q': return 0;
-			case 's': return 1;
-			case 'r':
-				$oldname = $this->name;
-				$newname = $this->getline('New name: ');
-				if($newname === 'q')
-					break;
-				// allow renaming to existing name, for example to replace in-press files, but warn
-				if($this->p->has($newname))
-					echo 'Warning: file already exists' . PHP_EOL;
-				$this->name = $newname;
-				$cmd = 'mv ' 
-					. escapeshellarg(TEMPPATH . '/' . $oldname) . ' ' 
-					. escapeshellarg(TEMPPATH . '/' . $newname);
-				if(!$this->shell($cmd)) {
-					echo "Error moving file" . PHP_EOL;
-				}
-				break;
-			case 'n':
-				$cmd = 'mv ' 
-					. escapeshellarg(TEMPPATH . '/' . $this->name) . ' '
-					. escapeshellarg(
-						TEMPPATH . '/Not to be cataloged/' . $this->name
-					);
-				if(!$this->shell($cmd)) {
-					echo "Error moving file" . PHP_EOL;
-				}
-				return 1;
-			case '': break 2;
+			case 'n': case 's': return 1;
+			default: break;
 		}
 		/*
 		 * get data
 		 */
+		// the next line may "rename" the file, but we do not actually rename it
+		// until we move it to the repository, so remember the old name
 		$oldname = $this->name;
-		// loop until the value of $this->name doesn't exist yet
-		while(isset($paras['lslist'][$this->name])) {
-			makemenu(array('r' => 'move over the existing file',
-					'd' => 'delete the new file',
-					'o' => 'open the new and existing files',
-				), 'A file with this name already exists. Please enter a new filename');
-			while(true) {
-				switch($newname = $this->getline()) {
-					case 'o':
-						$this->openf(array('place' => 'temp'));
-						$paras['lslist'][$this->name]->openf();
-						break;
-					case 'r':
-						$cmd = 'mv '
-							. escapeshellarg(TEMPPATH . '/' . $this->name) . ' ' 
-							. $paras['lslist'][$this->name]->path();
-						if(!$this->shell($cmd)) {
-							echo "Error moving file" . PHP_EOL;
-						}
-						$this->p->edit($this->name);
-						return 1;
-					case 'd':
-						$this->shell('rm '
-							. escapeshellarg(TEMPPATH . '/' . $this->name)
-						);
-						return 1;
-					case 'q': return 0;
-					default:
-						$this->name = $newname;
-						break 2;
+		if(!$this->checkForExistingFile($paras['lslist'])) {
+			return 1;
+		}
+		if(!$this->fullPathSuggestions()) {
+			if(!$this->folderSuggestions()) {
+				echo 'Unable to determine folder' . PHP_EOL;
+				return 1;
+			}
+		}
+		if(!$this->shell(array(
+			'cmd' => 'mv',
+			'arg' => array(
+				'-n',
+				TEMPPATH . '/' . $oldname,
+				$this->path(array('type' => 'none')),
+			),
+		))) {
+			echo "Error moving file {$this->name} into library." . PHP_EOL;
+			return 1;
+		}
+		return $this->add() ? 2 : 1;
+	}
+	private /* bool */ function fullPathSuggestions() {
+		if(!$this->p->sugglist) {
+			$this->p->build_sugglist();
+		}
+		$key = $this->getkey();
+		if(isset($this->p->sugglist[$key])) {
+			$suggs = $this->p->sugglist[$key]->getsugg();
+			foreach($suggs as $sugg) {
+				echo 'Suggested placement. Folder: ' . $sugg[0];
+				if($sugg[1]) {
+					echo '; subfolder: ' . $sugg[1];
+					if($sugg[2])
+						echo '; sub-subfolder: ' . $sugg[2];
+				}
+				$cmd = $this->menu(array(
+					'head' => PHP_EOL,
+					'options' => array(
+						'y' => 'this suggestion is correct',
+						'n' => 'this suggestion is not correct',
+						's' => 'stop suggestions',
+						'q' => 'quit this file',
+					),
+				));
+				switch($cmd) {
+					case 'y':
+						$this->folder = $sugg[0];
+						$this->sfolder = $sugg[1];
+						$this->ssfolder = $sugg[2];
+						return true;
+					case 'n': break;
+					case 's': return false;
 				}
 			}
 		}
+		return false;
+	}
+	private /* bool */ function folderSuggestions() {
 		$sugg_lister = function($in) {
 		// in folder suggestions part 2, print a list of suggestions and return useful array
 		// input: array of folders
@@ -2132,117 +2178,122 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			echo PHP_EOL;
 			return $out;
 		};
-		// loop in case of incorrect folders
-		while(true) {
-			if(!$this->p->sugglist) $this->p->build_sugglist();
-			$key = $this->getkey();
-			if(isset($this->p->sugglist[$key])) {
-				$suggs = $this->p->sugglist[$key]->getsugg();
-				foreach($suggs as $sugg) {
-					echo 'Suggested placement. Folder: ' . $sugg[0];
-					if($sugg[1]) {
-						echo '; subfolder: ' . $sugg[1];
-						if($sugg[2])
-							echo '; sub-subfolder: ' . $sugg[2];
-					}
-					$cmd = $this->menu(array(
-						'head' => PHP_EOL,
-						'options' => array(
-							'y' => 'if this suggestion is correct',
-							'n' => 'this suggestion is not correct',
-							's' => 'stop suggestions',
-							'q' => 'quit this file',
-						),
-					));
-					switch($cmd) {
-						case 'y':
-							$this->folder = $sugg[0];
-							$this->sfolder = $sugg[1];
-							$this->ssfolder = $sugg[2];
-							break 2;
-						case 'n': break;
-						case 's': break 2;
-						case 'q': return 1;
-					}
-				}
-			}
-			if(!$this->folder) {
-				if(!$this->p->foldertree) {
-					$this->p->build_foldertree();
-				}
-				$foldertree = $this->p->foldertree;
-				/* folder */
-				echo 'Suggestions: ';
-				$suggs = $sugg_lister($foldertree);
-				$menuOptions = array(
-					'head' => 'Folder: ',
-					'headasprompt' => true,
-					'options' => array(
-						'q' => 'Quit',
-						'o' => 'Open this file',
-					),
-					'process' => array(
-						'o' => function() {
-							$this->openf(array('place' => 'temp'));
-							return true;
-						},
-					),
-					'processcommand' => function($cmd) use(&$suggs) {
-						if(is_numeric($cmd) && isset($suggs[$cmd])) {
-							return $suggs[$cmd];
-						} else {
-							return $cmd;
-						}
-					},
-					'validfunction' => function($cmd) use(&$foldertree) {
-						return ($cmd === '') || isset($foldertree[$cmd]);
-					},
-				);
-				$folder = $this->menu($menuOptions);
-				if($folder === 'q') {
-					continue 2;
+		if(!$this->p->foldertree) {
+			$this->p->build_foldertree();
+		}
+		$foldertree = $this->p->foldertree;
+		$suggs = array();
+		$menuOptions = array(
+			'head' => 'Folder: ',
+			'headasprompt' => true,
+			'options' => array(
+				'q' => 'Quit',
+				'o' => 'Open this file',
+			),
+			'process' => array(
+				'o' => function() {
+					$this->openf(array('place' => 'temp'));
+					return true;
+				},
+			),
+			'processcommand' => function($cmd) use(&$suggs) {
+				if(is_numeric($cmd) && isset($suggs[$cmd])) {
+					return $suggs[$cmd];
 				} else {
-					$this->folder = $folder;
+					return $cmd;
 				}
-				/* subfolder */
-				if($folder !== '' && count($foldertree[$folder]) !== 0) {
-					echo 'Suggestions: ';
-					$foldertree = $this->p->foldertree[$this->folder];
-					$suggs = $sugg_lister($this->p->foldertree[$this->folder]);
-					// update menu options
-					$menuOptions['head'] = 'Subfolder: ';
-					$sfolder = $this->menu($menuOptions);
-					if($sfolder === 'q') {
-						continue 2;
-					} else {
-						$this->sfolder = $sfolder;
-					}
-					/* sub-subfolder */
-					if($sfolder !== '' && count($foldertree[$sfolder]) !== 0) {
-						echo 'Suggestions: ';
-						$foldertree = $foldertree[$sfolder];
-						$suggs = $sugg_lister($foldertree);
-						$menuOptions['head'] = 'Sub-subfolder: ';
-						$ssfolder = $this->menu($menuOptions);
-						if($ssfolder === 'q') {
-							continue 2;
-						} else { 	
-							$this->ssfolder = $ssfolder;
-						}
-					}
-				}
-			}
-
-			$command = 'mv -n ' . escapeshellarg(TEMPPATH . '/' . $oldname) 
-				. ' ' . $this->path();
-			// move file
-			if($this->shell($command)) {
-				break;
-			} else {
-				echo "Error moving file {$this->name} into library. Type 'q' for \"Folder\" to quit this file." . PHP_EOL;
+			},
+			'validfunction' => function($cmd) use(&$foldertree) {
+				return ($cmd === '') || isset($foldertree[$cmd]);
+			},
+		);
+		/* folder */
+		echo 'Suggestions: ';
+		$suggs = $sugg_lister($foldertree);
+		$this->folder = $folder = $this->menu($menuOptions);
+		/* subfolder */
+		if($folder !== '' && count($foldertree[$folder]) !== 0) {
+			echo 'Suggestions: ';
+			$foldertree = $this->p->foldertree[$this->folder];
+			$suggs = $sugg_lister($this->p->foldertree[$this->folder]);
+			// update menu options
+			$menuOptions['head'] = 'Subfolder: ';
+			$this->sfolder = $sfolder = $this->menu($menuOptions);
+			/* sub-subfolder */
+			if($sfolder !== '' && count($foldertree[$sfolder]) !== 0) {
+				echo 'Suggestions: ';
+				$foldertree = $foldertree[$sfolder];
+				$suggs = $sugg_lister($foldertree);
+				$menuOptions['head'] = 'Sub-subfolder: ';
+				$this->ssfolder = $this->menu($menuOptions);
 			}
 		}
-		return $this->add() ? 2 : 1;
+		return true;
+	}
+	private /* bool */ function checkForExistingFile($lslist) {
+		if(!isset($lslist[$this->name])) {
+			return true;
+		}
+		$options = array(
+			'r' => 'move over the existing file',
+			'd' => 'delete the new file',
+			'o' => 'open the new and existing files',
+		);
+		$cmd = $this->menu(array(
+			'head' => 'A file with this name already exists. Please enter a new filename',
+			'options' => $options,
+			'validfunction' => function() { return true; },
+			'processcommand' => function($cmd, &$data) use($options) {
+				if(!array_key_exists($cmd, $options)) {
+					$data = $cmd;
+					$cmd = 's';
+				}
+				return $cmd;
+			},
+			'process' => array(
+				'o' => function() use($lslist) {
+					$this->openf(array('place' => 'temp'));
+					$lslist[$this->name]->openf();
+					return true;
+				},
+				'r' => function() use($lslist) {
+					$this->shell(array(
+						'cmd' => 'mv',
+						'arg' => array(
+							TEMPPATH . '/' . $this->name,
+							$lslist[$this->name]->path(array(
+								'type' => 'none'
+							)),
+						),
+					));
+					$this->p->edit($this->name);
+					return false;
+				},
+				'd' => function() {
+					$this->shell(array(
+						'cmd' => 'rm',
+						'arg' => array(TEMPPATH . '/' . $this->name),
+					));
+					return false;
+				},
+				's' => function($cmd, &$data) use($lslist) {
+					if(isset($lslist[$data])) {
+						echo 'This filename already exists' . PHP_EOL;
+						return true;
+					} else {
+						$this->name = $data;
+						$data = NULL;
+						return false;
+					}
+				},
+			),
+		));
+		switch($cmd) {
+			case 'n': case 'r': return false;
+			case 's': return true;
+		}
+		// control should never reach here
+		var_dump($cmd);
 	}
 	private function setCurrentDate() {
 		// add time added

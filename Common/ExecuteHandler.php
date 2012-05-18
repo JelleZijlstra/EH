@@ -858,6 +858,8 @@ class ExecuteHandler extends EHICore {
 			'checklist' => array(
 				'head' =>
 					'Menu heading',
+				'prompt' =>
+					'Prompt to be shown',
 				'headasprompt' =>
 					'Whether to show the heading as the prompt for input',
 				'options' =>
@@ -885,6 +887,7 @@ class ExecuteHandler extends EHICore {
 			),
 			'default' => array(
 				'head' => 'MENU',
+				'prompt' => '> ',
 				'printoptions' => false,
 				'helpcommand' => true,
 				'options' => array(),
@@ -916,6 +919,8 @@ class ExecuteHandler extends EHICore {
 		$getlineparas = array('lines' => array_keys($paras['options']));
 		if($paras['headasprompt']) {
 			$getlineparas['prompt'] = $paras['head'];
+		} else {
+			$getlineparas['prompt'] = $paras['prompt'];
 		}
 		while(true) {
 			// get command

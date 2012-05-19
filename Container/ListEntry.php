@@ -66,7 +66,10 @@ abstract class ListEntry extends ExecuteHandler {
 	 * needs harmonization.
 	 */
 	// TODO: determine what those should do here
-	static function haspm($in) {}
+	static function haspm($in) {
+		// should probably also check for methods
+		return property_exists(get_called_class(), $in);
+	}
 	static function hasproperty($property) {}
 	static function hasmethodps($method) {}
 	static function hasmethod($method) {}

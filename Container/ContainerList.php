@@ -421,10 +421,6 @@ abstract class ContainerList extends ExecuteHandler {
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if(!is_array($this->{$paras['array']})) {
-			echo 'Invalid array' . PHP_EOL;
-			return false;
-		}
 		// check for groupby
 		if($paras['groupby']) {
 			$childparas = $paras;

@@ -180,7 +180,7 @@ abstract class SqlContainerList extends ContainerList {
 			'from' => $this->table()
 		));
 		foreach($fields as $entry) {
-			echo $entry['name'];
+			echo $entry['name'] . PHP_EOL;
 		}
 		return true;
 	}
@@ -223,11 +223,10 @@ abstract class SqlContainerList extends ContainerList {
 		if($dowhere) {
 			$query .= ' WHERE ' . Database::where($whereparas);
 		}
-		$values = Database::singleton()->query($query);
+		$values = Database::singleton()->query(array($query));
 		$out = array();
 		foreach($values as $value) {
-			// TODO: does this work?
-			$out[$value[$paras['field']]] = $value['count'];
+			$out[$value[$paras['field']]] = $value['COUNT(*)'];
 		}
 		return $out;
 	}

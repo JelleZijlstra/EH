@@ -21,20 +21,26 @@ abstract class Sanitizer {
 	}
 	public static /* void */ function printVar(/* mixed */ $in) {
 		// print a variable in human-readable form.
+		echo self::varToString($in);
+	}
+		
+	public static /* string */ function varToString(/* mixed */ $in) {
 		if($in === true) {
-			echo '(true)';
+			return '(true)';
 		} elseif($in === false) {
-			echo '(false)';
+			return '(false)';
 		} elseif($in === NULL) {
-			echo '(null)';
+			return '(null)';
 		} elseif($in === '') {
-			echo '(empty string)';
+			return '(empty string)';
 		} elseif($in === array()) {
-			echo '(empty array)';
+			return '(empty array)';
 		} elseif($in instanceof Closure) {
-			echo '(closure)';
+			return '(closure)';
+		} elseif(is_object($in) and method_exists($in, '__toString')) {
+			return (string) $in;
 		} else {
-			print_r($in);
+			return print_r($in, true);
 		}
 	}
 }

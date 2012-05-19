@@ -31,5 +31,6 @@ class Age extends SqlListEntry {
 			'end_time' => new SqlProperty(array(
 				'name' => 'end_time',
 				'type' => SqlProperty::INT)),
+		);
 	}
 }

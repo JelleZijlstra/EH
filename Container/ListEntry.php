@@ -139,7 +139,7 @@ abstract class ListEntry extends ExecuteHandler {
 		throw new EHException("Call to non-existent method " . $name);
 	}
 	
-	public function setProperty(array $paras) {
+	public /* bool */ function setProperty(array $paras) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(
@@ -166,7 +166,20 @@ abstract class ListEntry extends ExecuteHandler {
 				. Sanitizer::varToString($this->{$paras['field']}) . PHP_EOL;
 			$paras['new'] = $this->getline('New value: ');
 		}
-		return $this->set(array($paras['field'] => $paras['new']));
+		if($this->validateProperty($paras['field'], $paras['new'])) {
+			return $this->set(array($paras['field'] => $paras['new']));
+		} else {
+			echo 'Invalid value' . PHP_EOL;
+			return false;
+		}
+	}
+	
+	/*
+	 * Validate a property value. Default implementation accepts anything;
+	 * subclasses should be smarter.
+	 */
+	protected /* bool */ function validateProperty(/* string */ $property, /* mixed */ $value) {
+		return true;
 	}
 
 	/*

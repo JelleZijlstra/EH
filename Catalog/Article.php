@@ -3138,6 +3138,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!$this->hdl)
 			return false;
 		// load document. Suppress errors because it's not our fault if the AMNH's HTML is messed up.
+		libxml_use_internal_errors(true);
 		$doc = new DOMDocument();
 		if($paras['text'] !== false) {
 			try {
@@ -3156,6 +3157,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				return false;
 			}
 		}
+		libxml_use_internal_errors(false);
 		$list = $doc->getElementsByTagName('tr');
 		$authors = '';
 		for($i = 0; $i < $list->length; $i++) {
@@ -3186,7 +3188,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$this->end = (int) $value;
 					break;
 				case 'dc.relation.ispartofseries':
-					$data = preg_split('/; (no|vol)\. |, article /u', $value);
+					$data = preg_split('/; (no|vol|v)\. |, article /u', $value);
 					$this->journal = trim($data[0]);
 					$this->volume = trim($data[1]);
 					if(isset($data[2]))

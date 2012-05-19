@@ -143,7 +143,7 @@ abstract class SqlListEntry extends ListEntry {
 		}, $this->fields());
 	}
 
-	protected /* bool */ function validateProperty(/* string */ $property, /* mixed */ $value) {
+	final protected /* bool */ function validateProperty(/* string */ $property, /* mixed */ $value) {
 		$validator = $this->getFieldObject($property)->getValidator();
 		return $validator($value);
 	}

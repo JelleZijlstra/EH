@@ -9,15 +9,15 @@ class Publisher extends SqlListEntry {
 	protected static $Publisher_commands = array(
 	);
 	
-	public function fields() {
+	protected static function fillFields() {
 		return array(
-			new SqlProperty(array(
+			'id' => new SqlProperty(array(
 				'name' => 'id',
 				'type' => SqlProperty::ID)),
-			new SqlProperty(array(
+			'name' => new SqlProperty(array(
 				'name' => 'name',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'cities' => new SqlProperty(array(
 				'name' => 'cities',
 				'type' => SqlProperty::JOINT_REFERENCE,
 				'referredClass' => 'city',

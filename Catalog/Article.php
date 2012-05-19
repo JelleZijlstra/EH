@@ -3559,29 +3559,29 @@ Content-Disposition: attachment
 	/*
 	 * SqlListEntry stuff.
 	 */
-	public function fields() {
+	protected static function fillFields() {
 		return array(
-			new SqlProperty(array(
+			'id' => new SqlProperty(array(
 				'name' => 'id',
 				'type' => SqlProperty::ID)),
-			new SqlProperty(array(
+			'name' => new SqlProperty(array(
 				'name' => 'name',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'folder' => 'folder' => new SqlProperty(array(
 				'name' => 'folder',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Folder')),
-			new SqlProperty(array(
+			'added' => 'added' => new SqlProperty(array(
 				'name' => 'added',
 				'type' => SqlProperty::TIMESTAMP)),
-			new SqlProperty(array(
+			'type' => 'type' => new SqlProperty(array(
 				'name' => 'type',
 				'validator' => function($in) {
 					// this is an enum, so check whether it has an allowed value
 					return true;
 				},
 				'type' => SqlProperty::INT)),
-			new SqlProperty(array(
+			'authors' => new SqlProperty(array(
 				'name' => 'authors',
 				'type' => SqlProperty::CUSTOM,
 				'creator' => function($id) {
@@ -3599,58 +3599,58 @@ Content-Disposition: attachment
 					}
 					return $out;
 				})),
-			new SqlProperty(array(
+			'year' => new SqlProperty(array(
 				'name' => 'year',
 				'validator' => function($in) {
 					return preg_match('/^(\d+|undated|\d+–\d+)$/', $in);
 				},
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'title' => new SqlProperty(array(
 				'name' => 'title',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'journal' => new SqlProperty(array(
 				'name' => 'journal',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'journal')),
-			new SqlProperty(array(
+			'series' => new SqlProperty(array(
 				'name' => 'series',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'volume' => new SqlProperty(array(
 				'name' => 'volume',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'issue' => new SqlProperty(array(
 				'name' => 'issue',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'start_page' => new SqlProperty(array(
 				'name' => 'start_page',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'end_page' => new SqlProperty(array(
 				'name' => 'end_page',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'pages' => new SqlProperty(array(
 				'name' => 'pages',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'url' => new SqlProperty(array(
 				'name' => 'url',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'doi' => new SqlProperty(array(
 				'name' => 'doi',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'parent' => new SqlProperty(array(
 				'name' => 'parent',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Article')),
-			new SqlProperty(array(
+			'publisher' => new SqlProperty(array(
 				'name' => 'publisher',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Publisher')),
-			new SqlProperty(array(
+			'part_identifier' => new SqlProperty(array(
 				'name' => 'part_identifier',
 				'type' => SqlProperty::BOOL)),
-			new SqlProperty(array(
+			'misc_data' => new SqlProperty(array(
 				'name' => 'misc_data',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'children' => new SqlProperty(array(
 				'name' => 'children',
 				'type' => SqlProperty::CHILDREN)),
 		);

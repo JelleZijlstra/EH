@@ -111,7 +111,26 @@ abstract class SqlListEntry extends ListEntry {
 	 * Return all the fields of the object that are filled from the DB, in the
 	 * form of an array of SqlProperty objects.
 	 */
-	abstract protected function fields();
+	protected static $fields = array();
+	abstract protected function fillFields();
+	
+	private static function grabFields() {
+		if(static::$fields === array()) {
+			static::$fields = static::fillFields();
+		}
+	}
+	
+	final protected function fields() {
+		static::grabFields();
+		return static::fields;
+	}
+	
+	final protected /* SqlProperty */ function getFieldObject(/* string */ $field) {
+		static::grabFields();
+		// if the field does not exist, that is a programming error, and
+		// throwing an exception is appropriate
+		return static::fields[$field];
+	}
 	
 	final protected function fieldsAsStrings() {
 		return array_map(function($in) {

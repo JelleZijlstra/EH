@@ -13,24 +13,24 @@ class Occurrence extends SqlListEntry {
 	protected static $Occurrence_commands = array(
 	);
 	
-	public function fields() {
+	protected static function fillFields() {
 		return array(
-			new SqlProperty(array(
+			'id' => new SqlProperty(array(
 				'name' => 'id',
 				'type' => SqlProperty::ID)),
-			new SqlProperty(array(
+			'taxon' => new SqlProperty(array(
 				'name' => 'taxon',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Taxon')),
-			new SqlProperty(array(
+			'location' => new SqlProperty(array(
 				'name' => 'location',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Location')),
-			new SqlProperty(array(
+			'age' => new SqlProperty(array(
 				'name' => 'age',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'age')),
-			new SqlProperty(array(
+			'articles' => new SqlProperty(array(
 				'name' => 'articles',
 				'type' => SqlProperty::JOINT_REFERENCE,
 				'tableName' => 'occurrence_article',

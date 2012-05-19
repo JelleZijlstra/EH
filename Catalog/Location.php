@@ -9,16 +9,16 @@ class Location extends SqlListEntry {
 	protected static $Location_commands = array(
 	);
 	
-	public function fields() {
+	protected static function fillFields() {
 		return array(
-			new SqlProperty(array(
+			'id' => new SqlProperty(array(
 				'name' => 'id',
 				'type' => SqlProperty::ID)),
-			new SqlProperty(array(
+			'parent' => new SqlProperty(array(
 				'name' => 'parent',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Folder')),
-			new SqlProperty(array(
+			'name' => new SqlProperty(array(
 				'name' => 'name',
 				'type' => SqlProperty::STRING)),
 		);

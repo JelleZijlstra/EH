@@ -39,64 +39,64 @@ class Name extends SqlListEntry {
 	protected static $Name_commands = array(
 	);
 	
-	public function fields() {
+	protected static function fillFields() {
 		return array(
-			new SqlProperty(array(
+			'id' => new SqlProperty(array(
 				'name' => 'id',
 				'type' => SqlProperty::ID)),
-			new SqlProperty(array(
+			'taxon' => new SqlProperty(array(
 				'name' => 'taxon',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Taxon')),
-			new SqlProperty(array(
+			'group' => new SqlProperty(array(
 				'name' => 'group',
 				'type' => SqlProperty::INT)),
-			new SqlProperty(array(
+			'status' => new SqlProperty(array(
 				'name' => 'status',
 				'type' => SqlProperty::INT)),
-			new SqlProperty(array(
+			'original_name' => new SqlProperty(array(
 				'name' => 'original_name',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'base_name' => new SqlProperty(array(
 				'name' => 'base_name',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'year' => new SqlProperty(array(
 				'name' => 'year',
 				'type' => SqlProperty::STRING,
 				'validator' => function($in) {
 					return preg_match('/^\d{4}(–\d{4})?\??$/', $in);
 				})),
-			new SqlProperty(array(
+			'page_described' => new SqlProperty(array(
 				'name' => 'page_described',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'type' => new SqlProperty(array(
 				'name' => 'type',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Name')),
-			new SqlProperty(array(
+			'verbatim_type' => new SqlProperty(array(
 				'name' => 'verbatim_type',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'article' => new SqlProperty(array(
 				'name' => 'article',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Article')),
-			new SqlProperty(array(
+			'verbatim_citation' => new SqlProperty(array(
 				'name' => 'verbatim_citation',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'location' => new SqlProperty(array(
 				'name' => 'location',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Location')),
-			new SqlProperty(array(
+			'type_locality' => new SqlProperty(array(
 				'name' => 'type_locality',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'nomenclature_comments' => new SqlProperty(array(
 				'name' => 'nomenclature_comments',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'taxonomy_comments' => new SqlProperty(array(
 				'name' => 'taxonomy_comments',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'other_comments' => new SqlProperty(array(
 				'name' => 'other_comments',
 				'type' => SqlProperty::STRING)),
 		);

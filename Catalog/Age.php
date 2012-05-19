@@ -13,22 +13,22 @@ class Age extends SqlListEntry {
 	protected static $Folder_commands = array(
 	);
 	
-	public function fields() {
+	protected static function fillFields() {
 		return array(
-			new SqlProperty(array(
+			'id' => new SqlProperty(array(
 				'name' => 'id',
 				'type' => SqlProperty::ID)),
-			new SqlProperty(array(
+			'name' => new SqlProperty(array(
 				'name' => 'name',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'parent' => new SqlProperty(array(
 				'name' => 'parent',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Age')),
-			new SqlProperty(array(
+			'start_time' => new SqlProperty(array(
 				'name' => 'start_time',
 				'type' => SqlProperty::INT)),
-			new SqlProperty(array(
+			'end_time' => new SqlProperty(array(
 				'name' => 'end_time',
 				'type' => SqlProperty::INT)),
 	}

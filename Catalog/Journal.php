@@ -16,21 +16,21 @@ class Journal extends SqlListEntry {
 	
 	);
 
-	public function fields() {
+	static protected function fillFields() {
 		return array(
-			new SqlProperty(array(
+			'id' => new SqlProperty(array(
 				'name' => 'id',
 				'type' => SqlProperty::ID)),
-			new SqlProperty(array(
+			'name' => new SqlProperty(array(
 				'name' => 'name',
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'issn' => new SqlProperty(array(
 				'name' => 'issn',
 				'validator' => function($in) {
 					return preg_match('/^\d{4}-\d{4}$/', $in);
 				},
 				'type' => SqlProperty::STRING)),
-			new SqlProperty(array(
+			'nopagenumber' => new SqlProperty(array(
 				'name' => 'nopagenumber',
 				'type' => SqlProperty::BOOL)),
 		);

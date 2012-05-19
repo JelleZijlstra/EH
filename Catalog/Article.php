@@ -2514,20 +2514,19 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!$html) {
 			echo 'Could not retrieve data (file ' . $this->name . ')' . PHP_EOL;
 			return false;
-		}
-		else
+		} else {
 			echo 'Retrieved data from AMNH' . PHP_EOL;
+		}
 		// check whether we got one or several results
 		if(strpos($html, 'Search produced no results.') !== false) {
 			echo 'Could not find paper at AMNH' . PHP_EOL;
 			return true;
 		}
-		if(strpos($html, 'Results 1-1 of 1.') !== false) {
-			preg_match('/<td class="evenRowEvenCol"><A HREF="\/dspace\/handle\/2246\/(\d+)">/', $html, $matches);
+		if(strpos($html, 'Now showing items 1-1 of 1') !== false) {
+			preg_match('/cocoon:\/\/metadata\/handle\/2246\/(\d+)\/mets\.xml/', $html, $matches);
 			$this->hdl = '2246/' . $matches[1];
-		}
-		else {
-			$this->shell('open ' . escapeshellarg($url));
+		} else {
+			$this->shell(array('open', array($url)));
 			$hdl = $this->getline('HDL: ');
 			if($hdl === 'q') return false;
 			if(strpos($hdl, 'http') !== false) {

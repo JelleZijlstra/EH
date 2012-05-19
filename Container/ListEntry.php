@@ -132,20 +132,41 @@ abstract class ListEntry extends ExecuteHandler {
 	public function __call($name, $arguments) {
 		// allow setting properties
 		if(substr($name, 0, 3) === 'set') {
-			$prop = substr($name, 3);
-			if(static::hasproperty($prop)) {
-				$paras = $arguments[0];
-				$new = isset($paras['new']) ? $paras['new'] :
-					(isset($paras[0]) ? $paras[0] : false);
-				if($new === false or $new === '') {
-					if($this->$prop)
-						echo 'Current value: ' . $this->$prop . PHP_EOL;
-					$new = $this->getline('New value: ');
-				}
-				return $this->set(array($prop => $new));
-			}
+			$paras = $arguments[0];
+			$paras['field'] = substr($name, 3);
+			return $this->setProperty($paras);
 		}
-		return NULL;
+		throw new EHException("Call to non-existent method " . $name);
+	}
+	
+	public function setProperty(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'new',
+			),
+			'checklist' => array(
+				'field' => 'Field to set',
+				'new' => 'Value to set to',
+			),
+			'default' => array(
+				'new' => false,
+			),
+			'errorifempty' => array(
+				'field',
+			),
+			'checkparas' => array(
+				'field' => function($in) {
+					return static::hasproperty($in);
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if($paras['new'] === false) {
+			echo 'Current value: ' 
+				. Sanitizer::varToString($this->{$paras['field']}) . PHP_EOL;
+			$paras['new'] = $this->getline('New value: ');
+		}
+		return $this->set(array($paras['field'] => $paras['new']));
 	}
 
 	/*

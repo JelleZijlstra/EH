@@ -3567,14 +3567,14 @@ Content-Disposition: attachment
 			'name' => new SqlProperty(array(
 				'name' => 'name',
 				'type' => SqlProperty::STRING)),
-			'folder' => 'folder' => new SqlProperty(array(
+			'folder' => new SqlProperty(array(
 				'name' => 'folder',
 				'type' => SqlProperty::REFERENCE,
 				'referredClass' => 'Folder')),
-			'added' => 'added' => new SqlProperty(array(
+			'added' => new SqlProperty(array(
 				'name' => 'added',
 				'type' => SqlProperty::TIMESTAMP)),
-			'type' => 'type' => new SqlProperty(array(
+			'type' => new SqlProperty(array(
 				'name' => 'type',
 				'validator' => function($in) {
 					// this is an enum, so check whether it has an allowed value

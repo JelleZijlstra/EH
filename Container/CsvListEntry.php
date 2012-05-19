@@ -31,7 +31,7 @@ abstract class CsvListEntry extends ListEntry {
 	}
 	/* OVERLOADING */
 	public function __set($property, $value) {
-		if($property_exists($this, $property)) {
+		if(property_exists($this, $property)) {
 			$this->$property = $value;
 		} else {
 			$arr = static::findarray($property);

@@ -70,7 +70,9 @@ abstract class ListEntry extends ExecuteHandler {
 		// should probably also check for methods
 		return property_exists(get_called_class(), $in);
 	}
-	static function hasproperty($property) {}
+	static function hasproperty($property) {
+		return property_exists(get_called_class(), $property);
+	}
 	static function hasmethodps($method) {}
 	static function hasmethod($method) {}
 	
@@ -171,9 +173,10 @@ abstract class ListEntry extends ExecuteHandler {
 	// needs
 		foreach($paras as $field => $content) {
 			if(self::hasproperty($field)) {
-				if($this->$field === $content) continue;
-				$this->$field = $content;
-				$this->p->needsave();
+				if($this->$field !== $content) {
+					$this->__set($field, $content);
+					$this->p->needsave();
+				}
 			}
 		}
 		return true;

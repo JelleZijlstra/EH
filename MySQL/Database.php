@@ -60,6 +60,8 @@ class Database extends ExecuteHandler {
 	 * class should use Database::query() instead.
 	 */
 	private function rawQuery(/* string */ $sql) {
+		var_dump($sql);
+		//debug_print_backtrace();
 		$result = mysql_query($sql, $this->connection);
 		if($result === false) {
 			throw new DatabaseException(mysql_error(), $sql);

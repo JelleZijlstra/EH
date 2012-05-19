@@ -31,11 +31,15 @@ abstract class CsvListEntry extends ListEntry {
 	}
 	/* OVERLOADING */
 	public function __set($property, $value) {
-		$arr = static::findarray($property);
-		if($arr and $arr !== 'props')
-			$this->{$arr}[$property] = $value;
-		else
-			$this->props[$property] = $value;
+		if($property_exists($this, $property)) {
+			$this->$property = $value;
+		} else {
+			$arr = static::findarray($property);
+			if($arr and $arr !== 'props')
+				$this->{$arr}[$property] = $value;
+			else
+				$this->props[$property] = $value;
+		}
 	}
 	public function __get($property) {
 		switch($arr = $this->findarray_dyn($property)) {

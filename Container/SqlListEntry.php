@@ -36,6 +36,7 @@ abstract class SqlListEntry extends ListEntry {
 				$this->name = $data;
 				break;
 			case self::CONSTR_FULL:
+				$this->fillPropertiesOnce = true;
 				$this->setProperties($data);
 				break;
 			default:

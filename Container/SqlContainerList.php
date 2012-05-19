@@ -58,6 +58,7 @@ abstract class SqlContainerList extends ContainerList {
 			$obj = new static::$childClass($res[0], SqlListEntry::CONSTR_FULL, $this);
 			$this->c[$obj->id()] = $obj;
 			$this->cByName[$name] = $obj;
+			return $obj;
 		} else {
 			throw new EHException("Duplicate objects in table " .
 				$this->table() . " with name " . $name,

@@ -3556,12 +3556,16 @@ Content-Disposition: attachment
 		}
 		return true;
 	}
-	public function testNameParser() {
+	public function testNameParser(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$parser = new NameParser($this->name);
 		if($parser->errorOccurred()) {
 			$parser->printErrors();
 		} else {
-			$parser->printParsed();
+			//$parser->printParsed();
 		}
 		return true;
 	}

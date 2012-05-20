@@ -90,6 +90,8 @@ class ArticleList extends CsvContainerList {
 			'desc' => 'Edit the title of a file',
 			'arg' => 'File handle',
 			'execute' => 'callmethod'),
+		'testNameParser' => array('name' => 'testNameParser',
+			'desc' => 'Test the NameParser'),
 		'setcitetype' => array('name' => 'setcitetype',
 			'aka' => array('t'),
 			'desc' => 'set the default style used for citing',

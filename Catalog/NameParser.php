@@ -108,9 +108,9 @@ class NameParser {
 		 * (2) <normal-name>
 		 *		[e.g., "Afrosoricida Egypt Eo-Oligocene.pdf"]
 		 * (3) <nov-phrase>, <normal-name>
+		 * (4) <replacement> for <preoccupied name>
 		 *
-		 * TODO: other possibilities. "for-phrases" (e.g., 
-		 * "Churcheria for Anonymus.pdf"), stuff with parasites.
+		 * TODO: other possibilities. E.g., stuff with parasites.
 		 */
 		if(substr($name, -3, 3) === 'nov') {
 			// possibility (1)
@@ -119,6 +119,8 @@ class NameParser {
 			$parts = preg_split('/(?<=nov), /u', $name);
 			$this->parseNovPhrase($parts[0]);
 			$this->parseNormalName($parts[1]);
+		} elseif(preg_match('/^[A-Z][a-z]+( [a-z]+){0,2} for [A-Za-z][a-z]+$/', $name)) {
+			$this->parseForPhrase($name);
 		} else {
 			$this->parseNormalName($name);
 		}
@@ -238,9 +240,36 @@ class NameParser {
 				$this->addError('Invalid nov phrase');
 				return;
 			}
-			$nov = self::parseNames($matches[1]);
+			$nov = $this->parseNames($matches[1]);
 		}
 		$this->baseName['nov'] = $nov;
+	}
+	
+	/*
+	 * For phrases.
+	 * 
+	 * "Churcheria for Anonymus.pdf" -> 'for' => array('Churcheria', 'Anonymus')
+	 * "Neurotrichus skoczeni for minor.pdf" ->
+	 *			'for' => array('Neurotrichus skoczeni', 'Neurotrichus minor')
+	 */
+	private function parseForPhrase($in) {
+		preg_match('/^(\w+)( (\w+))?( (\w+))? for (\w+)$/u', $in, $matches);
+		$replacement = $matches[1];
+		if(isset($matches[3])) {
+			$replacement .= ' ' . $matches[3];
+		}
+		if(isset($matches[5])) {
+			$replacement .= ' ' . $matches[5];
+		}
+		
+		if(isset($matches[5])) {
+			$preoccupied = $matches[1] . ' ' . $matches[3] . ' ' . $matches[6];
+		} elseif(isset($matches[3])) {
+			$preoccupied = $matches[1] . ' ' . $matches[6];
+		} else {
+			$preoccupied = $matches[6];
+		}
+		$this->baseName['for' ] = array($replacement, $preoccupied);
 	}
 	
 	/*
@@ -275,6 +304,10 @@ class NameParser {
 				// we're done
 				break;
 			}
+			if($in[0] === ',') {
+				$names .= ',';
+				$in = trim(substr($in, 1));
+			}
 			if($in[0] === '-') {
 				$out += $this->parseNormalAtTopic($in);
 				break;
@@ -292,7 +325,7 @@ class NameParser {
 			$in = trim($tmp[1]);
 		}
 		if($names !== '') {
-			$out['names'] = self::parseNames(trim($names));
+			$out['names'] = $this->parseNames(trim($names));
 		}
 		$this->baseName['normal'] = $out;
 	}
@@ -308,8 +341,7 @@ class NameParser {
 		$out = array();
 		$times = array();
 		$inRange = false;
-		while(1) {
-			var_dump($in);
+		while(true) {
 			$split = self::getFirstWord($in);
 			$firstWord = $split[0];
 			if(in_array($firstWord, self::$periodModifiers)) {
@@ -322,7 +354,7 @@ class NameParser {
 				}
 				$time = array($firstWord, $secondWord);
 			} elseif(in_array($firstWord, self::$periodTerms)) {
-				$time = array(NULL, $secondWord);
+				$time = array(NULL, $firstWord);
 			} else {
 				$this->addError('Invalid word in period');
 				break;
@@ -361,7 +393,7 @@ class NameParser {
 		$places = array();
 		$currentMajor = '';
 		$currentMinor = '';
-		while(1) {
+		while(true) {
 			if($in === '') {
 				$places[] = array($currentMajor, $currentMinor);
 				break;			
@@ -382,7 +414,6 @@ class NameParser {
 				}
 			}
 			$in = trim($in);
-			var_dump($in);
 			if($in[0] === ',') {
 				$places[] = array($currentMajor, $currentMinor);
 				$currentMinor = '';
@@ -489,7 +520,7 @@ class NameParser {
 	/*
 	 * Parse a listing of scientific names.
 	 */
-	private static function parseNames($in) {
+	private function parseNames($in) {
 		$out = array();
 		$names = explode(', ', $in);
 		$lastName = false;
@@ -501,7 +532,12 @@ class NameParser {
 					$name = self::getFirstWord($lastName)[0] . ' ' . $name;
 				}
 			}
-			$out[] = $name;
+			// valid name forms
+			if(preg_match('/^((Cf|Aff)\. )?[A-Z][a-z]+(( (cf|aff)\.)? [a-z]+( [a-z]+)?)?$/u', $name)) {
+				$out[] = $name;
+			} else {
+				$this->addError('Invalid name: ' . $name);
+			}
 			$lastName = $name;
 		}
 		return $out;

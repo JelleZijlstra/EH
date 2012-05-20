@@ -6,20 +6,51 @@
 class NameParser {
 	static private $geographicTerms;
 	static private $geographicModifiers;
-	static private $periods;
+	static private $periodTerms;
 	static private $periodModifiers;
 	
 	/*
 	 * Whether an error occurred, and a description.
 	 */
 	private $errorDescription = array();
+	
 	public function errorOccurred() { 
 		return $this->errorDescription !== array(); 
 	}
+	
 	public function getErrors() { return $this->errorDescription; }
+	
+	public function printErrors() {
+		echo count($this->getErrors()) . ' errors while parsing name: ' 
+			. $this->rawName . PHP_EOL;
+		foreach($this->getErrors() as $error) {
+			echo '- ' . $error . PHP_EOL;
+		}
+	}
+	
 	private function addError($description) {
 		$description = trim($description);
 		$this->errorDescription[] = $description;
+	}
+	
+	/*
+	 * Print as parsed.
+	 */
+	public function printParsed() {
+		echo 'Parsing name: ' . $this->rawName . PHP_EOL;
+		$printIfNotEmpty = function($field) {
+			if($this->$field !== '') {
+				echo ucfirst($field) . ': ' 
+					. Sanitizer::varToString($this->$field) . PHP_EOL;
+			}
+		};
+		$printIfNotEmpty('extension');
+		$printIfNotEmpty('modifier');
+		if($this->authorship !== array(false, '')) {
+			$printIfNotEmpty('authorship');
+		}
+		$printIfNotEmpty('baseName');
+		echo PHP_EOL;
 	}
 
 	/*
@@ -91,8 +122,8 @@ class NameParser {
 	 */
 	private function splitExtension($name) {
 		if(preg_match('/^(.*)\.([a-z]+)$/u', $name, $matches)) {
-			$this->extension = $matches[1];
-			return $matches[0];
+			$this->extension = $matches[2];
+			return $matches[1];
 		} else {
 			return $name;
 		}
@@ -140,8 +171,8 @@ class NameParser {
 	}
 	
 	private function splitParentheses($in) {
-		if(preg_match('/^(.*) \([^()]+\)$/u', $in, $matches)) {
-			return array($matches[0], $matches[1]);
+		if(preg_match('/^(.*) \(([^()]+)\)$/u', $in, $matches)) {
+			return array($matches[1], $matches[2]);
 		} else {
 			return $in;
 		}
@@ -158,8 +189,8 @@ class NameParser {
 		// isAuthorModifier function
 		preg_match('/^(.*)(\d{4})$/u', $in, $matches);
 		// year
-		$this->authorship[1] = (int) $matches[1];
-		$authors = trim($matches[0]);
+		$this->authorship[1] = (int) $matches[2];
+		$authors = trim($matches[1]);
 		if($authors === '') {
 			// nothing to do
 			return;
@@ -168,9 +199,9 @@ class NameParser {
 		if(substr($authors, -6, 6) === 'et al.') {
 			$this->authorship[0] = array(substr($authors, 0, -7));
 		} elseif(strpos($authors, ' & ') !== false) {
-			$this->authorship[1] = explode(' & ', $authors);
+			$this->authorship[0] = explode(' & ', $authors);
 		} else {
-			$this->authorship[1] = $authors;
+			$this->authorship[0] = $authors;
 		}
 	}
 	
@@ -194,25 +225,13 @@ class NameParser {
 	private function parseNovPhrase($in) {
 		$nov = array();
 		if(preg_match('/^(\w+) (\d+)nov$/u', $in, $matches)) {
-			$nov[] = array((int) $matches[1], $matches[0]);
+			$nov[] = array((int) $matches[2], $matches[1]);
 		} else {
 			if(!preg_match('/^(.*) nov$/u', $in, $matches)) {
 				$this->addError('Invalid nov phrase');
 				return;
 			}
-			$in = $matches[0];
-			$names = explode(', ', $in);
-			$lastName = false;
-			foreach($names as $name) {
-				if(ctype_lower($name[0])) {
-					if($lastName === false) {
-						$this->addError('Invalid lowercase name');
-					} else {
-						$name = self::getFirstWord($lastName) . ' ' . $name;
-					}
-				}
-				$nov[] = $name;
-			}
+			$nov = self::parseNames($matches[1]);
 		}
 		$this->baseName['nov'] = $nov;
 	}
@@ -228,7 +247,7 @@ class NameParser {
 	 * Data handling.
 	 */
 	private static $didBuildLists = false;
-	private static $buildLists() {
+	private static function buildLists() {
 		if(self::$didBuildLists) {
 			return;
 		}
@@ -241,18 +260,54 @@ class NameParser {
 					return $in[0] !== '#';
 				}
 			);
-		}
+		};
 		self::$geographicTerms = $getData('geography.txt');
 		self::$geographicModifiers = $getData('geography_modifiers.txt');
 		self::$periodTerms = $getData('periods.txt');
 		self::$periodModifiers = $getData('period_modifiers.txt');
-		self::$didbuildLists = true;
+		self::$didBuildLists = true;
 	}
 	
 	/*
 	 * Helper methods.
 	 */
-	private static getFirstWord($in) {
+	private static function getFirstWord($in) {
 		return preg_replace('/ .*$/u', '', $in);
+	}
+	
+	/*
+	 * Finds whether any of the phrases in array terms occur in haystack.
+	 * Returns an array of the haystack without the word plus the word, or
+	 * false on failure to find a word.
+	 */
+	private static function findWordFromArray($haystack, array $terms) {
+		foreach($terms as $term) {
+			if(strpos($haystack, $term . ' ') === 0) {
+				$len = strlen($term) + 1;
+				return array(substr($haystack, $len), $term);
+			}
+		}
+		return false;
+	}
+	
+	/*
+	 * Parse a listing of scientific names.
+	 */
+	private static function parseNames($in) {
+		$out = array();
+		$names = explode(', ', $in);
+		$lastName = false;
+		foreach($names as $name) {
+			if(ctype_lower($name[0])) {
+				if($lastName === false) {
+					$this->addError('Invalid lowercase name');
+				} else {
+					$name = self::getFirstWord($lastName) . ' ' . $name;
+				}
+			}
+			$out[] = $name;
+			$lastName = $name;
+		}
+		return $out;
 	}
 }

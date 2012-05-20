@@ -3556,6 +3556,15 @@ Content-Disposition: attachment
 		}
 		return true;
 	}
+	public function testNameParser() {
+		$parser = new NameParser($this->name);
+		if($parser->errorOccurred()) {
+			$parser->printErrors();
+		} else {
+			$parser->printParsed();
+		}
+		return true;
+	}
 
 	/*
 	 * SqlListEntry stuff.

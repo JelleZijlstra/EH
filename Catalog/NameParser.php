@@ -503,7 +503,7 @@ class NameParser {
 		}
 		$getData = function($fileName) {
 			return array_filter(
-				file(BPATH . '/Catalog/data/' . $fileName, 
+				file(BPATH . '/Catalog/parserdata/' . $fileName, 
 					FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES),
 				function($in) {
 					// allow comments with #

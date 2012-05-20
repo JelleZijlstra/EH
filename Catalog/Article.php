@@ -239,7 +239,10 @@ class Article extends CsvListEntry {
 		parent::inform($paras);
 		// provide ls data
 		if($this->isfile()) {
-			echo shell_exec('ls -l ' . $this->path()) . PHP_EOL;
+			$this->shell(array(
+				'cmd' => 'ls',
+				'arg' => array('-l', $this->path())
+			));
 		}
 	}
 	public function path(array $paras = array()) {
@@ -252,7 +255,7 @@ class Article extends CsvListEntry {
 				'print' => 'Whether the result should be printed',
 			),
 			'default' => array(
-				'type' => 'shell',
+				'type' => 'none',
 				'folder' => false,
 				'print' => false,
 			),
@@ -2561,12 +2564,19 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	// Get the PDF text of a file and process it
 	private function putpdfcontent() {
 		// only do actual PDF files
-		if(!$this->ispdf() or $this->isredirect())
+		if(!$this->ispdf() or $this->isredirect()) {
 			return false;
+		}
 		// only get first page
-		$shcommand = PDFTOTEXT . " " . $this->path() . " - -l 1 2>> " . __DIR__ . "/data/pdftotextlog";
-		$this->pdfcontent = trim(utf8_encode(shell_exec($shcommand)));
-		return $this->pdfcontent ? true : false;
+		$this->pdfcontent = trim(utf8_encode($this->shell(array(
+			'cmd' => PDFTOTEXT,
+			'arg' => array($this->path(), '-', '-l', '1'),
+			'stderr' => BPATH . 'Catalog/data/pdftotextlog',
+			'appenderr' => true,
+			'return' => 'output',
+			'printout' => false,
+		))));
+		return ($this->pdfcontent === '') ? true : false;
 	}
 	public function getpdfcontent($paras = array()) {
 		if(!$this->ispdf() or $this->isredirect()) return false;

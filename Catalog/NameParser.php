@@ -6,8 +6,10 @@
 class NameParser {
 	static private $geographicTerms;
 	static private $geographicModifiers;
+	static private $geographicWords;
 	static private $periodTerms;
 	static private $periodModifiers;
+	static private $periodWords;
 	
 	/*
 	 * Whether an error occurred, and a description.
@@ -90,6 +92,7 @@ class NameParser {
 	public function baseName() { return $this->baseName; }
 	
 	public function __construct(/* string */ $name) {
+		var_dump($name);
 		self::buildLists();
 		$this->rawName = $name;
 		$name = $this->splitExtension($name);
@@ -238,9 +241,117 @@ class NameParser {
 	
 	/*
 	 * Normal names
+	 *
+	 * Grammar:
+	 *  <name-list>? <geography>? <time>? ((-<topic>)?
+	 * Where:
+	 *  <name-list> is as in a nov phrase
+	 *  <geography> is of the form:
+	 *		<geographic-modifier>? <geographic-area> <geographic-term>?
+	 *  <time> is of the form
+	 * 		<period-modifier>? <period>
+	 *  (or a more complicated range)
+	 *  <topic> is an arbitrary string
+	 *
+	 * This produces something of the form 'normal' => array(
+	 *		'names' => (array as for nov-phrase)
+	 *		'geography' => (array of arrays of two items, representing the 
+	 *						general and specific geography)
+	 *		'time' => (array of items representing either a single time unit as
+	 *						a string or an array of two; time unit is 
+	 *						represented as array of modifier + major unit)
+	 *		'topic' => (array of topics)
 	 */
 	private function parseNormalName($in) {
+		$out = array();
+		// first, consume names until we find a geographic or period term
+		$names = '';
+		while(true) {
+			var_dump($in);
+			if($in === '') {
+				// we're done
+				break;
+			}
+			if($in[0] === '-') {
+				$out += $this->parseNormalAtTopic($in);
+				break;
+			}
+			if(self::findWordFromArray($in, self::$periodWords) !== false) {
+				$out += $this->parseNormalAtTime($in);
+				break;
+			}
+			if(self::findWordFromArray($in, self::$geographicWords) !== false) {
+				$out += $this->parseNormalAtGeography($in);
+				break;
+			}
+			$tmp = self::getFirstWord($in);
+			$names .= ' ' . $tmp[0];
+			$in = trim($tmp[1]);
+		}
+		if($names !== '') {
+			$out['names'] = self::parseNames(trim($names));
+		}
+		$this->baseName['normal'] = $out;
+	}
+	
+	private function parseNormalAtTopic($in) {
+		// input begins with -
+		$topic = explode(', ', substr($in, 1));
+		return array('topic' => $topic);
+	}
+	
+	private function parseNormalAtTime($in) {
+		// Here we can assume that period terms are always one word
+		$out = array();
+		$times = array();
+		$inRange = false;
+		while(1) {
+			$split = self::getFirstWord($in);
+			$firstWord = $split[0];
+			if(in_array($firstWord, self::$periodModifiers)) {
+				// next word must be a periodTerm followed by [,-]
+				$split = self::getFirstWord($split[1]);
+				$secondWord = $split[0];
+				if(!in_array($secondWord, self::$periodTerms)) {
+					$this->addError('Period modifier not followed by period term');
+					break;
+				}
+				$time = array($firstWord, $secondWord);
+			} elseif(in_array($firstWord, self::$periodTerms)) {
+				$time = array(NULL, $secondWord);
+			} else {
+				$this->addError('Invalid word in period');
+				break;
+			}
+			$in = $split[1];
+			if($in[0] === ',' && isset($in[1]) && $in[1] === ' ') {
+				if($inRange) {
+					$times[] = array(array_pop($times), $time);
+				} else {
+					$times[] = $time;
+				}
+			} elseif($in[0] === '-') {
+				$in = substr($in, 1);			
+				if(self::findWordFromArray($in, self::$periodWords)) {
+					$inRange = true;
+				} else {
+					$out += $this->parseNormalAtTopic('-' . $in);
+				}
+			} else {
+				$this->addError('Syntax error in period');
+				break;
+			}
+		}
+		if($times !== array()) {
+			$out['times'] = $times;
+		}
+		return $out;
+	}
+	
+	private function parseNormalAtGeography($in) {
+		$out = array();
 		// TODO
+		return $out;
 	}
 	
 	/*
@@ -265,6 +376,13 @@ class NameParser {
 		self::$geographicModifiers = $getData('geography_modifiers.txt');
 		self::$periodTerms = $getData('periods.txt');
 		self::$periodModifiers = $getData('period_modifiers.txt');
+		
+		// overall arrays that are sometimes useful
+		self::$geographicWords = 
+			array_merge(self::$geographicTerms, self::$geographicModifiers);
+		self::$periodWords =
+			array_merge(self::$periodTerms, self::$periodModifiers);
+			
 		self::$didBuildLists = true;
 	}
 	
@@ -272,7 +390,12 @@ class NameParser {
 	 * Helper methods.
 	 */
 	private static function getFirstWord($in) {
-		return preg_replace('/ .*$/u', '', $in);
+		$out = preg_split('/(?=[ \-,])/u', $in, 2);
+		// simplify life for callers
+		if(!isset($out[1])) {
+			$out[1] = '';
+		}
+		return $out;
 	}
 	
 	/*
@@ -282,9 +405,11 @@ class NameParser {
 	 */
 	private static function findWordFromArray($haystack, array $terms) {
 		foreach($terms as $term) {
-			if(strpos($haystack, $term . ' ') === 0) {
-				$len = strlen($term) + 1;
-				return array(substr($haystack, $len), $term);
+			if(strpos($haystack, $term) === 0) {
+				$newHay = substr($haystack, strlen($term));
+				if($newHay[0] === ',' || $newHay[0] === ' ' || $newHay[0] === '-') {
+					return array(trim(substr($haystack, 1)), $term);
+				}
 			}
 		}
 		return false;
@@ -302,7 +427,7 @@ class NameParser {
 				if($lastName === false) {
 					$this->addError('Invalid lowercase name');
 				} else {
-					$name = self::getFirstWord($lastName) . ' ' . $name;
+					$name = self::getFirstWord($lastName)[0] . ' ' . $name;
 				}
 			}
 			$out[] = $name;

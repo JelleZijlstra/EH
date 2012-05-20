@@ -2041,6 +2041,37 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			'checklist' => array('lslist' => 'List of files found using ls'),
 			'errorifempty' => array('lslist'),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$renameFunction = function() {
+			$oldname = $this->name;
+			$newname = $this->getline('New name: ');
+			if($newname === 'q') {
+				break;
+			}
+			// allow renaming to existing name, for example to replace in-press files, but warn
+			if($this->p->has($newname)) {
+				echo 'Warning: file already exists' . PHP_EOL;
+			}
+			$this->name = $newname;
+			if(!$this->shell(array(
+				'cmd' => 'mv',
+				'arg' => array(
+					TEMPPATH . '/' . $oldname, 
+					TEMPPATH . '/' . $newname
+				),
+			))) {
+				echo "Error moving file" . PHP_EOL;
+			}
+			return true;
+		};
+		$parser = new NameParser($this->name);
+		if($parser->errorOccurred()) {
+			$parser->printErrors();
+			$cmd = $this->ynmenu(
+				'This filename could not be parsed. Do you want to rename it?');
+			if($cmd) {
+				$renameFunction();
+			}
+		}
 		switch($this->menu(array(
 			'head' => 'Adding file ' . $this->name,
 			'options' => array(
@@ -2056,28 +2087,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$this->openf(array('place' => 'temp'));
 					return true;
 				},
-				'r' => function() {
-					$oldname = $this->name;
-					$newname = $this->getline('New name: ');
-					if($newname === 'q') {
-						break;
-					}
-					// allow renaming to existing name, for example to replace in-press files, but warn
-					if($this->p->has($newname)) {
-						echo 'Warning: file already exists' . PHP_EOL;
-					}
-					$this->name = $newname;
-					if(!$this->shell(array(
-						'cmd' => 'mv',
-						'arg' => array(
-							TEMPPATH . '/' . $oldname, 
-							TEMPPATH . '/' . $newname
-						),
-					))) {
-						echo "Error moving file" . PHP_EOL;
-					}
-					return true;
-				},
+				'r' => $renameFunction,
 				'n' => function() {
 					if(!$this->shell(array(
 						'cmd' => 'mv',
@@ -2925,7 +2935,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	private function trygoogle() {
 		// find title
-		($title = $this->findtitle_specifics()) or
+		($title = $this->findtitle_specific()) or
 			($title = $this->findtitle_pdfcontent());
 		if($title === false) return false;
 		// show title so it's possible to confirm it's right

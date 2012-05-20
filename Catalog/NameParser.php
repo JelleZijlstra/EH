@@ -49,7 +49,12 @@ class NameParser {
 		$printIfNotEmpty('extension');
 		$printIfNotEmpty('modifier');
 		if($this->authorship !== array(false, '')) {
-			$printIfNotEmpty('authorship');
+			echo 'Authorship:' . PHP_EOL;
+			if($this->authorship[0] !== false) {
+				echo "\tAuthors: " . implode('; ', $this->authorship[0]) 
+					. PHP_EOL;
+			}
+			echo "\tYear: " . $this->authorship[1] . PHP_EOL;
 		}
 		$printIfNotEmpty('baseName');
 		echo PHP_EOL;
@@ -92,7 +97,6 @@ class NameParser {
 	public function baseName() { return $this->baseName; }
 	
 	public function __construct(/* string */ $name) {
-		var_dump($name);
 		self::buildLists();
 		$this->rawName = $name;
 		$name = $this->splitExtension($name);
@@ -267,7 +271,6 @@ class NameParser {
 		// first, consume names until we find a geographic or period term
 		$names = '';
 		while(true) {
-			var_dump($in);
 			if($in === '') {
 				// we're done
 				break;
@@ -306,11 +309,12 @@ class NameParser {
 		$times = array();
 		$inRange = false;
 		while(1) {
+			var_dump($in);
 			$split = self::getFirstWord($in);
 			$firstWord = $split[0];
 			if(in_array($firstWord, self::$periodModifiers)) {
 				// next word must be a periodTerm followed by [,-]
-				$split = self::getFirstWord($split[1]);
+				$split = self::getFirstWord(trim($split[1]));
 				$secondWord = $split[0];
 				if(!in_array($secondWord, self::$periodTerms)) {
 					$this->addError('Period modifier not followed by period term');
@@ -323,12 +327,15 @@ class NameParser {
 				$this->addError('Invalid word in period');
 				break;
 			}
-			$in = $split[1];
-			if($in[0] === ',' && isset($in[1]) && $in[1] === ' ') {
+			$in = trim($split[1]);
+			if($in === '' || ($in[0] === ',' && isset($in[1]) && $in[1] === ' ')) {
 				if($inRange) {
 					$times[] = array(array_pop($times), $time);
 				} else {
 					$times[] = $time;
+				}
+				if($in === '') {
+					break;
 				}
 			} elseif($in[0] === '-') {
 				$in = substr($in, 1);			
@@ -349,8 +356,67 @@ class NameParser {
 	}
 	
 	private function parseNormalAtGeography($in) {
+		// first find a major term, then minor terms
 		$out = array();
-		// TODO
+		$places = array();
+		$currentMajor = '';
+		$currentMinor = '';
+		while(1) {
+			if($in === '') {
+				$places[] = array($currentMajor, $currentMinor);
+				break;			
+			}
+			if($currentMinor === '') {
+				$findMajor = 
+					self::findWordFromArray($in, self::$geographicTerms);
+				if($findMajor === false) {
+					if($currentMajor === '') {
+						$this->addError('Invalid geography');
+						break;
+					} else {
+						// retain $currentMajor and $in
+					}
+				} else {
+					$currentMajor = $findMajor[1];
+					$in = $findMajor[0];
+				}
+			}
+			$in = trim($in);
+			var_dump($in);
+			if($in[0] === ',') {
+				$places[] = array($currentMajor, $currentMinor);
+				$currentMinor = '';
+				$in = trim(substr($in, 1));
+			} elseif($in[0] === '-') {
+				// decide whether this starts the topic (if there's another - 
+				// in the text or the last word is a period, we assume it 
+				// doesn't)
+				if(strpos($in, '-', 1) === false 
+					&& !in_array(self::getLastWord($in), self::$periodTerms)) {
+					$places[] = array($currentMajor, $currentMinor);
+					$out += $this->parseNormalAtTopic($in);
+					break;
+				} else {
+					$currentMinor .= '-';
+					$tmp = self::getFirstWord(substr($in, 1));
+					$currentMinor .= $tmp[0];
+					$in = $tmp[1];
+				}
+			} elseif(self::findWordFromArray($in, self::$periodWords) !== false) {
+				$places[] = array($currentMajor, $currentMinor);
+				$out += $this->parseNormalAtTime($in);
+				break;
+			} else {
+				// then it's a minor term
+				if($currentMinor !== '') {
+					$currentMinor .= ' ';
+				}
+				$tmp = self::getFirstWord($in);
+				$currentMinor .= $tmp[0];
+				$in = $tmp[1];
+			}
+		}
+		$out['geography'] = $places;
 		return $out;
 	}
 	
@@ -398,6 +464,11 @@ class NameParser {
 		return $out;
 	}
 	
+	private static function getLastWord($in) {
+		$out = preg_split('/(?=[ \-])/u', $in);
+		return trim(array_pop($out));
+	}
+	
 	/*
 	 * Finds whether any of the phrases in array terms occur in haystack.
 	 * Returns an array of the haystack without the word plus the word, or
@@ -408,7 +479,7 @@ class NameParser {
 			if(strpos($haystack, $term) === 0) {
 				$newHay = substr($haystack, strlen($term));
 				if($newHay[0] === ',' || $newHay[0] === ' ' || $newHay[0] === '-') {
-					return array(trim(substr($haystack, 1)), $term);
+					return array($newHay, $term);
 				}
 			}
 		}

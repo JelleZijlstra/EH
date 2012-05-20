@@ -159,7 +159,12 @@ class ArticleList extends CsvContainerList {
 	 */
 		echo "acquiring list of files... ";
 		// ls output as string
-		$list = shell_exec("ls -pR " . LIBRARY);
+		$list = $this->shell(array(
+			'cmd' => 'ls',
+			'arg' => array('-pR', LIBRARY),
+			'printout' => false,
+			'return' => 'output',
+		));
 		if(!$list) {
 			echo "Could not find library." . PHP_EOL;
 			return false;
@@ -170,10 +175,16 @@ class ArticleList extends CsvContainerList {
 		$list = preg_split("/\n" . PHP_EOL . $escapelibrary . "/", $list);
 		foreach($list as $folder) {
 			$folder = preg_split("/:\n/", $folder);
-			if(!isset($folder[1])) continue;
+			if(!isset($folder[1])) {
+				continue;
+			}
 			$path = preg_split("/\//", $folder[0]);
-			if(!isset($path[2])) $path[2] = '';
-			if(!isset($path[3])) $path[3] = '';
+			if(!isset($path[2])) {
+				$path[2] = '';
+			}
+			if(!isset($path[3])) {
+				$path[3] = '';
+			}
 			$filelist = preg_split("/\n/", $folder[1]);
 			foreach($filelist as $file) {
 				// do not handle directories
@@ -187,14 +198,22 @@ class ArticleList extends CsvContainerList {
 		echo "done" . PHP_EOL;
 	}
 	private function build_newlist($path = '', $out = 'newlist') {
-		if(in_array($out, array('p'))) return false;
+		// why do we need this?
+		if($out === 'p') {
+			return false;
+		}
 		// reset out list
 		$this->$out = array();
 		echo "acquiring list of new files... ";
-		if(!$path) $path = TEMPPATH;
+		if($path === '') $path = TEMPPATH;
 		// ls output as string
-		$list = shell_exec("ls -p " . $path);
-		if(!$list) {
+		$list = $this->shell(array(
+			'cmd' => 'ls',
+			'arg' => array('-p', $path),
+			'printout' => false,
+			'return' => 'output',
+		));
+		if($list === '') {
 			echo "no new files found" . PHP_EOL;
 			return false;
 		}

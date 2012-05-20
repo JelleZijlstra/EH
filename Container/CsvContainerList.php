@@ -652,11 +652,11 @@ abstract class CsvContainerList extends ContainerList {
 		}
 	}
 	private function getbackup($backupdir) {
-		$backuplist = $this->shell(array(
+		$backuplist = explode(PHP_EOL, $this->shell(array(
 			'cmd' => 'ls -t ' . escapeshellarg($backupdir),
 			'return' => 'output',
 			'printout' => false,
-		));
+		)));
 		return $backupdir . array_shift($backuplist);		
 	}
 }

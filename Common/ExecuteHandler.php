@@ -1159,7 +1159,7 @@ class ExecuteHandler extends EHICore {
 				case 'success':
 					return ($exitval === 0);
 				case 'output':
-					return $output;
+					return implode(PHP_EOL, $output);
 				case 'exitvalue':
 					return $exitval;
 			}

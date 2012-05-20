@@ -1256,8 +1256,9 @@ class Article extends CsvListEntry {
 						$this->title = $content;
 						break;
 					case 'name':
-						if(!$paras['cannotmove'])
+						if(!$paras['cannotmove']) {
 							$this->move($content);
+						}
 						break;
 					default:
 						$this->$field = $content;

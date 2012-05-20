@@ -1,6 +1,10 @@
 <?php
 /*
  * NameParser. A class that can parse file names into machine-readable units.
+ *
+ * Known bugs:
+ *  - Multiple periods are broken: "Vertebrata Cameroon Cretaceous, Pleistocene.pdf"
+ *  - Doesn't like odd nov-phrases: "Muroidea Africa 14nov.pdf"
  */
 require_once(__DIR__ . '/../Common/common.php');
 
@@ -349,6 +353,7 @@ class NameParser {
 	
 	private function parseNormalAtTime($in) {
 		// Here we can assume that period terms are always one word
+		// Except for MN7-8, that is, which we'll have to hard-code
 		$out = array();
 		$times = array();
 		$inRange = false;
@@ -364,6 +369,7 @@ class NameParser {
 				} else {
 					$split = self::getFirstWord(trim($split[1]));
 					$secondWord = $split[0];
+					
 					if(!in_array($secondWord, self::$periodTerms)) {
 						$this->addError('Period modifier not followed by period term');
 						break;
@@ -372,6 +378,9 @@ class NameParser {
 				}
 			} elseif(in_array($firstWord, self::$periodTerms)) {
 				$time = array(NULL, $firstWord);
+			} elseif($firstWord === 'MN7' && substr($split[1], 0, 2) === '-8') {
+				$time = array(NULL , 'MN7-8');
+				$split[1] = substr($split[1], 2);
 			} else {
 				$this->addError('Invalid word in period: ' . $firstWord);
 				break;

@@ -19,6 +19,8 @@ class ArticleList extends CsvContainerList {
 	private static $ArticleList_commands = array(
 		'countNameParser' => array('name' => 'countNameParser',
 			'desc' => 'Count NameParser results'),
+		'renameRegex' => array('name' => 'renameRegex',
+			'desc' => 'Rename files that match a regex'),
 		'adddata' => array('name' => 'adddata',
 			'desc' => 'Add data to existing reference through API lookups',
 			'arg' => 'None',
@@ -938,6 +940,47 @@ class ArticleList extends CsvContainerList {
 		});
 		echo $good . ' of ' . $count . ' (' . ($good / $count * 100) . '%)' 
 			. PHP_EOL;
+	}
+	
+	public function renameRegex(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'from',
+				1 => 'to',
+				'f' => 'force',
+			),
+			'checklist' => array(
+				'from' => 'Regex to recognize faulty titles',
+				'to' => 'Replacement',
+				'force' => 'Do not ask for confirmation',
+			),
+			'checkparas' => array(
+				'from' => function($in) {
+					return ($in[0] === '/') and !preg_match('/\/[^\/]*e[^\/]*$/', $in);
+				},
+			),
+			'errorifempty' => array('from', 'to'),
+			'default' => array('force' => false),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$this->each(function($e) use($paras) {
+			if($e->isredirect()) {
+				return;
+			}
+			if(preg_match($paras['from'], $e->name)) {
+				$newTitle = preg_replace($paras['from'], $paras['to'], $e->name);
+				if($paras['force']) {
+					$cmd = true;
+				} else {
+					$cmd = $this->ynmenu(
+						'Rename "' . $e->name . '" to "' . $newTitle . '"? ');
+				}
+				if($cmd) {
+					$e->move($newTitle);
+				}
+			}
+		});
+		return true;
 	}
 	
 	/*

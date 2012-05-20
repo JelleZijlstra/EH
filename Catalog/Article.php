@@ -339,7 +339,9 @@ class Article extends CsvListEntry {
 		}
 		if($cmd) {
 			if($this->isfile()) {
-				$this->shell('rm ' . $this->path());
+				$this->shell(array('rm', array(
+					$this->path(array('type' => 'none'))
+				)));
 			}
 			$this->log('Removed file');
 			$this->p->removeEntry($this->name);
@@ -380,15 +382,13 @@ class Article extends CsvListEntry {
 		}
 		// change the name internally
 		$oldname = $this->name;
-		$oldpath = $this->path();
+		$oldpath = $this->path(array('type' => 'none'));
 		$this->name = $newname;
 		// move the physical file
-		if($this->isfile() && ($newpath = $this->path())) {
-			$cmd = 'mv -n ' . $oldpath . ' ' . $newpath;
-			if(!$this->shell($cmd)) {
-				echo 'Error moving file ' . $oldname;
-				return false;
-			}
+		if($this->isfile() && ($newpath = $this->path(array('type' => 'none')))) {
+			$this->shell(array('mv', array(
+				'-n', $oldpath, $newpath
+			)));
 			$this->log('Moved file ' . $oldname);
 		}
 		// change the catalog
@@ -440,8 +440,11 @@ class Article extends CsvListEntry {
 				$this->p->needsave();
 				$this->p->log("File " . $this->name . " renamed to " . $newname . " (check)." . PHP_EOL);
 				if($paras['domove']) {
-					if(!$this->shell("mv -n " . $this->path() . " " . $searchres->path()))
-						echo "Error moving file $this->name to $searchres->name." . PHP_EOL;
+					$this->shell(array('mv', array(
+						'-n',
+						$this->path(array('type' => 'none')),
+						$searchres->path(array('type' => 'none')),
+					)));
 				}
 				$oldname = $this->name;
 				$this->name = $searchres->name;
@@ -2052,15 +2055,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				echo 'Warning: file already exists' . PHP_EOL;
 			}
 			$this->name = $newname;
-			if(!$this->shell(array(
+			$this->shell(array(
 				'cmd' => 'mv',
 				'arg' => array(
 					TEMPPATH . '/' . $oldname, 
 					TEMPPATH . '/' . $newname
 				),
-			))) {
-				echo "Error moving file" . PHP_EOL;
-			}
+			));
 			return true;
 		};
 		$parser = new NameParser($this->name);
@@ -2089,15 +2090,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				},
 				'r' => $renameFunction,
 				'n' => function() {
-					if(!$this->shell(array(
+					$this->shell(array(
 						'cmd' => 'mv',
 						'arg' => array(
 							TEMPPATH . '/' . $this->name,
 							TEMPPATH . '/Not to be cataloged/' . $this->name,
 						),
-					))) {
-						echo "Error moving file" . PHP_EOL;				
-					}
+					));
 					return false;
 				},
 			),
@@ -2121,17 +2120,14 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				return 1;
 			}
 		}
-		if(!$this->shell(array(
+		$this->shell(array(
 			'cmd' => 'mv',
 			'arg' => array(
 				'-n',
 				TEMPPATH . '/' . $oldname,
 				$this->path(array('type' => 'none')),
 			),
-		))) {
-			echo "Error moving file {$this->name} into library." . PHP_EOL;
-			return 1;
-		}
+		));
 		return $this->add() ? 2 : 1;
 	}
 	private /* bool */ function fullPathSuggestions() {
@@ -2455,7 +2451,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						$this->triedfindurl = true;
 						return false;
 					case 'o':
-						$this->shell('open ' . escapeshellarg($result->link));
+						$this->shell(array('open', array($result->link)));
 						break;
 					case 'i':
 						$this->inform();
@@ -2969,7 +2965,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				),
 				'process' => array(
 					'o' => function() use(&$url) {
-						ArticleList::singleton()->shell(array(
+						$this->shell(array(
 							'cmd' => 'open', 
 							'arg' => array($url),
 						));
@@ -3304,19 +3300,19 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	public function burst() {
 	// bursts a PDF file into several files
 		echo 'Bursting file ' . $this->name . '. Opening file.' . PHP_EOL;
-		$cmd = 'open ' . escapeshellarg(BURSTPATH . '/' . $this->name);
-		$this->shell($cmd);
+		$this->shell(array('open', array(BURSTPATH . '/' . $this->name)));
 		makemenu(array('q' => 'quit',
 			'c' => 'continue with the next file'),
 			'Enter file names and page ranges');
 		while(true) {
 			switch($name = $this->getline('File name: ')) {
 				case 'c':
-					$cmd = 'mv -n ' 
-						. escapeshellarg(BURSTPATH . '/' . $this->name) . ' ' 
-						. escapeshellarg(BURSTPATH . '/Old/' . $this->name);
-					if(!$this->shell($cmd))
-						echo 'Error moving file ' . $this->name . ' to Old' . PHP_EOL;
+					$this->shell(array(
+						'cmd' => 'mv',
+						'arg' => array('-n',
+							BURSTPATH . '/' . $this->name,
+							BURSTPATH . '/Old/' . $this->name)
+					));
 					return true;
 				case 'q':
 					throw new StopException('burst');
@@ -3340,7 +3336,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$to = $srange[1];
 				break;
 			}
-			$cmd = array(
+			$this->shell(array(
 				'cmd' => 'gs',
 				'arg' => array(
 					'-dBATCH', '-dNOPAUSE', '-q', '-sDEVICE=pdfwrite',
@@ -3348,27 +3344,29 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					'-sOUTPUTFILE=' . TEMPPATH . '/' . $name,
 					BURSTPATH . '/' . $this->name,
 				),
-			);
-			if(!$this->shell($cmd)) {
-				echo 'Could not burst PDF' . PHP_EOL;
-				return false;
-			}
-			else
-				echo 'Split off file ' . $name . PHP_EOL;
+			));
+			echo 'Split off file ' . $name . PHP_EOL;
 		}
 	}
 	public function removefirstpage() {
-		$path = $this->path(array('folder' => true, 'type' => 'none'));
-		$tmppath = escapeshellarg($path . "/tmp.pdf");
-		$cmd = "gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dFirstPage=2 -sOUTPUTFILE=$tmppath {$this->path()}";
-		$this->shell($cmd);
+		$tmpPath = $this->path(array('folder' => true, 'type' => 'none')) 
+			. '/tmp.pdf';
+		$path = $this->path(array('type' => 'none'));
+		$this->shell(array(
+			'cmd' => 'gs',
+			'arg' => array(
+				'-dBATCH', '-dNOPAUSE', '-q', '-sDEVICE=pdfwrite', 
+				'-dFirstPage=2', '-sOUTPUTFILE=' . $tmpPath, $path
+			),
+		));
 		// open files for review
-		$this->shell("open $tmppath");
+		$this->shell(array('open', array($tmpPath)));
 		$this->openf();
 		if($this->ynmenu("Do you want to replace the file?")) {
-			return $this->shell("mv $tmppath {$this->path()}");
+			$this->shell(array('mv', array($tmpPath, $path)));
+			return true;
 		} else {
-			$this->shell('rm ' . $tmppath);
+			$this->shell(array('rm', array($tmpPath)));
 			return false;
 		}
 	}
@@ -3467,7 +3465,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	public function searchgoogletitle() {
 	// searches for the title of the article in Google
 		$url = 'http://www.google.com/search?q=' . $this->googletitle();
-		return $this->shell("open '" . $url . "'");
+		return $this->shell(array('open', array($url)));
 	}
 	public function gethost() {
 	// get the host part of the URL

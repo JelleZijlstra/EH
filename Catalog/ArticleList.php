@@ -17,6 +17,8 @@ class ArticleList extends CsvContainerList {
 	public $pdfcontentcache = array(); // cache for Article::$pdfcontent
 	protected static $inform_exclude = array('pdfcontent');
 	private static $ArticleList_commands = array(
+		'countNameParser' => array('name' => 'countNameParser',
+			'desc' => 'Count NameParser results'),
 		'adddata' => array('name' => 'adddata',
 			'desc' => 'Add data to existing reference through API lookups',
 			'arg' => 'None',
@@ -923,6 +925,19 @@ class ArticleList extends CsvContainerList {
 				json_encode($this->pdfcontentcache)
 			);
 		}
+	}
+	
+	public function countNameParser(array $paras) {
+		$count = 0;
+		$good = 0;
+		$this->each(function($e) use(&$count, &$good) {
+			$count++;
+			if($e->testNameParser()) {
+				$good++;
+			}
+		});
+		echo $good . ' of ' . $count . ' (' . ($good / $count * 100) . '%)' 
+			. PHP_EOL;
 	}
 	
 	/*

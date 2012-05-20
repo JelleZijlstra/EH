@@ -3561,13 +3561,17 @@ Content-Disposition: attachment
 			'name' => __FUNCTION__,
 			'checklist' => array( /* No paras */ ),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if($this->isredirect()) {
+			return true;
+		}
 		$parser = new NameParser($this->name);
 		if($parser->errorOccurred()) {
 			$parser->printErrors();
+			return false;
 		} else {
 			//$parser->printParsed();
+			return true;
 		}
-		return true;
 	}
 
 	/*

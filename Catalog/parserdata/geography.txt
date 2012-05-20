@@ -748,13 +748,15 @@ Java
 Borneo
 Bali
 Lesser Sundas
+Nusa Tenggara
+Mentawai
 Bali
 Flores
 Sumba
 Sumbawa
 Timor
 Sulawesi
-Moluccas
+Maluku
 New Guinea
 
 # Australia states and territories

@@ -38,6 +38,7 @@ abstract class AutoLoader {
 		'NameList' => '/Catalog/NameList.php',
 		'Publisher' => '/Catalog/Publisher.php',
 		'PublisherList' => '/Catalog/PublisherList.php',
+		'NameParser' => '/Catalog/NameParser.php',
 		
 		// List
 		'Country' => '/List/Country.php',

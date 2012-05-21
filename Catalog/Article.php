@@ -34,7 +34,7 @@ class Article extends CsvListEntry {
 	public $ids; //array of properties for various less-common identifiers
 	public $comm; //array of properties for comments, notes, and other secondary stuff
 	public $bools; // array of boolean flags
-	public $enclosing; // enclosing article
+	public $parent; // enclosing article
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
 	static $n_comm = array('pages', 'newtaxa', 'muroids'); // names of commentary fields supported
 	static $n_bools = array('parturl', 'fullissue'); // variables (mostly boolean) supported
@@ -126,7 +126,7 @@ class Article extends CsvListEntry {
 				if($in[24]) $this->ids = json_decode($in[24], true);
 				if($in[25]) $this->comm = json_decode($in[25], true);
 				if($in[26]) $this->bools = json_decode($in[26], true);
-				if(isset($in[27])) $this->enclosing = $in[27];
+				if(isset($in[27])) $this->parent = $in[27];
 				return;
 			case 'r': // make new redirect
 				if(!is_array($in)) {
@@ -226,7 +226,7 @@ class Article extends CsvListEntry {
 		$out[] = $this->getarray('ids');
 		$out[] = $this->getarray('comm');
 		$out[] = $this->getarray('bools');
-		$out[] = $this->enclosing;
+		$out[] = $this->parent;
 		return $out;
 	}
 	public function inform(array $paras = array()) {
@@ -367,9 +367,9 @@ class Article extends CsvListEntry {
 				if(!$this->ynmenu('The existing file is a redirect. Do you want to overwrite it?')) {
 					return false;
 				}
-			}
-			else
+			} else {
 				return false;
+			}
 		}
 		// fix any enclosings
 		$enclosings = $this->p->bfind(array(
@@ -377,7 +377,7 @@ class Article extends CsvListEntry {
 			'quiet' => true,
 		));
 		foreach($enclosings as $enclosing) {
-			$enclosing->enclosing = $newname;
+			$enclosing->parent = $newname;
 		}
 		// change the name internally
 		$oldname = $this->name;
@@ -628,7 +628,7 @@ class Article extends CsvListEntry {
 		}
 		if(!$this->pages) unset($this->pages);
 		// redundant stuff for books
-		if($this->enclosing) {
+		if($this->parent) {
 			$obj = $this->getEnclosing();
 			if($this->publisher) {
 				if(!$obj->publisher) {
@@ -731,8 +731,8 @@ class Article extends CsvListEntry {
 			$this->warn('deprecated parameter', 'pages');
 		if(!$this->isor('inpress', 'nopagenumberjournal', 'fullissue') and $this->journal and !$this->start_page)
 			$this->warn('no content in "start" for journal article', 'journal');
-		if($this->enclosing and !$this->p->has($this->enclosing)) {
-			$this->warn('invalid enclosing article', 'enclosing');
+		if($this->parent and !$this->p->has($this->parent)) {
+			$this->warn('invalid enclosing article', 'parent');
 		}
 		$this->p->needsave();
 		return true;
@@ -1283,7 +1283,7 @@ class Article extends CsvListEntry {
 			return 'web';
 		if($this->journal)
 			return 'journal';
-		if($this->enclosing)
+		if($this->parent)
 			return 'chapter';
 		if($this->isthesis())
 			return 'thesis';
@@ -3105,7 +3105,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		"'d': try entering a DOI again" . PHP_EOL .
 		"'o': open the file" . PHP_EOL;
 		$params = array("authors", "year", "title", "journal", "volume", 
-			"issue", "start", "end", "pages", "url", "enclosing", "publisher", 
+			"issue", "start", "end", "pages", "url", "parent", "publisher", 
 			"bookpages", "isbn", "location", "parturl"
 		);
 		foreach($params as $key) {
@@ -3120,9 +3120,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 			}
 		}
-		if($this->enclosing && !$this->p->has($this->enclosing)) {
+		if($this->parent && !$this->p->has($this->parent)) {
 			echo 'Adding the enclosing file...' . PHP_EOL;
-			$this->p->add_nofile(array('handle' => $this->enclosing));
+			$this->p->add_nofile(array('handle' => $this->parent));
 		}
 		return true;
 	}
@@ -3685,7 +3685,7 @@ Content-Disposition: attachment
 		foreach($candidates as $candidate) {
 			$candidate->inform();
 			if($this->ynmenu("Is this the correct book?")) {
-				$this->enclosing = $candidate->name;
+				$this->parent = $candidate->name;
 				return true;
 			}
 		}
@@ -3702,7 +3702,7 @@ Content-Disposition: attachment
 			}
 		));
 		if($cmd !== 'n') {
-			$this->enclosing = $cmd;
+			$this->parent = $cmd;
 			return true;
 		}
 		// now, make a new one
@@ -3718,12 +3718,12 @@ Content-Disposition: attachment
 		$entry->name = $newName;
 		$entry->title = $title;
 		$this->p->addEntry($entry, array('isnew' => true));
-		$this->enclosing = $newName;
+		$this->parent = $newName;
 		return true;
 	}
 	private function getEnclosing() {
-		if($this->enclosing) {
-			return $this->p->get($this->enclosing);
+		if($this->parent) {
+			return $this->p->get($this->parent);
 		} else {
 			return false;
 		}

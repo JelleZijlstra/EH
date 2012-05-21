@@ -21,6 +21,7 @@ class Article extends CsvListEntry {
 	public $issue; //journal issue
 	public $start_page; //start page
 	public $end_page; //end page
+	public $pages; //number of pages in book
 	public $parent; // enclosing article
 	public $misc_data; // miscellaneous data
 	
@@ -48,13 +49,11 @@ class Article extends CsvListEntry {
 	public $publisher; //publisher
 	public $location; //geographical location published
 	
-	// should become pages field
-	public $bookpages; //number of pages in book
 	public $ids; //array of properties for various less-common identifiers
 	public $comm; //array of properties for comments, notes, and other secondary stuff
 	public $bools; // array of boolean flags
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
-	static $n_comm = array('pages'); // names of commentary fields supported
+	static $n_comm = array(); // names of commentary fields supported
 	static $n_bools = array('parturl', 'fullissue'); // variables (mostly boolean) supported
 	private $pdfcontent; // holds text of first page of PDF
 	protected static $Article_commands = array(
@@ -139,7 +138,7 @@ class Article extends CsvListEntry {
 				$this->doi = $in[17];
 				$this->publisher = $in[20];
 				$this->location = $in[21];
-				$this->bookpages = $in[22];
+				$this->pages = $in[22];
 				if($in[24]) $this->ids = json_decode($in[24], true);
 				if($in[25]) $this->comm = json_decode($in[25], true);
 				if($in[26]) $this->bools = json_decode($in[26], true);
@@ -239,7 +238,7 @@ class Article extends CsvListEntry {
 		$out[] = '';
 		$out[] = $this->publisher;
 		$out[] = $this->location;
-		$out[] = $this->bookpages;
+		$out[] = $this->pages;
 		$out[] = '';
 		$out[] = $this->getarray('ids');
 		$out[] = $this->getarray('comm');
@@ -499,7 +498,7 @@ class Article extends CsvListEntry {
 			// no other data for redirects
 			$redirect_remove = array('sfolder', 'ssfolder', 'authors', 'year', 
 				'title', 'journal', 'volume', 'series', 'issue', 'start', 'end', 
-				'pages', 'bookpages', 'ids', 'comm', 'doi', 'url', 'location', 
+				'pages', 'ids', 'comm', 'doi', 'url', 'location', 
 				'bools'
 			);
 			foreach($redirect_remove as $key)
@@ -512,7 +511,7 @@ class Article extends CsvListEntry {
 		}
 		if($this->issupplement()) {
 			$supplement_remove = array('authors', 'year', 'journal', 'volume', 
-				'series', 'issue', 'start', 'end', 'pages', 'bookpages', 'ids', 
+				'series', 'issue', 'start', 'end', 'pages', 'ids', 
 				'comm', 'doi', 'url', 'location', 'bools'
 			);
 			foreach($supplement_remove as $key)
@@ -641,11 +640,6 @@ class Article extends CsvListEntry {
 			$this->publisher = $this->journal;
 			$this->journal = NULL;
 		}
-		if($this->isthesis() and $this->pages) {
-			$this->bookpages = $this->pages;
-			unset($this->pages);
-		}
-		if(!$this->pages) unset($this->pages);
 		// redundant stuff for books
 		if($this->parent) {
 			$obj = $this->getEnclosing();
@@ -677,17 +671,17 @@ class Article extends CsvListEntry {
 					}
 				}
 			}
-			if($this->bookpages) {
-				if(!$obj->bookpages) {
-					$obj->bookpages = $this->bookpages;
-					$this->bookpages = '';
+			if($this->pages) {
+				if(!$obj->pages) {
+					$obj->pages = $this->pages;
+					$this->pages = '';
 				} else {
-					if($this->bookpages !== $obj->bookpages) {
-						$this->warn('Bookpages for enclosing ("' .
-							$obj->bookpages . '") is different from bookpages',
-							'bookpages');
+					if($this->pages !== $obj->pages) {
+						$this->warn('Pages for enclosing ("' .
+							$obj->pages . '") is different from pages',
+							'pages');
 					} else {
-						$this->bookpages = '';
+						$this->pages = '';
 					}
 				}
 			}
@@ -745,9 +739,6 @@ class Article extends CsvListEntry {
 		// AMNH journals need HDL thingy
 		if($this->isamnh() && !$this->hdl)
 			$this->warn('no HDL for AMNH title', 'journal');
-		// deprecated
-		if(!$this->isor('inpress', 'nopagenumberjournal', 'web') and $this->pages)
-			$this->warn('deprecated parameter', 'pages');
 		if(!$this->isor('inpress', 'nopagenumberjournal', 'fullissue') and $this->journal and !$this->start_page)
 			$this->warn('no content in "start" for journal article', 'journal');
 		if($this->parent and !$this->p->has($this->parent)) {
@@ -950,7 +941,7 @@ class Article extends CsvListEntry {
 	}
 	public function isweb() {
 	// is this a web publication?
-		return (!$this->bookpages && !$this->volume && !$this->start_page && !$this->journal && !$this->isbn && $this->url);
+		return (!$this->volume && !$this->start_page && !$this->journal && !$this->isbn && $this->url);
 	}
 	public function isthesis() {
 		return preg_match('/^(PhD|MSc|BSc) thesis/', $this->publisher);
@@ -1365,8 +1356,8 @@ class Article extends CsvListEntry {
 			$out .= " (eds.). ";
 			$out .= $enclosing->title . ". ";
 			$out .= $enclosing->publisher;
-			if($enclosing->bookpages) {
-				$out .= ", " . $enclosing->bookpages . " pp";
+			if($enclosing->pages) {
+				$out .= ", " . $enclosing->pages . " pp";
 			}
 			$out .= ".";
 		}
@@ -1482,7 +1473,7 @@ class Article extends CsvListEntry {
 			case 'book':
 				$paras['title'] = $this->title;
 				if(!$paras['pages']) {
-					$paras['pages'] = $this->bookpages;
+					$paras['pages'] = $this->pages;
 				}
 				$paras['edition'] = $this->edition;
 				break;
@@ -1534,7 +1525,7 @@ class Article extends CsvListEntry {
 				$tmp = explode(' thesis, ', $this->publisher);
 				$paras['degree'] = $tmp[0];
 				$paras['publisher'] = $tmp[1];
-				$paras['pages'] = $this->bookpages;
+				$paras['pages'] = $this->pages;
 				break;
 			case 'web':
 				$paras['title'] = $this->title;
@@ -1638,7 +1629,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= $this->title . '. <i>in</i> ';
 				$out .= str_replace("(Ed", '(ed', $this->getEnclosingAuthors());
 				$out .= ', <i>' . $enclosing->title . '</i>. ' 
-					. $enclosing->bookpages . ' pp. ' . $enclosing->publisher;
+					. $enclosing->pages . ' pp. ' . $enclosing->publisher;
 				if($enclosing->location) {
 					$out .= ', ' . $this->location;
 				}
@@ -1646,8 +1637,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				break;
 			case 'book':
 				$out .= '<i>' . $this->title . '.</i>';
-				if($this->bookpages) {
-					$out .= ' ' . $this->bookpages . ' pp.';
+				if($this->pages) {
+					$out .= ' ' . $this->pages . ' pp.';
 				}
 				if(preg_match('/: /', $this->publisher)) {
 					$tmp = preg_split('/: /', $this->publisher);
@@ -1691,7 +1682,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= "$this->publisher, ";
 				if($this->location)
 					$out .= "$this->location, ";
-				$out .= "$this->bookpages pp.";
+				$out .= "$this->pages pp.";
 				break;
 			case 'chapter':
 				$enclosing = $this->getEnclosing();
@@ -1702,7 +1693,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= "$enclosing->publisher, ";
 				if($enclosing->location)
 					$out .= "$enclosing->location, ";
-				$out .= "$enclosing->bookpages pp.";
+				$out .= "$enclosing->pages pp.";
 				break;
 			case 'thesis':
 				$out .= "<i>$this->title</i>. Unpublished ";
@@ -1713,7 +1704,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 				$out .= ", ";
 				$out .= $this->thesis_getuni();
-				$out .= ", $this->bookpages pp.";
+				$out .= ", $this->pages pp.";
 				break;
 			default:
 				$out .= "$this->title. ";
@@ -1790,8 +1781,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				if($this->location) {
 					$out .= ", $this->location";
 				}
-				if($this->bookpages) {
-					$out .= ", $this->bookpages p.";
+				if($this->pages) {
+					$out .= ", $this->pages p.";
 				}
 				break;
 			default:
@@ -1913,8 +1904,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				if($this->location) {
 					$out .= ", $this->location";
 				}
-				if($this->bookpages) {
-					$out .= ", $this->bookpages pp.";
+				if($this->pages) {
+					$out .= ", $this->pages pp.";
 				}
 				break;
 			default:
@@ -3125,7 +3116,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		"'o': open the file" . PHP_EOL;
 		$params = array("authors", "year", "title", "journal", "volume", 
 			"issue", "start", "end", "pages", "url", "parent", "publisher", 
-			"bookpages", "isbn", "location", "parturl"
+			"isbn", "location", "parturl"
 		);
 		foreach($params as $key) {
 			while(true) {

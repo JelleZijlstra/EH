@@ -497,6 +497,19 @@ class Article extends CsvListEntry {
 		/*
 		 * conversion
 		 */
+		if($this->status) {
+			$this->misc_data .= ' Status: ' . $this->status;
+			$this->status = '';
+		}
+		if($this->newtaxa) {
+			$this->misc_data .= ' New taxa: ' . $this->newtaxa;
+			$this->newtaxa = '';
+		}
+		if($this->muroids) {
+			$this->misc_data .= ' Muroids: ' . $this->muroids;
+			$this->muroids = '';
+		}
+		
 		if($this->isredirect()) {
 			// no other data for redirects
 			$redirect_remove = array('sfolder', 'ssfolder', 'authors', 'year', 

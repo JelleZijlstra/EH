@@ -141,7 +141,7 @@ abstract class CsvContainerList extends ContainerList {
 			// TODO: get DATAPATH straight
 			file_put_contents(DATAPATH . 'formatoutput.txt', preg_replace('/Warning \(file: (.*?)\): /', '$1' . PHP_EOL, ob_get_contents()));
 			ob_end_clean();
-			$this->shell(array('edit', DATAPATH . 'formatoutput.txt'));
+			$this->shell(array('edit', array(DATAPATH . 'formatoutput.txt')));
 		}
 		// need to save here for the diff to work
 		$this->save();

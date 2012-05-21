@@ -50,12 +50,11 @@ class Article extends CsvListEntry {
 	
 	// should become pages field
 	public $bookpages; //number of pages in book
-	public $status; //status of the file
 	public $ids; //array of properties for various less-common identifiers
 	public $comm; //array of properties for comments, notes, and other secondary stuff
 	public $bools; // array of boolean flags
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
-	static $n_comm = array('pages', 'newtaxa', 'muroids'); // names of commentary fields supported
+	static $n_comm = array('pages'); // names of commentary fields supported
 	static $n_bools = array('parturl', 'fullissue'); // variables (mostly boolean) supported
 	private $pdfcontent; // holds text of first page of PDF
 	protected static $Article_commands = array(
@@ -141,7 +140,6 @@ class Article extends CsvListEntry {
 				$this->publisher = $in[20];
 				$this->location = $in[21];
 				$this->bookpages = $in[22];
-				$this->status = $in[23];
 				if($in[24]) $this->ids = json_decode($in[24], true);
 				if($in[25]) $this->comm = json_decode($in[25], true);
 				if($in[26]) $this->bools = json_decode($in[26], true);
@@ -242,7 +240,7 @@ class Article extends CsvListEntry {
 		$out[] = $this->publisher;
 		$out[] = $this->location;
 		$out[] = $this->bookpages;
-		$out[] = $this->status;
+		$out[] = '';
 		$out[] = $this->getarray('ids');
 		$out[] = $this->getarray('comm');
 		$out[] = $this->getarray('bools');
@@ -497,25 +495,12 @@ class Article extends CsvListEntry {
 		/*
 		 * conversion
 		 */
-		if($this->status) {
-			$this->misc_data .= ' Status: ' . $this->status;
-			$this->status = '';
-		}
-		if($this->newtaxa) {
-			$this->misc_data .= ' New taxa: ' . $this->newtaxa;
-			$this->newtaxa = '';
-		}
-		if($this->muroids) {
-			$this->misc_data .= ' Muroids: ' . $this->muroids;
-			$this->muroids = '';
-		}
-		
 		if($this->isredirect()) {
 			// no other data for redirects
 			$redirect_remove = array('sfolder', 'ssfolder', 'authors', 'year', 
 				'title', 'journal', 'volume', 'series', 'issue', 'start', 'end', 
 				'pages', 'bookpages', 'ids', 'comm', 'doi', 'url', 'location', 
-				'status', 'bools'
+				'bools'
 			);
 			foreach($redirect_remove as $key)
 				$this->$key = NULL;
@@ -528,7 +513,7 @@ class Article extends CsvListEntry {
 		if($this->issupplement()) {
 			$supplement_remove = array('authors', 'year', 'journal', 'volume', 
 				'series', 'issue', 'start', 'end', 'pages', 'bookpages', 'ids', 
-				'comm', 'doi', 'url', 'location', 'status', 'bools'
+				'comm', 'doi', 'url', 'location', 'bools'
 			);
 			foreach($supplement_remove as $key)
 				$this->$key = NULL;

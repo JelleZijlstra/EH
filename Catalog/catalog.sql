@@ -18,13 +18,9 @@ CREATE TABLE `article` (
 	`start_page` VARCHAR(255) DEFAULT NULL,
 	`end_page` VARCHAR(255) DEFAULT NULL,
 	`pages` VARCHAR(255) DEFAULT NULL,
-	`url` VARCHAR(512) DEFAULT NULL,
-	`doi` VARCHAR(255) DEFAULT NULL,
 	-- Book for book chapter
 	`parent` INT UNSIGNED DEFAULT NULL,
 	`publisher_id` INT UNSIGNED DEFAULT NULL,
-	-- Indicate that an identifier does not have a 1-to-1 relationship to this work.
-	`part_identifier` TINYINT(1) DEFAULT FALSE,
 	-- Any other data we wish to preserve
 	`misc_data` VARCHAR(4096) DEFAULT NULL,
 	PRIMARY KEY(`id`),
@@ -103,16 +99,25 @@ CREATE TABLE `journal` (
 	INDEX(`name`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
 
--- Other IDs than DOI
-DROP TABLE IF EXISTS `article_identifiers`;
-CREATE TABLE `article_identifiers` (
+-- Identifiers (e.g., URLs, DOIs, HDLs, JSTOR IDs)
+DROP TABLE IF EXISTS `identifier`;
+CREATE TABLE `identifier` (
 	`id` INT UNSIGNED AUTO_INCREMENT,
-	`article_id` INT UNSIGNED NOT NULL,
-	-- E.g., 'jstor'
-	`identifier_name` VARCHAR(255) NOT NULL,
-	`identifier` VARCHAR(255) NOT NULL,
+	`name` VARCHAR(255) NOT NULL,
 	PRIMARY KEY(`id`),
-	INDEX(`article_id`)
+	INDEX(`name`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `article_identifier`;
+CREATE TABLE `article_identifier` (
+	`article_id` INT UNSIGNED NOT NULL,
+	-- Indicate that an identifier does not have a 1-to-1 relationship to this work.
+	`identifier_is_shared` BOOL DEFAULT FALSE,
+	-- E.g., 'jstor'
+	`identifier_id` VARCHAR(255) NOT NULL,
+	`data` VARCHAR(255) NOT NULL,
+	INDEX(`article_id`),
+	INDEX(`data`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
 
 --

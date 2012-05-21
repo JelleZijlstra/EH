@@ -131,23 +131,30 @@ abstract class CsvContainerList extends ContainerList {
 		return $childClass::hasproperty($field);
 	}
 	protected function _formatAll(array $paras) {
-		$this->shell('cp ' . escapeshellarg(static::$fileloc) . ' '
-			. escapeshellarg(static::$fileloc . '.save')
-		);
+		$this->shell(array(
+			'cmd' => 'cp', 
+			'arg' => array(static::$fileloc, static::$fileloc . '.save')
+		));
 		if($paras['w']) ob_start();
 		$this->doall(array(0 => 'format', 'askafter' => 0));
 		if($paras['w']) {
 			// TODO: get DATAPATH straight
 			file_put_contents(DATAPATH . 'formatoutput.txt', preg_replace('/Warning \(file: (.*?)\): /', '$1' . PHP_EOL, ob_get_contents()));
 			ob_end_clean();
-			$this->shell(
-				'edit ' . escapeshellarg(DATAPATH . 'formatoutput.txt')
-			);
+			$this->shell(array('edit', DATAPATH . 'formatoutput.txt'));
 		}
 		// need to save here for the diff to work
 		$this->save();
-		$this->shell('diff ' . static::$fileloc . ' ' . static::$fileloc . '.save');
-		$this->shell('rm ' . static::$fileloc . '.save');
+		$this->shell(array(
+			'cmd' => 'diff',
+			'arg' => array(static::$fileloc, static::$fileloc . '.save'),
+			// diff returns one if two files differ
+			'exceptiononerror' => false,
+		));
+		$this->shell(array(
+			'cmd' => 'rm',
+			'arg' => array(static::$fileloc . '.save'),
+		));
 	}
 	/* listing, manipulating, and summarizing the whole list */
 	protected function _listMembers(array $paras) {

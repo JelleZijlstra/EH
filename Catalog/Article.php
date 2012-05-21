@@ -50,10 +50,8 @@ class Article extends CsvListEntry {
 	public $location; //geographical location published
 	
 	public $ids; //array of properties for various less-common identifiers
-	public $comm; //array of properties for comments, notes, and other secondary stuff
 	public $bools; // array of boolean flags
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
-	static $n_comm = array(); // names of commentary fields supported
 	static $n_bools = array('parturl', 'fullissue'); // variables (mostly boolean) supported
 	private $pdfcontent; // holds text of first page of PDF
 	protected static $Article_commands = array(
@@ -105,7 +103,7 @@ class Article extends CsvListEntry {
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 	);
-	protected static $arrays_to_check = array('ids', 'comm', 'bools');
+	protected static $arrays_to_check = array('ids', 'bools');
 	/* OBJECT CONSTRUCTION AND BASIC OPERATIONS */
 	public function __construct($in, $code, &$parent) {
 	// $in: input data (array or string)
@@ -140,7 +138,6 @@ class Article extends CsvListEntry {
 				$this->location = $in[21];
 				$this->pages = $in[22];
 				if($in[24]) $this->ids = json_decode($in[24], true);
-				if($in[25]) $this->comm = json_decode($in[25], true);
 				if($in[26]) $this->bools = json_decode($in[26], true);
 				if(isset($in[27])) $this->parent = $in[27];
 				if(isset($in[28])) $this->misc_data = $in[28];
@@ -241,7 +238,7 @@ class Article extends CsvListEntry {
 		$out[] = $this->pages;
 		$out[] = '';
 		$out[] = $this->getarray('ids');
-		$out[] = $this->getarray('comm');
+		$out[] = '';
 		$out[] = $this->getarray('bools');
 		$out[] = $this->parent;
 		$out[] = $this->misc_data;
@@ -498,7 +495,7 @@ class Article extends CsvListEntry {
 			// no other data for redirects
 			$redirect_remove = array('sfolder', 'ssfolder', 'authors', 'year', 
 				'title', 'journal', 'volume', 'series', 'issue', 'start', 'end', 
-				'pages', 'ids', 'comm', 'doi', 'url', 'location', 
+				'pages', 'ids', 'doi', 'url', 'location', 
 				'bools'
 			);
 			foreach($redirect_remove as $key)
@@ -512,7 +509,7 @@ class Article extends CsvListEntry {
 		if($this->issupplement()) {
 			$supplement_remove = array('authors', 'year', 'journal', 'volume', 
 				'series', 'issue', 'start', 'end', 'pages', 'ids', 
-				'comm', 'doi', 'url', 'location', 'bools'
+				'doi', 'url', 'location', 'bools'
 			);
 			foreach($supplement_remove as $key)
 				$this->$key = NULL;

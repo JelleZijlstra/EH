@@ -37,10 +37,9 @@ class Article extends CsvListEntry {
 	public $enclosing; // enclosing article
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
 	static $n_comm = array('pages', 'newtaxa', 'muroids'); // names of commentary fields supported
-	static $n_bools = array('parturl', 'fullissue', 'triedfindurl', 'triedfinddoi', 'triedadddata'); // variables (mostly boolean) supported
-	static protected $set_exclude_child = array('triedfindurl', 'triedfinddoi', 'triedadddata');
+	static $n_bools = array('parturl', 'fullissue'); // variables (mostly boolean) supported
+	static protected $set_exclude_child = array();
 	private $pdfcontent; // holds text of first page of PDF
-	private $adddata_return; // private flag used in Article::adddata()
 	protected static $Article_commands = array(
 		'edittitle' => array('name' => 'edittitle',
 			'aka' => array('t'),
@@ -508,9 +507,7 @@ class Article extends CsvListEntry {
 				$this->title = preg_replace('@^/([^/]+)/.*$@u', '/$1/' . $this->p->resolve_redirect($target), $this->title);
 
 		}
-		foreach(array(
-			'parturl', 'triedfindurl', 'triedfinddoi',  'triedaddata'
-		) as $field) {
+		foreach(array('parturl') as $field) {
 			if($this->$field) {
 				$this->$field = 1;
 			} else {
@@ -521,16 +518,6 @@ class Article extends CsvListEntry {
 		if($this->jstor) {
 			$this->doi = '10.2307/' . $this->jstor;
 			$this->jstor = NULL;
-		}
-		// those are unnecessary
-		if($this->url) {
-			unset($this->triedfindurl);
-		}
-		if($this->doi) {
-			unset($this->triedfinddoi);
-		}
-		if(!$this->needsdata() and $this->doi) {
-			unset($this->triedadddata);
 		}
 		// this indicates it's in press
 		if($this->start_page === 'no') {
@@ -2403,14 +2390,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$this->finddoi();
 		if(!$this->triedfindurl)
 			$this->findurl();
-		return $this->adddata_return ? false : true;
+		return true;
 	}
 	private function findurl() {
 		echo 'Trying to find a URL for file ' . $this->name . '... ';
 		$json = self::fetchgoogle($this->googletitle());
 		if($json === false) {
-			$this->adddata_return = true;
-			return false;
+			throw new StopException;
 		}
 		// Google behaved correctly, but found nothing
 		if($json === NULL) {
@@ -2467,9 +2453,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						echo 'data added' . PHP_EOL;
 						return true;
 					case 'r':
-						$this->adddata_return = true;
 						echo 'nothing found' . PHP_EOL;
-						return false;
+						throw new StopException;
 					case 'e':
 						$this->edit();
 						break;
@@ -3002,8 +2987,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				case 'n':
 					break;
 				case 'r':
-					$this->adddata_return = true;
-					return false;
+					throw new StopException;
 				default:
 					return $cmd;
 			}

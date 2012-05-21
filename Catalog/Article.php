@@ -9,32 +9,51 @@
 ContainerList::$resolve_redirect_exclude[] = array('Article', 'isredirect');
 
 class Article extends CsvListEntry {
+	/*
+	 * Properties that have a one-to-one correspondence with the database.
+	 */
+	public $id; // ID in database
 	public $name; //name of file (or handle of citation)
-	public $folder; //folder (NOFILE when "file" is not a file)
-	public $sfolder; //subfolder
-	public $ssfolder; //sub-subfolder
-	public $addmonth; //month added to catalog
-	public $addday; //day added to catalog
-	public $addyear; //year added to catalog
-	public $authors; //authors in form <last1>, <initial1>.<initial1>.; <last2>, ...
 	public $year; //year published
 	public $title; //title (chapter title for book chapter; book title for full book or thesis)
-	public $journal; //journal published in
 	public $series; //journal series
 	public $volume; //journal volume
 	public $issue; //journal issue
 	public $start_page; //start page
 	public $end_page; //end page
+	public $parent; // enclosing article
+	public $misc_data; // miscellaneous data
+	
+	// should become reference to a Folder object
+	public $folder; //folder (NOFILE when "file" is not a file)
+	public $sfolder; //subfolder
+	public $ssfolder; //sub-subfolder
+	
+	// should become a timestamp
+	public $addmonth; //month added to catalog
+	public $addday; //day added to catalog
+	public $addyear; //year added to catalog
+	
+	// should become special reference to set of Author objects
+	public $authors; //authors in form <last1>, <initial1>.<initial1>.; <last2>, ...
+	
+	// should become reference to Journal object
+	public $journal; //journal published in
+	
+	// should become identifiers like others
 	public $url; //url where available
 	public $doi; //DOI
+	
+	// should become reference to Publisher object
 	public $publisher; //publisher
 	public $location; //geographical location published
+	
+	// should become pages field
 	public $bookpages; //number of pages in book
 	public $status; //status of the file
 	public $ids; //array of properties for various less-common identifiers
 	public $comm; //array of properties for comments, notes, and other secondary stuff
 	public $bools; // array of boolean flags
-	public $parent; // enclosing article
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
 	static $n_comm = array('pages', 'newtaxa', 'muroids'); // names of commentary fields supported
 	static $n_bools = array('parturl', 'fullissue'); // variables (mostly boolean) supported
@@ -127,6 +146,7 @@ class Article extends CsvListEntry {
 				if($in[25]) $this->comm = json_decode($in[25], true);
 				if($in[26]) $this->bools = json_decode($in[26], true);
 				if(isset($in[27])) $this->parent = $in[27];
+				if(isset($in[28])) $this->misc_data = $in[28];
 				return;
 			case 'r': // make new redirect
 				if(!is_array($in)) {
@@ -227,6 +247,7 @@ class Article extends CsvListEntry {
 		$out[] = $this->getarray('comm');
 		$out[] = $this->getarray('bools');
 		$out[] = $this->parent;
+		$out[] = $this->misc_data;
 		return $out;
 	}
 	public function inform(array $paras = array()) {

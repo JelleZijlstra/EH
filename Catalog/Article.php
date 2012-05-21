@@ -38,7 +38,6 @@ class Article extends CsvListEntry {
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
 	static $n_comm = array('pages', 'newtaxa', 'muroids'); // names of commentary fields supported
 	static $n_bools = array('parturl', 'fullissue'); // variables (mostly boolean) supported
-	static protected $set_exclude_child = array();
 	private $pdfcontent; // holds text of first page of PDF
 	protected static $Article_commands = array(
 		'edittitle' => array('name' => 'edittitle',
@@ -90,8 +89,6 @@ class Article extends CsvListEntry {
 			'execute' => 'callmethod'),
 	);
 	protected static $arrays_to_check = array('ids', 'comm', 'bools');
-	// fields not printed by inform()
-	protected static $inform_exclude = array('pdfcontent');
 	/* OBJECT CONSTRUCTION AND BASIC OPERATIONS */
 	public function __construct($in, $code, &$parent) {
 	// $in: input data (array or string)

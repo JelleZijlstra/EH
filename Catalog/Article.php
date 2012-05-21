@@ -2560,8 +2560,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$this->pdfcontent = trim(utf8_encode($this->shell(array(
 			'cmd' => PDFTOTEXT,
 			'arg' => array($this->path(), '-', '-l', '1'),
-			'stderr' => BPATH . 'Catalog/data/pdftotextlog',
-			'appenderr' => true,
+			'stderr' => BPATH . '/Catalog/data/pdftotextlog',
+			'append-err' => true,
 			'return' => 'output',
 			'printout' => false,
 		))));

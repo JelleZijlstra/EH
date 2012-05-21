@@ -36,7 +36,7 @@ class Article extends CsvListEntry {
 	public $bools; // array of boolean flags
 	public $enclosing; // enclosing article
 	static $n_ids = array('isbn', 'eurobats', 'hdl', 'jstor', 'pmid', 'edition', 'issn', 'pmc'); // names of identifiers supported
-	static $n_comm = array('pages', 'newtaxa', 'draft', 'muroids'); // names of commentary fields supported
+	static $n_comm = array('pages', 'newtaxa', 'muroids'); // names of commentary fields supported
 	static $n_bools = array('parturl', 'fullissue', 'triedfindurl', 'triedfinddoi', 'triedadddata'); // variables (mostly boolean) supported
 	static protected $set_exclude_child = array('triedfindurl', 'triedfinddoi', 'triedadddata');
 	private $pdfcontent; // holds text of first page of PDF

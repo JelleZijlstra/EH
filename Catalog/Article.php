@@ -23,8 +23,8 @@ class Article extends CsvListEntry {
 	public $series; //journal series
 	public $volume; //journal volume
 	public $issue; //journal issue
-	public $start; //start page
-	public $end; //end page
+	public $start_page; //start page
+	public $end_page; //end page
 	public $url; //url where available
 	public $doi; //DOI
 	public $publisher; //publisher
@@ -119,8 +119,8 @@ class Article extends CsvListEntry {
 				$this->series = $in[11];
 				$this->volume = $in[12];
 				$this->issue = $in[13];
-				$this->start = $in[14];
-				$this->end = $in[15];
+				$this->start_page = $in[14];
+				$this->end_page = $in[15];
 				$this->url = $in[16];
 				$this->doi = $in[17];
 				$this->publisher = $in[20];
@@ -217,8 +217,8 @@ class Article extends CsvListEntry {
 		$out[] = $this->series;
 		$out[] = $this->volume;
 		$out[] = $this->issue;
-		$out[] = $this->start;
-		$out[] = $this->end;
+		$out[] = $this->start_page;
+		$out[] = $this->end_page;
 		$out[] = $this->url;
 		$out[] = $this->doi;
 		$out[] = '';
@@ -533,9 +533,9 @@ class Article extends CsvListEntry {
 			unset($this->triedadddata);
 		}
 		// this indicates it's in press
-		if($this->start === 'no') {
-			$this->start = 'in press';
-			$this->end = NULL;
+		if($this->start_page === 'no') {
+			$this->start_page = 'in press';
+			$this->end_page = NULL;
 		}
 		// correct dashes (also prevent OpenOffice from bad things)
 		$this->volume = str_replace('-', "–", $this->volume);
@@ -737,7 +737,7 @@ class Article extends CsvListEntry {
 			$this->warn('slash', 'volume');
 		if(strpos($this->volume, ':') !== false)
 			$this->warn('colon', 'volume');
-		if($this->start === 'no')
+		if($this->start_page === 'no')
 			$this->warn('text "no"', 'start');
 		// AMNH journals need HDL thingy
 		if($this->isamnh() && !$this->hdl)
@@ -745,7 +745,7 @@ class Article extends CsvListEntry {
 		// deprecated
 		if(!$this->isor('inpress', 'nopagenumberjournal', 'web') and $this->pages)
 			$this->warn('deprecated parameter', 'pages');
-		if(!$this->isor('inpress', 'nopagenumberjournal', 'fullissue') and $this->journal and !$this->start)
+		if(!$this->isor('inpress', 'nopagenumberjournal', 'fullissue') and $this->journal and !$this->start_page)
 			$this->warn('no content in "start" for journal article', 'journal');
 		if($this->enclosing and !$this->p->has($this->enclosing)) {
 			$this->warn('invalid enclosing article', 'enclosing');
@@ -927,7 +927,7 @@ class Article extends CsvListEntry {
 	}
 	public function isinpress() {
 	// checks whether file is in "in press" (and therefore, year etcetera cannot be given)
-		return ($this->start === 'in press');
+		return ($this->start_page === 'in press');
 	}
 	public function issupplement() {
 		// some pieces have no title
@@ -947,7 +947,7 @@ class Article extends CsvListEntry {
 	}
 	public function isweb() {
 	// is this a web publication?
-		return (!$this->bookpages && !$this->volume && !$this->start && !$this->journal && !$this->isbn && $this->url);
+		return (!$this->bookpages && !$this->volume && !$this->start_page && !$this->journal && !$this->isbn && $this->url);
 	}
 	public function isthesis() {
 		return preg_match('/^(PhD|MSc|BSc) thesis/', $this->publisher);
@@ -1343,16 +1343,16 @@ class Article extends CsvListEntry {
 			if($this->issue)
 				$out .= "($this->issue)";
 			$out .= ":";
-			if($this->start === $this->end)
-				$out .= $this->start;
+			if($this->start_page === $this->end_page)
+				$out .= $this->start_page;
 			else
-				$out .= $this->start . "–" . $this->end;
+				$out .= $this->start_page . "–" . $this->end_page;
 			$out .= ".";
 		} elseif($enclosing = $this->getEnclosing()) {
-			if($this->start === $this->end) {
-				$out .= "P. $this->start in ";
+			if($this->start_page === $this->end_page) {
+				$out .= "P. $this->start_page in ";
 			} else {
-				$out .= "Pp. " . $this->start . "–" . $this->end . " in ";
+				$out .= "Pp. " . $this->start_page . "–" . $this->end_page . " in ";
 			}
 			$out .= preg_replace(
 				array("/;(?=.*;)/", "/;/", "/\\\\/"), 
@@ -1464,10 +1464,10 @@ class Article extends CsvListEntry {
 		$paras['publisher'] = $this->publisher;
 		$paras['location'] = $this->location;
 		$paras['isbn'] = $this->isbn;
-		if(($this->start === $this->end) or $this->end === NULL) {
-			$paras['pages'] = $this->start;
+		if(($this->start_page === $this->end_page) or $this->end_page === NULL) {
+			$paras['pages'] = $this->start_page;
 		} else {
-			$paras['pages'] = $this->start . "–". $this->end;
+			$paras['pages'] = $this->start_page . "–". $this->end_page;
 		}
 		switch($class) {
 			case 'journal':
@@ -1576,8 +1576,8 @@ class Article extends CsvListEntry {
 					$this->title . '. ' .
 					$this->journal . ' ' .
 					$this->volume . ': ' .
-					$this->start . '–' .
-					$this->end . '.';
+					$this->start_page . '–' .
+					$this->end_page . '.';
 				break;
 			case 'book':
 				$out = $this->authors . '. ' .
@@ -1623,10 +1623,10 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$out .= "(" . str_replace(";", ") (", $this->series) . ")";
 				}
 				$out .= '<b>' . $this->volume . '</b>: ';
-				if($this->start === $this->end) {
-					$out .= $this->start;
+				if($this->start_page === $this->end_page) {
+					$out .= $this->start_page;
 				} else {
-					$out .= $this->start . "–" . $this->end;
+					$out .= $this->start_page . "–" . $this->end_page;
 				}
 				$out .= '.';
 				break;
@@ -1767,13 +1767,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= ". $this->journal, ";
 				if($this->series) $out .= "ser. $this->series, ";
 				$out .= "$this->volume:";
-				if($this->start === $this->end)
-					$out .= $this->start;
+				if($this->start_page === $this->end_page)
+					$out .= $this->start_page;
 				else
-					$out .= $this->start . '–' . $this->end;
+					$out .= $this->start_page . '–' . $this->end_page;
 				break;
 			case 'chapter':
-				$out .= ', ' . $this->start . '–' . $this->end . '. <i>In</i> ';
+				$out .= ', ' . $this->start_page . '–' . $this->end_page . '. <i>In</i> ';
 				$bauthors = $processauthors($this->getEnclosingAuthors(), 
 					'editors');
 				$out .= $bauthors;
@@ -1858,7 +1858,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$add('journal', $this->journal, true);
 				$add('volume', $this->volume);
 				$add('number', $this->issue);
-				$add('pages', $this->start . '--' . $this->end);
+				$add('pages', $this->start_page . '--' . $this->end_page);
 				break;
 			case 'book':
 				$add('publisher', $this->publisher, true);
@@ -1891,10 +1891,10 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		switch($class) {
 			case 'journal':
 				$out .= "$this->title. <i>$this->journal</i>, $this->volume, ";
-				if($this->start === $this->end)
-					$out .= $this->start;
+				if($this->start_page === $this->end_page)
+					$out .= $this->start_page;
 				else
-					$out .= $this->start . '–' . $this->end;
+					$out .= $this->start_page . '–' . $this->end_page;
 				break;
 			case 'chapter':
 				$out .= "$this->title. <i>In</i>: ";
@@ -1902,8 +1902,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= $processauthors($this->getEnclosingAuthors(), 
 					'editors');
 				$out .= ", <i>$enclosing->title</i>. $enclosing->publisher, "
-					. "$enclosing->location, pp. " . $this->start . '–' 
-					. $this->end;
+					. "$enclosing->location, pp. " . $this->start_page . '–' 
+					. $this->end_page;
 				break;
 			case 'book':
 				$out .= "<i>$this->title</i>. $this->publisher";
@@ -2025,17 +2025,17 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	private function pages() {
 	// return a string representing the pages of the article
-		if($this->start and $this->end) {
+		if($this->start_page and $this->end_page) {
 			// single page
-			if($this->start === $this->end)
-				return (string) $this->start;
+			if($this->start_page === $this->end_page)
+				return (string) $this->start_page;
 			// normal
 			else
-				return $this->start . '–' . $this->end;
+				return $this->start_page . '–' . $this->end_page;
 		}
 		// Palaeontologia Electronica and friends
-		else if($this->start)
-			return $this->start;
+		else if($this->start_page)
+			return $this->start_page;
 		else
 			return false;
 	}
@@ -2373,7 +2373,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$this->triedadddata = true;
 		// if there already is a DOI, little chance that we found something
 		if($this->doi) {
-			if(!$this->year or !$this->volume or !$this->start) {
+			if(!$this->year or !$this->volume or !$this->start_page) {
 				$this->expanddoi(array('verbose' => true));
 				$this->p->needsave();
 			}
@@ -2480,9 +2480,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	private function finddoi() {
 		if($this->doi) return true;
-		if($this->journal and $this->volume and $this->start) {
+		if($this->journal and $this->volume and $this->start_page) {
 			echo "Trying to find DOI for file $this->name... ";
-			$url = "http://www.crossref.org/openurl?pid=" . CROSSREFID . "&title=" . urlencode($this->journal) . "&volume=" . urlencode($this->volume) . "&spage=" . urlencode($this->start) . "&noredirect=true";
+			$url = "http://www.crossref.org/openurl?pid=" . CROSSREFID . "&title=" . urlencode($this->journal) . "&volume=" . urlencode($this->volume) . "&spage=" . urlencode($this->start_page) . "&noredirect=true";
 			$xml = @simplexml_load_file($url);
 			// check success
 			if($xml and $doi = $xml->query_result->body->query->doi) {
@@ -2733,8 +2733,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		// start and end pages
 		$pages = isset($source[4]) ? $source[4] : $source[3];
 		$pages = explode('-', $pages);
-		$this->start = $pages[0];
-		$this->end = isset($pages[1]) ? $pages[1] : $pages[0];
+		$this->start_page = $pages[0];
+		$this->end_page = isset($pages[1]) ? $pages[1] : $pages[0];
 		/*
 		 * Process "authors" field
 		 * Will fail with various variants, including double surnames
@@ -2789,8 +2789,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		// start and end pages
 		$pages = $source[4] ? $source[3] : $source[2];
 		$pages = preg_split("/-/", $pages);
-		$this->start = $pages[0];
-		$this->end = $pages[1] ? $pages[1] : $pages[0];
+		$this->start_page = $pages[0];
+		$this->end_page = $pages[1] ? $pages[1] : $pages[0];
 		/*
 		 * Process "authors" field
 		 * Will fail with various variants, including double surnames
@@ -2836,8 +2836,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		 */
 		$pages = str_replace(".", "", $head[5]);
 		$pages = explode("-", $pages);
-		$this->start = $pages[0];
-		$this->end = preg_replace("/\n.*$/", "", $pages[1]);
+		$this->start_page = $pages[0];
+		$this->end_page = preg_replace("/\n.*$/", "", $pages[1]);
 		/*
 		 * Process "authors" field
 		 */
@@ -2885,7 +2885,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$this->journal = 'Palaeontologia Electronica';
 			$this->volume = $matches[4];
 			$this->issue = $matches[5];
-			$this->start = $matches[6];
+			$this->start_page = $matches[6];
 			$this->pages = $matches[7];
 			$this->url = $matches[8];
 			return true;
@@ -2901,7 +2901,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$this->journal = 'Palaeontologia Electronica';
 			$this->volume = $matches[4];
 			$this->issue = $matches[5];
-			$this->start = $matches[6];
+			$this->start_page = $matches[6];
 			$this->pages = $matches[7];
 			$this->url = 'http://' . $matches[8];
 			return true;
@@ -3200,9 +3200,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				case 'dc.description':
 					if(!preg_match("/^\d+ p\./u", $value))
 						break;
-					$this->start = 1;
+					$this->start_page = 1;
 					// number of pages is at beginning of this piece
-					$this->end = (int) $value;
+					$this->end_page = (int) $value;
 					break;
 				case 'dc.relation.ispartofseries':
 					$data = preg_split('/; (no|vol|v)\. |, article /u', $value);
@@ -3383,7 +3383,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	/* SMALL UTILITIES */
 	public function needsdata() {
 	// whether this citation has incomplete information
-		return !($this->hasid() and $this->year and $this->volume and $this->start);
+		return !($this->hasid() and $this->year and $this->volume and $this->start_page);
 	}
 	public function folderstr() {
 		// return the folder path in string format
@@ -3399,7 +3399,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	public function getrefname() {
 	// generate refname, which should usually be unique with this method
 		$tmp = explode(',', $this->authors);
-		$refname = $tmp[0] . $this->year . $this->volume . $this->start;
+		$refname = $tmp[0] . $this->year . $this->volume . $this->start_page;
 		if(!$refname) $refname = $this->title;
 		if(is_numeric($refname)) $refname = 'ref' . $refname;
 		$refname = str_replace("'", "", $refname);

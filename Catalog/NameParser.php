@@ -116,9 +116,13 @@ class NameParser {
 		 * (4) <replacement> for <preoccupied name>
 		 * (5) MS <genus-name> <species-name>
 		 *
+		 * The preg_match below is to account for the syntax
+		 *		"Oryzomys palustris-Hoplopleura oryzomydis nov.pdf",
+		 * used with parasites.
+		 *
 		 * TODO: other possibilities. E.g., stuff with parasites.
 		 */
-		if(substr($name, -3, 3) === 'nov') {
+		if(substr($name, -3, 3) === 'nov' && !preg_match('/-[A-Z]/', $name)) {
 			// possibility (1)
 			$this->parseNovPhrase($name);
 		} elseif(strpos($name, 'nov, ') !== false) {
@@ -401,6 +405,7 @@ class NameParser {
 				if($in === '') {
 					break;
 				}
+				$in = substr($in, 2);
 			} elseif($in[0] === '-') {
 				$in = substr($in, 1);			
 				if(self::findWordFromArray($in, self::$periodWords)) {

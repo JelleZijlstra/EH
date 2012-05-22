@@ -388,7 +388,7 @@ class Article extends CsvListEntry {
 		}
 		// fix any enclosings
 		$enclosings = $this->p->bfind(array(
-			'enclosing' => $this->name,
+			'parent' => $this->name,
 			'quiet' => true,
 		));
 		foreach($enclosings as $enclosing) {
@@ -494,9 +494,8 @@ class Article extends CsvListEntry {
 		if($this->isredirect()) {
 			// no other data for redirects
 			$redirect_remove = array('sfolder', 'ssfolder', 'authors', 'year', 
-				'title', 'journal', 'volume', 'series', 'issue', 'start', 'end', 
-				'pages', 'ids', 'doi', 'url', 'location', 
-				'bools'
+				'title', 'journal', 'volume', 'series', 'issue', 'start_page', 
+				'end_page', 'pages', 'ids', 'doi', 'url', 'location', 'bools'
 			);
 			foreach($redirect_remove as $key)
 				$this->$key = NULL;
@@ -508,7 +507,7 @@ class Article extends CsvListEntry {
 		}
 		if($this->issupplement()) {
 			$supplement_remove = array('authors', 'year', 'journal', 'volume', 
-				'series', 'issue', 'start', 'end', 'pages', 'ids', 
+				'series', 'issue', 'start_page', 'end_page', 'pages', 'ids', 
 				'doi', 'url', 'location', 'bools'
 			);
 			foreach($supplement_remove as $key)
@@ -732,12 +731,12 @@ class Article extends CsvListEntry {
 		if(strpos($this->volume, ':') !== false)
 			$this->warn('colon', 'volume');
 		if($this->start_page === 'no')
-			$this->warn('text "no"', 'start');
+			$this->warn('text "no"', 'start_page');
 		// AMNH journals need HDL thingy
 		if($this->isamnh() && !$this->hdl)
 			$this->warn('no HDL for AMNH title', 'journal');
 		if(!$this->isor('inpress', 'nopagenumberjournal', 'fullissue') and $this->journal and !$this->start_page)
-			$this->warn('no content in "start" for journal article', 'journal');
+			$this->warn('no content in "start_page" for journal article', 'journal');
 		if($this->parent and !$this->p->has($this->parent)) {
 			$this->warn('invalid enclosing article', 'parent');
 		}
@@ -3112,8 +3111,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		"'d': try entering a DOI again" . PHP_EOL .
 		"'o': open the file" . PHP_EOL;
 		$params = array("authors", "year", "title", "journal", "volume", 
-			"issue", "start", "end", "pages", "url", "parent", "publisher", 
-			"isbn", "location", "parturl"
+			"issue", "start_page", "end_page", "pages", "url", "parent", 
+			"publisher",  "isbn", "location", "parturl"
 		);
 		foreach($params as $key) {
 			while(true) {
@@ -3247,12 +3246,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		 * process data
 		 */
 		// variables we process from the API result
-		$vars = array('volume', 'issue', 'start', 'end', 'year', 'title', 'journal', 'isbn', 'authors');
+		$vars = array('volume', 'issue', 'start_page', 'end_page', 'year', 'title', 'journal', 'isbn', 'authors');
 		// kill leading zeroes
 		$volume = preg_replace("/^0/u", "", (string)$result->volume);
 		$issue = preg_replace("/^0/u", "", (string)$result->issue);
-		$start = preg_replace("/^0/u", "", (string)$result->first_page);
-		$end = preg_replace("/^0/u", "", (string)$result->last_page);
+		$start_page = preg_replace("/^0/u", "", (string)$result->first_page);
+		$end_page = preg_replace("/^0/u", "", (string)$result->last_page);
 		$year = (string)$result->year;
 		$title = (string)$result->article_title;
 		$journal = (string)$result->journal_title;

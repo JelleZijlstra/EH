@@ -2633,54 +2633,68 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	private function findtitle_specific() {
 	// find title in specific journals
+		// this is now barely useful anymore
+		$j = array();
+		$has = function($in) use(&$j) {
+			return isset($j[$in]) && ($j[$in] === true);
+		};
 		if(
-			$mammalia = preg_match("/(Mammalia|MAMMALIA), (t|I)\. /", $this->pdfcontent) or
+			$j['mammalia'] = preg_match("/(Mammalia|MAMMALIA), (t|I)\. /", $this->pdfcontent) or
 			// this is also likely Mammalia ("par" on 2nd line)
-			$mammalia = preg_match("/^[^\n]*\n+(par|PAR)\n+/", $this->pdfcontent) or
+			$j['mammalia'] = preg_match("/^[^\n]*\n+(par|PAR)\n+/", $this->pdfcontent) or
 			// this too
-			$mammalia = preg_match("/^[^\n]*\n+(by|BY)\n+/", $this->pdfcontent) or
+			$j['mammalia'] = preg_match("/^[^\n]*\n+(by|BY)\n+/", $this->pdfcontent) or
 			// and this
-			$mammalia = preg_match("/MAMMALIA · /", $this->pdfcontent) or
-			$jvp = preg_match("/^\s*Journal of Vertebrate Paleontology/", $this->pdfcontent) or
-			$jparas = preg_match("/^\s*J. Parasitol.,/", $this->pdfcontent) or
-			$bioljlinnsoc = preg_match("/^\s*Biological Journal of the Linnean Society, /", $this->pdfcontent) or
+			$j['mammalia'] = preg_match("/MAMMALIA · /", $this->pdfcontent) or
+			$j['jvp'] = preg_match("/^\s*Journal of Vertebrate Paleontology/", $this->pdfcontent) or
+			$j['jparas'] = preg_match("/^\s*J. Parasitol.,/", $this->pdfcontent) or
+			$j['bioljlinnsoc'] = preg_match("/^\s*Biological Journal of the Linnean Society, /", $this->pdfcontent) or
 			$bioljlinnsoc2 = preg_match("/^[^\n]+\n\nBiological Journal of the Linnean Society, /", $this->pdfcontent) or
-			$zooljlinnsoc = preg_match("/^\s*Zoological Journal of the Linnean Society, /", $this->pdfcontent) or
-			$swnat = preg_match("/^\s*THE SOUTHWESTERN NATURALIST/", $this->pdfcontent) or
-			$wnanat = preg_match("/^\s*Western North American Naturalist/", $this->pdfcontent) or
-			$mammreview = preg_match("/^\s*Mammal Rev. /", $this->pdfcontent) or
-			$mammstudy = preg_match("/^\s*Mammal Study /", $this->pdfcontent) or
-			$jpaleont = preg_match("/^\s*(Journal of Paleontology|J. Paleont.)/", $this->pdfcontent) or
-			$jbiogeogr = preg_match("/^s*(Journal of Biogeography)/", $this->pdfcontent) or
-			$amjprim = preg_match("/^\s*American Journal of Primatology/", $this->pdfcontent) or
-			$ajpa = preg_match("/^\s*AMERICAN JOURNAL OF PHYSICAL ANTHROPOLOGY/", $this->pdfcontent) or
-			$oryx = preg_match("/^\s*Oryx /", $this->pdfcontent) or
-			$jmamm = preg_match("/^\s*Journal of Mammalogy,/", $this->pdfcontent)
+			$j['zooljlinnsoc'] = preg_match("/^\s*Zoological Journal of the Linnean Society, /", $this->pdfcontent) or
+			$j['swnat'] = preg_match("/^\s*THE SOUTHWESTERN NATURALIST/", $this->pdfcontent) or
+			$j['wnanat'] = preg_match("/^\s*Western North American Naturalist/", $this->pdfcontent) or
+			$j['mammreview'] = preg_match("/^\s*Mammal Rev. /", $this->pdfcontent) or
+			$j['mammstudy'] = preg_match("/^\s*Mammal Study /", $this->pdfcontent) or
+			$j['jpaleont'] = preg_match("/^\s*(Journal of Paleontology|J. Paleont.)/", $this->pdfcontent) or
+			$j['jbiogeogr'] = preg_match("/^s*(Journal of Biogeography)/", $this->pdfcontent) or
+			$j['amjprim'] = preg_match("/^\s*American Journal of Primatology/", $this->pdfcontent) or
+			$j['ajpa'] = preg_match("/^\s*AMERICAN JOURNAL OF PHYSICAL ANTHROPOLOGY/", $this->pdfcontent) or
+			$j['oryx'] = preg_match("/^\s*Oryx /", $this->pdfcontent) or
+			$j['jmamm'] = preg_match("/^\s*Journal of Mammalogy,/", $this->pdfcontent)
 			) {
 			echo "Found BioOne/Mammalia/Wiley paper; searching Google to find a DOI." . PHP_EOL;
 			/*
 			 * find title
 			 */
 			// title ought to be first line
-			if($mammalia) $title = preg_replace("/^([^\n]+).*/su", "$1", $this->pdfcontent);
-			else if($jvp) $title = preg_replace("/^[^\n]+\n+((ARTICLE|SHORT COMMUNICATION|RAPID COMMUNICATION|NOTE|FEATURED ARTICLE|CORRECTION|REVIEW)\n+)?([^\n]+)\n.*/su", "$3", $this->pdfcontent);
-			else if($jparas) $title = preg_replace("/.*American Society of Parasitologists \d+\s*([^\n]+)\n.*/su", "$1", $this->pdfcontent);
-			else if($swnat) $title = preg_replace("/^[^\n]+\n+[^\n]+\n+([^\n]+).*/su", "$1", $this->pdfcontent);
+			if($has('mammalia')) {
+				$title = preg_replace("/^([^\n]+).*/su", "$1", $this->pdfcontent);
+			} else if($has('jvp')) {
+				$title = preg_replace("/^[^\n]+\n+((ARTICLE|SHORT COMMUNICATION|RAPID COMMUNICATION|NOTE|FEATURED ARTICLE|CORRECTION|REVIEW)\n+)?([^\n]+)\n.*/su", "$3", $this->pdfcontent);
+			} else if($has('jparas')) {
+				$title = preg_replace("/.*American Society of Parasitologists \d+\s*([^\n]+)\n.*/su", "$1", $this->pdfcontent);
+			} else if($has('swnat')) {
+				$title = preg_replace("/^[^\n]+\n+[^\n]+\n+([^\n]+).*/su", "$1", $this->pdfcontent);
 			// title is after a line of text plus two newlines; works often
-			else if($wnanat || $mammreview || $jpaleont || $jbiogeogr || $ajpa || $oryx || $jmamm || $bioljlinnsoc || $mammstudy || $zooljlinnsoc) $title = preg_replace("/^[^\n]+\n+((ORIGINAL ARTICLE|SHORT COMMUNICATION|Short communication|Blackwell Science, Ltd|CORRECTION|REVIEW)\n+)?([^\n]+).*/su", "$3", $this->pdfcontent);
+			} else if($has('wnanat') || $has('mammreview') || $has('jpaleont') || $has('jbiogeogr') || $has('ajpa') || $has('oryx') || $has('jmamm') || $has('bioljlinnsoc') || $has('mammstudy') || $has('zooljlinnsoc')) { 
+				$title = preg_replace("/^[^\n]+\n+((ORIGINAL ARTICLE|SHORT COMMUNICATION|Short communication|Blackwell Science, Ltd|CORRECTION|REVIEW)\n+)?([^\n]+).*/su", "$3", $this->pdfcontent);
 			// this needs some other possibilities
-			else if($amjprim) $title = preg_replace("/^[^\n]+\n\n((BRIEF REPORT|RESEARCH ARTICLES)\s)?([^\n]+).*/su", "$3", $this->pdfcontent);
-			else if($bioljlinnsoc2) $title = preg_replace("/^[^\n]+\n\n[^\n]+\n\n([^\n]+).*/su", "$1", $this->pdfcontent);
-			if(!$title || preg_match("/\n/", trim($title))) {
+			} else if($has('amjprim')) {
+				$title = preg_replace("/^[^\n]+\n\n((BRIEF REPORT|RESEARCH ARTICLES)\s)?([^\n]+).*/su", "$3", $this->pdfcontent);
+			} else if($has('bioljlinnsoc2')) {
+				$title = preg_replace("/^[^\n]+\n\n[^\n]+\n\n([^\n]+).*/su", "$1", $this->pdfcontent);
+			}
+			if(!isset($title) || preg_match("/\n/", trim($title))) {
 				echo "Error: could not find title." . PHP_EOL;
 				return false;
 			}
-			if($jvp || $jparas || $wnanat || $swnat || $mammstudy || $jpaleont || $jmamm)
+			if($has('jvp') || $has('jparas') || $has('wnanat') || $has('swnat') || $has('mammstudy') || $has('jpaleont') || $has('jmamm')) {
 				$title .= " site:bioone.org";
-			else if($mammalia)
+			} else if($has('mammalia')) {
 				$title .= " site:reference-global.com";
-			else if($bioljlinnsoc || $bioljlinnsoc2 || $mammreview || $jbiogeogr || $ajpa || $zooljlinnsoc)
+			} else if($has('bioljlinnsoc') || $has('bioljlinnsoc') || $has('mammreview') || $has('jbiogeogr') || $has('ajpa') || $has('zooljlinnsoc')) {
 				$title .= " site:wiley.com";
+			}
 			return $title;
 		}
 		return false;
@@ -3316,7 +3330,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				default:
 					if($this->p->has($name)) {
 						if($this->ynmenu('A file with this name already exists. Do you want to continue anyway?')) {
-							break 2;
+							break;
 						} else {
 							continue 2;
 						}

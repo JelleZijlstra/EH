@@ -521,6 +521,14 @@ Oberoesterreich
 Wien
 Burgenland
 
+# in English too
+Upper Austria
+Lower Austria
+Vienna
+Styria
+Tyrol
+Carinthia
+
 # French dependencies
 Corsica
 French Guiana
@@ -545,7 +553,7 @@ Catalonia
 Aragon
 Asturias
 Baleares
-Canary Islands
+Canary Is
 Cantabria
 Castilla-La Mancha
 Castilla y Leon
@@ -614,6 +622,10 @@ Zaragoza
 # Major islands
 Mallorca
 Tenerife
+
+# Portugal islands
+Azores
+Madeira
 
 # Italian major islands. Don't think we're doing regions yet.
 Sardinia
@@ -749,6 +761,9 @@ Java
 Borneo
 Bali
 Lesser Sundas
+Greater Sundas
+Sunda Shelf
+Wallacea
 Nusa Tenggara
 Mentawai
 Bali

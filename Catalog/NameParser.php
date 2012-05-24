@@ -603,7 +603,7 @@ class NameParser {
 				}
 			}
 			// valid name forms
-			if(preg_match('/^((Cf|Aff)\. )?[A-Z][a-z?]+(( (cf|aff)\.)? [a-z?]+( [a-z?]+)?)?$/u', $name)) {
+			if(preg_match('/^((Cf|Aff)\. )?[A-Z][a-z?]+( \([A-Z][a-z]+\))?(( (cf|aff)\.)? [a-z?]+( [a-z?]+)?)?$/u', $name)) {
 				$out[] = $name;
 			} else {
 				$this->addError('Invalid name: ' . $name);

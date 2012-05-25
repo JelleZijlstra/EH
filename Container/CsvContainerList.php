@@ -297,8 +297,10 @@ abstract class CsvContainerList extends ContainerList {
 	protected function _bfind(array $queries, array $paras) {
 		// do the search
 		$out = array();
+		$hasRedirect = method_exists(static::$childClass, 'isredirect');
+		
 		foreach($this->{$paras['array']} as $file) {
-			if($file->isredirect()) {
+			if($hasRedirect && $file->isredirect()) {
 				continue;
 			}
 			if($paras['printvalues']) {

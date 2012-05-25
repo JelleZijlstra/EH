@@ -297,11 +297,10 @@ class ArticleList extends CsvContainerList {
 			'checkparas' => array(
 				'handle' => function($in) {
 					// NOFILEs can't have dots in their names
-					if(strpos($in, '.') !== false) {
+					if(!is_string($in) || (strpos($in, '.') !== false)) {
 						return false;
 					}
-					// when we're in PHP 5.4, use $this->has instead here
-					return !ArticleList::singleton()->has($in);
+					return !$this->has($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;

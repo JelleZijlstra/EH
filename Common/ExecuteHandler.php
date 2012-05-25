@@ -370,8 +370,9 @@ class ExecuteHandler extends EHICore {
 				$this->execute_help(array($pp_paras['name']));
 			}
 			// without checklist, we can't do much
-			if(!isset($pp_paras['checklist']))
+			if(!isset($pp_paras['checklist'])) {
 				return false;
+			}
 			echo 'Parameters:' . PHP_EOL;
 			foreach($pp_paras['checklist'] as $name => $description) {
 				echo '- ' . $name . PHP_EOL;
@@ -429,9 +430,8 @@ class ExecuteHandler extends EHICore {
 						if(!isset($paras[$key])) {
 							// paras for the menu() call
 							$menu_paras = array(
-								'head' => $key . ': ',
+								'prompt' => $key . ': ',
 								'options' => array(),
-								'headasprompt' => true,
 							);
 							// use checkparas validation if possible
 							if(isset($pp_paras['checkparas'][$key])) {
@@ -528,7 +528,9 @@ class ExecuteHandler extends EHICore {
 							continue;
 						}
 						if(!$func($paras[$para], $paras)) {
-							$showerror('invalid value "' . $paras[$para] . '" for parameter "' . $para . '"');
+							$showerror('invalid value "' 
+								. Sanitizer::varToString($paras[$para]) 
+								. '" for parameter "' . $para . '"');
 						}
 					}
 					break;
@@ -546,9 +548,11 @@ class ExecuteHandler extends EHICore {
 							continue;
 						}
 						if(!in_array($paras[$para], $options, true)) {
-							$showerror('invalid value "' . $paras[$para] . 
-								'" for parameter "' . $para . '" (allowed ' .
-								'options: "' . implode('", "', $options) . '")'
+							$showerror('invalid value "' 
+								. Sanitizer::varToString($paras[$para]) 
+								. '" for parameter "' . $para . '" (allowed ' 
+								. 'options: "' . implode('", "', $options) 
+								. '")'
 							);
 						}
 					}

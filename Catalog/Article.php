@@ -2716,6 +2716,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$head = $splittext[0];
 		// get rid of occasional text above relevant info
 		$head = preg_replace("/^.*\n\n/", "", $head);
+		// bail out
+		if(preg_match('/Review by:/', $head)) {
+			echo 'Unable to process data' . PHP_EOL;
+			return false;
+		}
+		
 		// split into fields
 		$head = preg_split("/( Author\(s\): |\s*(Reviewed work\(s\):.*)?Source: | Published by: | Stable URL: |( \.)? Accessed: )/", $head);
 		// handle the easy ones

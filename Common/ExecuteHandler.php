@@ -931,6 +931,8 @@ class ExecuteHandler extends EHICore {
 			if($cmd === false) {
 				return false;
 			}
+			// remember command in history
+			$getlineparas['lines'][] = $cmd;
 			// provide help if necessary
 			if($paras['helpcommand']) {
 				// just 'help' prints all options
@@ -969,7 +971,6 @@ class ExecuteHandler extends EHICore {
 			} else {
 				echo 'Invalid value ' . $cmd . PHP_EOL;
 			}
-			$getlineparas['lines'][] = $cmd;
 		}
 		if($data === NULL) {
 			return $cmd;

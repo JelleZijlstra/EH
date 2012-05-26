@@ -585,13 +585,12 @@ abstract class ContainerList extends ExecuteHandler {
 						}
 						break;
 					case '\\':
-						// espace
+						// escape
 						$query['content'] = substr($para, 1);
 						break;
 				}
 				$queries[] = $query;
-			}
-			else if(substr($key, -2) === '()') {
+			} elseif(substr($key, -2) === '()') {
 				$func = substr($key, 0, -2);
 				if(method_exists($childClass, $func)) {
 					$query['field'] = $func;

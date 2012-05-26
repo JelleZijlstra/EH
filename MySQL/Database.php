@@ -142,9 +142,10 @@ class Database extends ExecuteHandler {
 					. 'other scalars) or arrays. In the '
 					. 'former case, simple equality is used, and the array key '
 					. 'must be the field name. In the latter case, each entry '
-					. 'must contain three values: the field involved, the '
-					. 'desired value, and the comparator (e.g., ">" or '
-					. '"RLIKE").',
+					. 'must contain three values: the field involved (which '
+					. 'may be in the form of an array of the table plus the '
+					. 'field name), the desired value, and the comparator '
+					. '(e.g., ">" or "RLIKE").',
 				'order_by' => 'ORDER BY clause',
 				'join' => 'JOIN clauses. These are in the form of an array, '
 					. 'where each key is a table name and each value is an ' 
@@ -178,7 +179,7 @@ class Database extends ExecuteHandler {
 								return false;
 							}
 						}
-						if(!isset($value['field']) || !is_string($value['field'])) {
+						if(!isset($value['field'])) {
 							return false;
 						}
 						if(!isset($value['comparator']) || !in_array($compataror, array('=', '>', '>=', '<=', '<', 'RLIKE'), true)) {
@@ -411,7 +412,9 @@ class Database extends ExecuteHandler {
 	 * actually accepts.
 	 */
 	public static function escapeField(/* string */ $in) {
-		if(is_string($in) and preg_match('/^[a-z_][a-z0-9_]*$/', $in)) {
+		if(is_array($in)) {
+			return self::escapeField($in[0]) . '.' . self::escapeField($in[1]);
+		} elseif(is_string($in) and preg_match('/^[a-z_][a-z0-9_]*$/', $in)) {
 			return '`' . $in . '`';
 		} else {
 			throw new DatabaseException('Invalid field "' . $in . '"');

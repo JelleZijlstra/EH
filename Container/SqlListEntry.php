@@ -125,7 +125,7 @@ abstract class SqlListEntry extends ListEntry {
 		}
 	}
 	
-	final protected function fields() {
+	final protected static function fields() {
 		static::grabFields();
 		return static::$fields;
 	}
@@ -140,7 +140,7 @@ abstract class SqlListEntry extends ListEntry {
 	final protected function fieldsAsStrings() {
 		return array_map(function($in) {
 			return $in->getName();
-		}, $this->fields());
+		}, self::fields());
 	}
 
 	final protected /* bool */ function validateProperty(/* string */ $property, /* mixed */ $value) {
@@ -210,7 +210,7 @@ abstract class SqlListEntry extends ListEntry {
 	 * Fill properties manually from user input.
 	 */
 	protected function fillPropertiesManually() {
-		$fields = $this->fields();
+		$fields = self::fields();
 		$file = $this;
 		echo 'Filling data manually for object' . PHP_EOL;
 		$hasId = false;
@@ -302,7 +302,7 @@ abstract class SqlListEntry extends ListEntry {
 	 * Set properties from an array.
 	 */
 	private /* bool */ function setProperties(array $in) {
-		$fields = $this->fieldsAsStrings();
+		$fields = self::fieldsAsStrings();
 		foreach($in as $key => $value) {
 			if(substr($key, -3, 3) === '_id') {
 				// Get the relevant names. We don't actually need to care about
@@ -341,7 +341,7 @@ abstract class SqlListEntry extends ListEntry {
 	 * Set properties from an array returned by the database.
 	 */
 	private /* bool */ function setPropertiesFromSql(array $in) {
-		$fields = $this->fields();
+		$fields = self::fields();
 		foreach($fields as $field) {
 			$name = $field->getName();
 			switch($field->getType()) {
@@ -423,7 +423,7 @@ abstract class SqlListEntry extends ListEntry {
 	public function toArray() {
 		$this->fillProperties();
 		$fields = array();
-		foreach($this->fields() as $field) {
+		foreach(self::fields() as $field) {
 			$name = $field->getName();
 			switch($field->getType()) {
 				case SqlProperty::INT:
@@ -474,7 +474,7 @@ abstract class SqlListEntry extends ListEntry {
 	}
 
 	protected function listproperties() {
-		return $this->fieldsAsStrings();
+		return self::fieldsAsStrings();
 	}
 	
 	/*

@@ -137,8 +137,20 @@ class Database extends ExecuteHandler {
 			'checklist' => array(
 				'fields' => 'Array of fields',
 				'from' => 'Table to select from',
-				'where' => 'Where clauses',
+				'where' => 'Where clauses. These are in the form of an array, '
+					. 'where the values may be strings (or, equivalently, '
+					. 'other scalars) or arrays. In the '
+					. 'former case, simple equality is used, and the array key '
+					. 'must be the field name. In the latter case, each entry '
+					. 'must contain three values: the field involved, the '
+					. 'desired value, and the comparator (e.g., ">" or '
+					. '"RLIKE").',
 				'order_by' => 'ORDER BY clause',
+				'join' => 'JOIN clauses. These are in the form of an array, '
+					. 'where each key is a table name and each value is an ' 
+					. 'array with two elements of which the first is the field '
+					. 'in the table we are selecting from and the second is '
+					. 'the field in the table that is being joined.',
 			),
 			'errorifempty' => array(
 				'from',
@@ -147,6 +159,7 @@ class Database extends ExecuteHandler {
 				'fields' => '*',
 				'where' => false,
 				'order_by' => false,
+				'join' => false,
 			),
 			'checkparas' => array(
 				'fields' => function($val, $paras) {
@@ -156,11 +169,45 @@ class Database extends ExecuteHandler {
 					return is_string($val);
 				},
 				'where' => function($val, $paras) {
-					return is_array($val);
+					if(!is_array($val)) {
+						return false;
+					}
+					foreach($val as $key => $value) {
+						if(!is_array($value)) {
+							if(!is_string($key)) {
+								return false;
+							}
+						}
+						if(!isset($value['field']) || !is_string($value['field'])) {
+							return false;
+						}
+						if(!isset($value['comparator']) || !in_array($compataror, array('=', '>', '>=', '<=', '<', 'RLIKE'), true)) {
+							return false;
+						}
+						if(!isset($value['content'])) {
+							return false;
+						}
+					}
 				},
 				'order_by' => function($val, $paras) {
 					return is_string($val);
 				},
+				'join' => function($val) {
+					if(!is_array($val)) {
+						return false;
+					}
+					foreach($val as $key => $value) {
+						if(!is_string($key) || !is_array($value) || count($value) !== 2) {
+							return false;
+						}
+						foreach($value as $field) {
+							if(!is_string($field)) {
+								return false;
+							}
+						}
+					}
+					return true;
+				}
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		$sql = 'SELECT ' 
@@ -168,6 +215,9 @@ class Database extends ExecuteHandler {
 				? '*' 
 				: self::assembleFieldList($paras['fields']))
 			. ' FROM ' . self::escapeField($paras['from']);
+		if($paras['join'] !== false) {
+			$sql .= self::assembleJoinList($paras['join'], $paras['from']);
+		}
 		if($paras['where'] !== false) {
 			$sql .= ' WHERE ' . self::where($paras['where']);
 		}
@@ -310,8 +360,14 @@ class Database extends ExecuteHandler {
 	public static function where(array $conditions) {
 	// assemble where clause
 		return implode(' AND ', array_map(function($key, $value) {
-			return Database::escapeField($key) . ' = ' 
-				. Database::escapeValue($value);
+			if(is_array($value)) {
+				return Database::escapeField($value['field']) . ' '
+					. $value['comparator'] . ' ' 
+					. Database::escapeValue($value['content']);
+			} else {
+				return Database::escapeField($key) . ' = ' 
+					. Database::escapeValue($value);
+			}
 		}, array_keys($conditions), $conditions));
 	}
 	
@@ -322,6 +378,21 @@ class Database extends ExecuteHandler {
 		return implode(', ', 
 			array_map(array('Database', 'escapeField'), $fields)
 		);
+	}
+	
+	/*
+	 * Assemble a list of JOINed tables.
+	 */
+	private static function assembleJoinList(array $joins, $from) {
+		$out = '';
+		foreach($joins as $table => $fields) {
+			$out .= ' JOIN ' . self::escapeField($table) . ' ON ';
+			$out .= self::escapeField($from) . '.';
+			$out .= self::escapeField($fields[0]) . ' = ';
+			$out .= self::escapeField($table) . '.';
+			$out .= self::escapeField($fields[1]);
+		}
+		return $out;
 	}
 	
 	/*

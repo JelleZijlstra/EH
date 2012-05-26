@@ -283,13 +283,25 @@ abstract class SqlContainerList extends ContainerList {
 				case SqlProperty::CUSTOM:
 				case SqlProperty::CHILDREN:
 				case SqlProperty::JOINT_REFERENCE:
+					//TODO
 					throw new EHException('bfind: error: cannot use SqlProperty of this type in query');
 				default:
 					throw new EHException('Unknown SqlProperty type ' . $type);
 			}
 		}
-		
-		return array();
+		$entries = Database::singleton()->select(array(
+			'from' => $this->table(),
+			'fields' => array('name'),
+			'where' => $wheres,
+			'join' => $joins,
+		));
+		//TODO: printing
+		$out = array();
+		foreach($entries as $entry) {
+			$obj = self::grabEntry($entry['name']);
+			$out[$obj->name()] = $obj;
+		}
+		return $out;
 	}
 
 }

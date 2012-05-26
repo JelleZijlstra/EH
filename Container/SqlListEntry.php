@@ -125,26 +125,26 @@ abstract class SqlListEntry extends ListEntry {
 		}
 	}
 	
-	final protected static function fields() {
+	final public static function fields() {
 		static::grabFields();
 		return static::$fields;
 	}
 	
-	final protected /* SqlProperty */ function getFieldObject(/* string */ $field) {
+	final public static /* SqlProperty */ function getFieldObject(/* string */ $field) {
 		static::grabFields();
 		// if the field does not exist, that is a programming error, and
 		// throwing an exception is appropriate
 		return static::$fields[$field];
 	}
 	
-	final protected function fieldsAsStrings() {
+	final protected static function fieldsAsStrings() {
 		return array_map(function($in) {
 			return $in->getName();
 		}, self::fields());
 	}
 
 	final protected /* bool */ function validateProperty(/* string */ $property, /* mixed */ $value) {
-		$validator = $this->getFieldObject($property)->getValidator();
+		$validator = self::getFieldObject($property)->getValidator();
 		return $validator($value);
 	}
 

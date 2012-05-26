@@ -236,9 +236,59 @@ abstract class SqlContainerList extends ContainerList {
 	 * Queries.
 	 */
 	protected function _bfind(array $queries, array $paras) {
-		// TODO: make this work.
-		// We will perhaps make an extended version of Database::where() that
-		// can handle bfind's complicated needs.
+		$childClass = static::$childClass;
+		// assemble query
+		$joins = array();
+		$wheres = array();
+		foreach($queries as $query) {
+			$property = $childClass::getFieldObject($query['field']);
+			$type = $property->getType();
+			if(isset($query['regex'])) {
+				$comparator = 'RLIKE';
+				// input is with slash separators, in the fashion of PCRE regex,
+				// but MySQL's RLIKE doesn't need those.
+				$rpos = strrpos($query['content'], '/');
+				$query['content'] = substr($query['content'], 1, $rpos - 1);
+			} elseif(isset($query['>'])) {
+				$comparator = '>';
+			} elseif(isset($query['>='])) {
+				$comparator = '>=';
+			} elseif(isset($query['<'])) {
+				$comparator = '<';
+			} elseif(isset($query['<='])) {
+				$comparator = '<=';
+			} else {
+				$comparator = '=';
+			}
+			switch($type) {
+				case SqlProperty::INT:
+				case SqlProperty::STRING:
+				case SqlProperty::ID:
+				case SqlProperty::TIMESTAMP:
+				case SqlProperty::BOOL:
+					$wheres[] = array(
+						'field' => $query['field'],
+						'comparator' => $comparator,
+						'content' => $query['content'],
+					);
+					break;
+				case SqlProperty::REFERENCE:
+					$table = strtolower($property->getReferredClass());
+					$joins[$table] = array($table . '_id', 'id');
+					$wheres[] = array(
+						'field' => array($table, 'name'),
+						'comparator' => $comparator,
+						'content' => $query['content'],
+					);
+				case SqlProperty::CUSTOM:
+				case SqlProperty::CHILDREN:
+				case SqlProperty::JOINT_REFERENCE:
+					throw new EHException('bfind: error: cannot use SqlProperty of this type in query');
+				default:
+					throw new EHException('Unknown SqlProperty type ' . $type);
+			}
+		}
+		
 		return array();
 	}
 

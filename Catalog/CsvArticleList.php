@@ -813,14 +813,15 @@ class CsvArticleList extends CsvContainerList {
 	// builds an array of Suggester objects, with $file->getkey() (currently first word of the filename) used as the array key.
 		foreach($this->c as $file) {
 			// get information
-			$folders = $file->folderstr();
+			$folders = $file->path(array('folder' => true));
 			$key = $file->getkey();
 			// if there is already a Suggester for this object, add the current folderstr to it
-			if(isset($this->sugglist[$key]))
+			if(isset($this->sugglist[$key])) {
 				$this->sugglist[$key]->add($folders);
-			// else, make a new Suggester
-			else
+			} else {
+				// else, make a new Suggester
 				$this->sugglist[$key] = new Suggester($folders);
+			}
 		}
 	}
 	/* 2nd kind of suggestions: list folders with IDs */

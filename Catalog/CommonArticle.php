@@ -113,6 +113,16 @@ trait CommonArticle {
 	}
 	abstract protected function _getIdentifier($name);
 	
+	private $nameParser = NULL;
+	public function getNameParser() {
+		if($this->nameParser === NULL) {
+			$this->nameParser = new NameParser($this->name);
+		} elseif($this->nameParser->rawName() !== $this->name) {
+			$this->nameParser = new NameParser($this->name);		
+		}
+		return $this->nameParser;
+	}
+	
 	/*
 	 * Basic operations with files.
 	 */
@@ -338,6 +348,9 @@ trait CommonArticle {
 	abstract public function isfile();
 	public function isnofile() {
 		return !$this->isfile();
+	}
+	public function ispdf() {
+		return $this->getNameParser()->extension() === 'pdf';
 	}
 	abstract public function isredirect();
 	abstract public function resolve_redirect();
@@ -1442,5 +1455,1477 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				},
 			),
 		));
+	}
+	/*
+	 * Adding data
+	 */
+	public function newadd(array $paras) {
+	// add from ArticleList::newcheck(). This function gets the path and moves the file into the library.
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array('lslist' => 'List of files found using ls'),
+			'errorifempty' => array('lslist'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$renameFunction = function() {
+			$oldname = $this->name;
+			$newname = $this->getline('New name: ');
+			if($newname === 'q') {
+				break;
+			}
+			// allow renaming to existing name, for example to replace in-press files, but warn
+			if($this->p->has($newname)) {
+				echo 'Warning: file already exists' . PHP_EOL;
+			}
+			$this->name = $newname;
+			$this->shell(array(
+				'cmd' => 'mv',
+				'arg' => array(
+					TEMPPATH . '/' . $oldname, 
+					TEMPPATH . '/' . $newname
+				),
+			));
+			return true;
+		};
+		$parser = new NameParser($this->name);
+		if($parser->errorOccurred()) {
+			$parser->printErrors();
+			$cmd = $this->ynmenu(
+				'This filename could not be parsed. Do you want to rename it?');
+			if($cmd) {
+				$renameFunction();
+			}
+		}
+		switch($this->menu(array(
+			'head' => 'Adding file ' . $this->name,
+			'options' => array(
+				'o' => 'open this file',
+				'q' => 'quit',
+				's' => 'skip this file',
+				'n' => 'move this file to "Not to be cataloged"',
+				'r' => 'rename this file',
+				'' => 'add this file to the catalog',				
+			),
+			'process' => array(
+				'o' => function() {
+					$this->openf(array('place' => 'temp'));
+					return true;
+				},
+				'r' => $renameFunction,
+				'n' => function() {
+					$this->shell(array(
+						'cmd' => 'mv',
+						'arg' => array(
+							TEMPPATH . '/' . $this->name,
+							TEMPPATH . '/Not to be cataloged/' . $this->name,
+						),
+					));
+					return false;
+				},
+			),
+		))) {
+			case 'q': return 0;
+			case 'n': case 's': return 1;
+			default: break;
+		}
+		/*
+		 * get data
+		 */
+		// the next line may "rename" the file, but we do not actually rename it
+		// until we move it to the repository, so remember the old name
+		$oldname = $this->name;
+		if(!$this->checkForExistingFile($paras['lslist'])) {
+			return 1;
+		}
+		if(!$this->determinePath()) {
+			echo 'Unable to determine folder' . PHP_EOL;
+			return 1;
+		}
+		$this->shell(array(
+			'cmd' => 'mv',
+			'arg' => array(
+				'-n',
+				TEMPPATH . '/' . $oldname,
+				$this->path(array('type' => 'none')),
+			),
+		));
+		return $this->add() ? 2 : 1;
+	}
+	abstract protected function determinePath();
+	abstract protected function setCurrentDate();
+	private /* bool */ function checkForExistingFile($lslist) {
+		if(!isset($lslist[$this->name])) {
+			return true;
+		}
+		$options = array(
+			'r' => 'move over the existing file',
+			'd' => 'delete the new file',
+			'o' => 'open the new and existing files',
+		);
+		$cmd = $this->menu(array(
+			'head' => 'A file with this name already exists. Please enter a new filename',
+			'options' => $options,
+			'validfunction' => function() { return true; },
+			'processcommand' => function($cmd, &$data) use($options) {
+				if(!array_key_exists($cmd, $options)) {
+					$data = $cmd;
+					$cmd = 's';
+				}
+				return $cmd;
+			},
+			'process' => array(
+				'o' => function() use($lslist) {
+					$this->openf(array('place' => 'temp'));
+					$lslist[$this->name]->openf();
+					return true;
+				},
+				'r' => function() use($lslist) {
+					$this->shell(array(
+						'cmd' => 'mv',
+						'arg' => array(
+							TEMPPATH . '/' . $this->name,
+							$lslist[$this->name]->path(array(
+								'type' => 'none'
+							)),
+						),
+					));
+					$this->p->edit($this->name);
+					return false;
+				},
+				'd' => function() {
+					$this->shell(array(
+						'cmd' => 'rm',
+						'arg' => array(TEMPPATH . '/' . $this->name),
+					));
+					return false;
+				},
+				's' => function($cmd, &$data) use($lslist) {
+					if(isset($lslist[$data])) {
+						echo 'This filename already exists' . PHP_EOL;
+						return true;
+					} else {
+						$this->name = $data;
+						$data = NULL;
+						return false;
+					}
+				},
+			),
+		));
+		switch($cmd) {
+			case 'n': case 'r': return false;
+			case 's': return true;
+		}
+		// control should never reach here
+		var_dump($cmd);
+	}
+	public function add(array $paras = array()) {
+	// fill in data
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'noedittitle' =>
+					'Whether to skip editing the title of the newly added entry',
+			),
+			'default' => array(
+				'noedittitle' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		/*
+		 * start adding data
+		 */
+		$this->setCurrentDate();
+		if($this->isredirect()) {
+			return true;
+		}
+		switch($this->getNameParser()->extension()) {
+			case '.PDF': echo "Warning: uppercase file extension." . PHP_EOL;
+			case '.pdf':
+				$this->putpdfcontent();
+				/*
+				 * Try various options
+				 */
+				$successful = ($this->tryjstor() or
+					$this->trybioone() or
+					$this->trydoi() or
+					$this->trygeodiv() or
+					$this->trype() or
+					$this->trygoogle() or
+					$this->doiamnhinput() or
+					$this->trymanual());
+				break;
+			default:
+				// can't do tryjstor() etcetera when we're not in a PDF
+				$successful = ($this->doiamnhinput() or
+					$this->trymanual());
+				break;
+		}
+		if(!$paras['noedittitle']) {
+			$this->edittitle();
+		}
+		return $successful;
+	}
+	public function adddata() {
+		if($this->isor('redirect', 'supplement') or $this->triedadddata) {
+			return true;
+		}
+		if(!$this->needsdata()) {
+			if(!$this->triedfinddoi and !$this->doi) {
+				$this->finddoi();
+			}
+			return true;
+		}
+		// apply global settings
+		$this->p->addmanual = false;
+		$this->adddata_specifics();
+		$this->triedadddata = true;
+		// if there already is a DOI, little chance that we found something
+		if($this->doi() !== false) {
+			if(!$this->year or !$this->volume or !$this->start_page) {
+				$this->expanddoi(array('verbose' => true));
+				$this->needSave();
+			}
+			return true;
+		} elseif($this->hasid()) {
+			if(!$this->triedfinddoi) {
+				$this->finddoi();
+			}
+			return true;
+		}
+		echo "Adding data for file $this->name... ";
+		$tmp = new self(
+			//TODO: figure out how to do this in the Sql version
+			array($this->name, $this->folder, $this->sfolder, $this->ssfolder), 
+			'l'
+		);
+		if(!$tmp->add(array('noedittitle' => true))) {
+			echo "nothing found" . PHP_EOL;
+		} else {
+			foreach($tmp as $key => $value) {
+				if($value && !$this->$key) {
+					$this->$key = $value;
+				}
+			}
+			$this->log('Added data');
+			$this->needSave();
+			echo "data added" . PHP_EOL;
+		}
+		if($this->hasid()) {
+			return true;
+		}
+		if(!$this->triedfinddoi) {
+			$this->finddoi();
+		}
+		if(!$this->triedfindurl) {
+			$this->findurl();
+		}
+		return true;
+	}
+	private function findurl() {
+		echo 'Trying to find a URL for file ' . $this->name . '... ';
+		$json = self::fetchgoogle($this->googletitle());
+		if($json === false) {
+			throw new StopException;
+		}
+		// Google behaved correctly, but found nothing
+		if($json === NULL) {
+			echo 'nothing found' . PHP_EOL;
+			return true;
+		}
+		$first = true;
+		foreach($json->items as $result) {
+			if($first) {
+				echo PHP_EOL . $this->title . PHP_EOL;
+				$this->echocite(array('mode' => 'paper'));
+				echo PHP_EOL;
+				$first = false;
+			}
+			echo "Title: " . $result->title . PHP_EOL;
+			echo "URL: " . $result->link . PHP_EOL;
+			while(true) {
+				$cmd = $this->menu(array(
+					'options' => array(
+						'y' => 'this URL is correct',
+						'n' => 'this URL is not correct',
+						'q' => 'quit the function',
+						'o' => 'open the URL',
+						'r' => 'stop adding data',
+						'u' => 'add a different URL',
+						'i' => 'give information about this file',
+						'e' => 'edit this file',
+					),
+					'prompt' => '> ',
+				));
+				switch($cmd) {
+					case 'y':
+						$this->needSave();
+						$this->set(array('url' => $result->link));
+						echo 'data added' . PHP_EOL;
+						return true;
+					case 'q':
+						echo 'nothing found' . PHP_EOL;
+						$this->triedfindurl = true;
+						return false;
+					case 'o':
+						$this->shell(array('open', array($result->link)));
+						break;
+					case 'i':
+						$this->inform();
+						break;
+					case 'n':
+						break 2;
+					case 'u':
+						$this->set(array('url' => $this->getline('New url: ')));
+						$this->needSave();
+						echo 'data added' . PHP_EOL;
+						return true;
+					case 'r':
+						echo 'nothing found' . PHP_EOL;
+						throw new StopException;
+					case 'e':
+						$this->edit();
+						break;
+				}
+			}
+		}
+		$this->triedfindurl = true;
+	}
+	private function finddoi() {
+		if($this->doi() !== false) {
+			return true;
+		}
+		if($this->journal() and $this->volume and $this->start_page) {
+			echo "Trying to find DOI for file $this->name... ";
+			$url = "http://www.crossref.org/openurl?pid=" . CROSSREFID 
+				. "&title=" . urlencode($this->journal()) . "&volume=" 
+				. urlencode($this->volume) . "&spage=" 
+				. urlencode($this->start_page) . "&noredirect=true";
+			$xml = @simplexml_load_file($url);
+			// check success
+			if($xml and $doi = $xml->query_result->body->query->doi) {
+				$this->set(array('doi' => $doi));
+				echo "data added" . PHP_EOL;
+				$this->needSave();
+				return true;
+			} else {
+				echo "nothing found" . PHP_EOL;
+				$this->triedfinddoi = true;
+				return false;
+			}
+		}
+		return false;
+	}
+	public function findhdl() {
+		if(!$this->isamnh() || ($this->hdl() !== false)) {
+			return true;
+		}
+		echo 'Finding HDL for file ' . $this->name .
+			' (' . $this->journal() . ' ' . $this->volume . ')' . PHP_EOL;
+		switch($this->journal()) {
+			case 'American Museum Novitates':
+				$journalhdl = '2246/9';
+				break;
+			case 'Bulletin of the American Museum of Natural History':
+				$journalhdl = '2246/7';
+				break;
+			case 'Anthropological Papers of the American Museum of Natural History':
+				$journalhdl = '2246/6';
+				break;
+		}
+		// construct search URL
+		$url = 'http://digitallibrary.amnh.org/dspace/handle/' .
+			$journalhdl .
+			'/simple-search?query=series:' .
+			$this->volume;
+		$html = @file_get_contents($url);
+		if(!$html) {
+			echo 'Could not retrieve data (file ' . $this->name . ')' . PHP_EOL;
+			return false;
+		} else {
+			echo 'Retrieved data from AMNH' . PHP_EOL;
+		}
+		// check whether we got one or several results
+		if(strpos($html, 'Search produced no results.') !== false) {
+			echo 'Could not find paper at AMNH' . PHP_EOL;
+			return true;
+		}
+		if(strpos($html, 'Now showing items 1-1 of 1') !== false) {
+			preg_match('/cocoon:\/\/metadata\/handle\/2246\/(\d+)\/mets\.xml/', $html, $matches);
+			$hdl = '2246/' . $matches[1];
+		} else {
+			$this->shell(array('open', array($url)));
+			$hdl = $this->getline('HDL: ');
+			if($hdl === 'q') {
+				return false;
+			}
+			if(strpos($hdl, 'http') !== false) {
+				preg_match('/2246\/\d+$/', $hdl, $matches);
+				$hdl = $matches[0];
+			}
+		}
+		$this->set(array('hdl' => $hdl));
+		echo 'Added HDL: ' . $hdl . PHP_EOL;
+		$this->needSave();
+		return true;
+	}
+	private function adddata_specifics() {
+	// kitchen sink function for various stuff in adddata() territory, in order to keep addata() clean and to avoid lots of limited-use functions
+		if(($this->journal === 'Estudios Geológicos' or preg_match('/springerlink|linkinghub\.elsevier|biomedcentral|ingentaconnect/', $this->url())) and !$this->doi()) {
+			echo 'File ' . $this->name . ' has no DOI, but its data suggest it should have one.' . PHP_EOL;
+			if(!$this->openurl()) {
+				$this->searchgoogletitle();
+			}
+			$this->echocite();
+			$doi = $this->getline('DOI: ');
+			if($doi === 'q') {
+				return false;
+			} elseif($doi) {
+				$this->set(array('doi' => $doi));
+			}
+		}
+	}
+	// Get the PDF text of a file and process it
+	private function putpdfcontent() {
+		// only do actual PDF files
+		if(!$this->ispdf() or $this->isredirect()) {
+			return false;
+		}
+		// only get first page
+		$this->pdfcontent = trim(utf8_encode($this->shell(array(
+			'cmd' => PDFTOTEXT,
+			'arg' => array($this->path(), '-', '-l', '1'),
+			'stderr' => BPATH . '/Catalog/data/pdftotextlog',
+			'append-err' => true,
+			'return' => 'output',
+			'printout' => false,
+			'exceptiononerror' => false,
+		))));
+		return ($this->pdfcontent === '') ? true : false;
+	}
+	public function getpdfcontent($paras = array()) {
+		if(!$this->ispdf() or $this->isredirect()) {
+			return false;
+		}
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'force' => 'Whether to force the generation of a new pdfcontent',
+			),
+			'default' => array('force' => false),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if(!$paras['force']) {
+			$this->p->getpdfcontentcache();
+			if(isset($this->p->pdfcontentcache[$this->name])) {
+				$this->pdfcontent =& $this->p->pdfcontentcache[$this->name];
+				return $this->pdfcontent;
+			}
+			if(!$this->pdfcontent) {
+				$this->putpdfcontent();
+			}
+		}
+		else {
+			$this->putpdfcontent();
+		}
+		$this->p->pdfcontentcache[$this->name] =& $this->pdfcontent;
+		if(!$this->pdfcontent) {
+			return false;
+		}
+		return $this->pdfcontent;
+	}
+	public function echopdfcontent() {
+		$c = $this->getpdfcontent();
+		if($c === false)
+			return false;
+		echo $c;
+		return true;
+	}
+	public function findtitle_pdfcontent() {
+	// tries to detect the title from $this->pdfcontent
+	// assumes it is the first line with real running text
+		$lines = explode("\n", $this->getpdfcontent());
+		foreach($lines as $line) {
+			// empty line
+			if(!$line) continue;
+			$line = trim($line);
+			// titles are generally more than two words
+			if(preg_match_all('/ /', $line, $matches) <= 2) continue;
+			// probably not a title
+			if(preg_match('/[©@·]/u', $line)) continue;
+			// this looks like a volume-issue-pages kind of thing, or a date. This regex is matching a substantial number of existing articles; check how much of it is needed.
+			if(preg_match('/\(\s*\d+\s*\)\s*:|\d{5}|\d\s*,\s*\d|\d+\s*\(\d+\)\s*\d+|\d+\s*\(\s*\d+\s*\),|\d+\s*\.\s*\d+\s*\.\s*\d+|Volume \d+|\s*(January|February|April|June|July|August|September|October|November|December)\s*\d+|\/\d|\d:\s*\d|\d\(\d+\)|\d\s*\(\d|\d\s*\)\s*:\s*\d|;\s*\d|\s+\/\s+|\d\s+\d|doi:|Vol\.?\s*\d+\s*No\.?\s*\d+|Pages?\s*\d|Vol\.\s*\d+,|\*{2}|\d\s+&|,\s*pp\.\s*\d|\d\)\s*\d/ui', $line)) continue;
+			// no URLs in title
+			if((strpos($line, 'http://') !== false) or (strpos($line, 'www.') !== false)) continue;
+			// if there is no four-letter word in it, it's probably not a title
+			if(!preg_match('/[a-zA-Z]{4}/', $line)) continue;
+			// title will contain at least one uppercase letter
+			if(!preg_match('/[A-Z]/', $line)) continue;
+			// looks like an author listing (but this matches 24 real articles)
+			if(preg_match('/Jr\.|\s([a-z]\s){2,}/u', $line)) continue;
+			// [A-Z]\.\s*[A-Z]\.|
+			// JSTOR, ScienceDirect stuff, probable author line, publisher line, other stuff
+			if(preg_match('/collaborating with JSTOR|ScienceDirect|^By|^Issued|^Geobios|^Palaeogeography|^Published|^Printed|^Received|^Mitt\.|,$|^Journal compilation|^E \d+|^Zeitschrift|^J Mol|^Open access|^YMPEV|x{3}|^Reproduced|^BioOne|^Alcheringa|^MOLECULAR PHYLOGENETICS AND EVOLUTION|Ann\. Naturhist(or)?\. Mus\. Wien|Letter to the Editor|Proc\. Natl\. Acad\. Sci\. USA|American Society of Mammalogists|CONTRIBUTIONS FROM THE MUSEUM OF PALEONTOLOGY|American College of Veterinary Pathologists|Stuttgarter Beiträge zur Naturkunde|^The Newsletter|^Short notes|^No\. of pages|Verlag|^This copy|Southwestern Association of Naturalists|^Peabody Museum|^(c) |^Number|^Occasional Papers|^Article in press|^Museum|^The university|^University|^Journal|^Key words|^International journal|^Terms? of use|^Bulletin|^A journal|^The Bulletin|^Academy|en prensa|^American Journal|^Contributions from|Museum of Natural History$|^The American|^Notes on geographic distribution$|Publications$|Sistema de Información Científica|Press$|^Downloaded|^Serie|issn|^Society|University of|Elsevier|^Australian Journal/ui', $line)) continue;
+			// if it starts with a year, it's unlikely to be a title
+			if(preg_match('/^\d{3}/u', $line)) continue;
+			// if we got to such a long line, we're probably already in the abstract and we're not going to find the title. Longest title in database as of November 24, 2011 is 292
+			if(strlen($line) > 300) return false;
+			// how is this?
+			else return $line;
+		}
+		return false;
+	}
+	private function findtitle_specific() {
+	// find title in specific journals
+		// this is now barely useful anymore
+		$j = array();
+		$has = function($in) use(&$j) {
+			return isset($j[$in]) && ($j[$in] === true);
+		};
+		if(
+			$j['mammalia'] = preg_match("/(Mammalia|MAMMALIA), (t|I)\. /", $this->pdfcontent) or
+			// this is also likely Mammalia ("par" on 2nd line)
+			$j['mammalia'] = preg_match("/^[^\n]*\n+(par|PAR)\n+/", $this->pdfcontent) or
+			// this too
+			$j['mammalia'] = preg_match("/^[^\n]*\n+(by|BY)\n+/", $this->pdfcontent) or
+			// and this
+			$j['mammalia'] = preg_match("/MAMMALIA · /", $this->pdfcontent) or
+			$j['jvp'] = preg_match("/^\s*Journal of Vertebrate Paleontology/", $this->pdfcontent) or
+			$j['jparas'] = preg_match("/^\s*J. Parasitol.,/", $this->pdfcontent) or
+			$j['bioljlinnsoc'] = preg_match("/^\s*Biological Journal of the Linnean Society, /", $this->pdfcontent) or
+			$bioljlinnsoc2 = preg_match("/^[^\n]+\n\nBiological Journal of the Linnean Society, /", $this->pdfcontent) or
+			$j['zooljlinnsoc'] = preg_match("/^\s*Zoological Journal of the Linnean Society, /", $this->pdfcontent) or
+			$j['swnat'] = preg_match("/^\s*THE SOUTHWESTERN NATURALIST/", $this->pdfcontent) or
+			$j['wnanat'] = preg_match("/^\s*Western North American Naturalist/", $this->pdfcontent) or
+			$j['mammreview'] = preg_match("/^\s*Mammal Rev. /", $this->pdfcontent) or
+			$j['mammstudy'] = preg_match("/^\s*Mammal Study /", $this->pdfcontent) or
+			$j['jpaleont'] = preg_match("/^\s*(Journal of Paleontology|J. Paleont.)/", $this->pdfcontent) or
+			$j['jbiogeogr'] = preg_match("/^s*(Journal of Biogeography)/", $this->pdfcontent) or
+			$j['amjprim'] = preg_match("/^\s*American Journal of Primatology/", $this->pdfcontent) or
+			$j['ajpa'] = preg_match("/^\s*AMERICAN JOURNAL OF PHYSICAL ANTHROPOLOGY/", $this->pdfcontent) or
+			$j['oryx'] = preg_match("/^\s*Oryx /", $this->pdfcontent) or
+			$j['jmamm'] = preg_match("/^\s*Journal of Mammalogy,/", $this->pdfcontent)
+			) {
+			echo "Found BioOne/Mammalia/Wiley paper; searching Google to find a DOI." . PHP_EOL;
+			/*
+			 * find title
+			 */
+			// title ought to be first line
+			if($has('mammalia')) {
+				$title = preg_replace("/^([^\n]+).*/su", "$1", $this->pdfcontent);
+			} else if($has('jvp')) {
+				$title = preg_replace("/^[^\n]+\n+((ARTICLE|SHORT COMMUNICATION|RAPID COMMUNICATION|NOTE|FEATURED ARTICLE|CORRECTION|REVIEW)\n+)?([^\n]+)\n.*/su", "$3", $this->pdfcontent);
+			} else if($has('jparas')) {
+				$title = preg_replace("/.*American Society of Parasitologists \d+\s*([^\n]+)\n.*/su", "$1", $this->pdfcontent);
+			} else if($has('swnat')) {
+				$title = preg_replace("/^[^\n]+\n+[^\n]+\n+([^\n]+).*/su", "$1", $this->pdfcontent);
+			// title is after a line of text plus two newlines; works often
+			} else if($has('wnanat') || $has('mammreview') || $has('jpaleont') || $has('jbiogeogr') || $has('ajpa') || $has('oryx') || $has('jmamm') || $has('bioljlinnsoc') || $has('mammstudy') || $has('zooljlinnsoc')) { 
+				$title = preg_replace("/^[^\n]+\n+((ORIGINAL ARTICLE|SHORT COMMUNICATION|Short communication|Blackwell Science, Ltd|CORRECTION|REVIEW)\n+)?([^\n]+).*/su", "$3", $this->pdfcontent);
+			// this needs some other possibilities
+			} else if($has('amjprim')) {
+				$title = preg_replace("/^[^\n]+\n\n((BRIEF REPORT|RESEARCH ARTICLES)\s)?([^\n]+).*/su", "$3", $this->pdfcontent);
+			} else if($has('bioljlinnsoc2')) {
+				$title = preg_replace("/^[^\n]+\n\n[^\n]+\n\n([^\n]+).*/su", "$1", $this->pdfcontent);
+			}
+			if(!isset($title) || preg_match("/\n/", trim($title))) {
+				echo "Error: could not find title." . PHP_EOL;
+				return false;
+			}
+			if($has('jvp') || $has('jparas') || $has('wnanat') || $has('swnat') || $has('mammstudy') || $has('jpaleont') || $has('jmamm')) {
+				$title .= " site:bioone.org";
+			} else if($has('mammalia')) {
+				$title .= " site:reference-global.com";
+			} else if($has('bioljlinnsoc') || $has('bioljlinnsoc') || $has('mammreview') || $has('jbiogeogr') || $has('ajpa') || $has('zooljlinnsoc')) {
+				$title .= " site:wiley.com";
+			}
+			return $title;
+		}
+		return false;
+	}
+	public function test_pdfcontent() {
+	// test whether the PDFcontent functions are producing correct results
+	// also useful for detecting damaged PDF files
+		echo 'File ' . $this->name . PHP_EOL;
+		if($this->putpdfcontent())
+			echo $this->findtitle_pdfcontent() . PHP_EOL;
+		return true;
+	}
+	// Try to determine the citation from the PDF content
+	private function tryjstor() {
+		if(!preg_match("/(Stable URL: http:\/\/www\.jstor\.org\/stable\/| Accessed: )/", $this->pdfcontent))
+			return false;
+		echo "Detected JSTOR file; extracting data." . PHP_EOL;
+		$splittext = preg_split("/\nYour use of the JSTOR archive indicates your acceptance of JSTOR's Terms and Conditions of Use/", $this->pdfcontent);
+		$head = $splittext[0];
+		// get rid of occasional text above relevant info
+		$head = preg_replace("/^.*\n\n/", "", $head);
+		// bail out
+		if(preg_match('/Review by:/', $head)) {
+			echo 'Unable to process data' . PHP_EOL;
+			return false;
+		}
+		
+		// split into fields
+		$head = preg_split("/( Author\(s\): |\s*(Reviewed work\(s\):.*)?Source: | Published by: | Stable URL: |( \.)? Accessed: )/", $head);
+		
+		$data = array();
+		// handle the easy ones
+		$data['title'] = $head[0];
+		$data['doi'] = '10.2307/' . substr($head[4], 28);
+		// problem sometimes
+		if(!preg_match("/(, Vol\. |, No\. | \(|\), pp?\. )/", $head[2])) {
+			echo 'Unable to process data' . PHP_EOL;
+			return false;
+		}
+		/*
+		 * Process "source" field
+		 */
+		$source = preg_split("/(, Vol\. |, No\. | \(|\), pp?\. )/", $head[2]);
+		$data['journal'] = $source[0];
+		$data['volume'] = $source[1];
+		// issue may have been omitted
+		$data['issue'] = isset($source[4]) ? $source[2] : NULL;
+		// year
+		$year = isset($source[4]) ? $source[3] : $source[2];
+		$data['year'] = preg_replace("/^.*, /", "", $year);
+		// start and end pages
+		$pages = isset($source[4]) ? $source[4] : $source[3];
+		$pages = explode('-', $pages);
+		$data['start_page'] = $pages[0];
+		$data['end_page'] = isset($pages[1]) ? $pages[1] : $pages[0];
+		/*
+		 * Process "authors" field
+		 * Will fail with various variants, including double surnames
+		 */
+		$authors = $head[1];
+		$authors = preg_split("/(, | and )/", $authors);
+		// array for correctly formatted authors
+		$fmtauth = array();
+		foreach($authors as $author) {
+			$author = preg_split("/\s/", $author);
+			$lastname = array_pop($author) . ", ";
+			foreach($author as $firstname) {
+				$firstname = preg_replace("/(?<=^[A-Z]).*$/", ".", $firstname);
+				$lastname .= $firstname;
+			}
+			$fmtauth[] = $lastname;
+		}
+		$authorstring = '';
+		foreach($fmtauth as $key => $author) {
+			if($key !== 0)
+				$authorstring .= "; ";
+			$authorstring .= $author;
+		}
+		$data['authors'] = $authorstring;
+		$this->set($data);
+		return true;
+	}
+	private function trybioone() {
+		if(!preg_match("/BioOne \(www\.bioone\.org\) is an electronic aggregator of bioscience research content/", $this->pdfcontent))
+			return false;
+		echo "Detected BioOne file; extracting data." . PHP_EOL;
+		$pdftext = preg_split("/\n\nBioOne \(www\.bioone\.org\) is an electronic aggregator of bioscience research content/", $this->pdfcontent);
+		$head = trim($pdftext[0]);
+		// get rid of occasional text above relevant info
+		$head = preg_replace("/^.*\n\n/", "", $head);
+		// split into fields
+		$head = preg_split("/(\sAuthor\(s\): | Source: |\. Published By: | URL: )/", $head);
+		
+		$data = array();
+		// handle the easy ones
+		$data['title'] = $head[0];
+		$data['doi'] = preg_replace("/^http:\/\/www\.bioone\.org\/doi\/full\//", '', $head[4]);
+		/*
+		 * Process "source" field
+		 */
+		$source = $head[2];
+		$source = preg_split("/(, |\(|\)?:|\. )/", $source);
+		$data['journal'] = $source[0];
+		$data['volume'] = str_replace('Number ', '', $source[1]);
+		// issue may have been omitted
+		$data['issue'] = $source[4] ? $source[2] : NULL;
+		// year
+		$year = $source[4] ? $source[4] : $source[3];
+		$data['year'] = preg_replace("/[\.\s]/", "", $year);
+		// start and end pages
+		$pages = $source[4] ? $source[3] : $source[2];
+		$pages = preg_split("/-/", $pages);
+		$data['start_page'] = $pages[0];
+		$data['end_page'] = $pages[1] ? $pages[1] : $pages[0];
+		/*
+		 * Process "authors" field
+		 * Will fail with various variants, including double surnames
+		 */
+		$authors = $head[1];
+		$authors = preg_split("/(,? and |, (?!and)| & )/", $authors);
+		// array for correctly formatted authors
+		$fmtauth = array();
+		foreach($authors as $author) {
+			$author = preg_split("/\s/", $author);
+			$lastname = array_pop($author) . ", ";
+			foreach($author as $firstname) {
+				$firstname = preg_replace("/(?<=^[A-Z]).*$/", ".", $firstname);
+				$lastname .= $firstname;
+			}
+			$fmtauth[] = $lastname;
+		}
+		foreach($fmtauth as $key => $author) {
+			if($key !== 0)
+				$authorstring .= "; ";
+			$authorstring .= $author;
+		}
+		$data['authors'] = $authorstring;
+		$this->set($data);
+		return true;
+	}
+	private function trygeodiv() {
+		if(!preg_match("/GEODIVERSITAS · /", $this->pdfcontent))
+			return false;
+		echo "Detected Geodiversitas paper." . PHP_EOL;
+		preg_match("/\n\n([^\n]*)\n\nKEY/s", $this->pdfcontent, $cite);
+		if(!$cite = trim($cite[1]))
+			return false;
+		// split into fields
+		$head = preg_split("/((?<=\.) (?=\d{4})|\. -- |\. Geodiversitas |(?<=\d) \((?=\d)|(?<=\d)\) : (?=\d))/", $cite);
+		
+		$data = array();
+		// handle the easy ones
+		$data['journal'] = "Geodiversitas";
+		$data['title'] = $head[2];
+		$data['year'] = $head[1];
+		$data['volume'] = $head[3];
+		$data['issue'] = $head[4];
+		/*
+		 * Process pages
+		 */
+		$pages = str_replace(".", "", $head[5]);
+		$pages = explode("-", $pages);
+		$data['start_page'] = $pages[0];
+		$data['end_page'] = preg_replace("/\n.*$/", "", $pages[1]);
+		/*
+		 * Process "authors" field
+		 */
+		// kill extraneous stuff
+		$authors = preg_replace("/.*\n([^\n]+)$/", "$1", $head[0]);
+		// kill spaces between initials
+		$authors = str_replace(". ", ".", $authors);
+		// semicolons between authors
+		$authors = preg_replace("/((?<=\.), |& )/", "; ", $authors);
+		// comma before initials
+		$data['authors'] = preg_replace("/(?<=[a-z]) (?=[A-Z]\.)/", ", ", $authors);
+		$this->set($data);
+		return true;
+	}
+	private function trype() {
+	// Palaeontologia Electronica
+		// PE has a citation block after either a new line or something like "Accepted: 5 October 2011"
+		if(!preg_match("/(\n|Acceptance:\s*(\d+\s*[A-Z][a-z]+|\?\?)\s*\d+\s*)(?!PE Article Number)([^\n]+Palaeontologia Electronica Vol\.[^\n]+)(\s*\$|\n)/u", $this->pdfcontent, $matches))
+			return false;
+		$citation = $matches[3];
+		$processauthors = function($in) {
+			$authors = explode(', ', $in);
+			$out = '';
+			foreach($authors as $key => $aut) {
+				if(($key % 2) === 0) { // even index
+					$out .= preg_replace('/^and /u', '', $aut) . ', ';
+				}
+				else {
+					$auta = explode(' ', $aut);
+					foreach($auta as $autp) {
+						$out .= $autp[0] . '.';
+					}
+					$out .= '; ';
+				}
+			}
+			return preg_replace('/; $/u', '', $out);
+		};
+		$data = array();
+		if(preg_match(
+			"/^(.*?), (\d{4})\. (.*?), Palaeontologia Electronica Vol\. (\d+), Issue (\d+); ([\dA-Z]+):(\d+)p, [\dA-Za-z]+; ([^\s]*)\$/u",
+			$citation,
+			$matches
+		)) {
+			$data['authors'] = $processauthors($matches[1]);
+			$data['year'] = $matches[2];
+			$data['title'] = $matches[3];
+			$data['journal'] = 'Palaeontologia Electronica';
+			$data['volume'] = $matches[4];
+			$data['issue'] = $matches[5];
+			$data['start_page'] = $matches[6];
+			$data['pages'] = $matches[7];
+			$data['url'] = $matches[8];
+		}
+		else if(preg_match(
+			"/^(.*?) (\d{4})\. (.*?). Palaeontologia Electronica Vol\. (\d+), Issue (\d+); ([\dA-Z]+):(\d+)p; ([^\s]*)\$/u",
+			$citation,
+			$matches
+		)) {
+			$data['authors'] = $processauthors($matches[1]);
+			$data['year'] = $matches[2];
+			$data['title'] = $matches[3];
+			$data['journal'] = 'Palaeontologia Electronica';
+			$data['volume'] = $matches[4];
+			$data['issue'] = $matches[5];
+			$data['start_page'] = $matches[6];
+			$data['pages'] = $matches[7];
+			$data['url'] = 'http://' . $matches[8];
+		} else {
+			return false;
+		}
+		$this->set($data);
+		return true;
+	}
+	private function trydoi() {
+		if(preg_match_all("/(doi|DOI)\s*(\/((full|abs|pdf)\/)?|:|\.org\/)?\s*(?!URL:)([^\s]*?),?\s/su", $this->pdfcontent, $matches)) {
+			echo "Detected possible DOI." . PHP_EOL;
+			foreach($matches[5] as $match) {
+				$doi = Sanitizer::trimdoi($match);
+				// PNAS tends to return this
+				if(preg_match('/^10.\d{4}\/?$/', $doi))
+					$doi = preg_replace("/.*?10\.(\d{4})\/? ([^\s]+).*/s", "10.$1/$2", $this->pdfcontent);
+				// Elsevier accepted manuscripts
+				if(in_array($doi, array("Reference:", "Accepted Manuscript"))) {
+					if(preg_match("/Accepted date: [^\s]+ ([^\s]+)/s", $this->pdfcontent, $doi)) {
+						$doi = $doi[1];
+					} else {
+						echo 'Could not find DOI' . PHP_EOL;
+						return false;
+					}
+				}
+				// get rid of false positive DOIs containing only letters or numbers, or containing line breaks
+				if($doi && !preg_match("/^([a-z\(\)]*|\d*)$/", $doi) && !preg_match("/\n/", $doi)) {
+					// remove final period
+					$doi = preg_replace("/\.$/", "", $doi);
+					$this->set(array('doi' => $doi));
+					echo 'Found DOI: ' . $doi . PHP_EOL;
+					return $this->expanddoi();
+				}
+				else {
+					echo "Could not find DOI: $doi." . PHP_EOL;
+				}
+			}
+		}
+		return false;
+	}
+	private function trygoogle() {
+		// find title
+		($title = $this->findtitle_specific()) or
+			($title = $this->findtitle_pdfcontent());
+		if($title === false) {
+			return false;
+		}
+		// show title so it's possible to confirm it's right
+		echo "Title: $title" . PHP_EOL;
+		/*
+		 * get data
+		 */
+		// construct url
+		$search = self::googletitle($title);
+		// fetch data
+		$cjson = self::fetchgoogle($search);
+		if($cjson === false) {
+			// we didn't find anything
+			echo "Could not find any results in Google" . PHP_EOL;
+			return false;
+		}
+		/*
+		 * process
+		 */
+		foreach($cjson->items as $result) {
+			echo "Title: " . $result->title . PHP_EOL;
+			echo "URL: " . $result->link . PHP_EOL;
+			$url = $result->link;
+			$cmd = $this->menu(array(
+				'options' => array(
+					'y' => 'this URL is correct',
+					'n' => 'this URL is not correct',
+					'q' => 'quit the function',
+					'o' => 'open the URL',
+					'r' => 'stop adding data',
+				),
+				'process' => array(
+					'o' => function() use(&$url) {
+						$this->shell(array(
+							'cmd' => 'open', 
+							'arg' => array($url),
+						));
+						return true;
+					},
+					'q' => function(&$cmd) {
+						$cmd = false;
+						return false;
+					},
+				),
+			));
+			switch($cmd) {
+				case 'y':
+					$doi = preg_replace(array("/^.*\/doi\/(abs|pdf|full|url|pdfplusdirect)?\/?/", "/(\?.*|\/(abstract|full|pdf))$/"), array("", ""), $result->link);
+					if($doi === $result->link) {
+						$this->set(array('url' => $result->link));
+						// return false, not true, because this doesn't mean we don't have to do manual input for other stuff
+						return false;
+					}
+					else {
+						$this->set(array('doi' => trim($doi)));
+						return $this->expanddoi();
+					}
+				case 'n':
+					break;
+				case 'r':
+					throw new StopException;
+				default:
+					return $cmd;
+			}
+		}
+	}
+	// Getting stuff from Google
+	private function googletitle($title = '') {
+		if($title === '') {
+			$title = $this->title;
+		}
+		return urlencode(preg_replace("/\(|\)|;|-+\\/(?=\s)|(?<=\s)-+|<\/?i>/", "", $title));
+	}
+	private static function fetchgoogle($search) {
+		// get data from Google
+		$url = "https://www.googleapis.com/customsearch/v1?key=" . GOOGLEKEY . "&cx=" . GOOGLECUS . "&q=" . $search;
+		$json = @file_get_contents($url);
+		if(!$json) {
+			echo "Error: nothing found in Google." . PHP_EOL;
+			return false;
+		}
+		// decode into PHP-readable format
+		$cjson = json_decode($json);
+		if($cjson === NULL and $json !== 'null' and $json !== 'NULL') {
+			echo "Error: could not decode Google results." . PHP_EOL;
+			return false;
+		}
+		// this means we got good input, but found no results in Google
+		if((!isset($cjson->items)) or (!is_array($cjson->items))) {
+			echo "Could not find anything in Google." . PHP_EOL;
+			return false;
+		}
+		return $cjson;
+	}
+	// Manual input
+	private function doiamnhinput() {
+		if(!$this->p->addmanual) {
+			return false;
+		}
+		$this->echopdfcontent();
+		$name = $this->name;
+		$doi = $this->menu(array(
+			'head' => 'If this file has a DOI or AMNH handle, please enter it.',
+			'options' => array(
+				'c' => "continue to direct input of data",
+				'o' => "open the file",
+				'r' => "re-use a citation from a NOFILE entry",
+			),
+			'processcommand' => function($in) {
+				return Sanitizer::trimdoi($in);
+			},
+			'validfunction' => function($in, $options) {
+				if(array_key_exists($in, $options) || strlen($in) > 2) {
+					return true;
+				} else {
+					return false;
+				}
+			},
+			'process' => array(
+				'o' => function() {
+					$this->openf();
+					return true;
+				},
+			),
+		));
+		switch($doi) {
+			case 'c': return false;
+			case 'r':
+				if($this->reuseNofile()) {
+					return true;
+				}
+		}
+		if(substr($doi, 0, 22) === 'http://hdl.handle.net/') {
+			$this->set(array('hdl' => substr($doi, 22)));
+			if($this->expandamnh()) {
+				return true;
+			} else {
+				echo "Could not find data at the AMNH." . PHP_EOL;
+				return false;
+			}
+		} else {
+			$this->set(array('doi' => $doi));
+			return $this->expanddoi();
+		}
+	}
+	private function reuseNofile() {
+		$handle = $this->menu(array(
+			'head' => 'Enter the citation handle:',
+			'options' => array('q' => 'Stop trying csvrefs'),
+			'validfunction' => function($in) {
+				return $this->p->has($in);
+			}
+		));
+		if($handle === 'q') {
+			return false;
+		}
+		$blacklist = array('addmonth', 'addday', 'addyear', 'adddate', 'name', 'folder', 'sfolder', 'ssfolder');
+		$data = array();
+		foreach($this->p->get($handle) as $key => $value) {
+			if(!in_array($key, $blacklist, true)) {
+				$data[$key] = $value;
+			}
+		}
+		$this->set($data);
+		// make redirect
+		$this->p->makeredirect($handle, $this->name);
+		echo 'Data copied.' . PHP_EOL;
+		if($this->ynmenu('Do you want to review and edit information now associated with this file?')) {
+			$this->inform();
+			$this->edit();
+		}
+		return true;
+	}
+	abstract protected function trymanual();
+	// Expanding AMNH data and DOIs
+	private function expandamnh(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array('text' => 'Text of HTML file to be parsed'),
+			'default' => array('text' => false),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$hdl = $this->hdl();
+		if($hdl === false) {
+			return false;
+		}
+		// load document. Suppress errors because it's not our fault if the AMNH's HTML is messed up.
+		libxml_use_internal_errors(true);
+		$doc = new DOMDocument();
+		if($paras['text'] !== false) {
+			try {
+				$doc->loadHTML($paras['text']);
+			} catch(Exception $e) {
+				echo 'Unable to load data from AMNH' . PHP_EOL;
+				return false;				
+			}
+		} else {
+			try {
+				$doc->loadHTMLFile(
+					'http://digitallibrary.amnh.org/dspace/handle/' .
+					$hdl . '?show=full');
+			} catch(Exception $e) {
+				echo 'Unable to load data from AMNH' . PHP_EOL;
+				return false;
+			}
+		}
+		libxml_use_internal_errors(false);
+		$list = $doc->getElementsByTagName('tr');
+		$authors = '';
+		$data = array();
+		for($i = 0; $i < $list->length; $i++) {
+			$row = $list->item($i);
+			// only handle actual data
+			if(strpos($row->attributes->getNamedItem('class')->nodeValue, 'ds-table-row') !== 0)
+				continue;
+			$label = $row->childNodes->item(0)->nodeValue;
+			$value = $row->childNodes->item(2)->nodeValue;
+			switch($label) {
+				case 'dc.contributor.author':
+					// remove year of birth
+					$value = preg_replace('/, [\d\-]+| \(.*\)$/u', '', $value);
+					$authors .= preg_replace(
+						'/(?<=, |\.)([A-Z])\w*\s*/u',
+						'$1.',
+						$value
+					) . '; ';
+					break;
+				case 'dc.date.issued':
+					$data['year'] = $value;
+					break;
+				case 'dc.description':
+					if(!preg_match("/^\d+ p\./u", $value)) {
+						break;
+					}
+					$data['start_page'] = 1;
+					// number of pages is at beginning of this piece
+					$data['end_page'] = (int) $value;
+					break;
+				case 'dc.relation.ispartofseries':
+					$data = preg_split('/;\s+(no|vol|v)\.\s+|, article /u', $value);
+					$data['journal'] = trim($data[0]);
+					$data['volume'] = trim($data[1]);
+					if(isset($data[2])) {
+						$data['issue'] = trim($data[2]);
+					}
+					break;
+				case 'dc.title': // title, with some extraneous stuff
+					$data['title'] = trim(preg_replace(
+						'/\. (American Museum novitates|Bulletin of the AMNH|Anthropological papers of the AMNH|Memoirs of the AMNH|Bulletin of the American Museum of Natural History).*$/u',
+						'',
+						$value
+					));
+					break;
+			}
+		}
+		// final cleanup
+		$data['authors'] = trim(preg_replace(
+			array('/\.+/u', '/; $/u'),
+			array('.', ''),
+			$authors
+		));
+		$this->set($data);
+		return true;
+	}
+	protected function expanddoi($paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'overwrite' => 'Whether to overwrite existing data',
+				'verbose' => 'Whether to mention data that differs from existing data',
+			),
+			'default' => array(
+				'overwrite' => false,
+				'verbose' => false
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$doi = $this->doi();
+		// fetch data
+		$url = "http://www.crossref.org/openurl/?pid=" . CROSSREFID . "&id=doi:" . $doi . "&noredirect=true";
+		$xml = @simplexml_load_file($url);
+		// check success
+		if($xml &&
+			$xml->query_result && $xml->query_result->body->query &&
+			($arr = $xml->query_result->body->query->attributes()) &&
+			(string)$arr === "resolved") {
+			echo 'Retrieved data for DOI ' . $doi . PHP_EOL;
+			$result = $xml->query_result->body->query;
+		} else {
+			echo 'Could not retrieve data for DOI ' . $doi . PHP_EOL;
+			return false;
+		}
+		/*
+		 * process data
+		 */
+		// variables we process from the API result
+		$vars = array('volume', 'issue', 'start_page', 'end_page', 'year', 'title', 'journal', 'isbn', 'authors');
+		// kill leading zeroes
+		$volume = preg_replace("/^0/u", "", (string)$result->volume);
+		$issue = preg_replace("/^0/u", "", (string)$result->issue);
+		$start_page = preg_replace("/^0/u", "", (string)$result->first_page);
+		$end_page = preg_replace("/^0/u", "", (string)$result->last_page);
+		$year = (string)$result->year;
+		$title = (string)$result->article_title;
+		$journal = (string)$result->journal_title;
+		$booktitle = (string)$result->volume_title;
+		$isbn = (string)$result->isbn;
+		$authorsraw = $result->contributors->children();
+		$authors = '';
+		if($result->contributors->count()) foreach($authorsraw as $author) {
+			if((string)$author->attributes() !== "first")
+				$authors .= "; ";
+			$authors .= ucwords(mb_strtolower((string)$author->surname, 'UTF-8'));
+			$authors .= ", ";
+			$authors .= preg_replace(array("/([^\s])[^\s]*/u", "/\s/u"), array("$1.", ""), (string)$author->given_name);
+		}
+		$data = array();
+		foreach($vars as $var) {
+			if(${$var}) {
+				// echo differences if verbose is set
+				if($paras['verbose']) {
+					// loose comparison is intentional here
+					if(simplify(${$var}) != simplify($this->$var)) {
+						echo 'Different data from expanddoi(). File ' . $this->name . '; var ' . $var . PHP_EOL;
+						echo 'Existing data: ' . $this->$var . PHP_EOL;
+						echo 'New data: ' . ${$var} . PHP_EOL;
+					}
+				}
+				// overwrite everything if overwrite is set; else only if no existing data
+				if($paras['overwrite']) {
+					$data[$var] = ${$var};
+				} elseif(!$this->$var) {
+					$data[$var] = ${$var};
+				}
+			}
+		}
+		if($booktitle !== '') {
+			if(strpos($booktitle, '/') === false and strpos($this->doi, 'bhl') !== false) {
+				$this->fillEnclosingFromTitle($booktitle);
+			} elseif(!$this->title) {
+				$data['title'] = $booktitle;
+			}
+		}
+		$this->set($data);
+		return true;
+	}
+	/* 
+	 * Processing PDFs
+	 */
+	public function burst() {
+	// bursts a PDF file into several files
+		echo 'Bursting file "' . $this->name . '". Opening file.' . PHP_EOL;
+		$this->shell(array('open', array(BURSTPATH . '/' . $this->name)));
+		
+		$this->menu(array(
+			'head' => 'Enter file names and page ranges',
+			'prompt' => 'File name: ',
+			'options' => array(
+				'c' => 'continue with the next file',
+				'q' => 'quit',
+				// fake commands, used internally by processcommand/process
+				// a => add this file
+				// i => ignore
+			),
+			'processcommand' => function($cmd, &$data) {
+				if($cmd === 'c' || $cmd === 'q') {
+					return $cmd;
+				} else {
+					$data = $cmd;
+					if($this->p->has($cmd)) {
+						if(!$this->ynmenu('A file with this name already exists. Do you want to continue anyway?')) {
+							return 'i';
+						}
+					}
+					return 'a';
+				}
+			},
+			'validfunction' => function() {
+				return true;
+			},
+			'process' => array(
+				'q' => function() { 
+					throw new StopException('burst'); 
+				},
+				'i' => function() {
+					return true;
+				},
+				'c' => function() {
+					$this->shell(array(
+						'cmd' => 'mv',
+						'arg' => array('-n',
+							BURSTPATH . '/' . $this->name,
+							BURSTPATH . '/Old/' . $this->name)
+					));
+					return false;				
+				},
+				'a' => function($cmd, $data) {
+					$range = $this->menu(array(
+						'prompt' => 'Page range: ',
+						'validfunction' => function($range) {
+							return preg_match('/^\d+-\d+$/', $range);
+						},
+					));
+					$srange = explode('-', $range);
+					$from = $srange[0];
+					$to = $srange[1];
+					$this->shell(array(
+						'cmd' => 'gs',
+						'arg' => array(
+							'-dBATCH', '-dNOPAUSE', '-q', '-sDEVICE=pdfwrite',
+							'-dFirstPage=' . $from, '-dLastPage=' . $to,
+							'-sOUTPUTFILE=' . TEMPPATH . '/' . $data,
+							BURSTPATH . '/' . $this->name,
+						),
+					));
+					echo 'Split off file ' . $data . PHP_EOL;
+					return true;
+				},
+			),
+		));
+		return true;
+	}
+	public function removefirstpage() {
+		$tmpPath = $this->path(array('folder' => true, 'type' => 'none')) 
+			. '/tmp.pdf';
+		$path = $this->path(array('type' => 'none'));
+		$this->shell(array(
+			'cmd' => 'gs',
+			'arg' => array(
+				'-dBATCH', '-dNOPAUSE', '-q', '-sDEVICE=pdfwrite', 
+				'-dFirstPage=2', '-sOUTPUTFILE=' . $tmpPath, $path
+			),
+		));
+		// open files for review
+		$this->shell(array('open', array($tmpPath)));
+		$this->openf();
+		if($this->ynmenu("Do you want to replace the file?")) {
+			$this->shell(array('mv', array($tmpPath, $path)));
+			return true;
+		} else {
+			$this->shell(array('rm', array($tmpPath)));
+			return false;
+		}
+	}
+	/*
+	 * Other utilities
+	 */
+	public function getkey() {
+		// get the key to the suggestions array
+		if(strpos($this->name, 'MS ') === 0)
+			return preg_replace('/^MS ([^\s]+).*$/', '$1', $this->name);
+		$tmp = preg_split('/[\s\-,]/', $this->name);
+		return $tmp[0];
+	}
+	public function getrefname() {
+	// generate refname, which should usually be unique with this method
+		$authors = $this->getAuthors(array('asArray' => true));
+		if(isset($authors[0][0])) {
+			$author = $authors[0][0];
+		} else {
+			$author = '';
+		}
+		$refname = $author . $this->year . $this->volume . $this->start_page;
+		if($refname === '') {
+			$refname = $this->title;
+		}
+		if(is_numeric($refname)) {
+			$refname = 'ref' . $refname;
+		}
+		$refname = str_replace("'", "", $refname);
+		return $refname;
+	}
+	public function getsimpletitle($title = '') {
+	// should probably get rid of this
+		if(!$title) $title = $this->title;
+		$title = preg_replace(
+			array(
+				'/<\/?i>/u', // |[\'"`*,\.:;\-+()–´«»\/!—]|\s*
+				'/[áàâ]/u',
+				'/[éèê]/u',
+				'/[îíì]/u',
+				'/[óôòõ]/u',
+				'/[ûúù]/u',
+				'/ñ/u',
+				'/[çč]/u',
+				'/[^a-z0-9]/u',
+			),
+			array(
+				'',
+				'a',
+				'e',
+				'i',
+				'o',
+				'u',
+				'n',
+				'c',
+				'',
+			),
+			mb_strtolower($title, mb_detect_encoding($title))
+		);
+		return $title;
+	}
+	private function geturl() {
+	// get the URL for this file from the data given
+		$tries = array(
+			'url' => '',
+			'doi' => 'http://dx.doi.org.ezp-prod1.hul.harvard.edu/',
+			'jstor' => 'http://www.jstor.org.ezp-prod1.hul.harvard.edu/stable/',
+			'hdl' => 'http://hdl.handle.net/',
+			'pmid' => 'http://www.ncbi.nlm.nih.gov/pubmed/',
+			'pmc' => 'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC',
+		);
+		foreach($tries as $identifier => $url) {
+			$try = $this->getIdentifier($identifier);
+			if($try !== false) {
+				return $url . $try;
+			}
+		}
+		return false;
+	}
+	public function openurl(array $paras = array()) {
+	// open the URL associated with the file
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No parameters accepted */ ),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$url = $this->geturl();
+		if($url === false) {
+			echo 'No URL to open' . PHP_EOL;
+			return false;		
+		} else {
+			return $this->shell(array(
+				'cmd' => 'open',
+				'arg' => array($url),
+			));
+		}
+	}
+	public function searchgoogletitle() {
+	// searches for the title of the article in Google
+		$url = 'http://www.google.com/search?q=' . $this->googletitle();
+		return $this->shell(array('open', array($url)));
+	}
+	public function gethost() {
+	// get the host part of the URL
+		$url = $this->url();
+		if($url === false) {
+			return false;
+		} else {
+			return parse_url($url, PHP_URL_HOST);
+		}
+	}
+	public function email(array $paras = array()) {
+	// Email this file to someone
+	// Inspired by http://www.webcheatsheet.com/PHP/send_email_text_html_attachment.php#attachment
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'to' => 'Address to send to',
+				'message' => 'E-mail message',
+				'subject' => 'Subject line',
+			),
+			'default' => array(
+				'subject' => $this->name,
+			),
+			'askifempty' => array(
+				'to',
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		// not in process_paras because then the code would be evaluated no matter what.
+		if(!isset($paras['message'])) {
+			$paras['message'] = "<p>Please find attached the following paper:</p>\r\n<ul><li>" . $this->citepaper() . "</li></ul>\r\n";
+		}
+		// generate boundary hash
+		$boundary_hash = md5(date('r', time()));
+		$headers = "From: " . FROMADDRESS .
+			"\r\nReply-To: " . FROMADDRESS .
+			"\r\nContent-Type: multipart/mixed; boundary=\"PHP-mixed-" .
+			$boundary_hash . "\"";
+		$message = '
+--PHP-mixed-' . $boundary_hash . '
+Content-Type: multipart/alternative; boundary="PHP-alt-' . $boundary_hash . '"
+
+--PHP-alt-' . $boundary_hash . '
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+
+' . $paras['message'] . '
+
+--PHP-alt-' . $boundary_hash . '--
+
+--PHP-mixed-' . $boundary_hash . '
+Content-Type: application/zip; name="' . $this->name . '"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment
+
+' . chunk_split(base64_encode(file_get_contents($this->path(array('type' => 'none'))))) . '
+--PHP-mixed-' . $boundary_hash . '--
+';
+		if(!mail($paras['to'], $paras['subject'], $message, $headers)) {
+			echo 'Error sending e-mail' . PHP_EOL;
+			return false;
+		}
+		return true;
+	}
+	public function testNameParser(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if($this->isredirect()) {
+			return true;
+		}
+		$parser = $this->getNameParser();
+		if($parser->errorOccurred()) {
+			$parser->printErrors();
+			return false;
+		} else {
+			//$parser->printParsed();
+			return true;
+		}
 	}
 }

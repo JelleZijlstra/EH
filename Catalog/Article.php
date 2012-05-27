@@ -28,6 +28,9 @@ class Article extends SqlListEntry {
 	protected function publisher() {
 		return $this->publisher->name();
 	}
+	protected function journal() {
+		return $this->journal->name();
+	}
 	
 	/*
 	 * Types.
@@ -46,6 +49,65 @@ class Article extends SqlListEntry {
 	 */
 	public function issupplement() {
 		return $this->type === self::SUPPLEMENT;
+	}
+	public function isredirect() {
+		return $this->type === self::REDIRECT;
+	}
+	public function resolve_redirect() {
+		if($this->isredirect()) {
+			return $this->parent->name();
+		} else {
+			return $this->name();
+		}
+	}
+	public function isthesis() {
+		return $this->type === self::THESIS;
+	}
+	public function thesis_getuni() {
+	// get the university for a thesis
+		if(!$this->isthesis()) {
+			return false;
+		} else {
+			return $this->publisher();
+		}
+	}
+	public function thesis_gettype() {
+		if(!$this->isthesis()) {
+			return false;
+		} else {
+			return $this->series;
+		}
+	}
+	public function supp_getbasic() {
+		if($this->issupplement()) {
+			return $this->parent->name();
+		} else {
+			return false;
+		}
+	}
+	/*
+	 * Citing
+	 */
+	protected function cite_getclass() {
+		switch($this->type) {
+			case self::JOURNAL:
+				return 'journal';
+			case self::CHAPTER:
+				return 'chapter';
+			case self::BOOK:
+				return 'book';
+			case self::THESIS:
+				return 'thesis';
+			case self::WEB:
+				return 'web';
+			case self::MISCELLANEOUS:
+				return 'unknown';
+			case self::REDIRECT:
+			case self::SUPPLEMENT:
+				return 'n/a';
+			default:
+				throw new EHException('Invalid type: ' . $this->type);
+		}
 	}
 
 	/*

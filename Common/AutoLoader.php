@@ -22,6 +22,10 @@ abstract class AutoLoader {
 		// Catalog
 		'Age' => '/Catalog/Age.php',
 		'AgeList' => '/Catalog/AgeList.php',
+		'CsvArticle' => '/Catalog/CsvArticle.php',
+		'CsvArticleList' => '/Catalog/CsvArticleList.php',
+		'CommonArticle' => '/Catalog/CommonArticle.php',
+		'CommonArticleList' => '/Catalog/CommonArticleList.php',
 		'Article' => '/Catalog/Article.php',
 		'ArticleList' => '/Catalog/ArticleList.php',
 		'Author' => '/Catalog/Author.php',

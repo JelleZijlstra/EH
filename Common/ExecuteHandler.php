@@ -892,7 +892,7 @@ class ExecuteHandler extends EHICore {
 						. ' command is invalid.',
 			),
 			'default' => array(
-				'head' => 'MENU',
+				'head' => false,
 				'prompt' => '> ',
 				'printoptions' => false,
 				'helpcommand' => true,
@@ -908,7 +908,9 @@ class ExecuteHandler extends EHICore {
 		))) return false;
 		// print menu heading
 		if(!$paras['headasprompt']) {
-			echo $paras['head'] . PHP_EOL;
+			if($paras['head'] !== false) {
+				echo $paras['head'] . PHP_EOL;
+			}
 		}
 		$printoptions = function() use($paras) {
 			if(count($paras['options']) === 0) {

@@ -688,6 +688,9 @@ Kashmir
 Andamans
 Nicobars
 Andamans and Nicobars
+Arunachal
+Andhra
+UP
 
 # China provinces
 Anhui

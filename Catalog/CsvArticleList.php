@@ -40,7 +40,7 @@ class CsvArticleList extends CsvContainerList {
 			'desc' => 'Cite a file',
 			'arg' => 'File handle',
 			'execute' => 'callmethod'),
-		'add_redirect' => array('name' => 'add_redirect',
+		'addRedirect' => array('name' => 'addRedirect',
 			'aka' => array('d'),
 			'desc' => 'Add a new redirect',
 			'arg' => 'None',
@@ -310,7 +310,7 @@ class CsvArticleList extends CsvContainerList {
 			array('isnew' => true)
 		);
 	}
-	public function add_redirect(array $paras = array()) {
+	public function addRedirect(array $paras = array()) {
 		if($this->process_paras($paras, array(
 			'name' => __FUNCTION__,
 			'synonyms' => array(

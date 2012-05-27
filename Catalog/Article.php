@@ -7,6 +7,46 @@
  */
 
 class Article extends SqlListEntry {
+	use CommonArticle;
+	
+	protected /* int */ $id;
+	protected /* string */ $name;
+	protected /* Folder */ $folder;
+	protected /* string */ $added;
+	protected /* int */ $type;
+	protected /* Author array */ $authors;
+	protected /* string|int */ $year;
+	protected /* string */ $title;
+	protected /* Journal */ $journal;
+	protected /* string */ $series;
+	protected /* string */ $volume;
+	protected /* string */ $issue;
+	protected /* string */ $start_page;
+	protected /* string */ $end_page;
+	// TODO: more properties
+	
+	protected function publisher() {
+		return $this->publisher->name();
+	}
+	
+	/*
+	 * Types.
+	 */
+	const JOURNAL = 9; // no zero because that value may signify an error
+	const CHAPTER = 1;
+	const BOOK = 2;
+	const THESIS = 3; // kind of degree in "series", university in "publisher"
+	const WEB = 5;
+	const MISCELLANEOUS = 6;
+	const REDIRECT = 7; // ID of target in "parent"
+	const SUPPLEMENT = 8; // ID of target in "parent", kind of supplement in "title"
+
+	/*
+	 * Kinds of files
+	 */
+	public function issupplement() {
+		return $this->type === self::SUPPLEMENT;
+	}
 
 	/*
 	 * SqlListEntry stuff.

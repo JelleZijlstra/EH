@@ -464,21 +464,17 @@ trait CommonArticle {
 					$a[1] = trim(str_replace('.', '. ', $a[1]));
 				}
 			}
-			if($key === 0) {
-				if($paras['firstInitialsBeforeName']) {
+			if(isset($a[1])) {
+				if(($key === 0) ? $paras['firstInitialsBeforeName'] : $paras['initialsBeforeName']) {
 					$author = $a[1] . ' ' . $a[0];
 				} else {
 					$author = $a[0] . ', ' . $a[1];
+				}
+				if(isset($a[2])) {
+					$author .= ', ' . $a[2];
 				}
 			} else {
-				if($paras['initialsBeforeName']) {
-					$author = $a[1] . ' ' . $a[0];
-				} else {
-					$author = $a[0] . ', ' . $a[1];
-				}
-			}
-			if(isset($a[3])) {
-				$author .= ', ' . $a[3];
+				$author = $a[0];
 			}
 			$out .= $author;
 		}

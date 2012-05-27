@@ -561,6 +561,7 @@ class CsvArticle extends CsvListEntry {
 			case 'CL': $o = 'Check List'; break;
 			case 'CMPUM': case 'Contributions from the Museum of Paleontology, The University of Michigan': $o = 'Contributions from the Museum of Paleontology, University of Michigan'; break;
 			case 'CN': $o = 'Chiroptera Neotropical'; break;
+			case 'Courier Forschungsinstitut Senckenberg': $o = 'Courier Forschungs-Institut Senckenberg'; break;
 			case 'CPMHNM': case 'Comunicaciones Paleontologicas del Museo de Historia Natural de Montevideo': $o = 'Comunicaciones Paleontológicas del Museo de Historia Natural de Montevideo'; break;
 			case 'Comptes Rendus de l\'Académie des Sciences de Paris, Earth and Planetary Sciences': case 'Comptes Rendus de l\'Académie des Sciences de Paris, Sciences de la Terre et des planètes': $o = 'Comptes Rendus de l\'Académie des Sciences - Series IIA - Earth and Planetary Science'; break;
 			case 'CP': case 'COL-PA': $o = 'Coloquios de Paleontología'; break;
@@ -573,6 +574,7 @@ class CsvArticle extends CsvListEntry {
 			case 'JHE': $o = 'Journal of Human Evolution'; break;
 			case 'JME': $o = 'Journal of Mammalian Evolution'; break;
 			case 'JOZ': case 'Journal of Zoology': $o = 'Journal of Zoology, London'; break;
+			case 'JP': case 'The Journal of Parasitology': $o = 'Journal of Parasitology'; break;
 			case 'JPSI': $o = 'Journal of the Palaeontological Society of India'; break;
 			case 'JVP': $o = 'Journal of Vertebrate Paleontology'; break;
 			case 'JSP': $o = 'Journal of Systematic Palaeontology'; break;
@@ -583,6 +585,7 @@ class CsvArticle extends CsvListEntry {
 			case 'MIOC': case 'Mem. Inst. Oswaldo Cruz': $o = 'Memórias do Instituto Oswaldo Cruz'; break;
 			case 'MN': $o = 'Mastozoología Neotropical'; break;
 			case 'MNSM': case 'Memoirs of the National Science Museum, Tokyo': $o = 'Memoirs of the National Science Museum'; break;
+			case 'MBSPHG': case 'Mitteilungen der Bayerischen Staatssammlung für Paläontologie und Historische Geologie': $o = 'Mitteilungen der Bayerischen Staatssammlung für Paläontologie und historische Geologie'; break;
 			case 'MPE': $o = 'Molecular Phylogenetics and Evolution'; break;
 			case 'MPMZUM': $o = 'Miscellaneous Publications, Museum of Zoology, University of Michigan'; break;
 			case 'MS': $o = 'Mammalian Species'; break;
@@ -593,6 +596,7 @@ class CsvArticle extends CsvListEntry {
 			case 'OPMZLSU': $o = 'Occasional Papers of the Museum of Zoology, Louisiana State University'; break;
 			case 'OPTTU': case 'OPMTTU': case 'Occasional Papers, The Museum, Texas Tech University': $o = 'Occasional Papers, Museum of Texas Tech University'; break;
 			case 'PAZ': case 'Papéis Avulsos de Zoologia, Museu de Zoologia da Universidade de São Paulo': $o = 'Papéis Avulsos de Zoologia'; break;
+			case 'Paleobios': $o = 'PaleoBios'; break;
 			case 'PBSW': $o = 'Proceedings of the Biological Society of Washington'; break;
 			case 'PE': $o = 'Palaeontologia Electronica'; break;
 			case 'PIE': $o = 'Paleontologia i Evolució'; break;
@@ -601,7 +605,7 @@ class CsvArticle extends CsvListEntry {
 			case 'PLSNSW': $o = 'Proceedings of the Linnean Society of New South Wales'; break;
 			case 'PKNAW': case 'Proceedings of the Koninklijke Nederlandse Academie van Wetenschappen': $o = 'Proceedings of the Koninklijke Nederlandse Akademie van Wetenschappen'; break;
 			case 'PN': case 'Palaeontologica Nova, Seminario de Paleontología de Zaragoza': $o = 'Palaeontologica Nova'; break;
-			case 'PNAS': $o = 'Proceedings of the National Academy of Sciences'; break;
+			case 'PNAS': case 'Proceedings of the National Academy of Sciences of the United States of America': $o = 'Proceedings of the National Academy of Sciences'; break;
 			case 'POP': case 'Papers on Paleontology, The Museum of Palaeontology, University of Michigan': $o = 'Papers on Paleontology'; break;
 			case 'PPP': case 'Palaeogeography,Palaeoclimatology,Palaeoecology': $o = 'Palaeogeography, Palaeoclimatology, Palaeoecology'; break;
 			case 'PZ': case 'Paläontologisches Zeitschrift': $o = 'Paläontologische Zeitschrift'; break;
@@ -611,6 +615,7 @@ class CsvArticle extends CsvListEntry {
 			case 'RJT': $o = 'Russian Journal of Theriology'; break;
 			case 'RSGE': $o = 'Revista de la Sociedad Geológica de España'; break;
 			case 'RWAM': $o = 'Records of the Western Australian Museum'; break;
+			case 'RZA': case 'Revue de Zoologie africaine': $o = 'Revue Zoologique africaine'; break;
 			case 'Science, New Series': $o = 'Science'; break;
 			case 'SBN': $o = 'Stuttgarter Beiträge zur Naturkunde'; break;
 			case 'SCC': $o = 'Small Carnivore Conservation'; break;
@@ -618,6 +623,7 @@ class CsvArticle extends CsvListEntry {
 			case 'SG': $o = 'Scripta Geologica'; break;
 			case 'TMGB': $o = 'Treballs del Museu de Geologia de Barcelona'; break;
 			case 'VPA': $o = 'Vertebrata PalAsiatica'; break;
+			case 'VZ': case 'Vestnik Zoologii': $o = 'Vestnik zoologii'; break;
 			case 'WNAN': $o = 'Western North American Naturalist'; break;
 			case 'ZA': case 'Zoologischer Anzeiger - A Journal of Comparative Zoology': case 'Zoologischer Anzeiger, Jena': $o = 'Zoologischer Anzeiger'; break;
 			case 'ZM': case 'Zoologische Mededelingen Leiden': case 'Zoölogische Mededelingen': $o = 'Zoologische Mededelingen'; break;

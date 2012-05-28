@@ -26,45 +26,25 @@ class CsvArticleList extends CsvContainerList {
 	 * Gets list of files into $this->lslist, an array of results (Article form).
 	 */
 		echo "acquiring list of files... ";
-		// ls output as string
 		$list = $this->shell(array(
-			'cmd' => 'ls',
-			'arg' => array('-pR', LIBRARY),
+			'cmd' => 'find',
+			'arg' => array(
+				LIBRARY, '-regex', '.*\.[a-z][a-z]*'
+			),
 			'printout' => false,
-			'return' => 'output',
+			'return' => 'outputlines',
 		));
-		if(!$list) {
-			echo "Could not find library." . PHP_EOL;
-			return false;
-		}
-		// output associative array
 		$this->lslist = array();
-		$escapelibrary = preg_replace("/\//", "\/", LIBRARY);
-		$list = preg_split("/\n" . PHP_EOL . $escapelibrary . "/", $list);
-		foreach($list as $folder) {
-			$folder = preg_split("/:\n/", $folder);
-			if(!isset($folder[1])) {
-				continue;
-			}
-			$path = preg_split("/\//", $folder[0]);
-			if(!isset($path[2])) {
-				$path[2] = '';
-			}
-			if(!isset($path[3])) {
-				$path[3] = '';
-			}
-			$path = array($path[1], $path[2], $path[3]);
-			$filelist = preg_split("/\n/", $folder[1]);
-			foreach($filelist as $file) {
-				// do not handle directories
-				if(!preg_match("/\/$/", $file) && $file) {
-					$this->lslist[$file] = new self::$childClass(
-						array($file, $path), 'l', $this
-					);
-				}
-			}
+		foreach($list as $line) {
+			$line = str_replace(LIBRARY . '/', '', $line);
+			$path = explode('/', $line);
+			$name = array_pop($path);
+			$this->lslist[$name] = new self::$childClass(
+				array($name, $path), 'l', $this
+			);
 		}
-		echo "done" . PHP_EOL;
+		echo 'done' . PHP_EOL;
+		return true;
 	}
 	private function build_newlist($path = '', $out = 'newlist') {
 		// why do we need this?

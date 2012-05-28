@@ -31,48 +31,6 @@ class Article extends SqlListEntry implements ArticleInterface {
 	protected function journal() {
 		return $this->journal->name();
 	}
-
-	/*
-	 * Kinds of files
-	 */
-	public function issupplement() {
-		return $this->type === self::SUPPLEMENT;
-	}
-	public function isredirect() {
-		return $this->type === self::REDIRECT;
-	}
-	public function resolve_redirect() {
-		if($this->isredirect()) {
-			return $this->parent->name();
-		} else {
-			return $this->name();
-		}
-	}
-	public function isthesis() {
-		return $this->type === self::THESIS;
-	}
-	public function thesis_getuni() {
-	// get the university for a thesis
-		if(!$this->isthesis()) {
-			return false;
-		} else {
-			return $this->publisher();
-		}
-	}
-	public function thesis_gettype() {
-		if(!$this->isthesis()) {
-			return false;
-		} else {
-			return $this->series;
-		}
-	}
-	public function supp_getbasic() {
-		if($this->issupplement()) {
-			return $this->parent->name();
-		} else {
-			return false;
-		}
-	}
 	/*
 	 * Citing
 	 */

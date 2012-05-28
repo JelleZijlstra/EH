@@ -126,6 +126,23 @@ trait CommonArticle {
 	}
 	
 	/*
+	 * Validators. Should ultimately be organized in some other way.
+	 */
+	public static function getValidator($field) {
+		switch($field) {
+			case 'hdl':
+				return function($in) {
+					return preg_match('/^\d+(\.\d+)?\/(\d+)$/u', $in);
+				};
+			case 'doi':
+				return function($in) {
+					return preg_match('/^10\.[A-Za-z0-9\.\/\[\]<>\-;:_()+]+$/u', $in);
+				};
+			default: return false;
+		}
+	}
+	
+	/*
 	 * Basic operations with files.
 	 */
 	abstract protected function needSave();
@@ -336,6 +353,109 @@ trait CommonArticle {
 		}
 	}
 	/*
+	 * Types
+	 */
+	public static function typeToString($type) {
+		switch($type) {
+			case self::JOURNAL: return 'journal';
+			case self::CHAPTER: return 'chapter';
+			case self::BOOK: return 'book';
+			case self::THESIS: return 'thesis';
+			case self::WEB: return 'web';
+			case self::MISCELLANEOUS: return 'miscellaneous';
+			case self::REDIRECT: return 'redirect';
+			case self::SUPPLEMENT: return 'supplement';
+			default: throw new EHException($type);
+		}
+	}
+	private static $stringToType = array(
+		self::BOOK => self::BOOK,
+		'book' => self::BOOK,
+		'b' => self::BOOK,
+		self::JOURNAL => self::JOURNAL,
+		'journal' => self::JOURNAL,
+		'j' => self::JOURNAL,
+		self::CHAPTER => self::CHAPTER,
+		'chapter' => self::CHAPTER,
+		'c' => self::CHAPTER,
+		self::THESIS => self::THESIS,
+		'thesis' => self::THESIS,
+		't' => self::THESIS,
+		self::WEB => self::WEB,
+		'web' => self::WEB,
+		'w' => self::WEB,
+		self::MISCELLANEOUS => self::MISCELLANEOUS,
+		'miscellaneous' => self::MISCELLANEOUS,
+		'misc' => self::MISCELLANEOUS,
+		'm' => self::MISCELLANEOUS,
+		self::REDIRECT => self::REDIRECT,
+		'redirect' => self::REDIRECT,
+		'r' => self::REDIRECT,
+		self::SUPPLEMENT => self::SUPPLEMENT,
+		'supplement' => self::SUPPLEMENT,
+		's' => self::SUPPLEMENT,
+	);
+	// Returns a function that converts an arbitrary value to a type if possible
+	public function getConverterToType(array $paras) {
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'excluded' => 'Types to exclude',
+			),
+			'default' => array('excluded' => array()),
+			'checkparas' => array(
+				'excluded' => function($in) {
+					return is_array($in);
+				}
+			),
+		))) return false;
+		$arr = array();
+		foreach(self::$stringToType as $key => $value) {
+			if(!in_array($value, $paras['excluded'], true)) {
+				$arr[$key] = $value;
+			}
+		}
+		return function($in) use($arr) {
+			if(isset($arr[$in])) {
+				return $arr[$in];
+			} else {
+				return false;
+			}
+		};
+	}
+	// Returns an array of arrays, one for each type
+	public function getTypeSynonyms(array $paras = array()) {
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'excluded' => 'Types to exclude',
+			),
+			'default' => array('excluded' => array()),
+			'checkparas' => array(
+				'excluded' => function($in) {
+					return is_array($in);
+				}
+			),
+		))) return false;
+		$arr = array();
+		foreach(self::$stringToType as $key => $value) {
+			if(!in_array($value, $paras['excluded'], true)) {
+				$arr[$value][] = $key;
+			}
+		}
+		return $arr;
+	}
+	public function getTypeSynonymsAsString(array $paras = array()) {
+		$arr = $this->getTypeSynonyms($paras);
+		$out = '';
+		foreach($arr as $key => $value) {
+			$out .= self::typeToString($key) . ': ' . implode(', ', $value) 
+				. PHP_EOL;
+		}
+		return $out;
+	}
+
+	/*
 	 * Kinds of Article objects
 	 */
 	public function isor() {
@@ -356,16 +476,51 @@ trait CommonArticle {
 	public function ispdf() {
 		return $this->getNameParser()->extension() === 'pdf';
 	}
-	abstract public function isredirect();
-	abstract public function resolve_redirect();
-	abstract public function issupplement();
-	abstract public function isthesis();
-	abstract public function thesis_getuni();
-	abstract public function thesis_gettype();
-	abstract public function supp_getbasic();
+	public function issupplement() {
+		return $this->type === self::SUPPLEMENT;
+	}
+	public function isredirect() {
+		return $this->type === self::REDIRECT;
+	}
+	public function resolve_redirect() {
+		if($this->isredirect()) {
+			return (string) $this->parent;
+		} else {
+			return $this->name();
+		}
+	}
+	public function isthesis() {
+		return $this->type === self::THESIS;
+	}
+	public function thesis_getuni() {
+	// get the university for a thesis
+		if(!$this->isthesis()) {
+			return false;
+		} else {
+			return $this->publisher();
+		}
+	}
+	public function thesis_gettype() {
+		if(!$this->isthesis()) {
+			return false;
+		} else {
+			return $this->series;
+		}
+	}
+	public function supp_getbasic() {
+		if($this->issupplement()) {
+			return (string) $this->parent;
+		} else {
+			return false;
+		}
+	}
 	public function isinpress() {
 	// checks whether file is in "in press" (and therefore, year etcetera cannot be given)
 		return ($this->start_page === 'in press');
+	}
+	public function isweb() {
+	// is this a web publication?
+		return $this->type === self::WEB;
 	}
 	private function getEnclosing() {
 		if($this->parent) {
@@ -2426,50 +2581,99 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			return false;
 		}
 		$this->echopdfcontent();
-		$name = $this->name;
-		$doi = $this->menu(array(
-			'head' => 'If this file has a DOI or AMNH handle, please enter it.',
+		$converter = $this->getConverterToType(array(
+			'excluded' => array(self::REDIRECT),
+		));
+		$hdlValidator = self::getValidator('hdl');
+		$doiValidator = self::getValidator('doi');
+		return $this->menu(array(
+			'head' => 
+				'If this file has a DOI or AMNH handle, please enter it. Otherwise, enter the type of the file.',
+			'helpinfo' =>
+				'In addition to the regular commands, the following synonyms are accepted for the several types:' . PHP_EOL 
+				. $this->getTypeSynonymsAsString(array(
+					'excluded' => array(self::REDIRECT),
+				)),
 			'options' => array(
-				'c' => "continue to direct input of data",
-				'o' => "open the file",
-				'r' => "re-use a citation from a NOFILE entry",
+				'o' => 'open the file',
+				'r' => 're-use a citation from a NOFILE entry',
+				// fake commands:
+				// 't' => 'set type',
+				// 'd' => 'enter doi',
+				// 'h' => 'enter hdl',
 			),
-			'processcommand' => function($in) {
-				return Sanitizer::trimdoi($in);
-			},
-			'validfunction' => function($in, $options) {
-				if(array_key_exists($in, $options) || strlen($in) > 2) {
-					return true;
+			'processcommand' => function($cmd, &$data) use($converter, $doiValidator, $hdlValidator) {
+				if($cmd === 'o' || $cmd === 'r') {
+					return $cmd;
+				}
+				$type = $converter($cmd);
+				if($type !== false) {
+					$data = $type;
+					return 't';
+				}
+				// try doi
+				$cmd = Sanitizer::trimdoi($cmd);
+				if($doiValidator($cmd)) {
+					$data = $cmd;
+					return 'd';
+				}
+				// try hdl
+				if(substr($cmd, 0, 22) === 'http://hdl.handle.net/') {
+					$cmd = substr($cmd, 22);
+				}
+				if($hdlValidator($cmd)) {
+					$data = $cmd;
+					return 'h';
 				} else {
 					return false;
 				}
+			},
+			'validfunction' => function() {
+				return true;
 			},
 			'process' => array(
 				'o' => function() {
 					$this->openf();
 					return true;
 				},
+				'r' => function(&$cmd, &$data) {
+					if($this->reuseNoFile()) {
+						$cmd = true;
+						$data = NULL;
+						return false;
+					} else {
+						return true;
+					}
+				},
+				't' => function(&$cmd, &$data) {
+					$this->type = $data;
+					$cmd = false;
+					$data = NULL;
+					return false;
+				},
+				'h' => function(&$cmd, &$data) {
+					$this->set(array('hdl' => $data));
+					if($this->expandamnh()) {
+						$cmd = true;
+						$data = NULL;
+						return false;
+					} else {
+						echo "Could not find data at the AMNH." . PHP_EOL;
+						return true;					
+					}
+				},
+				'd' => function(&$cmd, &$data) {
+					$this->set(array('doi' => $doi));
+					if($this->expanddoi()) {
+						$cmd = true;
+						$data = NULL;
+						return false;
+					} else {
+						return true;
+					}
+				},
 			),
 		));
-		switch($doi) {
-			case 'c': return false;
-			case 'r':
-				if($this->reuseNofile()) {
-					return true;
-				}
-		}
-		if(substr($doi, 0, 22) === 'http://hdl.handle.net/') {
-			$this->set(array('hdl' => substr($doi, 22)));
-			if($this->expandamnh()) {
-				return true;
-			} else {
-				echo "Could not find data at the AMNH." . PHP_EOL;
-				return false;
-			}
-		} else {
-			$this->set(array('doi' => $doi));
-			return $this->expanddoi();
-		}
 	}
 	private function reuseNofile() {
 		$handle = $this->menu(array(

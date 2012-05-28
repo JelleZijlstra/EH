@@ -11,6 +11,8 @@ interface ArticleInterface {
 	const MISCELLANEOUS = 6;
 	const REDIRECT = 7; // ID of target in "parent"
 	const SUPPLEMENT = 8; // ID of target in "parent", kind of supplement in "title"
+	public static function typeToString($type);
+	
 	/*
 	 * Constructors
 	 */

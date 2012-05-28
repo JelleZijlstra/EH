@@ -7,7 +7,7 @@
 abstract class Sanitizer {
 	public static /* string */ function trimDoi(/* string */ $in) {
 		return trim(preg_replace(
-			"/([\.;\(]$|^[:]|^doi:\s*)|^http:\/\/dx\.doi\.org\//", 
+			"/[\.;\(]$|^:|^doi:|^http:\/\/dx\.doi\.org\//", 
 			"", trim($in)
 		));
 	}

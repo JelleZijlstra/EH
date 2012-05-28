@@ -55,6 +55,14 @@ class StopException extends Exception {
 	}
 }
 
+// Used when a method gets invalid input
+class EHInvalidInputException extends EHException {
+	public function __construct($input, $code = self::E_RECOVERABLE, Exception $previous = NULL) {
+		$msg = 'Invalid input: ' . Sanitizer::varToString($input);
+		parent::__construct($msg, $code, $previous);
+	}
+}
+
 // Catch as many errors as possible
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
 	$msg = $errstr . ' (errno ' . $errno . ') at ' . $errfile . ', line ' 

@@ -66,6 +66,9 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			return false;
 		}
 	}
+	protected function name() {
+		return $this->name;
+	}
 	
 	public $ids; //array of properties for various less-common identifiers
 	public $bools; // array of boolean flags
@@ -103,7 +106,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 				$this->end_page = $in[15];
 				$this->url = $in[16];
 				$this->doi = $in[17];
-				$this->type = $in[18];
+				$this->type = (int) $in[18];
 				$this->publisher = $in[20];
 				$this->location = $in[21];
 				$this->pages = $in[22];
@@ -119,7 +122,8 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 					);
 				}
 				$this->name = $in[0];
-				$this->folder = 'SEE ' . $in[1];
+				$this->type = self::REDIRECT;
+				$this->parent = $in[1];
 				break;
 			case 'n': // new NOFILE entry
 				// revise so it can somewhat take into account ListEntry::add()
@@ -190,7 +194,8 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 	}
 	public static function makeNewRedirect($name, $target, ContainerList $parent) {
 		$obj = new self(NULL, 'e', $parent);
-		$obj->folder = 'SEE ' . $target;
+		$obj->type = self::REDIRECT;
+		$obj->folder = $target;
 		$obj->name = $name;
 		$obj->setCurrentDate();
 		$parent->addEntry($obj, array('isnew' => true));
@@ -270,9 +275,26 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 	// This function does various kinds of cleanups and tweaks. It's a mess,
 	// though, and should be organized better.
 		/*
-		 * completion of partial citations
+		 * Fix old style
 		 */
 		$this->setType();
+		if(substr($this->folder, 0, 4) === 'SEE ') {
+			$this->parent = $this->resolve_redirect();
+			$this->folder = 'NOFILE';
+		}
+		if(isset($this->title[0]) && ($this->title[0] === '/')) {
+			$tmp = explode('/', $this->title);
+			$this->title = $tmp[1];
+			$this->parent = $tmp[2];
+		}
+		if(preg_match('/^([A-Za-z]+) thesis, (.*)$/u', $this->publisher, $matches)) {
+			$this->series = $matches[1];
+			$this->publisher = $matches[2];
+		}
+		
+		/*
+		 * completion of partial citations
+		 */
 		// expand journals
 		$this->expandjournal();
 		// automatically detect title in MS papers
@@ -293,7 +315,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			if(!$this->p->has($target))
 				$this->warn('invalid redirect target', 'folder');
 			else if($this->p->isredirect($target))
-				$this->folder = 'SEE ' . $this->p->resolve_redirect($target);
+				$this->parent = $this->p->resolve_redirect($target);
 		}
 		if($this->issupplement()) {
 			$supplement_remove = array('authors', 'year', 'journal', 'volume', 
@@ -305,8 +327,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			$target = $this->supp_getbasic();
 			// resolve redirect
 			if($this->p->isredirect($target))
-				$this->title = preg_replace('@^/([^/]+)/.*$@u', '/$1/' . $this->p->resolve_redirect($target), $this->title);
-
+				$this->parent = $this->p->resolve_redirect($target);
 		}
 		foreach(array('parturl') as $field) {
 			if($this->$field) {
@@ -481,8 +502,11 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		 */
 		if(!$this->folder)
 			$this->warn('no content', 'folder');
-		if(!$this->isor('redirect', 'fullissue') && !$this->title)
+		if(!$this->isor('redirect', 'fullissue') && !$this->title) {
+			var_dump($this->type);
+			var_dump($this->isredirect());
 			$this->warn('no content', 'title');
+		}
 		if(!$this->isor('redirect', 'fullissue', 'supplement', 'erratum') && !$this->authors)
 			$this->warn('no content', 'authors');
 		if(!$this->isor('redirect', 'inpress') && !$this->volume && $this->journal)
@@ -676,27 +700,6 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 	// returns whether this 'file' is a file
 		return ($this->folder !== 'NOFILE');
 	}
-	public function isredirect() {
-		return (substr($this->folder, 0, 4) === 'SEE ');
-	}
-	public function resolve_redirect() {
-		if($this->isredirect()) {
-			$target = substr($this->folder, 4);
-			if($this->p->has($target))
-				return $target;
-			else {
-				$this->warn('invalid redirect target', 'folder');
-				return false;
-			}
-		} else {
-			return $this->name;
-		}
-	}
-	public function issupplement() {
-		// some pieces have no title
-		if(!isset($this->title[0])) return false;
-		return ($this->title[0] === '/');
-	}
 	public function isamnh() {
 		return in_array(
 			$this->journal,
@@ -707,35 +710,6 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 				'Memoirs of the American Museum of Natural History',
 				)
 			);
-	}
-	public function isweb() {
-	// is this a web publication?
-		return (!$this->volume && !$this->start_page && !$this->journal && !$this->isbn && $this->url);
-	}
-	public function isthesis() {
-		return preg_match('/^(PhD|MSc|BSc) thesis/', $this->publisher);
-	}
-	public function thesis_getuni() {
-	// get the university for a thesis
-		if(!$this->isthesis())
-			return false;
-		// "PhD thesis, " is 12 letters
-		return substr($this->publisher, 12);
-	}
-	public function thesis_gettype() {
-		if(!$this->isthesis())
-			return false;
-		// first three letters
-		return substr($this->publisher, 0, 3);
-	}
-	public function supp_getbasic() {
-		$out = preg_replace('/^.*\//u', '', $this->title);
-		if($this->p->has($out))
-			return $out;
-		else {
-			$this->warn('unknown supplement target', 'title');
-			return false;
-		}
 	}
 	private function hasid() {
 	// whether this file has any kind of online ID

@@ -467,9 +467,9 @@ abstract class SqlListEntry extends ListEntry {
 	}
 
 	/*
-	 * __toString() defaults to returning the name.
+	 * __toString() shall return the name.
 	 */
-	public function __toString() {
+	final public function __toString() {
 		return $this->name();
 	}
 

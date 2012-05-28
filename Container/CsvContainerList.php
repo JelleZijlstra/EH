@@ -273,7 +273,7 @@ abstract class CsvContainerList extends ContainerList {
 			$bfindparas['quiet'] = true;
 			$files = $this->bfind($bfindparas);
 			if(!$files) {
-				return false;
+				return array();
 			}
 		} else {
 			$files = $this->{$paras['array']};

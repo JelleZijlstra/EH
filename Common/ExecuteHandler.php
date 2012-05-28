@@ -1085,7 +1085,7 @@ class ExecuteHandler extends EHICore {
 				'append-err' => 'Whether to append to the stderr file',
 				'input' => 'Place to get input from',
 				'input-string' => 'String to send as stdin input',
-				'return' => 'What to return. Options are "success" (whether the command returned exit status 0), "output" (the stdout output), and "exitvalue" (the exit code of the command).',
+				'return' => 'What to return. Options are "success" (whether the command returned exit status 0), "output" (the stdout output), "outputlines" (the output as an array of lines), and "exitvalue" (the exit code of the command).',
 				'printcmd' => 'Print the command as it is executed',
 				'printout' => 'Whether to print the output',
 				'exceptiononerror' => 'Whether to throw an exception when an error occurs',
@@ -1104,7 +1104,7 @@ class ExecuteHandler extends EHICore {
 				'exceptiononerror' => true,
 			),
 			'listoptions' => array(
-				'return' => array('success', 'output', 'exitvalue'),
+				'return' => array('success', 'output', 'exitvalue', 'outputlines'),
 			),
 			'checkparas' => array(
 				'arg' => function($in) {
@@ -1165,6 +1165,8 @@ class ExecuteHandler extends EHICore {
 			switch($paras['return']) {
 				case 'success':
 					return ($exitval === 0);
+				case 'outputlines':
+					return $output;
 				case 'output':
 					return implode(PHP_EOL, $output);
 				case 'exitvalue':

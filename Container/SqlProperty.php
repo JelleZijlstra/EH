@@ -130,6 +130,7 @@ class SqlProperty {
 			$this->processor = $data['processor'];
 		} else {
 			switch($this->type) {
+				case self::ID:
 				case self::INT:
 					$this->processor = function($in) {
 						return (int) $in;
@@ -152,11 +153,16 @@ class SqlProperty {
 				case self::REFERENCE:
 					$referredClass = $this->referredClass;
 					$this->processor = function($in) use($referredClass) {
-						return $referredClass::withName($in);
+						if($in instanceof $referredClass) {
+							return $in;
+						} elseif(is_string($in)) {
+							return $referredClass::withName($in);
+						} else {
+							return NULL;
+						}
 					};
 					break;
 				case self::TIMESTAMP:
-				case self::ID:
 				case self::CHILDREN:
 				case self::JOINT_REFERENCE:
 				case self::CUSTOM:

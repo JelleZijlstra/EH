@@ -47,7 +47,7 @@ abstract class Property {
 	}
 	protected function validatorDefault() {
 		// default validator accepts anything of the right type
-		switch($this->type) {
+		switch($this->getType()) {
 			case self::INT:
 			case self::REFERENCE:
 			case self::ID:
@@ -82,6 +82,14 @@ abstract class Property {
 				$this->validator = function($in) {
 					return is_array($in);
 				};
+				break;
+			case self::CUSTOM:
+				$this->validator = function() {
+					return true;
+				};
+				break;
+			default:
+				throw new EHInvalidArgumentException($this->getType());
 		}
 	}
 	
@@ -93,7 +101,7 @@ abstract class Property {
 		return $this->processor;
 	}
 	protected function processorDefault() {
-		switch($this->type) {
+		switch($this->getType()) {
 			case self::ID:
 			case self::INT:
 				$this->processor = function($in) {
@@ -115,7 +123,7 @@ abstract class Property {
 				};
 				break;
 			case self::REFERENCE:
-				$referredClass = $this->referredClass;
+				$referredClass = $this->getReferredClass();
 				$this->processor = function($in) use($referredClass) {
 					if($in instanceof $referredClass) {
 						return $in;
@@ -140,7 +148,7 @@ abstract class Property {
 	/*
 	 * Constructor
 	 */
-	protected function set(array $data, $name) {
+	protected function set(array $data, $field) {
 		if(isset($data[$field])) {
 			$this->$field = $data[$field];
 		} else {

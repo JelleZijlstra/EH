@@ -966,7 +966,7 @@ class ExecuteHandler extends EHICore {
 			// return command if valid
 			if($cmd !== false && ((is_string($cmd) 
 				&& array_key_exists($cmd, $paras['options'])) 
-				|| $paras['validfunction']($cmd, $paras['options']))) {
+				|| $paras['validfunction']($cmd, $paras['options'], $data))) {
 				if(isset($paras['process'][$cmd])) {
 					if($paras['process'][$cmd]($cmd, $data) === false) {
 						break;

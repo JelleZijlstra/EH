@@ -916,39 +916,13 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		$this->addyear = $time["year"];
 		return true;
 	}
-	// Manual input
-	protected function trymanual() {
-		// apply global setting
-		if(!$this->p->addmanual) {
-			return false;
-		}
-		echo "Please enter data for this file" . PHP_EOL .
-		"'q' in any place: quit and move to the next file" . PHP_EOL .
-		"'s': save the file" . PHP_EOL .
-		"'e': edit all information" . PHP_EOL .
-		"'d': try entering a DOI again" . PHP_EOL .
-		"'o': open the file" . PHP_EOL;
-		$params = array("authors", "year", "title", "journal", "volume", 
-			"issue", "start_page", "end_page", "pages", "url", "parent", 
-			"publisher",  "isbn", "location", "parturl"
-		);
-		foreach($params as $key) {
-			while(true) {
-				switch($cmd = $this->getline($key . ": ")) {
-					case 'q': return false;
-					case 's': break 3;
-					case 'd': $this->doiamnhinput(); break;
-					case 'o': $this->openf(); break;
-					case 'e': $this->edit(array('cannotmove' => true)); break;
-					default: $this->$key = $cmd; break 2;
-				}
-			}
-		}
-		if($this->parent && !$this->p->has($this->parent)) {
+	protected function manuallyFillProperty($field) {
+		$result = $this->fillScalarProperty($field);
+		if($field === 'parent' && strlen($this->parent) > 0 && !$this->p->has($this->parent)) {
 			echo 'Adding the enclosing file...' . PHP_EOL;
 			$this->p->addNofile(array('handle' => $this->parent));
 		}
-		return true;
+		return $result;
 	}
 	/* SMALL UTILITIES */
 	public function needsdata() {

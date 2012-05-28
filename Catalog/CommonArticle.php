@@ -124,24 +124,7 @@ trait CommonArticle {
 		}
 		return $this->nameParser;
 	}
-	
-	/*
-	 * Validators. Should ultimately be organized in some other way.
-	 */
-	public static function getValidator($field) {
-		switch($field) {
-			case 'hdl':
-				return function($in) {
-					return preg_match('/^\d+(\.\d+)?\/(\d+)$/u', $in);
-				};
-			case 'doi':
-				return function($in) {
-					return preg_match('/^10\.[A-Za-z0-9\.\/\[\]<>\-;:_()+]+$/u', $in);
-				};
-			default: return false;
-		}
-	}
-	
+
 	/*
 	 * Basic operations with files.
 	 */
@@ -1809,8 +1792,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			return true;
 		}
 		switch($this->getNameParser()->extension()) {
-			case '.PDF': echo "Warning: uppercase file extension." . PHP_EOL;
-			case '.pdf':
+			case 'PDF': echo "Warning: uppercase file extension." . PHP_EOL;
+			case 'pdf':
 				$this->putpdfcontent();
 				/*
 				 * Try various options
@@ -2669,7 +2652,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					}
 				},
 				'd' => function(&$cmd, &$data) {
-					$this->set(array('doi' => $doi));
+					$this->set(array('doi' => $data));
 					if($this->expanddoi()) {
 						$cmd = true;
 						$data = NULL;
@@ -2709,7 +2692,107 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		return true;
 	}
-	abstract protected function trymanual();
+	protected function trymanual() {
+		// apply global setting
+		if(!$this->p->addmanual) {
+			return false;
+		}
+		switch($this->type) {
+			case self::JOURNAL:
+				$fields = array(
+					'authors', 'year', 'title', 'journal', 'volume', 'issue', 
+					'start_page', 'end_page', 'url',
+				);
+				break;
+			case self::CHAPTER:
+				$fields = array(
+					'authors', 'year', 'title', 'start_page', 'end_page',
+					'parent', 'url',
+				);
+				break;
+			case self::BOOK:
+				$fields = array(
+					'authors', 'year', 'title', 'pages', 'publisher', 'isbn',
+				);
+				break;
+			case self::THESIS:
+				$fields = array(
+					'authors', 'year', 'title', 'pages', 'publisher', 'series',
+				);
+				break;
+			case self::SUPPLEMENT:
+				$fields = array(
+					'title', 'parent',
+				);
+				break;
+			case self::WEB:
+			case self::MISCELLANEOUS:
+				$fields = array(
+					'authors', 'year', 'title', 'url',
+				);
+		}
+		foreach($fields as $field) {
+			if(!$this->manuallyFillProperty($field)) {
+				return true;
+			}
+		}
+		return true;
+	}
+	protected function fillScalarProperty($field) {
+		// returns false if we want to stop inputting data, true if we need more
+		$processor = self::getFieldObject($field)->getProcessor();
+		$validator = self::getFieldObject($field)->getValidator();
+		return $this->menu(array(
+			'prompt' => $field . ': ',
+			'options' => array(
+				'e' => "Enter the file's command-line interface",
+				'd' => "Try entering a DOI again",
+				's' => "Save the file now",
+				'o' => "Open the file",
+				// Fake:
+				// 'set' => "Set an option",
+			),
+			'processcommand' => function($in, &$data) use($processor) {
+				// enable having 'e' or 's' as field by typing '\e'
+				if(isset($in[0]) and ($in[0] === '\\')) {
+					$in = substr($in, 1);
+				}
+				$data = $processor($in);
+				return 'set';
+			},
+			'validfunction' => function($cmd, $options, $data) use($validator) {
+				if($cmd === 'set') {
+					return $validator($data);
+				} else {
+					return array_key_exists($cmd, $options);
+				}
+			},
+			'process' => array(
+				'e' => function() {
+					$this->edit();
+					return true;
+				},
+				'o' => function() {
+					$this->openf();
+					return true;
+				},
+				'd' => function() {
+					$this->doiamnhinput();
+					return true;
+				},
+				's' => function(&$cmd) {
+					$cmd = false;
+					return false;
+				},
+				'set' => function(&$cmd, $data) use($field) {
+					$cmd = true;
+					$this->set(array($field => $data));
+					return false;
+				},
+			),
+		));
+	}
+	abstract protected function manuallyFillProperty();
 	// Expanding AMNH data and DOIs
 	private function expandamnh(array $paras = array()) {
 		if($this->process_paras($paras, array(
@@ -3190,4 +3273,126 @@ Content-Disposition: attachment
 			return true;
 		}
 	}
+	/*
+	 * Fields. Ultimately, should be split between the two.
+	 *
+	 * CsvArticle now actually has SqlProperty objects, which for the moment
+	 * is unlikely to cause problems, since CsvProperty does not add anything
+	 * to Property.
+	 */
+	protected static function fillFields() {
+		return array(
+			'id' => new SqlProperty(array(
+				'name' => 'id',
+				'type' => Property::ID)),
+			'name' => new SqlProperty(array(
+				'name' => 'name',
+				'type' => Property::STRING)),
+			'folder' => new SqlProperty(array(
+				'name' => 'folder',
+				'type' => Property::REFERENCE,
+				'referredClass' => 'Folder')),
+			'added' => new SqlProperty(array(
+				'name' => 'added',
+				'type' => Property::TIMESTAMP)),
+			'type' => new SqlProperty(array(
+				'name' => 'type',
+				'validator' => function($in) {
+					// this is an enum, so check whether it has an allowed value
+					return true;
+				},
+				'type' => Property::INT)),
+			'authors' => new SqlProperty(array(
+				'name' => 'authors',
+				'type' => Property::CUSTOM,
+				'automatedFiller' => function($id) {
+					$authors = Database::singleton()->select(array(
+						'fields' => array('author_id'),
+						'from' => 'article_author',
+						'where' => array(
+							'article_id' => Database::escapeValue($id)
+						),
+						'order_by' => 'position',
+					));
+					$out = array();
+					foreach($authors as $author) {
+						$out[] = Author::withId($author['article_id']);
+					}
+					return $out;
+				})),
+			'year' => new SqlProperty(array(
+				'name' => 'year',
+				'validator' => function($in) {
+					return preg_match('/^(\d+|undated|\d+–\d+)$/', $in);
+				},
+				'type' => Property::STRING)),
+			'title' => new SqlProperty(array(
+				'name' => 'title',
+				'type' => Property::STRING)),
+			'journal' => new SqlProperty(array(
+				'name' => 'journal',
+				'type' => Property::STRING, // Property::REFERENCE as soon as everything is sorted out
+				'referredClass' => 'journal')),
+			'series' => new SqlProperty(array(
+				'name' => 'series',
+				'type' => Property::STRING)),
+			'volume' => new SqlProperty(array(
+				'name' => 'volume',
+				'type' => Property::STRING)),
+			'issue' => new SqlProperty(array(
+				'name' => 'issue',
+				'type' => Property::STRING)),
+			'start_page' => new SqlProperty(array(
+				'name' => 'start_page',
+				'type' => Property::STRING)),
+			'end_page' => new SqlProperty(array(
+				'name' => 'end_page',
+				'type' => Property::STRING)),
+			'pages' => new SqlProperty(array(
+				'name' => 'pages',
+				'type' => Property::STRING)),
+			'url' => new SqlProperty(array(
+				'name' => 'url',
+				'type' => Property::STRING)),
+			'doi' => new SqlProperty(array(
+				'name' => 'doi',
+				'type' => Property::STRING)),
+			'parent' => new SqlProperty(array(
+				'name' => 'parent',
+				'type' => Property::REFERENCE,
+				'referredClass' => 'Article')),
+			'publisher' => new SqlProperty(array(
+				'name' => 'publisher',
+				'type' => Property::STRING, // Property::REFERENCE as soon as everything is sorted out
+				'referredClass' => 'Publisher')),
+			'part_identifier' => new SqlProperty(array(
+				'name' => 'part_identifier',
+				'type' => Property::BOOL)),
+			'misc_data' => new SqlProperty(array(
+				'name' => 'misc_data',
+				'type' => Property::STRING)),
+			'children' => new SqlProperty(array(
+				'name' => 'children',
+				'type' => Property::CHILDREN)),
+		);
+	}
+	
+	/*
+	 * Validators. Should ultimately be organized in some other way.
+	 */
+	public static function getValidator($field) {
+		switch($field) {
+			case 'hdl':
+				return function($in) {
+					return preg_match('/^\d+(\.\d+)?\/(\d+)$/u', $in);
+				};
+			case 'doi':
+				return function($in) {
+					return preg_match('/^10\.[A-Za-z0-9\.\/\[\]<>\-;:_()+]+$/u', $in);
+				};
+			default: 
+				return self::getFieldObject($in)->getValidator();
+		}
+	}
+
 }

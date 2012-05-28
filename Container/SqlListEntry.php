@@ -106,47 +106,6 @@ abstract class SqlListEntry extends ListEntry {
 			return $obj;
 		}
 	}
-	
-	/*
-	 * Return all the fields of the object that are filled from the DB, in the
-	 * form of an array of SqlProperty objects.
-	 */
-	protected static $fields = array();
-	
-	/*
-	 * PHP does not allow abstract static functions, but I don't know another 
-	 * way to convey the requirement that subclasses must implement this method.
-	abstract static protected function fillFields();
-	 */
-
-	private static function grabFields() {
-		if(static::$fields === array()) {
-			static::$fields = static::fillFields();
-		}
-	}
-	
-	final public static function fields() {
-		static::grabFields();
-		return static::$fields;
-	}
-	
-	final public static /* SqlProperty */ function getFieldObject(/* string */ $field) {
-		static::grabFields();
-		// if the field does not exist, that is a programming error, and
-		// throwing an exception is appropriate
-		return static::$fields[$field];
-	}
-	
-	final protected static function fieldsAsStrings() {
-		return array_map(function($in) {
-			return $in->getName();
-		}, self::fields());
-	}
-
-	final protected /* bool */ function validateProperty(/* string */ $property, /* mixed */ $value) {
-		$validator = self::getFieldObject($property)->getValidator();
-		return $validator($value);
-	}
 
 	/*
 	 * Getter: fills properties if necessary.

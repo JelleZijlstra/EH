@@ -361,7 +361,7 @@ abstract class SqlListEntry extends ListEntry {
 					$this->id = $in['id'];
 					break;
 				case SqlProperty::CUSTOM:
-					$creator = $field->getCreator();
+					$creator = $field->getAutomatedFiller();
 					$this->$name = $creator($this->id);
 					break;
 				case SqlProperty::JOINT_REFERENCE:

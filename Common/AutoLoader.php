@@ -14,9 +14,13 @@ abstract class AutoLoader {
 		'ContainerList' => '/Container/ContainerList.php',
 		'CsvContainerList' => '/Container/CsvContainerList.php',
 		'CsvListEntry' => '/Container/CsvListEntry.php',
+		
 		'ListEntry' => '/Container/ListEntry.php',
 		'SqlContainerList' => '/Container/SqlContainerList.php',
 		'SqlListEntry' => '/Container/SqlListEntry.php',
+		
+		'Property' => '/Container/Property.php',
+		'CsvProperty' => '/Container/CsvProperty.php',
 		'SqlProperty' => '/Container/SqlProperty.php',
 		
 		// Catalog

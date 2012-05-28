@@ -146,11 +146,13 @@ trait CommonArticle {
 			'checklist' => array(
 				'type' => 'Type of path: shell, url, or none',
 				'folder' => 'Whether we want the folder only',
+				'fullpath' => 'Whether the full path should be returned',
 				'print' => 'Whether the result should be printed',
 			),
 			'default' => array(
 				'type' => 'none',
 				'folder' => false,
+				'fullpath' => true,
 				'print' => false,
 			),
 			'listoptions' => array(

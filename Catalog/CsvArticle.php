@@ -231,7 +231,12 @@ class CsvArticle extends CsvListEntry {
 		if($this->folder === NULL) {
 			$out = $this->name;
 		} else {
-			$out = LIBRARY . "/" . $this->folder;
+			if($paras['fullpath']) {
+				$out = LIBRARY . '/';
+			} else {
+				$out = '';
+			}
+			$out .= $this->folder;
 			if($this->sfolder) {
 				$out .= "/" . $this->sfolder;
 				if($this->ssfolder)
@@ -802,11 +807,13 @@ class CsvArticle extends CsvListEntry {
 		if(isset($this->p->sugglist[$key])) {
 			$suggs = $this->p->sugglist[$key]->getsugg();
 			foreach($suggs as $sugg) {
+				$sugg = array_pad($sugg, 3, '');
 				echo 'Suggested placement. Folder: ' . $sugg[0];
-				if($sugg[1]) {
+				if($sugg[1] !== '') {
 					echo '; subfolder: ' . $sugg[1];
-					if($sugg[2])
+					if($sugg[2] !== '') {
 						echo '; sub-subfolder: ' . $sugg[2];
+					}
 				}
 				$cmd = $this->menu(array(
 					'head' => PHP_EOL,

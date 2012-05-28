@@ -20,66 +20,6 @@ class CsvArticleList extends CsvContainerList {
 		$redirected->format();
 		return true;
 	}
-	/* load related lists */
-	private function build_lslist() {
-	/*
-	 * Gets list of files into $this->lslist, an array of results (Article form).
-	 */
-		echo "acquiring list of files... ";
-		$list = $this->shell(array(
-			'cmd' => 'find',
-			'arg' => array(
-				LIBRARY, '-regex', '.*\.[a-z][a-z]*'
-			),
-			'printout' => false,
-			'return' => 'outputlines',
-		));
-		$this->lslist = array();
-		foreach($list as $line) {
-			$line = str_replace(LIBRARY . '/', '', $line);
-			$path = explode('/', $line);
-			$name = array_pop($path);
-			$this->lslist[$name] = new self::$childClass(
-				array($name, $path), 'l', $this
-			);
-		}
-		echo 'done' . PHP_EOL;
-		return true;
-	}
-	private function build_newlist($path = '', $out = 'newlist') {
-		// why do we need this?
-		if($out === 'p') {
-			return false;
-		}
-		// reset out list
-		$this->$out = array();
-		echo "acquiring list of new files... ";
-		if($path === '') $path = TEMPPATH;
-		// ls output as string
-		$list = $this->shell(array(
-			'cmd' => 'ls',
-			'arg' => array('-p', $path),
-			'printout' => false,
-			'return' => 'output',
-		));
-		if($list === '') {
-			echo "no new files found" . PHP_EOL;
-			return false;
-		}
-		// output associative array
-		$list = preg_split("/\n/", $list);
-		foreach($list as $file) {
-			if(!preg_match("/\/$/", $file) && $file) {
-				$this->{$out}[$file] = new self::$childClass(NULL, 'e', $this);
-				$this->{$out}[$file]->name = $file;
-			}
-		}
-		if(count($this->$out) === 0) {
-			echo "no new files found" . PHP_EOL;
-			return false;
-		}
-		echo "done" . PHP_EOL;
-	}
 	/* adding stuff to the list */
 	public function addEntry(ListEntry $file, array $paras = array()) {
 	// Adds a Article to this ArticleList object
@@ -218,179 +158,6 @@ class CsvArticleList extends CsvContainerList {
 		foreach($this as $property => $value) {
 			echo $property . ': '; echo $value . PHP_EOL;
 		}
-	}
-	/* check */
-	public function check(array $paras = array()) {
-	/*
-	 * Checks the catalog for things to be changed:
-	 * - Checks whether there are any files in the catalog that are not in the
-	 *   library
-	 * - Checks whether there are any files in the library that are not in the
-	 *   catalog
-	 * - Checks whether there are new files in temporary storage that need to be
-	 *   added to the library
-	 */
-	 	if($this->process_paras($paras, array(
-	 		'name' => __FUNCTION__,
-	 		'checklist' => array( /* No paras */ ),
-	 	)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		// always get new ls list, since changes may have occurred since previous check()
-		$this->build_lslist();
-		if(!$this->lslist) {
-			return false;
-		}
-		$date = new DateTime();
-		$this->log(PHP_EOL . PHP_EOL . 'check() session ' . $date->format('Y-m-d H:i:s') . PHP_EOL);
-		try {
-			// check whether all files in the catalog are in the actual library
-			$this->csvcheck();
-			// check whether all files in the actual library are in the catalog
-			$this->lscheck();
-			// check whether there are any files to be burst
-			$this->burstcheck();
-			// check whether there are any new files to be added
-			$this->newcheck();
-		} catch(StopException $e) {
-			echo 'Exiting from check (' . $e->getMessage() . ')' . PHP_EOL;
-			return false;
-		}
-		return true;
-	}
-	private function csvcheck() {
-	/* check CSV list for problems
-	 * - detect articles in catalog that are not in the actual library
-	 * - correct filepaths
-	 */
-		echo 'checking whether cataloged articles are in library... ';
-		foreach($this->c as $file) {
-			// if file already exists in right place
-			if(isset($this->lslist[$file->name])) {
-				// update path
-				$file->setpath(array('fromfile' => $this->lslist[$file->name]));
-			} elseif($file->isfile() && !$file->isredirect()) {
-				echo PHP_EOL;
-				$cmd = $this->menu(array(
-					'head' => 'Could not find file ' . $file->name,
-					'options' => array(
-						'i' => 'give information about this file',
-						'l' => 'file has been renamed',
-						'r' => 'remove this file from the catalog',
-						'm' => 'move to the next component',
-						's' => 'skip this file',
-						'q' => 'quit the program',
-						'e' => 'edit the file',
-					),
-					'process' => array(
-						'i' => function() use($file) {
-							$file->inform();
-						},
-						'e' => function() use($file) {
-							$file->edit();
-						},
-						'q' => function() {
-							throw new StopException('csvcheck');					
-						},
-						'm' => function(&$cmd) {
-							$cmd = true;
-							return false;
-						},
-					),
-				));
-				switch($cmd) {
-					case 'l': 
-						$file->effect_rename(array(
-							'elist' => $this->c,
-							'searchlist' => $this->lslist,
-						)); 
-						break;
-					case 'r':
-						$file->log('Removed');
-						$this->needsave();
-						$this->removeEntry($file->name);
-						break;
-					case 's':
-						break;
-					default:
-						return $cmd;
-				}
-			}
-		}
-		echo 'done' . PHP_EOL;
-		return true;
-	}
-	private function lscheck() {
-	/* check LS list for errors
-	 * - Detect articles in the library that are not in the catalog.
-	 */
-		echo "checking whether articles in library are in catalog... ";
-		foreach($this->lslist as $lsfile) {
-			if(!$this->has($lsfile->name)) {
-				echo PHP_EOL;
-				$cmd = $this->menu(array(
-					'options' => array(
-						'l' => 'file has been renamed',
-						'a' => 'add the file to the catalog',
-						's' => 'skip this file',
-						'q' => 'quit the program',
-						'm' => 'move to the next component of the catalog',
-					),
-					'head' => 
-						'Could not find file ' . $lsfile->name . ' in catalog',
-				));
-				switch($cmd) {
-					case 'q': 
-						throw new StopException('lscheck');
-					case 'm': 
-						return true;
-					case 'l': 
-						$lsfile->effect_rename(array(
-							'elist' => $this->lslist,
-							'searchlist' => $this->c,
-							'domove' => true,
-						)); 
-						break;
-					case 's': 
-						break;
-					case 'a':
-						$lsfile->add();
-						$this->addEntry($lsfile, array('isnew' => true));
-						break;
-				}
-			}
-		}
-		echo "done" . PHP_EOL;
-		return true;
-	}
-	private function burstcheck() {
-		echo 'checking for files to be bursted... ';
-		$this->build_newlist(BURSTPATH, 'burstlist');
-		if($this->burstlist) {
-			foreach($this->burstlist as $file) {
-				$file->burst();
-			}
-		}
-		echo 'done' . PHP_EOL;
-		return true;
-	}
-	private function newcheck() {
-	// look for new files
-		echo 'checking for newly added articles... ';
-		$this->build_newlist();
-		if($this->newlist) {
-			foreach($this->newlist as $file) {
-				switch($file->newadd(array('lslist' => $this->lslist))) {
-					case 0: 
-						return true;
-					case 1: 
-						continue 2;
-					case 2: 
-						$this->addEntry($file, array('isnew' => true));
-						break;
-				}
-			}
-		}
-		echo 'done' . PHP_EOL;
-		return true;
 	}
 	private function find_dups($key, $needle, array $paras = array()) {
 		if(!isset($paras['quiet']))
@@ -659,33 +426,17 @@ class CsvArticleList extends CsvContainerList {
 	}
 	/* first kind of suggestions: full paths */
 	public function build_sugglist() {
-	// builds an array of Suggester objects, with $file->getkey() (currently first word of the filename) used as the array key.
-		foreach($this->c as $file) {
-			// get information
-			$folders = $file->path(array('folder' => true));
-			$key = $file->getkey();
-			// if there is already a Suggester for this object, add the current folderstr to it
-			if(isset($this->sugglist[$key])) {
-				$this->sugglist[$key]->add($folders);
-			} else {
-				// else, make a new Suggester
-				$this->sugglist[$key] = new Suggester($folders);
-			}
+		if($this->sugglist === array()) {
+			return $this->build_lslist();
 		}
+		return true;
 	}
 	/* 2nd kind of suggestions: list folders with IDs */
 	public function build_foldertree() {
-	// build a tree of folders (array of array of arrays) used for suggestions
-		foreach($this->c as $file) {
-			//exclude non-files and redirects
-			if($file->isor('nofile', 'redirect')) continue;
-			if(!isset($this->foldertree[$file->folder]))
-				$this->foldertree[$file->folder] = array();
-			if(!isset($this->foldertree[$file->folder][$file->sfolder]) and $file->sfolder)
-				$this->foldertree[$file->folder][$file->sfolder] = array();
-			if(!isset($this->foldertree[$file->folder][$file->sfolder][$file->ssfolder]) and $file->ssfolder)
-				$this->foldertree[$file->folder][$file->sfolder][$file->ssfolder] = array();
+		if($this->foldertree === array()) {
+			return $this->build_lslist();
 		}
+		return true;
 	}
 	private function build_foldertree_n() {
 	// as build_foldertree(), but include number of files
@@ -852,26 +603,4 @@ class CsvArticleList extends CsvContainerList {
 		return true;
 	}
 
-}
-
-class Suggester {
-// cf. ArticleList::$sugglist
-	private $suggestions;
-	function __construct($folders) {
-		$this->suggestions[$folders] = 1;
-	}
-	function add($folders) {
-		if(!isset($this->suggestions[$folders]))
-			$this->suggestions[$folders] = 0;
-		$this->suggestions[$folders]++;
-	}
-	function sort() {
-		arsort($this->suggestions);
-	}
-	function getsugg() {
-		$this->sort();
-		foreach($this->suggestions as $key => $count)
-			$out[] = explode(':', $key);
-		return $out;
-	}
 }

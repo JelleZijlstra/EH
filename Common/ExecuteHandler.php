@@ -960,7 +960,7 @@ class ExecuteHandler extends EHICore {
 					continue;
 				}
 			}
-			if($paras['processcommand']) {
+			if($paras['processcommand'] && !array_key_exists($cmd, $paras['options'])) {
 				$cmd = $paras['processcommand']($cmd, $data);
 			}
 			// return command if valid

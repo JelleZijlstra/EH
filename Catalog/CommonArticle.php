@@ -2286,6 +2286,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$authorstring .= $author;
 		}
 		$data['authors'] = $authorstring;
+		// if it isn't, this code fails miserably anyway
+		$data['type'] = self::JOURNAL;
 		$this->set($data);
 		return true;
 	}
@@ -2344,6 +2346,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$authorstring .= $author;
 		}
 		$data['authors'] = $authorstring;
+		// if it isn't, this code fails miserably anyway
+		$data['type'] = self::JOURNAL;
 		$this->set($data);
 		return true;
 	}
@@ -2382,6 +2386,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$authors = preg_replace("/((?<=\.), |& )/", "; ", $authors);
 		// comma before initials
 		$data['authors'] = preg_replace("/(?<=[a-z]) (?=[A-Z]\.)/", ", ", $authors);
+		$data['type'] = self::JOURNAL;
 		$this->set($data);
 		return true;
 	}
@@ -2441,6 +2446,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		} else {
 			return false;
 		}
+		$data['type'] = self::JOURNAL;
 		$this->set($data);
 		return true;
 	}
@@ -2790,6 +2796,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			array('.', ''),
 			$authors
 		));
+		$data['type'] = self::JOURNAL;
 		$this->set($data);
 		return true;
 	}
@@ -2825,6 +2832,41 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		 */
 		// variables we process from the API result
 		$vars = array('volume', 'issue', 'start_page', 'end_page', 'year', 'title', 'journal', 'isbn', 'authors');
+		$data = array();
+		
+		$doiType = (string) $result->doi->attributes()->type;
+		// values from http://www.crossref.org/schema/queryResultSchema/crossref_query_output2.0.xsd
+		switch($doiType) {
+			case 'journal_title':
+			case 'journal_issue':
+			case 'journal_volume':
+			case 'journal_article':
+				$data['type'] = self::JOURNAL;
+				break;
+			case 'conference_paper':
+			case 'component':
+			case 'book_content':
+				$data['type'] = self::CHAPTER;
+				break;
+			case 'dissertation':
+				$data['type'] = self::THESIS;
+				break;
+			case 'conference_title':
+			case 'conference_series':
+			case 'book_title':
+			case 'book_series':
+				$data['type'] = self::BOOK;
+				break;
+			case 'report-paper_title':
+			case 'report-paper_series':
+			case 'report-paper_content':
+			case 'standard_title':
+			case 'standard_series':
+			case 'standard_content':
+			default:
+				$data['type'] = self::MISCELLANEOUS;
+				break;
+		}
 		// kill leading zeroes
 		$volume = preg_replace("/^0/u", "", (string)$result->volume);
 		$issue = preg_replace("/^0/u", "", (string)$result->issue);
@@ -2844,7 +2886,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$authors .= ", ";
 			$authors .= preg_replace(array("/([^\s])[^\s]*/u", "/\s/u"), array("$1.", ""), (string)$author->given_name);
 		}
-		$data = array();
 		foreach($vars as $var) {
 			if(${$var}) {
 				// echo differences if verbose is set

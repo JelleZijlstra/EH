@@ -10,6 +10,7 @@ trait CommonArticle {
 	 */
 	public $id; // ID in database
 	public $name; //name of file (or handle of citation)
+	public $type; //type of file
 	public $year; //year published
 	public $title; //title (chapter title for book chapter; book title for full book or thesis)
 	public $series; //journal series
@@ -71,14 +72,7 @@ trait CommonArticle {
 			'arg' => 'None',
 			'execute' => 'callmethod'),
 	);
-	/*
-	 * Constructors
-	 */
-	/* PHP doesn't allow abstract static methods
-	abstract public static makeNewNoFile(string $handle, ContainerList $parent);
-	abstract public static makeNewRedirect(string $handle, mixed $target, ContainerList $parent);
-	 */
-	
+
 	/*
 	 * Some wrappers.
 	 */
@@ -416,6 +410,23 @@ trait CommonArticle {
 		return $this->$func();
 	}
 	abstract protected function cite_getclass();
+	protected function determineType() {
+	// get the type of citation needed (journal, book, chapter, etc.)
+		// redirect resolution magic?
+		if($this->issupplement())
+			return 'n/a';
+		if($this->isweb())
+			return 'web';
+		if($this->journal)
+			return 'journal';
+		if($this->parent)
+			return 'chapter';
+		if($this->isthesis())
+			return 'thesis';
+		if($this->title)
+			return 'book';
+		return 'unknown';
+	}
 	public function getAuthors(array $paras) {
 		if(!$this->process_paras($paras, array(
 			'name' => __FUNCTION__,

@@ -2,7 +2,7 @@
 // methods that should not get redirects resolved by ContainerList
 ContainerList::$resolve_redirect_exclude[] = array('CsvArticle', 'isredirect');
 
-class CsvArticle extends CsvListEntry {
+class CsvArticle extends CsvListEntry implements ArticleInterface {
 	use CommonArticle;
 	
 	// should become reference to a Folder object
@@ -103,6 +103,7 @@ class CsvArticle extends CsvListEntry {
 				$this->end_page = $in[15];
 				$this->url = $in[16];
 				$this->doi = $in[17];
+				$this->type = $in[18];
 				$this->publisher = $in[20];
 				$this->location = $in[21];
 				$this->pages = $in[22];
@@ -215,7 +216,7 @@ class CsvArticle extends CsvListEntry {
 		$out[] = $this->end_page;
 		$out[] = $this->url;
 		$out[] = $this->doi;
-		$out[] = '';
+		$out[] = $this->type;
 		$out[] = '';
 		$out[] = $this->publisher;
 		$out[] = $this->location;
@@ -271,6 +272,7 @@ class CsvArticle extends CsvListEntry {
 		/*
 		 * completion of partial citations
 		 */
+		$this->setType();
 		// expand journals
 		$this->expandjournal();
 		// automatically detect title in MS papers
@@ -772,10 +774,32 @@ class CsvArticle extends CsvListEntry {
 		}
 	}
 	/* CITING */
+	protected function setType() {
+		if($this->type !== '') {
+			return true;
+		}
+		if($this->isredirect()) {
+			$this->type = self::REDIRECT;
+		} elseif($this->issupplement()) {
+			$this->type = self::SUPPLEMENT;
+		} elseif($this->isweb()) {
+			$this->type = self::WEB;
+		} elseif($this->journal) {
+			$this->type = self::JOURNAL;
+		} elseif($this->parent) {
+			$this->type = self::CHAPTER;
+		} elseif($this->isthesis()) {
+			$this->type = self::THESIS;
+		} elseif($this->title) {
+			$this->type = self::BOOK;
+		} else {
+			$this->type = self::MISCELLANEOUS;
+		}
+	}
 	protected function cite_getclass() {
 	// get the type of citation needed (journal, book, chapter, etc.)
 		// redirect resolution magic?
-		if($this->issupplement)
+		if($this->issupplement())
 			return 'n/a';
 		if($this->isweb())
 			return 'web';

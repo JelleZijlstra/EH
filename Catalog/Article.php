@@ -6,7 +6,7 @@
  * An Article should be a member of the $p array of a ArticleList object.
  */
 
-class Article extends SqlListEntry {
+class Article extends SqlListEntry implements ArticleInterface {
 	use CommonArticle;
 	
 	protected /* int */ $id;
@@ -31,18 +31,6 @@ class Article extends SqlListEntry {
 	protected function journal() {
 		return $this->journal->name();
 	}
-	
-	/*
-	 * Types.
-	 */
-	const JOURNAL = 9; // no zero because that value may signify an error
-	const CHAPTER = 1;
-	const BOOK = 2;
-	const THESIS = 3; // kind of degree in "series", university in "publisher"
-	const WEB = 5;
-	const MISCELLANEOUS = 6;
-	const REDIRECT = 7; // ID of target in "parent"
-	const SUPPLEMENT = 8; // ID of target in "parent", kind of supplement in "title"
 
 	/*
 	 * Kinds of files

@@ -28,6 +28,7 @@ abstract class AutoLoader {
 		'CommonArticleList' => '/Catalog/CommonArticleList.php',
 		'Article' => '/Catalog/Article.php',
 		'ArticleList' => '/Catalog/ArticleList.php',
+		'ArticleInterface' => '/Catalog/ArticleInterface.php',
 		'Author' => '/Catalog/Author.php',
 		'AuthorList' => '/Catalog/AuthorList.php',
 		'City' => '/Catalog/City.php',

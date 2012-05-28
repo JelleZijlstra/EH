@@ -144,9 +144,15 @@ class CsvArticle extends CsvListEntry {
 					);
 				}
 				$this->name = $in[0];
-				$this->folder = $in[1];
-				$this->sfolder = $in[2];
-				$this->ssfolder = $in[3];
+				if(is_array($in[1])) {
+					$this->folder = $in[1][0];
+					$this->sfolder = $in[1][1];
+					$this->ssfolder = $in[1][2];
+				} else {
+					$this->folder = $in[1];
+					$this->sfolder = $in[2];
+					$this->ssfolder = $in[3];
+				}
 				if($code === 'l') {
 					return;
 				} else {

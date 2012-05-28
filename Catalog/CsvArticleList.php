@@ -10,124 +10,6 @@ class CsvArticleList extends CsvContainerList {
 	protected function __construct(array $commands = array()) {
 		parent::__construct(self::$ArticleList_commands);
 	}
-	public function makeredirect($handle, $target) {
-	// redirect one file to another
-		if(!$this->has($handle)) {
-			return false;
-		}
-		$redirected = $this->get($handle);
-		$redirected->name = 'SEE ' . $target;
-		$redirected->format();
-		return true;
-	}
-	/* adding stuff to the list */
-	public function addEntry(ListEntry $file, array $paras = array()) {
-	// Adds a Article to this ArticleList object
-	// Type hint is ListEntry instead of Article to keep E_STRICT happy
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'checklist' => array(
-				'name' =>
-					'Filename to write under (if different from $file->name',
-				'isnew' =>
-					'Whether we need to do things we do for new files (as opposed to old ones merely loaded into the catalog)',
-			),
-			'default' => array(
-				'name' => $file->name,
-				'isnew' => false,
-			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		while($this->has($paras['name'])) {
-			echo "File " . $paras['name'] . " already exists.";
-			if($this->isredirect($file->name)) echo ' The existing file is a redirect.';
-			echo PHP_EOL;
-			$cmd = $this->menu(array(
-				'options' => array(
-					's' => 'skip this file',
-					'r' => 'overwrite the existing file',
-					'm' => 'rename the new file',
-				),
-			));
-			switch($cmd) {
-				case 's': return false;
-				case 'r': break 2;
-				case 'm':
-					$newname = $this->getline(array(
-						'prompt' => 'New name of file: '
-					));
-					if(!$file->move($newname)) {
-						echo 'Error moving file' . PHP_EOL;
-						continue 2;
-					}
-					break;
-			}
-		}
-		parent::addEntry($file);
-		if($paras['isnew']) {
-			$this->log($file->name, 'Added file to catalog');
-			echo "Added to catalog!" . PHP_EOL;
-			$this->needsave();
-			$this->format($file->name);
-		}
-		return true;
-	}
-	public function add_nofile(array $paras = array()) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(
-				0 => 'handle',
-			),
-			'checklist' => array(
-				'handle' => 'Handle of new entry',
-			),
-			'askifempty' => array(
-				'handle',
-			),
-			'checkparas' => array(
-				'handle' => function($in) {
-					// NOFILEs can't have dots in their names
-					if(!is_string($in) || (strpos($in, '.') !== false)) {
-						return false;
-					}
-					return !$this->has($in);
-				},
-			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$childClass = self::$childClass;
-		return $this->addEntry(
-			$childClass::makeNofile($paras['handle'], $this),
-			array('isnew' => true)
-		);
-	}
-	public function addRedirect(array $paras = array()) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(
-				// eh returns them in reverse order, though I'd like to change that
-				1 => 'handle',
-				0 => 'target',
-			),
-			'checklist' => array(
-				'handle' => 'Handle of new redirect',
-				'target' => 'Target of new redirect',
-			),
-			'askifempty' => array('handle', 'target'),
-			'checkparas' => array(
-				'handle' => function($in) {
-					return !$this->has($in);
-				},
-				'target' => function($in) {
-					return $this->has($in);
-				},
-			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		return $this->addEntry(
-			new self::$childClass(
-				array($paras['handle'], $paras['target']), 'r', $this
-			),
-			array('isnew' => true)
-		);
-	}
 	/* parsing - needs overall revision, and coordination with Parser class */
 	protected function parse_wlist(array $paras) {
 		if($this->process_paras($paras, array(
@@ -150,24 +32,18 @@ class CsvArticleList extends CsvContainerList {
 		return parse_wtext($paras['file']);
 	}
 	/* do things with files */
-	public function cli() {
-	// Performs various functions in a pseudo-command line. A main entry point.
-		$this->setup_commandline('Catalog');
-	}
-	public function listinfo() {
-		foreach($this as $property => $value) {
-			echo $property . ': '; echo $value . PHP_EOL;
-		}
-	}
 	private function find_dups($key, $needle, array $paras = array()) {
-		if(!isset($paras['quiet']))
+		if(!isset($paras['quiet'])) {
 			$paras['quiet'] = true;
+		}
 		$paras[$key] = $needle;
 		$files = $this->bfind($paras);
-		if(($files === false) or (count($files) === 0))
+		if(($files === false) or (count($files) === 0)) {
 			return false;
-		foreach($files as $file)
+		}
+		foreach($files as $file) {
 			echo $file->name . PHP_EOL . $file->citepaper() . PHP_EOL;
+		}
 		return $files;
 	}
 	public function dups(array $paras = array()) {
@@ -399,45 +275,6 @@ class CsvArticleList extends CsvContainerList {
 		}
 		return;
 	}
-	/* citing */
-	public function setcitetype(array $paras = array()) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(
-				0 => 'new',
-			),
-			'checklist' => array(
-				'new' => 'New citetype',
-			),
-			'askifempty' => array(
-				'new',
-			),
-			'checkparas' => array(
-				'new' => function($in) {
-					return self::validcitetype($in);
-				},
-			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$this->citetype = $paras['new'];
-		return $this->citetype;
-	}
-	public static function validcitetype($in) {
-		return method_exists(self::$childClass, 'cite' . $in);
-	}
-	/* first kind of suggestions: full paths */
-	public function build_sugglist() {
-		if($this->sugglist === array()) {
-			return $this->build_lslist();
-		}
-		return true;
-	}
-	/* 2nd kind of suggestions: list folders with IDs */
-	public function build_foldertree() {
-		if($this->foldertree === array()) {
-			return $this->build_lslist();
-		}
-		return true;
-	}
 	private function build_foldertree_n() {
 	// as build_foldertree(), but include number of files
 		foreach($this->c as $file) {
@@ -466,141 +303,4 @@ class CsvArticleList extends CsvContainerList {
 			}
 		}
 	}
-	/* URL magic */
-	private $urls_by_journal;
-	public function geturlsjournal($journal, $paras = '') {
-		if(!$journal)
-			return false;
-		if(!$paras['rebuild'] and !isset($this->urls_by_journal)) {
-			$this->urls_by_journal = $this->mlist(array(
-				'field' => 'gethost',
-				'isfunc' => true,
-				'groupby' => 'journal', 
-				'print' => false, 
-				'printresult' => false,
-			));
-		}
-		if(!is_array($this->urls_by_journal)) return false;
-		return $this->urls_by_journal[$journal] ?: false;
-	}
-	public function temp() {
-	// general cleanup/test function; does whatever it is currently programmed to do (which at the moment is nothing)
-	}
-	public function testtitles($paras = array()) {
-	// Test the findtitle_pdfcontent() method.
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'checklist' => array(
-				'file' => 'File to write results too',
-			),
-			'default' => array('file' => false),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		if($paras['file'])
-			$fp = fopen($paras['file'], 'w');
-		$matches = $mismatches = $impossible = 0;
-		foreach($this->c as $child) {
-			$pdftitle = $child->findtitle_pdfcontent();
-			if(!$pdftitle or $child->title[0] === '/') {
-				$impossible++;
-				continue;
-			}
-			$rectitle = $child->getsimpletitle();
-			$dettitle = $child->getsimpletitle($pdftitle);
-			if(($dettitle !== $rectitle) and
-				($rectitle ? (strpos($dettitle, $rectitle) === false) : true) and
-				($dettitle ? (strpos($rectitle, $dettitle) === false) : true)
-			) {
-				echo 'Title mismatch for file ' . $child->name . PHP_EOL;
-				echo 'Levenshtein distance: ' . ($levenshtein = levenshtein($dettitle, $rectitle)) . PHP_EOL;
-				echo 'Actual title: ' . $child->title . PHP_EOL;
-				echo "\tSimplified as $rectitle\n";
-				echo "\tSimplified as $dettitle\n";
-				echo 'Detected title: ' . $pdftitle . PHP_EOL;
-				$mismatches++;
-				if($paras['file'])
-					fputcsv($fp, array($child->name, $child->title, $pdftitle, $rectitle, $dettitle, $levenshtein));
-			}
-			else {
-				$matches++;
-			}
-		}
-		if($paras['file'])
-			fclose($fp);
-		echo "\n\nTotal matches: $matches\nTotal mismatches: $mismatches\nCould not determine title: $impossible\n";
-	}
-	public function getpdfcontentcache() {
-		if(count($this->pdfcontentcache) !== 0) return false;
-		// this may take huge amounts of memory...
-		ini_set('memory_limit', 1e10);
-		$this->pdfcontentcache = json_decode(file_get_contents(PDFCONTENTCACHE), true);
-		if($this->pdfcontentcache === NULL) {
-			echo 'Error retrieving PDF content cache' . PHP_EOL;
-			return false;
-		}
-		return true;
-	}
-	public function putpdfcontentcache() {
-		// only save if we've actually retrieved the cache
-		if(count($this->pdfcontentcache) > 0) {
-			file_put_contents(
-				PDFCONTENTCACHE,
-				json_encode($this->pdfcontentcache)
-			);
-		}
-	}
-	
-	public function countNameParser(array $paras) {
-		$count = 0;
-		$good = 0;
-		$this->each(function($e) use(&$count, &$good) {
-			$count++;
-			if($e->testNameParser()) {
-				$good++;
-			}
-		});
-		echo $good . ' of ' . $count . ' (' . ($good / $count * 100) . '%)' 
-			. PHP_EOL;
-	}
-	
-	public function renameRegex(array $paras) {
-		if($this->process_paras($paras, array(
-			'name' => __FUNCTION__,
-			'synonyms' => array(
-				0 => 'from',
-				1 => 'to',
-				'f' => 'force',
-			),
-			'checklist' => array(
-				'from' => 'Regex to recognize faulty titles',
-				'to' => 'Replacement',
-				'force' => 'Do not ask for confirmation',
-			),
-			'checkparas' => array(
-				'from' => function($in) {
-					return ($in[0] === '/') and !preg_match('/\/[^\/]*e[^\/]*$/', $in);
-				},
-			),
-			'errorifempty' => array('from', 'to'),
-			'default' => array('force' => false),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		$this->each(function($e) use($paras) {
-			if($e->isredirect()) {
-				return;
-			}
-			if(preg_match($paras['from'], $e->name)) {
-				$newTitle = preg_replace($paras['from'], $paras['to'], $e->name);
-				if($paras['force']) {
-					$cmd = true;
-				} else {
-					$cmd = $this->ynmenu(
-						'Rename "' . $e->name . '" to "' . $newTitle . '"? ');
-				}
-				if($cmd) {
-					$e->move($newTitle);
-				}
-			}
-		});
-		return true;
-	}
-
 }

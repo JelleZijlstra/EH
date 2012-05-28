@@ -72,6 +72,14 @@ trait CommonArticle {
 			'execute' => 'callmethod'),
 	);
 	/*
+	 * Constructors
+	 */
+	/* PHP doesn't allow abstract static methods
+	abstract public static makeNewNoFile(string $handle, ContainerList $parent);
+	abstract public static makeNewRedirect(string $handle, mixed $target, ContainerList $parent);
+	 */
+	
+	/*
 	 * Some wrappers.
 	 */
 	abstract protected function publisher();
@@ -2472,7 +2480,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		$this->set($data);
 		// make redirect
-		$this->p->makeredirect($handle, $this->name);
+		$this->p->addRedirect(array($handle, $this->name));
 		echo 'Data copied.' . PHP_EOL;
 		if($this->ynmenu('Do you want to review and edit information now associated with this file?')) {
 			$this->inform();

@@ -179,18 +179,20 @@ class CsvArticle extends CsvListEntry {
 	public static function makeEmpty(&$parent) {
 		return new self(NULL, 'e', $parent);
 	}
-	public static function makeNofile(/* string */ $name, &$parent) {
+	public static function makeNewNofile(/* string */ $name, ContainerList $parent) {
 		$obj = new self(NULL, 'e', $parent);
 		$obj->folder = 'NOFILE';
 		$obj->name = $name;
 		$obj->add();
+		$parent->add($obj, array('isnew' => true));
 		return $obj;
 	}
-	public static function makeRedirect($name, $target) {
+	public static function makeNewRedirect($name, $target, ContainerList $parent) {
 		$obj = new self(NULL, 'e', $parent);
 		$obj->folder = 'SEE ' . $target;
 		$obj->name = $name;
 		$obj->setCurrentDate();
+		$parent->addEntry($obj, array('isnew' => true));
 		return $obj;
 	}
 	public function toArray() {
@@ -946,7 +948,7 @@ class CsvArticle extends CsvListEntry {
 		}
 		if($this->parent && !$this->p->has($this->parent)) {
 			echo 'Adding the enclosing file...' . PHP_EOL;
-			$this->p->add_nofile(array('handle' => $this->parent));
+			$this->p->addNofile(array('handle' => $this->parent));
 		}
 		return true;
 	}

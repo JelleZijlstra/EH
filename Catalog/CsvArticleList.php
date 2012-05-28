@@ -7,17 +7,9 @@ class CsvArticleList extends CsvContainerList {
 	protected static $logfile = CATALOG_LOG;
 	protected static $childClass = 'CsvArticle';
 	/* core utils */
-	// PHP doesn't seem to like having constructors in traits much
 	protected function __construct(array $commands = array()) {
 		parent::__construct(self::$ArticleList_commands);
-		// set some stuff initially
-		$this->citetype = 'wp';
-		$this->verbosecite = true;
-		$this->includesfn = true;
-		$this->includerefharv = true;
-		$this->addmanual = true;
 	}
-
 	public function makeredirect($handle, $target) {
 	// redirect one file to another
 		if(!$this->has($handle)) {

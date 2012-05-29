@@ -242,7 +242,7 @@ abstract class ListEntry extends ExecuteHandler {
 		foreach($paras as $field => $content) {
 			if(self::hasproperty($field)) {
 				if($this->$field !== $content) {
-					$this->__set($field, $content);
+					$this->$field = $content;
 					$this->p->needsave();
 				}
 			}

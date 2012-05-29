@@ -70,8 +70,10 @@ DROP TABLE IF EXISTS `author`;
 CREATE TABLE `author` (
 	`id` INT UNSIGNED AUTO_INCREMENT,
 	-- In form "J.S." or "Jelle Sjoerd"
-	`firstnames` VARCHAR(255) DEFAULT NULL,
+	`first_names` VARCHAR(255) DEFAULT NULL,
 	`name` VARCHAR(255) NOT NULL,
+	-- E.g. "Jr." or "Sr."
+	`suffix` VARCHAR(255) DEFAULT NULL,
 	PRIMARY KEY(`id`),
 	INDEX(`name`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;

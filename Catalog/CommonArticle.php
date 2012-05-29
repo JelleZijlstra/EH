@@ -1689,6 +1689,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return $this->add() ? 2 : 1;
 	}
 	abstract protected function determinePath();
+	abstract protected function setPathFromArray(array $path);
 	abstract protected function setCurrentDate();
 	private /* bool */ function checkForExistingFile($lslist) {
 		if(!isset($lslist[$this->name])) {

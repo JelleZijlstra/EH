@@ -42,16 +42,15 @@ abstract class CsvListEntry extends ListEntry {
 		}
 	}
 	public function __get($property) {
-		switch($arr = $this->findarray_dyn($property)) {
-			case false:
+		$arr = $this->findarray_dyn($property);
+		if($arr !== false) {
+			if(isset($this->{$arr}[$property])) {
+				return $this->{$arr}[$property];
+			} else {
 				return NULL;
-			default:
-				if(isset($this->{$arr}[$property])) {
-					return $this->{$arr}[$property];
-				} else {
-					return NULL;
-				}
+			}
 		}
+		throw new EHException('Access to undeclared property ' . $property);
 	}
 	public function __isset($property) {
 		switch($arr = $this->findarray_dyn($property)) {

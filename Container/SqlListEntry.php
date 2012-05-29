@@ -37,7 +37,7 @@ abstract class SqlListEntry extends ListEntry {
 				break;
 			case self::CONSTR_FULL:
 				$this->fillPropertiesOnce = true;
-				$this->setProperties($data);
+				$this->set($data);
 				break;
 			default:
 				throw new EHException(
@@ -247,7 +247,7 @@ abstract class SqlListEntry extends ListEntry {
 			}
 		}
 		if(count($vars) === 1) {
-			return $this->setProperties($vars[0]);
+			return $this->set($vars[0]);
 		} else {
 			throw new EHException(
 				"Multiple instances of id " . $id . " detected in table "
@@ -260,40 +260,36 @@ abstract class SqlListEntry extends ListEntry {
 	/*
 	 * Set properties from an array.
 	 */
-	private /* bool */ function setProperties(array $in) {
-		$fields = self::fieldsAsStrings();
-		foreach($in as $key => $value) {
+	public /* bool */ function set(array $paras) {
+	// default method; should be overridden by child classes with more precise 
+	// needs
+		foreach($paras as $key => $value) {
 			if(substr($key, -3, 3) === '_id') {
-				// Get the relevant names. We don't actually need to care about
-				// case, because PHP class names are case-insensitive, but let's
-				// be precise.
-				$name = substr($key, 0, -3);
-				if(!in_array($name, $fields, true)) {
-					throw new EHException('Invalid data key ' . $key);
-				}
-				$id = (int) $value;
-
-				if($id === 0) {
-					$this->$name = NULL;
-				} else {
-					$this->$name = $className::withId($id);
-				}
-			} elseif($key === 'parent') {
-				$id = (int) $value;
-				if($id === 0) {
-					$this->parent = NULL;
-				} else {
-					$className = get_called_class();
-					$this->parent = $className::withId($id);
-				}
-			} else {
-				if(!in_array($key, $fields, true)) {
-					throw new EHException('Invalid data key ' . $key);
-				}
-				$this->$key = $value;
+				$key = substr($key, 0, -3);
 			}
+			$fieldObject = self::getFieldObject($key);
+			if($fieldObject === NULL) {
+				$this->setFakeProperty($key, $value);
+				continue;
+			}
+			$processor = $fieldObject->getProcessor();
+			$value = $processor($value);
+			$validator = $fieldObject->getValidator();
+			if(!$validator($value)) {
+				echo 'set: error: invalid value '
+					. Sanitizer::varToString($value) . ' for field '
+					. Sanitizer::varToString($key);
+				continue;
+			}
+			$this->needSave();
+			// TODO: check whether any types need more things to do
+			$this->$field = $content;
 		}
 		return true;
+	}
+	protected function setFakeProperty($field, $value) {
+		// Subclasses may allow "setting" more properties
+		throw new EHInvalidArgumentException($field);
 	}
 
 	/*
@@ -303,22 +299,20 @@ abstract class SqlListEntry extends ListEntry {
 		$fields = self::fields();
 		foreach($fields as $field) {
 			$name = $field->getName();
+			$processor = $field->getProcessor();
+			if(isset($in[$name])) {
+				$value = $processor($in[$name]);
+			}
 			switch($field->getType()) {
 				case SqlProperty::INT:
 				case SqlProperty::TIMESTAMP:
 				case SqlProperty::STRING:
-					$this->$name = $in[$name];
-					break;
 				case SqlProperty::BOOL:
-					$this->$name = (bool) $in[$name];
-					break;
 				case SqlProperty::REFERENCE:
-					$referredClass = $field->getReferredClass();
-					$this->$name = $referredClass::withId($in[$name . '_id']);
-					break;
 				case SqlProperty::ID:
-					$this->id = $in['id'];
+					$this->$name = $value;
 					break;
+				case SqlProperty::CHILDREN:
 				case SqlProperty::CUSTOM:
 					$creator = $field->getAutomatedFiller();
 					$this->$name = $creator($this->id);
@@ -343,11 +337,10 @@ abstract class SqlListEntry extends ListEntry {
 						$out[] = $otherClass::withId($entry[$otherClassId]);
 					}
 					$this->$name = $out;
-					break;					
-				case SqlProperty::CHILDREN:
-					$manualFiller = $field->getManualFiller();
-					$this->$name = $manualFiller($this, $this->p->table());
 					break;
+				default:
+					throw new EHException(
+						'Unrecognized type: ' . $field->getType());
 			}
 		}
 		return true;
@@ -412,6 +405,7 @@ abstract class SqlListEntry extends ListEntry {
 	 * a different decision.
 	 */
 	public function name() {
+		$this->fillProperties();
 		return $this->name;
 	}
 	public function id() {

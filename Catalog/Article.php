@@ -34,6 +34,47 @@ class Article extends SqlListEntry implements ArticleInterface {
 	/*
 	 * Citing
 	 */
+	/*
+	 * Identifiers
+	 */
+	const URL = 1;
+	const DOI = 2;
+	const JSTOR = 3;
+	const HDL = 4;
+	const PMID = 5;
+	const PMC = 6;
+	const EUROBATS = 7;
+	const EDITION = 8;
+	public static function identifierToString($in) {
+		switch($in) {
+			case self::URL: return 'url';
+			case self::DOI: return 'doi';
+			case self::JSTOR: return 'jstor';
+			case self::HDL: return 'hdl';
+			case self::PMID: return 'pmid';
+			case self::PMC: return 'pmc';
+			case self::EUROBATS: return 'eurobats';
+			case self::EDITION: return 'edition';			
+			default: throw new EHInvalidArgumentException($in);
+		}
+	}
+	public static function stringToIdentifier($in) {
+		switch($in) {
+			case 'url': return self::URL;
+			case 'doi': return self::DOI;
+			case 'jstor': return self::JSTOR;
+			case 'hdl': return self::HDL;
+			case 'pmid': return self::PMID;
+			case 'pmc': return self::PMC;
+			case 'eurobats': return self::EUROBATS;
+			case 'edition': return self::EDITION;
+			default: throw new EHInvalidArgumentException($in);
+		}
+	}
+	
+	/*
+	 * Fields
+	 */
 	protected static function fillFields() {
 		return array(
 			'id' => new SqlProperty(array(

@@ -774,7 +774,7 @@ class Taxon extends CsvListEntry {
 	/*
 	 * Field for SqlListEntry.
 	 */
-	public function fields() {
+	protected static function fillFields() {
 		return array(
 			new SqlProperty(array(
 				'name' => 'id',
@@ -785,6 +785,9 @@ class Taxon extends CsvListEntry {
 			new SqlProperty(array(
 				'name' => 'rank',
 				'type' => SqlProperty::INT)),
+			new SqlProperty(array(
+				'name' => 'comments',
+				'type' => SqlProperty::STRING)),
 		);
 	}
 }

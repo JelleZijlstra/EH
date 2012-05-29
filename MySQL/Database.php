@@ -182,7 +182,7 @@ class Database extends ExecuteHandler {
 							if(!isset($value['field'])) {
 								return false;
 							}
-							if(!isset($value['comparator']) || !in_array($compataror, array('=', '>', '>=', '<=', '<', 'RLIKE'), true)) {
+							if(!isset($value['comparator']) || !in_array($value['compataror'], array('=', '>', '>=', '<=', '<', 'RLIKE'), true)) {
 								return false;
 							}
 							if(!isset($value['content'])) {

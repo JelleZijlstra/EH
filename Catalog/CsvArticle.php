@@ -228,38 +228,15 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		return $out;
 	}
 	private function _path(array $paras) {
-		// if there is no folder, just return filename and hope for the best
-		if($this->folder === NULL) {
-			$out = $this->name;
-		} else {
-			if($paras['fullpath']) {
-				$out = LIBRARY . '/';
-			} else {
-				$out = '';
-			}
-			$out .= $this->folder;
+		$out = '';
+		if($this->folder !== NULL) {
+			$out .= '/' . $this->folder;
 			if($this->sfolder) {
-				$out .= "/" . $this->sfolder;
-				if($this->ssfolder)
-					$out .= "/" . $this->ssfolder;
+				$out .= '/' . $this->sfolder;
+				if($this->ssfolder) {
+					$out .= '/' . $this->ssfolder;
+				}
 			}
-			if(!$paras['folder'])
-				$out .= "/" . $this->name;
-		}
-		// process output
-		switch($paras['type']) {
-			case 'shell':
-				$out = escapeshellarg($out);
-				break;
-			case 'url':
-				$out = str_replace('%2F', '/', rawurlencode($out));
-				break;
-			case 'none':
-				break;
-		}		
-
-		if($paras['print']) {
-			echo $out . PHP_EOL;
 		}
 		return $out;
 	}

@@ -54,8 +54,22 @@ class Article extends SqlListEntry implements ArticleInterface {
 		// TODO
 	}
 	/*
-	 * Citing
+	 * Basic operations
 	 */
+	protected function _path(array $paras) {
+		$this->fillProperties();
+		return $this->folder->path();
+	}
+	public function isfile() {
+		$this->fillProperties();
+		return $this->folder !== NULL;
+	}
+	protected function _getAuthors() {
+		$this->fillProperties();
+		return array_map(function($author) {
+			return array($author->first_names, $author->surname, $author->suffix);
+		}, $this->authors);
+	}
 	/*
 	 * Identifiers
 	 */

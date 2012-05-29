@@ -166,7 +166,28 @@ trait CommonArticle {
 		if(!$this->isfile()) {
 			return false;
 		}
-		return $this->_path($paras);
+		$out = $this->_path($paras);
+		if($paras['fullpath']) {
+			$out = LIBRARY . $out;
+		}
+		if(!$paras['folder']) {
+			$out .= '/' . $this->name;
+		}
+		// process output
+		switch($paras['type']) {
+			case 'shell':
+				$out = escapeshellarg($out);
+				break;
+			case 'url':
+				$out = str_replace('%2F', '/', rawurlencode($out));
+				break;
+			case 'none':
+				break;
+		}
+		if($paras['print']) {
+			echo $out . PHP_EOL;
+		}
+		return $out;
 	}
 	abstract protected function _path(array $paras);
 	public function openf(array $paras = array()) {
@@ -549,23 +570,6 @@ trait CommonArticle {
 		$func = 'cite' . $this->p->citetype;
 		return $this->$func();
 	}
-	protected function determineType() {
-	// get the type of citation needed (journal, book, chapter, etc.)
-		// redirect resolution magic?
-		if($this->issupplement())
-			return 'n/a';
-		if($this->isweb())
-			return 'web';
-		if($this->journal)
-			return 'journal';
-		if($this->parent)
-			return 'chapter';
-		if($this->isthesis())
-			return 'thesis';
-		if($this->title)
-			return 'book';
-		return 'unknown';
-	}
 	public function getAuthors(array $paras) {
 		if(!$this->process_paras($paras, array(
 			'name' => __FUNCTION__,
@@ -680,7 +684,7 @@ trait CommonArticle {
 		}
 		$out .= ". ";
 		switch($this->type) {
-			case 'journal':
+			case self::JOURNAL:
 				// journals (most common case)
 				$out .= $this->journal() . " ";
 				if(strlen($this->series) > 0) {
@@ -693,7 +697,7 @@ trait CommonArticle {
 				}
 				$out .= ':' . $this->pages() . '.';
 				break;
-			case 'chapter':
+			case self::CHAPTER:
 				if($this->start_page === $this->end_page) {
 					$out .= "P. $this->start_page in ";
 				} else {
@@ -712,7 +716,7 @@ trait CommonArticle {
 				}
 				$out .= ".";
 				break;
-			case 'book':
+			case self::BOOK:
 				$out .= ' ' . $this->publisher();
 				if(strlen($this->pages) > 0) {
 					$out .= ", " . $this->pages . " pp";
@@ -758,22 +762,23 @@ trait CommonArticle {
 			return $out1;
 		}
 		switch($this->type) {
-			case 'journal': 
+			case self::JOURNAL: 
 				$temp = 'journal'; 
 				break;
-			case 'book': case 'chapter': 
+			case self::BOOK: 
+			case self::CHAPTER: 
 				$temp = 'book'; 
 				break;
-			case 'thesis': 
+			case self::THESIS: 
 				$temp = 'thesis'; 
 				break;
-			case 'unknown': 
+			case self::MISCELLANEOUS: 
 				if($out1) {
 					return $out1;
 				} else {
 					return false;
 				}
-			case 'web': 
+			case self::WEB: 
 				$temp = 'web'; 
 				break;
 			default:
@@ -814,20 +819,20 @@ trait CommonArticle {
 		$paras['isbn'] = $this->getIdentifier('isbn');
 		$paras['pages'] = $this->pages();
 		switch($this->type) {
-			case 'journal':
+			case self::JOURNAL:
 				$paras['title'] = $this->title;
 				$paras['journal'] = $this->journal;
 				$paras['volume'] = $this->volume;
 				$paras['issue'] = $this->issue;
 				break;
-			case 'book':
+			case self::BOOK:
 				$paras['title'] = $this->title;
 				if(!$paras['pages']) {
 					$paras['pages'] = $this->pages;
 				}
 				$paras['edition'] = $this->edition;
 				break;
-			case 'chapter':
+			case self::CHAPTER:
 				$paras['chapter'] = $this->title;
 				$enclosing = $this->getEnclosing();
 				$paras['title'] = $enclosing->title;
@@ -871,13 +876,13 @@ trait CommonArticle {
 					}
 				}
 				break;
-			case 'thesis':
+			case self::THESIS:
 				$paras['title'] = $this->title;
 				$paras['degree'] = $this->thesis_gettype();
 				$paras['publisher'] = $this->thesis_getuni();
 				$paras['pages'] = $this->pages;
 				break;
-			case 'web':
+			case self::WEB:
 				$paras['title'] = $this->title;
 				$paras['publisher'] = $this->publisher();
 				break;
@@ -916,7 +921,7 @@ trait CommonArticle {
 	public function citelemurnews() {
 		$authors = $this->getAuthors(array());
 		switch($this->type) {
-			case 'journal':
+			case self::JOURNAL:
 				$out = $authors . '. ' .
 					$this->year . '. ' .
 					$this->title . '. ' .
@@ -925,7 +930,7 @@ trait CommonArticle {
 					$this->start_page . '–' .
 					$this->end_page . '.';
 				break;
-			case 'book':
+			case self::BOOK:
 				$out = $authors . '. ' .
 					$this->year . '. ' .
 					$this->title . '. ' .
@@ -963,7 +968,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		));
 		$out .= '</b> ' . $this->year . '. ';
 		switch($this->type) {
-			case 'journal':
+			case self::JOURNAL:
 				$out .= $this->title;
 				$out .= '. ';
 				$out .= '<i>' . $this->journal() . '</i>, ';
@@ -974,7 +979,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= '<b>' . $this->volume . '</b>: ';
 				$out .= $this->pages() . '.';
 				break;
-			case 'chapter':
+			case self::CHAPTER:
 				$enclosing = $this->getEnclosing();
 				$out .= $this->title . '. <i>in</i> ';
 				$out .= str_replace("(Ed", '(ed', $this->getEnclosingAuthors());
@@ -985,7 +990,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 				$out .= '.';
 				break;
-			case 'book':
+			case self::BOOK:
 				$out .= '<i>' . $this->title . '.</i>';
 				if($this->pages) {
 					$out .= ' ' . $this->pages . ' pp.';
@@ -1014,12 +1019,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		$out .= $this->getAuthors($authorsParas);
 		$out .= ' ' . $this->year . '. ';
 		switch($this->type) {
-			case 'journal':
+			case self::JOURNAL:
 				$out .= $this->title . '. <i>' . $this->journal() . '</i>, ';
 				// TODO: series
 				$out .= '<b>' . $this->volume . '</b>, ' . $this->pages();
 				break;
-			case 'book':
+			case self::BOOK:
 				$out .= '<i>' . $this->title . '.</i> ';
 				$out .= $this->publisher() . ', ';
 				if($this->location()) {
@@ -1027,7 +1032,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 				$out .= $this->pages . ' pp.';
 				break;
-			case 'chapter':
+			case self::CHAPTER:
 				$enclosing = $this->getEnclosing();
 				$out .= $this->title . '. <i>In</i> ';
 				$out .= $this->getEnclosingAuthors($authorsParas);
@@ -1038,7 +1043,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 				$out .= $enclosing->pages . ' pp.';
 				break;
-			case 'thesis':
+			case self::THESIS:
 				$out .= '<i>' . $this->title . '</i>. Unpublished ';
 				switch($this->thesis_gettype()) {
 					case 'PhD': $out .= 'Ph.D.'; break;
@@ -1071,14 +1076,14 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		));
 		$out .= ' ' . $this->year . '. ' . $this->title;
 		switch($this->type) {
-			case 'journal':
+			case self::JOURNAL:
 				$out .= '. ' . $this->journal() . ', ';
 				if($this->series) {
 					$out .= 'ser. ' . $this->series . ', ';
 				}
 				$out .= $this->volume . ':' . $this->pages();
 				break;
-			case 'chapter':
+			case self::CHAPTER:
 				$out .= ', ' . $this->pages() . '. <i>In</i> ';
 				$bauthors = $this->getEnclosingAuthors(array(
 					'capitalizeNames' => true,
@@ -1096,7 +1101,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$out .= ' (ed.), ';
 				}
 				$out .= $this->getEnclosing()->title;
-			case 'book':
+			case self::BOOK:
 				$out .= '. ' . $this->publisher();
 				if($this->location()) {
 					$out .= ', ' . $this->location();
@@ -1133,16 +1138,16 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		};
 		$out = '@';
 		switch($this->type) {
-			case 'journal':
+			case self::JOURNAL:
 				$out .= 'article';
 				break;
-			case 'book':
+			case self::BOOK:
 				$out .= 'book';
 				break;
-			case 'chapter':
+			case self::CHAPTER:
 				$out .= 'incollection';
 				break;
-			case 'thesis':
+			case self::THESIS:
 				switch($this->thesis_gettype()) {
 					case 'PhD': $out .= 'phdthesis'; break;
 					case 'MSc': $out .= 'mscthesis'; break;
@@ -1168,16 +1173,16 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		) . '}';
 		$add('title', $title, true);
 		switch($this->type) {
-			case 'thesis':
+			case self::THESIS:
 				$add('school', $this->thesis_getuni(), true);
 				break;
-			case 'journal':
+			case self::JOURNAL:
 				$add('journal', $this->journal(), true);
 				$add('volume', $this->volume);
 				$add('number', $this->issue);
 				$add('pages', $this->start_page . '--' . $this->end_page);
 				break;
-			case 'book':
+			case self::BOOK:
 				$add('publisher', $this->publisher(), true);
 				$add('address', $this->location());
 				break;
@@ -1197,11 +1202,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		));
 		$out .= ' (' . $this->year . ') ';
 		switch($this->type) {
-			case 'journal':
+			case self::JOURNAL:
 				$out .= $this->title . '. <i>' . $this->journal() . '</i>, ';
 				$out .= $this->volume . ', ' . $this->pages();
 				break;
-			case 'chapter':
+			case self::CHAPTER:
 				$out .= $this->title . '. <i>In</i>: ';
 				$out .= $this->getEnclosingAuthors(array(
 					'separator' => ',',
@@ -1212,7 +1217,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$out .= $enclosing->publisher() . ', ' . $enclosing->location();
 				$out .= ', pp. ' . $this->pages();
 				break;
-			case 'book':
+			case self::BOOK:
 				$out .= '<i>' . $this->title . '</i>. ' . $this->publisher();
 				if($this->location()) {
 					$out .= ', ' . $this->location();

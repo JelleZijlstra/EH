@@ -1041,6 +1041,9 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			'doi' => new CsvProperty(array(
 				'name' => 'doi',
 				'type' => Property::STRING)),
+			'isbn' => new CsvProperty(array(
+				'name' => 'isbn',
+				'type' => Property::STRING)),
 			'parent' => new CsvProperty(array(
 				'name' => 'parent',
 				'type' => Property::STRING)),

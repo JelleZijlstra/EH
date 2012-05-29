@@ -178,15 +178,16 @@ class Database extends ExecuteHandler {
 							if(!is_string($key)) {
 								return false;
 							}
-						}
-						if(!isset($value['field'])) {
-							return false;
-						}
-						if(!isset($value['comparator']) || !in_array($compataror, array('=', '>', '>=', '<=', '<', 'RLIKE'), true)) {
-							return false;
-						}
-						if(!isset($value['content'])) {
-							return false;
+						} else {
+							if(!isset($value['field'])) {
+								return false;
+							}
+							if(!isset($value['comparator']) || !in_array($compataror, array('=', '>', '>=', '<=', '<', 'RLIKE'), true)) {
+								return false;
+							}
+							if(!isset($value['content'])) {
+								return false;
+							}
 						}
 					}
 				},

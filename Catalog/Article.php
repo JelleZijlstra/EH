@@ -9,27 +9,49 @@
 class Article extends SqlListEntry implements ArticleInterface {
 	use CommonArticle;
 	
+	// properties specific to Article
 	protected /* int */ $id;
-	protected /* string */ $name;
 	protected /* Folder */ $folder;
 	protected /* string */ $added;
-	protected /* int */ $type;
-	protected /* Author array */ $authors;
-	protected /* string|int */ $year;
-	protected /* string */ $title;
-	protected /* Journal */ $journal;
-	protected /* string */ $series;
-	protected /* string */ $volume;
-	protected /* string */ $issue;
-	protected /* string */ $start_page;
-	protected /* string */ $end_page;
-	// TODO: more properties
+	protected /* string array */ $identifiers;
 	
 	protected function publisher() {
-		return $this->publisher->name();
+		return (string) $this->publisher;
 	}
 	protected function journal() {
-		return $this->journal->name();
+		return (string) $this->journal;
+	}
+	protected function location() {
+		if($this->publisher === NULL) {
+			return false;
+		} else {
+			return (string) $this->publisher->location;
+		}
+	}
+	protected function doi() {
+		return $this->getIdentifier('doi');
+	}
+	protected function hdl() {
+		return $this->getIdentifier('hdl');
+	}
+	protected function jstor() {
+		return $this->getIdentifier('jstor');
+	}
+	protected function _getIdentifier($name) {
+		if(isset($this->identifiers[$name])) {
+			return $this->identifiers[$name];
+		} else {
+			return false;
+		}
+	}
+	/*
+	 * Constructors
+	 */
+	public static function makeNewNoFile(/* string */ $handle, ContainerList $parent) {
+		// TODO
+	}
+	public static function makeNewRedirect(/* string */ $handle, $target, ContainerList $parent) {
+		// TODO
 	}
 	/*
 	 * Citing
@@ -94,27 +116,10 @@ class Article extends SqlListEntry implements ArticleInterface {
 				'name' => 'type',
 				'validator' => function($in) {
 					// this is an enum, so check whether it has an allowed value
+					// TODO
 					return true;
 				},
 				'type' => Property::INT)),
-			'authors' => new SqlProperty(array(
-				'name' => 'authors',
-				'type' => Property::CUSTOM,
-				'automatedFiller' => function($id) {
-					$authors = Database::singleton()->select(array(
-						'fields' => array('author_id'),
-						'from' => 'article_author',
-						'where' => array(
-							'article_id' => Database::escapeValue($id)
-						),
-						'order_by' => 'position',
-					));
-					$out = array();
-					foreach($authors as $author) {
-						$out[] = Author::withId($author['article_id']);
-					}
-					return $out;
-				})),
 			'year' => new SqlProperty(array(
 				'name' => 'year',
 				'validator' => function($in) {
@@ -146,12 +151,6 @@ class Article extends SqlListEntry implements ArticleInterface {
 			'pages' => new SqlProperty(array(
 				'name' => 'pages',
 				'type' => Property::STRING)),
-			'url' => new SqlProperty(array(
-				'name' => 'url',
-				'type' => Property::STRING)),
-			'doi' => new SqlProperty(array(
-				'name' => 'doi',
-				'type' => Property::STRING)),
 			'parent' => new SqlProperty(array(
 				'name' => 'parent',
 				'type' => Property::REFERENCE,
@@ -163,9 +162,43 @@ class Article extends SqlListEntry implements ArticleInterface {
 			'misc_data' => new SqlProperty(array(
 				'name' => 'misc_data',
 				'type' => Property::STRING)),
-			'children' => new SqlProperty(array(
-				'name' => 'children',
-				'type' => Property::CHILDREN)),
+			'authors' => new SqlProperty(array(
+				'name' => 'authors',
+				'type' => Property::CUSTOM,
+				'automatedFiller' => function($id) {
+					$authors = Database::singleton()->select(array(
+						'fields' => array('author_id'),
+						'from' => 'article_author',
+						'where' => array(
+							'article_id' => $id,
+						),
+						'order_by' => 'position',
+					));
+					$out = array();
+					foreach($authors as $author) {
+						$out[] = Author::withId($author['article_id']);
+					}
+					return $out;
+				})),
+			'identifiers' => new SqlProperty(array(
+				'name' => 'identifiers',
+				'type' => Property::CUSTOM,
+				'automatedFiller' => function($id) {
+					$identifiers = Database::singleton()->select(array(
+						'fields' => array('data', 'identifier'),
+						'from' => 'article_identifier',
+						'where' => array(
+							'article_id' => $id,
+						),
+					));
+					$out = array();
+					foreach($identifiers as $identifier) {
+						$name = Article::identifierToString(
+							$identifier['identifier']);
+						$out[$name] = $identifier['data'];
+					}
+					return $out;
+				})),
 		);
 	}
 }

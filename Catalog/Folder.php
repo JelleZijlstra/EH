@@ -1,10 +1,24 @@
 <?php
+require_once(BPATH . '/Catalog/settings.php');
+
 class Folder extends SqlListEntry {
 	protected $id;
 	
 	protected $parent;
 	
 	protected $name;
+	
+	protected $children;
+	
+	public function path() {
+		$this->fillProperties();
+		if($this->parent === NULL) {
+			$path = LIBRARY;
+		} else {
+			$path =  $this->parent->path();
+		}
+		return $path . '/' . $this->name;
+	}
 	
 	protected static $Folder_commands = array(
 	);

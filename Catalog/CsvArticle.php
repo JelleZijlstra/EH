@@ -5,28 +5,21 @@ ContainerList::$resolve_redirect_exclude[] = array('CsvArticle', 'isredirect');
 class CsvArticle extends CsvListEntry implements ArticleInterface {
 	use CommonArticle;
 	
-	// should become reference to a Folder object
+	// references to a Folder object in Article
 	public $folder; //folder (NOFILE when "file" is not a file)
 	public $sfolder; //subfolder
 	public $ssfolder; //sub-subfolder
 	
-	// should become a timestamp
+	// timestamp in Article
 	public $addmonth; //month added to catalog
 	public $addday; //day added to catalog
 	public $addyear; //year added to catalog
 	
-	// should become special reference to set of Author objects
-	public $authors; //authors in form <last1>, <initial1>.<initial1>.; <last2>, ...
-	
-	// should become reference to Journal object
-	public $journal; //journal published in
-	
-	// should become identifiers like others
+	// part of identifiers in Article
 	public $url; //url where available
 	public $doi; //DOI
 	
-	// should become reference to Publisher object
-	public $publisher; //publisher
+	// part of publisher in Article
 	public $location; //geographical location published
 	protected function publisher() {
 		return $this->publisher;

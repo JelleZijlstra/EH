@@ -8,19 +8,21 @@ trait CommonArticle {
 	/*
 	 * Properties that have a one-to-one correspondence with the database.
 	 */
-	public $id; // ID in database
-	public $name; //name of file (or handle of citation)
-	public $type; //type of file
-	public $year; //year published
-	public $title; //title (chapter title for book chapter; book title for full book or thesis)
-	public $series; //journal series
-	public $volume; //journal volume
-	public $issue; //journal issue
-	public $start_page; //start page
-	public $end_page; //end page
-	public $pages; //number of pages in book
-	public $parent; // enclosing article
-	public $misc_data; // miscellaneous data
+	public /* string */ $name; // name of file (or handle of citation)
+	public /* int */ $type; // type of file
+	public /* string|int */ $year; // year published
+	public /* string */ $title; // title (chapter title for book chapter; book title for full book or thesis)
+	public /* Journal / string */ $journal; // journal published in
+	public /* string */ $series; // journal series
+	public /* string */ $volume; // journal volume
+	public /* string */ $issue; // journal issue
+	public /* string */ $start_page; // start page
+	public /* string */ $end_page; // end page
+	public /* string */ $pages; // number of pages in book
+	public /* Article / string */ $parent; // enclosing article
+	public /* Publisher / string */ $publisher; // publisher
+	public /* string */ $misc_data; // miscellaneous data
+	public /* Author array / string */ $authors;
 
 	private $pdfcontent; // holds text of first page of PDF
 	protected static $Article_commands = array(
@@ -1256,14 +1258,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			echo $cite . PHP_EOL;
 		}
 		return true;
-	}
-	public function __toString() {
-	// return a citation for this file
-		$out = $this();
-		if(is_array($out))
-			return implode(PHP_EOL, $out);
-		else
-			return $out;
 	}
 	public function get_citedoiurl($var = 'doi') {
 	// returns URL to Wikipedia cite doi-family template for this Article

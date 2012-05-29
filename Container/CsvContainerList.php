@@ -5,7 +5,7 @@
  * A class that holds a collection of entries (represented by ListEntry 
  * objects).
  * This class contains the all-important $c property—an array of ListEntry
- * objects indexed by name, as well as a variety of method used to manage the
+ * objects indexed by name—as well as a variety of methods used to manage the
  * list. There is code to retrieve data from a CSV file to form a ContainerList, 
  * and to save a modified ContainerList back into CSV. This class also contains 
  * methods to find child ListEntries and summarize data in them, such as the 

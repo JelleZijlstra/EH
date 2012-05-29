@@ -18,6 +18,38 @@ class Folder extends SqlListEntry {
 		return $path . '/' . $this->name;
 	}
 	
+	private function getChildByName($name) {
+		$this->fillProperties();
+		foreach($this->children as $child) {
+			if($child->name() === $name) {
+				return $child;
+			}
+		}
+		return false;
+	}
+	
+	// Adds a child folder of name $name, returns the Folder object
+	private function addChild($name) {
+	
+	}
+	
+	/*
+	 * Make sure that the path in $in exists as a chain of folders. Return the 
+	 * tip of the folder tree.
+	 */
+	public function makeChildPath(array $in) {
+		if(count($in) === 0) {
+			return $this;
+		} else {
+			$folder = array_shift($in);
+			$child = $this->getChildByName($folder);
+			if($folder === false) {
+				$child = $this->addChild($folder);
+			}
+			return $child->makeChildPath($in);
+		}
+	}
+	
 	protected static $Folder_commands = array(
 	);
 	

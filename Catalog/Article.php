@@ -34,27 +34,6 @@ class Article extends SqlListEntry implements ArticleInterface {
 	/*
 	 * Citing
 	 */
-	protected function cite_getclass() {
-		switch($this->type) {
-			case self::JOURNAL:
-				return 'journal';
-			case self::CHAPTER:
-				return 'chapter';
-			case self::BOOK:
-				return 'book';
-			case self::THESIS:
-				return 'thesis';
-			case self::WEB:
-				return 'web';
-			case self::MISCELLANEOUS:
-				return 'unknown';
-			case self::REDIRECT:
-			case self::SUPPLEMENT:
-				return 'n/a';
-			default:
-				throw new EHException('Invalid type: ' . $this->type);
-		}
-	}
 	protected static function fillFields() {
 		return array(
 			'id' => new SqlProperty(array(

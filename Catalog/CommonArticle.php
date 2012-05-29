@@ -547,7 +547,6 @@ trait CommonArticle {
 		$func = 'cite' . $this->p->citetype;
 		return $this->$func();
 	}
-	abstract protected function cite_getclass();
 	protected function determineType() {
 	// get the type of citation needed (journal, book, chapter, etc.)
 		// redirect resolution magic?
@@ -678,8 +677,7 @@ trait CommonArticle {
 			$out .= "] (subscription required)";
 		}
 		$out .= ". ";
-		$class = $this->cite_getclass();
-		switch($class) {
+		switch($this->type) {
 			case 'journal':
 				// journals (most common case)
 				$out .= $this->journal() . " ";
@@ -757,7 +755,7 @@ trait CommonArticle {
 		if($verbosecite === false && $out1 !== '') {
 			return $out1;
 		}
-		switch($class = $this->cite_getclass()) {
+		switch($this->type) {
 			case 'journal': 
 				$temp = 'journal'; 
 				break;
@@ -813,7 +811,7 @@ trait CommonArticle {
 		$paras['location'] = $this->location();
 		$paras['isbn'] = $this->getIdentifier('isbn');
 		$paras['pages'] = $this->pages();
-		switch($class) {
+		switch($this->type) {
 			case 'journal':
 				$paras['title'] = $this->title;
 				$paras['journal'] = $this->journal;
@@ -915,7 +913,7 @@ trait CommonArticle {
 	}
 	public function citelemurnews() {
 		$authors = $this->getAuthors(array());
-		switch($class = $this->cite_getclass()) {
+		switch($this->type) {
 			case 'journal':
 				$out = $authors . '. ' .
 					$this->year . '. ' .
@@ -955,7 +953,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	public function citebzn() {
 	// cites according to BZN citation style
-		$class = $this->cite_getclass();
 		// replace last ; with " &"; others with ","
 		$out = '<b>';
 		$out .= $this->getAuthors(array(
@@ -963,7 +960,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			'lastSeparator' => ' &',
 		));
 		$out .= '</b> ' . $this->year . '. ';
-		switch($class) {
+		switch($this->type) {
 			case 'journal':
 				$out .= $this->title;
 				$out .= '. ';
@@ -996,13 +993,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$out .= ', ' . $this->location();
 				}
 				$out .= '.';
+				break;
 		}
 		// final cleanup
 		$out = str_replace(array("  ", ".."), array(" ", "."), $out);
 		return $out;
 	}
 	public function citepalaeontology() {
-		$class = $this->cite_getclass();
 		// this is going to be the citation
 		$out = '';
 		
@@ -1014,7 +1011,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		);
 		$out .= $this->getAuthors($authorsParas);
 		$out .= ' ' . $this->year . '. ';
-		switch($class) {
+		switch($this->type) {
 			case 'journal':
 				$out .= $this->title . '. <i>' . $this->journal() . '</i>, ';
 				// TODO: series
@@ -1060,7 +1057,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return $out;
 	}
 	public function citejpal() {
-		$class = $this->cite_getclass();
 		// this is going to be the citation
 		$out = '';
 		$out .= $this->getAuthors(array(
@@ -1072,7 +1068,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			'spaceInitials' => true,
 		));
 		$out .= ' ' . $this->year . '. ' . $this->title;
-		switch($class) {
+		switch($this->type) {
 			case 'journal':
 				$out .= '. ' . $this->journal() . ', ';
 				if($this->series) {
@@ -1134,7 +1130,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$out .= "\t" . $key . ' = "' . $value . "\",\n";
 		};
 		$out = '@';
-		switch($class = $this->cite_getclass()) {
+		switch($this->type) {
 			case 'journal':
 				$out .= 'article';
 				break;
@@ -1169,7 +1165,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			$this->title
 		) . '}';
 		$add('title', $title, true);
-		switch($class) {
+		switch($this->type) {
 			case 'thesis':
 				$add('school', $this->thesis_getuni(), true);
 				break;
@@ -1191,26 +1187,14 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return $out;
 	}
 	public function citezootaxa() {
-		$class = $this->cite_getclass();
 		// this is going to be the citation
 		$out = '';
-		$processauthors = function($in, $type = 'normal') {
-			// replace semicolons
-			$in = preg_replace(
-				array('/;(?=[^;]$)/u', '/;/u'),
-				array('& ', ','),
-				$in
-			);
-			if($type === 'editors')
-				$in .= ' (Eds)';
-			return $in;
-		};
 		$out .= $this->getAuthors(array(
 			'separator' => ',',
 			'lastSeparator' => ' &',
 		));
 		$out .= ' (' . $this->year . ') ';
-		switch($class) {
+		switch($this->type) {
 			case 'journal':
 				$out .= $this->title . '. <i>' . $this->journal() . '</i>, ';
 				$out .= $this->volume . ', ' . $this->pages();

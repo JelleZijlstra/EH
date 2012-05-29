@@ -752,45 +752,6 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		}
 	}
 	/* CITING */
-	protected function setType() {
-		if($this->type !== '') {
-			return true;
-		}
-		if($this->isredirect()) {
-			$this->type = self::REDIRECT;
-		} elseif($this->issupplement()) {
-			$this->type = self::SUPPLEMENT;
-		} elseif($this->isweb()) {
-			$this->type = self::WEB;
-		} elseif($this->journal) {
-			$this->type = self::JOURNAL;
-		} elseif($this->parent) {
-			$this->type = self::CHAPTER;
-		} elseif($this->isthesis()) {
-			$this->type = self::THESIS;
-		} elseif($this->title) {
-			$this->type = self::BOOK;
-		} else {
-			$this->type = self::MISCELLANEOUS;
-		}
-	}
-	protected function cite_getclass() {
-	// get the type of citation needed (journal, book, chapter, etc.)
-		// redirect resolution magic?
-		if($this->issupplement())
-			return 'n/a';
-		if($this->isweb())
-			return 'web';
-		if($this->journal)
-			return 'journal';
-		if($this->parent)
-			return 'chapter';
-		if($this->isthesis())
-			return 'thesis';
-		if($this->title)
-			return 'book';
-		return 'unknown';
-	}
 	protected function _getAuthors() {
 		$authors = explode('; ', $this->authors);
 		return array_map(function($author) {
@@ -922,6 +883,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 	}
 	protected function manuallyFillProperty($field) {
 		$result = $this->fillScalarProperty($field);
+		// this space may be used to set some properties on the basis of values of others
 		return $result;
 	}
 	/* SMALL UTILITIES */

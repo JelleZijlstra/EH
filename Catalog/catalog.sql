@@ -5,7 +5,7 @@ CREATE TABLE `article` (
 	`name` VARCHAR(255) NOT NULL,
 	-- 0 for nofile
 	`folder_id` INT UNSIGNED NOT NULL,
-	`added` TIMESTAMP NOT NULL,
+	`added` DATETIME NOT NULL,
 	-- Journal article, chapter, book, web, thesis, misc, redirect, supplement
 	`type` INT NOT NULL,
 	-- Authors in article_authors table

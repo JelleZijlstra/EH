@@ -67,8 +67,26 @@ class Article extends SqlListEntry implements ArticleInterface {
 	protected function _getAuthors() {
 		$this->fillProperties();
 		return array_map(function($author) {
-			return array($author->first_names, $author->surname, $author->suffix);
+			return $author->toArray();
 		}, $this->authors);
+	}
+	protected function manuallyFillProperty($field) {
+		$result = $this->fillScalarProperty($field);
+		// this space may be used to set some properties on the basis of values of others
+		return $result;
+	}
+	protected function setCurrentDate() {
+		$date = new DateTime();
+		$this->added = $date->format('Y-m-d H:i:s');
+	}
+	protected function determinePath() {
+	
+	}
+	protected function setPathFromArray($in) {
+		assert(isset($in[0]));
+		$f = array_shift($in);
+		$parentFolder = Folder::withName($f);
+		$this->folder = $parentFolder->makeChildPath($in);
 	}
 	/*
 	 * Identifiers

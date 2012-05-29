@@ -188,7 +188,8 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 	public static function makeNewRedirect($name, $target, ContainerList $parent) {
 		$obj = new self(NULL, 'e', $parent);
 		$obj->type = self::REDIRECT;
-		$obj->folder = $target;
+		$obj->folder = 'NOFILE';
+		$obj->parent = $target;
 		$obj->name = $name;
 		$obj->setCurrentDate();
 		$parent->addEntry($obj, array('isnew' => true));
@@ -247,7 +248,6 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		/*
 		 * Fix old style
 		 */
-		$this->setType();
 		if(substr($this->folder, 0, 4) === 'SEE ') {
 			$this->parent = $this->resolve_redirect();
 			$this->folder = 'NOFILE';
@@ -817,7 +817,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 				}
 			},
 			'validfunction' => function($cmd) use(&$foldertree) {
-				return ($cmd === '') || isset($foldertree[$cmd]);
+				return isset($foldertree[$cmd]);
 			},
 		);
 		/* folder */
@@ -831,6 +831,9 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			$suggs = $sugg_lister($this->p->foldertree[$this->folder]);
 			// update menu options
 			$menuOptions['head'] = 'Subfolder: ';
+			$menuOptions['validfunction'] = function($cmd) use(&$foldertree) {
+				return ($cmd === '') || isset($foldertree[$cmd]);
+			};
 			$this->sfolder = $sfolder = $this->menu($menuOptions);
 			/* sub-subfolder */
 			if($sfolder !== '' && count($foldertree[$sfolder]) !== 0) {
@@ -842,6 +845,23 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			}
 		}
 		return true;
+	}
+	protected function setPathFromArray($in) {
+		if(isset($in[0])) {
+			$this->folder = $in[0];
+		} else {
+			throw new EHInvalidArgumentException($in);
+		}
+		if(isset($in[1])) {
+			$this->sfolder = $in[1];
+		} else {
+			$this->sfolder = '';
+		}
+		if(isset($in[2])) {
+			$this->ssfolder = $in[2];
+		} else {
+			$this->ssfolder = '';
+		}
 	}
 	protected function setCurrentDate() {
 		// add time added

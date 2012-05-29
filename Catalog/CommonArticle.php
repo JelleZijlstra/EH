@@ -3273,13 +3273,6 @@ Content-Disposition: attachment
 			return true;
 		}
 	}
-	/*
-	 * Fields. Ultimately, should be split between the two.
-	 *
-	 * CsvArticle now actually has SqlProperty objects, which for the moment
-	 * is unlikely to cause problems, since CsvProperty does not add anything
-	 * to Property.
-	 */
 	
 	/*
 	 * Validators. Should ultimately be organized in some other way.

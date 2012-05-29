@@ -1022,80 +1022,80 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 	 */
 	protected static function fillFields() {
 		return array(
-			'name' => new SqlProperty(array(
+			'name' => new CsvProperty(array(
 				'name' => 'name',
 				'type' => Property::STRING)),
-			'folder' => new SqlProperty(array(
+			'folder' => new CsvProperty(array(
 				'name' => 'folder',
 				'type' => Property::STRING)),
-			'sfolder' => new SqlProperty(array(
+			'sfolder' => new CsvProperty(array(
 				'name' => 'folder',
 				'type' => Property::STRING)),
-			'ssfolder' => new SqlProperty(array(
+			'ssfolder' => new CsvProperty(array(
 				'name' => 'folder',
 				'type' => Property::STRING)),
-			'addmonth' => new SqlProperty(array(
+			'addmonth' => new CsvProperty(array(
 				'name' => 'added',
 				'type' => Property::INT)),
-			'addday' => new SqlProperty(array(
+			'addday' => new CsvProperty(array(
 				'name' => 'added',
 				'type' => Property::INT)),
-			'addyear' => new SqlProperty(array(
+			'addyear' => new CsvProperty(array(
 				'name' => 'added',
 				'type' => Property::INT)),
-			'type' => new SqlProperty(array(
+			'type' => new CsvProperty(array(
 				'name' => 'type',
 				'validator' => function($in) {
 					// this is an enum, so check whether it has an allowed value
 					return true;
 				},
 				'type' => Property::INT)),
-			'authors' => new SqlProperty(array(
+			'authors' => new CsvProperty(array(
 				'name' => 'authors',
 				'type' => Property::STRING)),
-			'year' => new SqlProperty(array(
+			'year' => new CsvProperty(array(
 				'name' => 'year',
 				'validator' => function($in) {
 					return preg_match('/^(\d+|undated|\d+–\d+)$/', $in);
 				},
 				'type' => Property::STRING)),
-			'title' => new SqlProperty(array(
+			'title' => new CsvProperty(array(
 				'name' => 'title',
 				'type' => Property::STRING)),
-			'journal' => new SqlProperty(array(
+			'journal' => new CsvProperty(array(
 				'name' => 'journal',
 				'type' => Property::STRING)),
-			'series' => new SqlProperty(array(
+			'series' => new CsvProperty(array(
 				'name' => 'series',
 				'type' => Property::STRING)),
-			'volume' => new SqlProperty(array(
+			'volume' => new CsvProperty(array(
 				'name' => 'volume',
 				'type' => Property::STRING)),
-			'issue' => new SqlProperty(array(
+			'issue' => new CsvProperty(array(
 				'name' => 'issue',
 				'type' => Property::STRING)),
-			'start_page' => new SqlProperty(array(
+			'start_page' => new CsvProperty(array(
 				'name' => 'start_page',
 				'type' => Property::STRING)),
-			'end_page' => new SqlProperty(array(
+			'end_page' => new CsvProperty(array(
 				'name' => 'end_page',
 				'type' => Property::STRING)),
-			'pages' => new SqlProperty(array(
+			'pages' => new CsvProperty(array(
 				'name' => 'pages',
 				'type' => Property::STRING)),
-			'url' => new SqlProperty(array(
+			'url' => new CsvProperty(array(
 				'name' => 'url',
 				'type' => Property::STRING)),
-			'doi' => new SqlProperty(array(
+			'doi' => new CsvProperty(array(
 				'name' => 'doi',
 				'type' => Property::STRING)),
-			'parent' => new SqlProperty(array(
+			'parent' => new CsvProperty(array(
 				'name' => 'parent',
 				'type' => Property::STRING)),
-			'publisher' => new SqlProperty(array(
+			'publisher' => new CsvProperty(array(
 				'name' => 'publisher',
 				'type' => Property::STRING)),
-			'misc_data' => new SqlProperty(array(
+			'misc_data' => new CsvProperty(array(
 				'name' => 'misc_data',
 				'type' => Property::STRING)),
 		);

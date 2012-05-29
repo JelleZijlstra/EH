@@ -1,6 +1,4 @@
 <?php
-require_once(BPATH . '/Catalog/settings.php');
-
 class Folder extends SqlListEntry {
 	protected $id;
 	
@@ -13,7 +11,7 @@ class Folder extends SqlListEntry {
 	public function path() {
 		$this->fillProperties();
 		if($this->parent === NULL) {
-			$path = LIBRARY;
+			$path = '';
 		} else {
 			$path =  $this->parent->path();
 		}

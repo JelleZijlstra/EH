@@ -731,8 +731,12 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			if(self::hasproperty($field)) {
 				if($this->$field === $content) continue;
 				switch($field) {
-					case 'title':
-						$this->title = $content;
+					case 'parent':
+						if(strlen($content) > 0 && !$this->p->has($content)) {
+							echo 'Adding the enclosing file...' . PHP_EOL;
+							$this->p->addNofile(array('handle' => $content));
+						}
+						$this->parent = $content;
 						break;
 					case 'name':
 						if(!$paras['cannotmove']) {
@@ -918,10 +922,6 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 	}
 	protected function manuallyFillProperty($field) {
 		$result = $this->fillScalarProperty($field);
-		if($field === 'parent' && strlen($this->parent) > 0 && !$this->p->has($this->parent)) {
-			echo 'Adding the enclosing file...' . PHP_EOL;
-			$this->p->addNofile(array('handle' => $this->parent));
-		}
 		return $result;
 	}
 	/* SMALL UTILITIES */

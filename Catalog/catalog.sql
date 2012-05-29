@@ -69,7 +69,7 @@ CREATE TABLE `folder` (
 DROP TABLE IF EXISTS `author`;
 CREATE TABLE `author` (
 	`id` INT UNSIGNED AUTO_INCREMENT,
-	-- In form "J. S." or "Jelle Sjoerd"
+	-- In form "J.S." or "Jelle Sjoerd"
 	`firstnames` VARCHAR(255) DEFAULT NULL,
 	`name` VARCHAR(255) NOT NULL,
 	PRIMARY KEY(`id`),
@@ -100,21 +100,13 @@ CREATE TABLE `journal` (
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
 
 -- Identifiers (e.g., URLs, DOIs, HDLs, JSTOR IDs)
-DROP TABLE IF EXISTS `identifier`;
-CREATE TABLE `identifier` (
-	`id` INT UNSIGNED AUTO_INCREMENT,
-	`name` VARCHAR(255) NOT NULL,
-	PRIMARY KEY(`id`),
-	INDEX(`name`)
-) ENGINE=INNODB DEFAULT CHARSET=utf8;
-
 DROP TABLE IF EXISTS `article_identifier`;
 CREATE TABLE `article_identifier` (
 	`article_id` INT UNSIGNED NOT NULL,
 	-- Indicate that an identifier does not have a 1-to-1 relationship to this work.
 	`identifier_is_shared` BOOL DEFAULT FALSE,
-	-- E.g., 'jstor'
-	`identifier_id` VARCHAR(255) NOT NULL,
+	-- E.g., 'jstor' (constants defined in Article.php)
+	`identifier` INT NOT NULL,
 	`data` VARCHAR(255) NOT NULL,
 	INDEX(`article_id`),
 	INDEX(`data`)
@@ -129,6 +121,7 @@ CREATE TABLE `taxon` (
 	`id` INT UNSIGNED AUTO_INCREMENT,
 	`name` VARCHAR(512) NOT NULL,
 	`rank` INT NOT NULL,
+	`comments` VARCHAR(4096) DEFAULT NULL,
 	PRIMARY KEY(`id`),
 	INDEX(`name`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;

@@ -174,11 +174,7 @@ class Database extends ExecuteHandler {
 						return false;
 					}
 					foreach($val as $key => $value) {
-						if(!is_array($value)) {
-							if(!is_string($key)) {
-								return false;
-							}
-						} else {
+						if(is_array($value)) {
 							if(!isset($value['field'])) {
 								return false;
 							}
@@ -188,8 +184,13 @@ class Database extends ExecuteHandler {
 							if(!isset($value['content'])) {
 								return false;
 							}
+						} else {
+							if(!is_string($key)) {
+								return false;
+							}
 						}
 					}
+					return true;
 				},
 				'order_by' => function($val, $paras) {
 					return is_string($val);

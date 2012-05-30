@@ -794,8 +794,8 @@ ehretval_t *eh_op_for(opnode_t *op, ehcontext_t context) {
 		range = *count_r->rangeval;
 	} else {
 		count_r = eh_xtoint(count_r);
-		if(count_r->type != int_e) {
-			eh_error_type("count", count_r->type, eerror_e);
+		if(EH_TYPE(count_r) != int_e) {
+			eh_error_type("count", EH_TYPE(count_r), eerror_e);
 			return ret;
 		}
 		range.min = 0;

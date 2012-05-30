@@ -743,13 +743,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			$suggs = $this->p->sugglist[$key]->getsugg();
 			foreach($suggs as $sugg) {
 				$sugg = array_pad($sugg, 3, '');
-				echo 'Suggested placement. Folder: ' . $sugg[0];
-				if($sugg[1] !== '') {
-					echo '; subfolder: ' . $sugg[1];
-					if($sugg[2] !== '') {
-						echo '; sub-subfolder: ' . $sugg[2];
-					}
-				}
+				echo 'Suggested placement: ' . implode(' -> ', $sugg) . PHP_EOL;
 				$cmd = $this->menu(array(
 					'head' => PHP_EOL,
 					'options' => array(
@@ -761,9 +755,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 				));
 				switch($cmd) {
 					case 'y':
-						$this->folder = $sugg[0];
-						$this->sfolder = $sugg[1];
-						$this->ssfolder = $sugg[2];
+						$this->setPathFromArray($sugg);
 						return true;
 					case 'n': break;
 					case 's': return false;
@@ -817,9 +809,19 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 				}
 			},
 			'validfunction' => function($cmd) use(&$foldertree) {
-				return isset($foldertree[$cmd]);
+				return ($cmd === '') || isset($foldertree[$cmd]);
 			},
 		);
+		$path = array();
+		for( ; count($foldertree) !== 0; ) {
+			echo 'Suggestions: ';
+			$suggs = $sugg_lister($foldertree);
+			$path[] = $folder = $this->menu($menuOptions);
+			$foldertree = $foldertree[$folder];
+		}
+		$this->setPathFromArray($path);
+		return true;
+		
 		/* folder */
 		echo 'Suggestions: ';
 		$suggs = $sugg_lister($foldertree);

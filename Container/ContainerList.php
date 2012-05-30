@@ -292,10 +292,11 @@ abstract class ContainerList extends ExecuteHandler {
 				try {
 					$ret = $file->$func($paras);
 				} catch(EHException $e) {
-					echo $e->getMessage();
+					echo $e->getMessage() . PHP_EOL;
 					if(!$continueiffalse) {
 						throw new StopException;
 					}
+					$ret = false;
 				}
 				if($countfalse or $ret) {
 					$i++;

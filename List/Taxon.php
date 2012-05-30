@@ -25,6 +25,7 @@ class Taxon extends CsvListEntry {
 	// Should get rid of it; perhaps instead just set $this->name to NULL, or
 	// use a StopException
 	public $discardthis;
+	public $temprange;
 	protected static $Taxon_commands = array(
 		'populatecitation' => array('name' => 'populatecitation',
 			'desc' => 'Attempt to populate the citation field',
@@ -286,7 +287,7 @@ class Taxon extends CsvListEntry {
 		else {
 			if(isset($tmp)) {
 				if($this->citation and $this->citation !== 'Unknown') {
-					$csvlist = ArticleList::singleton();
+					$csvlist = CsvArticleList::singleton();
 					$tmp .= ':::<small>Original description: ';
 					$csvlist->verbosecite = false;
 					$tmp .= $csvlist->cite($this->citation);
@@ -713,7 +714,7 @@ class Taxon extends CsvListEntry {
 			$this->citation = 'Unknown';
 			return false;
 		}
-		$csvlist = ArticleList::singleton();
+		$csvlist = CsvArticleList::singleton();
 		$cites = array_merge(
 			$csvlist->bfind(array(
 				'authors' => $authors,
@@ -722,6 +723,7 @@ class Taxon extends CsvListEntry {
 			)),
 			$csvlist->bfind(array(
 				'name' => $title,
+				'year' => $this->year,
 				'quiet' => true,
 			))
 		);
@@ -735,7 +737,7 @@ class Taxon extends CsvListEntry {
 			$response = $this->menu(array(
 				'head' => 'Is this citation correct?' . PHP_EOL .
 					$cite->name . PHP_EOL .
-					$cite,
+					$cite->cite(),
 				'options' => array(
 					'y' => 'This citation is correct',
 					'n' => 'This citation is not correct',

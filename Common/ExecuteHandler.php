@@ -790,6 +790,9 @@ class ExecuteHandler extends EHICore {
 						$keypos++;
 					break;
 				case "\177": // KEY_BACKSPACE
+					if($keypos === 0) {
+						break;
+					}
 					$tmp = array();
 					$nchars = $cmdlen - $keypos;
 					for($i = $keypos; $i < $cmdlen; $i++) {

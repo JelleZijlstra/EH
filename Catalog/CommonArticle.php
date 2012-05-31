@@ -2826,7 +2826,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			switch($label) {
 				case 'dc.contributor.author':
 					// remove year of birth
-					$value = preg_replace('/, [\d\-]+| \(.*\)$/u', '', $value);
+					$value = preg_replace('/, [\d\-]+| \(.*\)/u', '', $value);
 					$authors .= preg_replace(
 						'/(?<=, |\.)([A-Z])\w*\s*/u',
 						'$1.',
@@ -2837,19 +2837,20 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$data['year'] = $value;
 					break;
 				case 'dc.description':
-					if(!preg_match("/^\d+ p\./u", $value)) {
-						break;
+					if(preg_match('/^p\.\s*(\d+)-(\d+)/u', $value, $matches)) {
+						$data['start_page'] = $matches[1];
+						$data['end_page'] = $matches[2];
+					} elseif(preg_match("/^(\d+)\s*p\./u", $value, $matches)) {
+						$data['start_page'] = 1;
+						$data['end_page'] = $matches[1];
 					}
-					$data['start_page'] = 1;
-					// number of pages is at beginning of this piece
-					$data['end_page'] = (int) $value;
 					break;
 				case 'dc.relation.ispartofseries':
 					$data = preg_split('/;\s+(no|vol|v)\.\s+|, article /u', $value);
 					$data['journal'] = trim($data[0]);
 					$data['volume'] = trim($data[1]);
 					if(isset($data[2])) {
-						$data['issue'] = trim($data[2]);
+						$data['issue'] = trim(str_replace('.', '', $data[2]));
 					}
 					break;
 				case 'dc.title': // title, with some extraneous stuff
@@ -2863,7 +2864,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		// final cleanup
 		$data['authors'] = trim(preg_replace(
-			array('/\.+/u', '/; $/u'),
+			array('/\.+\s*/u', '/; $/u'),
 			array('.', ''),
 			$authors
 		));

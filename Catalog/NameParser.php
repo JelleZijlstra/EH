@@ -115,6 +115,7 @@ class NameParser {
 		 * (3) <nov-phrase>, <normal-name>
 		 * (4) <replacement> for <preoccupied name>
 		 * (5) MS <genus-name> <species-name>
+		 * (6) <journal name> <volume>
 		 *
 		 * The preg_match below is to account for the syntax
 		 *		"Oryzomys palustris-Hoplopleura oryzomydis nov.pdf",
@@ -131,6 +132,8 @@ class NameParser {
 			$this->parseForPhrase($name);
 		} elseif(substr($name, 0, 3) === 'MS ') {
 			$this->parseMsPhrase($name);
+		} elseif(preg_match('/^[A-Za-z\-\s]+ (\d+)$/', $name)) {
+			$this->parseFullIssue($name);
 		} else {
 			$this->parseNormalName($name);
 		}
@@ -287,7 +290,16 @@ class NameParser {
 	 * Mammalian Species
 	 */
 	private function parseMsPhrase($in) {
-		$this->baseName['mammalianspecies'] = substr($in, 3);
+		$this->baseName['mammalianspecies'] = $this->parseNames(substr($in, 3));
+	}
+	
+	/*
+	 * Names of type "Lemur News 12.pdf" -> 
+	 *		'fullissue' => array('Lemur News', 12)
+	 */
+	private function parseFullIssue($in) {
+		preg_match('/^(.*) (\d+)$/', $in, $matches);
+		$this->baseName['fullissue'] = array($matches[1], (int) $matches[2]);
 	}
 	
 	/*
@@ -624,12 +636,10 @@ class NameParser {
 					}
 					break;
 				case 'for':
+				case 'mammalianspecies':
 					foreach($value as $name) {
 						$this->validateName($name, false);
 					}
-					break;
-				case 'mammalianspecies':
-					$this->validateName($value, false);
 					break;
 				case 'normal':
 					if(!isset($value['names'])) {
@@ -637,8 +647,11 @@ class NameParser {
 					}
 					if(isset($value['topic'])) {
 						$topic = $value['topic'];
-						$topicIsSpecial = in_array('review', $topic, true)
-							|| in_array('types', $topic, true);
+						$allowedTopics = array(
+							'review', 'types', 'biography', 'obituary'
+						);
+						$topicIsSpecial = 
+							count(array_intersect($topic, $allowedTopics)) > 0;
 					} else {
 						$topicIsSpecial = false;
 					}
@@ -646,8 +659,10 @@ class NameParser {
 						$this->validateName($name, $topicIsSpecial);
 					}
 					break;
+				case 'fullissue':
+					break;
 				default:
-					throw new EHInvalidArgumentException($key);
+					throw new EHInvalidInputException($key);
 			}
 		}
 	}

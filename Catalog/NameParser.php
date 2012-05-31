@@ -119,8 +119,6 @@ class NameParser {
 		 * The preg_match below is to account for the syntax
 		 *		"Oryzomys palustris-Hoplopleura oryzomydis nov.pdf",
 		 * used with parasites.
-		 *
-		 * TODO: other possibilities. E.g., stuff with parasites.
 		 */
 		if(substr($name, -3, 3) === 'nov' && !preg_match('/-[A-Z]/', $name)) {
 			// possibility (1)
@@ -136,6 +134,7 @@ class NameParser {
 		} else {
 			$this->parseNormalName($name);
 		}
+		$this->validateNames();
 	}
 	
 	/*
@@ -267,21 +266,21 @@ class NameParser {
 	private function parseForPhrase($in) {
 		preg_match('/^(\w+)( (\w+))?( (\w+))? for (\w+)$/u', $in, $matches);
 		$replacement = $matches[1];
-		if(isset($matches[3])) {
+		if($matches[3] !== '') {
 			$replacement .= ' ' . $matches[3];
 		}
-		if(isset($matches[5])) {
+		if($matches[5] !== '') {
 			$replacement .= ' ' . $matches[5];
 		}
 		
-		if(isset($matches[5])) {
+		if($matches[5] !== '') {
 			$preoccupied = $matches[1] . ' ' . $matches[3] . ' ' . $matches[6];
-		} elseif(isset($matches[3])) {
+		} elseif($matches[3] !== '') {
 			$preoccupied = $matches[1] . ' ' . $matches[6];
 		} else {
 			$preoccupied = $matches[6];
 		}
-		$this->baseName['for' ] = array($replacement, $preoccupied);
+		$this->baseName['for'] = array($replacement, $preoccupied);
 	}
 	
 	/*
@@ -602,15 +601,62 @@ class NameParser {
 					$name = self::getFirstWord($lastName)[0] . ' ' . $name;
 				}
 			}
-			// valid name forms
-			if(preg_match('/^((Cf|Aff)\. )?[A-Z][a-z?]+( \([A-Z][a-z]+\))?(( (cf|aff)\.)? [a-z?]+( [a-z?]+)?)?$/u', $name)) {
-				$out[] = $name;
-			} else {
-				$this->addError('Invalid name: ' . $name);
-			}
+			$out[] = $name;
 			$lastName = $name;
 		}
 		return $out;
+	}
+	
+	/*
+	 * After parsing is completed, check whether scientific names are valid.
+	 */
+	private function validateNames() {
+		foreach($this->baseName as $key => $value) {
+			switch($key) {
+				case 'nov':
+					foreach($value as $new) {
+						if(is_array($new)) {
+							// "Oryzomyini 10nov" type
+							$this->validateName($new[1], false);
+						} else {
+							$this->validateName($new, false);
+						}
+					}
+					break;
+				case 'for':
+					foreach($value as $name) {
+						$this->validateName($name, false);
+					}
+					break;
+				case 'mammalianspecies':
+					$this->validateName($value, false);
+					break;
+				case 'normal':
+					if(!isset($value['names'])) {
+						break;
+					}
+					if(isset($value['topic'])) {
+						$topic = $value['topic'];
+						$topicIsSpecial = in_array('review', $topic, true)
+							|| in_array('types', $topic, true);
+					} else {
+						$topicIsSpecial = false;
+					}
+					foreach($value['names'] as $name) {
+						$this->validateName($name, $topicIsSpecial);
+					}
+					break;
+				default:
+					throw new EHInvalidArgumentException($key);
+			}
+		}
+	}
+	
+	private function validateName($name, $topicIsSpecial) {
+		// valid name forms
+		if(!preg_match('/^((Cf|Aff)\. )?[A-Z][a-z?]+( \([A-Z][a-z]+\))?(( (cf|aff)\.)? [a-z?]+( [a-z?]+)?)?$/u', $name) && !$topicIsSpecial) {
+			$this->addError('Invalid name: ' . $name);
+		}
 	}
 	
 	public static function test() {

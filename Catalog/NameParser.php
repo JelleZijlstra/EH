@@ -669,7 +669,7 @@ class NameParser {
 	
 	private function validateName($name, $topicIsSpecial) {
 		// valid name forms
-		if(!preg_match('/^((Cf|Aff)\. )?[A-Z][a-z?]+( \([A-Z][a-z]+\))?(( (cf|aff)\.)? [a-z?]+( [a-z?]+)?)?$/u', $name) && !$topicIsSpecial) {
+		if(!preg_match('/^(((Cf|Aff)\. )?[A-Z][a-z?]+( \([A-Z][a-z]+\))?(( (cf|aff)\.)? [a-z?]+( [a-z?]+)?)?( Division| group| complex)?|[A-Za-z ]+ virus)$/u', $name) && !$topicIsSpecial) {
 			$this->addError('Invalid name: ' . $name);
 		}
 	}

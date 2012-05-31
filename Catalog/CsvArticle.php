@@ -548,6 +548,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			case 'AJPA': $o = 'American Journal of Physical Anthropology'; break;
 			case 'Alcheringa: An Australasian Journal of Palaeontology': $o = 'Alcheringa'; break;
 			case 'AMN': case 'American Museum novitates': $o = 'American Museum Novitates'; break;
+			case 'AMNH': $o = 'Annals and Magazine of Natural History'; break;
 			case 'AMNR': case 'Arquivos do Museu Nacional, Rio de Janeiro': $o = 'Arquivos do Museu Nacional'; break;
 			case 'ANMW': $o = 'Annales des Naturhistorischen Museums in Wien'; break;
 			case 'APP': $o = 'Acta Palaeontologica Polonica'; break;
@@ -729,125 +730,6 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		}, $authors);
 	}
 	/* ADDING DATA */
-	protected /* bool */ function determinePath() {
-		// short-circuiting
-		return $this->fullPathSuggestions()
-			or $this->folderSuggestions();
-	}
-	private /* bool */ function fullPathSuggestions() {
-		if(!$this->p->sugglist) {
-			$this->p->build_sugglist();
-		}
-		$key = $this->getkey();
-		if(isset($this->p->sugglist[$key])) {
-			$suggs = $this->p->sugglist[$key]->getsugg();
-			foreach($suggs as $sugg) {
-				$sugg = array_pad($sugg, 3, '');
-				echo 'Suggested placement: ' . implode(' -> ', $sugg) . PHP_EOL;
-				$cmd = $this->menu(array(
-					'head' => PHP_EOL,
-					'options' => array(
-						'y' => 'this suggestion is correct',
-						'n' => 'this suggestion is not correct',
-						's' => 'stop suggestions',
-						'q' => 'quit this file',
-					),
-				));
-				switch($cmd) {
-					case 'y':
-						$this->setPathFromArray($sugg);
-						return true;
-					case 'n': break;
-					case 's': return false;
-				}
-			}
-		}
-		return false;
-	}
-	private /* bool */ function folderSuggestions() {
-		$sugg_lister = function($in) {
-		// in folder suggestions part 2, print a list of suggestions and return useful array
-		// input: array of folders
-			if(!is_array($in)) {
-				return;
-			}
-			// input is array with key: name of folder; value: array with contents
-			// discard value, use key as value for out array
-			foreach($in as $key => $value) {
-				$out[] = $key;
-			}
-			foreach($out as $key => $value) {
-				// print new keys (ints) to be used in user input
-				echo $key . ': ' . $value . '; ';
-			}
-			echo PHP_EOL;
-			return $out;
-		};
-		if(!$this->p->foldertree) {
-			$this->p->build_foldertree();
-		}
-		$foldertree = $this->p->foldertree;
-		$suggs = array();
-		$menuOptions = array(
-			'head' => 'Folder: ',
-			'headasprompt' => true,
-			'options' => array(
-				'q' => 'Quit',
-				'o' => 'Open this file',
-			),
-			'process' => array(
-				'o' => function() {
-					$this->openf(array('place' => 'temp'));
-					return true;
-				},
-			),
-			'processcommand' => function($cmd) use(&$suggs) {
-				if(is_numeric($cmd) && isset($suggs[$cmd])) {
-					return $suggs[$cmd];
-				} else {
-					return $cmd;
-				}
-			},
-			'validfunction' => function($cmd) use(&$foldertree) {
-				return ($cmd === '') || isset($foldertree[$cmd]);
-			},
-		);
-		$path = array();
-		for( ; count($foldertree) !== 0; ) {
-			echo 'Suggestions: ';
-			$suggs = $sugg_lister($foldertree);
-			$path[] = $folder = $this->menu($menuOptions);
-			$foldertree = $foldertree[$folder];
-		}
-		$this->setPathFromArray($path);
-		return true;
-		
-		/* folder */
-		echo 'Suggestions: ';
-		$suggs = $sugg_lister($foldertree);
-		$this->folder = $folder = $this->menu($menuOptions);
-		/* subfolder */
-		if($folder !== '' && count($foldertree[$folder]) !== 0) {
-			echo 'Suggestions: ';
-			$foldertree = $this->p->foldertree[$this->folder];
-			$suggs = $sugg_lister($this->p->foldertree[$this->folder]);
-			// update menu options
-			$menuOptions['head'] = 'Subfolder: ';
-			$menuOptions['validfunction'] = function($cmd) use(&$foldertree) {
-				return ($cmd === '') || isset($foldertree[$cmd]);
-			};
-			$this->sfolder = $sfolder = $this->menu($menuOptions);
-			/* sub-subfolder */
-			if($sfolder !== '' && count($foldertree[$sfolder]) !== 0) {
-				echo 'Suggestions: ';
-				$foldertree = $foldertree[$sfolder];
-				$suggs = $sugg_lister($foldertree);
-				$menuOptions['head'] = 'Sub-subfolder: ';
-				$this->ssfolder = $this->menu($menuOptions);
-			}
-		}
-		return true;
-	}
 	protected function setPathFromArray($in) {
 		if(isset($in[0])) {
 			$this->folder = $in[0];

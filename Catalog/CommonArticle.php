@@ -1692,7 +1692,102 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		));
 		return $this->add() ? 2 : 1;
 	}
-	abstract protected function determinePath();
+	protected /* bool */ function determinePath() {
+		// short-circuiting
+		return $this->fullPathSuggestions()
+			or $this->folderSuggestions();
+	}
+	private /* bool */ function fullPathSuggestions() {
+		if(!$this->p->sugglist) {
+			$this->p->build_sugglist();
+		}
+		$key = $this->getkey();
+		if(isset($this->p->sugglist[$key])) {
+			$suggs = $this->p->sugglist[$key]->getsugg();
+			foreach($suggs as $sugg) {
+				$sugg = array_pad($sugg, 3, '');
+				echo 'Suggested placement: ' . implode(' -> ', $sugg) . PHP_EOL;
+				$cmd = $this->menu(array(
+					'options' => array(
+						'y' => 'this suggestion is correct',
+						'n' => 'this suggestion is not correct',
+						's' => 'stop suggestions',
+						'q' => 'quit this file',
+					),
+				));
+				switch($cmd) {
+					case 'y':
+						$this->setPathFromArray($sugg);
+						return true;
+					case 'n': break;
+					case 's': return false;
+				}
+			}
+		}
+		return false;
+	}
+	private /* bool */ function folderSuggestions() {
+		$sugg_lister = function($in) {
+		// in folder suggestions part 2, print a list of suggestions and return useful array
+		// input: array of folders
+			if(!is_array($in)) {
+				return;
+			}
+			// input is array with key: name of folder; value: array with contents
+			// discard value, use key as value for out array
+			foreach($in as $key => $value) {
+				$out[] = $key;
+			}
+			foreach($out as $key => $value) {
+				// print new keys (ints) to be used in user input
+				echo $key . ': ' . $value . '; ';
+			}
+			echo PHP_EOL;
+			return $out;
+		};
+		if(!$this->p->foldertree) {
+			$this->p->build_foldertree();
+		}
+		$foldertree = $this->p->foldertree;
+		$suggs = array();
+		$menuOptions = array(
+			'head' => 'Folder: ',
+			'headasprompt' => true,
+			'options' => array(
+				'q' => 'Quit',
+				'o' => 'Open this file',
+			),
+			'process' => array(
+				'o' => function() {
+					$this->openf(array('place' => 'temp'));
+					return true;
+				},
+			),
+			'processcommand' => function($cmd) use(&$suggs) {
+				if(is_numeric($cmd) && isset($suggs[$cmd])) {
+					return $suggs[$cmd];
+				} else {
+					return $cmd;
+				}
+			},
+			'validfunction' => function($cmd) use(&$foldertree) {
+				return ($cmd === '') || isset($foldertree[$cmd]);
+			},
+		);
+		$path = array();
+		for( ; count($foldertree) !== 0; ) {
+			echo 'Suggestions: ';
+			$suggs = $sugg_lister($foldertree);
+			$path[] = $folder = $this->menu($menuOptions);
+			if(isset($foldertree[$folder])) {
+				$foldertree = $foldertree[$folder];
+			} else {
+				break;
+			}
+		}
+		$this->setPathFromArray($path);
+		return true;
+	}
 	abstract protected function setPathFromArray(array $path);
 	abstract protected function setCurrentDate();
 	private /* bool */ function checkForExistingFile($lslist) {

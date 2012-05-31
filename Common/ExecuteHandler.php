@@ -56,6 +56,9 @@ class ExecuteHandler extends EHICore {
 			'arg' => 'None'),
 		'menu' => array('name' => 'menu',
 			'desc' => 'Create a menu'),
+		'call' => array('name' => 'call',
+			'aka' => array('phpcall'),
+			'desc' => 'Call an arbitrary PHP function'),
 	);
 	/* Setting up the EH interface */
 	protected function __construct(array $commands = array()) {
@@ -1185,5 +1188,29 @@ class ExecuteHandler extends EHICore {
 					return $exitval;
 			}
 		}
+	}
+	public function call($paras) {
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'function',
+				1 => 'arguments',
+			),
+			'checklist' => array(
+				'function' => 'Function to call',
+				'arguments' => 'Arguments for the function call',
+			),
+			'errorifempty' => array('function'),
+			'default' => array('arguments' => array()),
+			'checkparas' => array(
+				'function' => function($in) {
+					return function_exists($in);
+				},
+				'arguments' => function($in) {
+					return is_array($in);
+				}
+			),
+		))) return false;
+		return call_user_func_array($paras['function'], $paras['arguments']);
 	}
 }

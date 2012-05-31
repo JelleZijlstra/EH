@@ -213,9 +213,13 @@ abstract class ListEntry extends ExecuteHandler {
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if($paras['new'] === false) {
+			$value = $this->{$paras['field']};
 			echo 'Current value: ' 
-				. Sanitizer::varToString($this->{$paras['field']}) . PHP_EOL;
-			$paras['new'] = $this->getline('New value: ');
+				. Sanitizer::varToString($value) . PHP_EOL;
+			$paras['new'] = $this->getline(array(
+				'initialtext' => $value,
+				'prompt' => 'New value: ',
+			));
 		}
 		return $this->set(array($paras['field'] => $paras['new']));
 	}

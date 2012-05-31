@@ -170,7 +170,7 @@ Russia
 Rwanda
 St Kitts and Nevis
 St Lucia
-Saint Vincent and the Grenadines
+St Vincent and the Grenadines
 Samoa
 San Marino
 Sao Tome and Principe
@@ -229,37 +229,53 @@ UAE
 UK
 USA
 
-# Some other regions
+# Almost countries
 Taiwan
 Palestine
-Far East
-Caribbean
-West Indies
-Rocky Mountains
-Rockies
-Sahara
-Arabia
-Arabian Peninsula
-Mediterranean
-Eurasia
-Australasia
-America
-Mesoamerica
+
+# Major biogeographic regions
 Neotropic
 Nearctic
-Sahel
-USSR
-# And not "Soviet Union"
+Palearctic
+Indomalaya
+Australasia
+Indo-Australia
+
+# European (and vicinity) regions
 Iberia
-Korea
+Pyrenees
 Balkan
 Caucasus
-Siwalik
-Palearctic
-Amazonia
-Beringia
 Paratethys
-Indo-Australia
+Mediterranean
+USSR
+# And not "Soviet Union"
+Eurasia
+
+# Asia
+Arabia
+Arabian Peninsula
+Korea
+Siwalik
+Beringia
+
+# Americas
+Far East
+Rocky Mountains
+Rockies
+America
+Mesoamerica
+Amazonia
+
+# Caribbean regions
+Caribbean
+West Indies
+Greater Antilles
+Lesser Antilles
+
+# Africa
+Sahara
+Sahel
 
 # Canadian provinces
 Alberta
@@ -341,6 +357,7 @@ American Samoa
 US Virgin Islands
 Guam
 Northern Marianas
+Marianas
 
 # Mexican states
 Aguascalientes
@@ -379,10 +396,13 @@ Zacatecas
 # Some Caribbean islands
 Hispaniola
 Trinidad
+Tobago
 Antigua
 Barbuda
 Nevis
 St Kitts
+St Vincent
+Grenadines
 Cozumel
 
 # Major island group

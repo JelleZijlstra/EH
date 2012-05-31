@@ -79,9 +79,6 @@ class Article extends SqlListEntry implements ArticleInterface {
 		$date = new DateTime();
 		$this->added = $date->format('Y-m-d H:i:s');
 	}
-	protected function determinePath() {
-	
-	}
 	protected function setPathFromArray($in) {
 		assert(isset($in[0]));
 		$f = array_shift($in);
@@ -109,7 +106,7 @@ class Article extends SqlListEntry implements ArticleInterface {
 			case self::PMC: return 'pmc';
 			case self::EUROBATS: return 'eurobats';
 			case self::EDITION: return 'edition';			
-			default: throw new EHInvalidArgumentException($in);
+			default: throw new EHInvalidInputException($in);
 		}
 	}
 	public static function stringToIdentifier($in) {
@@ -122,7 +119,7 @@ class Article extends SqlListEntry implements ArticleInterface {
 			case 'pmc': return self::PMC;
 			case 'eurobats': return self::EUROBATS;
 			case 'edition': return self::EDITION;
-			default: throw new EHInvalidArgumentException($in);
+			default: throw new EHInvalidInputException($in);
 		}
 	}
 	
@@ -232,5 +229,25 @@ class Article extends SqlListEntry implements ArticleInterface {
 					return $out;
 				})),
 		);
+	}
+	
+	/*
+	 * Conversion
+	 */
+	static public function withCsvArticle(CsvArticle $in) {
+		$list = CsvArticleList::singleton();
+		$data = array();
+		// TODO: make sure the processor can handle this
+		$data['authors'] = $in->authors;
+		$data['year'] = $in->year;
+		$data['title'] = $in->title;
+		$data['volume'] = $in->volume;
+		$data['series'] = $in->series;
+		$data['issue'] = $in->issue;
+		$data['start_page'] = $in->start_page;
+		$data['end_page'] = $in->end_page;
+	
+		$obj = new self($data, SqlListEntry::CONSTR_FULL, $list);
+		$list->addEntry($obj, array('isnew' => true));
 	}
 }

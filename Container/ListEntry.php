@@ -56,6 +56,11 @@ abstract class ListEntry extends ExecuteHandler {
 		return static::$fields[$field];
 	}
 	
+	final public static /* bool */ function hasField(/* string */ $field) {
+		static::grabFields();
+		return isset(static::$fields[$field]);
+	}
+	
 	final protected static function fieldsAsStrings() {
 		return array_map(function($in) {
 			return $in->getName();
@@ -63,8 +68,12 @@ abstract class ListEntry extends ExecuteHandler {
 	}
 
 	final protected /* bool */ function validateProperty(/* string */ $property, /* mixed */ $value) {
-		$validator = self::getFieldObject($property)->getValidator();
-		return $validator($value);
+		if(static::hasField($property)) {
+			$validator = self::getFieldObject($property)->getValidator();
+			return $validator($value);
+		} else {
+			return true;
+		}
 	}
 
 	/*
@@ -208,12 +217,7 @@ abstract class ListEntry extends ExecuteHandler {
 				. Sanitizer::varToString($this->{$paras['field']}) . PHP_EOL;
 			$paras['new'] = $this->getline('New value: ');
 		}
-		if($this->validateProperty($paras['field'], $paras['new'])) {
-			return $this->set(array($paras['field'] => $paras['new']));
-		} else {
-			echo 'Invalid value' . PHP_EOL;
-			return false;
-		}
+		return $this->set(array($paras['field'] => $paras['new']));
 	}
 	
 	/*

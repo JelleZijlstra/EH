@@ -18,6 +18,8 @@ North Sea
 Red Sea
 Sea of Okhotsk
 Black Sea
+Sea of Cortez
+Laptev Sea
 
 # Countries
 Afghanistan
@@ -255,17 +257,20 @@ Eurasia
 # Asia
 Arabia
 Arabian Peninsula
-Korea
 Siwalik
+Korea
+Far East
 Beringia
 
 # Americas
-Far East
+America
 Rocky Mountains
 Rockies
-America
+Great Plains
 Mesoamerica
+Guianas
 Amazonia
+Patagonia
 
 # Caribbean regions
 Caribbean
@@ -785,7 +790,7 @@ Okinawa
 # Russia assorted geography
 Siberia
 Sakhalin
-Kuriles
+Kurils
 
 # Philippines major islands
 Luzon
@@ -825,6 +830,7 @@ New Guinea
 
 # Australia states and territories
 Christmas Island
+Norfolk
 Northern Territory
 Western Australia
 South Australia

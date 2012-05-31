@@ -734,7 +734,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		if(isset($in[0])) {
 			$this->folder = $in[0];
 		} else {
-			throw new EHInvalidArgumentException($in);
+			throw new EHInvalidInputException($in);
 		}
 		if(isset($in[1])) {
 			$this->sfolder = $in[1];

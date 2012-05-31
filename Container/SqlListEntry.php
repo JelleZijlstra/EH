@@ -289,7 +289,7 @@ abstract class SqlListEntry extends ListEntry {
 	}
 	protected function setFakeProperty($field, $value) {
 		// Subclasses may allow "setting" more properties
-		throw new EHInvalidArgumentException($field);
+		throw new EHInvalidInputException($field);
 	}
 
 	/*

@@ -89,7 +89,7 @@ abstract class Property {
 				};
 				break;
 			default:
-				throw new EHInvalidArgumentException($this->getType());
+				throw new EHInvalidInputException($this->getType());
 		}
 	}
 	

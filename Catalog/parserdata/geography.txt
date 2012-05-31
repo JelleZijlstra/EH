@@ -529,6 +529,29 @@ Styria
 Tyrol
 Carinthia
 
+# French regions
+Alsace
+Aquitaine
+Auvergne
+Bretagne
+Bourgogne
+Centre
+Champagne-Ardenne
+Franche-Comte
+Ile-de-France
+Languedoc-Roussillon
+Limousin
+Lorraine
+Basse-Normandie
+Midi-Pyrenees
+Nord-Pas-de-Calais
+Pays de la Loire
+Picardie
+Poitou-Charentes
+Provence-Alpes-Cote d'Azur
+Rhone-Alpes
+Haute-Normandie
+
 # French dependencies
 Corsica
 French Guiana
@@ -691,6 +714,7 @@ Andamans and Nicobars
 Arunachal
 Andhra
 UP
+J&K
 
 # China provinces
 Anhui

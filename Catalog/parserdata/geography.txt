@@ -259,6 +259,7 @@ Palearctic
 Amazonia
 Beringia
 Paratethys
+Indo-Australia
 
 # Canadian provinces
 Alberta
@@ -831,3 +832,11 @@ Northern Cape
 Western Cape
 # Former province
 Transvaal
+
+# Some major islands
+Sao Tome
+Bioko
+Principe
+Grand Comoro
+Anjouan
+Moheli

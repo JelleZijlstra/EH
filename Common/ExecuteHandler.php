@@ -689,11 +689,14 @@ class ExecuteHandler extends EHICore {
 					'Prompt to be printed',
 				'includenewlines' =>
 					'Whether to include newlines in the line returned',
+				'initialtext' =>
+					'Initial suggested text',
 			),
 			'default' => array(
 				'lines' => array(),
 				'prompt' => '> ',
 				'includenewlines' => false,
+				'initialtext' => false,
 			),
 		))) return false;
 		$promptoffset = strlen($paras['prompt']);
@@ -726,12 +729,18 @@ class ExecuteHandler extends EHICore {
 		};
 		// set our settings
 		$this->stty('cbreak iutf8');
-		// get command
-		$cmd = array();
-		$cmdlen = 0;
-		$keypos = 0;
 		// always put cursor at beginning of line, and print prompt
 		echo "\033[200D" . $paras['prompt'];
+		if($paras['initialtext'] === false) {
+			// get command
+			$cmd = array();
+			$cmdlen = 0;
+			$keypos = 0;
+		} else {
+			echo $paras['initialtext'];
+			$cmd = mb_str_split($paras['initialtext']);
+			$cmdlen = $keypos = count($cmd);
+		}
 		while(true) {
 			// get input
 			$c = $this->fgetc(STDIN);

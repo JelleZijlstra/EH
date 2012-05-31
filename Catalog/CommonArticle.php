@@ -253,7 +253,10 @@ trait CommonArticle {
 			return true;
 		}
 		if(!$newname or !is_string($newname)) while(true) {
-			$newname = $this->getline('New name: ');
+			$newname = $this->getline(array(
+				'initialtext' => $this->name,
+				'prompt' => 'New name: ',
+			));
 			if($newname === 'q') return false;
 			break;
 		}

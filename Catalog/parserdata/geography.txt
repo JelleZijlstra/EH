@@ -255,12 +255,16 @@ USSR
 Eurasia
 
 # Asia
+Middle East
 Arabia
 Arabian Peninsula
 Siwalik
 Korea
 Far East
 Beringia
+
+# Australasia
+Melanesia
 
 # Americas
 America
@@ -828,6 +832,11 @@ Sulawesi
 Maluku
 New Guinea
 
+# PNG major islands
+New Britain
+New Ireland
+Bismarcks
+
 # Australia states and territories
 Christmas Island
 Norfolk
@@ -866,3 +875,4 @@ Principe
 Grand Comoro
 Anjouan
 Moheli
+Mascarenes

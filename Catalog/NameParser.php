@@ -132,7 +132,7 @@ class NameParser {
 			$this->parseForPhrase($name);
 		} elseif(substr($name, 0, 3) === 'MS ') {
 			$this->parseMsPhrase($name);
-		} elseif(preg_match('/^[A-Za-z\-\s]+ (\d+)$/', $name)) {
+		} elseif(preg_match('/^[A-Za-z\-\s]+ (\d+)(\(\d+\))?$/', $name)) {
 			$this->parseFullIssue($name);
 		} else {
 			$this->parseNormalName($name);
@@ -295,11 +295,11 @@ class NameParser {
 	
 	/*
 	 * Names of type "Lemur News 12.pdf" -> 
-	 *		'fullissue' => array('Lemur News', 12)
+	 *		'fullissue' => array('Lemur News', '12')
 	 */
 	private function parseFullIssue($in) {
-		preg_match('/^(.*) (\d+)$/', $in, $matches);
-		$this->baseName['fullissue'] = array($matches[1], (int) $matches[2]);
+		preg_match('/^(.*) (\d+(\(\d+\))?)$/', $in, $matches);
+		$this->baseName['fullissue'] = array($matches[1], $matches[2]);
 	}
 	
 	/*
@@ -648,7 +648,8 @@ class NameParser {
 					if(isset($value['topic'])) {
 						$topic = $value['topic'];
 						$allowedTopics = array(
-							'review', 'types', 'biography', 'obituary'
+							'review', 'types', 'biography', 'obituary', 
+							'bibliography',
 						);
 						$topicIsSpecial = 
 							count(array_intersect($topic, $allowedTopics)) > 0;

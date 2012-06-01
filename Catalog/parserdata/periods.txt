@@ -2,6 +2,7 @@
 Cenozoic
 Paleogene
 Neogene
+Paleozoic
 Mesozoic
 Cretaceous
 Jurassic

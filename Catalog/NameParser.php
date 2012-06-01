@@ -1,10 +1,6 @@
 <?php
 /*
  * NameParser. A class that can parse file names into machine-readable units.
- *
- * Known bugs:
- *  - Multiple periods are broken: "Vertebrata Cameroon Cretaceous, Pleistocene.pdf"
- *  - Doesn't like odd nov-phrases: "Muroidea Africa 14nov.pdf"
  */
 require_once(__DIR__ . '/../Common/common.php');
 

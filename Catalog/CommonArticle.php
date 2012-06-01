@@ -1367,7 +1367,18 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			}
 			return $word;
 		};
-		
+		$looper = function($f) use(&$splitTitle) {
+			return function($cmd, array $data) use(&$splitTitle, $f) {
+				if(count($data) !== 2) {
+					echo 'Invalid argument' . PHP_EOL;
+					return true;
+				}
+				for($i = $data[0]; $i <= $data[1]; $i++) {
+					$splitTitle[$i] = $f($splitTitle[$i]);
+				}
+				return true;
+			};
+		};
 		echo 'Current title: ' . $this->title . PHP_EOL;
 		// the array to hold the title
 		$splitTitle = $makeSplit($this->title);
@@ -1422,26 +1433,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 			},
 			'process' => array(
-				'l' => function($cmd, array $data) use(&$splitTitle, $tolower) {
-					if(count($data) !== 2) {
-						echo 'Invalid argument' . PHP_EOL;
-						return true;
-					}
-					for($i = $data[0]; $i <= $data[1]; $i++) {
-						$splitTitle[$i] = $tolower($splitTitle[$i]);
-					}
-					return true;
-				},
-				'u' => function($cmd, array $data) use(&$splitTitle, $toupper) {
-					if(count($data) !== 2) {
-						echo 'Invalid argument' . PHP_EOL;
-						return true;
-					}
-					for($i = $data[0]; $i <= $data[1]; $i++) {
-						$splitTitle[$i] = $toupper($splitTitle[$i]);
-					}
-					return true;
-				},
+				'l' => $looper($tolower),
+				'u' => $looper($toupper),
 				'i' => function($cmd, array $data) use(&$splitTitle) {
 					if(count($data) !== 2) {
 						echo 'Invalid argument' . PHP_EOL;
@@ -1470,32 +1463,18 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$splitTitle[$n + 1] = '';
 					return true;
 				},
-				'r' => function($cmd, array $data) use(&$splitTitle) {
-					if(count($data) !== 2) {
-						echo 'Invalid argument' . PHP_EOL;
-						return true;
-					}
-					for($i = $data[0]; $i <= $data[1]; $i++) {
-						$splitTitle[$i] = '';
-					}
-					return true;
-				},
-				'v' => function($cmd, array $data) use(&$splitTitle, $tolower) {
-					if(count($data) !== 2) {
-						echo 'Invalid argument' . PHP_EOL;
-						return true;
-					}
-					for($i = $data[0]; $i <= $data[1]; $i++) {
-						$splitTitle[$i] = preg_replace(
-							array(
-								'/(?<=[a-z,\.\)])(?=[A-Z])/u', '/(?=\()/u', 
-								'/(?<=,)(?=[a-zA-Z])/u'
-							),
-							array(' ', ' ', ' '),
-							$splitTitle[$i]);
-					}
-					return true;
-				},
+				'r' => $looper(function() {
+					return '';
+				}),
+				'v' => $looper(function($in) {
+					return preg_replace(
+						array(
+							'/(?<=[a-z,\.\)])(?=[A-Z])/u', '/(?=\()/u', 
+							'/(?<=,)(?=[a-zA-Z])/u'
+						),
+						array(' ', ' ', ' '),
+						$in);
+				}),
 				'w' => function() use(&$splitTitle, $unite, $makeSplit) {
 					$ret = $this->editWholeTitle(array(
 						'new' => $unite($splitTitle),

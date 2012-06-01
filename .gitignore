@@ -34,3 +34,4 @@ EH-parser/php_ehphp.h
 # File hierarchies that aren't ready yet
 PHPmap/
 Measurements/
+Misc/bin/

@@ -535,7 +535,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 				$this->$key = preg_replace(array("/([`’‘]|&apos;)/u", '/[“”]/u'), array("'", '"'), $this->$key);
 				if(($key !== 'pdfcontent') and preg_match("/(\n|\r)/", $field))
 					$this->warn('line break', $key);
-				if(strpos($field, '??') !== false)
+				if(($key !== 'pdfcontent') and strpos($field, '??') !== false)
 					$this->warn('double question mark', $key);
 			}
 		}

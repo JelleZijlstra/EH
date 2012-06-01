@@ -651,6 +651,12 @@ trait CommonArticle {
 		}
 		return $out;
 	}
+	public static function explodeAuthors($in) {
+		$authors = explode('; ', $in);
+		return array_map(function($author) {
+			return explode(', ', $author);
+		}, $authors);
+	}
 	/*
 	 * Should return array like:
 	 * array(

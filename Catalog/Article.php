@@ -209,6 +209,12 @@ class Article extends SqlListEntry implements ArticleInterface {
 					}
 					return $out;
 				})),
+				'processor' => function($in) {
+					$array = self::explodeAuthors($in);
+					return array_map(function($in) {
+						return Author::withArray($in);
+					}, $array);
+				},
 			'identifiers' => new SqlProperty(array(
 				'name' => 'identifiers',
 				'type' => Property::CUSTOM,
@@ -237,15 +243,32 @@ class Article extends SqlListEntry implements ArticleInterface {
 	static public function withCsvArticle(CsvArticle $in) {
 		$list = CsvArticleList::singleton();
 		$data = array();
-		// TODO: make sure the processor can handle this
-		$data['authors'] = $in->authors;
+
+		$data['name'] = $in->name;
+		$data['type'] = $in->type;
 		$data['year'] = $in->year;
 		$data['title'] = $in->title;
-		$data['volume'] = $in->volume;
+		// rely on processor to convert string -> Journal
+		$data['journal'] = $in->journal;
 		$data['series'] = $in->series;
+		$data['volume'] = $in->volume;
 		$data['issue'] = $in->issue;
 		$data['start_page'] = $in->start_page;
 		$data['end_page'] = $in->end_page;
+		$data['pages'] = $in->pages;
+		// rely on processor for conversion
+		$data['parent'] = $in->parent;
+		// TODO: add publisher with location
+		$data['publisher'] = $in->publisher;
+		$data['misc_data'] = $in->misc_data;
+		$data['authors'] = $in->authors;
+		
+		// TODO: folder
+		
+		$data['added'] = $in->addyear . '-' . $in->addmonth . '-' . $in->addday 
+			. ' 00:00:00';
+			
+		// TODO: identifiers
 	
 		$obj = new self($data, SqlListEntry::CONSTR_FULL, $list);
 		$list->addEntry($obj, array('isnew' => true));

@@ -724,10 +724,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 	}
 	/* CITING */
 	protected function _getAuthors() {
-		$authors = explode('; ', $this->authors);
-		return array_map(function($author) {
-			return explode(', ', $author);
-		}, $authors);
+		return self::explodeAuthors($this->authors);
 	}
 	/* ADDING DATA */
 	protected function setPathFromArray($in) {

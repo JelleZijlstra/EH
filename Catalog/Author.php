@@ -25,6 +25,10 @@ class Author extends SqlListEntry {
 		return array($this->initials(), $this->name, $this->suffix);
 	}
 	
+	public static function withArray(array $in) {
+		// TODO: get Author object corresponding to this array
+	}
+	
 	protected static function fillFields() {
 		return array(
 			'id' => new SqlProperty(array(

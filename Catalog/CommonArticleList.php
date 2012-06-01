@@ -464,19 +464,16 @@ trait CommonArticleList {
 		$this->build_newlist();
 		if($this->newlist) {
 			foreach($this->newlist as $file) {
-				switch($file->newadd(array('lslist' => $this->lslist))) {
-					case 0: 
-						return true;
-					case 1: 
-						continue 2;
-					case 2: 
-						$this->addEntry($file, array('isnew' => true));
-						break;
-				}
+				$this->addNewFile($file);
 			}
 		}
 		echo 'done' . PHP_EOL;
 		return true;
+	}
+	public function addNewFile(ArticleInterface $file) {
+		if($file->newadd(array('lslist' => $this->lslist))) {
+			$this->addEntry($file, array('isnew' => true));
+		}	
 	}
 	public function build_sugglist() {
 		if($this->sugglist === array()) {

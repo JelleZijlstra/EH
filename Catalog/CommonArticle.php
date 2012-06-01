@@ -1487,8 +1487,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					}
 					for($i = $data[0]; $i <= $data[1]; $i++) {
 						$splitTitle[$i] = preg_replace(
-							array('/(?<=[a-z,\.\)])(?=[A-Z])/u', '/(?=\()/u'),
-							array(' ', ' '),
+							array(
+								'/(?<=[a-z,\.\)])(?=[A-Z])/u', '/(?=\()/u', 
+								'/(?<=,)(?=[a-zA-Z])/u'
+							),
+							array(' ', ' ', ' '),
 							$splitTitle[$i]);
 					}
 					return true;
@@ -1666,10 +1669,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					));
 					return false;
 				},
+				'q' => function() {
+					throw new StopException('newadd');
+				}
 			),
 		))) {
-			case 'q': return 0;
-			case 'n': case 's': return 1;
+			case 'n': case 's': return true;
 			default: break;
 		}
 		/*
@@ -1679,11 +1684,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		// until we move it to the repository, so remember the old name
 		$oldname = $this->name;
 		if(!$this->checkForExistingFile($paras['lslist'])) {
-			return 1;
+			return false;
 		}
 		if(!$this->determinePath()) {
 			echo 'Unable to determine folder' . PHP_EOL;
-			return 1;
+			return false;
 		}
 		$this->shell(array(
 			'cmd' => 'mv',
@@ -1693,7 +1698,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				$this->path(array('type' => 'none')),
 			),
 		));
-		return $this->add() ? 2 : 1;
+		return $this->add();
 	}
 	protected /* bool */ function determinePath() {
 		// short-circuiting
@@ -3157,6 +3162,9 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						),
 					));
 					echo 'Split off file ' . $data . PHP_EOL;
+					$file = new self(NULL, 'e', $this->p);
+					$file->name = $data;
+					$this->p->addNewFile($file);
 					return true;
 				},
 			),

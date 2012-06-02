@@ -13,9 +13,11 @@ abstract class Sanitizer {
 	}
 	public static /* bool */ function testRegex(/* string */ $in) {
 	// tests whether a regex pattern is valid
-		ob_start();
-		$t = @preg_match($in, 'test');
-		ob_end_clean();
+		try {
+			$t = preg_match($in, 'test');
+		} catch(EHException $e) {
+			return false;
+		}
 		// if regex was invalid, preg_match returned FALSE
 		return $t !== false;
 	}

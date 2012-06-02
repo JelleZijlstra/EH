@@ -189,6 +189,7 @@ class ExecuteHandler extends EHICore {
 			// execute the command
 			$ret = $this->{$cmd['name']}($paras);
 		} catch(EHException $e) {
+			$e->handle();
 			echo "Error '" . $e->getMessage() . "' occurred while executing command '" . $cmd['name'] . "'" . PHP_EOL;
 			if(defined('IS_EHPHP')) {
 				return NULL;

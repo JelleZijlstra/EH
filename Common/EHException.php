@@ -5,7 +5,9 @@ class EHException extends Exception {
 	const E_FATAL = 0x3;
 	public function __construct($message, $code = self::E_RECOVERABLE, Exception $previous = NULL) {
 		parent::__construct($message, $code, $previous);
-		$this->handle();
+		if($code === self::E_FATAL) {
+			$this->handle_fatal();
+		}
 	}
 	public function handle() {
 		switch($this->code) {

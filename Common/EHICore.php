@@ -890,13 +890,14 @@ abstract class EHICore implements EHICoreInterface {
 		$this->curr('histlen', '++');
 		// continue executing as long as PC is below length of program
 		while($this->curr('pc') < $this->curr('histlen')) {
-			if($this->config['debug'])
+			if($this->config['debug']) {
 				echo "Feeding command (" . $this->curr('pc') . "): " .
 					$this->curr('pcres') . PHP_EOL;
+			}
 			try {
 				$ret = $this->execute();
-			}
-			catch(EHException $e) {
+			} catch(EHException $e) {
+				$e->handle();
 				echo "Error '" . $e->getMessage() . "' occurred while executing command '" . $in . "'" . PHP_EOL;
 				$ret = ExecuteHandler::EXECUTE_NEXT;
 			}

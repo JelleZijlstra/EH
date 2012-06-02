@@ -557,11 +557,11 @@ abstract class ContainerList extends ExecuteHandler {
 				$query['field'] = $key;
 				$query['content'] = $para;
 				// test special syntax
-				if(strlen($para)) switch($para[0]) {
+				if(strlen($para) > 0) switch($para[0]) {
 					case '/':
 						if(!Sanitizer::testRegex($para)) {
 							$error('invalid regex: ' . $para);
-							continue 2;
+							return false;
 						}
 						$query['regex'] = true;
 						break;
@@ -600,7 +600,7 @@ abstract class ContainerList extends ExecuteHandler {
 					if($para[0] === '/') {
 						if(!Sanitizer::testRegex($para)) {
 							$error('invalid regex: ' . $para);
-							continue;
+							return false;
 						}
 						$query['regex'] = true;
 					}
@@ -611,6 +611,7 @@ abstract class ContainerList extends ExecuteHandler {
 		if(count($queries) === 0) {
 			if($paras['printresult']) {
 				$error('invalid query');
+				return false;
 			}
 			if($this->config['debug']) {
 				print_r($paras);
@@ -636,8 +637,9 @@ abstract class ContainerList extends ExecuteHandler {
 			case 'objectarray': return $out;
 			case 'namearray':
 				$namearray = array();
-				foreach($out as $file)
+				foreach($out as $file) {
 					$namearray[] = $file->name;
+				}
 				return $namearray;
 			case 'count': return $count;
 		}

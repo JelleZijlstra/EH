@@ -473,8 +473,6 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		if(!$this->folder)
 			$this->warn('no content', 'folder');
 		if(!$this->isor('redirect', 'fullissue') && !$this->title) {
-			var_dump($this->type);
-			var_dump($this->isredirect());
 			$this->warn('no content', 'title');
 		}
 		if(!$this->isor('redirect', 'fullissue', 'supplement', 'erratum') && !$this->authors)

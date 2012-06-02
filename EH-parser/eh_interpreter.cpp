@@ -471,8 +471,15 @@ ehretval_t *eh_execute(ehretval_t *node, const ehcontext_t context) {
 		 */
 			case T_LVALUE_GET:
 			case T_LVALUE_SET:
-				ret = *eh_op_lvalue(node->opval, context);
+			{
+				ehretval_t **tmp = eh_op_lvalue(node->opval, context);
+				if(tmp == NULL) {
+					ret = NULL;
+				} else {
+					ret = *tmp;
+				}
 				break;
+			}
 			case T_RANGE:
 				// Attempt to cast operands to integers; if this does not work,
 				// return NULL. No need to yell, since eh_xtoi already does

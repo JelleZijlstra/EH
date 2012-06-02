@@ -1455,9 +1455,13 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 						echo 'Invalid argument' . PHP_EOL;
 						return true;
 					}
-					echo 'Current value of word ' . $data[0] . ': ' 
-						. $splitTitle[$data[0]] . PHP_EOL;
-					$splitTitle[$data[0]] = $this->getline('New value: ');
+					$n = $data[0];
+					echo 'Current value of word ' . $n . ': ' 
+						. $splitTitle[$n] . PHP_EOL;
+					$splitTitle[$n] = $this->getline(array(
+						'initialtext' => $splitTitle[$n],
+						'prompt' => 'New value: ',
+					));
 				},
 				't' => function($cmd, array $data) use(&$splitTitle) {
 					if(count($data) !== 2 || $data[0] !== $data[1]) {
@@ -1475,10 +1479,10 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				'v' => $looper(function($in) {
 					return preg_replace(
 						array(
-							'/(?<=[a-z,\.\)])(?=[A-Z])/u', '/(?=\()/u', 
-							'/(?<=,)(?=[a-zA-Z])/u'
+							'/(?<=[a-z,\.\)])(?=[A-Z])/u', '/(?<!^)(?=\()/u', 
+							'/(?<=,)(?=[a-zA-Z])/u', '/(?<=\))(?!$)/u',
 						),
-						array(' ', ' ', ' '),
+						array(' ', ' ', ' ', ' '),
 						$in);
 				}),
 				'w' => function() use(&$splitTitle, $unite, $makeSplit) {

@@ -121,8 +121,6 @@ statement_list:
 statement:
 	T_SEPARATOR				{ $$ = 0; }
 	| line_expr T_SEPARATOR	{ $$ = $1; }
-	| T_SET lvalue_set '=' expression T_SEPARATOR
-							{ $$ = eh_addnode(T_SET, 2, $2, $4); }
 	| lvalue_set T_ASSIGNMENT expression T_SEPARATOR
 							{ $$ = eh_addnode(T_SET, 2, $1, $3); }
 	| T_SET lvalue_set T_PLUSPLUS T_SEPARATOR

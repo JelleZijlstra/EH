@@ -3,10 +3,10 @@
 class Foo
 	public bar = 0
 	public set1:
-		set this->bar = 1
+		this->bar := 1
 	end
 	public set2:
-		set this->bar = 2
+		this->bar := 2
 	end
 	public useprop:
 		# Will use object property

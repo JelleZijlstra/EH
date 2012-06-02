@@ -5,7 +5,7 @@ class Foo
 endclass
 echo Foo::bar
 mah := new Foo
-set Foo::bar = 3
+Foo::bar := 3
 echo Foo::bar
 meh := new Foo
 echo $mah->bar

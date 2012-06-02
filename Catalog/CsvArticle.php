@@ -182,7 +182,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		$obj->folder = 'NOFILE';
 		$obj->name = $name;
 		$obj->add();
-		$parent->add($obj, array('isnew' => true));
+		$parent->addEntry($obj, array('isnew' => true));
 		return $obj;
 	}
 	public static function makeNewRedirect($name, $target, ContainerList $parent) {

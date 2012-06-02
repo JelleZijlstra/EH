@@ -3,4 +3,4 @@
 func test:
 	echo 2
 endfunc
-call test:
+test:

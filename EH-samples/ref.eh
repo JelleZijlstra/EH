@@ -3,5 +3,5 @@ echo 2
 func foo:
 	ret 1
 endfunc
-$ bar = 2
-call foo: &bar
+bar := 2
+foo: &bar

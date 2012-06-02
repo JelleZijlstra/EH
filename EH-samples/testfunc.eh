@@ -4,12 +4,12 @@ func test: n
 	echo $n
 	echo 'hi'
 	ret $n
-endfunc
+end
 
-call test: 1
+test: 1
 
-call test: 2
+test: 2
 
-$ b = test: 3
+b := test: 3
 
 echo $b

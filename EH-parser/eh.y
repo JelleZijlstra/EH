@@ -56,7 +56,6 @@ struct yy_buffer_state *yy_scan_string ( const char *str );
 %token T_RET
 %token T_SEPARATOR
 %token T_SET
-%token T_CALL
 %token T_NULL
 %token T_CLASS
 %token T_ENDCLASS
@@ -196,8 +195,6 @@ statement:
 	| T_CLASS bareword T_SEPARATOR classlist T_ENDCLASS T_SEPARATOR
 							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
 		/* Other statements */
-	| T_CALL expression T_SEPARATOR
-							{ $$ = eh_addnode(T_CALL, 1, $2); }
 	| T_RET expression T_SEPARATOR
 							{ $$ = eh_addnode(T_RET, 1, $2); }
 	| T_CONTINUE T_SEPARATOR

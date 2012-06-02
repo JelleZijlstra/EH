@@ -6,9 +6,9 @@ class Foo
 		ret 42
 	endfunc
 endclass
-$ foo = new Foo
-call printvar: $foo
-$ baz = $foo->bar
-call printvar: $baz
-call $baz: 2
+foo := new Foo
+printvar: $foo
+baz := $foo->bar
+printvar: $baz
+$baz: 2
 printvar: $baz

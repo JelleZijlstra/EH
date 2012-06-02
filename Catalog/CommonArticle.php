@@ -1663,7 +1663,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				}
 			),
 		))) {
-			case 'n': case 's': return true;
+			case 'n': case 's': return false;
 			default: break;
 		}
 		/*

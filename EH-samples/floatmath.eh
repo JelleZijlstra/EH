@@ -1,8 +1,8 @@
 #!/usr/bin/ehi
 # Math with floats
-set pi = 3.14
-set e = 1.68
-set answer = 42
+pi := 3.14
+e := 1.68
+answer := 42
 printvar: $pi + $e
 printvar: $pi * $e
 printvar: $pi / $e

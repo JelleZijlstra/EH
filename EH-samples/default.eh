@@ -12,7 +12,7 @@ switch $argc
 	case 4
 		echo 'That will not work'
 end
-set bar = given true
+bar := given true
 	case 2
 		false
 	case 0

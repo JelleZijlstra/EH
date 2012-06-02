@@ -3,8 +3,8 @@
 # Doesn't take into account many greater and lesser subtleties, but it
 # gets the core of the job done.
 func bto10: in, base
-	set getn = func: in, n
-		set char = $in->$n
+	getn := func: in, n
+		char := $in->$n
 		if $char >= 48 and $char <= 57
 			ret $char - 48
 		end
@@ -18,11 +18,11 @@ func bto10: in, base
 		end
 		ret false
 	end
-	set out = 0
-	set len = count $in
+	out := 0
+	len := count $in
 	for $len count i
-		set value = $getn: $in, $i
-		set out = $out + $value * (pow: $base, ($len - 1 - $i))
+		value := $getn: $in, $i
+		out := $out + $value * (pow: $base, ($len - 1 - $i))
 	end
 	ret $out
 end

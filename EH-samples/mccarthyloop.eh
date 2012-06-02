@@ -16,9 +16,9 @@ if $argc > 2
 	ret 1
 end
 if $argc = 2
-	$ input = @int $argv->1
+	input := @int $argv->1
 else
-	$ input = getinput:
+	input := getinput:
 end
 for $input count i
 	echo mccarthy: $i

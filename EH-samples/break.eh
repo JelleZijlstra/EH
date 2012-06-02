@@ -1,8 +1,8 @@
 #!/usr/bin/ehi
 # Illustrate uses of the break keyword
-$ n = 0
+n := 0
 while 1
-	$ n++
+	set n++
 	echo $n
 	if $n > 2
 		break
@@ -12,10 +12,10 @@ echo 'We got out of the infinite loop'
 
 while 1
 	echo 'Outer: ' . $n
-	$ n++
+	set n++
 	while 1
 		echo 'Inner: ' . $n
-		$ n++
+		set n++
 		if $n > 8
 			echo 'Breaking 2'
 			break 2

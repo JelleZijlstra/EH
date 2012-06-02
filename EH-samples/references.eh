@@ -18,7 +18,7 @@ echo $foo
 echo $bar
 func baz: n
 	n := $n + 2
-endfunc
+end
 baz: &foo
 # 9
 echo $foo
@@ -27,5 +27,5 @@ func meh: n
 	echo $n
 	# 9
 	echo $foo
-endfunc
+end
 meh: 1

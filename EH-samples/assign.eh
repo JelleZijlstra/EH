@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
-$ foo = 42
+foo := 42
 printvar: $foo
-set bar = 42
+bar := 42
 printvar: $bar
 baz := 42
 printvar: $bar

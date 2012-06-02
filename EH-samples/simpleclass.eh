@@ -2,5 +2,5 @@
 class Foo
 	public bar = 3
 endclass
-$ baz = new Foo
+baz := new Foo
 echo $baz->bar

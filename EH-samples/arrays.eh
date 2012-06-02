@@ -6,7 +6,7 @@ echo [1, 2] -> 0
 echo $foo -> 0
 echo [ 'booh', 2] -> 1
 echo $bar -> 1
-$ bar -> 3 = 'meh'
+bar->3 := 'meh'
 echo $bar -> 4
 echo $bar -> 3
 echo $bar -> 2

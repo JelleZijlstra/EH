@@ -1,10 +1,10 @@
 #!/usr/bin/ehi
 # Test the unary operators
-$ bar = 0
+bar := 0
 echo ~$bar
-$ foo = 1
+foo := 1
 echo (-$foo)
-$ baz = false
+baz := false
 echo !$baz
 echo !$foo
 # Even pathological stuff is allowed by ehi

@@ -8,10 +8,10 @@ end
 func test: n
 	echo $n
 end
-set baz = func: n
+baz := func: n
 	echo $n
 end
-$ n = given 2
+n := given 2
 	case 1
 		41
 	case 2
@@ -28,7 +28,7 @@ if 4 > 2
 else
 	echo 1
 end
-set mah = new Foo
+mah := new Foo
 $mah->bar: 42
 test: 42
 $baz: 42

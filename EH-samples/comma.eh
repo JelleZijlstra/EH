@@ -5,7 +5,7 @@ func giveargs: a, b, c
 	echo $b
 	echo $c
 	ret 0
-endfunc
+end
 # Expect 1
 printvar: (giveargs: 1, 2, 3) + 1
 # Expect 0

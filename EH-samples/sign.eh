@@ -2,8 +2,8 @@
 
 include: 'arrayfunc_lib.eh'
 
-set arr = [1, -1, 0, 2, -2]
-set arr = arrayfunc: $arr, func: in
+arr := [1, -1, 0, 2, -2]
+arr := arrayfunc: $arr, func: in
 	if $in > 0
 		ret 1
 	else 

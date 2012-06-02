@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
-// Basic while loop functionality
-$ ctr = 0
+# Basic while loop functionality
+ctr := 0
 while $ctr < 5
-	$ ctr++
+	set ctr++
 	echo $ctr
 endwhile

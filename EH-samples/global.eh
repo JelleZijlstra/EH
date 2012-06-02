@@ -7,11 +7,11 @@ class Foo
 		echo $myvar
 	end
 end
-set myvar = 42
+myvar := 42
 Foo::baz: 'test'
-set myvar = 'foo'
+myvar := 'foo'
 Foo::baz: 'bah'
-set newvar = Foo::baz
+newvar := Foo::baz
 $newvar: 19
 put @string 19
 echo @string 19

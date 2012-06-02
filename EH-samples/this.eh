@@ -8,9 +8,9 @@ class Foo
 	endfunc
 	public baz: n
 		echo 'Public method ' . $n
-		$ this->var = 2
+		this->var := 2
 		$this->bar: $n
 	endfunc
 endclass
-set foo = new Foo
+foo := new Foo
 $foo->baz: 42

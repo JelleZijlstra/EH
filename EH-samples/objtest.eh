@@ -13,7 +13,7 @@ class Foo
 		echo $bar
 	end
 end
-set o = new Foo
+o := new Foo
 # 0
 echo $o->bar
 (Foo::set1:)

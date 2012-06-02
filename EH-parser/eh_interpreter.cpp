@@ -930,7 +930,7 @@ ehretval_t *eh_op_new(const char *name) {
 
 	ehclass_t *classobj = get_class(name);
 	if(classobj == NULL) {
-		eh_error_unknown("class", name, efatal_e);
+		eh_error_unknown("class", name, eerror_e);
 		return ret;
 	}
 	ret = new ehretval_t(object_e);
@@ -1044,7 +1044,7 @@ void eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t *classname_r = eh_execute(paras[0], context);
 	ehclass_t *classobj = get_class(classname_r->stringval);
 	if(classobj != NULL) {
-		eh_error_redefine("class", classname_r->stringval, efatal_e);
+		eh_error_redefine("class", classname_r->stringval, eerror_e);
 		return;
 	}
 	classobj = new ehclass_t;
@@ -1171,7 +1171,7 @@ ehretval_t *eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 				function->stringval, curr_scope, context, T_LVALUE_GET
 			);
 			if(func == NULL) {
-				eh_error_unknown("function", function->stringval, efatal_e);
+				eh_error_unknown("function", function->stringval, eerror_e);
 				return ret;
 			}
 			if(EH_TYPE(func->value) != func_e) {
@@ -1360,8 +1360,15 @@ ehretval_t *eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 			}
 			break;
 		case doublecolon_e:
-			ret = *colon_access(basevar, index, context, T_LVALUE_GET);
+		{
+			ehretval_t **tmp = colon_access(basevar, index, context, T_LVALUE_GET);
+			if(tmp == NULL) {
+				ret = NULL;
+			} else {
+				ret = *tmp;
+			}
 			break;
+		}
 		default:
 			eh_error("Unsupported accessor", efatal_e);
 			break;
@@ -1831,12 +1838,12 @@ ehretval_t **colon_access(
 	}
 
 	if(EH_TYPE(operand1) != string_e) {
-		eh_error_type("class access", EH_TYPE(operand1), efatal_e);
+		eh_error_type("class access", EH_TYPE(operand1), eerror_e);
 		return ret;
 	}
 	ehclass_t *classobj = get_class(operand1->stringval);
 	if(classobj == NULL) {
-		eh_error_unknown("class", operand1->stringval, efatal_e);
+		eh_error_unknown("class", operand1->stringval, eerror_e);
 		return ret;
 	}
 	ehvar_t *member = class_getmember(&classobj->obj, label->stringval, context);

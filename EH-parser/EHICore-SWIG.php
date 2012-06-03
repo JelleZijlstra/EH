@@ -5,7 +5,11 @@
  *
  * PHP interface for the C++ EHI interpreter.
  */
-@include_once(BPATH . "/EH-parser/ehphp.php");
+try {
+	include_once(BPATH . "/EH-parser/ehphp.php");
+} catch(EHException $e) {
+	return;
+}
 if(extension_loaded("ehphp"))  {
 	define('IS_EHPHP', 0);
 	abstract class EHICore extends EHI implements EHICoreInterface {

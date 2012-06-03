@@ -1196,13 +1196,18 @@ class ExecuteHandler extends EHICore {
 			'synonyms' => array(
 				0 => 'function',
 				1 => 'arguments',
+				'p' => 'print',
 			),
 			'checklist' => array(
 				'function' => 'Function to call',
 				'arguments' => 'Arguments for the function call',
+				'print' => 'Whether to print the return value',
 			),
 			'errorifempty' => array('function'),
-			'default' => array('arguments' => array()),
+			'default' => array(
+				'arguments' => array(),
+				'print' => false,
+			),
 			'checkparas' => array(
 				'function' => function($in) {
 					return function_exists($in);
@@ -1212,6 +1217,11 @@ class ExecuteHandler extends EHICore {
 				}
 			),
 		))) return false;
-		return call_user_func_array($paras['function'], $paras['arguments']);
+		$ret = call_user_func_array($paras['function'], $paras['arguments']);
+		if($paras['print']) {
+			Sanitizer::printVar($ret);
+			echo PHP_EOL;
+		}
+		return $ret;
 	}
 }

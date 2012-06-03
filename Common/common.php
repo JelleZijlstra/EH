@@ -18,6 +18,8 @@ error_reporting(E_ALL | E_STRICT);
 ini_set("display_errors", '1');
 
 require_once(BPATH . '/Common/AutoLoader.php');
+// load exceptions
+require_once(BPATH . '/Common/EHException.php');
 // load interface
 require_once(BPATH . '/Common/EHICore.interface.php');
 // try to get the C++ EHI loaded
@@ -29,8 +31,6 @@ if(extension_loaded("ehphp")) {
 	require_once("EHICore.php");
 	define('EHI_LOADED', 0);
 }
-// load exceptions
-require_once(BPATH . '/Common/EHException.php');
 
 // set encoding
 if(mb_internal_encoding('UTF-8') === false) {

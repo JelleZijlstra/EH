@@ -30,7 +30,12 @@ class Folder extends SqlListEntry {
 	
 	// Adds a child folder of name $name, returns the Folder object
 	private function addChild($name) {
-	
+		$obj = self::newWithData(array(
+			'parent' => $this,
+			'name' => $name,
+		), $this->p);
+		$this->children[] = $obj;
+		return $obj;
 	}
 	
 	/*
@@ -49,10 +54,17 @@ class Folder extends SqlListEntry {
 			return $child->makeChildPath($in);
 		}
 	}
-	
+
+	public static function withArray(array $in) {
+		assert(isset($in[0]));
+		$f = array_shift($in);
+		$parentFolder = Folder::withName($f);
+		return $parentFolder->makeChildPath($in);
+	}
+
 	protected static $Folder_commands = array(
 	);
-	
+
 	protected static function fillFields() {
 		return array(
 			'id' => new SqlProperty(array(

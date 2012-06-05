@@ -2,6 +2,10 @@
 /*
  * SqlListEntry.php
  * Defines a class for objects representing database rows
+ *
+ * Potential problem: when a new ListEntry is created, we may already need its
+ * ID for other fields, before it is actually inserted into the DB and there is 
+ * an ID.
  */
 abstract class SqlListEntry extends ListEntry {
 	const CONSTR_ID = 0;
@@ -57,11 +61,14 @@ abstract class SqlListEntry extends ListEntry {
 	/*
 	 * Either return the object with name $name or create a new object.
 	 */
-	public static function withName(/* string */ $name) {
+	public static function withName(/* string */ $name, array $data = NULL) {
 		$parent = static::parentClass();
 		$parentObj = $parent::singleton();
 		if($parentObj->has($name)) {
 			return $parentObj->get($name);
+		} elseif($data !== NULL) {
+			$data['name'] = $name;
+			return self::newWithData($data);
 		} else {
 			$newName = $this->menu(array(
 				'head' =>
@@ -105,6 +112,15 @@ abstract class SqlListEntry extends ListEntry {
 			$parentObj->addEntryWithId($obj);
 			return $obj;
 		}
+	}
+
+	/*
+	 * Create a new object.
+	 */
+	public static function newWithData(array $data, SqlContainerList $parent) {
+		$child = new self($data, SqlListEntry::CONSTR_FULL, $this->p);
+		$parent->addEntry($child, array('isnew' => true));
+		return $child;
 	}
 
 	/*

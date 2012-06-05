@@ -103,9 +103,7 @@ trait CommonArticle {
 				'print' => false,
 			),
 			'listoptions' => array(
-				'name' => array(
-					'url', 'doi', 'pmid', 'jstor', 'pmc', 'hdl', 'isbn',
-				),
+				'name' => self::getIdentifierNames(),
 			),
 		))) return false;
 		$id = $this->_getIdentifier($paras['name']);
@@ -114,6 +112,11 @@ trait CommonArticle {
 			echo PHP_EOL;
 		}
 		return $id;
+	}
+	static public function getIdentifierNames() {
+		return array(
+			'url', 'doi', 'pmid', 'jstor', 'pmc', 'hdl', 'isbn',
+		);
 	}
 	abstract protected function _getIdentifier($name);
 	

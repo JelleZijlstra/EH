@@ -80,10 +80,7 @@ class Article extends SqlListEntry implements ArticleInterface {
 		$this->added = $date->format('Y-m-d H:i:s');
 	}
 	protected function setPathFromArray($in) {
-		assert(isset($in[0]));
-		$f = array_shift($in);
-		$parentFolder = Folder::withName($f);
-		$this->folder = $parentFolder->makeChildPath($in);
+		$this->folder = Folder::withArray($in);
 	}
 	/*
 	 * Identifiers
@@ -241,7 +238,6 @@ class Article extends SqlListEntry implements ArticleInterface {
 	 * Conversion
 	 */
 	static public function withCsvArticle(CsvArticle $in) {
-		$list = CsvArticleList::singleton();
 		$data = array();
 
 		$data['name'] = $in->name;
@@ -258,19 +254,26 @@ class Article extends SqlListEntry implements ArticleInterface {
 		$data['pages'] = $in->pages;
 		// rely on processor for conversion
 		$data['parent'] = $in->parent;
-		// TODO: add publisher with location
-		$data['publisher'] = $in->publisher;
+		$data['publisher'] = Publisher::withName($in->publisher, array(
+			'location' => $in->location,
+		));
 		$data['misc_data'] = $in->misc_data;
 		$data['authors'] = $in->authors;
 		
-		// TODO: folder
-		
+		$data['folder'] = Folder::withArray(array(
+			$in->folder, $in->sfolder, $in->ssfolder,
+		));
 		$data['added'] = $in->addyear . '-' . $in->addmonth . '-' . $in->addday 
 			. ' 00:00:00';
 			
-		// TODO: identifiers
-	
-		$obj = new self($data, SqlListEntry::CONSTR_FULL, $list);
-		$list->addEntry($obj, array('isnew' => true));
+		// setter should handle this
+		foreach(self::getIdentifierNames() as $identifier) {
+			$id = $in->getIdentifier(array('name' => $identifier));
+			if($id !== false) {
+				$data[$identifier] = $id;
+			}
+		}
+
+		return self::newWithData($data, CsvArticleList::singleton());
 	}
 }

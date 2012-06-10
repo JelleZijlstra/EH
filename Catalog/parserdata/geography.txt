@@ -227,6 +227,7 @@ Dominican Rep
 CAR
 DRC
 PNG
+Solomon Is
 UAE
 UK
 USA

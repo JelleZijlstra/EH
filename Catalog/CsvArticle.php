@@ -618,6 +618,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			case 'POP': case 'Papers on Paleontology, The Museum of Palaeontology, University of Michigan': $o = 'Papers on Paleontology'; break;
 			case 'PPP': case 'Palaeogeography,Palaeoclimatology,Palaeoecology': $o = 'Palaeogeography, Palaeoclimatology, Palaeoecology'; break;
 			case 'PZ': case 'Paläontologisches Zeitschrift': $o = 'Paläontologische Zeitschrift'; break;
+			case 'PZSL': $o = 'Proceedings of the Zoological Society of London'; break;
 			case 'QSR': case 'Quaternary Science Review': $o = 'Quaternary Science Reviews'; break;
 			case 'RAPBBA': $o = 'RAP Bulletin of Biological Assessment'; break;
 			case 'RBG': case 'Rev. Brasil. Genet.': $o = 'Revista Brasileira de Genetica'; break;

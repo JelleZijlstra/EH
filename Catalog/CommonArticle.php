@@ -575,7 +575,7 @@ trait CommonArticle {
 		}
 		$func = 'cite' . $this->p->citetype;
 		$result = $this->$func();
-		if(is_array($result)) {
+		if(is_array($result) && $asString) {
 			$result = implode(PHP_EOL, $result);
 		}
 		return $result;
@@ -1482,8 +1482,14 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 				'v' => $looper(function($in) {
 					return preg_replace(
 						array(
-							'/(?<=[a-z,\.\)])(?=[A-Z])/u', '/(?<!^)(?=\()/u', 
-							'/(?<=,)(?=[a-zA-Z])/u', '/(?<=\))(?!$)/u',
+							// capital letter not at beginning of word
+							'/(?<=[a-z,\.\)])(?=[A-Z])/u',
+							// left parenthesis not at beginning of word
+							'/(?<!^)(?=\()/u', 
+							// comma followed by letter
+							'/(?<=,)(?=[a-zA-Z])/u', 
+							// right parenthesis not at end of word
+							'/(?<=\))(?![$,])/u',
 						),
 						array(' ', ' ', ' ', ' '),
 						$in);
@@ -2943,7 +2949,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					}
 					break;
 				case 'dc.relation.ispartofseries':
-					$series = preg_split('/;\s+(no|vol|v)\.\s+|, article /u', $value);
+					$series = preg_split('/[;,]\s+(no|vol|v|article|pt)\.?\s+/u', $value);
+					var_dump($series, $value);
 					$data['journal'] = trim($series[0]);
 					$data['volume'] = trim($series[1]);
 					if(isset($series[2])) {

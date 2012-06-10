@@ -32,7 +32,7 @@ class Citation {
 				echo 'Could not retrieve sfn (no handle)' . PHP_EOL;
 				return false;
 			}
-			$this->sfn = ArticleList::singleton()->getsfn($this->handle);
+			$this->sfn = CsvArticleList::singleton()->getsfn($this->handle);
 		}
 		$out = substr($this->sfn, 0, -2);
 		if($this->p) $out .= '|p=' . $this->p;
@@ -47,7 +47,7 @@ class Citation {
 				return false;
 			}
 			$this->refname = 
-				ArticleList::singleton()->getrefname($this->handle);
+				CsvArticleList::singleton()->getrefname($this->handle);
 			if(!$this->refname) {
 				echo 'Could not retrieve refname' . PHP_EOL;
 				return false;
@@ -75,7 +75,7 @@ class Parser extends ExecuteHandler {
 		 * prepare for parsing
 		 */
 		$this->refs = array();
-		$csvlist = ArticleList::singleton();
+		$csvlist = CsvArticleList::singleton();
 		$this->result = $this->input = $in;
 		$this->getcitetype();
 		$csvlist->verbosecite = true;
@@ -156,7 +156,7 @@ class Parser extends ExecuteHandler {
 	}
 	function getcitetype() {
 		preg_match('/<!--CITETYPE (.*?)-->/', $this->input, $matches);
-		$csvlist = ArticleList::singleton();
+		$csvlist = CsvArticleList::singleton();
 		if(isset($matches[1])) {
 			$csvlist->citetype = $matches[1];
 		} elseif(!isset($csvlist->citetype)) {
@@ -166,7 +166,7 @@ class Parser extends ExecuteHandler {
 	public $mode; // string: parsing mode
 	public $includesfn; // bool: whether or not Sfn should be included in short-form citations
 	public function usemode() {
-		$csvlist = ArticleList::singleton();
+		$csvlist = CsvArticleList::singleton();
 		switch($this->mode) {
 			case 'wlist':
 				$this->replacement = 1;
@@ -229,7 +229,7 @@ class Parser extends ExecuteHandler {
 	}
 	public $resolveredirects; // bool: whether self::input should be edited to resolve redirects
 	function cite($cite) {
-		$csvlist = ArticleList::singleton();
+		$csvlist = CsvArticleList::singleton();
 		$c = parsecite($cite);
 		$tmp = $csvlist($c['main']);
 		if(is_array($tmp)) {
@@ -239,9 +239,9 @@ class Parser extends ExecuteHandler {
 			if(in_array($template, array('hdl', 'jst', 'doi', 'pmc', 'pmi')))
 				$url = $csvlist->get_citedoiurl($c['main'], $template);
 			$long = $tmp[1];
-		}
-		else
+		} else {
 			$text = $tmp;
+		}
 		if($this->resolveredirects and $csvlist->isredirect($cite)) {
 			$replace = '{' . $csvlist->resolve_redirect($c['main']);
 			if(isset($c['p'])) $replace .= '|p=' . $c['p'];
@@ -371,7 +371,7 @@ class Parser extends ExecuteHandler {
 		);
 	}
 	function shutdown() {
-		ArticleList::singleton()->saveIfNeeded();
+		CsvArticleList::singleton()->saveIfNeeded();
 		exit;
 	}
 }
@@ -402,7 +402,7 @@ function parse_wlist($in) {
 		return false;
 	}
 	global $wlist_p;
-	$csvlist = ArticleList::singleton();
+	$csvlist = CsvArticleList::singleton();
 	if(!$csvlist->citetype) {
 		$csvlist->citetype = 'wp';
 	}
@@ -415,7 +415,7 @@ function parse_wlist($in) {
 function parse_paper($infile) {
 	return fileparse('paper', $infile);
 	global $paper_p;
-	$csvlist = ArticleList::singleton();
+	$csvlist = CsvArticleList::singleton();
 	if(!$csvlist->citetype) {
 		$csvlist->citetype = 'paper';
 	}

@@ -2321,7 +2321,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		/*
 		 * Process "source" field
 		 */
-		$source = preg_split("/(, Vol\. |, No\. | \(|\), pp?\. )/", $head[2]);
+		$source = preg_split("/(, (Vol|No|Bd|H)\. | \(|\), pp?\. )/", $head[2]);
 		$data['journal'] = $source[0];
 		$data['volume'] = $source[1];
 		// issue may have been omitted

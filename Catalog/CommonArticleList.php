@@ -149,7 +149,6 @@ trait CommonArticleList {
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		while($this->has($file->name)) {
 			echo "File " . $file->name . " already exists.";
-			debug_print_backtrace();
 			if($this->isredirect($file->name)) {
 				echo ' The existing file is a redirect.';
 			}

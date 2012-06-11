@@ -1855,7 +1855,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			),
 		));
 		switch($cmd) {
-			case 'n': case 'r': return false;
+			case 'd': case 'r': return false;
 			case 's': return true;
 		}
 		// control should never reach here
@@ -2950,7 +2950,6 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					break;
 				case 'dc.relation.ispartofseries':
 					$series = preg_split('/[;,]\s+(no|vol|v|article|pt)\.?\s+/u', $value);
-					var_dump($series, $value);
 					$data['journal'] = trim($series[0]);
 					$data['volume'] = trim($series[1]);
 					if(isset($series[2])) {

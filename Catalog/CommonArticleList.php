@@ -195,12 +195,12 @@ trait CommonArticleList {
 			),
 			'checkparas' => array(
 				'handle' => function($in) {
-					// NOFILEs can't have a file extension
-					$parser = NameParser::parse($in);
-					if(!is_string($in) || ($parser->extension() !== '')) {
+					if(!is_string($in)) {
 						return false;
 					}
-					return !$this->has($in);
+					// NOFILEs can't have a file extension
+					$parser = NameParser::parse($in);
+					return ($parser->extension() !== '') && !$this->has($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;

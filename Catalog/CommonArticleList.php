@@ -195,8 +195,9 @@ trait CommonArticleList {
 			),
 			'checkparas' => array(
 				'handle' => function($in) {
-					// NOFILEs can't have dots in their names
-					if(!is_string($in) || (strpos($in, '.') !== false)) {
+					// NOFILEs can't have a file extension
+					$parser = NameParser::parse($in);
+					if(!is_string($in) || ($parser->extension() !== '')) {
 						return false;
 					}
 					return !$this->has($in);

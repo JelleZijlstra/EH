@@ -97,6 +97,9 @@ class NameParser {
 	private $baseName = array();
 	public function baseName() { return $this->baseName; }
 	
+	/*
+	 * Constructors.
+	 */
 	public function __construct(/* string */ $name) {
 		self::buildLists();
 		$this->rawName = $name;
@@ -134,6 +137,16 @@ class NameParser {
 			$this->parseNormalName($name);
 		}
 		$this->validateNames();
+	}
+	
+	private static $parsers = array();
+	
+	public static function parse(/* string */ $text) {
+		if(isset(self::$parsers[$text])) {
+			return self::$parsers[$text];
+		} else {
+			return new self($text);
+		}
 	}
 	
 	/*

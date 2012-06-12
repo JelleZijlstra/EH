@@ -122,10 +122,8 @@ trait CommonArticle {
 	
 	private $nameParser = NULL;
 	public function getNameParser() {
-		if($this->nameParser === NULL) {
-			$this->nameParser = new NameParser($this->name);
-		} elseif($this->nameParser->rawName() !== $this->name) {
-			$this->nameParser = new NameParser($this->name);		
+		if(($this->nameParser === NULL) || ($this->nameParser->rawName() !== $this->name)) {
+			$this->nameParser = NameParser::parse($this->name);		
 		}
 		return $this->nameParser;
 	}

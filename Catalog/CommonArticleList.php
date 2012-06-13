@@ -126,6 +126,8 @@ trait CommonArticleList {
 			'desc' => 'Test Article::findtitle_pdfcontent()\'s capabilities',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
+		'getNameArray' => array('name' => 'getNameArray',
+			'desc' => 'Returns an array with the names of all entries'),
 	);
 	public function cli() {
 		$this->setup_commandline('Catalog');
@@ -232,6 +234,7 @@ trait CommonArticleList {
 		$childclass = self::$childClass;
 		$childclass::makeNewRedirect($paras['handle'], $paras['target'], $this);
 	}
+	abstract public function getNameArray(array $paras = array());
 	
 	/*
 	 * check() and its friends

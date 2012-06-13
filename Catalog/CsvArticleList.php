@@ -10,6 +10,13 @@ class CsvArticleList extends CsvContainerList {
 	protected function __construct(array $commands = array()) {
 		parent::__construct(self::$ArticleList_commands);
 	}
+	public function getNameArray(array $paras = array()) {
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		))) return false;
+		return array_keys($this->c);
+	}
 	/* parsing - needs overall revision, and coordination with Parser class */
 	protected function parse_wlist(array $paras) {
 		if($this->process_paras($paras, array(

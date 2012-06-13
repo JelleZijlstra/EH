@@ -852,7 +852,7 @@ class ExecuteHandler extends EHICore {
 					return $cmd;
 				case "\011": // Tab and Ctrl+I
 					$command = $getcmd();
-					$offset = strrpos($command, "'", $keypos);
+					$offset = strrpos($command, "'", -($cmdlen - $keypos));
 					if(isset($autocompleter) && $offset !== false) {
 						$autocompleted = substr($command, $offset + 1);
 						$addition = $autocompleter->lookup($autocompleted);
@@ -1071,11 +1071,6 @@ class ExecuteHandler extends EHICore {
 	}
 	public function test($paras) {
 	// Test function that might do anything I currently want to test
-		$c = $this->fgetc(STDIN);
-		var_dump($c);
-		var_dump(ord($c), chr($c));
-		return;
-	
 	// Currently, returning its argument
 		// and telling us what functions etcetera we have defined
 		eval($paras[0]);

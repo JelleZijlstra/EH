@@ -695,12 +695,23 @@ class ExecuteHandler extends EHICore {
 					'Whether to include newlines in the line returned',
 				'initialtext' =>
 					'Initial suggested text',
+				'autocompletion' =>
+					'Array of strings for autocompletion',
 			),
 			'default' => array(
 				'lines' => array(),
 				'prompt' => '> ',
 				'includenewlines' => false,
 				'initialtext' => false,
+				'autocompletion' => false,
+			),
+			'checkparas' => array(
+				'lines' => function($in) {
+					return is_array($in);
+				},
+				'autocompletion' => function($in) {
+					return is_array($in);
+				},
 			),
 		))) return false;
 		$promptoffset = strlen($paras['prompt']);
@@ -721,7 +732,7 @@ class ExecuteHandler extends EHICore {
 				return NULL;
 			}
 		};
-		$showcursor = function() use (&$cmdlen, &$keypos, $getcmd, $promptoffset) {
+		$showcursor = function() use(&$cmdlen, &$keypos, $getcmd, $promptoffset) {
 			// return to saved cursor position, clear line
 			// first move as far west as we can; 200 positions should suffice
 			echo "\033[200D\033[" . $promptoffset . "C\033[K";
@@ -731,6 +742,25 @@ class ExecuteHandler extends EHICore {
 			if($cmdlen > $keypos)
 				echo "\033[" . ($cmdlen - $keypos) . "D";
 		};
+		$addCharacter = function($c) use(&$cmdlen, &$keypos, &$cmd) {
+			$tmp = array();
+			$nchars = $cmdlen - $keypos;
+			for($i = $keypos; $i < $cmdlen; $i++) {
+				$tmp[] = $cmd[$i];
+			}
+			// add new character to command
+			$cmd[$keypos] = $c;
+			$cmdlen++;
+			$keypos++;
+			// add characters back to command
+			for($i = 0; $i < $nchars; $i++) {
+				$cmd[$keypos + $i] = $tmp[$i];
+			}
+		};
+		// prepare autocompletion
+		if($paras['autocompletion'] !== false) {
+			$autocompleter = new Autocompleter($paras['autocompletion']);
+		}
 		// set our settings
 		$this->stty('cbreak iutf8');
 		// always put cursor at beginning of line, and print prompt
@@ -820,14 +850,25 @@ class ExecuteHandler extends EHICore {
 					// restore sane stty settings for the duration of command execution
 					$this->stty("sane");
 					return $cmd;
-				// more cases for Ctrl stuff needed
+				case "\011": // Tab and Ctrl+I
+					$command = $getcmd();
+					$offset = strrpos($command, "'", $keypos);
+					if(isset($autocompleter) && $offset !== false) {
+						$autocompleted = substr($command, $offset + 1);
+						$addition = $autocompleter->lookup($autocompleted);
+						if($addition !== false) {
+							for($i = 0, $len = strlen($addition); $i < $len; $i++) {
+								$addCharacter($addition[$i]);
+							}
+						}
+					}
+					break;
 				case "\001": // Ctrl+A
 				case "\002": // Ctrl+B
 				case "\005": // Ctrl+E
 				case "\006": // Ctrl+F
 				case "\007": // Ctrl+G
 				case "\010": // Ctrl+H
-				case "\011": // Ctrl+I
 				case "\013": // Ctrl+K
 				case "\016": // Ctrl+N
 				case "\020": // Ctrl+P
@@ -848,22 +889,8 @@ class ExecuteHandler extends EHICore {
 				case "\004": // Ctrl+D: stop
 					echo PHP_EOL; // make newline
 					throw new StopException("fgetc");
-					break;
 				default: // other characters: add to command
-					// temporary array to hold characters to be moved over
-					$tmp = array();
-					$nchars = $cmdlen - $keypos;
-					for($i = $keypos; $i < $cmdlen; $i++) {
-						$tmp[] = $cmd[$i];
-					}
-					// add new character to command
-					$cmd[$keypos] = $c;
-					$cmdlen++;
-					$keypos++;
-					// add characters back to command
-					for($i = 0; $i < $nchars; $i++) {
-						$cmd[$keypos + $i] = $tmp[$i];
-					}
+					$addCharacter($c);
 					break;
 			}
 			// show command
@@ -1044,6 +1071,11 @@ class ExecuteHandler extends EHICore {
 	}
 	public function test($paras) {
 	// Test function that might do anything I currently want to test
+		$c = $this->fgetc(STDIN);
+		var_dump($c);
+		var_dump(ord($c), chr($c));
+		return;
+	
 	// Currently, returning its argument
 		// and telling us what functions etcetera we have defined
 		eval($paras[0]);

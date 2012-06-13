@@ -557,6 +557,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			case 'AZC': case 'Acta zoologica cracoviensia': $o = 'Acta Zoologica Cracoviensia'; break;
 			case 'AZF': case 'Annales Zoologicae Fennici': $o = 'Annales Zoologici Fennici'; break;
 			case 'BAMNH': $o = 'Bulletin of the American Museum of Natural History'; break;
+			case 'BBMNHG': $o = 'Bulletin of the British Museum (Natural History), Geology'; break;
 			case 'BFMNH': $o = 'Bulletin of the Florida Museum of Natural History'; break;
 			case 'BKBIN': $o = "Bulletin de l'Institut royal des sciences naturales de Belgique / Bulletin van het Koninklijk Belgisch Instituut voor Natuurwetenschappen"; break;
 			case 'BMNHN': $o = "Bulletin du Muséum national d'histoire naturelle"; break;
@@ -573,6 +574,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			case 'Courier Forschungsinstitut Senckenberg': $o = 'Courier Forschungs-Institut Senckenberg'; break;
 			case 'CPMHNM': case 'Comunicaciones Paleontologicas del Museo de Historia Natural de Montevideo': $o = 'Comunicaciones Paleontológicas del Museo de Historia Natural de Montevideo'; break;
 			case 'Comptes Rendus de l\'Académie des Sciences de Paris, Earth and Planetary Sciences': case 'Comptes Rendus de l\'Académie des Sciences de Paris, Sciences de la Terre et des planètes': $o = 'Comptes Rendus de l\'Académie des Sciences - Series IIA - Earth and Planetary Science'; break;
+			case 'CRAS': $o = 'Comptes Rendus de l\'Académie des Sciences'; break;
 			case 'CP': case 'COL-PA': $o = 'Coloquios de Paleontología'; break;
 			case 'EA': case 'Evolutionary Anthropology': $o = 'Evolutionary Anthropology: Issues, News, and Reviews'; break;
 			case 'EG': case 'Estudios Geologicos': $o = 'Estudios Geológicos'; break;

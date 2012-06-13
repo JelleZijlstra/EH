@@ -413,7 +413,7 @@ trait CommonArticleList {
 	 */
 		echo "checking whether articles in library are in catalog... ";
 		foreach($this->lslist as $lsfile) {
-			if(!$this->has($lsfile->name) or $this->isredirect($file->name)) {
+			if(!$this->has($lsfile->name) or $this->isredirect($lsfile->name)) {
 				echo PHP_EOL;
 				$cmd = $this->menu(array(
 					'options' => array(
@@ -442,7 +442,7 @@ trait CommonArticleList {
 					case 's': 
 						break;
 					case 'a':
-						if($this->isredirect($file->name)) {
+						if($this->isredirect($lsfile->name)) {
 							// remove redirect
 							$this->remove(array(
 								$file->name, 

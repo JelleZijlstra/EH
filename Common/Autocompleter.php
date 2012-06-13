@@ -52,6 +52,7 @@ class Autocompleter {
 	private function fill(&$tree, $word) {
 		if(strlen($word) === 0) {
 			$tree['END'] = true;
+			return;
 		}
 		$firstLetter = $word[0];
 		$rest = substr($word, 1);

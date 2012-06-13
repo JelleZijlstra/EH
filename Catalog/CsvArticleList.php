@@ -17,6 +17,13 @@ class CsvArticleList extends CsvContainerList {
 		))) return false;
 		return array_keys($this->c);
 	}
+	private $autocompleter = NULL;
+	public function getAutocompleter() {
+		if($this->autocompleter === NULL) {
+			$this->autocompleter = new Autocompleter($this->getNameArray());
+		}
+		return $this->autocompleter;
+	}
 	/* parsing - needs overall revision, and coordination with Parser class */
 	protected function parse_wlist(array $paras) {
 		if($this->process_paras($paras, array(

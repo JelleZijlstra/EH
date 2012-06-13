@@ -697,12 +697,15 @@ class ExecuteHandler extends EHICore {
 					'Initial suggested text',
 				'autocompletion' =>
 					'Array of strings for autocompletion',
+				'autocompleter' =>
+					'Autocompleter object for autocompletion',
 			),
 			'default' => array(
 				'lines' => array(),
 				'prompt' => '> ',
 				'includenewlines' => false,
 				'initialtext' => false,
+				'autocompleter' => false,
 				'autocompletion' => false,
 			),
 			'checkparas' => array(
@@ -711,6 +714,9 @@ class ExecuteHandler extends EHICore {
 				},
 				'autocompletion' => function($in) {
 					return is_array($in);
+				},
+				'autocompleter' => function($in) {
+					return ($in instanceof Autocompleter);
 				},
 			),
 		))) return false;
@@ -758,7 +764,9 @@ class ExecuteHandler extends EHICore {
 			}
 		};
 		// prepare autocompletion
-		if($paras['autocompletion'] !== false) {
+		if($paras['autocompleter'] !== false) {
+			$autocompleter = $paras['autocompleter'];
+		} elseif($paras['autocompletion'] !== false) {
 			$autocompleter = new Autocompleter($paras['autocompletion']);
 		}
 		// set our settings
@@ -1083,6 +1091,10 @@ class ExecuteHandler extends EHICore {
 		return $paras[0];
 	}
 	/* Miscellaneous stuff */
+	public function getAutocompleter() {
+		// Autocompletion in getline(). Default is no autocompletion.
+		return false;
+	}
 	public function switchcli(array $paras) {
 		if(!$this->process_paras($paras, array(
 			'name' => __FUNCTION__,

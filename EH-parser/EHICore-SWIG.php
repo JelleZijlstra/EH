@@ -43,6 +43,7 @@ if(extension_loaded("ehphp"))  {
 					'prompt' => $this->prompt,
 					'lines' => $history,
 					'includenewlines' => true,
+					'autocompleter' => $this->getAutocompleter(),
 				));
 			} catch(StopException $e) {
 				// make StopException here equivalent to typing 'quit'

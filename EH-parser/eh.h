@@ -552,6 +552,10 @@ public:
 	EHParser(void);
 	~EHParser(void);
 };
+
+// macros to avoid having to check for NULL all the time
+#define EH_TYPE(ret) (((ret) == NULL) ? null_e : (ret)->type)
+
 // put this at the bottom because of dependencies
 #include "ehi.h"
 #endif /* EH_H_ */

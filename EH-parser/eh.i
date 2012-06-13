@@ -32,7 +32,7 @@ zval *arrtozval(ehvar_t **paras) {
 		while(currvar != NULL) {
 			// convert an EH array member to a PHP array member
 			if(currvar->indextype == int_e) {
-				switch(currvar->value->type) {
+				switch(EH_TYPE(currvar->value)) {
 					case int_e:
 						add_index_long(arr,
 							currvar->index, currvar->value->intval);
@@ -61,9 +61,8 @@ zval *arrtozval(ehvar_t **paras) {
 						eh_error_type("conversion to PHP", currvar->value->type, enotice_e);
 						break;
 				}
-			}
-			else if(currvar->indextype == string_e) {
-				switch(currvar->value->type) {
+			} else if(currvar->indextype == string_e) {
+				switch(EH_TYPE(currvar->value)) {
 					case int_e:
 						add_assoc_long(arr,
 							currvar->name, currvar->value->intval);
@@ -131,7 +130,7 @@ ehretval_t *zvaltoeh(zval *in) {
 		case IS_RESOURCE:
 		case IS_OBJECT:
 		default:
-			fprintf(stderr, "Unsupported PHP type\n");
+			fprintf(stderr, "Unsupported PHP type %d\n", in->type);
 			break;
 	}
 	return ret;
@@ -165,22 +164,16 @@ ehvar_t **zvaltoeh_array(HashTable *hash) {
 
 // EH string to PHP string
 %typemap(directorin) char* {
-	zval *str;
-
-	MAKE_STD_ZVAL(str);
-	ZVAL_STRING(str, name, 1);
-	obj0 = *str;
+	ZVAL_STRING($input, $1_name, 1);
 }
 // Typemap from EH array to PHP array
 %typemap(directorin) ehvar_t** {
-	// It looks like SWIG's directorin support for PHP may be broken. The code on the following line was written after inspection of the generated eh_wrap.cpp code and will not work when the argument names are different from those of EHI::execute_cmd().
-	obj1 = *arrtozval(paras);
+	*$input = *arrtozval($1);
 }
 
 // Typemap for returning stuff from execute_cmd
 %typemap(directorout) ehretval_t * {
-	// provisional, we'll want to work on making it actually do something useful with what PHP returns
-	c_result = zvaltoeh(result);
+	$result = zvaltoeh($1);
 }
 
 class EHI {

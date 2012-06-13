@@ -105,8 +105,6 @@ const char *libredirs[][2] = {
 	{NULL, NULL}
 };
 
-// macros to avoid having to check for NULL all the time
-#define EH_TYPE(ret) (((ret) == NULL) ? null_e : (ret)->type)
 #define DEC_RC(ret) (((ret) == NULL) ? (void)0 : (ret)->dec_rc())
 
 /*

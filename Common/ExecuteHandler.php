@@ -145,16 +145,14 @@ class ExecuteHandler extends EHICore {
 		return isset($this->commands[$cmd]) || isset($this->synonyms[$cmd]);
 	}
 	public function execute_cmd($rawcmd, $paras) {
-		// for some reason, accessing rawcmd in ehi mode botches the variable. This works around that.
-		$rawcmd2 = $rawcmd;
-		if($rawcmd2 === 'quit') {
+		if($rawcmd === 'quit') {
 			// execute "quit" immediately. No need to account for ehphp here,
 			// because "quit" is built in to the language.
 			return self::EXECUTE_QUIT;
 		}
-		$cmd = $this->expand_cmd($rawcmd2);
+		$cmd = $this->expand_cmd($rawcmd);
 		if(!$cmd) {
-			echo 'Invalid command: ' . $rawcmd2 . PHP_EOL;
+			echo 'Invalid command: ' . $rawcmd . PHP_EOL;
 			if(defined('IS_EHPHP')) {
 				return NULL;
 			} else {

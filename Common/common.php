@@ -16,6 +16,9 @@ define('BPATH', __DIR__ . '/..');
 // show all errors
 error_reporting(E_ALL | E_STRICT);
 
+// otherwise check() now fails
+ini_set('memory_limit', '256M');
+
 require_once(BPATH . '/Common/AutoLoader.php');
 // load exceptions
 require_once(BPATH . '/Common/EHException.php');

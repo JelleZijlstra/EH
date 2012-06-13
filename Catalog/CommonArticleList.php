@@ -410,7 +410,7 @@ trait CommonArticleList {
 	 */
 		echo "checking whether articles in library are in catalog... ";
 		foreach($this->lslist as $lsfile) {
-			if(!$this->has($lsfile->name)) {
+			if(!$this->has($lsfile->name) or $this->isredirect($file->name)) {
 				echo PHP_EOL;
 				$cmd = $this->menu(array(
 					'options' => array(
@@ -428,7 +428,8 @@ trait CommonArticleList {
 						throw new StopException('lscheck');
 					case 'm': 
 						return true;
-					case 'l': 
+					case 'l':
+						// don't know what will happen here if there is a redirect
 						$lsfile->effect_rename(array(
 							'elist' => $this->lslist,
 							'searchlist' => $this->c,
@@ -438,6 +439,13 @@ trait CommonArticleList {
 					case 's': 
 						break;
 					case 'a':
+						if($this->isredirect($file->name)) {
+							// remove redirect
+							$this->remove(array(
+								$file->name, 
+								'force' => true,
+							));
+						}
 						$lsfile->add();
 						$this->addEntry($lsfile, array('isnew' => true));
 						break;

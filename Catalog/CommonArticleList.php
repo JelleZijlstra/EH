@@ -202,7 +202,7 @@ trait CommonArticleList {
 					}
 					// NOFILEs can't have a file extension
 					$parser = NameParser::parse($in);
-					return ($parser->extension() !== '') && !$this->has($in);
+					return ($parser->extension() === '') && !$this->has($in);
 				},
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;

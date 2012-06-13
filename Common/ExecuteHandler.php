@@ -145,6 +145,8 @@ class ExecuteHandler extends EHICore {
 		return isset($this->commands[$cmd]) || isset($this->synonyms[$cmd]);
 	}
 	public function execute_cmd($rawcmd, $paras) {
+		static $cmds = array();
+		$cmd[] = $rawcmd;
 		if($rawcmd === 'quit') {
 			// execute "quit" immediately. No need to account for ehphp here,
 			// because "quit" is built in to the language.

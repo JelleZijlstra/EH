@@ -522,6 +522,9 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		if($this->parent and !$this->p->has($this->parent)) {
 			$this->warn('invalid enclosing article', 'parent');
 		}
+		if(preg_match('/^(?![ -~]+$)/', $this->name)) {
+			$this->warn('invalid characters in name', 'name');
+		}
 		$this->needSave();
 		return true;
 	}

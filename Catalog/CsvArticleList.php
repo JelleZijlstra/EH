@@ -20,7 +20,7 @@ class CsvArticleList extends CsvContainerList {
 	private $autocompleter = NULL;
 	public function getAutocompleter() {
 		if($this->autocompleter === NULL) {
-			$this->autocompleter = new Autocompleter($this->getNameArray());
+			$this->autocompleter = new TreeAutocompleter($this->getNameArray());
 		}
 		return $this->autocompleter;
 	}

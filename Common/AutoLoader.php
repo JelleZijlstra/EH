@@ -12,6 +12,10 @@ abstract class AutoLoader {
 		
 		// Autocompleter
 		'Autocompleter' => '/Autocompleter/Autocompleter.php',
+		'TreeAutocompleter' => '/Autocompleter/TreeAutocompleter.php',
+		'FixedArrayAutocompleter' => 
+			'/Autocompleter/FixedArrayAutocompleter.php',
+		'NaiveAutocompleter' => '/Autocompleter/NaiveAutocompleter.php',
 
 		// Container
 		'ContainerList' => '/Container/ContainerList.php',

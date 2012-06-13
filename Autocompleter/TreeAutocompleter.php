@@ -16,7 +16,6 @@ class TreeAutocompleter implements Autocompleter {
 		}
 	}
 	
-	// Returns an autocompletion, or FALSE if none is found
 	public function lookup(/* string */ $word) {
 		$tree = $this->tree;
 		for($i = 0, $len = strlen($word); $i < $len; $i++) {

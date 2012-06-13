@@ -14,12 +14,11 @@ class NaiveAutocompleter implements Autocompleter {
 		$this->words = $data;
 	}
 	
-	// Returns an autocompletion, or FALSE if none is found
 	public function lookup(/* string */ $word) {
 		$len = strlen($word);
 		$matching = array();
 		foreach($this->words as $w) {
-			if($len < strlen($w) && substr_compare($w, $word, 0, $len) === 0) {
+			if($len > 0 && $len < strlen($w) && substr_compare($w, $word, 0, $len) === 0) {
 				$matching[] = substr($w, $len);
 			}
 		}

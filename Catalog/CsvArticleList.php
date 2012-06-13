@@ -15,12 +15,19 @@ class CsvArticleList extends CsvContainerList {
 			'name' => __FUNCTION__,
 			'checklist' => array( /* No paras */ ),
 		))) return false;
-		return array_keys($this->c);
+		$out = array();
+		foreach($this->c as $file) {
+			if(!$file->isredirect()) {
+				$out[] = $file->name;
+			}
+		}
+		return $out;
 	}
 	private $autocompleter = NULL;
 	public function getAutocompleter() {
 		if($this->autocompleter === NULL) {
-			$this->autocompleter = new NaiveAutocompleter($this->getNameArray());
+			$this->autocompleter = 
+				new NaiveAutocompleter($this->getNameArray());
 		}
 		return $this->autocompleter;
 	}

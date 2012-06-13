@@ -829,7 +829,6 @@ class ExecuteHandler extends EHICore {
 				case "\010": // Ctrl+H
 				case "\011": // Ctrl+I
 				case "\013": // Ctrl+K
-				case "\014": // Ctrl+L
 				case "\016": // Ctrl+N
 				case "\020": // Ctrl+P
 				case "\024": // Ctrl+T
@@ -840,8 +839,13 @@ class ExecuteHandler extends EHICore {
 				case "\033": // Ctrl+[
 				case "\035": // Ctrl+]
 					break;
-				case "\004":
-				case "\022": // Ctrl+D/R: stop
+				case "\014": // Ctrl+L(eft): go to beginning of line
+					$keypos = 0;
+					break;
+				case "\022": // Ctrl+R(ight): go to end of line
+					$keypos = $cmdlen;
+					break;
+				case "\004": // Ctrl+D: stop
 					echo PHP_EOL; // make newline
 					throw new StopException("fgetc");
 					break;

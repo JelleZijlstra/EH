@@ -29,15 +29,14 @@ class NaiveAutocompleter implements Autocompleter {
 		$out = array_pop($matching);
 		foreach($matching as $match) {
 			// http://stackoverflow.com/questions/7475437/find-first-character-that-is-different-between-two-strings
-			$out = substr($out, strspn($out ^ $match, "\0"));
-			
-			// possible optimization: return immediately if string is already
-			// length 0
-			if($out === '') {
-				break;
+			$firstDifference = strspn($out ^ $match, "\0");
+			// need this because substr($out, 0) doesn't do what you'd expect
+			if($firstDifference === 0) {
+				return '';
 			}
+			$out = substr($out, $firstDifference);
 		}
-		return '';
+		return $out;
 	}
 	
 	/*

@@ -9,7 +9,9 @@ abstract class AutoLoader {
 		// Common
 		'ExecuteHandler' => '/Common/ExecuteHandler.php',
 		'Sanitizer' => '/Common/Sanitizer.php',
-		'Autocompleter' => '/Common/Autocompleter.php',
+		
+		// Autocompleter
+		'Autocompleter' => '/Autocompleter/Autocompleter.php',
 
 		// Container
 		'ContainerList' => '/Container/ContainerList.php',

@@ -383,6 +383,8 @@ abstract class ContainerList extends ExecuteHandler {
 				'print' => 'Whether to print results',
 				'groupby' => 'Column to group results by',
 				'array' => 'Array to search in',
+				'minimum' => 'Minimum number of results to return a value',
+				'maximum' => 'Maximum number of results to return a value',
 			),
 			'checkfunc' => function($in) use($childClass) {
 				return $childClass::haspm($in);
@@ -394,6 +396,8 @@ abstract class ContainerList extends ExecuteHandler {
 				'isfunc' => false,
 				'groupby' => '',
 				'sort' => 'ksort',
+				'minimum' => false,
+				'maximum' => false,
 			),
 			'errorifempty' => array(
 				'field',
@@ -444,6 +448,20 @@ abstract class ContainerList extends ExecuteHandler {
 			return $out;
 		}
 		$values = $this->_mlist($paras);
+		if($paras['minimum'] !== false) {
+			foreach($values as $value => $number) {
+				if($number < $paras['minimum']) {
+					unset($values[$value]);
+				}
+			}
+		}
+		if($paras['maximum'] !== false) {
+			foreach($values as $value => $number) {
+				if($number > $paras['maximum']) {
+					unset($values[$value]);
+				}
+			}
+		}
 		// sort (arsort to list by number, ksort to list alphabetically)
 		$paras['sort']($values);
 		if($paras['print']) {

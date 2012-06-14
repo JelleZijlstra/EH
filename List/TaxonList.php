@@ -50,6 +50,8 @@ class TaxonList extends CsvContainerList {
 			'execute' => 'callmethod'),
 		'getChildren' => array('name' => 'getChildren',
 			'desc' => 'Return an array of a taxon\'s children'),
+		'addCitations' => array('name' => 'addCitations',
+			'desc' => 'Add citations to taxa'),
 	);
 	protected function __construct() {
 		parent::__construct(self::$TaxonList_commands);
@@ -284,6 +286,29 @@ class TaxonList extends CsvContainerList {
 	public function sortchildren($name) {
 		if(!$this->par[$name]) return false;
 		ksort($this->par[$name]);
+	}
+	
+	/*
+	 * Populating citations.
+	 */
+	public function addCitations(array $paras) {
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		))) return false;
+		$this->doall(array(
+			'populatecitation',
+			'continueiffalse' => true,
+		));
+		echo 'FALSE POSITIVES' . PHP_EOL;
+		foreach($this->falsePositives as $name) {
+			echo $name . PHP_EOL;
+		}
+		return $this->falsePositives;
+	}
+	private $falsePositives = array();
+	public function addFalsePositive($name) {
+		$this->falsePositives[] = $name;
 	}
 	
 	/*

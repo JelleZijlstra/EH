@@ -737,7 +737,7 @@ class Taxon extends CsvListEntry {
 			$response = $this->menu(array(
 				'head' => 'Is this citation correct?' . PHP_EOL .
 					$cite->name . PHP_EOL .
-					$cite->cite(),
+					$cite->cite(true),
 				'options' => array(
 					'y' => 'This citation is correct',
 					'n' => 'This citation is not correct',
@@ -769,6 +769,7 @@ class Taxon extends CsvListEntry {
 				case 's': break 2;
 			}
 		}
+		$this->p->addFalsePositive($this->name);
 		$this->citation = 'Unknown';
 		return true;
 	}

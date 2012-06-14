@@ -2,13 +2,22 @@
 <?php
 /*
  * Testing the Autocompleter.
+ *
+ * Currently, OneStepAutocompleter appears to be the best solution, since it 
+ * doesn't have the ridiculous load time of TreeAutocompleter and is a bit 
+ * faster than NaiveAutocompleter.
+ *
+ * An improved version might be a "LazyAutocompleter", which is like a
+ * TreeAutocompleter but only builds up the parts of the tree that are actually
+ * needed. To begin with, it would just do the first letters.
  */
 require_once(__DIR__ . '/../Common/common.php');
 class AutocompleterTester {
 	private static $classes = array(
 		'TreeAutocompleter',
 		'NaiveAutocompleter',
-		'FixedArrayAutocompleter'
+		'FixedArrayAutocompleter',
+		'OneStepAutocompleter',
 	);
 
 	private static function test(/* string */ $class) {
@@ -42,16 +51,22 @@ class AutocompleterTester {
 		echo 'Memory taken: ' . 
 			Sanitizer::intToBytes($memoryAfter - $memoryBefore) . PHP_EOL;
 		
-		$timeBefore = microtime(true);
-		for($i = 0; $i < 100; $i++) {
-			$ac->lookup('Agat');
-			$ac->lookup('Oryz');
-			$ac->lookup('Sivalad');
-			$ac->lookup('A');
+		
+		$totalTime = 0;
+		$tests = array('Agat', 'Oryz', 'Sivalad', 'A');
+		foreach($tests as $test) {
+			$timeBefore = microtime(true);
+			for($i = 0; $i < 100; $i++) {
+				$ac->lookup($test);
+			}
+			$timeAfter = microtime(true);
+			$timeTaken = $timeAfter - $timeBefore;
+			echo 'Time taken for lookup of "' . $test . '": '
+				. round($timeTaken, 6) . ' s' . PHP_EOL;
+			$totalTime += $timeTaken;
 		}
-		$timeAfter = microtime(true);
-		echo 'Time taken for lookup: '
-			. round($timeAfter - $timeBefore, 6) . ' s' . PHP_EOL;
+		echo 'Total time taken for lookup: '
+				. round($totalTime, 6) . ' s' . PHP_EOL;
 		echo PHP_EOL;
 	}
 	

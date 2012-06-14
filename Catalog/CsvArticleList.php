@@ -27,7 +27,7 @@ class CsvArticleList extends CsvContainerList {
 	public function getAutocompleter() {
 		if($this->autocompleter === NULL) {
 			$this->autocompleter = 
-				new NaiveAutocompleter($this->getNameArray());
+				new OneStepAutocompleter($this->getNameArray());
 		}
 		return $this->autocompleter;
 	}

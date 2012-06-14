@@ -16,6 +16,7 @@ abstract class AutoLoader {
 		'FixedArrayAutocompleter' => 
 			'/Autocompleter/FixedArrayAutocompleter.php',
 		'NaiveAutocompleter' => '/Autocompleter/NaiveAutocompleter.php',
+		'OneStepAutocompleter' => '/Autocompleter/OneStepAutocompleter.php',
 
 		// Container
 		'ContainerList' => '/Container/ContainerList.php',

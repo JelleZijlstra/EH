@@ -237,7 +237,9 @@ class Parser extends ExecuteHandler {
 			$text = $tmp[0];
 			$template = substr($text, 7, 3);
 			if(in_array($template, array('hdl', 'jst', 'doi', 'pmc', 'pmi')))
-				$url = $csvlist->get_citedoiurl($c['main'], $template);
+				$url = $csvlist->get_citedoiurl(array(
+					$c['main'], 'name' => $template
+				));
 			$long = $tmp[1];
 		} else {
 			$text = $tmp;

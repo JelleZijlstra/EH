@@ -1278,19 +1278,28 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		}
 		return true;
 	}
-	public function get_citedoiurl($var = 'doi') {
+	public function get_citedoiurl(array $paras) {
 	// returns URL to Wikipedia cite doi-family template for this Article
 	// by default uses cite doi; by setting var to something else, jstor and a few others can be set
-		if($var === 'jst') {
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'name' => 'Name of the identifier used',
+			),
+			'default' => array(
+				'name' => 'doi',
+			),
+		))) return false;
+		if($paras['name'] === 'jst') {
 			// due to limitations in Parser
-			$var = 'jstor';
+			$paras['name'] = 'jstor';
 		}
-		$id = $this->getIdentifier($var);
+		$id = $this->getIdentifier($paras);
 		if($id === false) {
 			return false;
 		} else {
 			return 'https://en.wikipedia.org/w/index.php?action=edit&title=' 
-				. 'Template:Cite_' . $var . '/' . $id;
+				. 'Template:Cite_' . $paras['name'] . '/' . $id;
 		}
 	}
 	public function getharvard($paras = array()) {

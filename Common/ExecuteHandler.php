@@ -1151,7 +1151,7 @@ class ExecuteHandler extends EHICore {
 				'arg' => false,
 				'stdout' => false,
 				'append-out' => true,
-				'stderr' => isset($paras['_ehphp']) ? false : '/dev/null',
+				'stderr' => false,
 				'append-err' => true,
 				'input' => false,
 				'input-string' => false,

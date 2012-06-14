@@ -45,4 +45,15 @@ abstract class Sanitizer {
 			return print_r($in, true);
 		}
 	}
+	
+	public static /* string */ function intToBytes(/* int */ $in, /* int */ $precision = 2) {
+		// Convert into KiB etc.
+	 	// http://www.php.net/manual/en/function.memory-get-usage.php#96280
+	 	$units = array(
+	 		'B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'
+	 	);
+		$size = floor(log($in, 1024));
+		$value = round($in / pow(1024, $size), $precision);
+		return $value . ' ' . $units[$size];
+ 	}
 }

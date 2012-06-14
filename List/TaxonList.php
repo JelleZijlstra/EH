@@ -203,7 +203,7 @@ class TaxonList extends CsvContainerList {
 				'taxon' => 'list',
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		ArticleList::singleton()->citetype = 'wp';
+		CsvArticleList::singleton()->citetype = 'wp';
 		$this->wiki_out[$paras['taxon']] = fopen(BPATH . '/List/data/' . $paras['taxon'] . '.mw', "w");
 		fwrite($this->wiki_out[$paras['taxon']], self::$start_wiki);
 		if($paras['taxon'] === 'list') {

@@ -20,6 +20,8 @@ class NaiveAutocompleter implements Autocompleter {
 		foreach($this->words as $w) {
 			if($len > 0 && $len < strlen($w) && substr_compare($w, $word, 0, $len) === 0) {
 				$matching[] = substr($w, $len);
+			} elseif($len === 0) {
+				$matching[] = $w;
 			}
 		}
 		if(count($matching) === 0) {
@@ -33,7 +35,7 @@ class NaiveAutocompleter implements Autocompleter {
 			if($firstDifference === 0) {
 				return '';
 			}
-			$out = substr($out, $firstDifference);
+			$out = substr($out, 0, $firstDifference);
 		}
 		return $out;
 	}

@@ -46,10 +46,10 @@ class FixedArrayAutocompleter implements Autocompleter {
 					}
 				}
 			}
-			$out .= self::offsetToCharacter($currentKey);
 			if($currentValue === true) {
 				break;
 			}
+			$out .= self::offsetToCharacter($currentKey);
 			$tree = $currentValue;
 		}
 		return $out;

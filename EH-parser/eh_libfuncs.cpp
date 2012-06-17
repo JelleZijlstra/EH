@@ -315,5 +315,5 @@ EHLIBFUNC(eval) {
 		eh_error_type("argument 0 to eval", EH_TYPE(args[0]), enotice_e);
 		EHLF_RETFALSE;	
 	}
-	//*retval = new ehretval_t(interpreter->parse_string(arg->stringval));
+	*retval = new ehretval_t(obj->parse_string(arg->stringval));
 }

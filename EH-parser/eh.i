@@ -182,6 +182,8 @@ class EHI {
 public:
 	int eh_interactive(void);
 	ehretval_t parse_file(const char *name);
+	ehretval_t parse_string(const char *cmd);
+
 	virtual ehretval_t *execute_cmd(const char *name, ehvar_t **paras);
 	virtual char *eh_getline(EHParser *parser = NULL);
 	virtual ~EHI();

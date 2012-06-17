@@ -769,7 +769,9 @@ class Taxon extends CsvListEntry {
 				case 's': break 2;
 			}
 		}
-		$this->p->addFalsePositive($this->name);
+		$this->p->addFalsePositive(
+			$this->name . ' ' . $this->authority . ', ' . $this->year
+		);
 		$this->citation = 'Unknown';
 		return true;
 	}

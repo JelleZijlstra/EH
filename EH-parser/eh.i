@@ -6,7 +6,6 @@
  */
 %{
 #include "eh.h"
-EHI *interpreter;
 ehretval_t *EHI::execute_cmd(const char *name, ehvar_t **paras) {
 	return NULL;
 }

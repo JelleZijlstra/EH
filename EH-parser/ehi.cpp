@@ -4,7 +4,6 @@ int EHI::eh_interactive(interactivity_enum interactivity) {
 	ehretval_t ret;
 
 	EHParser parser(interactivity, this);
-	eh_init();
 	char *cmd = eh_getline(&parser);
 	if(!cmd) {
 		return eh_outer_exit(0);
@@ -25,7 +24,6 @@ ehretval_t EHI::parse_file(const char *name) {
 		return ret;
 	}
 	EHParser parser(end_is_end_e, this);
-	eh_init();
 	// if a syntax error occurs, stop parsing and return -1
 	try {
 		return parser.parse_file(infile);

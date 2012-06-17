@@ -15,8 +15,6 @@ FILE *outfile;
 unsigned int label = 0;
 bool returning = false;
 
-EHI *interpreter;
-
 void usage(char **argv) {
 	fprintf(stderr, "Usage: %s file -o output\n\t%s -o output file", argv[0], argv[0]);
 	exit(1);

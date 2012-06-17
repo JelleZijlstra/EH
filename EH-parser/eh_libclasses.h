@@ -13,7 +13,7 @@
 #define END_EHLC() {NULL, NULL} };
 #define EXTERN_EHLC(name) extern ehlibentry_t ehlc_l_ ## name [];
 
-#define EH_METHOD(classn,name) void ehlm_ ## classn ## _ ## name(void *obj, ehretval_t *paras, ehretval_t **retval, ehcontext_t context)
+#define EH_METHOD(classn,name) void ehlm_ ## classn ## _ ## name(void *obj, ehretval_t *paras, ehretval_t **retval, ehcontext_t context, EHI *interpreter)
 
 
 /*

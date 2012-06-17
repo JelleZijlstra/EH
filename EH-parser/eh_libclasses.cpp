@@ -18,7 +18,7 @@ EH_METHOD(CountClass, setcount) {
 	CountClass *selfptr = (CountClass *)obj;
 
 	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__, interpreter)) {
 		*retval = new ehretval_t(false);
 		return;
 	}
@@ -45,7 +45,7 @@ EH_METHOD(File, open) {
 	File *selfptr = (File *) obj;
 
 	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__, interpreter)) {
 		*retval = new ehretval_t(false);
 		return;
 	}
@@ -101,7 +101,7 @@ EH_METHOD(File, puts) {
 	}
 	
 	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__, interpreter)) {
 		*retval = new ehretval_t(false);
 		return;
 	}

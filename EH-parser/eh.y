@@ -10,6 +10,7 @@
 #include "eh.h"
 #include "eh.bison.hpp"
 extern FILE *yyin;
+EHParser *yyget_extra(void *scanner);
 #define YYERROR_VERBOSE
 #define YYLEX_PARAM scanner
 %}
@@ -96,10 +97,11 @@ program:
 global_list:
 	/* NULL */				{ $$ = eh_addnode(T_SEPARATOR, 0); }
 	| statement				{
-								ehretval_t *ret = eh_execute($1, NULL);
+								EHParser *parser = yyget_extra(scanner);
+								ehretval_t *ret = parser->_parent->eh_execute($1, NULL);
 								// flush stdout after executing each statement
 								fflush(stdout);
-								if(returning) {
+								if(parser->_parent->returning) {
 									return (ret == NULL) ? 0 : ret->intval;
 								}
 							} global_list {
@@ -609,6 +611,5 @@ attributelist:
 %%
 int eh_outer_exit(int exitval) {
 	//free_node: something. We should actually be adding stuff to the AST, I suppose.
-	eh_exit();
 	return exitval;
 }

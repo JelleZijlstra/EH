@@ -33,12 +33,9 @@ int main(int argc, char **argv) {
 		} else if(!strcmp(argv[1], "-r")) {
 			if(argc != 3)
 				eh_usage(argv[0]);
-			eh_init();
 			ret = interpreter.parse_string(argv[2]);
 		} else {
-			eh_setarg(argc, argv);
-			// set input
-			eh_init();
+			interpreter.eh_setarg(argc, argv);
 			ret = interpreter.parse_file(argv[1]);
 		}
 		exit(ret.intval);

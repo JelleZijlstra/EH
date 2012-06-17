@@ -287,7 +287,7 @@ typedef const struct ehobj_t *ehcontext_t;
 
 typedef void *(*ehconstructor_t)();
 
-typedef void (*ehlibmethod_t)(void *, ehretval_t *, ehretval_t **, ehcontext_t);
+typedef void (*ehlibmethod_t)(void *, ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
 
 typedef struct ehlibentry_t {
 	const char *name;
@@ -407,14 +407,14 @@ typedef struct ehfm_t {
 	ehscope_t scope;
 	union {
 		ehretval_t *code;
-		void (*ptr)(ehretval_t *, ehretval_t **, ehcontext_t);
+		void (*ptr)(ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
 		ehlibmethod_t mptr;
 	};
 } ehfm_t;
 
 // EH procedure
 typedef struct ehlibfunc_t {
-	void (*code)(ehretval_t *, ehretval_t **, ehcontext_t);
+	void (*code)(ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
 	const char *name;
 } ehlibfunc_t;
 
@@ -447,14 +447,10 @@ int eh_outer_exit(int exitval);
 /*
  * Top-level functions
  */
-void eh_init(void);
-void eh_exit(void);
 void yyerror(void *, const char *s);
 void free_node(ehretval_t *in);
 ehretval_t *eh_addnode(int operations, int noperations, ...);
-ehretval_t *eh_execute(ehretval_t *node, const ehcontext_t context);
 void print_tree(const ehretval_t *const in, const int n);
-void eh_setarg(int argc, char **argv);
 
 // eh_get_x functions
 #define GETFUNCPROTO(name, vtype) ehretval_t *eh_get_ ## name(vtype value);
@@ -467,9 +463,7 @@ GETFUNCPROTO(type, type_enum)
 GETFUNCPROTO(bool, bool)
 GETFUNCPROTO(visibility, visibility_enum)
 GETFUNCPROTO(attribute, attribute_enum)
-
-// indicate that we're returning
-extern bool returning;
+#undef GETFUNCPROTO
 
 char *eh_getinput(void);
 
@@ -477,38 +471,29 @@ char *eh_getinput(void);
  * EH interpreter
  */
 #include "eh.bison.hpp"
-// symbol table for variables and functions
-#define VARTABLE_S 1024
-extern ehvar_t *vartable[];
-extern ehclass_t *classtable[];
-extern ehcmd_bucket_t *cmdtable[];
+#include "ehi.h"
 
-// current variable scope
-extern ehscope_t global_scope;
-extern ehscope_t *curr_scope;
-
-// prototypes
-bool insert_variable(ehvar_t *var);
-ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context, int token);
-void remove_variable(const char *name, ehscope_t *scope);
-void list_variables(void);
-ehretval_t *call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext);
-ehretval_t *call_function_args(ehfm_t *f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, ehretval_t *args);
-void array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t context);
-ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t *index, ehretval_t *ret);
-ehvar_t *array_getmember(ehvar_t **array, ehretval_t *index);
-ehretval_t *array_get(ehvar_t **array, ehretval_t *index);
-int array_count(ehvar_t **array);
-void insert_class(ehclass_t *classobj);
-ehclass_t *get_class(const char *name);
-void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i);
-void class_insert(ehvar_t **classarr, const ehretval_t *in, ehcontext_t context);
-ehvar_t *class_insert_retval(ehvar_t **classarr, const char *name, memberattribute_t attribute, ehretval_t *value);
-ehvar_t *class_getmember(const ehobj_t *classobj, const char *name, ehcontext_t context);
 ehretval_t *class_get(const ehobj_t *classobj, const char *name, ehcontext_t context);
-ehretval_t **object_access(ehretval_t *name, ehretval_t *index, ehcontext_t context, int token);
-ehretval_t **colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token);
+void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i);
+ehvar_t *array_getmember(ehvar_t **array, ehretval_t *index);
+ehvar_t *class_getmember(const ehobj_t *classobj, const char *name, ehcontext_t context);
+void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node);
+ehretval_t *int_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
+ehretval_t *string_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
+ehretval_t *range_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
+void int_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue);
+void string_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue);
+void range_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue);
+ehretval_t *eh_count(const ehretval_t *in);
+ehretval_t *eh_op_tilde(ehretval_t *in);
+ehretval_t *eh_op_uminus(ehretval_t *in);
+ehretval_t *eh_op_dot(ehretval_t *operand1, ehretval_t *operand2);
+ehretval_t *eh_make_range(const int min, const int max);
+ehvar_t *class_insert_retval(ehvar_t **classarr, const char *name, memberattribute_t attribute, ehretval_t *value);
+int array_count(ehvar_t **array);
+ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t *index, ehretval_t *ret);
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
+ehretval_t *array_get(ehvar_t **array, ehretval_t *index);
 
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
@@ -534,12 +519,10 @@ bool eh_strictequals(ehretval_t *operand1, ehretval_t *operand2);
 /*
  * Helper
  */
-int eh_getargs(ehretval_t *paras, int n, ehretval_t **args, ehcontext_t context, const char *name);
+int eh_getargs(ehretval_t *paras, int n, ehretval_t **args, ehcontext_t context, const char *name, EHI *obj);
 void print_retval(const ehretval_t *in);
 
 // macros to avoid having to check for NULL all the time
 #define EH_TYPE(ret) (((ret) == NULL) ? null_e : (ret)->type)
 
-// put this at the bottom because of dependencies
-#include "ehi.h"
 #endif /* EH_H_ */

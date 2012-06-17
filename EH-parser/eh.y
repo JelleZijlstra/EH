@@ -12,11 +12,6 @@
 extern FILE *yyin;
 #define YYERROR_VERBOSE
 #define YYLEX_PARAM scanner
-int yylex (YYSTYPE *, void *);
-int yylex_init(void**);
-int yylex_destroy(void *);
-int is_interactive = 0;
-struct yy_buffer_state *yy_scan_string ( const char *str );
 %}
 %pure-parser
 %parse-param { void *scanner }
@@ -612,66 +607,8 @@ attributelist:
 	| /* NULL */			{ $$ = eh_addnode(T_ATTRIBUTE, 0); }
 	;
 %%
-char *eh_getinput(void) {
-	if(is_interactive == 2) {
-		printf("> ");
-	}
-	char *buf = new char[512];
-	return fgets(buf, 511, stdin);
-}
 int eh_outer_exit(int exitval) {
 	//free_node: something. We should actually be adding stuff to the AST, I suppose.
 	eh_exit();
 	return exitval;
-}
-int EHI::eh_interactive(void) {
-	char *cmd;
-	ehretval_t ret;
-	EHParser *parser;
-	EHI *oldinterpreter;
-
-	parser = new EHParser;
-	oldinterpreter = interpreter;
-	interpreter = this;
-	if(is_interactive == 0) {
-		is_interactive = 2;
-	}
-	eh_init();
-	cmd = interpreter->eh_getline();
-	if(!cmd) {
-		return eh_outer_exit(0);
-	}
-	// if a syntax error occurs, stop parsing and return -1
-	try {
-		ret = parser->parse_string(cmd);
-	} catch(...) {
-		// do nothing
-	}
-	delete parser;
-	interpreter = oldinterpreter;
-	return ret.intval;
-}
-void EHI::exec_file_name(const char *name) {
-	FILE *infile = fopen(name, "r");
-	if(!infile) {
-		fprintf(stderr, "Could not open input file\n");
-		return;
-	}
-	EHParser *parser;
-	EHI *oldinterpreter;
-
-	parser = new EHParser;
-	oldinterpreter = interpreter;
-	interpreter = this;
-	is_interactive = 0;
-	eh_init();
-	// if a syntax error occurs, stop parsing and return -1
-	try {
-		parser->parse_file(infile);
-	} catch(...) {
-		// TODO: actually do something useful with exceptions
-	}
-	delete parser;
-	interpreter = oldinterpreter;
-	return;
 }

@@ -30,5 +30,6 @@ EHLIBFUNC(get_type);
 EHLIBFUNC(include);
 EHLIBFUNC(pow);
 EHLIBFUNC(log);
+EHLIBFUNC(eval);
 
 void printvar_retval(const ehretval_t *in);

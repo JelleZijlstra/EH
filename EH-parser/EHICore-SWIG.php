@@ -35,7 +35,7 @@ if(extension_loaded("ehphp"))  {
 			echo "Goodbye." . PHP_EOL;
 			return $ret;
 		}
-		public function eh_getline() {
+		public function eh_getline($parser = NULL) {
 			$cmd = '';
 			static $history = array();
 			try {
@@ -62,7 +62,7 @@ if(extension_loaded("ehphp"))  {
 			if($file === NULL) {
 				return false;
 			} else {
-				return parent::exec_file_name($file);
+				return parent::parse_file($file);
 			}
 		}
 		/* workarounds to prevent EH from blowing up when using the PHP implementation's features */

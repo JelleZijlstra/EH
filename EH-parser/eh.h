@@ -473,9 +473,6 @@ extern bool returning;
 
 char *eh_getinput(void);
 
-// represents the interactivity of the parser. 0 is non-interactive, 1 just reads stuff from stdin, 2 gives a prompt. Of course, this should really be a property of the interpreter object.
-extern int is_interactive;
-
 /*
  * EH interpreter
  */
@@ -539,19 +536,6 @@ bool eh_strictequals(ehretval_t *operand1, ehretval_t *operand2);
  */
 int eh_getargs(ehretval_t *paras, int n, ehretval_t **args, ehcontext_t context, const char *name);
 void print_retval(const ehretval_t *in);
-
-/*
- * The EH parser
- */
-struct EHParser {
-public:
-	void *scanner;
-	struct yy_buffer_state *buffer;
-	ehretval_t parse_file(FILE *infile);
-	ehretval_t parse_string(char *cmd);
-	EHParser(void);
-	~EHParser(void);
-};
 
 // macros to avoid having to check for NULL all the time
 #define EH_TYPE(ret) (((ret) == NULL) ? null_e : (ret)->type)

@@ -10,7 +10,7 @@ EHI *interpreter;
 ehretval_t *EHI::execute_cmd(const char *name, ehvar_t **paras) {
 	return NULL;
 }
-char *EHI::eh_getline(void) {
+char *EHI::eh_getline(EHParser *parser) {
 	return NULL;
 }
 EHI::~EHI(void) {
@@ -170,6 +170,9 @@ ehvar_t **zvaltoeh_array(HashTable *hash) {
 %typemap(directorin) ehvar_t** {
 	*$input = *arrtozval($1);
 }
+%typemap(directorin) EHParser* {
+	ZVAL_NULL($input);
+}
 
 // Typemap for returning stuff from execute_cmd
 %typemap(directorout) ehretval_t * {
@@ -179,8 +182,8 @@ ehvar_t **zvaltoeh_array(HashTable *hash) {
 class EHI {
 public:
 	int eh_interactive(void);
+	ehretval_t parse_file(const char *name);
 	virtual ehretval_t *execute_cmd(const char *name, ehvar_t **paras);
-	virtual void exec_file_name(const char *name);
-	virtual char *eh_getline(void);
+	virtual char *eh_getline(EHParser *parser = NULL);
 	virtual ~EHI();
 };

@@ -24,19 +24,21 @@ void usage(char **argv) {
 
 int main(int argc, char **argv) {
 	ehretval_t ret;
-	EHParser *parser;
+	EHParser parser(end_is_end_e, NULL);
 	char *infilename;
 
 	// parse arguments
-	if(argc < 2 || argc == 3 || argc > 4)
+	if(argc < 2 || argc == 3 || argc > 4) {
 		usage(argv);
+	}
 	// no explicit output file given: s/\..*$/.s/
 	if(argc == 2) {
 		infilename = argv[1];
 		// default: replace .whatever with .s
 		outfilename = strdup(infilename);
-		if(!outfilename)
+		if(!outfilename) {
 			exit(1);
+		}
 		int i = strlen(outfilename) - 1;
 		while(1) {
 			if(i == 0) {
@@ -52,32 +54,29 @@ int main(int argc, char **argv) {
 			}
 			i--;
 		}
-	}
-	// explicit output file given
-	else {
+	} else {
+		// explicit output file given
 		if(!strcmp(argv[1], "-o")) {
 			outfilename = argv[2];
 			infilename = argv[3];
-		}
-		else if(!strcmp(argv[2], "-o")) {
+		} else if(!strcmp(argv[2], "-o")) {
 			infilename = argv[1];
 			outfilename = argv[3];
-		}
-		else
+		} else {
 			usage(argv);
+		}
 	}
-	parser = new EHParser;
 
 	try {
 		FILE *infile = fopen(infilename, "r");
-		if(!infile)
+		if(!infile) {
 			eh_error("Unable to open input file", efatal_e);
+		}
 		eh_setarg(argc, argv);
 		// set input
 		eh_init();
-		ret = parser->parse_file(infile);
+		ret = parser.parse_file(infile);
 		eh_exit();
-		delete parser;
 		exit(ret.intval);
 	}
 	catch(...) {

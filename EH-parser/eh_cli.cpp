@@ -8,7 +8,6 @@
 #include "eh.bison.hpp"
 
 extern FILE *yyin;
-int yyparse(void);
 struct yy_buffer_state *yy_scan_string ( const char *str );
 
 EHI *interpreter;
@@ -20,39 +19,28 @@ void eh_usage(char *name) {
 
 int main(int argc, char **argv) {
 	ehretval_t ret;
-	EHParser *parser;
 
-	interpreter = new EHI;
-	parser = new EHParser;
+	EHI interpreter;
 
 	try {
 		if(argc == 1) {
-			is_interactive = 1;
-			ret.intval = interpreter->eh_interactive();
-		}
-		else if(!strcmp(argv[1], "-i")) {
-			if(argc != 2)
+			ret.intval = interpreter.eh_interactive(cli_no_prompt_e);
+		} else if(!strcmp(argv[1], "-i")) {
+			if(argc != 2) {
 				eh_usage(argv[0]);
-			is_interactive = 2;
-			ret.intval = interpreter->eh_interactive();
-		}
-		else if(!strcmp(argv[1], "-r")) {
+			}
+			ret.intval = interpreter.eh_interactive();
+		} else if(!strcmp(argv[1], "-r")) {
 			if(argc != 3)
 				eh_usage(argv[0]);
 			eh_init();
-			ret = parser->parse_string(argv[2]);
-		}
-		else {
-			FILE *infile = fopen(argv[1], "r");
-			if(!infile)
-				eh_error("Unable to open input file", efatal_e);
+			ret = interpreter.parse_string(argv[2]);
+		} else {
 			eh_setarg(argc, argv);
 			// set input
 			eh_init();
-			ret = parser->parse_file(infile);
+			ret = interpreter.parse_file(argv[1]);
 		}
-		delete interpreter;
-		delete parser;
 		exit(ret.intval);
 	}
 	catch(...) {
@@ -67,6 +55,10 @@ ehretval_t *EHI::execute_cmd(const char *name, ehvar_t **array) {
 EHI::~EHI(void) {
 	return;
 }
-char *EHI::eh_getline(void) {
-	return eh_getinput();
+char *EHI::eh_getline(EHParser *parser) {
+	if(parser->interactivity() == cli_prompt_e) {
+		printf("> ");
+	}
+	char *buf = new char[512];
+	return fgets(buf, 511, stdin);
 }

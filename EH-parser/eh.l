@@ -14,6 +14,7 @@
 %option reentrant
 %option bison-bridge
 %option outfile="eh.flex.cpp"
+%option extra-type="struct EHParser *"
 %%
 ['][^']*[']	{
 				int len;
@@ -156,44 +157,41 @@
 				yyerror(yyscanner, message);
 			}
 %%
-int yywrap(void *scanner) {
-	if(is_interactive) {
-		char *buf;
-		buf = interpreter->eh_getline();
-		if(!buf)
+int yyparse(void *);
+
+int yywrap(yyscan_t scanner) {
+	EHParser *parser = yyget_extra(scanner);
+	if(parser->interactivity() != end_is_end_e) {
+		char *buf = parser->getline();
+		if(!buf) {
 			return 1;
+		}
 		yy_scan_string(buf, scanner);
 		return 0;
 	}
 	return 1;
 }
 
-int yyparse(void *);
-ehretval_t EHParser::parse_file(FILE *infile) {
-	ehretval_t ret;
-
-	buffer = yy_create_buffer(infile, YY_BUF_SIZE, scanner);
-	yy_switch_to_buffer(buffer, scanner);
-	ret.type = int_e;
-	ret.intval = yyparse(scanner);
-	return ret;
-}
-ehretval_t EHParser::parse_string(char *cmd) {
-	ehretval_t ret;
-
-	yy_scan_string(cmd, scanner);
-
-	ret.type = int_e;
-	ret.intval = yyparse(scanner);
-	return ret;
-}
-EHParser::EHParser(void) {
-	yylex_init(&scanner);
-}
-EHParser::~EHParser(void) {
-	yylex_destroy(scanner);
-}
 void yyerror(void *scanner, const char *s) {
 	// give up on line numbers for now
 	eh_error(s, eparsing_e);
+}
+
+ehretval_t EHParser::parse_file(FILE *infile) {
+	ehretval_t ret;
+
+	buffer = yy_create_buffer(infile, YY_BUF_SIZE, _scanner);
+	yy_switch_to_buffer(buffer, _scanner);
+	ret.type = int_e;
+	ret.intval = yyparse(_scanner);
+	return ret;
+}
+ehretval_t EHParser::parse_string(const char *cmd) {
+	ehretval_t ret;
+
+	yy_scan_string(cmd, _scanner);
+
+	ret.type = int_e;
+	ret.intval = yyparse(_scanner);
+	return ret;
 }

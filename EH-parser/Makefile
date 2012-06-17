@@ -1,6 +1,6 @@
 CC = g++
 CCFLAGS = -ggdb -Wall -pedantic -fPIC -c
-SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp eh_gc.cpp
+SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp eh_gc.cpp ehi.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
 INTERPRETER = $(SOURCES) eh_libfuncs.cpp eh_libclasses.cpp eh_libcmds.cpp eh_hash.cpp eh_interpreter.cpp
@@ -42,7 +42,7 @@ eh.bison.cpp eh.bison.hpp: eh.y
 	/usr/bin/bison -y -d eh.y --output='eh.bison.cpp'
 
 eh.flex.cpp: eh.l eh.bison.hpp
-	lex eh.l
+	/opt/local/bin/flex eh.l
 
 eh_wrap.cpp: eh.i
 	swig -c++ -php5 eh.i

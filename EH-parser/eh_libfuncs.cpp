@@ -245,37 +245,27 @@ EHLIBFUNC(get_type) {
  */
 ehretval_t eh_include_file(FILE *file);
 EHLIBFUNC(include) {
-	FILE *infile;
-	EHParser *parser;
-
-	// set is_interactive
-	int old_is_interactive = is_interactive;
-	is_interactive = 0;
-
 	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
 		EHLF_RETFALSE;
-	if(args[0]->type != string_e) {
-		eh_error_type("argument 0 to include", args[0]->type, enotice_e);
-		is_interactive = old_is_interactive;
+	}
+	if(EH_TYPE(args[0]) != string_e) {
+		eh_error_type("argument 0 to include", EH_TYPE(args[0]), enotice_e);
 		returning = false;
 		EHLF_RETFALSE;
 	}
 	// do the work
-	infile = fopen(args[0]->stringval, "r");
+	FILE *infile = fopen(args[0]->stringval, "r");
 	if(!infile) {
 		eh_error("Unable to open included file", enotice_e);
-		is_interactive = old_is_interactive;
 		returning = false;
 		EHLF_RETFALSE;
 	}
-	parser = new EHParser();
-	ehretval_t parse_return = parser->parse_file(infile);
+	EHParser parser(end_is_end_e, NULL);
+	ehretval_t parse_return = parser.parse_file(infile);
 	*retval = (new ehretval_t)->overwrite(&parse_return);
 	// we're no longer returning
 	returning = false;
-	is_interactive = old_is_interactive;
-	delete parser;
 	return;
 }
 
@@ -308,9 +298,22 @@ EHLIBFUNC(log) {
 	if(eh_getargs(paras, 1, args, context, __FUNCTION__))
 		EHLF_RETFALSE;
 	ehretval_t *arg = eh_xtofloat(args[0]);
-	if(arg->type != float_e) {
-		eh_error_type("argument 0 to log", args[0]->type, enotice_e);
+	if(EH_TYPE(arg) != float_e) {
+		eh_error_type("argument 0 to log", EH_TYPE(args[0]), enotice_e);
 		EHLF_RETFALSE;
 	}
 	*retval = new ehretval_t(log(arg->floatval));
+}
+
+EHLIBFUNC(eval) {
+	ehretval_t *args[1];
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__)) {
+		EHLF_RETFALSE;
+	}
+	ehretval_t *arg = eh_xtostring(args[0]);
+	if(EH_TYPE(arg) != string_e) {
+		eh_error_type("argument 0 to eval", EH_TYPE(args[0]), enotice_e);
+		EHLF_RETFALSE;	
+	}
+	//*retval = new ehretval_t(interpreter->parse_string(arg->stringval));
 }

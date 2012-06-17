@@ -17,10 +17,8 @@ void eh_error(const char *message, errlevel_e level) {
 			throw new std::exception;
 		case eparsing_e:
 			fprintf(stderr, ": EH parsing error\n");
-			if(is_interactive)
-				break;
-			else
-				throw new std::exception;
+			// TODO: figure out whether we're interactive
+			break;
 		case eerror_e:
 			fprintf(stderr, ": EH runtime error\n");
 			break;

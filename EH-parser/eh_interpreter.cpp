@@ -81,6 +81,7 @@ ehlibfunc_t libfuncs[] = {
 	LIBFUNCENTRY(include)
 	LIBFUNCENTRY(pow)
 	LIBFUNCENTRY(log)
+	LIBFUNCENTRY(eval)
 	{NULL, NULL}
 };
 
@@ -777,7 +778,8 @@ ehretval_t *eh_op_command(const char *name, ehretval_t *node, ehcontext_t contex
 	if(libcmd != NULL) {
 		ret = libcmd->code(paras);
 	} else {
-		ret = interpreter->execute_cmd(name, paras);
+		// TODO
+		// ret = interpreter->execute_cmd(name, paras);
 	}
 	// we're not returning anymore
 	returning = false;

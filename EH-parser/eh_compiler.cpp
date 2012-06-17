@@ -22,7 +22,6 @@ void usage(char **argv) {
 
 int main(int argc, char **argv) {
 	ehretval_t ret;
-	EHParser parser(end_is_end_e, NULL);
 	char *infilename;
 
 	// parse arguments
@@ -66,15 +65,11 @@ int main(int argc, char **argv) {
 	}
 
 	try {
-		FILE *infile = fopen(infilename, "r");
-		if(!infile) {
-			eh_error("Unable to open input file", efatal_e);
-		}
-		eh_setarg(argc, argv);
+		EHI interpreter;
+		interpreter.eh_setarg(argc, argv);
 		// set input
-		eh_init();
-		ret = parser.parse_file(infile);
-		eh_exit();
+		ret = interpreter.parse_file(infilename);
+		interpreter.eh_exit();
 		exit(ret.intval);
 	}
 	catch(...) {
@@ -83,7 +78,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void eh_init(void) {
+void EHI::eh_init(void) {
 	outfile = fopen(outfilename, "w");
 	if(outfile == NULL) {
 		fprintf(stderr, "Unable to create output file");
@@ -98,14 +93,14 @@ void eh_init(void) {
 	fprintf(outfile, "_main:\n");
 	return;
 }
-void eh_exit(void) {
+void EHI::eh_exit(void) {
 	// need to pad stack so esp is 16-byte aligned
 	fprintf(outfile, "movl $0xbffff770, %%esp\n");
 	fprintf(outfile, "call _exit\n");
 	return;
 }
 
-ehretval_t *eh_execute(ehretval_t *node, const ehcontext_t context) {
+ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 	ehretval_t *ret = new ehretval_t(int_e);
 	if(node == NULL)
 		ret->intval = 0;
@@ -304,7 +299,17 @@ ehretval_t *eh_execute(ehretval_t *node, const ehcontext_t context) {
 	return ret;
 }
 
-void eh_setarg(int argc, char **argv) {
+void EHI::eh_setarg(int argc, char **argv) {
 	// how should we do this?
 	return;
+}
+
+EHI::EHI() : eval_parser(NULL) {}
+EHI::~EHI() {}
+
+ehretval_t *EHI::execute_cmd(const char *cmd, ehvar_t **paras) {
+	return NULL;
+}
+char *EHI::eh_getline(EHParser *parser) {
+	return NULL;
 }

@@ -39,7 +39,6 @@ private:
 	ehscope_t *curr_scope;
 	
 	void eh_init(void);
-	void eh_exit(void);
 	// helper functions
 	ehretval_t *eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
 	ehretval_t *eh_op_for(opnode_t *op, ehcontext_t context);
@@ -88,6 +87,7 @@ public:
 	ehretval_t parse_string(const char *cmd);
 	ehretval_t parse_file(const char *name);
 	EHI();
+	void eh_exit(void);
 
 	virtual ehretval_t *execute_cmd(const char *rawcmd, ehvar_t **paras);
 	virtual char *eh_getline(class EHParser *parser = NULL);

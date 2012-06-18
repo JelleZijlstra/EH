@@ -34,7 +34,7 @@ ehretval_t EHI::parse_file(const char *name) {
 }
 void EHI::init_eval_parser() {
 	if(eval_parser == NULL) {
-		eval_parser = new EHParser(end_is_end_e, this);
+		eval_parser = new EHParser(end_is_end_e, new EHI);
 	}
 }
 ehretval_t EHI::parse_string(const char *cmd) {

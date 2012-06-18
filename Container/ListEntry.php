@@ -182,7 +182,7 @@ abstract class ListEntry extends ExecuteHandler {
 		} else {
 			$this->fillThisPointer();
 			$this->setup_eh_ListEntry();
-			var_dump($this->parse_string($paras['command'] . "\n"));
+			return $this->parse_string($paras['command'] . "\n");
 		}
 	}
 	

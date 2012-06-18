@@ -17,81 +17,67 @@ EHI::~EHI(void) {
 }
 
 ehvar_t **zvaltoeh_array(HashTable *hash);
+zval *arrtozval(ehvar_t **paras);
+
+zval *ehtozval(ehretval_t *in) {
+	if(EH_TYPE(in) == array_e) {
+		return arrtozval(in->arrayval);
+	} else {
+		zval *out;
+		MAKE_STD_ZVAL(out);
+		switch(EH_TYPE(in)) {
+			case int_e:
+				ZVAL_LONG(out, in->intval);
+				break;
+			case string_e:
+				ZVAL_STRING(out, in->stringval, 0);
+				break;
+			case bool_e:
+				ZVAL_BOOL(out, in->boolval);
+				break;
+			case array_e:
+				break;
+			case float_e:
+				ZVAL_DOUBLE(out, in->floatval);
+				break;
+			case null_e:
+				ZVAL_NULL(out);
+				break;
+			case range_e:
+			case func_e:
+			case object_e:
+				// TODO
+				eh_error_type("conversion to PHP", EH_TYPE(in), enotice_e);
+				break;
+			case accessor_e:
+			case type_e:
+			case reference_e:
+			case creference_e:
+			case op_e:
+			case attribute_e:
+			case attributestr_e:
+				// these shouldn't even appear as user-visible types
+				eh_error_type("conversion to PHP", EH_TYPE(in), efatal_e);
+				break;
+		}
+		return out;
+	}
+}
 
 zval *arrtozval(ehvar_t **paras) {
 	zval *arr;
 	MAKE_STD_ZVAL(arr);
-	ehvar_t *currvar;
-	int i;
 
 	// initiate PHP array
 	array_init(arr);
-	for(i = 0; i < VARTABLE_S; i++) {
-		currvar = paras[i];
-		while(currvar != NULL) {
+	for(int i = 0; i < VARTABLE_S; i++) {
+		for(ehvar_t *currvar = paras[i]; currvar != NULL; currvar = currvar->next) {
 			// convert an EH array member to a PHP array member
 			if(currvar->indextype == int_e) {
-				switch(EH_TYPE(currvar->value)) {
-					case int_e:
-						add_index_long(arr,
-							currvar->index, currvar->value->intval);
-						break;
-					case string_e:
-						add_index_string(arr,
-							currvar->index, currvar->value->stringval, 0);
-						break;
-					case bool_e:
-						add_index_bool(arr,
-							currvar->index, currvar->value->boolval);
-						break;
-					case array_e:
-						add_index_zval(arr,
-							currvar->index,
-							arrtozval(currvar->value->arrayval));
-						break;
-					case float_e:
-						add_index_double(arr,
-							currvar->index, currvar->value->floatval);
-						break;
-					case null_e:
-						add_index_null(arr, currvar->index);
-						break;
-					default:
-						eh_error_type("conversion to PHP", currvar->value->type, enotice_e);
-						break;
-				}
+				add_index_zval(arr, currvar->index, ehtozval(currvar->value));
 			} else if(currvar->indextype == string_e) {
-				switch(EH_TYPE(currvar->value)) {
-					case int_e:
-						add_assoc_long(arr,
-							currvar->name, currvar->value->intval);
-						break;
-					case string_e:
-						add_assoc_string(arr,
-							currvar->name, currvar->value->stringval, 0);
-						break;
-					case bool_e:
-						add_assoc_bool(arr,
-							currvar->name, currvar->value->boolval);
-						break;
-					case array_e:
-						add_assoc_zval(arr,
-							currvar->name,
-							arrtozval(currvar->value->arrayval));
-						break;
-					case float_e:
-						add_assoc_double(arr,
-							currvar->name, currvar->value->floatval);
-						break;
-					case null_e:
-						add_assoc_null(arr, currvar->name);
-						break;
-					default:
-						eh_error_type("conversion to PHP", currvar->value->type, enotice_e);
-						break;
-				}
+				add_assoc_zval(arr, currvar->name, ehtozval(currvar->value));
 			}
-			currvar = currvar->next;
 		}
 	}
 	return arr;
@@ -177,8 +163,8 @@ ehvar_t **zvaltoeh_array(HashTable *hash) {
 %typemap(directorout) ehretval_t * {
 	$result = zvaltoeh($1);
 }
-%typemap(directorout) ehretval_t {
-	$result = *zvaltoeh($1);
+%typemap(out) ehretval_t {
+	$result = ehtozval(&$1);
 }
 
 class EHI {

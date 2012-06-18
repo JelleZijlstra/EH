@@ -2183,10 +2183,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	}
 	public function echopdfcontent() {
 		$c = $this->getpdfcontent();
-		if($c === false)
+		if($c === false) {
 			return false;
-		echo $c;
-		return true;
+		} else {
+			echo $c . PHP_EOL;
+			return true;
+		}
 	}
 	public function findtitle_pdfcontent() {
 	// tries to detect the title from $this->pdfcontent
@@ -3165,6 +3167,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 							'-sOUTPUTFILE=' . TEMPPATH . '/' . $data,
 							BURSTPATH . '/' . $this->name,
 						),
+						'stderr' => '/dev/null',
 					));
 					echo 'Split off file ' . $data . PHP_EOL;
 					$file = new self(NULL, 'e', $this->p);

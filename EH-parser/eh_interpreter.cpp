@@ -130,8 +130,7 @@ const char *libredirs[][2] = {
 		continuing--; \
 		inloop--; \
 		return ret; \
-	} \
-	else if(continuing) { \
+	} else if(continuing) { \
 		continuing = 0; \
 		continue; \
 	} \
@@ -301,7 +300,7 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 				break;
 			case T_NEW: // object declaration
 				ret = eh_op_new(
-					eh_execute(node->opval->paras[0], context)->stringval
+					eh_execute(node->opval->paras[0], context)->stringval, context
 				);
 				break;
 		/*
@@ -754,7 +753,7 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	inloop--;
 	return ret;
 }
-ehretval_t *EHI::eh_op_new(const char *name) {
+ehretval_t *EHI::eh_op_new(const char *name, ehcontext_t context) {
 	ehretval_t *ret = NULL;
 
 	ehclass_t *classobj = get_class(name);
@@ -770,9 +769,21 @@ ehretval_t *EHI::eh_op_new(const char *name) {
 		// insert selfptr
 		ret->objectval->selfptr = classobj->obj.constructor();
 	}
+	
+	ehretval_t *constructor = NULL;
 	for(int i = 0; i < VARTABLE_S; i++) {
 		for(ehvar_t *m = classobj->obj.members[i]; m != NULL; m = m->next) {
 			class_copy_member(ret->objectval, m, i);
+			if(!strcmp(m->name, "constructor")) {
+				constructor = m->value;
+			}
+		}
+	}
+	if(constructor != NULL) {
+		if(EH_TYPE(constructor) != func_e) {
+			eh_error_type("constructor", EH_TYPE(constructor), enotice_e);
+		} else {
+			call_function_args(constructor->funcval, context, context, 0, NULL);
 		}
 	}
 	return ret;
@@ -1217,8 +1228,7 @@ bool EHI::insert_variable(ehvar_t *var) {
 	if(vartable[vhash] == NULL) {
 		vartable[vhash] = var;
 		var->next = NULL;
-	}
-	else {
+	} else {
 		var->next = vartable[vhash];
 		vartable[vhash] = var;
 	}
@@ -1245,12 +1255,10 @@ ehvar_t *EHI::get_variable(const char *name, ehscope_t *scope, ehcontext_t conte
 	// look in this scope, then the parent scope
 	while(1) {
 		unsigned int vhash = hash(name, (uint32_t) my_scope);
-		currvar = vartable[vhash];
-		while(currvar != NULL) {
+		for(currvar = vartable[vhash]; currvar != NULL; currvar = currvar->next) {
 			if(strcmp(currvar->name, name) == 0 && currvar->scope == (unsigned long) my_scope) {
 				return currvar;
 			}
-			currvar = currvar->next;
 		}
 		if(my_scope->parent == NULL) {
 			break;
@@ -1354,8 +1362,7 @@ ehretval_t *EHI::call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context,
 			f->scope.pop();
 			return ret;
 		}
-	}
-	else while(args->opval->nparas != 0) {
+	} else while(args->opval->nparas != 0) {
 		ehvar_t *var = new ehvar_t;
 		var->name = f->args[i].name;
 		var->scope = new_scope;

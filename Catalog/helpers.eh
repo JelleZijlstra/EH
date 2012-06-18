@@ -23,3 +23,12 @@ fixannals := func: dryRun {
 t := func: in {
 	printvar: $(edit 'Agathaeromys nov.pdf' -c=$in)
 }
+
+t := func: in {
+	switch $in
+		case $is_string
+			echo 'string'
+		default
+			echo 'not a string'
+	end
+}

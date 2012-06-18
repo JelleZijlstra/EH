@@ -489,9 +489,12 @@ abstract class CsvContainerList extends ContainerList {
 			},
 			'default' => array(
 				'includefiles' => false,
-				'groupby' => '',
+				'groupby' => false,
 				'getstats_quiet' => false,
 				'quiet' => true, // be quiet when we're in mlist and bfind
+			),
+			'errorifempty' => array(
+				'field',
 			),
 			'checkparas' => array(
 				'field' => function($in) use ($childClass) {
@@ -504,7 +507,7 @@ abstract class CsvContainerList extends ContainerList {
 			'split' => true,
 		), $gs_paras) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// do "groupby" if desired
-		if($gs_paras['groupby']) {
+		if($gs_paras['groupby'] !== false) {
 			// call mlist to get groups
 			$groups = $this->mlist(array(
 				'print' => false,

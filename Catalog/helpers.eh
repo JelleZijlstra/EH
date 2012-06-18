@@ -19,3 +19,7 @@ fixannals := func: dryRun {
 		}
 	}
 }
+
+t := func: in {
+	printvar: $(edit 'Agathaeromys nov.pdf' -c=$in)
+}

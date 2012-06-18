@@ -177,6 +177,9 @@ ehvar_t **zvaltoeh_array(HashTable *hash) {
 %typemap(directorout) ehretval_t * {
 	$result = zvaltoeh($1);
 }
+%typemap(directorout) ehretval_t {
+	$result = *zvaltoeh($1);
+}
 
 class EHI {
 public:

@@ -90,6 +90,9 @@ abstract class ListEntry extends ExecuteHandler {
 	 */
 	protected function setup_eh_ListEntry() {
 	// set up EH handler for a ListEntry
+		if($this->setup_execute) {
+			return;
+		}
 		$this->setup_ExecuteHandler(array_merge(
 			self::$ListEntry_commands,
 			static::${get_called_class() . '_commands'}
@@ -164,7 +167,23 @@ abstract class ListEntry extends ExecuteHandler {
 	 * Edit an entry.
 	 */
 	public function edit($paras = array()) {
-		return $this->cli($paras);
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array('c' => 'command'),
+			'checklist' => array(
+				'command' => 'Command to execute',
+			),
+			'default' => array(
+				'command' => false,
+			),
+		))) return false;
+		if($paras['command'] === false) {
+			return $this->cli($paras);
+		} else {
+			$this->fillThisPointer();
+			$this->setup_eh_ListEntry();
+			var_dump($this->parse_string($paras['command'] . "\n"));
+		}
 	}
 	
 	/*
@@ -229,10 +248,7 @@ abstract class ListEntry extends ExecuteHandler {
 	 */
 	public function cli(array $paras = array()) {
 	// edit information associated with an entry
-		if(!$this->setup_execute) {
-			$this->setup_eh_ListEntry();
-			$this->setup_execute = true;
-		}
+		$this->setup_eh_ListEntry();
 		if($this->name !== NULL) {
 			$label = $this->name;
 		} else {

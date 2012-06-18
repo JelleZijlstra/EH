@@ -21,10 +21,14 @@ if(extension_loaded("ehphp"))  {
 		protected function __construct() {
 			parent::__construct();
 		}
+		protected function fillThisPointer() {
+			if($this->_cPtr === NULL) {
+				parent::__construct();
+			}
+		}
 		public function setup_commandline($name, array $paras = array()) {
 			// set up if necessary
-			if($this->_cPtr === NULL)
-				parent::__construct();
+			$this->fillThisPointer();
 			$this->prompt = $name . '> ';
 			try {
 				$ret = $this->eh_interactive();

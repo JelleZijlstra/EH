@@ -522,7 +522,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 		if($this->parent and !$this->p->has($this->parent)) {
 			$this->warn('invalid enclosing article', 'parent');
 		}
-		if(preg_match('/^(?![ -~]+$)/', $this->name)) {
+		if(!$this->isredirect() and preg_match('/^(?![ -~]+$)/', $this->name)) {
 			$this->warn('invalid characters in name', 'name');
 		}
 		$this->needSave();
@@ -606,6 +606,7 @@ class CsvArticle extends CsvListEntry implements ArticleInterface {
 			case 'MTEPHE': case 'Mém. Trav. E.P.H.E., Inst. Montpellier': $o = "Mémoires et Travaux de l'École Pratique des Hautes Études, Institut de Montpellier"; break;
 			case 'NJGPA': case 'Neues Jahrbuch für Geologie und Paläontologie - Abhandlungen': $o = 'Neues Jahrbuch für Geologie und Paläontologie, Abhandlungen'; break;
 			case 'NJGPMH': case 'NJGPM': case 'Neues Jahrbuch für Geologie und Paläontologie - Monatshefte': $o = 'Neues Jahrbuch für Geologie und Paläontologie, Monatshefte'; break;
+			case 'OPMNHUK': $o = 'Occasional Papers of the Museum of Natural History, The University of Kansas'; break;
 			case 'OPMZUM': $o = 'Occasional Papers of the Museum of Zoology, University of Michigan'; break;
 			case 'OPMZLSU': $o = 'Occasional Papers of the Museum of Zoology, Louisiana State University'; break;
 			case 'OPTTU': case 'OPMTTU': case 'Occasional Papers, The Museum, Texas Tech University': $o = 'Occasional Papers, Museum of Texas Tech University'; break;

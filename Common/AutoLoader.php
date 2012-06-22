@@ -76,6 +76,9 @@ abstract class AutoLoader {
 		'Bot' => '/UcuchaBot/Bot.php',
 		'FacsList' => '/UcuchaBot/Facs.php',
 		'FacsEntry' => '/UcuchaBot/Facs.php',
+		
+		// Misc
+		'CodingGenerator' => '/Misc/CodingGenerator.php',
 	);
 	public static function load($class) {
 		if(isset(self::$locations[$class])) {

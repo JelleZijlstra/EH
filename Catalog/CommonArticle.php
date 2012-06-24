@@ -2330,7 +2330,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		/*
 		 * Process "source" field
 		 */
-		$source = preg_split("/(, (Vol|No|Bd|H)\. | \(|\), pp?\. )/", $head[2]);
+		$source = preg_split("/, (Vol|No|Bd|H)\. |(?<=\d) \(|\), pp?\. /", $head[2]);
 		$data['journal'] = $source[0];
 		$data['volume'] = $source[1];
 		// issue may have been omitted
@@ -2644,7 +2644,11 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 	private static function fetchgoogle($search) {
 		// get data from Google
 		$url = "https://www.googleapis.com/customsearch/v1?key=" . GOOGLEKEY . "&cx=" . GOOGLECUS . "&q=" . $search;
-		$json = @file_get_contents($url);
+		try {
+			$json = file_get_contents($url);
+		} catch(EHException $e) {
+			return false;
+		}
 		if(!$json) {
 			echo "Error: nothing found in Google." . PHP_EOL;
 			return false;

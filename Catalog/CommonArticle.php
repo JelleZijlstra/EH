@@ -1451,8 +1451,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 			'process' => array(
 				'l' => $looper($tolower),
 				'u' => $looper($toupper),
-				'i' => function($cmd, array $data) use(&$splitTitle) {
-					if(count($data) !== 2) {
+				'i' => function($cmd, $data) use(&$splitTitle) {
+					if(!is_array($data) || count($data) !== 2) {
 						echo 'Invalid argument' . PHP_EOL;
 						return true;
 					}
@@ -1460,8 +1460,8 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 					$splitTitle[$data[1]] .= '</i>';
 					return true;				
 				},
-				'e' => function($cmd, array $data) use(&$splitTitle) {
-					if(count($data) !== 2 || $data[0] !== $data[1]) {
+				'e' => function($cmd, $data) use(&$splitTitle) {
+					if(!is_array($data) || count($data) !== 2 || $data[0] !== $data[1]) {
 						echo 'Invalid argument' . PHP_EOL;
 						return true;
 					}

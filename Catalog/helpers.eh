@@ -32,3 +32,7 @@ t := func: in {
 			echo 'not a string'
 	end
 }
+
+h := func: author, year {
+	bfind --year=$year --authors='/' . $author . '/i'
+}

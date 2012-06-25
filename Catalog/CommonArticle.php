@@ -2436,9 +2436,12 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		if(!preg_match("/GEODIVERSITAS · /", $this->pdfcontent))
 			return false;
 		echo "Detected Geodiversitas paper." . PHP_EOL;
-		preg_match("/\n\n([^\n]*)\n\nKEY/s", $this->pdfcontent, $cite);
-		if(!$cite = trim($cite[1]))
+		try {
+			preg_match("/\n\n([^\n]*)\n\nKEY/s", $this->pdfcontent, $cite);
+			$cite = trim($cite[1]);
+		} catch(EHException $e) {
 			return false;
+		}
 		// split into fields
 		$head = preg_split("/((?<=\.) (?=\d{4})|\. -- |\. Geodiversitas |(?<=\d) \((?=\d)|(?<=\d)\) : (?=\d))/", $cite);
 		

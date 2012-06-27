@@ -281,8 +281,12 @@ abstract class CsvContainerList extends ContainerList {
 		// array of values for the field; $values["<value>"] gives the number of occurrences
 		$values = array();
 		$field = $paras['field'];
+		$hasRedirect = method_exists(static::$childClass, 'isredirect');
 		// fill array
 		foreach($files as $file) {
+			if($hasRedirect && $file->isredirect()) {
+				continue;
+			}
 			$value = $paras['isfunc'] ? $file->$field() : $file->$field;
 			if($paras['function']) {
 				$value = $paras['function']($value);

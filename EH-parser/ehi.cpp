@@ -17,7 +17,7 @@ int EHI::eh_interactive(interactivity_enum interactivity) {
 	return ret.intval;
 }
 ehretval_t EHI::parse_file(const char *name) {
-	ehretval_t ret(NULL);
+	ehretval_t ret(null_e);
 	FILE *infile = fopen(name, "r");
 	if(!infile) {
 		fprintf(stderr, "Could not open input file\n");

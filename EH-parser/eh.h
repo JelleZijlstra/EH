@@ -1,6 +1,6 @@
 /*
  * eh.h
- * Jelle Zijlstra, December 2011
+ * Jelle Zijlstra, December 2011–May 2012
  *
  * Main header file for the EH scripting language
  */
@@ -142,6 +142,7 @@ typedef struct ehretval_t {
 	EHRV_CONS(float, float)
 	EHRV_CONS(char *, string)
 	EHRV_CONS(int, int)
+#undef EHRV_CONS
 
 	// manipulate the refcount
 	void inc_rc() {
@@ -353,11 +354,11 @@ private:
 public:
 	struct ehscope_t *parent;
 	// push and pop a new scope from the stack
-	unsigned long push() {
+	size_t push() {
 		varscope_t *new_scope = new varscope_t(var_scope);
 		new_scope->parent = parent->top_pointer();
 		var_scope = new_scope;
-		return (unsigned long) new_scope;
+		return (size_t) new_scope;
 	}
 	void pop() {
 		assert(var_scope->next != NULL);
@@ -366,16 +367,16 @@ public:
 		var_scope = tmp;
 	}
 	// deferred push: create a new scope, but don't put it in yet
-	unsigned long deferred_push() {
+	size_t deferred_push() {
 		varscope_t *new_scope = new varscope_t(var_scope);
 		new_scope->parent = parent->top_pointer();
-		return (unsigned long) new_scope;
+		return (size_t) new_scope;
 	}
-	void complete_push(unsigned long new_scope) {
+	void complete_push(size_t new_scope) {
 		var_scope = (varscope_t *) new_scope;
 	}
-	unsigned long top() {
-		return (unsigned long) var_scope;
+	size_t top() {
+		return (size_t) var_scope;
 	}
 	varscope_t *top_pointer() {
 		return var_scope;

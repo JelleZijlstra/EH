@@ -1,5 +1,6 @@
 CC = g++
-CCFLAGS = -ggdb -Wall -pedantic -fPIC -c
+CCBASICFLAGS = -ggdb -fPIC -c
+CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic
 SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp eh_gc.cpp ehi.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
@@ -13,17 +14,15 @@ SYMBOLS = -Wl,-flat_namespace,-U,_zend_register_resource,-U,_zend_rsrc_list_get_
 all: ehc ehphp ehi
 
 eh_wrap.o: eh_wrap.cpp
-	$(CC) `php-config --includes` -ggdb -fPIC -c $< -o $@
+	$(CC) `php-config --includes` $(CCBASICFLAGS) $< -o $@
 
 eh.h: ehi.h eh.bison.hpp
-
-%.cpp: eh.h
 
 eh_interpreter.cpp: eh_libfuncs.h
 
 eh_libfuncs.cpp: eh_libfuncs.h
 
-%.o: %.cpp
+%.o: %.cpp eh.h
 	$(CC) $(CCFLAGS) $< -o $@
 
 ehc: $(COMPILER_O)

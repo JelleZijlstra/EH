@@ -1254,7 +1254,7 @@ ehvar_t *EHI::get_variable(const char *name, ehscope_t *scope, ehcontext_t conte
 	
 	// look in this scope, then the parent scope
 	while(1) {
-		unsigned int vhash = hash(name, (uint32_t) my_scope);
+		unsigned int vhash = hash(name, (size_t) my_scope);
 		for(currvar = vartable[vhash]; currvar != NULL; currvar = currvar->next) {
 			if(strcmp(currvar->name, name) == 0 && currvar->scope == (unsigned long) my_scope) {
 				return currvar;
@@ -1324,9 +1324,9 @@ void EHI::list_variables(void) {
 		tmp = vartable[i];
 		while(tmp != NULL) {
 			printf(
-				"Variable %s of type %d at scope %d in hash %d at address %x\n", 
+				"Variable %s of type %d at scope %d in hash %d at address %p\n", 
 				tmp->name, tmp->value->type, (uint32_t) tmp->scope, i, 
-				(int) tmp
+				(void *) tmp
 			);
 			tmp = tmp->next;
 		}

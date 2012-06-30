@@ -608,8 +608,8 @@ ehretval_t *EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 		// "for 5 count i; do stuff; endfor" construct
 		char *name = op->paras[1]->stringval;
 		// this should perhaps create a new variable, or only overwrite variables in the current scope
-		ehmember_t *var = context->get_variable(name, context, T_LVALUE_SET);
-		// if we do T_LVALUE_SET, get_variable never returns NULL
+		ehmember_t *var = context->get_recursive(name, context, T_LVALUE_SET);
+		// if we do T_LVALUE_SET, get_recursive never returns NULL
 		// count variable always gets to be an int
 		if(var->value == NULL) {
 			var->value = new ehretval_t((int) range.min);
@@ -665,9 +665,9 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 		code = op->paras[3];
 	}
 	// create variables
-	membervar = context->get_variable(membername, context, T_LVALUE_SET);
+	membervar = context->get_recursive(membername, context, T_LVALUE_SET);
 	if(indexname != NULL) {
-		indexvar = context->get_variable(indexname, context, T_LVALUE_SET);
+		indexvar = context->get_recursive(indexname, context, T_LVALUE_SET);
 	}
 	if(object->type == object_e) {
 		// object index is always a string
@@ -969,7 +969,7 @@ ehretval_t *EHI::eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 	// func_e (indicating a method or closure call)
 	switch(EH_TYPE(function)) {
 		case string_e:
-			func = context->get_variable(
+			func = context->get_recursive(
 				function->stringval, context, T_LVALUE_GET
 			);
 			if(func == NULL) {
@@ -1030,7 +1030,7 @@ ehretval_t *&EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	switch(op->nparas) {
 		case 1:
 		{
-			ehmember_t *var = context->get_variable(basevar->stringval, context, op->op);
+			ehmember_t *var = context->get_recursive(basevar->stringval, context, op->op);
 			// dereference variable
 			if(var != NULL) {
 				basevar->dec_rc();
@@ -1065,7 +1065,7 @@ ehretval_t *EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 		return ret;
 	}
 	
-	ehmember_t *var = context->get_variable(
+	ehmember_t *var = context->get_recursive(
 		varname->stringval, context, T_LVALUE_GET
 	);
 	if(var == NULL || var->value == NULL) {
@@ -1143,19 +1143,19 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 					// array access to an array works as expected.
 					if(basevar->arrayval->has(index)) {
 						ret = basevar->arrayval->operator[](index);
-					} else {
-						ret = NULL;
 					}
 					break;
 				case object_e:
 					if(index->type != string_e) {
 						eh_error_type("access to object", index->type, eerror_e);
 					} else {
-						ret = basevar->objectval->get(index->stringval, context);
-						if(ret == NULL) {
+						ehmember_t *member = basevar->objectval->get(index->stringval, context, T_LVALUE_GET);
+						if(member == NULL) {
 							eh_error_unknown(
 								"object member", index->stringval, eerror_e
 							);
+						} else {
+							ret = member->value;
 						}
 					}
 					break;
@@ -1168,7 +1168,6 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 			try {
 				ret = colon_access(basevar, index, context, T_LVALUE_GET);
 			} catch(int) {
-				ret = NULL;
 			}
 			break;
 		default:
@@ -1342,7 +1341,7 @@ void EHI::class_insert(ehobj_t *obj, const ehretval_t *in, ehcontext_t context) 
 ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token) {
 	ehmember_t *member;
 
-	ehmember_t *var = context->get_variable(operand1->stringval, context, T_LVALUE_GET);
+	ehmember_t *var = context->get_recursive(operand1->stringval, context, T_LVALUE_GET);
 	if(var == NULL) {
 		eh_error("cannot access member of nonexistent variable", eerror_e);
 		throw 0;
@@ -1364,7 +1363,7 @@ ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehconte
 				eh_error_type("object member label", EH_TYPE(label), eerror_e);
 				throw 0;
 			}
-			member = var->value->objectval->get_variable(label->stringval, context, token);
+			member = var->value->objectval->get(label->stringval, context, token);
 			if(member == NULL) {
 				throw 0;
 			} else {
@@ -1394,7 +1393,7 @@ ehretval_t *&EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontex
 		eh_error_unknown("class", operand1->stringval, eerror_e);
 		throw 0;
 	}
-	ehmember_t *member = classobj->obj.get_variable(label->stringval, context, token);
+	ehmember_t *member = classobj->obj.get(label->stringval, context, token);
 	if(member == NULL) {
 		if(token == T_LVALUE_GET) {
 			eh_error_unknown("object member", label->stringval, eerror_e);		
@@ -2176,29 +2175,31 @@ ehmember_t *ehobj_t::insert_retval(const char *name, memberattribute_t attribute
 	members[name] = member;
 	return member;
 }
-ehmember_t *ehobj_t::getmember(const char *name, const ehcontext_t context) {
-	if(has(name)) {
-		ehmember_t *out = operator[](name);
-		switch(out->attribute.visibility) {
-			case public_e:
-				return out;
-			case private_e:
-				// check context
-				return ehcontext_compare(this, context) ? out : NULL;		
+ehmember_t *ehobj_t::get(const char *name, const ehcontext_t context, int token) {
+	ehmember_t *out = NULL;
+	if(this->has(name)) {
+		out = this->members[name];
+		if(out->attribute.visibility == private_e) {
+			// check context
+			if(!ehcontext_compare(this, context)) {
+				out = NULL;
+			}
+		}
+	} else {
+		if(token == T_LVALUE_SET) {
+			out = new ehmember_t();
+			out->value = NULL;
+			this->insert(name, out);
 		}
 	}
-	return NULL;
-}
-ehretval_t *ehobj_t::get(const char *name, const ehcontext_t context) {
-	ehmember_t *curr = getmember(name, context);
-	if(curr != NULL) {
-		return curr->value;
-	} else {
+	if(out != NULL && token == T_LVALUE_SET && out->attribute.isconst == const_e) {
+		eh_error("Attempt to write to constant variable", eerror_e);
 		return NULL;
 	}
+	return out;
 }
-ehmember_t *ehobj_t::get_variable(const char *name, ehcontext_t context, int token) {
-	ehmember_t *currvar = this->get_variable_recursive(name, context);
+ehmember_t *ehobj_t::get_recursive(const char *name, ehcontext_t context, int token) {
+	ehmember_t *currvar = this->get_recursive_helper(name, context);
 	if(token == T_LVALUE_SET) {
 		if(currvar == NULL) {
 			if(!this->has(name)) {
@@ -2215,10 +2216,13 @@ ehmember_t *ehobj_t::get_variable(const char *name, ehcontext_t context, int tok
 	}
 	return currvar;
 }
-ehmember_t *ehobj_t::get_variable_recursive(const char *name, const ehcontext_t context) {
-	ehmember_t *out = this->getmember(name, context);
+ehmember_t *ehobj_t::get_recursive_helper(const char *name, const ehcontext_t context) {
+	ehmember_t *out = NULL;
+	if(this->has(name)) {
+		out = this->members[name];
+	}
 	if(out == NULL & this->parent != NULL) {
-		out = this->parent->get_variable_recursive(name, context);
+		out = this->parent->get_recursive_helper(name, context);
 	}
 	return out;
 }

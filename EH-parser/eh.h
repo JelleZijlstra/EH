@@ -365,9 +365,8 @@ public:
 	}
 	
 	ehmember_t *insert_retval(const char *name, memberattribute_t attribute, ehretval_t *value);
-	ehmember_t *getmember(const char *name, const ehcontext_t context);
-	ehmember_t *get_variable(const char *name, const ehcontext_t context, int token);
-	ehretval_t *get(const char *name, const ehcontext_t context);
+	ehmember_t *get_recursive(const char *name, const ehcontext_t context, int token);
+	ehmember_t *get(const char *name, const ehcontext_t context, int token);
 	
 	ehmember_t *&operator[](std::string key) {
 		return members[key];
@@ -385,7 +384,7 @@ public:
 		this->insert(str, value);
 	}
 private:
-	ehmember_t *get_variable_recursive(const char *name, const ehcontext_t context);
+	ehmember_t *get_recursive_helper(const char *name, const ehcontext_t context);
 } ehobj_t;
 #define OBJECT_FOR_EACH(obj, varname) for(ehobj_t::obj_iterator varname = (obj)->members.begin(), end = (obj)->members.end(); varname != end; varname++)
 

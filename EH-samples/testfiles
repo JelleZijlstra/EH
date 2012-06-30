@@ -115,3 +115,4 @@ braces.eh
 segfaults.eh
 chained_accessors.eh
 constructor.eh
+private.eh

@@ -11,7 +11,7 @@
 
 void printvar_retval(const ehretval_t *in);
 static void printvar_array(eharray_t *in);
-static void printvar_object(ehvar_t **in);
+static void printvar_object(ehobj_t *in);
 
 // get arguments, and error if there are too many or few
 // Args should have enough memory malloc'ed to it to house n arguments.
@@ -53,10 +53,7 @@ EHLIBFUNC(printvar) {
 }
 // helper functions for printvar
 void printvar_retval(const ehretval_t *in) {
-	int i;
-	if(in == NULL) {
-		printf("null\n");
-	} else switch(in->type) {
+	switch(EH_TYPE(in)) {
 		case null_e:
 			printf("null\n");
 			break;
@@ -79,7 +76,7 @@ void printvar_retval(const ehretval_t *in) {
 			break;
 		case object_e:
 			printf("@object <%s> [\n", in->objectval->classname);
-			printvar_object(in->objectval->members);
+			printvar_object(in->objectval);
 			printf("]\n");
 			break;
 		case creference_e:
@@ -88,7 +85,7 @@ void printvar_retval(const ehretval_t *in) {
 			break;
 		case func_e:
 			printf("@function <");
-			switch(in->funcval->type) {
+			switch(in->funcval->function->type) {
 				case user_e:
 					printf("user");
 					break;
@@ -100,9 +97,9 @@ void printvar_retval(const ehretval_t *in) {
 					break;
 			}
 			printf(">: ");
-			for(i = 0; i < in->funcval->argcount; i++) {
-				printf("%s", in->funcval->args[i].name);
-				if(i + 1 < in->funcval->argcount)
+			for(int i = 0; i < in->funcval->function->argcount; i++) {
+				printf("%s", in->funcval->function->args[i].name);
+				if(i + 1 < in->funcval->function->argcount)
 					printf(", ");
 			}
 			printf("\n");
@@ -131,41 +128,39 @@ void printvar_retval(const ehretval_t *in) {
 	}
 	return;
 }
-static void printvar_object(ehvar_t **in) {
-	for(int i = 0; i < VARTABLE_S; i++) {
-		for(ehvar_t *curr = in[i]; curr != NULL; curr = curr->next) {
-			// ignore $this
-			if(!strcmp(curr->name, "this")) {
-				continue;
-			}
-			printf("%s <", curr->name);
-			switch(curr->attribute.visibility) {
-				case public_e:
-					printf("public,");
-					break;
-				case private_e:
-					printf("private,");
-					break;
-			}
-			switch(curr->attribute.isstatic) {
-				case static_e:
-					printf("static,");
-					break;
-				case nonstatic_e:
-					printf("non-static,");
-					break;
-			}
-			switch(curr->attribute.isconst) {
-				case const_e:
-					printf("constant");
-					break;
-				case nonconst_e:
-					printf("non-constant");
-					break;
-			}
-			printf(">: ");
-			printvar_retval(curr->value);
+static void printvar_object(ehobj_t *in) {
+	OBJECT_FOR_EACH(in, curr) {
+		// ignore $this
+		if(curr->first.compare("this") == 0) {
+			continue;
 		}
+		printf("%s <", curr->first.c_str());
+		switch(curr->second->attribute.visibility) {
+			case public_e:
+				printf("public,");
+				break;
+			case private_e:
+				printf("private,");
+				break;
+		}
+		switch(curr->second->attribute.isstatic) {
+			case static_e:
+				printf("static,");
+				break;
+			case nonstatic_e:
+				printf("non-static,");
+				break;
+		}
+		switch(curr->second->attribute.isconst) {
+			case const_e:
+				printf("constant");
+				break;
+			case nonconst_e:
+				printf("non-constant");
+				break;
+		}
+		printf(">: ");
+		printvar_retval(curr->second->value);	
 	}
 }
 

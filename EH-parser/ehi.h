@@ -29,17 +29,11 @@ private:
 	int inloop;
 	int breaking;
 	int continuing;
-	ehvar_t *vartable[VARTABLE_S];
 	ehclass_t *classtable[VARTABLE_S];
 	ehcmd_bucket_t *cmdtable[VARTABLE_S];
 	
 	// hack: used to implement range/string/int access
 	ehretval_t *arrow_access_curr;
-	
-	// current object, gets passed around
-	ehcontext_t newcontext;
-	ehscope_t global_scope;
-	ehscope_t *curr_scope;
 	
 	void eh_init(void);
 	// helper functions
@@ -53,7 +47,7 @@ private:
 	ehretval_t *eh_op_array(ehretval_t *node, ehcontext_t context);
 	ehretval_t *eh_op_anonclass(ehretval_t *node, ehcontext_t context);
 	void eh_op_declarefunc(ehretval_t **paras);
-	ehretval_t *eh_op_declareclosure(ehretval_t **paras);
+	ehretval_t *eh_op_declareclosure(ehretval_t **paras, ehcontext_t context);
 	void eh_op_declareclass(ehretval_t **paras, ehcontext_t context);
 	ehretval_t *eh_op_switch(ehretval_t **paras, ehcontext_t context);
 	ehretval_t *eh_op_given(ehretval_t **paras, ehcontext_t context);
@@ -68,23 +62,20 @@ private:
 	void redirect_command(const char *redirect, const char *target);
 
 	// prototypes
-	bool insert_variable(ehvar_t *var);
-	ehvar_t *get_variable(const char *name, ehscope_t *scope, ehcontext_t context, int token);
-	void remove_variable(const char *name, ehscope_t *scope);
-	void list_variables(void);
-	ehretval_t *call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext);
-	ehretval_t *call_function_args(ehfm_t *f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, ehretval_t *args);
-	void remove_scope(ehscope_t *scope);
+	ehretval_t *call_function(ehobj_t *obj, ehretval_t *args, ehcontext_t context);
+	ehretval_t *call_function_args(ehobj_t *obj, ehcontext_t context, const int nargs, ehretval_t *args);
 	void array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t context);
 	void insert_class(ehclass_t *classobj);
 	ehclass_t *get_class(const char *name);
-	void class_insert(ehvar_t **classarr, const ehretval_t *in, ehcontext_t context);
+	void class_insert(ehobj_t *obj, const ehretval_t *in, ehcontext_t context);
 	ehretval_t *&object_access(ehretval_t *name, ehretval_t *index, ehcontext_t context, int token);
 	ehretval_t *&colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token);
+	ehobj_t *object_instantiate(ehobj_t *obj);
 public:
 	ehretval_t *eh_execute(ehretval_t *node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
 	bool returning;
+	ehobj_t *global_object;
 
 	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
 	ehretval_t parse_string(const char *cmd);

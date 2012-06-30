@@ -55,6 +55,8 @@ const char *libredirs[][2] = {
 
 #define DEC_RC(ret) (((ret) == NULL) ? (void)0 : (ret)->dec_rc())
 
+static inline int count_nodes(ehretval_t *node);
+
 /*
  * macros for interpreter behavior
  */
@@ -139,46 +141,50 @@ const char *libredirs[][2] = {
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), vartable(), classtable(), cmdtable(), arrow_access_curr(new ehretval_t(attribute_e)), newcontext(NULL), curr_scope(&global_scope), returning(false) {
+EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), classtable(), cmdtable(), arrow_access_curr(new ehretval_t(attribute_e)), returning(false), global_object(NULL) {
 		eh_init();
 	}
 void EHI::eh_init(void) {
+	global_object = new ehobj_t;
+	global_object->classname = "AnonymousClass";
+	global_object->parent = NULL;
+	
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
-		ehvar_t *func = new ehvar_t;
-		func->name = libfuncs[i].name;
-		func->scope = global_scope.top();
-		func->value = new ehretval_t;
-		func->value->type = func_e;
-		func->value->funcval = new ehfm_t;
-		func->value->funcval->type = lib_e;
-		func->value->funcval->ptr = libfuncs[i].code;
-		func->value->funcval->scope.parent = curr_scope;
+		ehmember_t *func = new ehmember_t();
+		func->value = new ehretval_t(func_e);
+		func->value->funcval = new ehobj_t;
+		func->value->funcval->parent = global_object;
+		func->value->funcval->classname = "Closure";
+		ehfm_t *f = new ehfm_t;
+		func->value->funcval->function = f;
+		f->type = lib_e;
+		f->ptr = libfuncs[i].code;
 		// other fields are irrelevant
-		insert_variable(func);
+		global_object->insert(libfuncs[i].name, func);
 	}
 	for(int i = 0; libclasses[i].name != NULL; i++) {
 		ehclass_t *newclass = new ehclass_t;
 		newclass->type = lib_e;
+		newclass->obj.parent = NULL;
 		newclass->obj.classname = libclasses[i].name;
 		newclass->obj.constructor = libclasses[i].info.constructor;
-		newclass->obj.members = new ehvar_t *[VARTABLE_S];
 		ehlibentry_t *members = libclasses[i].info.members;
 		// attributes for library methods
 		memberattribute_t attributes;
 		attributes.visibility = public_e;
 		attributes.isstatic = nonstatic_e;
 		attributes.isconst = nonconst_e;
-		// value
-		ehretval_t *value;
 		for(int i = 0; members[i].name != NULL; i++) {
-			value = new ehretval_t(func_e);
-			value->funcval = new ehfm_t;
-			value->funcval->type = libmethod_e;
-			value->funcval->mptr = members[i].func;
-			value->funcval->scope.parent = curr_scope;
-			class_insert_retval(
-				newclass->obj.members, members[i].name, attributes, value
-			);
+			ehmember_t *func = new ehmember_t(attributes);
+			func->value = new ehretval_t(func_e);
+			func->value->funcval = new ehobj_t;
+			func->value->funcval->parent = &newclass->obj;
+			func->value->funcval->classname = "Closure";
+			ehfm_t *f = new ehfm_t;
+			func->value->funcval->function = f;
+			f->type = libmethod_e;
+			f->mptr = members[i].func;
+			newclass->obj.insert(members[i].name, func);
 		}
 		insert_class(newclass);
 	}
@@ -208,289 +214,293 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 	if(node == NULL) {
 		return ret;
 	}
-	if(node->type == op_e) {
-		switch(node->opval->op) {
-		/*
-		 * Unary operators
-		 */
-			case '@': // type casting
-				ret = eh_cast(
-					node->opval->paras[0]->typeval,
-					eh_execute(node->opval->paras[1], context)
-				);
-				break;
-			case T_COUNT:
-				ret = eh_count(eh_execute(node->opval->paras[0], context));
-				break;
-			case '~': // bitwise negation
-				ret = eh_op_tilde(eh_execute(node->opval->paras[0], context));
-				break;
-			case T_NEGATIVE: // sign change
-				ret = eh_op_uminus(eh_execute(node->opval->paras[0], context));
-				break;
-			case '!': // Boolean not
-				operand1 = eh_execute(node->opval->paras[0], context);
-				ret = new ehretval_t(!eh_xtobool(operand1));
-				operand1->dec_rc();
-				break;
-		/*
-		 * Control flow
-		 */
-			case T_IF:
-				operand1 = eh_execute(node->opval->paras[0], context);
-				if(eh_xtobool(operand1)) {
-					ret = eh_execute(node->opval->paras[1], context);
-				} else if(node->opval->nparas == 3) {
-					ret = eh_execute(node->opval->paras[2], context);
-				}
-				if(operand1 != NULL) {
+	try {
+		if(node->type == op_e) {
+			switch(node->opval->op) {
+			/*
+			 * Unary operators
+			 */
+				case '@': // type casting
+					ret = eh_cast(
+						node->opval->paras[0]->typeval,
+						eh_execute(node->opval->paras[1], context)
+					);
+					break;
+				case T_COUNT:
+					ret = eh_count(eh_execute(node->opval->paras[0], context));
+					break;
+				case '~': // bitwise negation
+					ret = eh_op_tilde(eh_execute(node->opval->paras[0], context));
+					break;
+				case T_NEGATIVE: // sign change
+					ret = eh_op_uminus(eh_execute(node->opval->paras[0], context));
+					break;
+				case '!': // Boolean not
+					operand1 = eh_execute(node->opval->paras[0], context);
+					ret = new ehretval_t(!eh_xtobool(operand1));
 					operand1->dec_rc();
-				}
-				break;
-			case T_WHILE:
-				ret = eh_op_while(node->opval->paras, context);
-				break;
-			case T_FOR:
-				ret = eh_op_for(node->opval, context);
-				break;
-			case T_AS:
-				ret = eh_op_as(node->opval, context);
-				break;
-			case T_SWITCH: // switch statements
-				ret = eh_op_switch(node->opval->paras, context);
-				// incremented in the eh_op_switch function
-				inloop--;
-				break;
-			case T_GIVEN: // inline switch statements
-				ret = eh_op_given(node->opval->paras, context);
-				break;
-		/*
-		 * Miscellaneous
-		 */
-			case T_SEPARATOR:
-				// if we're in an empty list
-				if(node->opval->nparas == 0) {
-					return ret;
-				}
-				// else execute both commands
-				ret = eh_execute(node->opval->paras[0], context);
-				if(returning || breaking || continuing) {
-					return ret;
-				}
-				ret = eh_execute(node->opval->paras[1], context);
-				break;
-			case T_RET: // return from a function or the program
-				ret = eh_execute(node->opval->paras[0], context);
-				returning = true;
-				break;
-			case T_BREAK: // break out of a loop
-				eh_op_break(node->opval, context);
-				break;
-			case T_CONTINUE: // continue in a loop
-				eh_op_continue(node->opval, context);
-				break;
-		/*
-		 * Object access
-		 */
-			case ':': // function call
-				ret = eh_op_colon(node->opval->paras, context);
-				break;
-			case T_ACCESSOR: // array access, and similar stuff for other types
-				ret = eh_op_accessor(node->opval->paras, context);
-				break;
-			case T_NEW: // object declaration
-				ret = eh_op_new(
-					eh_execute(node->opval->paras[0], context)->stringval, context
-				);
-				break;
-		/*
-		 * Object definitions
-		 */
-			case T_FUNC: // function definition
-				ret = eh_op_declareclosure(node->opval->paras);
-				break;
-			case T_CLASS: // class declaration
-				eh_op_declareclass(node->opval->paras, context);
-				break;
-			case T_ATTRIBUTE: // class member attributes
-				if(node->opval->nparas == 0) {
-					ret = new ehretval_t(attributestr_e);
-					// all zeroes
-					ret->intval = 0;
-				} else {
-					// first execute first para
+					break;
+			/*
+			 * Control flow
+			 */
+				case T_IF:
+					operand1 = eh_execute(node->opval->paras[0], context);
+					if(eh_xtobool(operand1)) {
+						ret = eh_execute(node->opval->paras[1], context);
+					} else if(node->opval->nparas == 3) {
+						ret = eh_execute(node->opval->paras[2], context);
+					}
+					if(operand1 != NULL) {
+						operand1->dec_rc();
+					}
+					break;
+				case T_WHILE:
+					ret = eh_op_while(node->opval->paras, context);
+					break;
+				case T_FOR:
+					ret = eh_op_for(node->opval, context);
+					break;
+				case T_AS:
+					ret = eh_op_as(node->opval, context);
+					break;
+				case T_SWITCH: // switch statements
+					ret = eh_op_switch(node->opval->paras, context);
+					// incremented in the eh_op_switch function
+					inloop--;
+					break;
+				case T_GIVEN: // inline switch statements
+					ret = eh_op_given(node->opval->paras, context);
+					break;
+			/*
+			 * Miscellaneous
+			 */
+				case T_SEPARATOR:
+					// if we're in an empty list
+					if(node->opval->nparas == 0) {
+						return ret;
+					}
+					// else execute both commands
 					ret = eh_execute(node->opval->paras[0], context);
-					// then overwrite with attribute from second para
-					switch(node->opval->paras[1]->attributeval) {
-						case publica_e:
-							ret->attributestrval.visibility = public_e;
-							break;
-						case privatea_e:
-							ret->attributestrval.visibility = private_e;
-							break;
-						case statica_e:
-							ret->attributestrval.isstatic = static_e;
-							break;
-						case consta_e:
-							ret->attributestrval.isconst = const_e;
-							break;
+					if(returning || breaking || continuing) {
+						return ret;
 					}
-				}
-				break;
-			case '[': // array declaration
-				ret = eh_op_array(node->opval->paras[0], context);
-				break;
-			case '{': // anonymous class
-				ret = eh_op_anonclass(node->opval->paras[0], context);
-				break;
-		/*
-		 * Binary operators
-		 */
-			case '=': // equality
-				ret = eh_looseequals(
-					eh_execute(node->opval->paras[0], context),
-					eh_execute(node->opval->paras[1], context)
-				);
-				break;
-			case T_SE: // strict equality
-				ret = new ehretval_t(eh_strictequals(
-					eh_execute(node->opval->paras[0], context),
-					eh_execute(node->opval->paras[1], context)
-				));
-				break;
-			case T_SNE: // strict non-equality
-				ret = new ehretval_t(!eh_strictequals(
-					eh_execute(node->opval->paras[0], context),
-					eh_execute(node->opval->paras[1], context)
-				));
-				break;
-			EH_INTBOOL_CASE('>', >) // greater-than
-			EH_INTBOOL_CASE('<', <) // lesser-than
-			EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
-			EH_INTBOOL_CASE(T_LE, <=) // lesser-than or equal
-			EH_INTBOOL_CASE(T_NE, !=) // not equal
-			EH_FLOATINT_CASE('+', +) // addition
-			case '.': // string concatenation
-				ret = eh_op_dot(
-					eh_execute(node->opval->paras[0], context),
-					eh_execute(node->opval->paras[1], context)
-				);
-				break;
-			EH_FLOATINT_CASE('-', -) // subtraction
-			EH_FLOATINT_CASE('*', *) // multiplication
-			EH_FLOATINT_CASE('/', /) // division
-			EH_INT_CASE('%', %) // modulo
-			EH_INT_CASE('&', &) // bitwise AND
-			EH_INT_CASE('^', ^) // bitwise XOR
-			EH_INT_CASE('|', |) // bitwise OR
-			case T_AND: // AND; use short-circuit operation
-				operand1 = eh_execute(node->opval->paras[0], context);
-				if(!eh_xtobool(operand1)) {
-					ret = new ehretval_t(false);
-				} else {
-					operand2 = eh_execute(node->opval->paras[1], context);
-					ret = new ehretval_t(eh_xtobool(operand2));
-					DEC_RC(operand2);
-				}
-				DEC_RC(operand1);
-				break;
-			case T_OR: // OR; use short-circuit operation
-				operand1 = eh_execute(node->opval->paras[0], context);
-				if(eh_xtobool(operand1)) {
-					ret = new ehretval_t(true);
-				} else {
-					operand2 = eh_execute(node->opval->paras[1], context);
-					ret = new ehretval_t(eh_xtobool(operand2));
-					DEC_RC(operand2);
-				}
-				DEC_RC(operand1);
-				break;
-			case T_XOR:
-				operand1 = eh_execute(node->opval->paras[0], context);
-				operand2 = eh_execute(node->opval->paras[1], context);
-				b1 = eh_xtobool(operand1);
-				b2 = eh_xtobool(operand2);
-				operand1->dec_rc();
-				operand2->dec_rc();
-				ret = new ehretval_t((b1 && !b2) || (!b1 && b2));
-				break;
-		/*
-		 * Variable manipulation
-		 */
-			case T_LVALUE_GET:
-			case T_LVALUE_SET:
-				ret = eh_op_lvalue(node->opval, context);
-				break;
-			case T_RANGE:
-				// Attempt to cast operands to integers; if this does not work,
-				// return NULL. No need to yell, since eh_xtoi already does
-				// that.
-				operand1 = eh_xtoint(eh_execute(node->opval->paras[0], context));
-				if(operand1->type == null_e)
+					ret = eh_execute(node->opval->paras[1], context);
 					break;
-				operand2 = eh_xtoint(eh_execute(node->opval->paras[1], context));
-				if(operand2->type == null_e)
+				case T_RET: // return from a function or the program
+					ret = eh_execute(node->opval->paras[0], context);
+					returning = true;
 					break;
-				ret = eh_make_range(operand1->intval, operand2->intval);
-				break;
-			case T_SET:
-				eh_op_set(node->opval->paras, context);
-				break;
-			case T_MINMIN:
-				operand1 = eh_execute(node->opval->paras[0], context);
-				if(operand1 == NULL) {
-					eh_error("Cannot set with -- operator", eerror_e);
-				} else {
-					switch(operand1->type) {
-						case int_e:
-							operand1->intval--;
-							break;
-						default:
-							eh_error_type("-- operator", operand1->type, eerror_e);
-							break;
+				case T_BREAK: // break out of a loop
+					eh_op_break(node->opval, context);
+					break;
+				case T_CONTINUE: // continue in a loop
+					eh_op_continue(node->opval, context);
+					break;
+			/*
+			 * Object access
+			 */
+				case ':': // function call
+					ret = eh_op_colon(node->opval->paras, context);
+					break;
+				case T_ACCESSOR: // array access, and similar stuff for other types
+					ret = eh_op_accessor(node->opval->paras, context);
+					break;
+				case T_NEW: // object declaration
+					ret = eh_op_new(
+						eh_execute(node->opval->paras[0], context)->stringval, context
+					);
+					break;
+			/*
+			 * Object definitions
+			 */
+				case T_FUNC: // function definition
+					ret = eh_op_declareclosure(node->opval->paras, context);
+					break;
+				case T_CLASS: // class declaration
+					eh_op_declareclass(node->opval->paras, context);
+					break;
+				case T_ATTRIBUTE: // class member attributes
+					if(node->opval->nparas == 0) {
+						ret = new ehretval_t(attributestr_e);
+						// all zeroes
+						ret->intval = 0;
+					} else {
+						// first execute first para
+						ret = eh_execute(node->opval->paras[0], context);
+						// then overwrite with attribute from second para
+						switch(node->opval->paras[1]->attributeval) {
+							case publica_e:
+								ret->attributestrval.visibility = public_e;
+								break;
+							case privatea_e:
+								ret->attributestrval.visibility = private_e;
+								break;
+							case statica_e:
+								ret->attributestrval.isstatic = static_e;
+								break;
+							case consta_e:
+								ret->attributestrval.isconst = const_e;
+								break;
+						}
 					}
-					operand1->dec_rc();
-				}
-				break;
-			case T_PLUSPLUS:
-				operand1 = eh_execute(node->opval->paras[0], context);
-				if(operand1 == NULL) {
-					eh_error("Cannot set with ++ operator", eerror_e);
-				} else {
-					switch(operand1->type) {
-						case int_e:
-							operand1->intval++;
-							break;
-						default:
-							eh_error_type("++ operator", operand1->type, eerror_e);
-							break;
+					break;
+				case '[': // array declaration
+					ret = eh_op_array(node->opval->paras[0], context);
+					break;
+				case '{': // anonymous class
+					ret = eh_op_anonclass(node->opval->paras[0], context);
+					break;
+			/*
+			 * Binary operators
+			 */
+				case '=': // equality
+					ret = eh_looseequals(
+						eh_execute(node->opval->paras[0], context),
+						eh_execute(node->opval->paras[1], context)
+					);
+					break;
+				case T_SE: // strict equality
+					ret = new ehretval_t(eh_strictequals(
+						eh_execute(node->opval->paras[0], context),
+						eh_execute(node->opval->paras[1], context)
+					));
+					break;
+				case T_SNE: // strict non-equality
+					ret = new ehretval_t(!eh_strictequals(
+						eh_execute(node->opval->paras[0], context),
+						eh_execute(node->opval->paras[1], context)
+					));
+					break;
+				EH_INTBOOL_CASE('>', >) // greater-than
+				EH_INTBOOL_CASE('<', <) // lesser-than
+				EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
+				EH_INTBOOL_CASE(T_LE, <=) // lesser-than or equal
+				EH_INTBOOL_CASE(T_NE, !=) // not equal
+				EH_FLOATINT_CASE('+', +) // addition
+				case '.': // string concatenation
+					ret = eh_op_dot(
+						eh_execute(node->opval->paras[0], context),
+						eh_execute(node->opval->paras[1], context)
+					);
+					break;
+				EH_FLOATINT_CASE('-', -) // subtraction
+				EH_FLOATINT_CASE('*', *) // multiplication
+				EH_FLOATINT_CASE('/', /) // division
+				EH_INT_CASE('%', %) // modulo
+				EH_INT_CASE('&', &) // bitwise AND
+				EH_INT_CASE('^', ^) // bitwise XOR
+				EH_INT_CASE('|', |) // bitwise OR
+				case T_AND: // AND; use short-circuit operation
+					operand1 = eh_execute(node->opval->paras[0], context);
+					if(!eh_xtobool(operand1)) {
+						ret = new ehretval_t(false);
+					} else {
+						operand2 = eh_execute(node->opval->paras[1], context);
+						ret = new ehretval_t(eh_xtobool(operand2));
+						DEC_RC(operand2);
 					}
+					DEC_RC(operand1);
+					break;
+				case T_OR: // OR; use short-circuit operation
+					operand1 = eh_execute(node->opval->paras[0], context);
+					if(eh_xtobool(operand1)) {
+						ret = new ehretval_t(true);
+					} else {
+						operand2 = eh_execute(node->opval->paras[1], context);
+						ret = new ehretval_t(eh_xtobool(operand2));
+						DEC_RC(operand2);
+					}
+					DEC_RC(operand1);
+					break;
+				case T_XOR:
+					operand1 = eh_execute(node->opval->paras[0], context);
+					operand2 = eh_execute(node->opval->paras[1], context);
+					b1 = eh_xtobool(operand1);
+					b2 = eh_xtobool(operand2);
 					operand1->dec_rc();
-				}
-				break;
-			case T_REFERENCE: // reference declaration
-				ret = eh_op_reference(node->opval->paras[0]->opval, context);
-				break;
-			case '$': // variable dereference
-				ret = eh_op_dollar(node->opval->paras[0], context);
-				break;
-		/*
-		 * Commands
-		 */
-			case T_COMMAND:
-				// name of command to be executed
-				ret = eh_op_command(
-					eh_execute(node->opval->paras[0], context)->stringval,
-					node->opval->paras[1],
-					context
-				);
-				break;
-			default:
-				eh_error_int("Unexpected opcode", node->opval->op, efatal_e);
-				break;
+					operand2->dec_rc();
+					ret = new ehretval_t((b1 && !b2) || (!b1 && b2));
+					break;
+			/*
+			 * Variable manipulation
+			 */
+				case T_LVALUE_GET:
+				case T_LVALUE_SET:
+					ret = eh_op_lvalue(node->opval, context);
+					break;
+				case T_RANGE:
+					// Attempt to cast operands to integers; if this does not work,
+					// return NULL. No need to yell, since eh_xtoi already does
+					// that.
+					operand1 = eh_xtoint(eh_execute(node->opval->paras[0], context));
+					if(operand1->type == null_e)
+						break;
+					operand2 = eh_xtoint(eh_execute(node->opval->paras[1], context));
+					if(operand2->type == null_e)
+						break;
+					ret = eh_make_range(operand1->intval, operand2->intval);
+					break;
+				case T_SET:
+					eh_op_set(node->opval->paras, context);
+					break;
+				case T_MINMIN:
+					operand1 = eh_execute(node->opval->paras[0], context);
+					if(operand1 == NULL) {
+						eh_error("Cannot set with -- operator", eerror_e);
+					} else {
+						switch(operand1->type) {
+							case int_e:
+								operand1->intval--;
+								break;
+							default:
+								eh_error_type("-- operator", operand1->type, eerror_e);
+								break;
+						}
+						operand1->dec_rc();
+					}
+					break;
+				case T_PLUSPLUS:
+					operand1 = eh_execute(node->opval->paras[0], context);
+					if(operand1 == NULL) {
+						eh_error("Cannot set with ++ operator", eerror_e);
+					} else {
+						switch(operand1->type) {
+							case int_e:
+								operand1->intval++;
+								break;
+							default:
+								eh_error_type("++ operator", operand1->type, eerror_e);
+								break;
+						}
+						operand1->dec_rc();
+					}
+					break;
+				case T_REFERENCE: // reference declaration
+					ret = eh_op_reference(node->opval->paras[0]->opval, context);
+					break;
+				case '$': // variable dereference
+					ret = eh_op_dollar(node->opval->paras[0], context);
+					break;
+			/*
+			 * Commands
+			 */
+				case T_COMMAND:
+					// name of command to be executed
+					ret = eh_op_command(
+						eh_execute(node->opval->paras[0], context)->stringval,
+						node->opval->paras[1],
+						context
+					);
+					break;
+				default:
+					eh_error_int("Unexpected opcode", node->opval->op, efatal_e);
+					break;
+			}
+		} else {
+			ret = node;
 		}
-	} else {
-		ret = node;
+	} catch(int) {
+		// ignore all exceptions
 	}
 	return ret;
 }
@@ -597,7 +607,8 @@ ehretval_t *EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 	else {
 		// "for 5 count i; do stuff; endfor" construct
 		char *name = op->paras[1]->stringval;
-		ehvar_t *var = get_variable(name, curr_scope, context, T_LVALUE_SET);
+		// this should perhaps create a new variable, or only overwrite variables in the current scope
+		ehmember_t *var = context->get_variable(name, context, T_LVALUE_SET);
 		// if we do T_LVALUE_SET, get_variable never returns NULL
 		// count variable always gets to be an int
 		if(var->value == NULL) {
@@ -638,9 +649,9 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	inloop++;
 	// establish variables
 	char *membername;
-	ehvar_t *membervar;
+	ehmember_t *membervar;
 	char *indexname;
-	ehvar_t *indexvar = NULL;
+	ehmember_t *indexvar = NULL;
 	ehretval_t *code;
 	if(op->nparas == 3) {
 		// no index
@@ -654,40 +665,38 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 		code = op->paras[3];
 	}
 	// create variables
-	membervar = get_variable(membername, curr_scope, context, T_LVALUE_SET);
+	membervar = context->get_variable(membername, context, T_LVALUE_SET);
 	if(indexname != NULL) {
-		indexvar = get_variable(indexname, curr_scope, context, T_LVALUE_SET);
+		indexvar = context->get_variable(indexname, context, T_LVALUE_SET);
 	}
 	if(object->type == object_e) {
 		// object index is always a string
 		if(indexname) {
 			indexvar->value->type = string_e;
 		}
-		ehvar_t **members = object->objectval->members;
 		// check whether we're allowed to access private things
 		const bool doprivate = ehcontext_compare(object->objectval, context);
-		for(int i = 0; i < VARTABLE_S; i++) {
-			for(ehvar_t *currmember = members[i]; currmember != NULL; currmember = currmember->next) {
-				// ignore private
-				if(!doprivate && currmember->attribute.visibility == private_e) {
-					continue;
-				}
-				if(currmember->attribute.isconst == const_e) {
-					// test whether this works
-					membervar->value->type = creference_e;
-					membervar->value->referenceval = currmember->value;
-				} else {
-					membervar->value = currmember->value;
-				}
-				if(indexname) {
-					// need the strdup here because currmember->name is const
-					// and a string_e is not. Perhaps solve this instead by
-					// creating a new cstring_e type?
-					indexvar->value->stringval = strdup(currmember->name);
-				}
-				ret = eh_execute(code, context);
-				LOOPCHECKS;
+		OBJECT_FOR_EACH(object->objectval, curr) {
+			// ignore private
+			if(!doprivate && curr->second->attribute.visibility == private_e) {
+				continue;
 			}
+			if(curr->second->attribute.isconst == const_e) {
+				// test whether this works
+				membervar->value->type = creference_e;
+				membervar->value->referenceval = curr->second->value;
+			} else {
+				membervar->value = curr->second->value;
+			}
+			if(indexname) {
+				// need the strdup here because currmember->name is const
+				// and a string_e is not. Perhaps solve this instead by
+				// creating a new cstring_e type?
+				indexvar->value->stringval = strdup(curr->first.c_str());
+			}
+			ret = eh_execute(code, context);
+			LOOPCHECKS;
+		
 		}
 	} else {
 		// arrays
@@ -722,38 +731,13 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	return ret;
 }
 ehretval_t *EHI::eh_op_new(const char *name, ehcontext_t context) {
-	ehretval_t *ret = NULL;
-
 	ehclass_t *classobj = get_class(name);
 	if(classobj == NULL) {
 		eh_error_unknown("class", name, eerror_e);
-		return ret;
+		return NULL;
 	}
-	ret = new ehretval_t(object_e);
-	ret->objectval = new ehobj_t;
-	ret->objectval->classname = name;
-	ret->objectval->members = new ehvar_t *[VARTABLE_S]();
-	if(classobj->type == lib_e) {
-		// insert selfptr
-		ret->objectval->selfptr = classobj->obj.constructor();
-	}
-	
-	ehretval_t *constructor = NULL;
-	for(int i = 0; i < VARTABLE_S; i++) {
-		for(ehvar_t *m = classobj->obj.members[i]; m != NULL; m = m->next) {
-			class_copy_member(ret->objectval, m, i);
-			if(!strcmp(m->name, "constructor")) {
-				constructor = m->value;
-			}
-		}
-	}
-	if(constructor != NULL) {
-		if(EH_TYPE(constructor) != func_e) {
-			eh_error_type("constructor", EH_TYPE(constructor), enotice_e);
-		} else {
-			call_function_args(constructor->funcval, context, context, 0, NULL);
-		}
-	}
+	ehretval_t *ret = new ehretval_t(object_e);
+	ret->objectval = object_instantiate(&classobj->obj);
 	return ret;
 }
 void EHI::eh_op_break(opnode_t *op, ehcontext_t context) {
@@ -818,13 +802,11 @@ ehretval_t *EHI::eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
 	ehretval_t *ret = new ehretval_t(object_e);
 	ret->objectval = new ehobj_t;
 	ret->objectval->classname = "AnonClass";
-	ret->objectval->members = new ehvar_t *[VARTABLE_S]();
 	// all members are public, non-static, non-const
 	memberattribute_t attributes;
 	attributes.visibility = public_e;
 	attributes.isconst = nonconst_e;
 	attributes.isstatic = nonstatic_e;
-	ehvar_t **members = ret->objectval->members;
 
 	for( ; node->opval->nparas != 0; node = node->opval->paras[0]) {
 		ehretval_t **myparas = node->opval->paras[1]->opval->paras;
@@ -835,17 +817,36 @@ ehretval_t *EHI::eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
 			continue;
 		}
 		ehretval_t *value = eh_execute(myparas[1], context);
-		class_insert_retval(members, namev->stringval, attributes, value);
+		ret->objectval->insert_retval(namev->stringval, attributes, value);
 	}
 	return ret;
 }
-ehretval_t *EHI::eh_op_declareclosure(ehretval_t **paras) {
+ehretval_t *EHI::eh_op_declareclosure(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t *ret = new ehretval_t(func_e);
-	ret->funcval = new ehfm_t;
-	ret->funcval->type = user_e;
-	make_arglist(&ret->funcval->argcount, &ret->funcval->args, paras[0]);
-	ret->funcval->code = paras[1];
-	ret->funcval->scope.parent = curr_scope;
+	ret->funcval = new ehobj_t;
+	ret->funcval->parent = context;
+	ret->funcval->classname = "Closure";
+
+	ehfm_t *f = new ehfm_t;
+	ret->funcval->function = f;
+	f->type = user_e;
+	f->code = paras[1];
+
+	// determine argument count
+	f->argcount = count_nodes(paras[0]);
+	// if there are no arguments, the arglist can be NULL
+	if(f->argcount) {
+		f->args = new eharg_t[f->argcount]();
+	} else {
+		f->args = NULL;
+	}
+	// add arguments to arglist
+	int i = 0;
+	for(ehretval_t *tmp = paras[0]; tmp->opval->nparas != 0; 
+		tmp = tmp->opval->paras[0]) {
+		f->args[i].name = tmp->opval->paras[1]->stringval;
+		i++;
+	}
 	return ret;
 }
 void EHI::eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
@@ -858,13 +859,13 @@ void EHI::eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	classobj = new ehclass_t;
 	classobj->type = user_e;
 	classobj->obj.classname = classname_r->stringval;
-	classobj->obj.members = new ehvar_t *[VARTABLE_S]();
+	classobj->obj.parent = context;
 	// insert class members
 	for(ehretval_t *node = paras[1]; node != NULL; node = node->opval->paras[1]) {
 		if(node->type == op_e && node->opval->op == ',') {
-			class_insert(classobj->obj.members, node->opval->paras[0], context);
+			class_insert(&classobj->obj, node->opval->paras[0], &classobj->obj);
 		} else {
-			class_insert(classobj->obj.members, node, context);
+			class_insert(&classobj->obj, node, &classobj->obj);
 			break;
 		}
 	}
@@ -875,9 +876,7 @@ void EHI::eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	thisattributes.isconst = const_e;
 	ehretval_t *thisvalue = new ehretval_t(object_e);
 	thisvalue->objectval = &(classobj->obj);
-	class_insert_retval(
-		classobj->obj.members, "this", thisattributes, thisvalue
-	);
+	classobj->obj.insert_retval("this", thisattributes, thisvalue);
 	insert_class(classobj);
 	return;
 }
@@ -898,7 +897,7 @@ ehretval_t *EHI::eh_op_switch(ehretval_t **paras, ehcontext_t context) {
 			ehretval_t *decider;
 			// try to call function
 			if(EH_TYPE(casevar) == func_e) {
-				decider = call_function_args(casevar->funcval, context, newcontext, 1, switchvar);
+				decider = call_function_args(casevar->funcval, context, 1, switchvar);
 				if(EH_TYPE(decider) != bool_e) {
 					eh_error("Switch case method does not return bool", eerror_e);
 					return NULL;
@@ -946,7 +945,7 @@ ehretval_t *EHI::eh_op_given(ehretval_t **paras, ehcontext_t context) {
 		ehretval_t *decider;
 		if(EH_TYPE(casevar) == func_e) {
 			decider = call_function_args(
-				casevar->funcval, context, newcontext, 1, switchvar
+				casevar->funcval, context, 1, switchvar
 			);
 			if(EH_TYPE(decider) != bool_e) {
 				eh_error("Given case method does not return bool", eerror_e);
@@ -963,41 +962,39 @@ ehretval_t *EHI::eh_op_given(ehretval_t **paras, ehcontext_t context) {
 }
 ehretval_t *EHI::eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t *ret = NULL;
-	ehvar_t *func;
+	ehmember_t *func;
 
-	newcontext = NULL;
 	ehretval_t *function = eh_execute(paras[0], context);
-	// if we didn't find a function
-	if(function == NULL) {
-		return ret;
-	}
 	// operand1 will be either a string (indicating a normal function call) or a 
 	// func_e (indicating a method or closure call)
-	switch(function->type) {
+	switch(EH_TYPE(function)) {
 		case string_e:
-			func = get_variable(
-				function->stringval, curr_scope, context, T_LVALUE_GET
+			func = context->get_variable(
+				function->stringval, context, T_LVALUE_GET
 			);
 			if(func == NULL) {
 				eh_error_unknown("function", function->stringval, eerror_e);
-				return ret;
+				return NULL;
 			}
 			if(EH_TYPE(func->value) != func_e) {
 				eh_error_type("function call", EH_TYPE(func->value), eerror_e);
-				return ret;
+				return NULL;
 			}
 			ret = call_function(
-				func->value->funcval, paras[1], context, context
+				func->value->funcval, paras[1], context
 			);
 			break;
 		case func_e:
 			ret = call_function(
-				function->funcval, paras[1], context, newcontext
+				function->funcval, paras[1], context
 			);
 			break;
+		case null_e:
+			// ignore null functions to prevent duplicate warnings
+			return NULL;
 		default:
-			eh_error_type("function call", function->type, eerror_e);
-			break;
+			eh_error_type("function call", EH_TYPE(function), eerror_e);
+			return NULL;
 	}
 	function->dec_rc();
 	return ret;
@@ -1026,15 +1023,14 @@ ehretval_t *&EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	 * the variable referred to, so that eh_op_set can do its bitwise magic with
 	 * ints and similar stuff.
 	 */
-	ehvar_t *var;
-
 	ehretval_t *basevar = eh_execute(op->paras[0], context);
 	// We need this because of code in eh_op_set checking for this. Removing
 	// the check for NULL there yields a problem where $ foo->2 = 0 produces 
 	// $foo = @int 0.
 	switch(op->nparas) {
 		case 1:
-			var = get_variable(basevar->stringval, curr_scope, context, op->op);
+		{
+			ehmember_t *var = context->get_variable(basevar->stringval, context, op->op);
 			// dereference variable
 			if(var != NULL) {
 				basevar->dec_rc();
@@ -1043,9 +1039,10 @@ ehretval_t *&EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 			}
 			/*
 			 * If there is no variable of this name, and it is a
-			 * simple access, we use NULL as the return value.
+			 * simple access, we throw.
 			 */
 			break;
+		}
 		case 3:
 			switch(op->paras[1]->accessorval) {
 				case arrow_e:
@@ -1068,8 +1065,8 @@ ehretval_t *EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 		return ret;
 	}
 	
-	ehvar_t *var = get_variable(
-		varname->stringval, curr_scope, context, T_LVALUE_GET
+	ehmember_t *var = context->get_variable(
+		varname->stringval, context, T_LVALUE_GET
 	);
 	if(var == NULL || var->value == NULL) {
 		ret = new ehretval_t(null_e);
@@ -1119,7 +1116,7 @@ void EHI::eh_op_set(ehretval_t **paras, ehcontext_t context) {
 				lvalue = lvalue->overwrite(rvalue);
 			}
 		}
-	} catch(...) {
+	} catch(int) {
 		// do nothing
 	}
 	return;
@@ -1154,12 +1151,8 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 					if(index->type != string_e) {
 						eh_error_type("access to object", index->type, eerror_e);
 					} else {
-						ret = class_get(
-							basevar->objectval, index->stringval, context
-						);
-						if(ret != NULL) {
-							newcontext = basevar->objectval;
-						} else {
+						ret = basevar->objectval->get(index->stringval, context);
+						if(ret == NULL) {
 							eh_error_unknown(
 								"object member", index->stringval, eerror_e
 							);
@@ -1174,7 +1167,7 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 		case doublecolon_e:
 			try {
 				ret = colon_access(basevar, index, context, T_LVALUE_GET);
-			} catch(...) {
+			} catch(int) {
 				ret = NULL;
 			}
 			break;
@@ -1186,240 +1179,135 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 	DEC_RC(index);
 	return ret;
 }
-
-/*
- * Variables
- */
-bool EHI::insert_variable(ehvar_t *var) {
-	unsigned int vhash;
-	//printf("Inserting variable %s with value %d at scope %d\n", var->name, var->intval, var->scope);
-	vhash = hash(var->name, (uint32_t) var->scope);
-	if(vartable[vhash] == NULL) {
-		vartable[vhash] = var;
-		var->next = NULL;
-	} else {
-		var->next = vartable[vhash];
-		vartable[vhash] = var;
-	}
-	return true;
-}
-ehvar_t *EHI::get_variable(const char *name, ehscope_t *scope, ehcontext_t context, int token) {
-	ehvar_t *currvar;
-
-	// try the object first
-	if(context != NULL) {
-		currvar = class_getmember(context, name, context);
-		if(currvar != NULL) {
-			if(token == T_LVALUE_SET && currvar->attribute.isconst == const_e) {
-				eh_error("Attempt to write to constant variable", eerror_e);
-				return NULL;
-			} else {
-				return currvar;
-			}
-		}
-	}
-	// current variable scope
-	ehscope_t::varscope_t *my_scope = scope->top_pointer();
-	
-	// look in this scope, then the parent scope
-	while(1) {
-		unsigned int vhash = hash(name, (size_t) my_scope);
-		for(currvar = vartable[vhash]; currvar != NULL; currvar = currvar->next) {
-			if(strcmp(currvar->name, name) == 0 && currvar->scope == (unsigned long) my_scope) {
-				return currvar;
-			}
-		}
-		if(my_scope->parent == NULL) {
-			break;
-		} else {
-			my_scope = my_scope->parent;
-		}
-	}
-	if(token == T_LVALUE_SET) {
-		currvar = new ehvar_t;
-		currvar->value = new ehretval_t(null_e);
-		currvar->name = name;
-		currvar->scope = curr_scope->top();
-		insert_variable(currvar);
-		return currvar;
-	} else {
-		return NULL;
-	}
-}
-// remove all variables in scope scope
-void EHI::remove_scope(ehscope_t *scope) {
-	unsigned long var_scope = scope->top();
-	for(int i = 0; i < VARTABLE_S; i++) {
-		ehvar_t *c = vartable[i];
-		ehvar_t *p = NULL;
-		while(c != NULL) {
-			if(c->scope == var_scope) {
-				if(p == NULL) {
-					vartable[i] = c->next;
-				} else {
-					p->next = c->next;
-				}
-				delete c;
-			}
-			p = c;
-			c = c->next;
-		}
-	}
-}
-void EHI::remove_variable(const char *name, ehscope_t *scope) {
-	unsigned long var_scope = scope->top();
-	const unsigned int vhash = hash(name, (uint32_t) var_scope);
-	ehvar_t *currvar = vartable[vhash];
-	ehvar_t *prevvar = NULL;
-	while(currvar != NULL) {
-		if(strcmp(currvar->name, name) == 0 && currvar->scope == var_scope) {
-			if(prevvar == NULL) {
-				vartable[vhash] = currvar->next;
-			} else {
-				prevvar->next = currvar->next;
-			}
-			delete currvar;
-			return;
-		}
-		prevvar = currvar;
-		currvar = currvar->next;
-	}
-	return;
-}
-void EHI::list_variables(void) {
-	int i;
-	ehvar_t *tmp;
-	for(i = 0; i < VARTABLE_S; i++) {
-		tmp = vartable[i];
-		while(tmp != NULL) {
-			printf(
-				"Variable %s of type %d at scope %d in hash %d at address %p\n", 
-				tmp->name, tmp->value->type, (uint32_t) tmp->scope, i, 
-				(void *) tmp
-			);
-			tmp = tmp->next;
-		}
-	}
-}
 /*
  * Functions
  */
-ehretval_t *EHI::call_function(ehfm_t *f, ehretval_t *args, ehcontext_t context, ehcontext_t newcontext) {
+ehretval_t *EHI::call_function(ehobj_t *obj, ehretval_t *args, ehcontext_t context) {
 	ehretval_t *ret = NULL;
+	
+	ehfm_t *f = obj->function;
+	if(f == NULL) {
+		eh_error("Invalid object for function call", eerror_e);
+		return NULL;
+	}
 
 	if(f->type == lib_e) {
 		// library function
 		f->ptr(args, &ret, context, this);
 		return ret;
 	} else if(f->type == libmethod_e) {
-		if(newcontext == NULL) {
-			eh_error("Bare call of library method", eerror_e);
-			return NULL;
-		}
-		f->mptr(newcontext->selfptr, args, &ret, newcontext, this);
+		f->mptr(obj->parent, args, &ret, context, this);
 		return ret;
 	}
+	ehobj_t *newcontext = object_instantiate(obj);
 	int i = 0;
-	
-	// create new scope in this function
-	unsigned long new_scope = f->scope.deferred_push();
 	
 	// set parameters as necessary
 	if(f->args == NULL) {
 		if(args->opval->nparas != 0) {
 			eh_error_argcount(f->argcount, 1);
-			f->scope.pop();
-			return ret;
+			return NULL;
 		}
 	} else while(args->opval->nparas != 0) {
-		ehvar_t *var = new ehvar_t;
-		var->name = f->args[i].name;
-		var->scope = new_scope;
 		i++;
 		if(i > f->argcount) {
 			eh_error_argcount(f->argcount, i);
-			f->scope.pop();
-			delete var;
-			return ret;
+			return NULL;
 		}
-		insert_variable(var);
+		ehmember_t *var = new ehmember_t();
 		var->value = eh_execute(args->opval->paras[1], context);
 		// if it's a reference, dereference it
 		if(EH_TYPE(var->value) == reference_e) {
-			ehretval_t *tmp = var->value;
 			var->value = var->value->referenceval;
-			delete tmp;
 		} else {
 			var->value = var->value->share();
 		}
+		newcontext->insert(f->args[i - 1].name, var);
 		args = args->opval->paras[0];
 	}
 	if(f->argcount != i) {
 		eh_error_argcount(f->argcount, i);
-		return ret;
+		return NULL;
 	}
-	// move global scope into this function
-	f->scope.complete_push(new_scope);
-	ehscope_t *old_scope = curr_scope;
-	curr_scope = &f->scope;
 
-	// set new context (only useful for methods)
 	ret = eh_execute(f->code, newcontext);
 	returning = false;
 	
-	// kill scope
-	curr_scope->pop();
-	curr_scope = old_scope;
+	// kill instantiation object
+	delete newcontext;
 	return ret;
 }
-ehretval_t *EHI::call_function_args(ehfm_t *f, const ehcontext_t context, const ehcontext_t newcontext, const int nargs, ehretval_t *args) {
+ehretval_t *EHI::call_function_args(ehobj_t *obj, ehcontext_t context, const int nargs, ehretval_t *args) {
 	ehretval_t *ret = NULL;
-	if(f->type == lib_e) {
+	
+	ehfm_t *f = obj->function;
+	if(f == NULL) {
+		eh_error("Invalid object for function call", eerror_e);
+		return NULL;
+	}
+
+	if(f->type == lib_e || f->type == libmethod_e) {
 		// library function not supported here for now
 		eh_error("call_function_args does not support library functions", 
 			efatal_e);
-		return ret;
+		return NULL;
 	}
 	// check parameter count
 	if(nargs != f->argcount) {
 		eh_error_argcount(f->argcount, nargs);
-		return ret;
+		return NULL;
 	}
-	// create new scope
-	unsigned long new_scope = f->scope.deferred_push();
+	ehobj_t *newcontext = object_instantiate(obj);
 	
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {
-		ehvar_t *var = new ehvar_t;
-		var->name = f->args[i].name;
-		var->scope = new_scope;
+		ehmember_t *var = new ehmember_t();
 		var->value = eh_execute(&args[i], context);
-		// if it's a reference, dereference it
 		if(var->value->type == reference_e) {
-			ehretval_t *tmp = var->value;
 			var->value = var->value->referenceval;
-			delete tmp;
 		} else {
 			var->value = var->value->share();
 		}
-		insert_variable(var);
+		newcontext->insert(f->args[i].name, var);
 	}
-	// create new scope
-	f->scope.complete_push(new_scope);
-	ehscope_t *old_scope = curr_scope;
-	curr_scope = &f->scope;
-
-	// set new context (only useful for methods)
 	ret = eh_execute(f->code, newcontext);
 	returning = false;
 	
-	curr_scope->pop();
-	curr_scope = old_scope;
+	delete newcontext;
 	return ret;
 }
 /*
  * Classes
  */
+ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
+	ehobj_t *ret = new ehobj_t;
+	ret->classname = obj->classname;
+	ret->function = obj->function;
+	if(obj->function != NULL && obj->function->type == libmethod_e) {
+		// insert selfptr
+		ret->selfptr = obj->constructor();
+	} else {
+		ret->parent = obj->parent;
+	}
+	
+	ehretval_t *constructor = NULL;
+	for(int i = 0; i < VARTABLE_S; i++) {
+		OBJECT_FOR_EACH(obj, m) {
+			class_copy_member(ret, m);
+			if(m->first.compare("constructor") == 0) {
+				constructor = m->second->value;
+			}
+		}
+	}
+	if(constructor != NULL) {
+		if(EH_TYPE(constructor) != func_e) {
+			eh_error_type("constructor", EH_TYPE(constructor), enotice_e);
+		} else {
+			call_function_args(constructor->funcval, obj->parent, 0, NULL);
+		}
+	}
+	return ret;
+}
 void EHI::insert_class(ehclass_t *classobj) {
 	unsigned int vhash = hash(classobj->obj.classname, HASH_INITVAL);
 	classobj->next = classtable[vhash];
@@ -1435,7 +1323,7 @@ ehclass_t *EHI::get_class(const char *name) {
 	}
 	return NULL;
 }
-void EHI::class_insert(ehvar_t **classarr, const ehretval_t *in, ehcontext_t context) {
+void EHI::class_insert(ehobj_t *obj, const ehretval_t *in, ehcontext_t context) {
 	// insert a member into a class
 	ehretval_t *value;
 
@@ -1454,14 +1342,12 @@ void EHI::class_insert(ehvar_t **classarr, const ehretval_t *in, ehcontext_t con
 			value = eh_execute(in->opval->paras[2], context);
 			break;
 	}
-	class_insert_retval(classarr, name, attribute, value);
+	obj->insert_retval(name, attribute, value);
 }
 ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token) {
-	ehvar_t *member;
-	ehobj_t *object;
-	memberattribute_t attribute;
+	ehmember_t *member;
 
-	ehvar_t *var = get_variable(operand1->stringval, curr_scope, context, T_LVALUE_GET);
+	ehmember_t *var = context->get_variable(operand1->stringval, context, T_LVALUE_GET);
 	if(var == NULL) {
 		eh_error("cannot access member of nonexistent variable", eerror_e);
 		throw 0;
@@ -1483,38 +1369,10 @@ ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehconte
 				eh_error_type("object member label", EH_TYPE(label), eerror_e);
 				throw 0;
 			}
-			object = var->value->objectval;
-		
-			member = class_getmember(object, label->stringval, context);
+			member = var->value->objectval->get_variable(label->stringval, context, token);
 			if(member == NULL) {
-				// add new member if we're setting
-				if(token == T_LVALUE_SET) {
-					ehretval_t *val = new ehretval_t(null_e);
-					// default is public, non-static, non-constant
-					attribute.visibility = public_e;
-					attribute.isstatic = nonstatic_e;
-					attribute.isconst = nonconst_e;
-					member = class_insert_retval(
-						object->members, label->stringval, attribute, val
-					);
-				} else {
-					eh_error_unknown(
-						"object member", label->stringval, eerror_e
-					);
-					throw 0;
-				}
-			}
-			// respect const specifier
-			if(member->attribute.isconst == const_e) {
-				if(token == T_LVALUE_SET) {
-					eh_error("Attempt to write to constant variable", eerror_e);
-					throw 0;
-				} else {
-					newcontext = object;
-					return member->value;
-				}
+				throw 0;
 			} else {
-				newcontext = object;
 				return member->value;
 			}
 			break;
@@ -1526,8 +1384,6 @@ ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehconte
 	throw 0;
 }
 ehretval_t *&EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token) {
-	memberattribute_t attribute;
-
 	ehretval_t *label = eh_execute(index, context);
 	if(EH_TYPE(label) != string_e) {
 		eh_error_type("object member label", EH_TYPE(label), eerror_e);
@@ -1543,37 +1399,15 @@ ehretval_t *&EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontex
 		eh_error_unknown("class", operand1->stringval, eerror_e);
 		throw 0;
 	}
-	ehvar_t *member = class_getmember(&classobj->obj, label->stringval, context);
+	ehmember_t *member = classobj->obj.get_variable(label->stringval, context, token);
 	if(member == NULL) {
-		// add new, null member if we're setting
-		if(token == T_LVALUE_SET) {
-			ehretval_t *val = new ehretval_t(null_e);
-			// default is public, non-static, non-constant
-			attribute.visibility = public_e;
-			attribute.isstatic = nonstatic_e;
-			attribute.isconst = nonconst_e;
-			member = class_insert_retval(
-				classobj->obj.members, label->stringval, attribute, val
-			);
-		} else {
-			eh_error_unknown("object member", label->stringval, eerror_e);
-			throw 0;
+		if(token == T_LVALUE_GET) {
+			eh_error_unknown("object member", label->stringval, eerror_e);		
 		}
-	}
-	// respect const specifier
-	if(member->attribute.isconst == const_e) {
-		if(token == T_LVALUE_SET) {
-			eh_error("Attempt to write to constant variable", eerror_e);
-			throw 0;
-		} else {
-			newcontext = &classobj->obj;
-			return member->value;
-		}
+		throw 0;
 	} else {
-		newcontext = &classobj->obj;
 		return member->value;
 	}
-	throw 0;
 }
 /*
  * Arrays
@@ -1611,27 +1445,22 @@ void EHI::array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t 
  */
 void EHI::eh_setarg(int argc, char **argv) {
 	// insert argc
-	ehvar_t *argc_v = new ehvar_t;
+	ehmember_t *argc_v = new ehmember_t;
 	argc_v->value = new ehretval_t(int_e);
-	// global scope
-	argc_v->scope = global_scope.top();
-	argc_v->name = "argc";
 	// argc - 1, because argv[0] is ehi itself
 	argc_v->value->intval = argc - 1;
-	insert_variable(argc_v);
+	global_object->insert("argc", argc_v);
 
 	// insert argv
-	ehvar_t *argv_v = new ehvar_t;
+	ehmember_t *argv_v = new ehmember_t;
 	argv_v->value = new ehretval_t(array_e);
-	argv_v->scope = global_scope.top();
-	argv_v->name = "argv";
 	argv_v->value->arrayval = new eharray_t;
 
 	// all members of argv are strings
 	for(int i = 1; i < argc; i++) {
 		argv_v->value->arrayval->int_indices[i - 1] = new ehretval_t(argv[i]);
 	}
-	insert_variable(argv_v);
+	global_object->insert("argv", argv_v);
 }
 /*
  * Commands
@@ -1765,71 +1594,40 @@ ehretval_t *eh_op_dot(ehretval_t *operand1, ehretval_t *operand2) {
 /*
  * Classes.
  */
-void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i) {
-	ehvar_t *newmember = new ehvar_t;
-	// copy the whole thing over
-	newmember->name = classmember->name;
-	newmember->attribute = classmember->attribute;
+void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember) {
+	ehmember_t *newmember = new ehmember_t;
+	newmember->attribute = classmember->second->attribute;
 	// modify this pointer
-	if(!strcmp(newmember->name, "this")) {
-		newmember->value = new ehretval_t;
-		newmember->value->type = object_e;
+	if(classmember->first.compare("this") == 0) {
+		newmember->value = new ehretval_t(object_e);
 		newmember->value->objectval = classobj;
-	} else if(classmember->attribute.isstatic == static_e) {
-		newmember->value = classmember->value->reference(classmember->value);
+	} else if(classmember->second->attribute.isstatic == static_e) {
+		newmember->value = classmember->second->value->reference(classmember->second->value);
+	} else if(classmember->second->value->type == func_e) {
+		newmember->value = new ehretval_t(func_e);
+		newmember->value->funcval = new ehobj_t();
+		newmember->value->funcval->parent = classobj;
+		ehobj_t *oldobj = classmember->second->value->funcval;
+		newmember->value->funcval->function = oldobj->function;
+		newmember->value->funcval->classname = oldobj->classname;
+		newmember->value->funcval->members = oldobj->members;
 	} else {
-		newmember->value = classmember->value->share();
+		newmember->value = classmember->second->value->share();
 	}
-	newmember->next = classobj->members[i];
-	classobj->members[i] = newmember;
+	classobj->operator[](classmember->first) = newmember;
 	return;
-}
-ehvar_t *class_insert_retval(ehvar_t **classarr, const char *name, memberattribute_t attribute, ehretval_t *value) {
-	// insert a member into a class
-
-	ehvar_t *member = new ehvar_t;
-	// rely on standard layout of the input ehretval_t
-	member->attribute = attribute;
-	member->name = name;
-	member->value = value;
-
-	// insert into hash table
-	unsigned int vhash = hash(member->name, 0);
-	member->next = classarr[vhash];
-	classarr[vhash] = member;
-	return member;
-}
-ehvar_t *class_getmember(const ehobj_t *classobj, const char *name, ehcontext_t context) {
-	for(ehvar_t *curr = classobj->members[hash(name, 0)]; curr != NULL; 
-	  curr = curr->next) {
-		if(!strcmp(curr->name, name)) {
-			// we found it; now check visibility
-			switch(curr->attribute.visibility) {
-				case public_e:
-					return curr;
-				case private_e:
-					// check context
-					return ehcontext_compare(classobj, context) ? curr : NULL;
-			}
-		}
-	}
-	return NULL;
-}
-ehretval_t *class_get(const ehobj_t *classobj, const char *name, ehcontext_t context) {
-	ehretval_t *ret = NULL;
-
-	ehvar_t *curr = class_getmember(classobj, name, context);
-	if(curr != NULL) {
-		ret = curr->value;
-	}
-	return ret;
 }
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key) {
 	// in global context, we never have access to private stuff
-	if(key == NULL)
+	if(key == NULL) {
 		return false;
-	else
-		return !strcmp(lock->classname, key->classname);
+	} else {
+		if(strcmp(lock->classname, key->classname) == 0) {
+			return true;
+		} else {
+			return ehcontext_compare(lock, key->parent);
+		}
+	}
 }
 /*
  * Type casting
@@ -2369,23 +2167,6 @@ void print_retval(const ehretval_t *ret) {
 	}
 	return;
 }
-void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node) {
-	int currarg = count_nodes(node);
-	*argcount = currarg;
-	// if there are no arguments, the arglist can be NULL
-	if(currarg) {
-		*arglist = new eharg_t;
-	} else {
-		*arglist = NULL;
-	}
-	// add arguments to arglist
-	currarg = 0;
-	for(ehretval_t *tmp = node; tmp->opval->nparas != 0; 
-		tmp = tmp->opval->paras[0]) {
-		(*arglist)[currarg].name = tmp->opval->paras[1]->stringval;
-		currarg++;
-	}
-}
 
 /*
  * Other classes
@@ -2400,4 +2181,59 @@ ehretval_t * &eharray_t::operator[](ehretval_t *index) {
 			eh_error_type("array index", EH_TYPE(index), enotice_e);
 			throw new std::exception;
 	}
+}
+ehmember_t *ehobj_t::insert_retval(const char *name, memberattribute_t attribute, ehretval_t *value) {
+	// insert a member into a class
+	ehmember_t *member = new ehmember_t(attribute);
+	member->value = value;
+
+	// insert into object
+	members[name] = member;
+	return member;
+}
+ehmember_t *ehobj_t::getmember(const char *name, const ehcontext_t context) {
+	if(has(name)) {
+		ehmember_t *out = operator[](name);
+		switch(out->attribute.visibility) {
+			case public_e:
+				return out;
+			case private_e:
+				// check context
+				return ehcontext_compare(this, context) ? out : NULL;		
+		}
+	}
+	return NULL;
+}
+ehretval_t *ehobj_t::get(const char *name, const ehcontext_t context) {
+	ehmember_t *curr = getmember(name, context);
+	if(curr != NULL) {
+		return curr->value;
+	} else {
+		return NULL;
+	}
+}
+ehmember_t *ehobj_t::get_variable(const char *name, ehcontext_t context, int token) {
+	ehmember_t *currvar = this->get_variable_recursive(name, context);
+	if(token == T_LVALUE_SET) {
+		if(currvar == NULL) {
+			if(!this->has(name)) {
+				currvar = new ehmember_t();
+				currvar->value = NULL;
+				this->insert(name, currvar);
+			} else {
+				throw 0;
+			}
+		} else if(currvar->attribute.isconst == const_e) {
+			eh_error("Attempt to write to constant variable", eerror_e);
+			throw 0;
+		}
+	}
+	return currvar;
+}
+ehmember_t *ehobj_t::get_variable_recursive(const char *name, const ehcontext_t context) {
+	ehmember_t *out = this->getmember(name, context);
+	if(out == NULL & this->parent != NULL) {
+		out = this->parent->get_variable_recursive(name, context);
+	}
+	return out;
 }

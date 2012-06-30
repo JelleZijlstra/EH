@@ -119,7 +119,7 @@ typedef struct ehretval_t {
 		struct eharray_t *arrayval;
 		struct ehobj_t *objectval;
 		struct ehretval_t *referenceval;
-		struct ehfm_t *funcval;
+		struct ehobj_t *funcval;
 		struct ehrange_t *rangeval;
 		// pseudo-types for internal use
 		opnode_t *opval;
@@ -260,30 +260,25 @@ private:
 	short is_shared;
 } ehretval_t;
 
-typedef struct ehvar_t {
-	// union: either the name of a variable or a numeric array index
-	union {
-		const char *name;
-		int index;
-	};
-	// the scope of a variable, the index-type of an array member, or the
-	// attributes of an object member
-	union {
-		memberattribute_t attribute;
-		unsigned long scope;
-		type_enum indextype;
-	};
+typedef struct ehmember_t {
+	memberattribute_t attribute;
 	struct ehretval_t *value;
-	struct ehvar_t *next;
-	
+
 	// destructor
-	~ehvar_t() {
+	~ehmember_t() {
 		// decrement refcount of the value
 		if(value != NULL) {
 			value->dec_rc();
 		}
 	}
-} ehvar_t;
+	
+	ehmember_t() {
+		attribute.visibility = public_e;
+		attribute.isstatic = nonstatic_e;
+		attribute.isconst = nonconst_e;
+	}
+	ehmember_t(memberattribute_t atts) : attribute(atts) {}
+} ehmember_t;
 
 // in future, add type for type checking
 typedef struct eharg_t {
@@ -291,7 +286,7 @@ typedef struct eharg_t {
 } eharg_t;
 
 // context
-typedef const struct ehobj_t *ehcontext_t;
+typedef struct ehobj_t *ehcontext_t;
 
 typedef void *(*ehconstructor_t)();
 
@@ -345,13 +340,54 @@ typedef struct eharray_t {
 
 // EH object
 typedef struct ehobj_t {
+public:
+	// properties
+	struct ehfm_t *function;
 	const char *classname;
+	struct ehobj_t *parent;
 	union {
+		// for instantiated and non-instantiated library classes
 		void *selfptr;
 		ehconstructor_t constructor;
 	};
-	struct ehvar_t **members;
+	std::map<std::string, ehmember_t *> members;
+
+	// typedefs
+	typedef std::map<std::string, ehmember_t *> obj_map;
+	typedef obj_map::iterator obj_iterator;
+	
+	// constructors
+	ehobj_t() : function(NULL), classname(NULL), parent(NULL), members() {}
+
+	// methods
+	size_t size() {
+		return members.size();
+	}
+	
+	ehmember_t *insert_retval(const char *name, memberattribute_t attribute, ehretval_t *value);
+	ehmember_t *getmember(const char *name, const ehcontext_t context);
+	ehmember_t *get_variable(const char *name, const ehcontext_t context, int token);
+	ehretval_t *get(const char *name, const ehcontext_t context);
+	
+	ehmember_t *&operator[](std::string key) {
+		return members[key];
+	}
+	
+	bool has(const std::string key) {
+		return members.count(key);
+	}
+	
+	void insert(std::string &name, ehmember_t *value) {
+		members[name] = value;
+	}
+	void insert(const char *name, ehmember_t *value) {
+		std::string str(name);
+		this->insert(str, value);
+	}
+private:
+	ehmember_t *get_variable_recursive(const char *name, const ehcontext_t context);
 } ehobj_t;
+#define OBJECT_FOR_EACH(obj, varname) for(ehobj_t::obj_iterator varname = (obj)->members.begin(), end = (obj)->members.end(); varname != end; varname++)
 
 // range
 typedef struct ehrange_t {
@@ -373,64 +409,6 @@ typedef struct ehcmd_bucket_t {
 	struct ehcmd_bucket_t *next;
 } ehcmd_bucket_t;
 
-// scope
-struct ehscope_t {
-public:
-	struct varscope_t {
-		struct varscope_t *next;
-		struct varscope_t *parent;
-		varscope_t(varscope_t *in) {
-			next = in;
-		}
-		varscope_t() {
-			next = new varscope_t(NULL);
-		}
-	};
-private:
-	// current scope for this method
-	varscope_t *var_scope;
-public:
-	struct ehscope_t *parent;
-	// push and pop a new scope from the stack
-	size_t push() {
-		varscope_t *new_scope = new varscope_t(var_scope);
-		new_scope->parent = parent->top_pointer();
-		var_scope = new_scope;
-		return (size_t) new_scope;
-	}
-	void pop() {
-		assert(var_scope->next != NULL);
-		varscope_t *tmp = var_scope->next;
-		delete var_scope;
-		var_scope = tmp;
-	}
-	// deferred push: create a new scope, but don't put it in yet
-	size_t deferred_push() {
-		varscope_t *new_scope = new varscope_t(var_scope);
-		new_scope->parent = parent->top_pointer();
-		return (size_t) new_scope;
-	}
-	void complete_push(size_t new_scope) {
-		var_scope = (varscope_t *) new_scope;
-	}
-	size_t top() {
-		return (size_t) var_scope;
-	}
-	varscope_t *top_pointer() {
-		return var_scope;
-	}
-	// constructors
-	ehscope_t(ehscope_t *n_parent) {
-		parent = n_parent;
-	}
-	ehscope_t() {
-		// used as constructor for the global_scope
-		parent = NULL;
-		var_scope = new varscope_t();
-		var_scope->parent = NULL;
-	}
-};
-
 // class
 typedef struct ehclass_t {
 	ehobj_t obj;
@@ -443,7 +421,6 @@ typedef struct ehfm_t {
 	functype_enum type;
 	int argcount;
 	eharg_t *args;
-	ehscope_t scope;
 	union {
 		ehretval_t *code;
 		void (*ptr)(ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
@@ -512,10 +489,7 @@ char *eh_getinput(void);
 #include "eh.bison.hpp"
 #include "ehi.h"
 
-ehretval_t *class_get(const ehobj_t *classobj, const char *name, ehcontext_t context);
-void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i);
-ehvar_t *class_getmember(const ehobj_t *classobj, const char *name, ehcontext_t context);
-void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node);
+void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember);
 ehretval_t *int_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
 ehretval_t *string_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
 ehretval_t *range_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
@@ -527,7 +501,6 @@ ehretval_t *eh_op_tilde(ehretval_t *in);
 ehretval_t *eh_op_uminus(ehretval_t *in);
 ehretval_t *eh_op_dot(ehretval_t *operand1, ehretval_t *operand2);
 ehretval_t *eh_make_range(const int min, const int max);
-ehvar_t *class_insert_retval(ehvar_t **classarr, const char *name, memberattribute_t attribute, ehretval_t *value);
 void array_insert_retval(eharray_t *array, ehretval_t *index, ehretval_t *ret);
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
 

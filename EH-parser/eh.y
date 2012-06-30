@@ -98,7 +98,7 @@ global_list:
 	/* NULL */				{ $$ = eh_addnode(T_SEPARATOR, 0); }
 	| statement				{
 								EHParser *parser = yyget_extra(scanner);
-								ehretval_t *ret = parser->_parent->eh_execute($1, NULL);
+								ehretval_t *ret = parser->_parent->eh_execute($1, parser->_parent->global_object);
 								// flush stdout after executing each statement
 								fflush(stdout);
 								if(parser->_parent->returning) {

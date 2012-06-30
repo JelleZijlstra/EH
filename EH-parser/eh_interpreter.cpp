@@ -40,7 +40,7 @@ ehlc_listentry_t libclasses[] = {
 };
 
 #define LIBCMDENTRY(c) { #c, ehlcmd_ ## c },
-ehcmd_t libcmds[] = {
+ehlibcmd_t libcmds[] = {
 	LIBCMDENTRY(quit)
 	LIBCMDENTRY(echo)
 	LIBCMDENTRY(put)
@@ -189,7 +189,7 @@ void EHI::eh_init(void) {
 		insert_class(newclass);
 	}
 	for(int i = 0; libcmds[i].name != NULL; i++) {
-		insert_command(libcmds[i]);
+		insert_command(libcmds[i].name, libcmds[i].cmd);
 	}
 	for(int i = 0; libredirs[i][0] != NULL; i++) {
 		redirect_command(libredirs[i][0], libredirs[i][1]);
@@ -567,10 +567,10 @@ ehretval_t *EHI::eh_op_command(const char *name, ehretval_t *node, ehcontext_t c
 	// insert indicator that this is an EH-PHP command
 	paras.string_indices["_ehphp"] = new ehretval_t(true);
 	// get the command to execute
-	const ehcmd_t *libcmd = get_command(name);
+	const ehcmd_t libcmd = get_command(name);
 	ehretval_t *ret;
 	if(libcmd != NULL) {
-		ret = libcmd->code(&paras);
+		ret = libcmd(&paras);
 	} else {
 		ret = execute_cmd(name, &paras);
 	}
@@ -1309,19 +1309,14 @@ ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
 	return ret;
 }
 void EHI::insert_class(ehclass_t *classobj) {
-	unsigned int vhash = hash(classobj->obj.classname, HASH_INITVAL);
-	classobj->next = classtable[vhash];
-	classtable[vhash] = classobj;
-	return;
+	this->classtable[classobj->obj.classname] = classobj;
 }
 ehclass_t *EHI::get_class(const char *name) {
-	for(ehclass_t *currclass = classtable[hash(name, HASH_INITVAL)]; 
-	  currclass != NULL; currclass = currclass->next) {
-		if(strcmp(currclass->obj.classname, name) == 0) {
-			return currclass;
-		}
+	if(this->classtable.count(name) == 1) {
+		return this->classtable[name];
+	} else {
+		return NULL;
 	}
-	return NULL;
 }
 void EHI::class_insert(ehobj_t *obj, const ehretval_t *in, ehcontext_t context) {
 	// insert a member into a class
@@ -1465,32 +1460,22 @@ void EHI::eh_setarg(int argc, char **argv) {
 /*
  * Commands
  */
-ehcmd_t *EHI::get_command(const char *name) {
-	const unsigned int vhash = hash(name, 0);
-	
-	for(ehcmd_bucket_t *curr = cmdtable[vhash]; curr != NULL; curr = curr->next) {
-		if(!strcmp(curr->cmd.name, name)) {
-			return &curr->cmd;
-		}
+ehcmd_t EHI::get_command(const char *name) {
+	if(this->cmdtable.count(name) == 1) {
+		return this->cmdtable[name];
+	} else {
+		return NULL;
 	}
-	return NULL;
 }
-void EHI::insert_command(const ehcmd_t cmd) {
-	const unsigned int vhash = hash(cmd.name, 0);
-	ehcmd_bucket_t *bucket = new ehcmd_bucket_t;
-	bucket->cmd = cmd;
-	bucket->next = cmdtable[vhash];
-	cmdtable[vhash] = bucket;
+void EHI::insert_command(const char *name, const ehcmd_t cmd) {
+	this->cmdtable[name] = cmd;
 }
 void EHI::redirect_command(const char *redirect, const char *target) {
-	ehcmd_t *targetcmd = get_command(target);
+	ehcmd_t targetcmd = get_command(target);
 	if(targetcmd == NULL) {
 		eh_error("Unknown redirect target", eerror_e);
 	}
-	ehcmd_t newcmd;
-	newcmd.name = redirect;
-	newcmd.code = targetcmd->code;
-	insert_command(newcmd);
+	insert_command(redirect, targetcmd);
 }
 
 /*****************************************

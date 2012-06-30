@@ -396,24 +396,17 @@ typedef struct ehrange_t {
 } ehrange_t;
 
 // function executing a command
-typedef ehretval_t *(*ehcmd_f_t)(eharray_t *paras);
+typedef ehretval_t *(*ehcmd_t)(eharray_t *paras);
 
-// command
-typedef struct ehcmd_t {
+typedef struct ehlibcmd_t {
 	const char *name;
-	ehcmd_f_t code;
-} ehcmd_t;
-
-typedef struct ehcmd_bucket_t {
 	ehcmd_t cmd;
-	struct ehcmd_bucket_t *next;
-} ehcmd_bucket_t;
+} ehlibcmd_t;
 
 // class
 typedef struct ehclass_t {
 	ehobj_t obj;
 	functype_enum type;
-	struct ehclass_t *next;
 } ehclass_t;
 
 // struct with common infrastructure for procedures and methods

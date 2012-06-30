@@ -29,8 +29,8 @@ private:
 	int inloop;
 	int breaking;
 	int continuing;
-	ehclass_t *classtable[VARTABLE_S];
-	ehcmd_bucket_t *cmdtable[VARTABLE_S];
+	std::map<std::string, ehclass_t *> classtable;
+	std::map<std::string, ehcmd_t> cmdtable;
 	
 	// hack: used to implement range/string/int access
 	ehretval_t *arrow_access_curr;
@@ -57,8 +57,8 @@ private:
 	ehretval_t *eh_op_dollar(ehretval_t *node, ehcontext_t context);
 	void eh_op_set(ehretval_t **paras, ehcontext_t context);
 	ehretval_t *eh_op_accessor(ehretval_t **paras, ehcontext_t context);
-	ehcmd_t *get_command(const char *name);
-	void insert_command(const ehcmd_t cmd);
+	ehcmd_t get_command(const char *name);
+	void insert_command(const char *name, const ehcmd_t cmd);
 	void redirect_command(const char *redirect, const char *target);
 
 	// prototypes

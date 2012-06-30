@@ -497,10 +497,6 @@ ehretval_t *eh_make_range(const int min, const int max);
 void array_insert_retval(eharray_t *array, ehretval_t *index, ehretval_t *ret);
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
 
-// generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
-#define HASH_INITVAL 234092
-unsigned int hash(const char *data, int scope);
-
 // type casting
 ehretval_t *eh_cast(const type_enum type, ehretval_t *in);
 ehretval_t *eh_stringtoint(const char *const in);

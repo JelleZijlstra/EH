@@ -10,7 +10,7 @@
 #include <cmath>
 
 void printvar_retval(const ehretval_t *in);
-static void printvar_array(ehvar_t **in);
+static void printvar_array(eharray_t *in);
 static void printvar_object(ehvar_t **in);
 
 // get arguments, and error if there are too many or few
@@ -168,27 +168,17 @@ static void printvar_object(ehvar_t **in) {
 		}
 	}
 }
-static void printvar_array(ehvar_t **in) {
-	int i;
-	ehvar_t *curr;
 
-	for(i = 0; i < VARTABLE_S; i++) {
-		curr = in[i];
-		while(curr != NULL) {
-			switch(curr->indextype) {
-				case int_e:
-					printf("%d => ", curr->index);
-					break;
-				case string_e:
-					printf("'%s' => ", curr->name);
-					break;
-				default:
-					eh_error_type("array index", curr->indextype, eerror_e);
-					break;
-			}
-			printvar_retval(curr->value);
-			curr = curr->next;
-		}
+static void printvar_array(eharray_t *in) {
+	// iterate over strings
+	ARRAY_FOR_EACH_STRING(in, i) {
+		printf("'%s' => ", i->first.c_str());
+		printvar_retval(i->second);	
+	}
+	// and ints
+	ARRAY_FOR_EACH_INT(in, i) {
+		printf("%d => ", i->first);
+		printvar_retval(i->second);	
 	}
 }
 

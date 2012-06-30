@@ -20,9 +20,16 @@
 
 #include "eh_gc.h"
 
+#include <map>
+#include <iostream>
+#include <algorithm>
+
 /*
  * The EH AST
  */
+
+// macros to avoid having to check for NULL all the time
+#define EH_TYPE(ret) (((ret) == NULL) ? null_e : (ret)->type)
 
 /*
  * Enums used in the parser and interpreter
@@ -109,7 +116,7 @@ typedef struct ehretval_t {
 		bool boolval;
 		float floatval;
 		// complex types
-		struct ehvar_t **arrayval;
+		struct eharray_t *arrayval;
 		struct ehobj_t *objectval;
 		struct ehretval_t *referenceval;
 		struct ehfm_t *funcval;
@@ -196,7 +203,7 @@ typedef struct ehretval_t {
 		}
 	}
 	// make a reference to this object, overwriting the ehretval_t * pointed to by in.
-	ehretval_t *reference(ehretval_t **in) {
+	ehretval_t *reference(ehretval_t *&in) {
 		if(is_shared == 0) {
 			inc_rc();
 			return this;
@@ -204,7 +211,7 @@ typedef struct ehretval_t {
 			ehretval_t *out = clone();
 			is_shared--;
 			dec_rc();
-			*in = out;
+			in = out;
 			// one for the reference, one for the actual object
 			out->inc_rc();
 			return out;
@@ -242,7 +249,7 @@ typedef struct ehretval_t {
 		} else {
 			is_shared--;
 			dec_rc();
-			return in->reference(&in);
+			return in->reference(in);
 		}
 	}
 	void make_shared() {
@@ -305,6 +312,37 @@ typedef struct ehlc_listentry_t {
 	ehlibclass_t info;
 } ehlc_listentry_t;
 
+// EH array
+typedef struct eharray_t {
+	typedef std::map<int, ehretval_t *> int_map;
+	typedef std::map<std::string, ehretval_t *> string_map;
+	typedef std::pair<const int, ehretval_t *>& int_pair;
+	typedef std::pair<const std::string, ehretval_t *>& string_pair;
+	typedef int_map::iterator int_iterator;
+	typedef string_map::iterator string_iterator;
+
+	int_map int_indices;
+	string_map string_indices;
+
+	ehretval_t * &operator[](ehretval_t *index);
+	
+	size_t size() {
+		return this->int_indices.size() + this->string_indices.size();
+	}
+	
+	bool has(ehretval_t *index) {
+		switch(EH_TYPE(index)) {
+			case int_e: return this->int_indices.count(index->intval);
+			case string_e: return this->string_indices.count(index->stringval);
+			default: return false;
+		}
+	}
+	
+	eharray_t() : int_indices(), string_indices() {}
+} eharray_t;
+#define ARRAY_FOR_EACH_STRING(array, varname) for(eharray_t::string_iterator varname = (array)->string_indices.begin(), end = (array)->string_indices.end(); varname != end; varname++)
+#define ARRAY_FOR_EACH_INT(array, varname) for(eharray_t::int_iterator varname = (array)->int_indices.begin(), end = (array)->int_indices.end(); varname != end; varname++)
+
 // EH object
 typedef struct ehobj_t {
 	const char *classname;
@@ -322,7 +360,7 @@ typedef struct ehrange_t {
 } ehrange_t;
 
 // function executing a command
-typedef ehretval_t *(*ehcmd_f_t)(ehvar_t **paras);
+typedef ehretval_t *(*ehcmd_f_t)(eharray_t *paras);
 
 // command
 typedef struct ehcmd_t {
@@ -476,7 +514,6 @@ char *eh_getinput(void);
 
 ehretval_t *class_get(const ehobj_t *classobj, const char *name, ehcontext_t context);
 void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i);
-ehvar_t *array_getmember(ehvar_t **array, ehretval_t *index);
 ehvar_t *class_getmember(const ehobj_t *classobj, const char *name, ehcontext_t context);
 void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node);
 ehretval_t *int_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
@@ -491,11 +528,8 @@ ehretval_t *eh_op_uminus(ehretval_t *in);
 ehretval_t *eh_op_dot(ehretval_t *operand1, ehretval_t *operand2);
 ehretval_t *eh_make_range(const int min, const int max);
 ehvar_t *class_insert_retval(ehvar_t **classarr, const char *name, memberattribute_t attribute, ehretval_t *value);
-int array_count(ehvar_t **array);
-ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t *index, ehretval_t *ret);
+void array_insert_retval(eharray_t *array, ehretval_t *index, ehretval_t *ret);
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
-ehretval_t *array_get(ehvar_t **array, ehretval_t *index);
-
 
 // generic initval for the hash function if no scope is applicable (i.e., for functions, which are not currently scoped)
 #define HASH_INITVAL 234092
@@ -506,7 +540,7 @@ ehretval_t *eh_cast(const type_enum type, ehretval_t *in);
 ehretval_t *eh_stringtoint(const char *const in);
 ehretval_t *eh_stringtofloat(const char *const in);
 ehretval_t *eh_stringtorange(const char *const in);
-ehvar_t **eh_rangetoarray(const ehrange_t *const range);
+eharray_t *eh_rangetoarray(const ehrange_t *const range);
 char *eh_inttostring(const int in);
 ehretval_t *eh_xtoarray(ehretval_t *in);
 ehretval_t *eh_xtoint(ehretval_t *in);
@@ -522,8 +556,5 @@ bool eh_strictequals(ehretval_t *operand1, ehretval_t *operand2);
  */
 int eh_getargs(ehretval_t *paras, int n, ehretval_t **args, ehcontext_t context, const char *name, EHI *obj);
 void print_retval(const ehretval_t *in);
-
-// macros to avoid having to check for NULL all the time
-#define EH_TYPE(ret) (((ret) == NULL) ? null_e : (ret)->type)
 
 #endif /* EH_H_ */

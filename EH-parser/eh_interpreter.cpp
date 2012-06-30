@@ -139,7 +139,7 @@ const char *libredirs[][2] = {
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), vartable(), classtable(), cmdtable(), newcontext(NULL), curr_scope(&global_scope), returning(false) {
+EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), vartable(), classtable(), cmdtable(), arrow_access_curr(new ehretval_t(attribute_e)), newcontext(NULL), curr_scope(&global_scope), returning(false) {
 		eh_init();
 	}
 void EHI::eh_init(void) {
@@ -419,15 +419,8 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 		 */
 			case T_LVALUE_GET:
 			case T_LVALUE_SET:
-			{
-				ehretval_t **tmp = eh_op_lvalue(node->opval, context);
-				if(tmp == NULL) {
-					ret = NULL;
-				} else {
-					ret = *tmp;
-				}
+				ret = eh_op_lvalue(node->opval, context);
 				break;
-			}
 			case T_RANGE:
 				// Attempt to cast operands to integers; if this does not work,
 				// return NULL. No need to yell, since eh_xtoi already does
@@ -505,17 +498,14 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
  * Opnode execution helpers
  */
 ehretval_t *EHI::eh_op_command(const char *name, ehretval_t *node, ehcontext_t context) {
-	ehretval_t *index_r;
 	ehretval_t *value_r;
-	ehvar_t **paras;
-	ehretval_t *node2;
 	// count for simple parameters
 	int count = 0;
 	// we're making an array of parameters
-	paras = new ehvar_t *[VARTABLE_S]();
+	eharray_t paras;
 	// loop through the paras given
 	for( ; node->opval->nparas != 0; node = node->opval->paras[1]) {
-		node2 = node->opval->paras[0];
+		ehretval_t *node2 = node->opval->paras[0];
 		if(node2->type == op_e) {
 			switch(node2->opval->op) {
 				case T_SHORTPARA:
@@ -529,85 +519,53 @@ ehretval_t *EHI::eh_op_command(const char *name, ehretval_t *node, ehcontext_t c
 					}
 					node2 = node2->opval->paras[0];
 					for(int i = 0, len = strlen(node2->stringval); i < len; i++) {
-						index_r = new ehretval_t(string_e);
-						index_r->stringval = new char[2];
-						index_r->stringval[0] = node2->stringval[i];
-						index_r->stringval[1] = '\0';
-						array_insert_retval(paras, index_r, value_r);
+						char index[2];
+						index[0] = node2->stringval[i];
+						index[1] = '\0';
+						paras.string_indices[index] = value_r;
 					}
 					break;
 				case T_LONGPARA:
+				{
 					// long-form paras
+					char *index = node2->opval->paras[0]->stringval;
 					if(node2->opval->nparas == 1) {
-						value_r = new ehretval_t(true);
-						array_insert_retval(
-							paras,
-							eh_execute(node2->opval->paras[0], context),
-							value_r
-						);
+						paras.string_indices[index] = new ehretval_t(true);
 					} else {
-						array_insert_retval(
-							paras,
-							eh_execute(node2->opval->paras[0], context),
-							eh_execute(node2->opval->paras[1], context)
-						);
+						paras.string_indices[index] = eh_execute(node2->opval->paras[1], context);
 					}
 					break;
+				}
 				case T_REDIRECT:
-					index_r = new ehretval_t(string_e);
-					index_r->stringval = new char[sizeof(">")];
-					strcpy(index_r->stringval, ">");
-					// output redirector
-					array_insert_retval(
-						paras,
-						index_r,
-						eh_execute(node2->opval->paras[0], context)
-					);
+					paras.string_indices[">"] = eh_execute(node2->opval->paras[0], context);
 					break;
 				case '}':
-					index_r = new ehretval_t(string_e);
-					index_r->stringval = new char[sizeof("}")];
-					strcpy(index_r->stringval, "}");
-					// output redirector
-					array_insert_retval(
-						paras,
-						index_r,
-						eh_execute(node2->opval->paras[0], context)
-					);
+					paras.string_indices["}"] = eh_execute(node2->opval->paras[0], context);
 					break;
 				default: // non-named parameters with an expression
 					// non-named parameters
-					index_r = new ehretval_t(int_e);
-					index_r->intval = count;
-					value_r = eh_execute(node2, context);
-					array_insert_retval(paras, index_r, value_r);
+					paras.int_indices[count] = eh_execute(node2, context);
 					count++;
 					break;
 			}
 		} else {
 			// non-named parameters
-			index_r = new ehretval_t(int_e);
-			index_r->intval = count;
-			value_r = eh_execute(node2, context);
-			array_insert_retval(paras, index_r, value_r);
+			paras.int_indices[count] = node2;
 			count++;
 		}
 	}
 	// insert indicator that this is an EH-PHP command
-	value_r = new ehretval_t(true);
-	index_r = new ehretval_t(strdup("_ehphp"));
-	array_insert_retval(paras, index_r, value_r);
+	paras.string_indices["_ehphp"] = new ehretval_t(true);
 	// get the command to execute
 	const ehcmd_t *libcmd = get_command(name);
 	ehretval_t *ret;
 	if(libcmd != NULL) {
-		ret = libcmd->code(paras);
+		ret = libcmd->code(&paras);
 	} else {
-		ret = execute_cmd(name, paras);
+		ret = execute_cmd(name, &paras);
 	}
 	// we're not returning anymore
 	returning = false;
-	delete paras;
 	return ret;
 }
 ehretval_t *EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
@@ -733,21 +691,31 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 		}
 	} else {
 		// arrays
-		ehvar_t **members = object->arrayval;
-		for(int i = 0; i < VARTABLE_S; i++) {
-			for(ehvar_t *currmember = members[i]; currmember != NULL; currmember = currmember->next) {
-				membervar->value = currmember->value;
-				if(indexname) {
-					indexvar->value->type = currmember->indextype;
-					if(currmember->indextype == string_e) {
-						indexvar->value->stringval = strdup(currmember->name);
-					} else {
-						indexvar->value->intval = currmember->index;
-					}
-				}
-				ret = eh_execute(code, context);
-				LOOPCHECKS;
+		eharray_t *array = object->arrayval;
+		if(indexname) {
+			if(indexvar->value == NULL) {
+				indexvar->value = new ehretval_t(int_e);
 			}
+			indexvar->value->type = int_e;
+		}
+		ARRAY_FOR_EACH_INT(array, i) {
+			if(indexname) {
+				indexvar->value->intval = i->first;
+			}
+			membervar->value = i->second;
+			ret = eh_execute(code, context);
+			LOOPCHECKS;
+		}
+		if(indexname) {
+			indexvar->value->type = string_e;
+		}
+		ARRAY_FOR_EACH_STRING(array, i) {
+			if(indexname) {
+				indexvar->value->stringval = (char *)i->first.c_str();
+			}
+			membervar->value = i->second;
+			ret = eh_execute(code, context);
+			LOOPCHECKS;		
 		}
 	}
 	inloop--;
@@ -834,7 +802,7 @@ void EHI::eh_op_continue(opnode_t *op, ehcontext_t context) {
 }
 ehretval_t *EHI::eh_op_array(ehretval_t *node, ehcontext_t context) {
 	ehretval_t *ret = new ehretval_t(array_e);
-	ret->arrayval = new ehvar_t *[VARTABLE_S]();
+	ret->arrayval = new eharray_t;
 	// need to count array members first, because they are reversed in our node.
 	// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
 	int count = 0;
@@ -1035,15 +1003,15 @@ ehretval_t *EHI::eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 	return ret;
 }
 ehretval_t *EHI::eh_op_reference(opnode_t *op, ehcontext_t context) {
-	ehretval_t **var = eh_op_lvalue(op, context);
+	ehretval_t *var = eh_op_lvalue(op, context);
 	if(var == NULL) {
 		eh_error("Unable to create reference", eerror_e);
 	}
 	ehretval_t *ret = new ehretval_t(reference_e);
-	ret->referenceval = (*var)->reference(var);
+	ret->referenceval = var->reference(var);
 	return ret;
 }
-ehretval_t **EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
+ehretval_t *&EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	/*
 	 * Get an lvalue. This function normally returns a pointer to a pointer
 	 * to an ehretval_t: it points to the place where the pointer to the value
@@ -1058,7 +1026,6 @@ ehretval_t **EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	 * the variable referred to, so that eh_op_set can do its bitwise magic with
 	 * ints and similar stuff.
 	 */
-	ehretval_t **ret = NULL;
 	ehvar_t *var;
 
 	ehretval_t *basevar = eh_execute(op->paras[0], context);
@@ -1070,8 +1037,9 @@ ehretval_t **EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 			var = get_variable(basevar->stringval, curr_scope, context, op->op);
 			// dereference variable
 			if(var != NULL) {
+				basevar->dec_rc();
 				// increase refcount?
-				ret = &(var->value);
+				return var->value;
 			}
 			/*
 			 * If there is no variable of this name, and it is a
@@ -1081,16 +1049,13 @@ ehretval_t **EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 		case 3:
 			switch(op->paras[1]->accessorval) {
 				case arrow_e:
-					ret = object_access(basevar, op->paras[2], context, op->op);
-					break;
+					return object_access(basevar, op->paras[2], context, op->op);
 				case doublecolon_e:
-					ret = colon_access(basevar, op->paras[2], context, op->op);
-					break;
+					return colon_access(basevar, op->paras[2], context, op->op);
 			}
 			break;
 	}
-	basevar->dec_rc();
-	return ret;
+	throw 0;
 }
 ehretval_t *EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 	ehretval_t *ret = eh_execute(node, context);
@@ -1118,41 +1083,44 @@ ehretval_t *EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 	return ret;
 }
 void EHI::eh_op_set(ehretval_t **paras, ehcontext_t context) {
-	ehretval_t **lvalue = eh_op_lvalue(paras[0]->opval, context);
-	ehretval_t *rvalue = eh_execute(paras[1], context);
-	if(rvalue != NULL) {
-		rvalue->inc_rc();
-	}
-	if(lvalue == NULL) {
-		// do nothing
-		return;
-	} else if(EH_TYPE(*lvalue) == attribute_e) {
-		// lvalue is a pointer to the variable modified, rvalue is the value set to, index is the index
-		ehretval_t *index = eh_execute(paras[0]->opval->paras[2], context);
-		switch(EH_TYPE((*lvalue)->referenceval)) {
-			case int_e:
-				int_arrow_set((*lvalue)->referenceval, index, rvalue);
-				break;
-			case string_e:
-				string_arrow_set((*lvalue)->referenceval, index, rvalue);
-				break;
-			case range_e:
-				range_arrow_set((*lvalue)->referenceval, index, rvalue);
-				break;
-			default:
-				eh_error_type("arrow access", EH_TYPE((*lvalue)->referenceval), eerror_e);
-				break;
+	try {
+		ehretval_t *&lvalue = eh_op_lvalue(paras[0]->opval, context);
+		ehretval_t *rvalue = eh_execute(paras[1], context);
+		if(rvalue != NULL) {
+			rvalue->inc_rc();
 		}
-		DEC_RC(index);
-	} else {
-		if(EH_TYPE(rvalue) == reference_e) {
-			// set new reference
-			*lvalue = rvalue->referenceval;
-			rvalue->dec_rc();
+		if(EH_TYPE(lvalue) == attribute_e) {
+			// lvalue is a pointer to the variable modified, rvalue is the value set to, index is the index
+			ehretval_t *index = eh_execute(paras[0]->opval->paras[2], context);
+			switch(EH_TYPE(lvalue->referenceval)) {
+				case int_e:
+					int_arrow_set(lvalue->referenceval, index, rvalue);
+					break;
+				case string_e:
+					string_arrow_set(lvalue->referenceval, index, rvalue);
+					break;
+				case range_e:
+					range_arrow_set(lvalue->referenceval, index, rvalue);
+					break;
+				default:
+					eh_error_type("arrow access", EH_TYPE(lvalue->referenceval), eerror_e);
+					break;
+			}
+			DEC_RC(index);
 		} else {
-			// set variable
-			*lvalue = (*lvalue)->overwrite(rvalue);
+			if(EH_TYPE(rvalue) == reference_e) {
+				// set new reference
+				lvalue = rvalue->referenceval;
+				rvalue->dec_rc();
+			} else if(lvalue == NULL) {
+				lvalue = rvalue->share();
+			} else {
+				// set variable
+				lvalue = lvalue->overwrite(rvalue);
+			}
 		}
+	} catch(...) {
+		// do nothing
 	}
 	return;
 }
@@ -1176,7 +1144,11 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 					break;
 				case array_e:
 					// array access to an array works as expected.
-					ret = array_get(basevar->arrayval, index);
+					if(basevar->arrayval->has(index)) {
+						ret = basevar->arrayval->operator[](index);
+					} else {
+						ret = NULL;
+					}
 					break;
 				case object_e:
 					if(index->type != string_e) {
@@ -1200,15 +1172,12 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 			}
 			break;
 		case doublecolon_e:
-		{
-			ehretval_t **tmp = colon_access(basevar, index, context, T_LVALUE_GET);
-			if(tmp == NULL) {
+			try {
+				ret = colon_access(basevar, index, context, T_LVALUE_GET);
+			} catch(...) {
 				ret = NULL;
-			} else {
-				ret = *tmp;
 			}
 			break;
-		}
 		default:
 			eh_error("Unsupported accessor", efatal_e);
 			break;
@@ -1487,47 +1456,32 @@ void EHI::class_insert(ehvar_t **classarr, const ehretval_t *in, ehcontext_t con
 	}
 	class_insert_retval(classarr, name, attribute, value);
 }
-ehretval_t **EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token) {
-	ehretval_t **ret = NULL;
-	ehvar_t *var;
+ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token) {
 	ehvar_t *member;
 	ehobj_t *object;
 	memberattribute_t attribute;
 
-	var = get_variable(operand1->stringval, curr_scope, context, T_LVALUE_GET);
+	ehvar_t *var = get_variable(operand1->stringval, curr_scope, context, T_LVALUE_GET);
 	if(var == NULL) {
 		eh_error("cannot access member of nonexistent variable", eerror_e);
-		return NULL;
+		throw 0;
 	}
 	ehretval_t *label = eh_execute(index, context);
 	if(label == NULL) {
-		return ret;
+		throw 0;
 	}
 
 	switch(var->value->type) {
 		case array_e:
-			member = array_getmember(var->value->arrayval, label);
-			// if there is no member yet and we are
-			// setting, insert it with a null value
-			if(member == NULL) {
-				if(token == T_LVALUE_SET) {
-					ehretval_t *val = new ehretval_t(null_e);
-					member = array_insert_retval(
-						var->value->arrayval, label, val
-					);
-					if(member != NULL) {
-						ret = &member->value;
-					}
-				}
-				// else use default return value
+			if(var->value->arrayval->has(label) or (token == T_LVALUE_SET)) {
+				return var->value->arrayval->operator[](label);
 			} else {
-				ret = &member->value;
+				throw 0;
 			}
-			break;
 		case object_e:
 			if(EH_TYPE(label) != string_e) {
 				eh_error_type("object member label", EH_TYPE(label), eerror_e);
-				return NULL;
+				throw 0;
 			}
 			object = var->value->objectval;
 		
@@ -1547,49 +1501,47 @@ ehretval_t **EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehconte
 					eh_error_unknown(
 						"object member", label->stringval, eerror_e
 					);
-					return NULL;
+					throw 0;
 				}
 			}
 			// respect const specifier
 			if(member->attribute.isconst == const_e) {
 				if(token == T_LVALUE_SET) {
 					eh_error("Attempt to write to constant variable", eerror_e);
-					return NULL;
+					throw 0;
 				} else {
-					ret = &(member->value);
+					newcontext = object;
+					return member->value;
 				}
 			} else {
-				ret = &(member->value);
+				newcontext = object;
+				return member->value;
 			}
-			newcontext = object;
 			break;
 		default:
-			ehretval_t *ref = new ehretval_t(attribute_e);
-			ref->referenceval = var->value;
-			ret = new ehretval_t *;
-			*ret = ref;
-			break;
+			arrow_access_curr->type = attribute_e;
+			arrow_access_curr->referenceval = var->value;
+			return arrow_access_curr;
 	}
-	return ret;
+	throw 0;
 }
-ehretval_t **EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token) {
-	ehretval_t **ret = NULL;
+ehretval_t *&EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token) {
 	memberattribute_t attribute;
 
 	ehretval_t *label = eh_execute(index, context);
 	if(EH_TYPE(label) != string_e) {
 		eh_error_type("object member label", EH_TYPE(label), eerror_e);
-		return ret;
+		throw 0;
 	}
 
 	if(EH_TYPE(operand1) != string_e) {
 		eh_error_type("class access", EH_TYPE(operand1), eerror_e);
-		return ret;
+		throw 0;
 	}
 	ehclass_t *classobj = get_class(operand1->stringval);
 	if(classobj == NULL) {
 		eh_error_unknown("class", operand1->stringval, eerror_e);
-		return ret;
+		throw 0;
 	}
 	ehvar_t *member = class_getmember(&classobj->obj, label->stringval, context);
 	if(member == NULL) {
@@ -1603,36 +1555,30 @@ ehretval_t **EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontex
 			member = class_insert_retval(
 				classobj->obj.members, label->stringval, attribute, val
 			);
-		}
-		else {
+		} else {
 			eh_error_unknown("object member", label->stringval, eerror_e);
-			return ret;
+			throw 0;
 		}
 	}
 	// respect const specifier
 	if(member->attribute.isconst == const_e) {
 		if(token == T_LVALUE_SET) {
 			eh_error("Attempt to write to constant variable", eerror_e);
-			return NULL;
+			throw 0;
 		} else {
-			ret = &(member->value);
+			newcontext = &classobj->obj;
+			return member->value;
 		}
 	} else {
-		ret = &(member->value);
+		newcontext = &classobj->obj;
+		return member->value;
 	}
-	newcontext = &classobj->obj;
-	return ret;
+	throw 0;
 }
 /*
  * Arrays
  */
-void EHI::array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t context) {
-	unsigned int vhash;
-	ehretval_t *var;
-
-	// new array member
-	ehvar_t *member = new ehvar_t;
-
+void EHI::array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t context) {
 	/*
 	 * We'll assume we're always getting a correct ehretval_t *, referring to a
 	 * T_ARRAYMEMBER token. If there is 1 parameter, that means it's a
@@ -1642,69 +1588,22 @@ void EHI::array_insert(ehvar_t **array, ehretval_t *in, int place, ehcontext_t c
 	 */
 	if(in->opval->nparas == 1) {
 		// if there is no explicit key, simply use the place argument
-		vhash = place % VARTABLE_S;
-		var = eh_execute(in->opval->paras[0], context);
-		member->indextype = int_e;
-		member->index = place;
+		array->int_indices[place] = eh_execute(in->opval->paras[0], context);
 	} else {
 		const ehretval_t *label = eh_execute(in->opval->paras[0], context);
+		ehretval_t *var = eh_execute(in->opval->paras[1], context);
 		switch(EH_TYPE(label)) {
 			case int_e:
-				vhash = label->intval % VARTABLE_S;
-				member->indextype = int_e;
-				member->index = label->intval;
+				array->int_indices[label->intval] = var;
 				break;
 			case string_e:
-				vhash = hash(label->stringval, 0);
-				member->indextype = string_e;
-				member->name = label->stringval;
+				array->string_indices[label->stringval] = var;
 				break;
 			default:
 				eh_error_type("array member label", EH_TYPE(label), enotice_e);
-				delete member;
-				return;
+				break;
 		}
-		var = eh_execute(in->opval->paras[1], context);
 	}
-
-	// create array member
-	member->value = new ehretval_t;
-	member->value = var;
-	// set next to NULL by default
-	member->next = NULL;
-
-	// insert it into the hashtable
-	ehvar_t **currptr = &array[vhash];
-	switch(member->indextype) {
-		case int_e:
-			while(*currptr != NULL) {
-				if((*currptr)->indextype == int_e 
-				  && (*currptr)->index == member->index) {
-					// replace this array member
-					member->next = (*currptr)->next;
-					delete (*currptr);
-					*currptr = member;
-					return;
-				}
-				currptr = &(*currptr)->next;
-			}
-			break;
-		case string_e:
-			while(*currptr != NULL) {
-				if((*currptr)->indextype == string_e 
-				  && !strcmp((*currptr)->name, member->name)) {
-					member->next = (*currptr)->next;
-					delete (*currptr);
-					*currptr = member;
-					return;
-				}
-				currptr = &(*currptr)->next;
-			}
-			break;
-		default: // to keep the compiler happy
-			break;
-	}
-	*currptr = member;
 	return;
 }
 /*
@@ -1726,13 +1625,11 @@ void EHI::eh_setarg(int argc, char **argv) {
 	argv_v->value = new ehretval_t(array_e);
 	argv_v->scope = global_scope.top();
 	argv_v->name = "argv";
-	argv_v->value->arrayval = new ehvar_t *[VARTABLE_S]();
+	argv_v->value->arrayval = new eharray_t;
 
 	// all members of argv are strings
 	for(int i = 1; i < argc; i++) {
-		ehretval_t index(i - 1);
-		ehretval_t *ret = new ehretval_t(argv[i]);
-		array_insert_retval(argv_v->value->arrayval, &index, ret);
+		argv_v->value->arrayval->int_indices[i - 1] = new ehretval_t(argv[i]);
 	}
 	insert_variable(argv_v);
 }
@@ -1786,7 +1683,7 @@ ehretval_t *eh_count(const ehretval_t *in) {
 			ret->intval = strlen(in->stringval);
 			break;
 		case array_e:
-			ret->intval = array_count(in->arrayval);
+			ret->intval = in->arrayval->size();
 			break;
 		case null_e:
 			ret->intval = 0;
@@ -1879,7 +1776,7 @@ void class_copy_member(ehobj_t *classobj, ehvar_t *classmember, int i) {
 		newmember->value->type = object_e;
 		newmember->value->objectval = classobj;
 	} else if(classmember->attribute.isstatic == static_e) {
-		newmember->value = classmember->value->reference(&(classmember->value));
+		newmember->value = classmember->value->reference(classmember->value);
 	} else {
 		newmember->value = classmember->value->share();
 	}
@@ -2012,18 +1909,10 @@ char *eh_rangetostring(const ehrange_t *const range) {
 	
 	return buffer;
 }
-ehvar_t **eh_rangetoarray(const ehrange_t *const range) {
-	ehretval_t *index;
-	ehretval_t *member;
-
-	ehvar_t **ret = new ehvar_t *[VARTABLE_S]();
-	index = new ehretval_t(0);
-	member = new ehretval_t(range->min);
-	array_insert_retval(ret, index, member);
-	index = new ehretval_t(1);
-	member = new ehretval_t(range->max);
-	array_insert_retval(ret, index, member);
-
+eharray_t *eh_rangetoarray(const ehrange_t *const range) {
+	eharray_t *ret = new eharray_t;
+	ret->int_indices[0] = new ehretval_t(range->min);
+	ret->int_indices[1] = new ehretval_t(range->max);
 	return ret;
 }
 ehretval_t *eh_stringtorange(const char *const in) {
@@ -2134,7 +2023,7 @@ bool eh_xtobool(ehretval_t *in) {
 			return (in->stringval[0] != '\0');
 		case array_e:
 			// empty arrays should return false
-			return (array_count(in->arrayval) != 0);
+			return (in->arrayval->size() != 0);
 		case range_e:
 			// range of length zero is false, everything else is true
 			return (in->rangeval->min == in->rangeval->max);
@@ -2205,7 +2094,6 @@ ehretval_t *eh_xtorange(ehretval_t *in) {
 }
 ehretval_t *eh_xtoarray(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	ehretval_t index(0);
 	switch(EH_TYPE(in)) {
 		case array_e:
 			ret = in;
@@ -2222,8 +2110,8 @@ ehretval_t *eh_xtoarray(ehretval_t *in) {
 		case object_e:
 			// create an array with just this variable in it
 			ret = new ehretval_t(array_e);
-			ret->arrayval = new ehvar_t *[VARTABLE_S]();
-			array_insert_retval(ret->arrayval, &index, in);
+			ret->arrayval = new eharray_t;
+			ret->arrayval->int_indices[0] = in;
 			break;
 		default:
 			CASTERROR(array);
@@ -2291,91 +2179,20 @@ bool eh_strictequals(ehretval_t *operand1, ehretval_t *operand2) {
 /*
  * Arrays.
  */
-ehvar_t *array_insert_retval(ehvar_t **array, ehretval_t *index, ehretval_t *value) {
+void array_insert_retval(eharray_t *array, ehretval_t *index, ehretval_t *value) {
 	// Inserts a member into an array. 
-	// Assumes that the member is not yet present in the array.
-	unsigned int vhash;
-
-	ehvar_t *const newvar = new ehvar_t;
-	newvar->indextype = EH_TYPE(index);
 	switch(EH_TYPE(index)) {
 		case int_e:
-			vhash = index->intval % VARTABLE_S;
-			newvar->index = index->intval;
+			array->int_indices[index->intval] = value;
 			break;
 		case string_e:
-			vhash = hash(index->stringval, 0);
-			newvar->name = index->stringval;
+			array->string_indices[index->stringval] = value;
 			break;
 		default:
 			eh_error_type("array index", EH_TYPE(index), enotice_e);
-			delete newvar;
-			return NULL;
-	}
-	newvar->next = array[vhash];
-	array[vhash] = newvar;
-	// increase refcount?
-	newvar->value = value;
-	return newvar;
-}
-ehvar_t *array_getmember(ehvar_t **array, ehretval_t *index) {
-	ehvar_t *curr;
-	unsigned int vhash;
-
-	switch(EH_TYPE(index)) {
-		case int_e:
-			vhash = index->intval % VARTABLE_S;
 			break;
-		case string_e:
-			vhash = hash(index->stringval, 0);
-			break;
-		default:
-			eh_error_type("array index", EH_TYPE(index), enotice_e);
-			return NULL;
-	}
-	curr = array[vhash];
-	switch(index->type) {
-		case int_e:
-			for( ; curr != NULL; curr = curr->next) {
-				if(curr->indextype == int_e && curr->index == index->intval) {
-					return curr;
-				}
-			}
-			break;
-		case string_e:
-			for( ; curr != NULL; curr = curr->next) {
-				if(curr->indextype == string_e 
-				  && !strcmp(curr->name, index->stringval)) {
-					return curr;
-				}
-			}
-			break;
-		default: // to keep compiler happy (issues caught by previous switch)
-			break;
-	}
-	return NULL;
-}
-ehretval_t *array_get(ehvar_t **array, ehretval_t *index) {
-	const ehvar_t *curr = array_getmember(array, index);
-	if(curr == NULL) {
-		return NULL;
-	} else {
-		// should this increase the refcount?
-		return curr->value;
 	}
 }
-int array_count(ehvar_t **array) {
-	// count the members of an array
-	int count = 0;
-
-	for(int i = 0; i < VARTABLE_S; i++) {
-		for(ehvar_t *curr = array[i]; curr != NULL; curr = curr->next) {
-			count++;
-		}
-	}
-	return count;
-}
-
 /*
  * Variants of array access
  */
@@ -2567,5 +2384,20 @@ void make_arglist(int *argcount, eharg_t **arglist, ehretval_t *node) {
 		tmp = tmp->opval->paras[0]) {
 		(*arglist)[currarg].name = tmp->opval->paras[1]->stringval;
 		currarg++;
+	}
+}
+
+/*
+ * Other classes
+ */
+ehretval_t * &eharray_t::operator[](ehretval_t *index) {
+	switch(EH_TYPE(index)) {
+		case int_e:
+			return int_indices[index->intval];
+		case string_e:
+			return string_indices[index->stringval];
+		default:
+			eh_error_type("array index", EH_TYPE(index), enotice_e);
+			throw new std::exception;
 	}
 }

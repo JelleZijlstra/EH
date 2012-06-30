@@ -37,7 +37,8 @@ void ehretval_t::free() {
 			delete objectval;
 			break;
 		case array_e:
-			free_vartable(arrayval);
+			//TODO: kill maps effectively
+			//free_vartable(arrayval);
 			break;
 	}
 	// Suicide. Cf. 

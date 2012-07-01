@@ -487,7 +487,7 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 								operand1->intval--;
 								break;
 							default:
-								eh_error_type("-- operator", operand1->type, eerror_e);
+								eh_error_type("-- operator", EH_TYPE(operand1), eerror_e);
 								break;
 						}
 						operand1->dec_rc();
@@ -503,7 +503,7 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 								operand1->intval++;
 								break;
 							default:
-								eh_error_type("++ operator", operand1->type, eerror_e);
+								eh_error_type("++ operator", EH_TYPE(operand1), eerror_e);
 								break;
 						}
 						operand1->dec_rc();
@@ -1224,8 +1224,8 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 					}
 					break;
 				case object_e:
-					if(index->type != string_e) {
-						eh_error_type("access to object", index->type, eerror_e);
+					if(EH_TYPE(index) != string_e) {
+						eh_error_type("access to object", EH_TYPE(index), eerror_e);
 					} else {
 						ehmember_t *member = basevar->objectval->get(index->stringval, context, T_LVALUE_GET);
 						if(member == NULL) {
@@ -1296,7 +1296,7 @@ ehretval_t *EHI::call_function(ehobj_t *obj, ehretval_t *args, ehcontext_t conte
 		// if it's a reference, dereference it
 		if(EH_TYPE(var->value) == reference_e) {
 			var->value = var->value->referenceval;
-		} else {
+		} else if(var->value != NULL) {
 			var->value = var->value->share();
 		}
 		newcontext->insert(f->args[i - 1].name, var);
@@ -1565,7 +1565,7 @@ ehretval_t *eh_count(const ehretval_t *in) {
 			ret->intval = 2;
 			break;
 		default:
-			eh_error_type("count operator", in->type, eerror_e);
+			eh_error_type("count operator", EH_TYPE(in), eerror_e);
 			ret->type = null_e;
 			break;
 	}
@@ -1583,7 +1583,7 @@ ehretval_t *eh_op_tilde(ehretval_t *in) {
 		default:
 			in = eh_xtoint(in);
 			if(EH_TYPE(in) != int_e) {
-				eh_error_type("bitwise negation", in->type, eerror_e);
+				eh_error_type("bitwise negation", EH_TYPE(in), eerror_e);
 				return ret;
 			}
 			// fall through to int case
@@ -1606,7 +1606,7 @@ ehretval_t *eh_op_uminus(ehretval_t *in) {
 		default:
 			in = eh_xtoint(in);
 			if(EH_TYPE(in) != int_e) {
-				eh_error_type("negation", in->type, eerror_e);
+				eh_error_type("negation", EH_TYPE(in), eerror_e);
 				return ret;
 			}
 			// fall through to int case
@@ -1703,7 +1703,7 @@ ehretval_t *eh_cast(const type_enum type, ehretval_t *in) {
 }
 
 #define CASTERROR(totype) do { \
-	eh_error_type("typecast to " #totype, in->type, enotice_e); \
+	eh_error_type("typecast to " #totype, EH_TYPE(in), enotice_e); \
 	return NULL; \
 } while(0)
 #define CASTERROR_KNOWN(totype, vtype) do { \
@@ -2209,7 +2209,7 @@ void print_retval(const ehretval_t *ret) {
 			printf("%d to %d", ret->rangeval->min, ret->rangeval->max);
 			break;
 		default:
-			eh_error_type("echo operator", ret->type, enotice_e);
+			eh_error_type("echo operator", EH_TYPE(ret), enotice_e);
 			break;
 	}
 	return;

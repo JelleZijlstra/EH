@@ -9,10 +9,6 @@
 #include "eh.bison.hpp"
 #include <cmath>
 
-void printvar_retval(const ehretval_t *in);
-static void printvar_array(eharray_t *in);
-static void printvar_object(ehobj_t *in);
-
 // get arguments, and error if there are too many or few
 // Args should have enough memory malloc'ed to it to house n arguments.
 // Return 0 on success, -1 on too few, 1 on too many arguments.
@@ -33,26 +29,26 @@ int eh_getargs(ehretval_t *paras, int n, ehretval_t **args, ehcontext_t context,
 	return 0;
 }
 
-EHLIBFUNC(getinput) {
-	// more accurately, getint
-	*retval = new ehretval_t(int_e);
-	fscanf(stdin, "%d", &((*retval)->intval));
-	return;
-}
+/*
+ * printvar
+ */
 
-EHLIBFUNC(printvar) {
-	// this function always returns NULL
-	*retval = NULL;
+class printvar_t {
+private:
+	std::map<const void *, bool> seen;
+	
+	void retval(ehretval_t *in);
+	void array(eharray_t *in);
+	void object(ehobj_t *in);
 
-	// check argument count
-	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__, obj))
-		return;
-	printvar_retval(args[0]);
-	return;
-}
+public:
+	printvar_t(ehretval_t *in) : seen() {
+		this->retval(in);
+	}
+};
+
 // helper functions for printvar
-void printvar_retval(const ehretval_t *in) {
+void printvar_t::retval(ehretval_t *in) {
 	switch(EH_TYPE(in)) {
 		case null_e:
 			printf("null\n");
@@ -63,25 +59,35 @@ void printvar_retval(const ehretval_t *in) {
 		case string_e:
 			printf("@string '%s'\n", in->stringval);
 			break;
-		case array_e:
-			printf("@array [\n");
-			printvar_array(in->arrayval);
-			printf("]\n");
-			break;
 		case bool_e:
 			if(in->boolval)
 				printf("@bool true\n");
 			else
 				printf("@bool false\n");
 			break;
+		case array_e:
+			if(this->seen.count((void *)in->arrayval) == 0) {
+				this->seen[(void *)in->arrayval] = true;
+				printf("@array [\n");
+				this->array(in->arrayval);
+				printf("]\n");
+			} else {
+				printf("(recursion)\n");
+			}
+			break;
 		case object_e:
-			printf("@object <%s> [\n", in->objectval->classname);
-			printvar_object(in->objectval);
-			printf("]\n");
+			if(this->seen.count((void *)in->objectval) == 0) {
+				this->seen[(void *)in->objectval] = true;
+				printf("@object <%s> [\n", in->objectval->classname);
+				this->object(in->objectval);
+				printf("]\n");
+			} else {
+				printf("(recursion)\n");
+			}
 			break;
 		case creference_e:
 		case reference_e:
-			printvar_retval(in->referenceval);
+			this->retval(in->referenceval);
 			break;
 		case func_e:
 			printf("@function <");
@@ -128,7 +134,7 @@ void printvar_retval(const ehretval_t *in) {
 	}
 	return;
 }
-static void printvar_object(ehobj_t *in) {
+void printvar_t::object(ehobj_t *in) {
 	OBJECT_FOR_EACH(in, curr) {
 		// ignore $this
 		if(curr->first.compare("this") == 0) {
@@ -161,29 +167,32 @@ static void printvar_object(ehobj_t *in) {
 				break;
 		}
 		printf(">: ");
-		
-		// primitive recursion check. This makes printvar: $globals work,
-		// but obviously it is still possible to construct objects that send
-		// printvar into an infinite loop.
-		if(EH_TYPE(curr->second->value) == object_e && curr->second->value->objectval == in) {
-			printf("(recursion)\n");
-		} else {
-			printvar_retval(curr->second->value);
-		}
+		this->retval(curr->second->value);
 	}
 }
-
-static void printvar_array(eharray_t *in) {
+void printvar_t::array(eharray_t *in) {
 	// iterate over strings
 	ARRAY_FOR_EACH_STRING(in, i) {
 		printf("'%s' => ", i->first.c_str());
-		printvar_retval(i->second);	
+		this->retval(i->second);	
 	}
 	// and ints
 	ARRAY_FOR_EACH_INT(in, i) {
 		printf("%d => ", i->first);
-		printvar_retval(i->second);	
+		this->retval(i->second);	
 	}
+}
+
+EHLIBFUNC(printvar) {
+	// this function always returns NULL
+	*retval = NULL;
+
+	// check argument count
+	ehretval_t *args[1];
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__, obj))
+		return;
+	printvar_t printer(args[0]);
+	return;
 }
 
 /*
@@ -310,4 +319,11 @@ EHLIBFUNC(eval) {
 		EHLF_RETFALSE;	
 	}
 	*retval = new ehretval_t(obj->parse_string(arg->stringval));
+}
+
+EHLIBFUNC(getinput) {
+	// more accurately, getint
+	*retval = new ehretval_t(int_e);
+	fscanf(stdin, "%d", &((*retval)->intval));
+	return;
 }

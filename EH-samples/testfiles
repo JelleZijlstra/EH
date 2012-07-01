@@ -123,3 +123,4 @@ classscope.eh
 globalref.eh
 constarray.eh
 printglobal.eh
+globalrecursion.eh

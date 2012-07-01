@@ -56,6 +56,7 @@ EHParser *yyget_extra(void *scanner);
 %token T_CLASS
 %token T_ENDCLASS
 %token T_CLASSMEMBER
+%token T_INHERIT
 %token T_LVALUE_GET T_LVALUE_SET
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
@@ -219,6 +220,7 @@ statement:
 	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC
 							{ $$ = eh_addnode(T_CLASSMEMBER, 3, $1, $2, 
 									eh_addnode(T_FUNC, 2, $4, $6)); }
+	| T_INHERIT bareword	{ $$ = eh_addnode(T_INHERIT, 1, $2); }
 	;
 
 expression:

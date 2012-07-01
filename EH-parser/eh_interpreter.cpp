@@ -322,6 +322,9 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 				case T_CLASSMEMBER:
 					eh_op_classmember(node->opval, context);
 					break;
+				case T_INHERIT:
+					eh_op_inherit(node->opval->paras[0]->stringval, context);
+					break;
 				case T_ATTRIBUTE: // class member attributes
 					if(node->opval->nparas == 0) {
 						ret = new ehretval_t(attributestr_e);
@@ -742,6 +745,39 @@ ehretval_t *EHI::eh_op_new(const char *name, ehcontext_t context) {
 	ehretval_t *ret = new ehretval_t(object_e);
 	ret->objectval = object_instantiate(&classobj->obj);
 	return ret;
+}
+void EHI::eh_op_inherit(const char *name, ehcontext_t context) {
+	ehclass_t *classobj = get_class(name);
+	if(classobj == NULL) {
+		eh_error_unknown("class", name, eerror_e);
+		return;
+	}
+/*
+TODO: handle scope properly. Scenario:
+class A {
+	a := 3
+	class B {
+		public b: {
+			echo $a
+		}
+	}
+}
+
+class C {
+	a := 4
+	class D {
+		inherit B
+	}
+	o := new D
+	$o->b:
+}
+
+This will print 4; it should print 3. The solution must complicate scoping rules somehow; perhaps functions need an additional parent pointer.
+
+*/
+	OBJECT_FOR_EACH(&classobj->obj, i) {
+		class_copy_member(context, i);
+	}
 }
 void EHI::eh_op_break(opnode_t *op, ehcontext_t context) {
 	int level;

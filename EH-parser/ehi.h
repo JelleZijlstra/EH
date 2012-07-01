@@ -42,6 +42,7 @@ private:
 	ehretval_t *eh_op_while(ehretval_t **paras, ehcontext_t context);
 	ehretval_t *eh_op_as(opnode_t *op, ehcontext_t context);
 	ehretval_t *eh_op_new(const char *name, ehcontext_t context);
+	void eh_op_inherit(const char *name, ehcontext_t context);
 	void eh_op_continue(opnode_t *op, ehcontext_t context);
 	void eh_op_break(opnode_t *op, ehcontext_t context);
 	ehretval_t *eh_op_array(ehretval_t *node, ehcontext_t context);

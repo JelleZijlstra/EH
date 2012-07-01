@@ -122,3 +122,4 @@ inherit.eh
 classscope.eh
 globalref.eh
 constarray.eh
+printglobal.eh

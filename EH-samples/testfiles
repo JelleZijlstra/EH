@@ -121,3 +121,4 @@ classerrors.eh
 inherit.eh
 classscope.eh
 globalref.eh
+constarray.eh

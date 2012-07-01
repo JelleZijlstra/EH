@@ -243,7 +243,7 @@ expression:
 							{
 								$$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3);
 							}
-	| '$' expression %prec '$'
+	| '$' expression
 							{ $$ = eh_addnode('$', 1, $2); }
 	| '&' lvalue_get %prec T_REFERENCE
 							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }

@@ -347,6 +347,7 @@ public:
 	struct ehfm_t *function;
 	const char *classname;
 	struct ehobj_t *parent;
+	struct ehobj_t *real_parent;
 	union {
 		// for instantiated and non-instantiated library classes
 		void *selfptr;
@@ -359,7 +360,7 @@ public:
 	typedef obj_map::iterator obj_iterator;
 	
 	// constructors
-	ehobj_t() : function(NULL), classname(NULL), parent(NULL), members() {}
+	ehobj_t() : function(NULL), classname(NULL), parent(NULL), real_parent(NULL), selfptr(NULL), members() {}
 
 	// methods
 	size_t size() {
@@ -395,14 +396,13 @@ typedef struct ehfm_t {
 	functype_enum type;
 	int argcount;
 	eharg_t *args;
-	ehobj_t *real_parent;
 	union {
 		ehretval_t *code;
 		ehlibfunc_t libfunc_pointer;
 		ehlibmethod_t libmethod_pointer;
 	};
 	
-	ehfm_t(functype_enum _type = user_e, int _argcount = 0, eharg_t *_args = NULL, ehobj_t *_real_parent = NULL) : type(_type), argcount(_argcount), args(_args), real_parent(_real_parent) {}
+	ehfm_t(functype_enum _type) : type(_type), argcount(0), args(NULL), code(NULL) {}
 } ehfm_t;
 
 // range

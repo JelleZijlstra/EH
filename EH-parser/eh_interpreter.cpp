@@ -194,6 +194,15 @@ void EHI::eh_init(void) {
 	for(int i = 0; libredirs[i][0] != NULL; i++) {
 		redirect_command(libredirs[i][0], libredirs[i][1]);
 	}
+	// insert reference to global object
+	memberattribute_t attributes;
+	attributes.visibility = public_e;
+	attributes.isconst = const_e;
+	attributes.isstatic = nonstatic_e;
+	ehmember_t *global = new ehmember_t(attributes);
+	global->value = new ehretval_t(object_e);
+	global->value->objectval = global_object;
+	global_object->insert("global", global);
 	return;
 }
 void EHI::eh_exit(void) {

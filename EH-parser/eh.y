@@ -83,7 +83,7 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_get lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
 %%
 program:
 	global_list				{ 
@@ -593,7 +593,12 @@ lvalue_get:
 	;
 
 attributelist:
-	attributelist T_ATTRIBUTE
+	attributelist_inner T_ATTRIBUTE
+							{ $$ = eh_addnode(T_ATTRIBUTE, 2, $1, 
+								eh_get_attribute($2)); }
+
+attributelist_inner:
+	attributelist_inner T_ATTRIBUTE
 							{ $$ = eh_addnode(T_ATTRIBUTE, 2, $1, 
 								eh_get_attribute($2)); }
 	| /* NULL */			{ $$ = eh_addnode(T_ATTRIBUTE, 0); }

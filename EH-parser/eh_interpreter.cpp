@@ -2167,6 +2167,10 @@ ehretval_t * &eharray_t::operator[](ehretval_t *index) {
 	}
 }
 ehmember_t *ehobj_t::insert_retval(const char *name, memberattribute_t attribute, ehretval_t *value) {
+	if(this->has(name)) {
+		eh_error("object member already set", enotice_e);
+		return NULL;
+	}
 	// insert a member into a class
 	ehmember_t *member = new ehmember_t(attribute);
 	member->value = value;

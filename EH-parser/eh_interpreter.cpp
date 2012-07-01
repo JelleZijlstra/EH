@@ -10,9 +10,13 @@
 #include "eh_libcmds.h"
 #include <cctype>
 
-#define LIBFUNCENTRY(f) {ehlf_ ## f, #f},
 // library functions supported by ehi
-ehlibfunc_t libfuncs[] = {
+typedef struct ehlf_listentry_t {
+	const char *name;
+	ehlibfunc_t code;
+} ehlf_listentry_t;
+#define LIBFUNCENTRY(f) {#f, ehlf_ ## f},
+ehlf_listentry_t libfuncs[] = {
 	LIBFUNCENTRY(getinput)
 	LIBFUNCENTRY(printvar)
 	LIBFUNCENTRY(is_null)
@@ -32,6 +36,10 @@ ehlibfunc_t libfuncs[] = {
 	{NULL, NULL}
 };
 
+typedef struct ehlc_listentry_t {
+	const char *name;
+	ehlibclass_t info;
+} ehlc_listentry_t;
 #define LIBCLASSENTRY(c) { #c, {ehlc_new_ ## c, ehlc_l_ ## c }},
 ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(CountClass)
@@ -39,8 +47,12 @@ ehlc_listentry_t libclasses[] = {
 	{NULL, {NULL, NULL}}
 };
 
+typedef struct ehcmd_listentry_t {
+	const char *name;
+	ehcmd_t cmd;
+} ehcmd_listentry_t;
 #define LIBCMDENTRY(c) { #c, ehlcmd_ ## c },
-ehlibcmd_t libcmds[] = {
+ehcmd_listentry_t libcmds[] = {
 	LIBCMDENTRY(quit)
 	LIBCMDENTRY(echo)
 	LIBCMDENTRY(put)
@@ -158,7 +170,7 @@ void EHI::eh_init(void) {
 		ehfm_t *f = new ehfm_t;
 		func->value->funcval->function = f;
 		f->type = lib_e;
-		f->ptr = libfuncs[i].code;
+		f->libfunc_pointer = libfuncs[i].code;
 		// other fields are irrelevant
 		global_object->insert(libfuncs[i].name, func);
 	}
@@ -167,7 +179,7 @@ void EHI::eh_init(void) {
 		newclass->parent = NULL;
 		newclass->classname = libclasses[i].name;
 		newclass->constructor = libclasses[i].info.constructor;
-		ehlibentry_t *members = libclasses[i].info.members;
+		ehlm_listentry_t *members = libclasses[i].info.members;
 		// attributes for library methods
 		memberattribute_t attributes;
 		attributes.visibility = public_e;
@@ -182,7 +194,7 @@ void EHI::eh_init(void) {
 			ehfm_t *f = new ehfm_t;
 			func->value->funcval->function = f;
 			f->type = libmethod_e;
-			f->mptr = members[i].func;
+			f->libmethod_pointer = members[i].func;
 			newclass->insert(members[i].name, func);
 		}
 		insert_class(newclass);
@@ -1250,10 +1262,10 @@ ehretval_t *EHI::call_function(ehobj_t *obj, ehretval_t *args, ehcontext_t conte
 
 	if(f->type == lib_e) {
 		// library function
-		f->ptr(args, &ret, context, this);
+		f->libfunc_pointer(args, &ret, context, this);
 		return ret;
 	} else if(f->type == libmethod_e) {
-		f->mptr(obj->parent, args, &ret, context, this);
+		f->libmethod_pointer(obj->parent, args, &ret, context, this);
 		return ret;
 	}
 	ehobj_t *newcontext = object_instantiate(obj);

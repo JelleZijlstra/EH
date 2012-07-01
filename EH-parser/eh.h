@@ -288,24 +288,25 @@ typedef struct eharg_t {
 // context
 typedef struct ehobj_t *ehcontext_t;
 
+// library functions, classes, etcetera
+typedef void (*ehlibfunc_t)(ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
+
 typedef void *(*ehconstructor_t)();
 
 typedef void (*ehlibmethod_t)(void *, ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
 
-typedef struct ehlibentry_t {
+typedef struct ehlm_listentry_t {
 	const char *name;
 	ehlibmethod_t func;
-} ehlibentry_t;
+} ehlm_listentry_t;
 
 typedef struct ehlibclass_t {
 	ehconstructor_t constructor;
-	ehlibentry_t *members;
+	ehlm_listentry_t *members;
 } ehlibclass_t;
 
-typedef struct ehlc_listentry_t {
-	const char *name;
-	ehlibclass_t info;
-} ehlc_listentry_t;
+// function executing a command
+typedef ehretval_t *(*ehcmd_t)(eharray_t *paras);
 
 // EH array
 typedef struct eharray_t {
@@ -394,14 +395,6 @@ typedef struct ehrange_t {
 	int max;
 } ehrange_t;
 
-// function executing a command
-typedef ehretval_t *(*ehcmd_t)(eharray_t *paras);
-
-typedef struct ehlibcmd_t {
-	const char *name;
-	ehcmd_t cmd;
-} ehlibcmd_t;
-
 // struct with common infrastructure for procedures and methods
 typedef struct ehfm_t {
 	functype_enum type;
@@ -409,16 +402,12 @@ typedef struct ehfm_t {
 	eharg_t *args;
 	union {
 		ehretval_t *code;
-		void (*ptr)(ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
-		ehlibmethod_t mptr;
+		ehlibfunc_t libfunc_pointer;
+		ehlibmethod_t libmethod_pointer;
 	};
 } ehfm_t;
 
 // EH procedure
-typedef struct ehlibfunc_t {
-	void (*code)(ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
-	const char *name;
-} ehlibfunc_t;
 
 /*
  * EH error system

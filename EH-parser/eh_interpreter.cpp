@@ -97,7 +97,7 @@ static inline int count_nodes(ehretval_t *node);
 			ret = new ehretval_t(int_e); \
 			ret->intval = (operand1->intval operator operand2->intval); \
 		} else { \
-			eh_error_types(#operator, EH_TYPE(operand1), EH_TYPE(operand1), eerror_e); \
+			eh_error_types(#operator, EH_TYPE(operand1), EH_TYPE(operand2), eerror_e); \
 		} \
 	} \
 	break;

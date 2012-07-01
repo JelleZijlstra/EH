@@ -303,8 +303,16 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 					ret = eh_execute(node->opval->paras[0], context);
 					if(returning || breaking || continuing) {
 						return ret;
+					} else {
+						// check for empty statement; this means that the last
+						// actual statement in a function is returned
+						ehretval_t *newNode = node->opval->paras[1];
+						if(EH_TYPE(newNode) == op_e && newNode->opval->op == T_SEPARATOR && newNode->opval->nparas == 0) {
+							return ret;
+						} else {
+							ret = eh_execute(newNode, context);
+						}
 					}
-					ret = eh_execute(node->opval->paras[1], context);
 					break;
 				case T_RET: // return from a function or the program
 					ret = eh_execute(node->opval->paras[0], context);

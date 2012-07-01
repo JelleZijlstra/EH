@@ -63,6 +63,7 @@ EHParser *yyget_extra(void *scanner);
 %token T_EXPRESSION
 %token T_DOUBLEARROW
 %token T_COMMAND T_SHORTPARA T_LONGPARA T_REDIRECT
+%token T_SHORTFUNCTION
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %left T_LOWPREC /* Used to prevent S/R conflicts */
@@ -79,11 +80,11 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc T_RANGE
 %nonassoc '$' T_REFERENCE '~' '!' T_NEGATIVE T_COUNT
 %nonassoc T_NEW
-%nonassoc '`'
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
+%nonassoc T_SHORTFUNCTION
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_get lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_get lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string shortfunc
 %%
 program:
 	global_list				{ 
@@ -184,6 +185,10 @@ statement:
 	| T_FOR expression T_COUNT bareword T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
 							{ $$ = eh_addnode(T_FOR, 3, $2, $4, $6); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
+							{ $$ = eh_addnode(T_SET, 2,
+								eh_addnode(T_LVALUE_SET, 1, $2),
+								eh_addnode(T_FUNC, 2, $4, $6)); }
+	| T_FUNC bareword ':' parglist T_ACCESSOR expression %prec T_SHORTFUNCTION
 							{ $$ = eh_addnode(T_SET, 2,
 								eh_addnode(T_LVALUE_SET, 1, $2),
 								eh_addnode(T_FUNC, 2, $4, $6)); }
@@ -297,6 +302,8 @@ expression:
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
+	| shortfunc expression
+							{ $$ = eh_addnode(T_FUNC, 2, $1, $2); }
 	| T_GIVEN expression '{' exprcaselist '}'
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
@@ -456,6 +463,8 @@ line_expr:
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
 							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
+	| shortfunc expression %prec T_SHORTFUNCTION
+							{ $$ = eh_addnode(T_FUNC, 2, $1, $2); }
 	| T_GIVEN expression '{' exprcaselist '}'
 							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
@@ -464,6 +473,12 @@ line_expr:
 							{ $$ = $2; }
 	| '{' anonclasslist '}'	{ $$ = eh_addnode('{', 1, $2); }
 	;
+
+shortfunc:
+	T_FUNC ':' parglist T_ACCESSOR
+							{ $$ = $3; }
+	;
+
 
 command:
 	bareword paralist		{ $$ = eh_addnode(T_COMMAND, 2, $1, $2); }
@@ -540,7 +555,8 @@ arglist:
 	;
 
 arg:
-	expression %prec T_LOWPREC				{ $$ = $1; }
+	expression %prec T_LOWPREC
+							{ $$ = $1; }
 	| expression ','		{ $$ = $1; }
 	;
 

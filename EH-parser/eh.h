@@ -390,25 +390,26 @@ private:
 } ehobj_t;
 #define OBJECT_FOR_EACH(obj, varname) for(ehobj_t::obj_iterator varname = (obj)->members.begin(), end = (obj)->members.end(); varname != end; varname++)
 
-// range
-typedef struct ehrange_t {
-	int min;
-	int max;
-} ehrange_t;
-
 // struct with common infrastructure for procedures and methods
 typedef struct ehfm_t {
 	functype_enum type;
 	int argcount;
 	eharg_t *args;
+	ehobj_t *real_parent;
 	union {
 		ehretval_t *code;
 		ehlibfunc_t libfunc_pointer;
 		ehlibmethod_t libmethod_pointer;
 	};
+	
+	ehfm_t(functype_enum _type = user_e, int _argcount = 0, eharg_t *_args = NULL, ehobj_t *_real_parent = NULL) : type(_type), argcount(_argcount), args(_args), real_parent(_real_parent) {}
 } ehfm_t;
 
-// EH procedure
+// range
+typedef struct ehrange_t {
+	int min;
+	int max;
+} ehrange_t;
 
 /*
  * EH error system

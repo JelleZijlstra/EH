@@ -167,9 +167,8 @@ void EHI::eh_init(void) {
 		func->value->funcval = new ehobj_t;
 		func->value->funcval->parent = global_object;
 		func->value->funcval->classname = "Closure";
-		ehfm_t *f = new ehfm_t;
+		ehfm_t *f = new ehfm_t(lib_e);
 		func->value->funcval->function = f;
-		f->type = lib_e;
 		f->libfunc_pointer = libfuncs[i].code;
 		// other fields are irrelevant
 		global_object->insert(libfuncs[i].name, func);
@@ -191,9 +190,8 @@ void EHI::eh_init(void) {
 			func->value->funcval = new ehobj_t;
 			func->value->funcval->parent = newclass;
 			func->value->funcval->classname = "Closure";
-			ehfm_t *f = new ehfm_t;
+			ehfm_t *f = new ehfm_t(libmethod_e);
 			func->value->funcval->function = f;
-			f->type = libmethod_e;
 			f->libmethod_pointer = members[i].func;
 			newclass->insert(members[i].name, func);
 		}
@@ -894,9 +892,8 @@ ehretval_t *EHI::eh_op_declareclosure(ehretval_t **paras, ehcontext_t context) {
 	ret->funcval->parent = context;
 	ret->funcval->classname = "Closure";
 
-	ehfm_t *f = new ehfm_t;
+	ehfm_t *f = new ehfm_t(user_e);
 	ret->funcval->function = f;
-	f->type = user_e;
 	f->code = paras[1];
 
 	// determine argument count

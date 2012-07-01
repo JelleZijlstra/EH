@@ -29,7 +29,7 @@ private:
 	int inloop;
 	int breaking;
 	int continuing;
-	std::map<std::string, ehclass_t *> classtable;
+	std::map<std::string, ehobj_t *> classtable;
 	std::map<std::string, ehcmd_t> cmdtable;
 	
 	// hack: used to implement range/string/int access
@@ -67,8 +67,8 @@ private:
 	ehretval_t *call_function(ehobj_t *obj, ehretval_t *args, ehcontext_t context);
 	ehretval_t *call_function_args(ehobj_t *obj, ehcontext_t context, const int nargs, ehretval_t *args);
 	void array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t context);
-	void insert_class(ehclass_t *classobj);
-	ehclass_t *get_class(const char *name);
+	void insert_class(ehobj_t *classobj);
+	ehobj_t *get_class(const char *name);
 	ehretval_t *&object_access(ehretval_t *name, ehretval_t *index, ehcontext_t context, int token);
 	ehretval_t *&colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token);
 	ehobj_t *object_instantiate(ehobj_t *obj);

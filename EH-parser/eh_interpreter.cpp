@@ -163,11 +163,10 @@ void EHI::eh_init(void) {
 		global_object->insert(libfuncs[i].name, func);
 	}
 	for(int i = 0; libclasses[i].name != NULL; i++) {
-		ehclass_t *newclass = new ehclass_t;
-		newclass->type = lib_e;
-		newclass->obj.parent = NULL;
-		newclass->obj.classname = libclasses[i].name;
-		newclass->obj.constructor = libclasses[i].info.constructor;
+		ehobj_t *newclass = new ehobj_t;
+		newclass->parent = NULL;
+		newclass->classname = libclasses[i].name;
+		newclass->constructor = libclasses[i].info.constructor;
 		ehlibentry_t *members = libclasses[i].info.members;
 		// attributes for library methods
 		memberattribute_t attributes;
@@ -178,13 +177,13 @@ void EHI::eh_init(void) {
 			ehmember_t *func = new ehmember_t(attributes);
 			func->value = new ehretval_t(func_e);
 			func->value->funcval = new ehobj_t;
-			func->value->funcval->parent = &newclass->obj;
+			func->value->funcval->parent = newclass;
 			func->value->funcval->classname = "Closure";
 			ehfm_t *f = new ehfm_t;
 			func->value->funcval->function = f;
 			f->type = libmethod_e;
 			f->mptr = members[i].func;
-			newclass->obj.insert(members[i].name, func);
+			newclass->insert(members[i].name, func);
 		}
 		insert_class(newclass);
 	}
@@ -746,17 +745,17 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	return ret;
 }
 ehretval_t *EHI::eh_op_new(const char *name, ehcontext_t context) {
-	ehclass_t *classobj = get_class(name);
+	ehobj_t *classobj = get_class(name);
 	if(classobj == NULL) {
 		eh_error_unknown("class", name, eerror_e);
 		return NULL;
 	}
 	ehretval_t *ret = new ehretval_t(object_e);
-	ret->objectval = object_instantiate(&classobj->obj);
+	ret->objectval = object_instantiate(classobj);
 	return ret;
 }
 void EHI::eh_op_inherit(const char *name, ehcontext_t context) {
-	ehclass_t *classobj = get_class(name);
+	ehobj_t *classobj = get_class(name);
 	if(classobj == NULL) {
 		eh_error_unknown("class", name, eerror_e);
 		return;
@@ -784,7 +783,7 @@ class C {
 This will print 4; it should print 3. The solution must complicate scoping rules somehow; perhaps functions need an additional parent pointer.
 
 */
-	OBJECT_FOR_EACH(&classobj->obj, i) {
+	OBJECT_FOR_EACH(classobj, i) {
 		class_copy_member(context, i);
 	}
 }
@@ -899,25 +898,24 @@ ehretval_t *EHI::eh_op_declareclosure(ehretval_t **paras, ehcontext_t context) {
 }
 void EHI::eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t *classname_r = eh_execute(paras[0], context);
-	ehclass_t *classobj = get_class(classname_r->stringval);
+	ehobj_t *classobj = get_class(classname_r->stringval);
 	if(classobj != NULL) {
 		eh_error_redefine("class", classname_r->stringval, eerror_e);
 		return;
 	}
-	classobj = new ehclass_t;
-	classobj->type = user_e;
-	classobj->obj.classname = classname_r->stringval;
-	classobj->obj.parent = context;
+	classobj = new ehobj_t;
+	classobj->classname = classname_r->stringval;
+	classobj->parent = context;
 	// insert "this" pointer
 	memberattribute_t thisattributes;
 	thisattributes.visibility = private_e;
 	thisattributes.isstatic = nonstatic_e;
 	thisattributes.isconst = const_e;
 	ehretval_t *thisvalue = new ehretval_t(object_e);
-	thisvalue->objectval = &(classobj->obj);
-	classobj->obj.insert_retval("this", thisattributes, thisvalue);
+	thisvalue->objectval = classobj;
+	classobj->insert_retval("this", thisattributes, thisvalue);
 
-	eh_execute(paras[1], &classobj->obj);
+	eh_execute(paras[1], classobj);
 	
 	// don't allow the class to be instantiated within itself
 	insert_class(classobj);
@@ -1367,10 +1365,10 @@ ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
 	}
 	return ret;
 }
-void EHI::insert_class(ehclass_t *classobj) {
-	this->classtable[classobj->obj.classname] = classobj;
+void EHI::insert_class(ehobj_t *classobj) {
+	this->classtable[classobj->classname] = classobj;
 }
-ehclass_t *EHI::get_class(const char *name) {
+ehobj_t *EHI::get_class(const char *name) {
 	if(this->classtable.count(name) == 1) {
 		return this->classtable[name];
 	} else {
@@ -1427,12 +1425,12 @@ ehretval_t *&EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontex
 		eh_error_type("class access", EH_TYPE(operand1), eerror_e);
 		throw 0;
 	}
-	ehclass_t *classobj = get_class(operand1->stringval);
+	ehobj_t *classobj = get_class(operand1->stringval);
 	if(classobj == NULL) {
 		eh_error_unknown("class", operand1->stringval, eerror_e);
 		throw 0;
 	}
-	ehmember_t *member = classobj->obj.get(label->stringval, context, token);
+	ehmember_t *member = classobj->get(label->stringval, context, token);
 	if(member == NULL) {
 		if(token == T_LVALUE_GET) {
 			eh_error_unknown("object member", label->stringval, eerror_e);		

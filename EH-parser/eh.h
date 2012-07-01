@@ -402,12 +402,6 @@ typedef struct ehlibcmd_t {
 	ehcmd_t cmd;
 } ehlibcmd_t;
 
-// class
-typedef struct ehclass_t {
-	ehobj_t obj;
-	functype_enum type;
-} ehclass_t;
-
 // struct with common infrastructure for procedures and methods
 typedef struct ehfm_t {
 	functype_enum type;

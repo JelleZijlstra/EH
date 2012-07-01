@@ -49,6 +49,7 @@ private:
 	void eh_op_declarefunc(ehretval_t **paras);
 	ehretval_t *eh_op_declareclosure(ehretval_t **paras, ehcontext_t context);
 	void eh_op_declareclass(ehretval_t **paras, ehcontext_t context);
+	void eh_op_classmember(opnode_t *op, ehcontext_t context);
 	ehretval_t *eh_op_switch(ehretval_t **paras, ehcontext_t context);
 	ehretval_t *eh_op_given(ehretval_t **paras, ehcontext_t context);
 	ehretval_t *eh_op_colon(ehretval_t **paras, ehcontext_t context);
@@ -67,7 +68,6 @@ private:
 	void array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t context);
 	void insert_class(ehclass_t *classobj);
 	ehclass_t *get_class(const char *name);
-	void class_insert(ehobj_t *obj, const ehretval_t *in, ehcontext_t context);
 	ehretval_t *&object_access(ehretval_t *name, ehretval_t *index, ehcontext_t context, int token);
 	ehretval_t *&colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token);
 	ehobj_t *object_instantiate(ehobj_t *obj);

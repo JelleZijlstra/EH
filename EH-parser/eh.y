@@ -55,6 +55,7 @@ EHParser *yyget_extra(void *scanner);
 %token T_NULL
 %token T_CLASS
 %token T_ENDCLASS
+%token T_CLASSMEMBER
 %token T_LVALUE_GET T_LVALUE_SET
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
@@ -81,7 +82,7 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i classlist classmember lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_get lvalue_set parg attributelist caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string
 %%
 program:
 	global_list				{ 
@@ -145,7 +146,7 @@ statement:
 								eh_addnode(T_FUNC, 2, $4, $6)); }
 	| T_SWITCH expression '{' caselist '}'
 							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
-	| T_CLASS bareword '{' classlist '}'
+	| T_CLASS bareword '{' statement_list '}'
 							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
 		/* Using T_END */
 	| T_IF expression T_SEPARATOR statement_list T_END T_SEPARATOR
@@ -168,7 +169,7 @@ statement:
 								eh_addnode(T_FUNC, 2, $4, $6)); }
 	| T_SWITCH expression T_SEPARATOR caselist T_END T_SEPARATOR
 							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
-	| T_CLASS bareword T_SEPARATOR classlist T_END T_SEPARATOR
+	| T_CLASS bareword T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
 		/* Endif and endfor */
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
@@ -187,7 +188,7 @@ statement:
 								eh_addnode(T_FUNC, 2, $4, $6)); }
 	| T_SWITCH expression T_SEPARATOR caselist T_ENDSWITCH T_SEPARATOR
 							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
-	| T_CLASS bareword T_SEPARATOR classlist T_ENDCLASS T_SEPARATOR
+	| T_CLASS bareword T_SEPARATOR statement_list T_ENDCLASS T_SEPARATOR
 							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
 		/* Other statements */
 	| T_RET expression T_SEPARATOR
@@ -204,6 +205,20 @@ statement:
 								yyerrok;
 								$$ = NULL;
 							}
+							/* property declaration */
+	| attributelist bareword	
+							{ $$ = eh_addnode(T_CLASSMEMBER, 2, $1, $2); }
+	| attributelist bareword '=' expression
+							{ $$ = eh_addnode(T_CLASSMEMBER, 3, $1, $2, $4); }
+	| attributelist bareword ':' parglist '{' statement_list '}'
+							{ $$ = eh_addnode(T_CLASSMEMBER, 3, $1, $2, 
+									eh_addnode(T_FUNC, 2, $4, $6)); }
+	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_END
+							{ $$ = eh_addnode(T_CLASSMEMBER, 3, $1, $2, 
+									eh_addnode(T_FUNC, 2, $4, $6)); }
+	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC
+							{ $$ = eh_addnode(T_CLASSMEMBER, 3, $1, $2, 
+									eh_addnode(T_FUNC, 2, $4, $6)); }
 	;
 
 expression:
@@ -561,13 +576,6 @@ exprcase:
 							{ $$ = eh_addnode(T_CASE, 1, $3); }
 	;
 
-classlist:
-	classmember T_SEPARATOR classlist
-							{ $$ = eh_addnode(',', 2, $1, $3); }
-	| T_SEPARATOR classlist	{ $$ = $2; }
-	| /* NULL */			{ $$ = 0; }
-	;
-
 lvalue_set:
 	bareword				{ $$ = eh_addnode(T_LVALUE_SET, 1, $1); }
 	| bareword T_ACCESSOR expression
@@ -580,26 +588,6 @@ lvalue_get:
 	| bareword T_ACCESSOR expression
 							{ $$ = eh_addnode(T_LVALUE_GET, 3, $1, 
 								eh_get_accessor($2), $3); }
-	;
-
-classmember:
-	attributelist bareword	{ /* property declaration */
-								/* ',' is used as the operator token for those, 
-								 * because it is a suitably generic token 
-								 */
-								$$ = eh_addnode(',', 2, $1, $2);
-							}
-	| attributelist bareword '=' expression
-							{ $$ = eh_addnode(',', 3, $1, $2, $4); }
-	| attributelist bareword ':' parglist '{' statement_list '}'
-							{ $$ = eh_addnode(',', 3, $1, $2, 
-									eh_addnode(T_FUNC, 2, $4, $6)); }
-	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(',', 3, $1, $2, 
-									eh_addnode(T_FUNC, 2, $4, $6)); }
-	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC
-							{ $$ = eh_addnode(',', 3, $1, $2, 
-									eh_addnode(T_FUNC, 2, $4, $6)); }
 	;
 
 attributelist:

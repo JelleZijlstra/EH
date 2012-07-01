@@ -319,6 +319,9 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 				case T_CLASS: // class declaration
 					eh_op_declareclass(node->opval->paras, context);
 					break;
+				case T_CLASSMEMBER:
+					eh_op_classmember(node->opval, context);
+					break;
 				case T_ATTRIBUTE: // class member attributes
 					if(node->opval->nparas == 0) {
 						ret = new ehretval_t(attributestr_e);
@@ -860,15 +863,6 @@ void EHI::eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	classobj->type = user_e;
 	classobj->obj.classname = classname_r->stringval;
 	classobj->obj.parent = context;
-	// insert class members
-	for(ehretval_t *node = paras[1]; node != NULL; node = node->opval->paras[1]) {
-		if(node->type == op_e && node->opval->op == ',') {
-			class_insert(&classobj->obj, node->opval->paras[0], &classobj->obj);
-		} else {
-			class_insert(&classobj->obj, node, &classobj->obj);
-			break;
-		}
-	}
 	// insert "this" pointer
 	memberattribute_t thisattributes;
 	thisattributes.visibility = private_e;
@@ -877,8 +871,29 @@ void EHI::eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t *thisvalue = new ehretval_t(object_e);
 	thisvalue->objectval = &(classobj->obj);
 	classobj->obj.insert_retval("this", thisattributes, thisvalue);
+
+	eh_execute(paras[1], &classobj->obj);
+	
+	// don't allow the class to be instantiated within itself
 	insert_class(classobj);
-	return;
+}
+void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
+	// rely on standard layout of the paras
+	ehretval_t *attribute_v = eh_execute(op->paras[0], context);
+	memberattribute_t attribute = attribute_v->attributestrval;
+	char *name = op->paras[1]->stringval;
+
+	// decide what we got
+	ehretval_t *value;
+	switch(op->nparas) {
+		case 2: // non-set property: null
+			value = NULL;
+			break;
+		case 3: // set property
+			value = eh_execute(op->paras[2], context);
+			break;
+	}
+	context->insert_retval(name, attribute, value);
 }
 ehretval_t *EHI::eh_op_switch(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t *ret = NULL;
@@ -1317,27 +1332,6 @@ ehclass_t *EHI::get_class(const char *name) {
 		return NULL;
 	}
 }
-void EHI::class_insert(ehobj_t *obj, const ehretval_t *in, ehcontext_t context) {
-	// insert a member into a class
-	ehretval_t *value;
-
-	// rely on standard layout of the input ehretval_t
-	ehretval_t *attribute_v = eh_execute(in->opval->paras[0], context);
-	memberattribute_t attribute = attribute_v->attributestrval;
-	attribute_v->dec_rc();
-	char *name = in->opval->paras[1]->stringval;
-
-	// decide what we got
-	switch(in->opval->nparas) {
-		case 2: // non-set property: null
-			value = new ehretval_t(null_e);
-			break;
-		case 3: // set property
-			value = eh_execute(in->opval->paras[2], context);
-			break;
-	}
-	obj->insert_retval(name, attribute, value);
-}
 ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token) {
 	ehmember_t *member;
 
@@ -1586,8 +1580,12 @@ void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember) {
 		newmember->value = new ehretval_t(object_e);
 		newmember->value->objectval = classobj;
 	} else if(classmember->second->attribute.isstatic == static_e) {
+		// can't share NULL
+		if(classmember->second->value == NULL) {
+			classmember->second->value = new ehretval_t(null_e);
+		}
 		newmember->value = classmember->second->value->reference(classmember->second->value);
-	} else if(classmember->second->value->type == func_e) {
+	} else if(EH_TYPE(classmember->second->value) == func_e) {
 		newmember->value = new ehretval_t(func_e);
 		newmember->value->funcval = new ehobj_t();
 		newmember->value->funcval->parent = classobj;
@@ -1595,6 +1593,8 @@ void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember) {
 		newmember->value->funcval->function = oldobj->function;
 		newmember->value->funcval->classname = oldobj->classname;
 		newmember->value->funcval->members = oldobj->members;
+	} else if(classmember->second->value == NULL) {
+		newmember->value = NULL;
 	} else {
 		newmember->value = classmember->second->value->share();
 	}

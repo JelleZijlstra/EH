@@ -106,7 +106,7 @@ typedef struct opnode_t {
 	struct ehretval_t **paras; // Parameters
 } opnode_t;
 
-// EH variable, and generic node
+// EH value, and generic node
 typedef struct ehretval_t {
 	type_enum type;
 	union {
@@ -260,6 +260,7 @@ private:
 	short is_shared;
 } ehretval_t;
 
+// Variables and object members (which are the same)
 typedef struct ehmember_t {
 	memberattribute_t attribute;
 	struct ehretval_t *value;

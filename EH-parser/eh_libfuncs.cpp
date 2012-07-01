@@ -134,6 +134,7 @@ static void printvar_object(ehobj_t *in) {
 		if(curr->first.compare("this") == 0) {
 			continue;
 		}
+		
 		printf("%s <", curr->first.c_str());
 		switch(curr->second->attribute.visibility) {
 			case public_e:
@@ -160,7 +161,15 @@ static void printvar_object(ehobj_t *in) {
 				break;
 		}
 		printf(">: ");
-		printvar_retval(curr->second->value);	
+		
+		// primitive recursion check. This makes printvar: $globals work,
+		// but obviously it is still possible to construct objects that send
+		// printvar into an infinite loop.
+		if(EH_TYPE(curr->second->value) == object_e && curr->second->value->objectval == in) {
+			printf("(recursion)\n");
+		} else {
+			printvar_retval(curr->second->value);
+		}
 	}
 }
 

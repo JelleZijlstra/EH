@@ -1651,7 +1651,7 @@ void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember, bo
 		newmember->value->funcval = f;
 		f->parent = classobj;
 		ehobj_t *oldobj = classmember->second->value->funcval;
-		if(set_real_parent) {
+		if(set_real_parent && oldobj->real_parent == NULL) {
 			f->real_parent = oldobj->parent->parent;
 		} else {
 			f->real_parent = oldobj->real_parent;

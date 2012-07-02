@@ -127,3 +127,4 @@ globalrecursion.eh
 implicitreturn.eh
 shortfunction.eh
 inheritscope.eh
+complexinherit.eh

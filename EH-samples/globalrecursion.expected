@@ -1,4 +1,18 @@
 @object <AnonymousClass> [
+A <public,non-static,non-constant>: @class <A> [
+foo <public,non-static,non-constant>: (recursion)
+]
+CountClass <public,non-static,non-constant>: @class <CountClass> [
+docount <public,non-static,non-constant>: @function <library method>: 
+setcount <public,non-static,non-constant>: @function <library method>: 
+]
+File <public,non-static,non-constant>: @class <File> [
+close <public,non-static,non-constant>: @function <library method>: 
+getc <public,non-static,non-constant>: @function <library method>: 
+gets <public,non-static,non-constant>: @function <library method>: 
+open <public,non-static,non-constant>: @function <library method>: 
+puts <public,non-static,non-constant>: @function <library method>: 
+]
 argc <public,non-static,non-constant>: @int 1
 argv <public,non-static,non-constant>: @array [
 0 => @string 'globalrecursion.eh'

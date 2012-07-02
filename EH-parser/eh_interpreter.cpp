@@ -153,7 +153,7 @@ static inline int count_nodes(ehretval_t *node);
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), classtable(), cmdtable(), arrow_access_curr(new ehretval_t(attribute_e)), returning(false), global_object(NULL) {
+EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), arrow_access_curr(new ehretval_t(attribute_e)), returning(false), global_object(NULL) {
 		eh_init();
 	}
 void EHI::eh_init(void) {
@@ -195,7 +195,10 @@ void EHI::eh_init(void) {
 			f->libmethod_pointer = members[i].func;
 			newclass->insert(members[i].name, func);
 		}
-		insert_class(newclass);
+		ehmember_t *member = new ehmember_t(attributes);
+		member->value = new ehretval_t(class_e);
+		member->value->classval = newclass;
+		global_object->insert(newclass->classname, member);
 	}
 	for(int i = 0; libcmds[i].name != NULL; i++) {
 		insert_command(libcmds[i].name, libcmds[i].cmd);
@@ -332,9 +335,7 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 					ret = eh_op_accessor(node->opval->paras, context);
 					break;
 				case T_NEW: // object declaration
-					ret = eh_op_new(
-						eh_execute(node->opval->paras[0], context)->stringval, context
-					);
+					ret = eh_op_new(node->opval->paras, context);
 					break;
 			/*
 			 * Object definitions
@@ -343,13 +344,13 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 					ret = eh_op_declareclosure(node->opval->paras, context);
 					break;
 				case T_CLASS: // class declaration
-					eh_op_declareclass(node->opval->paras, context);
+					ret = eh_op_declareclass(node->opval, context);
 					break;
 				case T_CLASSMEMBER:
 					eh_op_classmember(node->opval, context);
 					break;
 				case T_INHERIT:
-					eh_op_inherit(node->opval->paras[0]->stringval, context);
+					eh_op_inherit(node->opval->paras, context);
 					break;
 				case T_ATTRIBUTE: // class member attributes
 					if(node->opval->nparas == 0) {
@@ -762,47 +763,22 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	inloop--;
 	return ret;
 }
-ehretval_t *EHI::eh_op_new(const char *name, ehcontext_t context) {
-	ehobj_t *classobj = get_class(name);
-	if(classobj == NULL) {
-		eh_error_unknown("class", name, eerror_e);
-		return NULL;
+ehretval_t *EHI::eh_op_new(ehretval_t **paras, ehcontext_t context) {
+	ehobj_t *classobj = this->get_class(paras[0], context);
+	ehretval_t *ret = NULL;
+	// get_class complains for us
+	if(classobj != NULL) {
+		ret = new ehretval_t(object_e);
+		ret->objectval = this->object_instantiate(classobj);
 	}
-	ehretval_t *ret = new ehretval_t(object_e);
-	ret->objectval = object_instantiate(classobj);
 	return ret;
 }
-void EHI::eh_op_inherit(const char *name, ehcontext_t context) {
-	ehobj_t *classobj = get_class(name);
-	if(classobj == NULL) {
-		eh_error_unknown("class", name, eerror_e);
-		return;
-	}
-/*
-TODO: handle scope properly. Scenario:
-class A {
-	a := 3
-	class B {
-		public b: {
-			echo $a
+void EHI::eh_op_inherit(ehretval_t **paras, ehcontext_t context) {
+	ehobj_t *classobj = this->get_class(paras[0], context);
+	if(classobj != NULL) {
+		OBJECT_FOR_EACH(classobj, i) {
+			class_copy_member(context, i, true);
 		}
-	}
-}
-
-class C {
-	a := 4
-	class D {
-		inherit B
-	}
-	o := new D
-	$o->b:
-}
-
-This will print 4; it should print 3. The solution must complicate scoping rules somehow; perhaps functions need an additional parent pointer.
-
-*/
-	OBJECT_FOR_EACH(classobj, i) {
-		class_copy_member(context, i, true);
 	}
 }
 void EHI::eh_op_break(opnode_t *op, ehcontext_t context) {
@@ -913,16 +889,22 @@ ehretval_t *EHI::eh_op_declareclosure(ehretval_t **paras, ehcontext_t context) {
 	}
 	return ret;
 }
-void EHI::eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
-	ehretval_t *classname_r = eh_execute(paras[0], context);
-	ehobj_t *classobj = get_class(classname_r->stringval);
-	if(classobj != NULL) {
-		eh_error_redefine("class", classname_r->stringval, eerror_e);
-		return;
+ehretval_t *EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
+	// process parameters
+	const char *name;
+	ehretval_t *code;
+	if(op->nparas == 2) {
+		name = op->paras[0]->stringval;
+		code = op->paras[1];
+	} else {
+		name = "AnonymousClass";
+		code = op->paras[0];
 	}
-	classobj = new ehobj_t;
-	classobj->classname = classname_r->stringval;
+
+	ehobj_t *classobj = new ehobj_t();
 	classobj->parent = context;
+	classobj->classname = name;
+
 	// insert "this" pointer
 	memberattribute_t thisattributes;
 	thisattributes.visibility = private_e;
@@ -932,10 +914,18 @@ void EHI::eh_op_declareclass(ehretval_t **paras, ehcontext_t context) {
 	thisvalue->objectval = classobj;
 	classobj->insert_retval("this", thisattributes, thisvalue);
 
-	eh_execute(paras[1], classobj);
+	eh_execute(code, classobj);
 	
-	// don't allow the class to be instantiated within itself
-	insert_class(classobj);
+	// create the ehretval_t
+	ehretval_t *ret = new ehretval_t(class_e);
+	ret->classval = classobj;
+	if(op->nparas == 2) {
+		// insert variable
+		ehmember_t *member = new ehmember_t();
+		member->value = ret;
+		context->insert(name, member);
+	}
+	return ret;
 }
 void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	// rely on standard layout of the paras
@@ -1184,6 +1174,8 @@ void EHI::eh_op_set(ehretval_t **paras, ehcontext_t context) {
 				// set new reference
 				lvalue = rvalue->referenceval;
 				rvalue->dec_rc();
+			} else if(rvalue == NULL) {
+				lvalue = NULL;
 			} else if(lvalue == NULL) {
 				lvalue = rvalue->share();
 			} else {
@@ -1382,16 +1374,6 @@ ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
 	}
 	return ret;
 }
-void EHI::insert_class(ehobj_t *classobj) {
-	this->classtable[classobj->classname] = classobj;
-}
-ehobj_t *EHI::get_class(const char *name) {
-	if(this->classtable.count(name) == 1) {
-		return this->classtable[name];
-	} else {
-		return NULL;
-	}
-}
 ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token) {
 	ehmember_t *member;
 
@@ -1438,13 +1420,8 @@ ehretval_t *&EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontex
 		throw 0;
 	}
 
-	if(EH_TYPE(operand1) != string_e) {
-		eh_error_type("class access", EH_TYPE(operand1), eerror_e);
-		throw 0;
-	}
-	ehobj_t *classobj = get_class(operand1->stringval);
+	ehobj_t *classobj = this->get_class(operand1, context);
 	if(classobj == NULL) {
-		eh_error_unknown("class", operand1->stringval, eerror_e);
 		throw 0;
 	}
 	ehmember_t *member = classobj->get(label->stringval, context, token);
@@ -1457,6 +1434,34 @@ ehretval_t *&EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontex
 		return member->value;
 	}
 }
+ehobj_t *EHI::get_class(ehretval_t *code, ehcontext_t context) {
+	ehretval_t *classname = this->eh_execute(code, context);
+	ehobj_t *classobj;
+	switch(EH_TYPE(classname)) {
+		case string_e:
+		{
+			ehmember_t *member = context->get_recursive(classname->stringval, context, T_LVALUE_GET);
+			if(member == NULL) {
+				eh_error_unknown("class", classname->stringval, eerror_e);
+				return NULL;
+			}
+			if(EH_TYPE(member->value) != class_e) {
+				eh_error_type("class", EH_TYPE(member->value), eerror_e);
+				return NULL;
+			}
+			classobj = member->value->classval;
+			break;
+		}
+		case class_e:
+			classobj = classname->classval;
+			break;
+		default:
+			eh_error_type("class name", EH_TYPE(classname), eerror_e);
+			return NULL;
+	}
+	return classobj;
+}
+
 /*
  * Arrays
  */

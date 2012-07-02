@@ -29,10 +29,9 @@ private:
 	int inloop;
 	int breaking;
 	int continuing;
-	std::map<std::string, ehobj_t *> classtable;
 	std::map<std::string, ehcmd_t> cmdtable;
 	
-	// hack: used to implement range/string/int access
+	// hack: used to implement several forms of inter-method communication
 	ehretval_t *arrow_access_curr;
 	
 	void eh_init(void);
@@ -41,15 +40,14 @@ private:
 	ehretval_t *eh_op_for(opnode_t *op, ehcontext_t context);
 	ehretval_t *eh_op_while(ehretval_t **paras, ehcontext_t context);
 	ehretval_t *eh_op_as(opnode_t *op, ehcontext_t context);
-	ehretval_t *eh_op_new(const char *name, ehcontext_t context);
-	void eh_op_inherit(const char *name, ehcontext_t context);
+	ehretval_t *eh_op_new(ehretval_t **paras, ehcontext_t context);
+	void eh_op_inherit(ehretval_t **paras, ehcontext_t context);
 	void eh_op_continue(opnode_t *op, ehcontext_t context);
 	void eh_op_break(opnode_t *op, ehcontext_t context);
 	ehretval_t *eh_op_array(ehretval_t *node, ehcontext_t context);
 	ehretval_t *eh_op_anonclass(ehretval_t *node, ehcontext_t context);
-	void eh_op_declarefunc(ehretval_t **paras);
 	ehretval_t *eh_op_declareclosure(ehretval_t **paras, ehcontext_t context);
-	void eh_op_declareclass(ehretval_t **paras, ehcontext_t context);
+	ehretval_t *eh_op_declareclass(opnode_t *op, ehcontext_t context);
 	void eh_op_classmember(opnode_t *op, ehcontext_t context);
 	ehretval_t *eh_op_switch(ehretval_t **paras, ehcontext_t context);
 	ehretval_t *eh_op_given(ehretval_t **paras, ehcontext_t context);
@@ -67,11 +65,10 @@ private:
 	ehretval_t *call_function(ehobj_t *obj, ehretval_t *args, ehcontext_t context);
 	ehretval_t *call_function_args(ehobj_t *obj, ehcontext_t context, const int nargs, ehretval_t *args);
 	void array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t context);
-	void insert_class(ehobj_t *classobj);
-	ehobj_t *get_class(const char *name);
 	ehretval_t *&object_access(ehretval_t *name, ehretval_t *index, ehcontext_t context, int token);
 	ehretval_t *&colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token);
 	ehobj_t *object_instantiate(ehobj_t *obj);
+	ehobj_t *get_class(ehretval_t *code, ehcontext_t context);
 public:
 	ehretval_t *eh_execute(ehretval_t *node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);

@@ -51,7 +51,8 @@ typedef enum type_enum {
 	attribute_e,
 	attributestr_e,
 	range_e,
-	float_e
+	float_e,
+	class_e
 } type_enum;
 
 // attributes of class members
@@ -121,6 +122,7 @@ typedef struct ehretval_t {
 		struct ehretval_t *referenceval;
 		struct ehobj_t *funcval;
 		struct ehrange_t *rangeval;
+		struct ehobj_t *classval;
 		// pseudo-types for internal use
 		opnode_t *opval;
 		type_enum typeval;
@@ -185,6 +187,7 @@ typedef struct ehretval_t {
 			COPY(attribute);
 			COPY(attributestr);
 			COPY(accessor);
+			COPY(class);
 			case null_e: break;
 #undef COPY
 		}
@@ -242,6 +245,7 @@ typedef struct ehretval_t {
 				COPY(attribute);
 				COPY(attributestr);
 				COPY(accessor);
+				COPY(class);
 				case null_e: break;
 #undef COPY
 			}

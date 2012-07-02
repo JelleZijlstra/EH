@@ -126,3 +126,4 @@ printglobal.eh
 globalrecursion.eh
 implicitreturn.eh
 shortfunction.eh
+inheritscope.eh

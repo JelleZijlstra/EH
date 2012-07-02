@@ -802,7 +802,7 @@ This will print 4; it should print 3. The solution must complicate scoping rules
 
 */
 	OBJECT_FOR_EACH(classobj, i) {
-		class_copy_member(context, i);
+		class_copy_member(context, i, true);
 	}
 }
 void EHI::eh_op_break(opnode_t *op, ehcontext_t context) {
@@ -1357,17 +1357,17 @@ ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
 	ehobj_t *ret = new ehobj_t;
 	ret->classname = obj->classname;
 	ret->function = obj->function;
+	ret->parent = obj->parent;
+	ret->real_parent = obj->real_parent;
 	if(obj->function != NULL && obj->function->type == libmethod_e) {
 		// insert selfptr
 		ret->selfptr = obj->constructor();
-	} else {
-		ret->parent = obj->parent;
 	}
 	
 	ehretval_t *constructor = NULL;
 	for(int i = 0; i < VARTABLE_S; i++) {
 		OBJECT_FOR_EACH(obj, m) {
-			class_copy_member(ret, m);
+			class_copy_member(ret, m, false);
 			if(m->first.compare("constructor") == 0) {
 				constructor = m->second->value;
 			}
@@ -1632,7 +1632,7 @@ ehretval_t *eh_op_dot(ehretval_t *operand1, ehretval_t *operand2) {
 /*
  * Classes.
  */
-void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember) {
+void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember, bool set_real_parent) {
 	ehmember_t *newmember = new ehmember_t;
 	newmember->attribute = classmember->second->attribute;
 	// modify this pointer
@@ -1647,12 +1647,18 @@ void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember) {
 		newmember->value = classmember->second->value->reference(classmember->second->value);
 	} else if(EH_TYPE(classmember->second->value) == func_e) {
 		newmember->value = new ehretval_t(func_e);
-		newmember->value->funcval = new ehobj_t();
-		newmember->value->funcval->parent = classobj;
+		ehobj_t *f = new ehobj_t();
+		newmember->value->funcval = f;
+		f->parent = classobj;
 		ehobj_t *oldobj = classmember->second->value->funcval;
-		newmember->value->funcval->function = oldobj->function;
-		newmember->value->funcval->classname = oldobj->classname;
-		newmember->value->funcval->members = oldobj->members;
+		if(set_real_parent) {
+			f->real_parent = oldobj->parent->parent;
+		} else {
+			f->real_parent = oldobj->real_parent;
+		}
+		f->function = oldobj->function;
+		f->classname = oldobj->classname;
+		f->members = oldobj->members;
 	} else if(classmember->second->value == NULL) {
 		newmember->value = NULL;
 	} else {
@@ -2285,8 +2291,18 @@ ehmember_t *ehobj_t::get_recursive_helper(const char *name, const ehcontext_t co
 	if(this->has(name)) {
 		out = this->members[name];
 	}
-	if(out == NULL & this->parent != NULL) {
-		out = this->parent->get_recursive_helper(name, context);
+	if(out == NULL) {
+		if(this->real_parent == NULL) {
+			if(this->parent != NULL) {
+				out = this->parent->get_recursive_helper(name, context);
+			}
+		} else {
+			if(this->parent != NULL && this->parent->has(name)) {
+				out = this->parent->members[name];
+			} else {
+				out = this->real_parent->get_recursive_helper(name, context);
+			}
+		}
 	}
 	return out;
 }

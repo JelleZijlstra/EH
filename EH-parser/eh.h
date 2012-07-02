@@ -466,7 +466,7 @@ char *eh_getinput(void);
 #include "eh.bison.hpp"
 #include "ehi.h"
 
-void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember);
+void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember, bool set_real_parent = false);
 ehretval_t *int_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
 ehretval_t *string_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
 ehretval_t *range_arrow_get(ehretval_t *operand1, ehretval_t *operand2);

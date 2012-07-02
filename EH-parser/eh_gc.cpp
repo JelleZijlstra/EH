@@ -32,7 +32,6 @@ void ehretval_t::free() {
 			// runtime garbage collector
 			break;
 		case object_e:
-		case class_e:
 			// TODO: kill maps
 			//free_vartable(objectval->members);
 			delete objectval;

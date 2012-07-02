@@ -1,3 +1,3 @@
 #!/usr/bin/ehi
-# Test anonymous classes
+# Test anonymous objects
 printvar: { test => 2, foo => bar }

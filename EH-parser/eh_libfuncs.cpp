@@ -85,16 +85,6 @@ void printvar_t::retval(ehretval_t *in) {
 				printf("(recursion)\n");
 			}
 			break;
-		case class_e:
-			if(this->seen.count((void *)in->objectval) == 0) {
-				this->seen[(void *)in->objectval] = true;
-				printf("@class <%s> [\n", in->objectval->classname);
-				this->object(in->objectval);
-				printf("]\n");
-			} else {
-				printf("(recursion)\n");
-			}
-			break;
 		case creference_e:
 		case reference_e:
 			this->retval(in->referenceval);

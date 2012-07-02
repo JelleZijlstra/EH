@@ -1,0 +1,13 @@
+@object <AnonymousClass> [
+a <private,non-static,non-constant>: @int 3
+b <public,non-static,non-constant>: @function <user>: 
+]
+@int 4
+@object <AnonymousClass> [
+a <private,non-static,non-constant>: @int 4
+b <public,non-static,non-constant>: @function <user>: 
+]
+@object <AnonymousClass> [
+a <private,non-static,non-constant>: @int 4
+b <public,non-static,non-constant>: @function <user>: 
+]

@@ -127,7 +127,6 @@ void print_tree(const ehretval_t *const in, const int n) {
 		case func_e:
 		case reference_e:
 		case creference_e:
-		case class_e:
 		case object_e:
 			// don't appear in AST
 			break;
@@ -148,7 +147,6 @@ const char *get_typestring(type_enum type) {
 		case array_e: return "array";
 		case func_e: return "function";
 		case object_e: return "object";
-		case class_e: return "class";
 		case op_e: return "op";
 		case attribute_e: return "attribute";
 		case attributestr_e: return "attributestr";

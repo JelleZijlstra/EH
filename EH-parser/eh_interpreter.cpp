@@ -196,7 +196,7 @@ void EHI::eh_init(void) {
 			newclass->insert(members[i].name, func);
 		}
 		ehmember_t *member = new ehmember_t(attributes);
-		member->value = new ehretval_t(class_e);
+		member->value = new ehretval_t(object_e);
 		member->value->classval = newclass;
 		global_object->insert(newclass->classname, member);
 	}
@@ -917,7 +917,7 @@ ehretval_t *EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	eh_execute(code, classobj);
 	
 	// create the ehretval_t
-	ehretval_t *ret = new ehretval_t(class_e);
+	ehretval_t *ret = new ehretval_t(object_e);
 	ret->classval = classobj;
 	if(op->nparas == 2) {
 		// insert variable
@@ -1445,14 +1445,14 @@ ehobj_t *EHI::get_class(ehretval_t *code, ehcontext_t context) {
 				eh_error_unknown("class", classname->stringval, eerror_e);
 				return NULL;
 			}
-			if(EH_TYPE(member->value) != class_e) {
+			if(EH_TYPE(member->value) != object_e) {
 				eh_error_type("class", EH_TYPE(member->value), eerror_e);
 				return NULL;
 			}
 			classobj = member->value->classval;
 			break;
 		}
-		case class_e:
+		case object_e:
 			classobj = classname->classval;
 			break;
 		default:

@@ -1,12 +1,12 @@
 @object <AnonymousClass> [
-A <public,non-static,non-constant>: @class <A> [
+A <public,non-static,non-constant>: @object <A> [
 foo <public,non-static,non-constant>: (recursion)
 ]
-CountClass <public,non-static,non-constant>: @class <CountClass> [
+CountClass <public,non-static,non-constant>: @object <CountClass> [
 docount <public,non-static,non-constant>: @function <library method>: 
 setcount <public,non-static,non-constant>: @function <library method>: 
 ]
-File <public,non-static,non-constant>: @class <File> [
+File <public,non-static,non-constant>: @object <File> [
 close <public,non-static,non-constant>: @function <library method>: 
 getc <public,non-static,non-constant>: @function <library method>: 
 gets <public,non-static,non-constant>: @function <library method>: 

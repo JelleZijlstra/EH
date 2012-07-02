@@ -128,3 +128,4 @@ implicitreturn.eh
 shortfunction.eh
 inheritscope.eh
 complexinherit.eh
+breakinherit.eh

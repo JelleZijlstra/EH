@@ -4,7 +4,7 @@ CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic
 SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp eh_gc.cpp ehi.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
-INTERPRETER = $(SOURCES) eh_libfuncs.cpp eh_libclasses.cpp eh_libcmds.cpp eh_hash.cpp eh_interpreter.cpp
+INTERPRETER = $(SOURCES) eh_libfuncs.cpp eh_libclasses.cpp eh_libcmds.cpp eh_interpreter.cpp
 EHI = $(INTERPRETER) eh_cli.cpp
 EHI_O = $(EHI:.cpp=.o)
 EHPHP = $(INTERPRETER) eh_wrap.cpp
@@ -38,7 +38,7 @@ ehphp: $(EHPHP_O)
 # If I don't do "/usr/bin/bison", y.tab.c won't compile because of a const char*
 # -> char* conversion.
 eh.bison.cpp eh.bison.hpp: eh.y
-	/usr/bin/bison -y -d eh.y --output='eh.bison.cpp'
+	/usr/bin/bison -v -y -d eh.y --output='eh.bison.cpp'
 
 eh.flex.cpp: eh.l eh.bison.hpp
 	/opt/local/bin/flex eh.l

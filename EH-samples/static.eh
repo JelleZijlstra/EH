@@ -3,7 +3,7 @@
 class Foo
 	static bar
 	public baz
-	mah
+	public mah
 	const muh = 2
 	const meh: n
 		echo $n

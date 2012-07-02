@@ -2,11 +2,11 @@
 bar <public,non-static,non-constant>: @int 3
 ]
 @object <Foo> [
-baz <public,non-static,non-constant>: @int 2
 bar <public,non-static,non-constant>: @int 3
+baz <public,non-static,non-constant>: @int 2
 ]
 @object <Foo> [
+bar <public,non-static,non-constant>: @int 3
 baz <public,non-static,non-constant>: @int 2
 meh <public,non-static,non-constant>: @int 4
-bar <public,non-static,non-constant>: @int 3
 ]

@@ -1,24 +1,24 @@
 Attempt to write to constant variable: EH runtime error
 @object <Foo> [
+bar <public,non-static,non-constant>: @function <user>: 
 baz <private,non-static,non-constant>: @int 42
 useprivate <public,non-static,non-constant>: @function <user>: 
-bar <public,non-static,non-constant>: @function <user>: 
 ]
 42
 @object <Foo> [
+bar <public,non-static,non-constant>: @function <user>: 
 baz <private,non-static,non-constant>: @int 42
 useprivate <public,non-static,non-constant>: @function <user>: 
-bar <public,non-static,non-constant>: @function <user>: 
 ]
 @object <Foo> [
+bar <public,non-static,non-constant>: @function <user>: 
 baz <private,non-static,non-constant>: @int 42
 useprivate <public,non-static,non-constant>: @function <user>: 
-bar <public,non-static,non-constant>: @function <user>: 
 ]
 @object <Foo> [
+bar <public,non-static,non-constant>: @function <user>: 
 baz <private,non-static,non-constant>: @int 42
 useprivate <public,non-static,non-constant>: @function <user>: 
-bar <public,non-static,non-constant>: @function <user>: 
 ]
 @int 42
 (null)

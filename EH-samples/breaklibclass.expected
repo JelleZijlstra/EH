@@ -1,7 +1,5 @@
-Bare call of library method: EH runtime error
-null
+@int 1
 (null)
 @function <library method>: 
-Bare call of library method: EH runtime error
-null
-@int 1
+@int 2
+@int 3

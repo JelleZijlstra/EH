@@ -307,7 +307,7 @@ void EHI::eh_setarg(int argc, char **argv) {
 EHI::EHI() : eval_parser(NULL) {}
 EHI::~EHI() {}
 
-ehretval_t *EHI::execute_cmd(const char *cmd, ehvar_t **paras) {
+ehretval_t *EHI::execute_cmd(const char *cmd, eharray_t *paras) {
 	return NULL;
 }
 char *EHI::eh_getline(EHParser *parser) {

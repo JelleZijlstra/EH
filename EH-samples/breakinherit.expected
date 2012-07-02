@@ -1,0 +1,10 @@
+No such class: A: EH runtime error
+@object <A> [
+A <public,non-static,non-constant>: @object <A> [
+b <public,non-static,non-constant>: null
+]
+a <public,non-static,non-constant>: @object <A> [
+b <public,non-static,non-constant>: null
+]
+b <public,non-static,non-constant>: null
+]

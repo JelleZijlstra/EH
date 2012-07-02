@@ -9,10 +9,6 @@
 #include "eh.bison.hpp"
 #include <cmath>
 
-void printvar_retval(const ehretval_t *in);
-static void printvar_array(ehvar_t **in);
-static void printvar_object(ehvar_t **in);
-
 // get arguments, and error if there are too many or few
 // Args should have enough memory malloc'ed to it to house n arguments.
 // Return 0 on success, -1 on too few, 1 on too many arguments.
@@ -33,30 +29,27 @@ int eh_getargs(ehretval_t *paras, int n, ehretval_t **args, ehcontext_t context,
 	return 0;
 }
 
-EHLIBFUNC(getinput) {
-	// more accurately, getint
-	*retval = new ehretval_t(int_e);
-	fscanf(stdin, "%d", &((*retval)->intval));
-	return;
-}
+/*
+ * printvar
+ */
 
-EHLIBFUNC(printvar) {
-	// this function always returns NULL
-	*retval = NULL;
+class printvar_t {
+private:
+	std::map<const void *, bool> seen;
+	
+	void retval(ehretval_t *in);
+	void array(eharray_t *in);
+	void object(ehobj_t *in);
 
-	// check argument count
-	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__, obj))
-		return;
-	printvar_retval(args[0]);
-	return;
-}
+public:
+	printvar_t(ehretval_t *in) : seen() {
+		this->retval(in);
+	}
+};
+
 // helper functions for printvar
-void printvar_retval(const ehretval_t *in) {
-	int i;
-	if(in == NULL) {
-		printf("null\n");
-	} else switch(in->type) {
+void printvar_t::retval(ehretval_t *in) {
+	switch(EH_TYPE(in)) {
 		case null_e:
 			printf("null\n");
 			break;
@@ -66,29 +59,39 @@ void printvar_retval(const ehretval_t *in) {
 		case string_e:
 			printf("@string '%s'\n", in->stringval);
 			break;
-		case array_e:
-			printf("@array [\n");
-			printvar_array(in->arrayval);
-			printf("]\n");
-			break;
 		case bool_e:
 			if(in->boolval)
 				printf("@bool true\n");
 			else
 				printf("@bool false\n");
 			break;
+		case array_e:
+			if(this->seen.count((void *)in->arrayval) == 0) {
+				this->seen[(void *)in->arrayval] = true;
+				printf("@array [\n");
+				this->array(in->arrayval);
+				printf("]\n");
+			} else {
+				printf("(recursion)\n");
+			}
+			break;
 		case object_e:
-			printf("@object <%s> [\n", in->objectval->classname);
-			printvar_object(in->objectval->members);
-			printf("]\n");
+			if(this->seen.count((void *)in->objectval) == 0) {
+				this->seen[(void *)in->objectval] = true;
+				printf("@object <%s> [\n", in->objectval->classname);
+				this->object(in->objectval);
+				printf("]\n");
+			} else {
+				printf("(recursion)\n");
+			}
 			break;
 		case creference_e:
 		case reference_e:
-			printvar_retval(in->referenceval);
+			this->retval(in->referenceval);
 			break;
 		case func_e:
 			printf("@function <");
-			switch(in->funcval->type) {
+			switch(in->funcval->function->type) {
 				case user_e:
 					printf("user");
 					break;
@@ -100,9 +103,9 @@ void printvar_retval(const ehretval_t *in) {
 					break;
 			}
 			printf(">: ");
-			for(i = 0; i < in->funcval->argcount; i++) {
-				printf("%s", in->funcval->args[i].name);
-				if(i + 1 < in->funcval->argcount)
+			for(int i = 0; i < in->funcval->function->argcount; i++) {
+				printf("%s", in->funcval->function->args[i].name);
+				if(i + 1 < in->funcval->function->argcount)
 					printf(", ");
 			}
 			printf("\n");
@@ -131,65 +134,65 @@ void printvar_retval(const ehretval_t *in) {
 	}
 	return;
 }
-static void printvar_object(ehvar_t **in) {
-	for(int i = 0; i < VARTABLE_S; i++) {
-		for(ehvar_t *curr = in[i]; curr != NULL; curr = curr->next) {
-			// ignore $this
-			if(!strcmp(curr->name, "this")) {
-				continue;
-			}
-			printf("%s <", curr->name);
-			switch(curr->attribute.visibility) {
-				case public_e:
-					printf("public,");
-					break;
-				case private_e:
-					printf("private,");
-					break;
-			}
-			switch(curr->attribute.isstatic) {
-				case static_e:
-					printf("static,");
-					break;
-				case nonstatic_e:
-					printf("non-static,");
-					break;
-			}
-			switch(curr->attribute.isconst) {
-				case const_e:
-					printf("constant");
-					break;
-				case nonconst_e:
-					printf("non-constant");
-					break;
-			}
-			printf(">: ");
-			printvar_retval(curr->value);
+void printvar_t::object(ehobj_t *in) {
+	OBJECT_FOR_EACH(in, curr) {
+		// ignore $this
+		if(curr->first.compare("this") == 0) {
+			continue;
 		}
+		
+		printf("%s <", curr->first.c_str());
+		switch(curr->second->attribute.visibility) {
+			case public_e:
+				printf("public,");
+				break;
+			case private_e:
+				printf("private,");
+				break;
+		}
+		switch(curr->second->attribute.isstatic) {
+			case static_e:
+				printf("static,");
+				break;
+			case nonstatic_e:
+				printf("non-static,");
+				break;
+		}
+		switch(curr->second->attribute.isconst) {
+			case const_e:
+				printf("constant");
+				break;
+			case nonconst_e:
+				printf("non-constant");
+				break;
+		}
+		printf(">: ");
+		this->retval(curr->second->value);
 	}
 }
-static void printvar_array(ehvar_t **in) {
-	int i;
-	ehvar_t *curr;
-
-	for(i = 0; i < VARTABLE_S; i++) {
-		curr = in[i];
-		while(curr != NULL) {
-			switch(curr->indextype) {
-				case int_e:
-					printf("%d => ", curr->index);
-					break;
-				case string_e:
-					printf("'%s' => ", curr->name);
-					break;
-				default:
-					eh_error_type("array index", curr->indextype, eerror_e);
-					break;
-			}
-			printvar_retval(curr->value);
-			curr = curr->next;
-		}
+void printvar_t::array(eharray_t *in) {
+	// iterate over strings
+	ARRAY_FOR_EACH_STRING(in, i) {
+		printf("'%s' => ", i->first.c_str());
+		this->retval(i->second);	
 	}
+	// and ints
+	ARRAY_FOR_EACH_INT(in, i) {
+		printf("%d => ", i->first);
+		this->retval(i->second);	
+	}
+}
+
+EHLIBFUNC(printvar) {
+	// this function always returns NULL
+	*retval = NULL;
+
+	// check argument count
+	ehretval_t *args[1];
+	if(eh_getargs(paras, 1, args, context, __FUNCTION__, obj))
+		return;
+	printvar_t printer(args[0]);
+	return;
 }
 
 /*
@@ -316,4 +319,11 @@ EHLIBFUNC(eval) {
 		EHLF_RETFALSE;	
 	}
 	*retval = new ehretval_t(obj->parse_string(arg->stringval));
+}
+
+EHLIBFUNC(getinput) {
+	// more accurately, getint
+	*retval = new ehretval_t(int_e);
+	fscanf(stdin, "%d", &((*retval)->intval));
+	return;
 }

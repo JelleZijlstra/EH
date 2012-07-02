@@ -6,7 +6,7 @@
  */
 %{
 #include "eh.h"
-ehretval_t *EHI::execute_cmd(const char *name, ehvar_t **paras) {
+ehretval_t *EHI::execute_cmd(const char *name, eharray_t *paras) {
 	return NULL;
 }
 char *EHI::eh_getline(EHParser *parser) {
@@ -16,8 +16,8 @@ EHI::~EHI(void) {
 	return;
 }
 
-ehvar_t **zvaltoeh_array(HashTable *hash);
-zval *arrtozval(ehvar_t **paras);
+eharray_t *zvaltoeh_array(HashTable *hash);
+zval *arrtozval(eharray_t *paras);
 
 zval *ehtozval(ehretval_t *in) {
 	if(EH_TYPE(in) == array_e) {
@@ -64,21 +64,17 @@ zval *ehtozval(ehretval_t *in) {
 	}
 }
 
-zval *arrtozval(ehvar_t **paras) {
+zval *arrtozval(eharray_t *paras) {
 	zval *arr;
 	MAKE_STD_ZVAL(arr);
 
 	// initiate PHP array
 	array_init(arr);
-	for(int i = 0; i < VARTABLE_S; i++) {
-		for(ehvar_t *currvar = paras[i]; currvar != NULL; currvar = currvar->next) {
-			// convert an EH array member to a PHP array member
-			if(currvar->indextype == int_e) {
-				add_index_zval(arr, currvar->index, ehtozval(currvar->value));
-			} else if(currvar->indextype == string_e) {
-				add_assoc_zval(arr, currvar->name, ehtozval(currvar->value));
-			}
-		}
+	ARRAY_FOR_EACH_INT(paras, i) {
+		add_index_zval(arr, i->first, ehtozval(i->second));
+	}
+	ARRAY_FOR_EACH_STRING(paras, i) {
+		add_assoc_zval(arr, i->first.c_str(), ehtozval(i->second));
 	}
 	return arr;
 }
@@ -121,25 +117,23 @@ ehretval_t *zvaltoeh(zval *in) {
 	return ret;
 }
 
-ehvar_t **zvaltoeh_array(HashTable *hash) {
-    ehvar_t **retval = new ehvar_t *[VARTABLE_S]();
+eharray_t *zvaltoeh_array(HashTable *hash) {
+    eharray_t *retval = new eharray_t;
 	// variables for our new array
 	ehretval_t *index, *value;
 	for(Bucket *curr = hash->pListHead; curr != NULL; curr = curr->pListNext) {
-		// determine index type and value
-		if(curr->nKeyLength == 0) {
-	    	// numeric index
-			index = new ehretval_t(int_e);
-			index->intval = curr->h;
-		} else {
-			// string index
-			index = new ehretval_t(strdup(curr->arKey));
-		}
 		// apparently the pDataPtr actually points to the zval
 		// see Zend/zend_hash.h for definition of the Bucket. No idea
 		// what the pData actually points to.
 		value = zvaltoeh((zval *)curr->pDataPtr);
-		array_insert_retval(retval, index, value);
+		// determine index type and value
+		if(curr->nKeyLength == 0) {
+	    	// numeric index
+	    	retval->int_indices[curr->h] = value;
+		} else {
+			// string index
+			retval->string_indices[curr->arKey] = value;
+		}
     }
     return retval;
 }
@@ -152,7 +146,7 @@ ehvar_t **zvaltoeh_array(HashTable *hash) {
 	ZVAL_STRING($input, $1_name, 1);
 }
 // Typemap from EH array to PHP array
-%typemap(directorin) ehvar_t** {
+%typemap(directorin) eharray_t* {
 	*$input = *arrtozval($1);
 }
 %typemap(directorin) EHParser* {
@@ -173,7 +167,7 @@ public:
 	ehretval_t parse_file(const char *name);
 	ehretval_t parse_string(const char *cmd);
 
-	virtual ehretval_t *execute_cmd(const char *name, ehvar_t **paras);
+	virtual ehretval_t *execute_cmd(const char *name, eharray_t *paras);
 	virtual char *eh_getline(EHParser *parser = NULL);
 	virtual ~EHI();
 };

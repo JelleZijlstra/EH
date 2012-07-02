@@ -14,6 +14,7 @@ class Foo
 	end
 end
 o := new Foo
+
 # 0
 echo $o->bar
 (Foo::set1:)

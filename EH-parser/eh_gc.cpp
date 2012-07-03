@@ -1,7 +1,7 @@
 #include "eh.h"
 
 void ehretval_t::free() {
-	switch(type) {
+	switch(this->_type) {
 		case null_e:
 		case int_e:
 		case bool_e:
@@ -20,7 +20,6 @@ void ehretval_t::free() {
 			//delete[] stringval;
 			break;
 		case reference_e:
-		case creference_e:
 			referenceval->dec_rc();
 			break;
 		case func_e:

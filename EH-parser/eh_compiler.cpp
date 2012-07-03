@@ -102,10 +102,10 @@ void EHI::eh_exit(void) {
 
 ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 	ehretval_t *ret = new ehretval_t(int_e);
-	if(node == NULL)
+	if(node == NULL) {
 		ret->intval = 0;
 	//printf("Executing nodetype %d\n", node->type);
-	else switch(node->type) {
+	} else switch(node->type()) {
 		/* Not sure yet how to handle strings
 		case string_e:
 			fprintf(outfile,
@@ -118,13 +118,13 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 			//printf("Executing opcode: %d\n", node->opval->op);
 			switch(node->opval->op) {
 				case T_COMMAND:
-					if(node->opval->paras[0]-> type == string_e 
+					if(node->opval->paras[0]->type() == string_e 
 						&& !strcmp(node->opval->paras[0]->stringval, "echo")) {
 						node = node->opval->paras[1];
 						if(node->opval->nparas != 2) {
 							break;
 						}
-						switch(node->opval->paras[0]->type) {
+						switch(node->opval->paras[0]->type()) {
 							case int_e:
 							case op_e:
 								// make sure stack is aligned
@@ -293,7 +293,7 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 			}
 			break;
 		default:
-			fprintf(stderr, "I'm too stupid a compiler; I can't handle this (type %d)\n", node->type);
+			fprintf(stderr, "I'm too stupid a compiler; I can't handle this (type %d)\n", node->type());
 			break;
 	}
 	return ret;

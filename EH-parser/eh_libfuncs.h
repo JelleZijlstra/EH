@@ -13,7 +13,7 @@
 	return; \
 } while(0)
 
-#define EHLIBFUNC(f) void ehlf_ ## f(ehretval_t *paras, ehretval_t **retval, ehcontext_t context, EHI *obj)
+#define EHLIBFUNC(f) ehretval_t *ehlf_ ## f(int nargs, ehretval_t **args, ehcontext_t context, EHI *obj)
 
 EHLIBFUNC(getinput);
 EHLIBFUNC(printvar);

@@ -179,20 +179,18 @@ void yyerror(void *scanner, const char *s) {
 }
 
 ehretval_t EHParser::parse_file(FILE *infile) {
-	ehretval_t ret;
 
 	buffer = yy_create_buffer(infile, YY_BUF_SIZE, _scanner);
 	yy_switch_to_buffer(buffer, _scanner);
-	ret.type = int_e;
+	ehretval_t ret(int_e);
 	ret.intval = yyparse(_scanner);
 	return ret;
 }
 ehretval_t EHParser::parse_string(const char *cmd) {
-	ehretval_t ret;
 
 	yy_scan_string(cmd, _scanner);
 
-	ret.type = int_e;
+	ehretval_t ret(int_e);
 	ret.intval = yyparse(_scanner);
 	return ret;
 }

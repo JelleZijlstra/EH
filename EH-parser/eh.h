@@ -25,13 +25,6 @@
 #include <algorithm>
 
 /*
- * The EH AST
- */
-
-// macros to avoid having to check for NULL all the time
-#define EH_TYPE(ret) (((ret) == NULL) ? null_e : (ret)->type)
-
-/*
  * Enums used in the parser and interpreter
  */
 
@@ -45,7 +38,6 @@ typedef enum type_enum {
 	array_e,
 	func_e, // methods
 	reference_e, // for internal use with lvalues, and as a value for references
-	creference_e, // constant references: can be dereferenced but not written to
 	object_e,
 	op_e,
 	attribute_e,
@@ -71,11 +63,21 @@ typedef enum const_enum {
 } const_enum;
 
 // struct for class member attributes
-typedef struct memberattribute_t {
+typedef struct attributes_t {
 	visibility_enum visibility : 2;
 	static_enum isstatic : 1;
 	const_enum isconst : 1;
-} memberattribute_t;
+	
+	// can't make a constructor because this thing appears in a union, but this
+	// is almost as good
+	static attributes_t make(visibility_enum v, static_enum s, const_enum c) {
+		attributes_t out;
+		out.visibility = v;
+		out.isstatic = s;
+		out.isconst = c;
+		return out;
+	}
+} attributes_t;
 
 // and accompanying enum used by the parser
 typedef enum attribute_enum {
@@ -108,7 +110,11 @@ typedef struct opnode_t {
 
 // EH value, and generic node
 typedef struct ehretval_t {
-	type_enum type;
+private:
+	short refcount;
+	short is_shared;
+	type_enum _type;
+public:
 	union {
 		// simple EH variable type
 		int intval;
@@ -121,35 +127,26 @@ typedef struct ehretval_t {
 		struct ehretval_t *referenceval;
 		struct ehobj_t *funcval;
 		struct ehrange_t *rangeval;
-		struct ehobj_t *classval;
 		// pseudo-types for internal use
 		opnode_t *opval;
 		type_enum typeval;
 		attribute_enum attributeval;
-		memberattribute_t attributestrval;
+		attributes_t attributestrval;
 		accessor_enum accessorval;
 	};
 	// constructors
-	ehretval_t() {
-		refcount = 1;
-		is_shared = 0;
-	}
-	ehretval_t(type_enum mtype) {
-		type = mtype;
-		refcount = 1;
-		is_shared = 0;
-	}
-#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) { \
-	type = ehtype ## _e; \
-	ehtype ## val = in; \
-	refcount = 1; \
-	is_shared = 0; \
-}
-	EHRV_CONS(bool, bool)
-	EHRV_CONS(double, float)
-	EHRV_CONS(float, float)
-	EHRV_CONS(char *, string)
+	ehretval_t() : refcount(1), is_shared(0) {}
+	ehretval_t(type_enum type) : refcount(1), is_shared(0), _type(type), stringval(NULL) {}
+#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) : refcount(1), is_shared(0), _type(ehtype ## _e), ehtype ## val(in) {}
 	EHRV_CONS(int, int)
+	EHRV_CONS(char *, string)
+	EHRV_CONS(bool, bool)
+	EHRV_CONS(float, float)
+	EHRV_CONS(double, float)
+	EHRV_CONS(struct eharray_t *, array)
+	EHRV_CONS(struct ehobj_t *, object)
+	EHRV_CONS(struct ehretval_t *, reference)
+	EHRV_CONS(struct ehrange_t *, range)
 #undef EHRV_CONS
 
 	// manipulate the refcount
@@ -166,10 +163,10 @@ typedef struct ehretval_t {
 		}
 	}
 	void free();
-	ehretval_t *clone() {
+	ehretval_t *clone() const {
 		ehretval_t *out = new ehretval_t;
-		out->type = type;
-		switch(type) {
+		out->type(this->_type);
+		switch(this->_type) {
 #define COPY(type) case type ## _e: out->type ## val = type ## val; break
 			COPY(int);
 			COPY(string);
@@ -177,7 +174,6 @@ typedef struct ehretval_t {
 			COPY(float);
 			COPY(array);
 			COPY(object);
-			case creference_e:
 			COPY(reference);
 			COPY(func);
 			COPY(range);
@@ -222,11 +218,11 @@ typedef struct ehretval_t {
 		if(is_shared == 0) {
 			// overwrite
 			if(in == NULL) {
-				type = null_e;
+				this->_type = null_e;
 				return this;
 			}
-			type = in->type;
-			switch(type) {
+			this->_type = in->_type;
+			switch(this->_type) {
 #define COPY(type) case type ## _e: type ## val = in->type ## val; break
 				COPY(int);
 				COPY(string);
@@ -234,7 +230,6 @@ typedef struct ehretval_t {
 				COPY(float);
 				COPY(array);
 				COPY(object);
-				case creference_e:
 				COPY(reference);
 				COPY(func);
 				COPY(range);
@@ -256,14 +251,24 @@ typedef struct ehretval_t {
 	void make_shared() {
 		is_shared++;
 	}
-private:
-	short refcount;
-	short is_shared;
+	
+	// other methods
+	type_enum type() const {
+		if(this == NULL) {
+			return null_e;
+		} else {
+			return this->_type;
+		}
+	}
+	void type(type_enum type) {
+		this->_type = type;
+	}
+	void print();
 } ehretval_t;
 
 // Variables and object members (which are the same)
 typedef struct ehmember_t {
-	memberattribute_t attribute;
+	attributes_t attribute;
 	struct ehretval_t *value;
 
 	// destructor
@@ -279,7 +284,7 @@ typedef struct ehmember_t {
 		attribute.isstatic = nonstatic_e;
 		attribute.isconst = nonconst_e;
 	}
-	ehmember_t(memberattribute_t atts) : attribute(atts) {}
+	ehmember_t(attributes_t atts) : attribute(atts) {}
 } ehmember_t;
 
 // in future, add type for type checking
@@ -291,11 +296,11 @@ typedef struct eharg_t {
 typedef struct ehobj_t *ehcontext_t;
 
 // library functions, classes, etcetera
-typedef void (*ehlibfunc_t)(ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
+typedef ehretval_t *(*ehlibfunc_t)(int, ehretval_t **, ehcontext_t, class EHI *);
 
 typedef void *(*ehconstructor_t)();
 
-typedef void (*ehlibmethod_t)(void *, ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
+typedef ehretval_t *(*ehlibmethod_t)(void *, int, ehretval_t **, ehcontext_t, class EHI *);
 
 typedef struct ehlm_listentry_t {
 	const char *name;
@@ -312,6 +317,7 @@ typedef ehretval_t *(*ehcmd_t)(eharray_t *paras);
 
 // EH array
 typedef struct eharray_t {
+	// typedefs
 	typedef std::map<int, ehretval_t *> int_map;
 	typedef std::map<std::string, ehretval_t *> string_map;
 	typedef std::pair<const int, ehretval_t *>& int_pair;
@@ -319,24 +325,29 @@ typedef struct eharray_t {
 	typedef int_map::iterator int_iterator;
 	typedef string_map::iterator string_iterator;
 
+	// properties
 	int_map int_indices;
 	string_map string_indices;
-
-	ehretval_t * &operator[](ehretval_t *index);
 	
-	size_t size() {
+	// constructor
+	eharray_t() : int_indices(), string_indices() {}
+	
+	// inline methods
+	size_t size() const {
 		return this->int_indices.size() + this->string_indices.size();
 	}
 	
-	bool has(ehretval_t *index) {
-		switch(EH_TYPE(index)) {
+	bool has(ehretval_t *index) const {
+		switch(index->type()) {
 			case int_e: return this->int_indices.count(index->intval);
 			case string_e: return this->string_indices.count(index->stringval);
 			default: return false;
 		}
 	}
 	
-	eharray_t() : int_indices(), string_indices() {}
+	// methods
+	ehretval_t * &operator[](ehretval_t *index);
+	void insert_retval(ehretval_t *index, ehretval_t *value);
 } eharray_t;
 #define ARRAY_FOR_EACH_STRING(array, varname) for(eharray_t::string_iterator varname = (array)->string_indices.begin(), end = (array)->string_indices.end(); varname != end; varname++)
 #define ARRAY_FOR_EACH_INT(array, varname) for(eharray_t::int_iterator varname = (array)->int_indices.begin(), end = (array)->int_indices.end(); varname != end; varname++)
@@ -361,22 +372,23 @@ public:
 	typedef obj_map::iterator obj_iterator;
 	
 	// constructors
-	ehobj_t() : function(NULL), classname(NULL), parent(NULL), real_parent(NULL), selfptr(NULL), members() {}
+	ehobj_t(const char *_classname = NULL, ehobj_t *_parent = NULL, ehobj_t *_real_parent = NULL) : function(NULL), classname(_classname), parent(_parent), real_parent(_real_parent), selfptr(NULL), members() {}
 
 	// methods
-	size_t size() {
+	size_t size() const {
 		return members.size();
 	}
 	
-	ehmember_t *insert_retval(const char *name, memberattribute_t attribute, ehretval_t *value);
+	ehmember_t *insert_retval(const char *name, attributes_t attribute, ehretval_t *value);
 	ehmember_t *get_recursive(const char *name, const ehcontext_t context, int token);
 	ehmember_t *get(const char *name, const ehcontext_t context, int token);
-	
+	void copy_member(obj_iterator &classmember, bool set_real_parent);
+
 	ehmember_t *&operator[](std::string key) {
 		return members[key];
 	}
 	
-	bool has(const std::string key) {
+	bool has(const std::string key) const {
 		return members.count(key);
 	}
 	
@@ -410,6 +422,9 @@ typedef struct ehfm_t {
 typedef struct ehrange_t {
 	int min;
 	int max;
+	
+	ehrange_t(int _min, int _max) : min(_min), max(_max) {}
+	ehrange_t() {}
 } ehrange_t;
 
 /*
@@ -467,7 +482,6 @@ char *eh_getinput(void);
 #include "eh.bison.hpp"
 #include "ehi.h"
 
-void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember, bool set_real_parent = false);
 ehretval_t *int_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
 ehretval_t *string_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
 ehretval_t *range_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
@@ -479,7 +493,6 @@ ehretval_t *eh_op_tilde(ehretval_t *in);
 ehretval_t *eh_op_uminus(ehretval_t *in);
 ehretval_t *eh_op_dot(ehretval_t *operand1, ehretval_t *operand2);
 ehretval_t *eh_make_range(const int min, const int max);
-void array_insert_retval(eharray_t *array, ehretval_t *index, ehretval_t *ret);
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
 
 // type casting

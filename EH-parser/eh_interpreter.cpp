@@ -701,8 +701,10 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	}
 	if(object->type == object_e) {
 		// object index is always a string
-		if(indexname) {
-			indexvar->value->type = string_e;
+		if(indexname != NULL) {
+			if(indexvar->value == NULL) {
+				indexvar->value = new ehretval_t(string_e);
+			}
 		}
 		// check whether we're allowed to access private things
 		const bool doprivate = ehcontext_compare(object->objectval, context);
@@ -711,13 +713,7 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 			if(!doprivate && curr->second->attribute.visibility == private_e) {
 				continue;
 			}
-			if(curr->second->attribute.isconst == const_e) {
-				// test whether this works
-				membervar->value->type = creference_e;
-				membervar->value->referenceval = curr->second->value;
-			} else {
-				membervar->value = curr->second->value;
-			}
+			membervar->value = curr->second->value->share();
 			if(indexname) {
 				// need the strdup here because currmember->name is const
 				// and a string_e is not. Perhaps solve this instead by
@@ -1114,7 +1110,7 @@ ehretval_t *&EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 ehretval_t *EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 	ehretval_t *ret = eh_execute(node, context);
 	if(ret == NULL) {
-		return ret;
+		return NULL;
 	}
 	
 	ehretval_t *varname = eh_xtostring(ret);
@@ -1126,7 +1122,7 @@ ehretval_t *EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 		varname->stringval, context, T_LVALUE_GET
 	);
 	if(var == NULL || var->value == NULL) {
-		ret = new ehretval_t(null_e);
+		return NULL;
 	} else {
 		ret = var->value;
 		// do we need this?

@@ -111,6 +111,8 @@ typedef struct opnode_t {
 // EH value, and generic node
 typedef struct ehretval_t {
 private:
+	short refcount;
+	short is_shared;
 	type_enum _type;
 public:
 	union {
@@ -133,10 +135,7 @@ public:
 		accessor_enum accessorval;
 	};
 	// constructors
-	ehretval_t() {
-		refcount = 1;
-		is_shared = 0;
-	}
+	ehretval_t() : refcount(1), is_shared(0) {}
 	ehretval_t(type_enum type) : _type(type), stringval(NULL), refcount(1), is_shared(0) {}
 #define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) : _type(ehtype ## _e), ehtype ## val(in), refcount(1), is_shared(0) {}
 	EHRV_CONS(int, int)
@@ -265,9 +264,6 @@ public:
 		this->_type = type;
 	}
 	void print();
-private:
-	short refcount;
-	short is_shared;
 } ehretval_t;
 
 // Variables and object members (which are the same)

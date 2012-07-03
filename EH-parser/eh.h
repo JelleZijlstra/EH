@@ -25,13 +25,6 @@
 #include <algorithm>
 
 /*
- * The EH AST
- */
-
-// macros to avoid having to check for NULL all the time
-#define EH_TYPE(ret) (((ret) == NULL) ? null_e : (ret)->type)
-
-/*
  * Enums used in the parser and interpreter
  */
 
@@ -249,7 +242,7 @@ typedef struct ehretval_t {
 	}
 	
 	// other methods
-	type_enum get_type() {
+	type_enum get_type() const {
 		if(this == NULL) {
 			return null_e;
 		} else {
@@ -334,7 +327,7 @@ typedef struct eharray_t {
 	}
 	
 	bool has(ehretval_t *index) {
-		switch(EH_TYPE(index)) {
+		switch(index->get_type()) {
 			case int_e: return this->int_indices.count(index->intval);
 			case string_e: return this->string_indices.count(index->stringval);
 			default: return false;

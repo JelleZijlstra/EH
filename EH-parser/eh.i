@@ -20,12 +20,12 @@ eharray_t *zvaltoeh_array(HashTable *hash);
 zval *arrtozval(eharray_t *paras);
 
 zval *ehtozval(ehretval_t *in) {
-	if(EH_TYPE(in) == array_e) {
+	if(in->get_type() == array_e) {
 		return arrtozval(in->arrayval);
 	} else {
 		zval *out;
 		MAKE_STD_ZVAL(out);
-		switch(EH_TYPE(in)) {
+		switch(in->get_type()) {
 			case int_e:
 				ZVAL_LONG(out, in->intval);
 				break;
@@ -47,7 +47,7 @@ zval *ehtozval(ehretval_t *in) {
 			case func_e:
 			case object_e:
 				// TODO
-				eh_error_type("conversion to PHP", EH_TYPE(in), enotice_e);
+				eh_error_type("conversion to PHP", in->get_type(), enotice_e);
 				break;
 			case accessor_e:
 			case type_e:
@@ -56,7 +56,7 @@ zval *ehtozval(ehretval_t *in) {
 			case attribute_e:
 			case attributestr_e:
 				// these shouldn't even appear as user-visible types
-				eh_error_type("conversion to PHP", EH_TYPE(in), efatal_e);
+				eh_error_type("conversion to PHP", in->get_type(), efatal_e);
 				break;
 		}
 		return out;

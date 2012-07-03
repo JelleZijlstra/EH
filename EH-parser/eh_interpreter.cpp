@@ -1121,13 +1121,11 @@ ehretval_t *EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 	ehmember_t *var = context->get_recursive(
 		varname->stringval, context, T_LVALUE_GET
 	);
-	if(var == NULL || var->value == NULL) {
+	if(var == NULL) {
 		return NULL;
 	} else {
-		ret = var->value;
-		// do we need this?
+		return var->value;
 	}
-	return ret;
 }
 void EHI::eh_op_set(ehretval_t **paras, ehcontext_t context) {
 	try {

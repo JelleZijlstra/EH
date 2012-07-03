@@ -131,3 +131,4 @@ complexinherit.eh
 breakinherit.eh
 anonymousclass.eh
 derefclass.eh
+modifyconstloop.eh

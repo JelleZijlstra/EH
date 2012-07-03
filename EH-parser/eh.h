@@ -63,11 +63,21 @@ typedef enum const_enum {
 } const_enum;
 
 // struct for class member attributes
-typedef struct memberattribute_t {
+typedef struct attributes_t {
 	visibility_enum visibility : 2;
 	static_enum isstatic : 1;
 	const_enum isconst : 1;
-} memberattribute_t;
+	
+	// can't make a constructor because this thing appears in a union, but this
+	// is almost as good
+	static attributes_t make(visibility_enum v, static_enum s, const_enum c) {
+		attributes_t out;
+		out.visibility = v;
+		out.isstatic = s;
+		out.isconst = c;
+		return out;
+	}
+} attributes_t;
 
 // and accompanying enum used by the parser
 typedef enum attribute_enum {
@@ -119,7 +129,7 @@ public:
 		opnode_t *opval;
 		type_enum typeval;
 		attribute_enum attributeval;
-		memberattribute_t attributestrval;
+		attributes_t attributestrval;
 		accessor_enum accessorval;
 	};
 	// constructors
@@ -262,7 +272,7 @@ private:
 
 // Variables and object members (which are the same)
 typedef struct ehmember_t {
-	memberattribute_t attribute;
+	attributes_t attribute;
 	struct ehretval_t *value;
 
 	// destructor
@@ -278,7 +288,7 @@ typedef struct ehmember_t {
 		attribute.isstatic = nonstatic_e;
 		attribute.isconst = nonconst_e;
 	}
-	ehmember_t(memberattribute_t atts) : attribute(atts) {}
+	ehmember_t(attributes_t atts) : attribute(atts) {}
 } ehmember_t;
 
 // in future, add type for type checking
@@ -373,7 +383,7 @@ public:
 		return members.size();
 	}
 	
-	ehmember_t *insert_retval(const char *name, memberattribute_t attribute, ehretval_t *value);
+	ehmember_t *insert_retval(const char *name, attributes_t attribute, ehretval_t *value);
 	ehmember_t *get_recursive(const char *name, const ehcontext_t context, int token);
 	ehmember_t *get(const char *name, const ehcontext_t context, int token);
 	void copy_member(obj_iterator &classmember, bool set_real_parent);

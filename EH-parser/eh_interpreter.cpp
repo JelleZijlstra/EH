@@ -174,10 +174,7 @@ void EHI::eh_init(void) {
 		newclass->constructor = libclasses[i].info.constructor;
 		ehlm_listentry_t *members = libclasses[i].info.members;
 		// attributes for library methods
-		memberattribute_t attributes;
-		attributes.visibility = public_e;
-		attributes.isstatic = nonstatic_e;
-		attributes.isconst = nonconst_e;
+		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
 		for(int i = 0; members[i].name != NULL; i++) {
 			ehmember_t *func = new ehmember_t(attributes);
 			func->value = new ehretval_t(func_e);
@@ -198,10 +195,7 @@ void EHI::eh_init(void) {
 		redirect_command(libredirs[i][0], libredirs[i][1]);
 	}
 	// insert reference to global object
-	memberattribute_t attributes;
-	attributes.visibility = public_e;
-	attributes.isconst = const_e;
-	attributes.isstatic = nonstatic_e;
+	attributes_t attributes = attributes_t::make(public_e, nonstatic_e, const_e);
 	ehmember_t *global = new ehmember_t(attributes);
 	global->value = new ehretval_t(global_object);
 	global_object->insert("global", global);
@@ -825,10 +819,7 @@ ehretval_t *EHI::eh_op_array(ehretval_t *node, ehcontext_t context) {
 ehretval_t *EHI::eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
 	ehretval_t *ret = new ehretval_t(new ehobj_t("AnonClass", context));
 	// all members are public, non-static, non-const
-	memberattribute_t attributes;
-	attributes.visibility = public_e;
-	attributes.isconst = nonconst_e;
-	attributes.isstatic = nonstatic_e;
+	attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
 
 	for( ; node->opval->nparas != 0; node = node->opval->paras[0]) {
 		ehretval_t **myparas = node->opval->paras[1]->opval->paras;
@@ -887,10 +878,7 @@ ehretval_t *EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	classobj->classname = name;
 
 	// insert "this" pointer
-	memberattribute_t thisattributes;
-	thisattributes.visibility = private_e;
-	thisattributes.isstatic = nonstatic_e;
-	thisattributes.isconst = const_e;
+	attributes_t thisattributes = attributes_t::make(private_e, nonstatic_e, const_e);
 	ehretval_t *thisvalue = new ehretval_t(classobj);
 	classobj->insert_retval("this", thisattributes, thisvalue);
 
@@ -909,7 +897,7 @@ ehretval_t *EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	// rely on standard layout of the paras
 	ehretval_t *attribute_v = eh_execute(op->paras[0], context);
-	memberattribute_t attribute = attribute_v->attributestrval;
+	attributes_t attribute = attribute_v->attributestrval;
 	char *name = op->paras[1]->stringval;
 
 	// decide what we got
@@ -2121,7 +2109,7 @@ void eharray_t::insert_retval(ehretval_t *index, ehretval_t *value) {
 			break;
 	}
 }
-ehmember_t *ehobj_t::insert_retval(const char *name, memberattribute_t attribute, ehretval_t *value) {
+ehmember_t *ehobj_t::insert_retval(const char *name, attributes_t attribute, ehretval_t *value) {
 	if(this->has(name)) {
 		eh_error("object member already set", enotice_e);
 		return NULL;

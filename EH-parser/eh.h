@@ -154,7 +154,7 @@ public:
 		}
 	}
 	void free();
-	ehretval_t *clone() {
+	ehretval_t *clone() const {
 		ehretval_t *out = new ehretval_t;
 		out->type(this->_type);
 		switch(this->_type) {
@@ -327,11 +327,11 @@ typedef struct eharray_t {
 	eharray_t() : int_indices(), string_indices() {}
 	
 	// inline methods
-	size_t size() {
+	size_t size() const {
 		return this->int_indices.size() + this->string_indices.size();
 	}
 	
-	bool has(ehretval_t *index) {
+	bool has(ehretval_t *index) const {
 		switch(index->type()) {
 			case int_e: return this->int_indices.count(index->intval);
 			case string_e: return this->string_indices.count(index->stringval);
@@ -369,7 +369,7 @@ public:
 	ehobj_t() : function(NULL), classname(NULL), parent(NULL), real_parent(NULL), selfptr(NULL), members() {}
 
 	// methods
-	size_t size() {
+	size_t size() const {
 		return members.size();
 	}
 	
@@ -382,7 +382,7 @@ public:
 		return members[key];
 	}
 	
-	bool has(const std::string key) {
+	bool has(const std::string key) const {
 		return members.count(key);
 	}
 	

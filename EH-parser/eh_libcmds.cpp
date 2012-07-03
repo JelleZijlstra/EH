@@ -10,14 +10,12 @@ EH_LIBCMD(quit) {
 }
 
 EH_LIBCMD(echo) {
-	ehretval_t *arg = paras->int_indices[0];
-	print_retval(arg);
+	paras->int_indices[0]->print();
 	printf("\n");
 	return NULL;
 }
 
 EH_LIBCMD(put) {
-	ehretval_t *arg = paras->int_indices[0];
-	print_retval(arg);
+	paras->int_indices[0]->print();
 	return NULL;
 }

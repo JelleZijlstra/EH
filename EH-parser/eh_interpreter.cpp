@@ -2135,18 +2135,18 @@ static inline int count_nodes(ehretval_t *node) {
 }
 
 /*
- * Helpers.
+ * ehretval_t
  */
-void print_retval(const ehretval_t *ret) {
-	switch(EH_TYPE(ret)) {
+void ehretval_t::print() {
+	switch(EH_TYPE(this)) {
 		case string_e:
-			printf("%s", ret->stringval);
+			printf("%s", this->stringval);
 			break;
 		case int_e:
-			printf("%d", ret->intval);
+			printf("%d", this->intval);
 			break;
 		case bool_e:
-			if(ret->boolval) {
+			if(this->boolval) {
 				printf("(true)");
 			} else {
 				printf("(false)");
@@ -2156,20 +2156,20 @@ void print_retval(const ehretval_t *ret) {
 			printf("(null)");
 			break;
 		case float_e:
-			printf("%f", ret->floatval);
+			printf("%f", this->floatval);
 			break;
 		case range_e:
-			printf("%d to %d", ret->rangeval->min, ret->rangeval->max);
+			printf("%d to %d", this->rangeval->min, this->rangeval->max);
 			break;
 		default:
-			eh_error_type("echo operator", EH_TYPE(ret), enotice_e);
+			eh_error_type("echo operator", EH_TYPE(this), enotice_e);
 			break;
 	}
 	return;
 }
 
 /*
- * Other classes
+ * eharray_t
  */
 ehretval_t * &eharray_t::operator[](ehretval_t *index) {
 	switch(EH_TYPE(index)) {
@@ -2209,6 +2209,9 @@ ehmember_t *ehobj_t::insert_retval(const char *name, memberattribute_t attribute
 	members[name] = member;
 	return member;
 }
+/*
+ * ehobj_t
+ */
 ehmember_t *ehobj_t::get(const char *name, const ehcontext_t context, int token) {
 	ehmember_t *out = NULL;
 	if(this->has(name)) {

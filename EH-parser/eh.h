@@ -256,6 +256,9 @@ typedef struct ehretval_t {
 	void make_shared() {
 		is_shared++;
 	}
+	
+	// other methods
+	void print();
 private:
 	short refcount;
 	short is_shared;

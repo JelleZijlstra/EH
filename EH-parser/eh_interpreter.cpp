@@ -636,8 +636,7 @@ ehretval_t *EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 			ret = eh_execute(op->paras[1], context);
 			LOOPCHECKS;
 		}
-	}
-	else {
+	} else {
 		// "for 5 count i; do stuff; endfor" construct
 		char *name = op->paras[1]->stringval;
 		// this should perhaps create a new variable, or only overwrite variables in the current scope
@@ -2138,9 +2137,7 @@ void range_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue) {
 ehretval_t *eh_make_range(const int min, const int max) {
 	ehretval_t *ret = new ehretval_t;
 	ret->type = range_e;
-	ret->rangeval = new ehrange_t;
-	ret->rangeval->min = min;
-	ret->rangeval->max = max;
+	ret->rangeval = new ehrange_t(min, max);
 	return ret;
 }
 static inline int count_nodes(ehretval_t *node) {

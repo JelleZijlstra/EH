@@ -411,6 +411,9 @@ typedef struct ehfm_t {
 typedef struct ehrange_t {
 	int min;
 	int max;
+	
+	ehrange_t(int _min, int _max) : min(_min), max(_max) {}
+	ehrange_t() {}
 } ehrange_t;
 
 /*

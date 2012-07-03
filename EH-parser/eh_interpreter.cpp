@@ -777,7 +777,7 @@ void EHI::eh_op_inherit(ehretval_t **paras, ehcontext_t context) {
 	ehobj_t *classobj = this->get_class(paras[0], context);
 	if(classobj != NULL) {
 		OBJECT_FOR_EACH(classobj, i) {
-			class_copy_member(context, i, true);
+			context->copy_member(i, true);
 		}
 	}
 }
@@ -1359,7 +1359,7 @@ ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
 	ehretval_t *constructor = NULL;
 	for(int i = 0; i < VARTABLE_S; i++) {
 		OBJECT_FOR_EACH(obj, m) {
-			class_copy_member(ret, m, false);
+			ret->copy_member(m, false);
 			if(m->first.compare("constructor") == 0) {
 				constructor = m->second->value;
 			}
@@ -1637,41 +1637,6 @@ ehretval_t *eh_op_dot(ehretval_t *operand1, ehretval_t *operand2) {
 /*
  * Classes.
  */
-void class_copy_member(ehobj_t *classobj, ehobj_t::obj_iterator &classmember, bool set_real_parent) {
-	ehmember_t *newmember = new ehmember_t;
-	newmember->attribute = classmember->second->attribute;
-	// modify this pointer
-	if(classmember->first.compare("this") == 0) {
-		newmember->value = new ehretval_t(object_e);
-		newmember->value->objectval = classobj;
-	} else if(classmember->second->attribute.isstatic == static_e) {
-		// can't share NULL
-		if(classmember->second->value == NULL) {
-			classmember->second->value = new ehretval_t(null_e);
-		}
-		newmember->value = classmember->second->value->reference(classmember->second->value);
-	} else if(EH_TYPE(classmember->second->value) == func_e) {
-		newmember->value = new ehretval_t(func_e);
-		ehobj_t *f = new ehobj_t();
-		newmember->value->funcval = f;
-		f->parent = classobj;
-		ehobj_t *oldobj = classmember->second->value->funcval;
-		if(set_real_parent && oldobj->real_parent == NULL) {
-			f->real_parent = oldobj->parent->parent;
-		} else {
-			f->real_parent = oldobj->real_parent;
-		}
-		f->function = oldobj->function;
-		f->classname = oldobj->classname;
-		f->members = oldobj->members;
-	} else if(classmember->second->value == NULL) {
-		newmember->value = NULL;
-	} else {
-		newmember->value = classmember->second->value->share();
-	}
-	classobj->operator[](classmember->first) = newmember;
-	return;
-}
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key) {
 	// in global context, we never have access to private stuff
 	if(key == NULL) {
@@ -2310,4 +2275,39 @@ ehmember_t *ehobj_t::get_recursive_helper(const char *name, const ehcontext_t co
 		}
 	}
 	return out;
+}
+void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent) {
+	ehmember_t *newmember = new ehmember_t;
+	newmember->attribute = classmember->second->attribute;
+	// modify this pointer
+	if(classmember->first.compare("this") == 0) {
+		newmember->value = new ehretval_t(object_e);
+		newmember->value->objectval = this;
+	} else if(classmember->second->attribute.isstatic == static_e) {
+		// can't share NULL
+		if(classmember->second->value == NULL) {
+			classmember->second->value = new ehretval_t(null_e);
+		}
+		newmember->value = classmember->second->value->reference(classmember->second->value);
+	} else if(EH_TYPE(classmember->second->value) == func_e) {
+		newmember->value = new ehretval_t(func_e);
+		ehobj_t *f = new ehobj_t();
+		newmember->value->funcval = f;
+		f->parent = this;
+		ehobj_t *oldobj = classmember->second->value->funcval;
+		if(set_real_parent && oldobj->real_parent == NULL) {
+			f->real_parent = oldobj->parent->parent;
+		} else {
+			f->real_parent = oldobj->real_parent;
+		}
+		f->function = oldobj->function;
+		f->classname = oldobj->classname;
+		f->members = oldobj->members;
+	} else if(classmember->second->value == NULL) {
+		newmember->value = NULL;
+	} else {
+		newmember->value = classmember->second->value->share();
+	}
+	this->operator[](classmember->first) = newmember;
+	return;
 }

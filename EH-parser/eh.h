@@ -121,7 +121,6 @@ typedef struct ehretval_t {
 		struct ehretval_t *referenceval;
 		struct ehobj_t *funcval;
 		struct ehrange_t *rangeval;
-		struct ehobj_t *classval;
 		// pseudo-types for internal use
 		opnode_t *opval;
 		type_enum typeval;
@@ -134,22 +133,17 @@ typedef struct ehretval_t {
 		refcount = 1;
 		is_shared = 0;
 	}
-	ehretval_t(type_enum mtype) {
-		type = mtype;
-		refcount = 1;
-		is_shared = 0;
-	}
-#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) { \
-	type = ehtype ## _e; \
-	ehtype ## val = in; \
-	refcount = 1; \
-	is_shared = 0; \
-}
-	EHRV_CONS(bool, bool)
-	EHRV_CONS(double, float)
-	EHRV_CONS(float, float)
-	EHRV_CONS(char *, string)
+	ehretval_t(type_enum mtype) : type(mtype), stringval(NULL), refcount(1), is_shared(0) {}
+#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) : type(ehtype ## _e), ehtype ## val(in), refcount(1), is_shared(0) {}
 	EHRV_CONS(int, int)
+	EHRV_CONS(char *, string)
+	EHRV_CONS(bool, bool)
+	EHRV_CONS(float, float)
+	EHRV_CONS(double, float)
+	EHRV_CONS(struct eharray_t *, array)
+	EHRV_CONS(struct ehobj_t *, object)
+	EHRV_CONS(struct ehretval_t *, reference)
+	EHRV_CONS(struct ehrange_t *, range)
 #undef EHRV_CONS
 
 	// manipulate the refcount

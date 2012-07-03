@@ -196,8 +196,7 @@ void EHI::eh_init(void) {
 			newclass->insert(members[i].name, func);
 		}
 		ehmember_t *member = new ehmember_t(attributes);
-		member->value = new ehretval_t(object_e);
-		member->value->classval = newclass;
+		member->value = new ehretval_t(newclass);
 		global_object->insert(newclass->classname, member);
 	}
 	for(int i = 0; libcmds[i].name != NULL; i++) {
@@ -212,8 +211,7 @@ void EHI::eh_init(void) {
 	attributes.isconst = const_e;
 	attributes.isstatic = nonstatic_e;
 	ehmember_t *global = new ehmember_t(attributes);
-	global->value = new ehretval_t(object_e);
-	global->value->objectval = global_object;
+	global->value = new ehretval_t(global_object);
 	global_object->insert("global", global);
 	return;
 }
@@ -767,8 +765,7 @@ ehretval_t *EHI::eh_op_new(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t *ret = NULL;
 	// get_class complains for us
 	if(classobj != NULL) {
-		ret = new ehretval_t(object_e);
-		ret->objectval = this->object_instantiate(classobj);
+		ret = new ehretval_t(this->object_instantiate(classobj));
 	}
 	return ret;
 }
@@ -825,8 +822,7 @@ void EHI::eh_op_continue(opnode_t *op, ehcontext_t context) {
 	return;
 }
 ehretval_t *EHI::eh_op_array(ehretval_t *node, ehcontext_t context) {
-	ehretval_t *ret = new ehretval_t(array_e);
-	ret->arrayval = new eharray_t;
+	ehretval_t *ret = new ehretval_t(new eharray_t);
 	// need to count array members first, because they are reversed in our node.
 	// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
 	int count = 0;
@@ -839,8 +835,7 @@ ehretval_t *EHI::eh_op_array(ehretval_t *node, ehcontext_t context) {
 	return ret;
 }
 ehretval_t *EHI::eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
-	ehretval_t *ret = new ehretval_t(object_e);
-	ret->objectval = new ehobj_t;
+	ehretval_t *ret = new ehretval_t(new ehobj_t);
 	ret->objectval->classname = "AnonClass";
 	// all members are public, non-static, non-const
 	memberattribute_t attributes;
@@ -909,15 +904,13 @@ ehretval_t *EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	thisattributes.visibility = private_e;
 	thisattributes.isstatic = nonstatic_e;
 	thisattributes.isconst = const_e;
-	ehretval_t *thisvalue = new ehretval_t(object_e);
-	thisvalue->objectval = classobj;
+	ehretval_t *thisvalue = new ehretval_t(classobj);
 	classobj->insert_retval("this", thisattributes, thisvalue);
 
 	eh_execute(code, classobj);
 	
 	// create the ehretval_t
-	ehretval_t *ret = new ehretval_t(object_e);
-	ret->classval = classobj;
+	ehretval_t *ret = new ehretval_t(classobj);
 	if(op->nparas == 2) {
 		// insert variable
 		ehmember_t *member = new ehmember_t();
@@ -1448,11 +1441,11 @@ ehobj_t *EHI::get_class(ehretval_t *code, ehcontext_t context) {
 				eh_error_type("class", EH_TYPE(member->value), eerror_e);
 				return NULL;
 			}
-			classobj = member->value->classval;
+			classobj = member->value->objectval;
 			break;
 		}
 		case object_e:
-			classobj = classname->classval;
+			classobj = classname->objectval;
 			break;
 		default:
 			eh_error_type("class name", EH_TYPE(classname), eerror_e);
@@ -1498,15 +1491,13 @@ void EHI::array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t 
 void EHI::eh_setarg(int argc, char **argv) {
 	// insert argc
 	ehmember_t *argc_v = new ehmember_t;
-	argc_v->value = new ehretval_t(int_e);
 	// argc - 1, because argv[0] is ehi itself
-	argc_v->value->intval = argc - 1;
+	argc_v->value = new ehretval_t(argc - 1);
 	global_object->insert("argc", argc_v);
 
 	// insert argv
 	ehmember_t *argv_v = new ehmember_t;
-	argv_v->value = new ehretval_t(array_e);
-	argv_v->value->arrayval = new eharray_t;
+	argv_v->value = new ehretval_t(new eharray_t);
 
 	// all members of argv are strings
 	for(int i = 1; i < argc; i++) {
@@ -1686,8 +1677,7 @@ ehretval_t *eh_cast(const type_enum type, ehretval_t *in) {
 /* Casts between specific pairs of types */
 ehretval_t *eh_stringtoint(const char *const in) {
 	char *endptr;
-	ehretval_t *ret = new ehretval_t(int_e);
-	ret->intval = strtol(in, &endptr, 0);
+	ehretval_t *ret = new ehretval_t((int) strtol(in, &endptr, 0));
 	// If in == endptr, strtol read no digits and there was no conversion.
 	if(in == endptr) {
 		delete ret;
@@ -1697,8 +1687,7 @@ ehretval_t *eh_stringtoint(const char *const in) {
 }
 ehretval_t *eh_stringtofloat(const char *const in) {
 	char *endptr;
-	ehretval_t *ret = new ehretval_t(float_e);
-	ret->floatval = strtof(in, &endptr);
+	ehretval_t *ret = new ehretval_t(strtof(in, &endptr));
 	// If in == endptr, strtof read no digits and there was no conversion.
 	if(in == endptr) {
 		delete ret;
@@ -1916,8 +1905,7 @@ ehretval_t *eh_xtoarray(ehretval_t *in) {
 			ret = in;
 			break;
 		case range_e:
-			ret = new ehretval_t(array_e);
-			ret->arrayval = eh_rangetoarray(in->rangeval);
+			ret = new ehretval_t(eh_rangetoarray(in->rangeval));
 			break;
 		case int_e:
 		case bool_e:
@@ -1926,8 +1914,7 @@ ehretval_t *eh_xtoarray(ehretval_t *in) {
 		case null_e:
 		case object_e:
 			// create an array with just this variable in it
-			ret = new ehretval_t(array_e);
-			ret->arrayval = new eharray_t;
+			ret = new ehretval_t(new eharray_t);
 			ret->arrayval->int_indices[0] = in;
 			break;
 		default:
@@ -2118,9 +2105,7 @@ void range_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue) {
  * Other types
  */
 ehretval_t *eh_make_range(const int min, const int max) {
-	ehretval_t *ret = new ehretval_t;
-	ret->type = range_e;
-	ret->rangeval = new ehrange_t(min, max);
+	ehretval_t *ret = new ehretval_t(new ehrange_t(min, max));
 	return ret;
 }
 static inline int count_nodes(ehretval_t *node) {
@@ -2278,8 +2263,7 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent) {
 	newmember->attribute = classmember->second->attribute;
 	// modify this pointer
 	if(classmember->first.compare("this") == 0) {
-		newmember->value = new ehretval_t(object_e);
-		newmember->value->objectval = this;
+		newmember->value = new ehretval_t(this);
 	} else if(classmember->second->attribute.isstatic == static_e) {
 		// can't share NULL
 		if(classmember->second->value == NULL) {

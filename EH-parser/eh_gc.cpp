@@ -1,7 +1,7 @@
 #include "eh.h"
 
 void ehretval_t::free() {
-	switch(type) {
+	switch(this->_type) {
 		case null_e:
 		case int_e:
 		case bool_e:

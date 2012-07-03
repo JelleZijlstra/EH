@@ -34,7 +34,7 @@ public:
 
 // helper functions for printvar
 void printvar_t::retval(ehretval_t *in) {
-	switch(in->get_type()) {
+	switch(in->type()) {
 		case null_e:
 			printf("null\n");
 			break;
@@ -186,7 +186,7 @@ EHLIBFUNC(printvar) {
 		eh_error_argcount_lib("is_" #typev, 1, nargs); \
 		return NULL; \
 	} \
-	return new ehretval_t(args[0]->get_type() == typev ## _e); \
+	return new ehretval_t(args[0]->type() == typev ## _e); \
 }
 
 TYPEFUNC(null)
@@ -204,12 +204,12 @@ EHLIBFUNC(class_is) {
 		return NULL;
 	}
 	// they are in reverse order
-	if(args[1]->get_type() != string_e) {
-		eh_error_type("argument 0 to class_is", args[1]->get_type(), enotice_e);
+	if(args[1]->type() != string_e) {
+		eh_error_type("argument 0 to class_is", args[1]->type(), enotice_e);
 		return NULL;
 	}
-	if(args[0]->get_type() != object_e) {
-		eh_error_type("argument 1 to class_is", args[0]->get_type(), enotice_e);
+	if(args[0]->type() != object_e) {
+		eh_error_type("argument 1 to class_is", args[0]->type(), enotice_e);
 		return NULL;
 	}
 	return new ehretval_t(strcmp(args[1]->stringval, args[0]->objectval->classname) == 0);
@@ -220,7 +220,7 @@ EHLIBFUNC(get_type) {
 		eh_error_argcount_lib("get_type", 1, nargs);
 		return NULL;
 	}
-	return new ehretval_t(strdup(get_typestring(args[0]->get_type())));
+	return new ehretval_t(strdup(get_typestring(args[0]->type())));
 }
 
 /*
@@ -231,8 +231,8 @@ EHLIBFUNC(include) {
 		eh_error_argcount_lib("include", 1, nargs);
 		return NULL;
 	}
-	if(args[0]->get_type() != string_e) {
-		eh_error_type("argument 0 to include", args[0]->get_type(), enotice_e);
+	if(args[0]->type() != string_e) {
+		eh_error_type("argument 0 to include", args[0]->type(), enotice_e);
 		obj->returning = false;
 		return NULL;
 	}
@@ -256,17 +256,17 @@ EHLIBFUNC(pow) {
 		eh_error_argcount_lib("pow", 2, nargs);
 		return NULL;
 	}
-	if(args[1]->get_type() == int_e && args[0]->get_type() == int_e) {
+	if(args[1]->type() == int_e && args[0]->type() == int_e) {
 		return new ehretval_t((int) pow((float) args[1]->intval, (float) args[0]->intval));
-	} else if(args[1]->get_type() == int_e && args[0]->get_type() == float_e) {
+	} else if(args[1]->type() == int_e && args[0]->type() == float_e) {
 		return new ehretval_t(pow((float) args[1]->intval, args[0]->floatval));
-	} else if(args[1]->get_type() == float_e && args[0]->get_type() == int_e) {
+	} else if(args[1]->type() == float_e && args[0]->type() == int_e) {
 		return new ehretval_t(pow(args[1]->floatval, (float) args[0]->intval));
-	} else if(args[1]->get_type() == float_e && args[0]->get_type() == float_e) {
+	} else if(args[1]->type() == float_e && args[0]->type() == float_e) {
 		return new ehretval_t(pow(args[1]->floatval, args[0]->floatval));
 	} else {
-		eh_error_type("argument 0 to pow", args[1]->get_type(), enotice_e);
-		eh_error_type("argument 1 to pow", args[0]->get_type(), enotice_e);
+		eh_error_type("argument 0 to pow", args[1]->type(), enotice_e);
+		eh_error_type("argument 1 to pow", args[0]->type(), enotice_e);
 		return NULL;
 	}
 }
@@ -277,8 +277,8 @@ EHLIBFUNC(log) {
 		return NULL;
 	}
 	ehretval_t *arg = eh_xtofloat(args[0]);
-	if(arg->get_type() != float_e) {
-		eh_error_type("argument 0 to log", args[0]->get_type(), enotice_e);
+	if(arg->type() != float_e) {
+		eh_error_type("argument 0 to log", args[0]->type(), enotice_e);
 		return NULL;
 	}
 	return new ehretval_t(log(arg->floatval));
@@ -290,8 +290,8 @@ EHLIBFUNC(eval) {
 		return NULL;
 	}
 	ehretval_t *arg = eh_xtostring(args[0]);
-	if(arg->get_type() != string_e) {
-		eh_error_type("argument 0 to eval", args[0]->get_type(), enotice_e);
+	if(arg->type() != string_e) {
+		eh_error_type("argument 0 to eval", args[0]->type(), enotice_e);
 		return NULL;	
 	}
 	return new ehretval_t(obj->parse_string(arg->stringval));

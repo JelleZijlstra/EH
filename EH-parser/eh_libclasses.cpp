@@ -26,7 +26,7 @@ EH_METHOD(CountClass, setcount) {
 	CountClass *selfptr = (CountClass *)obj;
 
 	ehretval_t *newcounter = eh_xtoint(args[0]);
-	if(newcounter->type != int_e) {
+	if(newcounter->type() != int_e) {
 		return NULL;
 	}
 
@@ -50,7 +50,7 @@ EH_METHOD(File, open) {
 		return NULL;
 	}
 	ehretval_t *filename = eh_xtostring(args[0]);
-	if(filename->type != string_e) {
+	if(filename->type() != string_e) {
 		return NULL;
 	}
 	FILE *mfile = fopen(filename->stringval, "r+");
@@ -113,7 +113,7 @@ EH_METHOD(File, puts) {
 		return NULL;
 	}
 	ehretval_t *str = eh_xtostring(args[0]);
-	if(str->type != string_e) {
+	if(str->type() != string_e) {
 		return NULL;
 	}
 

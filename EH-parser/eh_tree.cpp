@@ -10,7 +10,7 @@ void free_node(ehretval_t *in) {
 	if(in == NULL) {
 		return;
 	}
-	switch(in->type) {
+	switch(in->type()) {
 		case string_e:
 			delete[] in->stringval;
 			break;
@@ -29,22 +29,15 @@ void free_node(ehretval_t *in) {
 }
 
 #define GETFUNC(name, vtype) ehretval_t *eh_get_ ## name (vtype value) { \
-	ehretval_t *ret = new ehretval_t; \
-	ret->type = name ## _e; \
+	ehretval_t *ret = new ehretval_t(name ## _e); \
 	ret->name ## val = value; \
-	ret->inc_rc(); \
 	return ret; \
 }
 GETFUNC(int, int)
 GETFUNC(string, char *)
 GETFUNC(float, float)
 ehretval_t *eh_get_null(void) {
-	ehretval_t *ret = new ehretval_t;
-
-	ret->type = null_e;
-	ret->inc_rc();
-
-	return ret;
+	return new ehretval_t(null_e);
 }
 GETFUNC(type, type_enum)
 GETFUNC(accessor, accessor_enum)
@@ -55,7 +48,7 @@ ehretval_t *eh_addnode(int operation, int nparas, ...) {
 	va_list args;
 	ehretval_t *ret;
 
-	ret = new ehretval_t;
+	ret = new ehretval_t(op_e);
 	ret->opval = new opnode_t;
 	if(nparas) {
 		ret->opval->paras = new ehretval_t *[nparas];
@@ -63,8 +56,6 @@ ehretval_t *eh_addnode(int operation, int nparas, ...) {
 		ret->opval->paras = NULL;
 	}
 
-	ret->type = op_e;
-	ret->inc_rc();
 	ret->opval->op = operation;
 	ret->opval->nparas = nparas;
 	va_start(args, nparas);
@@ -88,8 +79,8 @@ static void printntabs(const int n) {
 	break;
 
 void print_tree(const ehretval_t *const in, const int n) {
-	printntabs(n); printf("Type: %s\n", get_typestring(in->type));
-	switch(in->type) {
+	printntabs(n); printf("Type: %s\n", get_typestring(in->type()));
+	switch(in->type()) {
 		PRINT_TREE_TYPE(string, s)
 		PRINT_TREE_TYPE(int, d)
 		case op_e:

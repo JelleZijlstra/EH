@@ -76,28 +76,28 @@ static inline int count_nodes(ehretval_t *node);
 #define EH_INT_CASE(token, operator) case token: \
 	operand1 = eh_xtoint(eh_execute(node->opval->paras[0], context)); \
 	operand2 = eh_xtoint(eh_execute(node->opval->paras[1], context)); \
-	if(operand1->get_type() == int_e && operand2->get_type() == int_e) { \
+	if(operand1->type() == int_e && operand2->type() == int_e) { \
 		ret = new ehretval_t(int_e); \
 		ret->intval = (operand1->intval operator operand2->intval); \
 	} else {\
-		eh_error_types(#operator, operand1->get_type(), operand2->get_type(), eerror_e); \
+		eh_error_types(#operator, operand1->type(), operand2->type(), eerror_e); \
 	} \
 	break;
 // take ints or floats, return an int or float
 #define EH_FLOATINT_CASE(token, operator) case token: \
 	operand1 = eh_execute(node->opval->paras[0], context); \
 	operand2 = eh_execute(node->opval->paras[1], context); \
-	if(operand1->get_type() == float_e && operand2->get_type() == float_e) { \
+	if(operand1->type() == float_e && operand2->type() == float_e) { \
 		ret = new ehretval_t(float_e); \
 		ret->floatval = (operand1->floatval operator operand2->floatval); \
 	} else { \
 		operand1 = eh_xtoint(operand1); \
 		operand2 = eh_xtoint(operand2); \
-		if(operand1->get_type() == int_e && operand2->get_type() == int_e) { \
+		if(operand1->type() == int_e && operand2->type() == int_e) { \
 			ret = new ehretval_t(int_e); \
 			ret->intval = (operand1->intval operator operand2->intval); \
 		} else { \
-			eh_error_types(#operator, operand1->get_type(), operand2->get_type(), eerror_e); \
+			eh_error_types(#operator, operand1->type(), operand2->type(), eerror_e); \
 		} \
 	} \
 	break;
@@ -105,17 +105,17 @@ static inline int count_nodes(ehretval_t *node);
 #define EH_INTBOOL_CASE(token, operator) case token: \
 	operand1 = eh_execute(node->opval->paras[0], context); \
 	operand2 = eh_execute(node->opval->paras[1], context); \
-	if(operand1->get_type() == float_e && operand2->get_type() == float_e) { \
+	if(operand1->type() == float_e && operand2->type() == float_e) { \
 		ret = new ehretval_t(bool_e); \
 		ret->boolval = (operand1->floatval operator operand2->floatval); \
 	} else { \
 		operand1 = eh_xtoint(operand1); \
 		operand2 = eh_xtoint(operand2); \
-		if(operand1->get_type() == int_e && operand2->get_type() == int_e) { \
+		if(operand1->type() == int_e && operand2->type() == int_e) { \
 			ret = new ehretval_t(bool_e); \
 			ret->boolval = (operand1->intval operator operand2->intval); \
 		} else { \
-			eh_error_types(#operator, operand1->get_type(), operand2->get_type(), eerror_e); \
+			eh_error_types(#operator, operand1->type(), operand2->type(), eerror_e); \
 		} \
 	} \
 	break;
@@ -234,7 +234,7 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 		return ret;
 	}
 	try {
-		if(node->type == op_e) {
+		if(node->type() == op_e) {
 			switch(node->opval->op) {
 			/*
 			 * Unary operators
@@ -306,7 +306,7 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 						// check for empty statement; this means that the last
 						// actual statement in a function is returned
 						ehretval_t *new_node = node->opval->paras[1];
-						if(new_node->get_type() == op_e && new_node->opval->op == T_SEPARATOR && new_node->opval->nparas == 0) {
+						if(new_node->type() == op_e && new_node->opval->op == T_SEPARATOR && new_node->opval->nparas == 0) {
 							return ret;
 						} else {
 							ret = eh_execute(new_node, context);
@@ -464,10 +464,10 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 					// return NULL. No need to yell, since eh_xtoi already does
 					// that.
 					operand1 = eh_xtoint(eh_execute(node->opval->paras[0], context));
-					if(operand1->type == null_e)
+					if(operand1->type() == null_e)
 						break;
 					operand2 = eh_xtoint(eh_execute(node->opval->paras[1], context));
-					if(operand2->type == null_e)
+					if(operand2->type() == null_e)
 						break;
 					ret = eh_make_range(operand1->intval, operand2->intval);
 					break;
@@ -479,12 +479,12 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 					if(operand1 == NULL) {
 						eh_error("Cannot set with -- operator", eerror_e);
 					} else {
-						switch(operand1->type) {
+						switch(operand1->type()) {
 							case int_e:
 								operand1->intval--;
 								break;
 							default:
-								eh_error_type("-- operator", operand1->get_type(), eerror_e);
+								eh_error_type("-- operator", operand1->type(), eerror_e);
 								break;
 						}
 						operand1->dec_rc();
@@ -495,12 +495,12 @@ ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 					if(operand1 == NULL) {
 						eh_error("Cannot set with ++ operator", eerror_e);
 					} else {
-						switch(operand1->type) {
+						switch(operand1->type()) {
 							case int_e:
 								operand1->intval++;
 								break;
 							default:
-								eh_error_type("++ operator", operand1->get_type(), eerror_e);
+								eh_error_type("++ operator", operand1->type(), eerror_e);
 								break;
 						}
 						operand1->dec_rc();
@@ -547,7 +547,7 @@ ehretval_t *EHI::eh_op_command(const char *name, ehretval_t *node, ehcontext_t c
 	// loop through the paras given
 	for( ; node->opval->nparas != 0; node = node->opval->paras[1]) {
 		ehretval_t *node2 = node->opval->paras[0];
-		if(node2->type == op_e) {
+		if(node2->type() == op_e) {
 			switch(node2->opval->op) {
 				case T_SHORTPARA:
 					// short paras: set each short-form option to the same thing
@@ -617,12 +617,12 @@ ehretval_t *EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 
 	// get the count
 	ehretval_t *count_r = eh_execute(op->paras[0], context);
-	if(count_r->type == range_e) {
+	if(count_r->type() == range_e) {
 		range = *count_r->rangeval;
 	} else {
 		count_r = eh_xtoint(count_r);
-		if(count_r->get_type() != int_e) {
-			eh_error_type("count", count_r->get_type(), eerror_e);
+		if(count_r->type() != int_e) {
+			eh_error_type("count", count_r->type(), eerror_e);
 			return ret;
 		}
 		range.min = 0;
@@ -671,8 +671,8 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 
 	// get the object to be looped through and check its type
 	ehretval_t *object = eh_execute(op->paras[0], context);
-	if(object->get_type() != array_e && object->get_type() != object_e) {
-		eh_error_type("for ... as operator", object->get_type(), enotice_e);
+	if(object->type() != array_e && object->type() != object_e) {
+		eh_error_type("for ... as operator", object->type(), enotice_e);
 		return ret;
 	}
 	// increment loop count
@@ -699,7 +699,7 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	if(indexname != NULL) {
 		indexvar = context->get_recursive(indexname, context, T_LVALUE_SET);
 	}
-	if(object->type == object_e) {
+	if(object->type() == object_e) {
 		// object index is always a string
 		if(indexname != NULL) {
 			if(indexvar->value == NULL) {
@@ -731,7 +731,7 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 			if(indexvar->value == NULL) {
 				indexvar->value = new ehretval_t(int_e);
 			}
-			indexvar->value->type = int_e;
+			indexvar->value->type(int_e);
 		}
 		ARRAY_FOR_EACH_INT(array, i) {
 			if(indexname) {
@@ -742,7 +742,7 @@ ehretval_t *EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 			LOOPCHECKS;
 		}
 		if(indexname) {
-			indexvar->value->type = string_e;
+			indexvar->value->type(string_e);
 		}
 		ARRAY_FOR_EACH_STRING(array, i) {
 			if(indexname) {
@@ -779,7 +779,7 @@ void EHI::eh_op_break(opnode_t *op, ehcontext_t context) {
 		level = 1;
 	} else {
 		ehretval_t *level_v = eh_xtoint(eh_execute(op->paras[0], context));
-		if(level_v->get_type() != int_e) {
+		if(level_v->type() != int_e) {
 			level_v->dec_rc();
 			return;
 		} else {
@@ -801,7 +801,7 @@ void EHI::eh_op_continue(opnode_t *op, ehcontext_t context) {
 		level = 1;
 	} else {
 		ehretval_t *level_v = eh_xtoint(eh_execute(op->paras[0], context));
-		if(level_v->get_type() != int_e) {
+		if(level_v->type() != int_e) {
 			level_v->dec_rc();
 			return;
 		} else {
@@ -843,8 +843,8 @@ ehretval_t *EHI::eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
 		ehretval_t **myparas = node->opval->paras[1]->opval->paras;
 		// nodes here will always have the name in para 0 and value in para 1
 		ehretval_t *namev = eh_execute(myparas[0], context);
-		if(namev->get_type() != string_e) {
-			eh_error_type("Class member label", namev->get_type(), eerror_e);
+		if(namev->type() != string_e) {
+			eh_error_type("Class member label", namev->type(), eerror_e);
 			continue;
 		}
 		ehretval_t *value = eh_execute(myparas[1], context);
@@ -949,9 +949,9 @@ ehretval_t *EHI::eh_op_switch(ehretval_t **paras, ehcontext_t context) {
 			ehretval_t *casevar = eh_execute(op->paras[0], context);
 			ehretval_t *decider;
 			// try to call function
-			if(casevar->get_type() == func_e) {
+			if(casevar->type() == func_e) {
 				decider = call_function_args(casevar->funcval, 1, &switchvar, context);
-				if(decider->get_type() != bool_e) {
+				if(decider->type() != bool_e) {
 					eh_error("Switch case method does not return bool", eerror_e);
 					return NULL;
 				}
@@ -996,11 +996,11 @@ ehretval_t *EHI::eh_op_given(ehretval_t **paras, ehcontext_t context) {
 		}
 		ehretval_t *casevar = eh_execute(op->paras[0], context);
 		ehretval_t *decider;
-		if(casevar->get_type() == func_e) {
+		if(casevar->type() == func_e) {
 			decider = call_function_args(
 				casevar->funcval, 1, &switchvar, context
 			);
-			if(decider->get_type() != bool_e) {
+			if(decider->type() != bool_e) {
 				eh_error("Given case method does not return bool", eerror_e);
 				return NULL;
 			}
@@ -1020,7 +1020,7 @@ ehretval_t *EHI::eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 	ehretval_t *function = eh_execute(paras[0], context);
 	// operand1 will be either a string (indicating a normal function call) or a 
 	// func_e (indicating a method or closure call)
-	switch(function->get_type()) {
+	switch(function->type()) {
 		case string_e:
 			func = context->get_recursive(
 				function->stringval, context, T_LVALUE_GET
@@ -1029,8 +1029,8 @@ ehretval_t *EHI::eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 				eh_error_unknown("function", function->stringval, eerror_e);
 				return NULL;
 			}
-			if(func->value->get_type() != func_e) {
-				eh_error_type("function call", func->value->get_type(), eerror_e);
+			if(func->value->type() != func_e) {
+				eh_error_type("function call", func->value->type(), eerror_e);
 				return NULL;
 			}
 			ret = call_function(
@@ -1046,7 +1046,7 @@ ehretval_t *EHI::eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 			// ignore null functions to prevent duplicate warnings
 			return NULL;
 		default:
-			eh_error_type("function call", function->get_type(), eerror_e);
+			eh_error_type("function call", function->type(), eerror_e);
 			return NULL;
 	}
 	function->dec_rc();
@@ -1134,10 +1134,10 @@ void EHI::eh_op_set(ehretval_t **paras, ehcontext_t context) {
 		if(rvalue != NULL) {
 			rvalue->inc_rc();
 		}
-		if(lvalue->get_type() == attribute_e) {
+		if(lvalue->type() == attribute_e) {
 			// lvalue is a pointer to the variable modified, rvalue is the value set to, index is the index
 			ehretval_t *index = eh_execute(paras[0]->opval->paras[2], context);
-			switch(lvalue->referenceval->get_type()) {
+			switch(lvalue->referenceval->type()) {
 				case int_e:
 					int_arrow_set(lvalue->referenceval, index, rvalue);
 					break;
@@ -1148,12 +1148,12 @@ void EHI::eh_op_set(ehretval_t **paras, ehcontext_t context) {
 					range_arrow_set(lvalue->referenceval, index, rvalue);
 					break;
 				default:
-					eh_error_type("arrow access", lvalue->referenceval->get_type(), eerror_e);
+					eh_error_type("arrow access", lvalue->referenceval->type(), eerror_e);
 					break;
 			}
 			DEC_RC(index);
 		} else {
-			if(rvalue->get_type() == reference_e) {
+			if(rvalue->type() == reference_e) {
 				// set new reference
 				lvalue = rvalue->referenceval;
 				rvalue->dec_rc();
@@ -1179,7 +1179,7 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 	switch(paras[1]->accessorval) {
 		case arrow_e:
 			// "array" access
-			switch(basevar->get_type()) {
+			switch(basevar->type()) {
 				case int_e:
 					ret = int_arrow_get(basevar, index);
 					break;
@@ -1196,8 +1196,8 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 					}
 					break;
 				case object_e:
-					if(index->get_type() != string_e) {
-						eh_error_type("access to object", index->get_type(), eerror_e);
+					if(index->type() != string_e) {
+						eh_error_type("access to object", index->type(), eerror_e);
 					} else {
 						ehmember_t *member = basevar->objectval->get(index->stringval, context, T_LVALUE_GET);
 						if(member == NULL) {
@@ -1210,7 +1210,7 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
 					}
 					break;
 				default:
-					eh_error_type("arrow access", basevar->get_type(), eerror_e);
+					eh_error_type("arrow access", basevar->type(), eerror_e);
 					break;
 			}
 			break;
@@ -1270,7 +1270,7 @@ ehretval_t *EHI::call_function_args(ehobj_t *obj, const int nargs, ehretval_t *a
 	for(int i = 0; i < nargs; i++) {
 		ehmember_t *var = new ehmember_t();
 		var->value = args[i];
-		if(var->value->get_type() == reference_e) {
+		if(var->value->type() == reference_e) {
 			var->value = var->value->referenceval;
 		} else {
 			var->value = var->value->share();
@@ -1307,8 +1307,8 @@ ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
 		}
 	}
 	if(constructor != NULL) {
-		if(constructor->get_type() != func_e) {
-			eh_error_type("constructor", constructor->get_type(), enotice_e);
+		if(constructor->type() != func_e) {
+			eh_error_type("constructor", constructor->type(), enotice_e);
 		} else {
 			call_function_args(constructor->funcval, 0, NULL, obj->parent);
 		}
@@ -1328,7 +1328,7 @@ ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehconte
 		throw 0;
 	}
 
-	switch(var->value->type) {
+	switch(var->value->type()) {
 		case array_e:
 			if(var->value->arrayval->has(label) or (token == T_LVALUE_SET)) {
 				return var->value->arrayval->operator[](label);
@@ -1336,8 +1336,8 @@ ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehconte
 				throw 0;
 			}
 		case object_e:
-			if(label->get_type() != string_e) {
-				eh_error_type("object member label", label->get_type(), eerror_e);
+			if(label->type() != string_e) {
+				eh_error_type("object member label", label->type(), eerror_e);
 				throw 0;
 			}
 			member = var->value->objectval->get(label->stringval, context, token);
@@ -1348,7 +1348,7 @@ ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehconte
 			}
 			break;
 		default:
-			arrow_access_curr->type = attribute_e;
+			arrow_access_curr->type(attribute_e);
 			arrow_access_curr->referenceval = var->value;
 			return arrow_access_curr;
 	}
@@ -1356,8 +1356,8 @@ ehretval_t *&EHI::object_access(ehretval_t *operand1, ehretval_t *index, ehconte
 }
 ehretval_t *&EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token) {
 	ehretval_t *label = eh_execute(index, context);
-	if(label->get_type() != string_e) {
-		eh_error_type("object member label", label->get_type(), eerror_e);
+	if(label->type() != string_e) {
+		eh_error_type("object member label", label->type(), eerror_e);
 		throw 0;
 	}
 
@@ -1378,7 +1378,7 @@ ehretval_t *&EHI::colon_access(ehretval_t *operand1, ehretval_t *index, ehcontex
 ehobj_t *EHI::get_class(ehretval_t *code, ehcontext_t context) {
 	ehretval_t *classname = this->eh_execute(code, context);
 	ehobj_t *classobj;
-	switch(classname->get_type()) {
+	switch(classname->type()) {
 		case string_e:
 		{
 			ehmember_t *member = context->get_recursive(classname->stringval, context, T_LVALUE_GET);
@@ -1386,8 +1386,8 @@ ehobj_t *EHI::get_class(ehretval_t *code, ehcontext_t context) {
 				eh_error_unknown("class", classname->stringval, eerror_e);
 				return NULL;
 			}
-			if(member->value->get_type() != object_e) {
-				eh_error_type("class", member->value->get_type(), eerror_e);
+			if(member->value->type() != object_e) {
+				eh_error_type("class", member->value->type(), eerror_e);
 				return NULL;
 			}
 			classobj = member->value->objectval;
@@ -1397,7 +1397,7 @@ ehobj_t *EHI::get_class(ehretval_t *code, ehcontext_t context) {
 			classobj = classname->objectval;
 			break;
 		default:
-			eh_error_type("class name", classname->get_type(), eerror_e);
+			eh_error_type("class name", classname->type(), eerror_e);
 			return NULL;
 	}
 	return classobj;
@@ -1420,7 +1420,7 @@ void EHI::array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t 
 	} else {
 		const ehretval_t *label = eh_execute(in->opval->paras[0], context);
 		ehretval_t *var = eh_execute(in->opval->paras[1], context);
-		switch(label->get_type()) {
+		switch(label->type()) {
 			case int_e:
 				array->int_indices[label->intval] = var;
 				break;
@@ -1428,7 +1428,7 @@ void EHI::array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t 
 				array->string_indices[label->stringval] = var;
 				break;
 			default:
-				eh_error_type("array member label", label->get_type(), enotice_e);
+				eh_error_type("array member label", label->type(), enotice_e);
 				break;
 		}
 	}
@@ -1483,7 +1483,7 @@ void EHI::redirect_command(const char *redirect, const char *target) {
  */
 ehretval_t *eh_count(const ehretval_t *in) {
 	ehretval_t *ret = new ehretval_t(int_e);
-	switch(in->get_type()) {
+	switch(in->type()) {
 		case int_e:
 			ret->intval = sizeof(int) * 8;
 			break;
@@ -1506,8 +1506,8 @@ ehretval_t *eh_count(const ehretval_t *in) {
 			ret->intval = 2;
 			break;
 		default:
-			eh_error_type("count operator", in->get_type(), eerror_e);
-			ret->type = null_e;
+			eh_error_type("count operator", in->type(), eerror_e);
+			ret->type(null_e);
 			break;
 	}
 	return ret;
@@ -1515,7 +1515,7 @@ ehretval_t *eh_count(const ehretval_t *in) {
 ehretval_t *eh_op_tilde(ehretval_t *in) {
 	// no const argument because it's modified below
 	ehretval_t *ret = NULL;
-	switch(in->get_type()) {
+	switch(in->type()) {
 		// bitwise negation of a bool is just normal negation
 		case bool_e:
 			ret = new ehretval_t(!in->boolval);
@@ -1523,8 +1523,8 @@ ehretval_t *eh_op_tilde(ehretval_t *in) {
 		// else try to cast to int
 		default:
 			in = eh_xtoint(in);
-			if(in->get_type() != int_e) {
-				eh_error_type("bitwise negation", in->get_type(), eerror_e);
+			if(in->type() != int_e) {
+				eh_error_type("bitwise negation", in->type(), eerror_e);
 				return ret;
 			}
 			// fall through to int case
@@ -1536,7 +1536,7 @@ ehretval_t *eh_op_tilde(ehretval_t *in) {
 }
 ehretval_t *eh_op_uminus(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->get_type()) {
+	switch(in->type()) {
 		// negation
 		case bool_e:
 			ret = new ehretval_t(!in->boolval);
@@ -1546,8 +1546,8 @@ ehretval_t *eh_op_uminus(ehretval_t *in) {
 			break;
 		default:
 			in = eh_xtoint(in);
-			if(in->get_type() != int_e) {
-				eh_error_type("negation", in->get_type(), eerror_e);
+			if(in->type() != int_e) {
+				eh_error_type("negation", in->type(), eerror_e);
 				return ret;
 			}
 			// fall through to int case
@@ -1561,7 +1561,7 @@ ehretval_t *eh_op_dot(ehretval_t *operand1, ehretval_t *operand2) {
 	ehretval_t *ret = NULL;
 	operand1 = eh_xtostring(operand1);
 	operand2 = eh_xtostring(operand2);
-	if(operand1->type == string_e && operand2->type == string_e) {
+	if(operand1->type() == string_e && operand2->type() == string_e) {
 		// concatenate them
 		ret = new ehretval_t(string_e);
 		size_t len1 = strlen(operand1->stringval);
@@ -1615,7 +1615,7 @@ ehretval_t *eh_cast(const type_enum type, ehretval_t *in) {
 }
 
 #define CASTERROR(totype) do { \
-	eh_error_type("typecast to " #totype, in->get_type(), enotice_e); \
+	eh_error_type("typecast to " #totype, in->type(), enotice_e); \
 	return NULL; \
 } while(0)
 #define CASTERROR_KNOWN(totype, vtype) do { \
@@ -1699,7 +1699,7 @@ ehretval_t *eh_stringtorange(const char *const in) {
 /* Casts from arbitrary types */
 ehretval_t *eh_xtoint(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->get_type()) {
+	switch(in->type()) {
 		case int_e:
 			ret = in;
 			break;
@@ -1728,7 +1728,7 @@ ehretval_t *eh_xtoint(ehretval_t *in) {
 }
 ehretval_t *eh_xtostring(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->get_type()) {
+	switch(in->type()) {
 		case string_e:
 			ret = in;
 			break;
@@ -1769,7 +1769,7 @@ ehretval_t *eh_xtostring(ehretval_t *in) {
 }
 bool eh_xtobool(ehretval_t *in) {
 	// convert an arbitrary variable to a bool
-	switch(in->get_type()) {
+	switch(in->type()) {
 		case bool_e:
 			return in->boolval;
 		case int_e:
@@ -1794,7 +1794,7 @@ bool eh_xtobool(ehretval_t *in) {
 }
 ehretval_t *eh_xtofloat(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->get_type()) {
+	switch(in->type()) {
 		case float_e:
 			ret = in;
 			break;
@@ -1822,7 +1822,7 @@ ehretval_t *eh_xtofloat(ehretval_t *in) {
 }
 ehretval_t *eh_xtorange(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->get_type()) {
+	switch(in->type()) {
 		case range_e:
 			ret = in;
 			break;
@@ -1849,7 +1849,7 @@ ehretval_t *eh_xtorange(ehretval_t *in) {
 }
 ehretval_t *eh_xtoarray(ehretval_t *in) {
 	ehretval_t *ret = NULL;
-	switch(in->get_type()) {
+	switch(in->type()) {
 		case array_e:
 			ret = in;
 			break;
@@ -1875,7 +1875,7 @@ ehretval_t *eh_xtoarray(ehretval_t *in) {
 static inline bool eh_floatequals(float infloat, ehretval_t *operand2) {
 	ehretval_t *operand = eh_xtoint(operand2);
 	// checks whether a float equals an int. C handles this correctly.
-	if(operand->get_type() != int_e) {
+	if(operand->type() != int_e) {
 		return false;
 	}
 	bool result = (infloat == operand->intval);
@@ -1887,14 +1887,14 @@ ehretval_t *eh_looseequals(ehretval_t *operand1, ehretval_t *operand2) {
 	// first try strict comparison
 	if(eh_strictequals(operand1, operand2)) {
 		ret = new ehretval_t(true);
-	} else if(operand1->get_type() == float_e) {
+	} else if(operand1->type() == float_e) {
 		ret = new ehretval_t(eh_floatequals(operand1->floatval, operand2));
-	} else if(operand2->get_type() == float_e) {
+	} else if(operand2->type() == float_e) {
 		ret = new ehretval_t(eh_floatequals(operand2->floatval, operand1));
 	} else {
 		operand1 = eh_xtoint(operand1);
 		operand2 = eh_xtoint(operand2);
-		if(operand1->get_type() == int_e && operand2->get_type() == int_e) {
+		if(operand1->type() == int_e && operand2->type() == int_e) {
 			ret = new ehretval_t(operand1->intval == operand2->intval);
 		} else {
 			ret = NULL;
@@ -1903,11 +1903,11 @@ ehretval_t *eh_looseequals(ehretval_t *operand1, ehretval_t *operand2) {
 	return ret;
 }
 bool eh_strictequals(ehretval_t *operand1, ehretval_t *operand2) {
-	if(operand1->get_type() != operand2->get_type()) {
+	if(operand1->type() != operand2->type()) {
 		// strict comparison between different types always returns false
 		return false;
 	}
-	switch(operand1->get_type()) {
+	switch(operand1->type()) {
 		case int_e:
 			return (operand1->intval == operand2->intval);
 		case string_e:
@@ -1936,8 +1936,8 @@ ehretval_t *int_arrow_get(ehretval_t *operand1, ehretval_t *operand2) {
 	ehretval_t *ret = NULL;
 	// "array" access to integer returns the nth bit of the integer; for example 
 	// (assuming sizeof(int) == 32), (2 -> 30) == 1, (2 -> 31) == 0
-	if(operand2->get_type() != int_e) {
-		eh_error_type("bitwise access to integer", operand2->get_type(), enotice_e);
+	if(operand2->type() != int_e) {
+		eh_error_type("bitwise access to integer", operand2->type(), enotice_e);
 		return ret;
 	}
 	if(operand2->intval >= (int) sizeof(int) * 8) {
@@ -1959,8 +1959,8 @@ ehretval_t *string_arrow_get(ehretval_t *operand1, ehretval_t *operand2) {
 	// In the future, perhaps replace this with a char datatype or with a 
 	// "shortstring" datatype representing strings up to 3 or even 4 characters 
 	// long
-	if(operand2->get_type() != int_e) {
-		eh_error_type("character access to string", operand2->get_type(), enotice_e);
+	if(operand2->type() != int_e) {
+		eh_error_type("character access to string", operand2->type(), enotice_e);
 		return ret;
 	}
 	int count = strlen(operand1->stringval);
@@ -1975,8 +1975,8 @@ ehretval_t *string_arrow_get(ehretval_t *operand1, ehretval_t *operand2) {
 }
 ehretval_t *range_arrow_get(ehretval_t *range, ehretval_t *accessor) {
 	ehretval_t *ret = NULL;
-	if(accessor->get_type() != int_e) {
-		eh_error_type("arrow access to range", accessor->get_type(), enotice_e);
+	if(accessor->type() != int_e) {
+		eh_error_type("arrow access to range", accessor->type(), enotice_e);
 		return ret;
 	}
 	switch(accessor->intval) {
@@ -1993,8 +1993,8 @@ ehretval_t *range_arrow_get(ehretval_t *range, ehretval_t *accessor) {
 	return ret;
 }
 void int_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue) {
-	if(index->get_type() != int_e) {
-		eh_error_type("bitwise access to integer", index->get_type(), enotice_e);
+	if(index->type() != int_e) {
+		eh_error_type("bitwise access to integer", index->type(), enotice_e);
 		return;
 	}
 	if(index->intval < 0 || (unsigned) index->intval >= sizeof(int) * 8) {
@@ -2013,12 +2013,12 @@ void int_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue) {
 	return;
 }
 void string_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue) {
-	if(rvalue->get_type() != int_e) {
-		eh_error_type("character access to string", rvalue->get_type(), enotice_e);
+	if(rvalue->type() != int_e) {
+		eh_error_type("character access to string", rvalue->type(), enotice_e);
 		return;
 	}
-	if(index->get_type() != int_e) {
-		eh_error_type("setting a character in a string", index->get_type(), enotice_e);
+	if(index->type() != int_e) {
+		eh_error_type("setting a character in a string", index->type(), enotice_e);
 		return;
 	}
 	int count = strlen(input->stringval);
@@ -2032,10 +2032,10 @@ void string_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue) 
 	return;
 }
 void range_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue) {
-	if(rvalue->get_type() != int_e) {
-		eh_error_type("arrow access to range", rvalue->get_type(), enotice_e);
-	} else if(index->get_type() != int_e) {
-		eh_error_type("arrow access to range", index->get_type(), enotice_e);
+	if(rvalue->type() != int_e) {
+		eh_error_type("arrow access to range", rvalue->type(), enotice_e);
+	} else if(index->type() != int_e) {
+		eh_error_type("arrow access to range", index->type(), enotice_e);
 	} else switch(index->intval) {
 		case 0:
 			input->rangeval->min = rvalue->intval;
@@ -2072,7 +2072,7 @@ static inline int count_nodes(ehretval_t *node) {
  * ehretval_t
  */
 void ehretval_t::print() {
-	switch(this->get_type()) {
+	switch(this->type()) {
 		case string_e:
 			printf("%s", this->stringval);
 			break;
@@ -2096,7 +2096,7 @@ void ehretval_t::print() {
 			printf("%d to %d", this->rangeval->min, this->rangeval->max);
 			break;
 		default:
-			eh_error_type("echo operator", this->get_type(), enotice_e);
+			eh_error_type("echo operator", this->type(), enotice_e);
 			break;
 	}
 	return;
@@ -2106,19 +2106,19 @@ void ehretval_t::print() {
  * eharray_t
  */
 ehretval_t * &eharray_t::operator[](ehretval_t *index) {
-	switch(index->get_type()) {
+	switch(index->type()) {
 		case int_e:
 			return int_indices[index->intval];
 		case string_e:
 			return string_indices[index->stringval];
 		default:
-			eh_error_type("array index", index->get_type(), enotice_e);
+			eh_error_type("array index", index->type(), enotice_e);
 			throw new std::exception;
 	}
 }
 void eharray_t::insert_retval(ehretval_t *index, ehretval_t *value) {
 	// Inserts a member into an array. 
-	switch(index->get_type()) {
+	switch(index->type()) {
 		case int_e:
 			this->int_indices[index->intval] = value;
 			break;
@@ -2126,7 +2126,7 @@ void eharray_t::insert_retval(ehretval_t *index, ehretval_t *value) {
 			this->string_indices[index->stringval] = value;
 			break;
 		default:
-			eh_error_type("array index", index->get_type(), enotice_e);
+			eh_error_type("array index", index->type(), enotice_e);
 			break;
 	}
 }
@@ -2219,7 +2219,7 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent) {
 			classmember->second->value = new ehretval_t(null_e);
 		}
 		newmember->value = classmember->second->value->reference(classmember->second->value);
-	} else if(classmember->second->value->get_type() == func_e) {
+	} else if(classmember->second->value->type() == func_e) {
 		newmember->value = new ehretval_t(func_e);
 		ehobj_t *f = new ehobj_t();
 		newmember->value->funcval = f;

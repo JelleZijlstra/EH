@@ -100,7 +100,9 @@ typedef struct opnode_t {
 
 // EH value, and generic node
 typedef struct ehretval_t {
-	type_enum type;
+private:
+	type_enum _type;
+public:
 	union {
 		// simple EH variable type
 		int intval;
@@ -125,8 +127,8 @@ typedef struct ehretval_t {
 		refcount = 1;
 		is_shared = 0;
 	}
-	ehretval_t(type_enum mtype) : type(mtype), stringval(NULL), refcount(1), is_shared(0) {}
-#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) : type(ehtype ## _e), ehtype ## val(in), refcount(1), is_shared(0) {}
+	ehretval_t(type_enum type) : _type(type), stringval(NULL), refcount(1), is_shared(0) {}
+#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) : _type(ehtype ## _e), ehtype ## val(in), refcount(1), is_shared(0) {}
 	EHRV_CONS(int, int)
 	EHRV_CONS(char *, string)
 	EHRV_CONS(bool, bool)
@@ -154,8 +156,8 @@ typedef struct ehretval_t {
 	void free();
 	ehretval_t *clone() {
 		ehretval_t *out = new ehretval_t;
-		out->type = type;
-		switch(type) {
+		out->type(this->_type);
+		switch(this->_type) {
 #define COPY(type) case type ## _e: out->type ## val = type ## val; break
 			COPY(int);
 			COPY(string);
@@ -207,11 +209,11 @@ typedef struct ehretval_t {
 		if(is_shared == 0) {
 			// overwrite
 			if(in == NULL) {
-				type = null_e;
+				this->_type = null_e;
 				return this;
 			}
-			type = in->type;
-			switch(type) {
+			this->_type = in->_type;
+			switch(this->_type) {
 #define COPY(type) case type ## _e: type ## val = in->type ## val; break
 				COPY(int);
 				COPY(string);
@@ -242,12 +244,15 @@ typedef struct ehretval_t {
 	}
 	
 	// other methods
-	type_enum get_type() const {
+	type_enum type() const {
 		if(this == NULL) {
 			return null_e;
 		} else {
-			return this->type;
+			return this->_type;
 		}
+	}
+	void type(type_enum type) {
+		this->_type = type;
 	}
 	void print();
 private:
@@ -327,7 +332,7 @@ typedef struct eharray_t {
 	}
 	
 	bool has(ehretval_t *index) {
-		switch(index->get_type()) {
+		switch(index->type()) {
 			case int_e: return this->int_indices.count(index->intval);
 			case string_e: return this->string_indices.count(index->stringval);
 			default: return false;

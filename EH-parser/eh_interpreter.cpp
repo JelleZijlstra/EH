@@ -67,7 +67,7 @@ const char *libredirs[][2] = {
 
 #define DEC_RC(ret) (((ret) == NULL) ? (void)0 : (ret)->dec_rc())
 
-static inline int count_nodes(ehretval_t *node);
+static inline int count_nodes(const ehretval_t *node);
 
 /*
  * macros for interpreter behavior
@@ -154,19 +154,15 @@ static inline int count_nodes(ehretval_t *node);
  * Functions executed before and after the program itself is executed.
  */
 EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), arrow_access_curr(new ehretval_t(attribute_e)), returning(false), global_object(NULL) {
-		eh_init();
-	}
+	eh_init();
+}
 void EHI::eh_init(void) {
-	global_object = new ehobj_t;
-	global_object->classname = "AnonymousClass";
-	global_object->parent = NULL;
+	global_object = new ehobj_t("AnonymousClass");
 	
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
 		ehmember_t *func = new ehmember_t();
 		func->value = new ehretval_t(func_e);
-		func->value->funcval = new ehobj_t;
-		func->value->funcval->parent = global_object;
-		func->value->funcval->classname = "Closure";
+		func->value->funcval = new ehobj_t("Closure", global_object);
 		ehfm_t *f = new ehfm_t(lib_e);
 		func->value->funcval->function = f;
 		f->libfunc_pointer = libfuncs[i].code;
@@ -174,9 +170,7 @@ void EHI::eh_init(void) {
 		global_object->insert(libfuncs[i].name, func);
 	}
 	for(int i = 0; libclasses[i].name != NULL; i++) {
-		ehobj_t *newclass = new ehobj_t;
-		newclass->parent = NULL;
-		newclass->classname = libclasses[i].name;
+		ehobj_t *newclass = new ehobj_t(libclasses[i].name);
 		newclass->constructor = libclasses[i].info.constructor;
 		ehlm_listentry_t *members = libclasses[i].info.members;
 		// attributes for library methods
@@ -187,9 +181,7 @@ void EHI::eh_init(void) {
 		for(int i = 0; members[i].name != NULL; i++) {
 			ehmember_t *func = new ehmember_t(attributes);
 			func->value = new ehretval_t(func_e);
-			func->value->funcval = new ehobj_t;
-			func->value->funcval->parent = newclass;
-			func->value->funcval->classname = "Closure";
+			func->value->funcval = new ehobj_t("Closure", newclass);
 			ehfm_t *f = new ehfm_t(libmethod_e);
 			func->value->funcval->function = f;
 			f->libmethod_pointer = members[i].func;
@@ -831,8 +823,7 @@ ehretval_t *EHI::eh_op_array(ehretval_t *node, ehcontext_t context) {
 	return ret;
 }
 ehretval_t *EHI::eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
-	ehretval_t *ret = new ehretval_t(new ehobj_t);
-	ret->objectval->classname = "AnonClass";
+	ehretval_t *ret = new ehretval_t(new ehobj_t("AnonClass", context));
 	// all members are public, non-static, non-const
 	memberattribute_t attributes;
 	attributes.visibility = public_e;
@@ -842,12 +833,12 @@ ehretval_t *EHI::eh_op_anonclass(ehretval_t *node, ehcontext_t context) {
 	for( ; node->opval->nparas != 0; node = node->opval->paras[0]) {
 		ehretval_t **myparas = node->opval->paras[1]->opval->paras;
 		// nodes here will always have the name in para 0 and value in para 1
-		ehretval_t *namev = eh_execute(myparas[0], context);
+		ehretval_t *namev = eh_execute(myparas[0], ret->objectval);
 		if(namev->type() != string_e) {
 			eh_error_type("Class member label", namev->type(), eerror_e);
 			continue;
 		}
-		ehretval_t *value = eh_execute(myparas[1], context);
+		ehretval_t *value = eh_execute(myparas[1], ret->objectval);
 		ret->objectval->insert_retval(namev->stringval, attributes, value);
 	}
 	return ret;
@@ -2057,10 +2048,10 @@ ehretval_t *eh_make_range(const int min, const int max) {
 	ehretval_t *ret = new ehretval_t(new ehrange_t(min, max));
 	return ret;
 }
-static inline int count_nodes(ehretval_t *node) {
+static inline int count_nodes(const ehretval_t *node) {
 	// count a list like an argument list. Assumes correct layout.
 	int i = 0;
-	for(ehretval_t *tmp = node; 
+	for(const ehretval_t *tmp = node; 
 		tmp->opval->nparas != 0; 
 		tmp = tmp->opval->paras[0], i++
 	);
@@ -2221,17 +2212,15 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent) {
 		newmember->value = classmember->second->value->reference(classmember->second->value);
 	} else if(classmember->second->value->type() == func_e) {
 		newmember->value = new ehretval_t(func_e);
-		ehobj_t *f = new ehobj_t();
-		newmember->value->funcval = f;
-		f->parent = this;
 		ehobj_t *oldobj = classmember->second->value->funcval;
+		ehobj_t *f = new ehobj_t(oldobj->classname, this);
+		newmember->value->funcval = f;
 		if(set_real_parent && oldobj->real_parent == NULL) {
 			f->real_parent = oldobj->parent->parent;
 		} else {
 			f->real_parent = oldobj->real_parent;
 		}
 		f->function = oldobj->function;
-		f->classname = oldobj->classname;
 		f->members = oldobj->members;
 	} else if(classmember->second->value == NULL) {
 		newmember->value = NULL;

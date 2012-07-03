@@ -366,7 +366,7 @@ public:
 	typedef obj_map::iterator obj_iterator;
 	
 	// constructors
-	ehobj_t() : function(NULL), classname(NULL), parent(NULL), real_parent(NULL), selfptr(NULL), members() {}
+	ehobj_t(const char *_classname = NULL, ehobj_t *_parent = NULL, ehobj_t *_real_parent = NULL) : function(NULL), classname(_classname), parent(_parent), real_parent(_real_parent), selfptr(NULL), members() {}
 
 	// methods
 	size_t size() const {

@@ -20,7 +20,6 @@ void ehretval_t::free() {
 			//delete[] stringval;
 			break;
 		case reference_e:
-		case creference_e:
 			referenceval->dec_rc();
 			break;
 		case func_e:

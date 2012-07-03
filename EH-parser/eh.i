@@ -52,7 +52,6 @@ zval *ehtozval(ehretval_t *in) {
 			case accessor_e:
 			case type_e:
 			case reference_e:
-			case creference_e:
 			case op_e:
 			case attribute_e:
 			case attributestr_e:

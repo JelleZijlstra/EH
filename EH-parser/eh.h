@@ -45,7 +45,6 @@ typedef enum type_enum {
 	array_e,
 	func_e, // methods
 	reference_e, // for internal use with lvalues, and as a value for references
-	creference_e, // constant references: can be dereferenced but not written to
 	object_e,
 	op_e,
 	attribute_e,
@@ -171,7 +170,6 @@ typedef struct ehretval_t {
 			COPY(float);
 			COPY(array);
 			COPY(object);
-			case creference_e:
 			COPY(reference);
 			COPY(func);
 			COPY(range);
@@ -228,7 +226,6 @@ typedef struct ehretval_t {
 				COPY(float);
 				COPY(array);
 				COPY(object);
-				case creference_e:
 				COPY(reference);
 				COPY(func);
 				COPY(range);

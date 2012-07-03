@@ -85,7 +85,6 @@ void printvar_t::retval(ehretval_t *in) {
 				printf("(recursion)\n");
 			}
 			break;
-		case creference_e:
 		case reference_e:
 			this->retval(in->referenceval);
 			break;

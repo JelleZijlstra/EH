@@ -1126,9 +1126,6 @@ ehretval_t *EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 	} else {
 		ret = var->value;
 		// do we need this?
-		while(EH_TYPE(ret) == creference_e) {
-			ret = ret->referenceval;
-		}
 	}
 	return ret;
 }

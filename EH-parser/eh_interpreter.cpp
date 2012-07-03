@@ -1119,7 +1119,7 @@ ehretval_t *EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 	
 	ehretval_t *varname = eh_xtostring(ret);
 	if(varname == NULL) {
-		return ret;
+		return NULL;
 	}
 	
 	ehmember_t *var = context->get_recursive(

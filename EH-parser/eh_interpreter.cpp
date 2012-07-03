@@ -1994,23 +1994,6 @@ bool eh_strictequals(ehretval_t *operand1, ehretval_t *operand2) {
 }
 
 /*
- * Arrays.
- */
-void array_insert_retval(eharray_t *array, ehretval_t *index, ehretval_t *value) {
-	// Inserts a member into an array. 
-	switch(EH_TYPE(index)) {
-		case int_e:
-			array->int_indices[index->intval] = value;
-			break;
-		case string_e:
-			array->string_indices[index->stringval] = value;
-			break;
-		default:
-			eh_error_type("array index", EH_TYPE(index), enotice_e);
-			break;
-	}
-}
-/*
  * Variants of array access
  */
 ehretval_t *int_arrow_get(ehretval_t *operand1, ehretval_t *operand2) {
@@ -2197,6 +2180,20 @@ ehretval_t * &eharray_t::operator[](ehretval_t *index) {
 		default:
 			eh_error_type("array index", EH_TYPE(index), enotice_e);
 			throw new std::exception;
+	}
+}
+void eharray_t::insert_retval(ehretval_t *index, ehretval_t *value) {
+	// Inserts a member into an array. 
+	switch(EH_TYPE(index)) {
+		case int_e:
+			this->int_indices[index->intval] = value;
+			break;
+		case string_e:
+			this->string_indices[index->stringval] = value;
+			break;
+		default:
+			eh_error_type("array index", EH_TYPE(index), enotice_e);
+			break;
 	}
 }
 ehmember_t *ehobj_t::insert_retval(const char *name, memberattribute_t attribute, ehretval_t *value) {

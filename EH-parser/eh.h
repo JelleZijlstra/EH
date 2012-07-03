@@ -312,6 +312,7 @@ typedef ehretval_t *(*ehcmd_t)(eharray_t *paras);
 
 // EH array
 typedef struct eharray_t {
+	// typedefs
 	typedef std::map<int, ehretval_t *> int_map;
 	typedef std::map<std::string, ehretval_t *> string_map;
 	typedef std::pair<const int, ehretval_t *>& int_pair;
@@ -319,11 +320,14 @@ typedef struct eharray_t {
 	typedef int_map::iterator int_iterator;
 	typedef string_map::iterator string_iterator;
 
+	// properties
 	int_map int_indices;
 	string_map string_indices;
-
-	ehretval_t * &operator[](ehretval_t *index);
 	
+	// constructor
+	eharray_t() : int_indices(), string_indices() {}
+	
+	// inline methods
 	size_t size() {
 		return this->int_indices.size() + this->string_indices.size();
 	}
@@ -336,7 +340,9 @@ typedef struct eharray_t {
 		}
 	}
 	
-	eharray_t() : int_indices(), string_indices() {}
+	// methods
+	ehretval_t * &operator[](ehretval_t *index);
+	void insert_retval(ehretval_t *index, ehretval_t *value);
 } eharray_t;
 #define ARRAY_FOR_EACH_STRING(array, varname) for(eharray_t::string_iterator varname = (array)->string_indices.begin(), end = (array)->string_indices.end(); varname != end; varname++)
 #define ARRAY_FOR_EACH_INT(array, varname) for(eharray_t::int_iterator varname = (array)->int_indices.begin(), end = (array)->int_indices.end(); varname != end; varname++)
@@ -482,7 +488,6 @@ ehretval_t *eh_op_tilde(ehretval_t *in);
 ehretval_t *eh_op_uminus(ehretval_t *in);
 ehretval_t *eh_op_dot(ehretval_t *operand1, ehretval_t *operand2);
 ehretval_t *eh_make_range(const int min, const int max);
-void array_insert_retval(eharray_t *array, ehretval_t *index, ehretval_t *ret);
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
 
 // type casting

@@ -57,7 +57,7 @@ void eh_error_argcount(int expected, int received) {
 	eh_error(NULL, efatal_e);
 }
 void eh_error_argcount_lib(const char *name, int expected, int received) {
-	fprintf(stderr, "Incorrect argument count for function %s: expected %d, got at least %d", name, expected, received);
+	fprintf(stderr, "Incorrect argument count for function %s: expected %d, got %d", name, expected, received);
 	eh_error(NULL, eerror_e);
 }
 void eh_error_line(int line, const char *msg) {

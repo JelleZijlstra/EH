@@ -63,7 +63,7 @@ private:
 
 	// prototypes
 	ehretval_t *call_function(ehobj_t *obj, ehretval_t *args, ehcontext_t context);
-	ehretval_t *call_function_args(ehobj_t *obj, ehcontext_t context, const int nargs, ehretval_t *args);
+	ehretval_t *call_function_args(ehobj_t *obj, const int nargs, ehretval_t *args[], ehcontext_t context);
 	void array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t context);
 	ehretval_t *&object_access(ehretval_t *name, ehretval_t *index, ehcontext_t context, int token);
 	ehretval_t *&colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token);

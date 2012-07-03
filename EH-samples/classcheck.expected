@@ -1,8 +1,8 @@
 (true)
-Incorrect argument count for function ehlf_class_is: expected 2, got at least 0: EH runtime error
-(false)
-Incorrect argument count for function ehlf_class_is: expected 2, got at least 1: EH runtime error
-(false)
-Incorrect argument count for function ehlf_class_is: expected 2, got at least 3: EH runtime error
-(false)
+Incorrect argument count for function class_is: expected 2, got 0: EH runtime error
+(null)
+Incorrect argument count for function class_is: expected 2, got 1: EH runtime error
+(null)
+Incorrect argument count for function class_is: expected 2, got 3: EH runtime error
+(null)
 (false)

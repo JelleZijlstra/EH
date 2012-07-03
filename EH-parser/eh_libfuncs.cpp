@@ -9,25 +9,10 @@
 #include "eh.bison.hpp"
 #include <cmath>
 
-// get arguments, and error if there are too many or few
-// Args should have enough memory malloc'ed to it to house n arguments.
-// Return 0 on success, -1 on too few, 1 on too many arguments.
-int eh_getargs(ehretval_t *paras, int n, ehretval_t **args, ehcontext_t context, const char *name, EHI *obj) {
-	int i = n;
-	while(i) {
-		if(paras->opval->nparas == 0) {
-			eh_error_argcount_lib(name, n, n - i);
-			return -1;
-		}
-		args[--i] = obj->eh_execute(paras->opval->paras[1], context);
-		paras = paras->opval->paras[0];
-	}
-	if(paras->opval->nparas != 0) {
-		eh_error_argcount_lib(name, n, n + 1);
-		return 1;
-	}
-	return 0;
-}
+// TODO: build an argument getter that sets arguments to local variables, checks
+// argument number, etcetera
+
+// Note that library functions get their arguments in reverse order
 
 /*
  * printvar
@@ -183,28 +168,25 @@ void printvar_t::array(eharray_t *in) {
 }
 
 EHLIBFUNC(printvar) {
-	// this function always returns NULL
-	*retval = NULL;
-
 	// check argument count
-	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__, obj))
-		return;
-	printvar_t printer(args[0]);
-	return;
+	if(nargs != 1) {
+		eh_error_argcount_lib("printvar", 1, nargs);
+	} else {
+		printvar_t printer(args[0]);
+	}
+	// this function always returns NULL
+	return NULL;
 }
 
 /*
  * Type checking functions
  */
 #define TYPEFUNC(typev) EHLIBFUNC(is_ ## typev) { \
-	*retval = new ehretval_t(bool_e); \
-	ehretval_t *args[1]; \
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__, obj)) \
-		EHLF_RETFALSE; \
-	ehretval_t *value = args[0]; \
-	(*retval)->boolval = (value->type == typev ## _e); \
-	return; \
+	if(nargs != 1) { \
+		eh_error_argcount_lib("is_" #typev, 1, nargs); \
+		return NULL; \
+	} \
+	return new ehretval_t(EH_TYPE(args[0]) == typev ## _e); \
 }
 
 TYPEFUNC(null)
@@ -217,112 +199,111 @@ TYPEFUNC(object)
 TYPEFUNC(range)
 // check whether a variable is a member of a specified class
 EHLIBFUNC(class_is) {
-	ehretval_t *args[2];
-	if(eh_getargs(paras, 2, args, context, __FUNCTION__, obj))
-		EHLF_RETFALSE;
-	if(args[0]->type != string_e) {
-		eh_error_type("argument 0 to class_is", args[0]->type, enotice_e);
-		EHLF_RETFALSE;
+	if(nargs != 2) {
+		eh_error_argcount_lib("class_is", 2, nargs);
+		return NULL;
 	}
-	if(args[1]->type != object_e) {
-		eh_error_type("argument 1 to class_is", args[1]->type, enotice_e);
-		EHLF_RETFALSE;
+	// they are in reverse order
+	if(EH_TYPE(args[1]) != string_e) {
+		eh_error_type("argument 0 to class_is", EH_TYPE(args[1]), enotice_e);
+		return NULL;
 	}
-	if(!strcmp(args[0]->stringval, args[1]->objectval->classname))
-		EHLF_RETTRUE;
-	else
-		EHLF_RETFALSE;
+	if(EH_TYPE(args[0]) != object_e) {
+		eh_error_type("argument 1 to class_is", EH_TYPE(args[0]), enotice_e);
+		return NULL;
+	}
+	return new ehretval_t(strcmp(args[1]->stringval, args[0]->objectval->classname) == 0);
 }
 // get the type of a variable
 EHLIBFUNC(get_type) {
-	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__, obj)) {
-		EHLF_RETFALSE;
+	if(nargs != 1) {
+		eh_error_argcount_lib("get_type", 1, nargs);
+		return NULL;
 	}
-	*retval = new ehretval_t(strdup(get_typestring(args[0]->type)));
+	return new ehretval_t(strdup(get_typestring(EH_TYPE(args[0]))));
 }
 
 /*
  * Including files
  */
-ehretval_t eh_include_file(FILE *file);
 EHLIBFUNC(include) {
-	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__, obj)) {
-		EHLF_RETFALSE;
+	if(nargs != 1) {
+		eh_error_argcount_lib("include", 1, nargs);
+		return NULL;
 	}
 	if(EH_TYPE(args[0]) != string_e) {
 		eh_error_type("argument 0 to include", EH_TYPE(args[0]), enotice_e);
 		obj->returning = false;
-		EHLF_RETFALSE;
+		return NULL;
 	}
 	// do the work
 	FILE *infile = fopen(args[0]->stringval, "r");
 	if(!infile) {
 		eh_error("Unable to open included file", enotice_e);
 		obj->returning = false;
-		EHLF_RETFALSE;
+		return NULL;
 	}
 	EHParser parser(end_is_end_e, obj);
 	ehretval_t parse_return = parser.parse_file(infile);
-	*retval = (new ehretval_t)->overwrite(&parse_return);
 	// we're no longer returning
 	obj->returning = false;
-	return;
+	return (new ehretval_t)->overwrite(&parse_return);
 }
 
 // power
 EHLIBFUNC(pow) {
-	ehretval_t *args[2];
-	if(eh_getargs(paras, 2, args, context, __FUNCTION__, obj))
-		EHLF_RETFALSE;
-	if(args[0]->type == int_e && args[1]->type == int_e) {
-		*retval = new ehretval_t((int) pow((float) args[0]->intval, (float) args[1]->intval));
+	if(nargs != 2) {
+		eh_error_argcount_lib("pow", 2, nargs);
+		return NULL;
 	}
-	else if(args[0]->type == int_e && args[1]->type == float_e) {
-		*retval = new ehretval_t(pow((float) args[0]->intval, args[1]->floatval));
-	}
-	else if(args[0]->type == float_e && args[1]->type == int_e) {
-		*retval = new ehretval_t(pow(args[0]->floatval, (float) args[1]->intval));
-	}
-	else if(args[0]->type == float_e && args[1]->type == float_e) {
-		*retval = new ehretval_t(pow(args[0]->floatval, args[1]->floatval));
-	}
-	else {
-		eh_error_type("argument 0 to pow", args[0]->type, enotice_e);
-		eh_error_type("argument 1 to pow", args[1]->type, enotice_e);
-		EHLF_RETFALSE;
+	if(args[1]->get_type() == int_e && args[0]->get_type() == int_e) {
+		return new ehretval_t((int) pow((float) args[1]->intval, (float) args[0]->intval));
+	} else if(args[1]->get_type() == int_e && args[0]->get_type() == float_e) {
+		return new ehretval_t(pow((float) args[1]->intval, args[0]->floatval));
+	} else if(args[1]->get_type() == float_e && args[0]->get_type() == int_e) {
+		return new ehretval_t(pow(args[1]->floatval, (float) args[0]->intval));
+	} else if(args[1]->get_type() == float_e && args[0]->get_type() == float_e) {
+		return new ehretval_t(pow(args[1]->floatval, args[0]->floatval));
+	} else {
+		eh_error_type("argument 0 to pow", args[1]->get_type(), enotice_e);
+		eh_error_type("argument 1 to pow", args[0]->get_type(), enotice_e);
+		return NULL;
 	}
 }
 
 EHLIBFUNC(log) {
-	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__, obj))
-		EHLF_RETFALSE;
+	if(nargs != 1) {
+		eh_error_argcount_lib("log", 1, nargs);
+		return NULL;
+	}
 	ehretval_t *arg = eh_xtofloat(args[0]);
 	if(EH_TYPE(arg) != float_e) {
 		eh_error_type("argument 0 to log", EH_TYPE(args[0]), enotice_e);
-		EHLF_RETFALSE;
+		return NULL;
 	}
-	*retval = new ehretval_t(log(arg->floatval));
+	return new ehretval_t(log(arg->floatval));
 }
 
 EHLIBFUNC(eval) {
-	ehretval_t *args[1];
-	if(eh_getargs(paras, 1, args, context, __FUNCTION__, obj)) {
-		EHLF_RETFALSE;
+	if(nargs != 1) {
+		eh_error_argcount_lib("eval", 1, nargs);
+		return NULL;
 	}
 	ehretval_t *arg = eh_xtostring(args[0]);
 	if(EH_TYPE(arg) != string_e) {
 		eh_error_type("argument 0 to eval", EH_TYPE(args[0]), enotice_e);
-		EHLF_RETFALSE;	
+		return NULL;	
 	}
-	*retval = new ehretval_t(obj->parse_string(arg->stringval));
+	return new ehretval_t(obj->parse_string(arg->stringval));
 }
 
 EHLIBFUNC(getinput) {
+	if(nargs != 0) {
+		eh_error_argcount_lib("getinput", 0, nargs);
+		return NULL;
+	}
 	// more accurately, getint
-	*retval = new ehretval_t(int_e);
-	fscanf(stdin, "%d", &((*retval)->intval));
-	return;
+	ehretval_t *ret = new ehretval_t(int_e);
+	fscanf(stdin, "%d", &(ret->intval));
+	return ret;
 }

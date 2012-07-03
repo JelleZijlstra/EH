@@ -950,7 +950,7 @@ ehretval_t *EHI::eh_op_switch(ehretval_t **paras, ehcontext_t context) {
 			ehretval_t *decider;
 			// try to call function
 			if(EH_TYPE(casevar) == func_e) {
-				decider = call_function_args(casevar->funcval, context, 1, switchvar);
+				decider = call_function_args(casevar->funcval, 1, &switchvar, context);
 				if(EH_TYPE(decider) != bool_e) {
 					eh_error("Switch case method does not return bool", eerror_e);
 					return NULL;
@@ -998,7 +998,7 @@ ehretval_t *EHI::eh_op_given(ehretval_t **paras, ehcontext_t context) {
 		ehretval_t *decider;
 		if(EH_TYPE(casevar) == func_e) {
 			decider = call_function_args(
-				casevar->funcval, context, 1, switchvar
+				casevar->funcval, 1, &switchvar, context
 			);
 			if(EH_TYPE(decider) != bool_e) {
 				eh_error("Given case method does not return bool", eerror_e);
@@ -1232,6 +1232,20 @@ ehretval_t *EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
  * Functions
  */
 ehretval_t *EHI::call_function(ehobj_t *obj, ehretval_t *args, ehcontext_t context) {
+	// this is a wrapper for call_function_args; it parses the arguments and
+	// puts them in an array
+	int nargs = count_nodes(args);
+	ehretval_t **new_args = new ehretval_t*[nargs]();
+	
+	for(int i = 0; args->opval->nparas != 0; (args = args->opval->paras[0]) && i++) {
+		new_args[i] = eh_execute(args->opval->paras[1], context);
+	}
+	ehretval_t *ret = this->call_function_args(obj, nargs, new_args, context);
+	delete[] new_args;
+
+	return ret;
+}
+ehretval_t *EHI::call_function_args(ehobj_t *obj, const int nargs, ehretval_t *args[], ehcontext_t context) {
 	ehretval_t *ret = NULL;
 	
 	ehfm_t *f = obj->function;
@@ -1241,65 +1255,9 @@ ehretval_t *EHI::call_function(ehobj_t *obj, ehretval_t *args, ehcontext_t conte
 	}
 
 	if(f->type == lib_e) {
-		// library function
-		f->libfunc_pointer(args, &ret, context, this);
-		return ret;
+		return f->libfunc_pointer(nargs, args, context, this);
 	} else if(f->type == libmethod_e) {
-		f->libmethod_pointer(obj->parent, args, &ret, context, this);
-		return ret;
-	}
-	ehobj_t *newcontext = object_instantiate(obj);
-	int i = 0;
-	
-	// set parameters as necessary
-	if(f->args == NULL) {
-		if(args->opval->nparas != 0) {
-			eh_error_argcount(f->argcount, 1);
-			return NULL;
-		}
-	} else while(args->opval->nparas != 0) {
-		i++;
-		if(i > f->argcount) {
-			eh_error_argcount(f->argcount, i);
-			return NULL;
-		}
-		ehmember_t *var = new ehmember_t();
-		var->value = eh_execute(args->opval->paras[1], context);
-		// if it's a reference, dereference it
-		if(EH_TYPE(var->value) == reference_e) {
-			var->value = var->value->referenceval;
-		} else if(var->value != NULL) {
-			var->value = var->value->share();
-		}
-		newcontext->insert(f->args[i - 1].name, var);
-		args = args->opval->paras[0];
-	}
-	if(f->argcount != i) {
-		eh_error_argcount(f->argcount, i);
-		return NULL;
-	}
-
-	ret = eh_execute(f->code, newcontext);
-	returning = false;
-	
-	// kill instantiation object
-	delete newcontext;
-	return ret;
-}
-ehretval_t *EHI::call_function_args(ehobj_t *obj, ehcontext_t context, const int nargs, ehretval_t *args) {
-	ehretval_t *ret = NULL;
-	
-	ehfm_t *f = obj->function;
-	if(f == NULL) {
-		eh_error("Invalid object for function call", eerror_e);
-		return NULL;
-	}
-
-	if(f->type == lib_e || f->type == libmethod_e) {
-		// library function not supported here for now
-		eh_error("call_function_args does not support library functions", 
-			efatal_e);
-		return NULL;
+		return f->libmethod_pointer(obj->parent, nargs, args, context, this);
 	}
 	// check parameter count
 	if(nargs != f->argcount) {
@@ -1311,8 +1269,8 @@ ehretval_t *EHI::call_function_args(ehobj_t *obj, ehcontext_t context, const int
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {
 		ehmember_t *var = new ehmember_t();
-		var->value = eh_execute(&args[i], context);
-		if(var->value->type == reference_e) {
+		var->value = args[i];
+		if(var->value->get_type() == reference_e) {
 			var->value = var->value->referenceval;
 		} else {
 			var->value = var->value->share();
@@ -1352,7 +1310,7 @@ ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
 		if(EH_TYPE(constructor) != func_e) {
 			eh_error_type("constructor", EH_TYPE(constructor), enotice_e);
 		} else {
-			call_function_args(constructor->funcval, obj->parent, 0, NULL);
+			call_function_args(constructor->funcval, 0, NULL, obj->parent);
 		}
 	}
 	return ret;

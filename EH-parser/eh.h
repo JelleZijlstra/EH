@@ -249,6 +249,13 @@ typedef struct ehretval_t {
 	}
 	
 	// other methods
+	type_enum get_type() {
+		if(this == NULL) {
+			return null_e;
+		} else {
+			return this->type;
+		}
+	}
 	void print();
 private:
 	short refcount;
@@ -285,11 +292,11 @@ typedef struct eharg_t {
 typedef struct ehobj_t *ehcontext_t;
 
 // library functions, classes, etcetera
-typedef void (*ehlibfunc_t)(ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
+typedef ehretval_t *(*ehlibfunc_t)(int, ehretval_t **, ehcontext_t, class EHI *);
 
 typedef void *(*ehconstructor_t)();
 
-typedef void (*ehlibmethod_t)(void *, ehretval_t *, ehretval_t **, ehcontext_t, class EHI *);
+typedef ehretval_t *(*ehlibmethod_t)(void *, int, ehretval_t **, ehcontext_t, class EHI *);
 
 typedef struct ehlm_listentry_t {
 	const char *name;

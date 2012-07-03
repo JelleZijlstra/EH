@@ -136,8 +136,8 @@ public:
 	};
 	// constructors
 	ehretval_t() : refcount(1), is_shared(0) {}
-	ehretval_t(type_enum type) : _type(type), stringval(NULL), refcount(1), is_shared(0) {}
-#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) : _type(ehtype ## _e), ehtype ## val(in), refcount(1), is_shared(0) {}
+	ehretval_t(type_enum type) : refcount(1), is_shared(0), _type(type), stringval(NULL) {}
+#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) : refcount(1), is_shared(0), _type(ehtype ## _e), ehtype ## val(in) {}
 	EHRV_CONS(int, int)
 	EHRV_CONS(char *, string)
 	EHRV_CONS(bool, bool)

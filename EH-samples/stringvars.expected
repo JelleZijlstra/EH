@@ -1,0 +1,9 @@
+It works!
+Unsupported type string for typecast to int: EH notice
+Unsupported type string for typecast to int: EH notice
+Unsupported types null and null for operator >=: EH runtime error
+There should have been several error messages on the lines before this one
+test
+test
+This should print "testtest":
+testtest

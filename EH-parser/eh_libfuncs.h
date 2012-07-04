@@ -4,7 +4,32 @@
  *
  * Function definitions for EH library functions
  */
-#define EHLIBFUNC(f) void f(ehnode_t *paras, ehretval_t *retval)
+#define EHLF_RETFALSE do { \
+	*retval = new ehretval_t(false); \
+	return; \
+} while(0)
+#define EHLF_RETTRUE do { \
+	*retval = new ehretval_t(true); \
+	return; \
+} while(0)
+
+#define EHLIBFUNC(f) ehretval_t *ehlf_ ## f(int nargs, ehretval_t **args, ehcontext_t context, EHI *obj)
 
 EHLIBFUNC(getinput);
 EHLIBFUNC(printvar);
+EHLIBFUNC(is_null);
+EHLIBFUNC(is_string);
+EHLIBFUNC(is_int);
+EHLIBFUNC(is_bool);
+EHLIBFUNC(is_array);
+EHLIBFUNC(is_object);
+EHLIBFUNC(is_range);
+EHLIBFUNC(is_float);
+EHLIBFUNC(class_is);
+EHLIBFUNC(get_type);
+EHLIBFUNC(include);
+EHLIBFUNC(pow);
+EHLIBFUNC(log);
+EHLIBFUNC(eval);
+
+void printvar_retval(const ehretval_t *in);

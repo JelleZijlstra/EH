@@ -1,0 +1,12 @@
+@object <Foo> [
+bar <public,non-static,non-constant>: @function <user>: 
+baz <private,non-static,non-constant>: @int 42
+useprivate <public,non-static,non-constant>: @function <user>: 
+]
+@object <Foo> [
+bar <public,non-static,non-constant>: @function <user>: 
+baz <private,non-static,non-constant>: @int 42
+useprivate <public,non-static,non-constant>: @function <user>: 
+]
+@int 42
+(null)

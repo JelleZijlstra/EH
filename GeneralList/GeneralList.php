@@ -1,36 +1,50 @@
 <?php
 /*
- * GeneralList - generates a FileList/ListEntry-type set of classes to handle an input CSV file.
+ * GeneralList - generates a ContainerList/ListEntry-type set of classes to handle an input CSV file.
  */
 require_once(__DIR__ . '/../Common/common.php');
 define('GLISTREPO', BPATH . '/GeneralList');
-require_once(BPATH . '/GeneralList/ExecuteHandler.php');
+require_once(BPATH . '/Common/ExecuteHandler.php');
 class GeneralList extends ExecuteHandler {
 	static private $switches = array('bool', 'json', 'serialize', 'normal');
 	static $GeneralList_commands = array(
 		'create' => array('name' => 'create',
 			'desc' => 'Create new GeneralList file',
 			'arg' => 'Input file name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 	);
 	public function __construct() {
 		parent::__construct(self::$GeneralList_commands);
 		$this->cli();
 	}
-	public function create($file) {
+	public function create(array $paras) {
 	// $file: input CSV file
-		if(!is_readable($file)) {
-			echo 'No such file' . PHP_EOL;
-			return false;
-		}
-		if(substr($file, -4) !== '.csv') {
-			echo 'Unsupported file type' . PHP_EOL;
-			return false;
-		}
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'file'),
+			'checklist' => array(
+				'file' => 'Name of input CSV file',
+			),
+			'errorifempty' => array('file'),
+			'checkparas' => array(
+				'file' => function($in) {
+					if(!is_readable($in)) {
+						echo 'No such file' . PHP_EOL;
+						return false;
+					}
+					if(substr($in, -4) !== '.csv') {
+						echo 'Unsupported file type' . PHP_EOL;
+						return false;
+					}
+					return true;
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		// set name used
-		$classname = ucfirst(substr($file, 0, -4));
-		$in = fopen($file, 'r');
-		if(!$in) return false;
+		$classname = ucfirst(substr($paras['file'], 0, -4));
+		$in = fopen($paras['file'], 'r');
+		if(!$in)
+			return false;
 		$firstline = fgetcsv($in);
 		if(!$firstline) {
 			echo 'Unable to retrieve data labels' . PHP_EOL;
@@ -60,8 +74,7 @@ class GeneralList extends ExecuteHandler {
 		if(!$outload) return false;
 		fwrite($outload, "<?php
 require_once(__DIR__ . '/../Common/common.php');
-define('GLISTREPO', BPATH . '/Common/GeneralList');
-require_once(GLISTREPO . '/$classname.php');
+require_once(BPATH . '/GeneralList/$classname.php');
 \${$classname}List = new {$classname}List();
 \${$classname}List->cli();
 ");
@@ -69,13 +82,13 @@ require_once(GLISTREPO . '/$classname.php');
 		$classfile = GLISTREPO . '/' . $classname . '.php';
 		$outclass = fopen($classfile, 'w');
 		if(!$outclass) return false;
-		$realpath = realpath($file);
+		$realpath = realpath($paras['file']);
 		fwrite($outclass, "<?php
 require_once(__DIR__ . '/../Common/common.php');
-require_once(BPATH . '/Common/List.php');
-class {$classname}List extends FileList {
+require_once(BPATH . '/Container/CsvContainerList.php');
+class {$classname}List extends CsvContainerList {
 	protected static \$fileloc = '$realpath';
-	protected static \$childclass = '{$classname}Entry';
+	protected static \$childClass = '{$classname}Entry';
 	public function __construct() {
 	// all handled adequately in parent
 		parent::__construct();
@@ -84,7 +97,7 @@ class {$classname}List extends FileList {
 		\$this->setup_commandline('$classname');
 	}
 }
-class {$classname}Entry extends ListEntry {
+class {$classname}Entry extends CsvListEntry {
 	// stuff that is standard across GeneralList outputs
 	protected static \$parentlist = '{$classname}List';
 	protected static \$arrays_to_check = array();
@@ -102,9 +115,8 @@ class {$classname}Entry extends ListEntry {
 ");
 		}
 		fwrite($outclass,
-"	public function __construct(\$in = '', \$code = '') {
-		global \${self::\$parentlist};
-		if(!\${self::\$parentlist}) \$this->p = \${self::\$parentlist};
+"	public function __construct(\$in, \$code, &\$parent) {
+		\$this->p =& \$parent;
 		switch(\$code) {
 			case 'f': // loading from file
 ");
@@ -121,17 +133,18 @@ class {$classname}Entry extends ListEntry {
 "); break;
 			}
 		}
-		// close __construct(), start toarray()
+		// close __construct(), start toArray()
 		fwrite($outclass,
 "				break;
 			case 'n': // associative array
-				if(!\$in['name']) {
+				if(!isset(\$in['name'])) {
 					echo 'Error: name must be provided' . PHP_EOL;
 					return false;
 				}
 				foreach(\$in as \$key => \$value) {
-					if(self::has_property(\$key))
+					if(self::has_property(\$key)) {
 						\$this->\$key = \$value;
+					}
 				}
 				break;
 			default:
@@ -139,7 +152,7 @@ class {$classname}Entry extends ListEntry {
 				break;
 		}
 	}
-	function toarray() {
+	function toArray() {
 		\$out = array();
 ");
 		foreach($fields as $field) {
@@ -155,7 +168,7 @@ class {$classname}Entry extends ListEntry {
 "); break;
 			}
 		}
-		// close toarray(), start format()
+		// close toArray(), start format()
 		fwrite($outclass,
 "		return \$out;
 	}
@@ -185,4 +198,3 @@ class {$classname}Entry extends ListEntry {
 		$this->setup_commandline('generallist');
 	}
 }
-?>

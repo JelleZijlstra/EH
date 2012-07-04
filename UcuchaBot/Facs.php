@@ -1,22 +1,29 @@
 <?php
 require_once(__DIR__  . '/../Common/common.php');
-require_once(BPATH . '/Common/List.php');
+require_once(BPATH . '/Container/CsvContainerList.php');
 require_once(BPATH . '/UcuchaBot/Bot.php');
-class FacsList extends FileList {
+class FacsList extends CsvContainerList {
 	protected static $fileloc;
-	protected static $childclass = 'FacsEntry';
+	protected static $childClass = 'FacsEntry';
 	public $bot;
 	const fac = 'Wikipedia:Featured article candidates';
+	protected static $FacsList_commands = array(
+	);
 	public function __construct() {
 		self::$fileloc = BPATH . '/UcuchaBot/data/facs.csv';
-		parent::__construct();
-		$this->bot = getbot();
+		parent::__construct(self::$FacsList_commands);
+		$this->bot = Bot::singleton();
 	}
 	public function cli() {
 		$this->setup_commandline('Facs');
 	}
 	public function update() {
-		$wpfac = $this->bot->fetchwp(self::fac);
+		echo 'Updating the FAC database...' . PHP_EOL;
+		$wpfac = $this->bot->fetchwp(array('page' => self::fac));
+		if($wpfac === false) {
+			echo 'Unable to retrieve FAC' . PHP_EOL;
+			return false;
+		}
 		$lines = preg_split('/[\r\n]+/u', $wpfac);
 		$facs = array();
 		$date = new DateTime();
@@ -30,10 +37,18 @@ class FacsList extends FileList {
 		$lastid = 0; //initialize
 		foreach($facs as $key => $fac) {
 			if($this->has($fac)) {
-				$this->set($fac, array('isonfac' => true));
-				$id = $this->get($fac, 'id');
+				$this->set(array(
+					0 => $fac, 
+					'isonfac' => true, 
+					'archived' => false
+				));
+				$id = $this->get($fac)->id;
 				if($id < $lastid)
-					$this->set($fac, array('id' => ++$lastid, 'date' => $facdate));
+					$this->set(array(
+						0 => $fac,
+						'id' => ++$lastid,
+						'date' => $facdate
+					));
 				else
 					$lastid = $id;
 			}
@@ -44,7 +59,7 @@ class FacsList extends FileList {
 				$paras['isnew'] = true;
 				$paras['date'] = $facdate;
 				$paras['id'] = ++$lastid;
-				if(!$this->add_entry(new FacsEntry($paras, 'n'))) {
+				if(!$this->addEntry(new FacsEntry($paras, 'n', $this))) {
 					echo 'Error adding entry ' . $fac . PHP_EOL;
 					continue;
 				}
@@ -57,17 +72,19 @@ class FacsList extends FileList {
 				$entry->archived = 1;
 			}
 		}
-		$this->needsave = true;
+		$this->needsave();
+		echo 'done' . PHP_EOL;
 	}
 }
-class FacsEntry extends ListEntry {
+class FacsEntry extends CsvListEntry {
 	// stuff that is standard across GeneralList outputs
 	protected static $parentlist = 'FacsList';
 	protected static $FacsEntry_commands = array(
-
-	);
-	protected static $FacsEntry_synonyms = array(
-
+		'addnoms' => array('name' => 'addnoms',
+			'desc' => 'Add nominators for an FAC',
+			'arg' => 'None',
+			'execute' => 'callmethod',
+		),
 	);
 	public $name; // String name of FAC page
 	public $nominators; // Array noms
@@ -82,9 +99,11 @@ class FacsEntry extends ListEntry {
 	public $isonfac; // Bool used internally and not saved; whether it's on current version of FAC
 	public $isnew; // Bool used internally; whether it was found on current update()
 	public $id; // ID on FAC
-	public function __construct($in = '', $code = '') {
-		global ${self::$parentlist};
-		if(!${self::$parentlist}) $this->p = ${self::$parentlist};
+	public function cli(array $paras = array()) {
+		$this->setup_commandline($this->name);
+	}
+	public function __construct($in, $code, &$parent) {
+		$this->p =& $parent;
 		switch($code) {
 			case 'f': // loading from file (only one implemented by GeneralList)
 				$this->name = $in[0];
@@ -97,7 +116,7 @@ class FacsEntry extends ListEntry {
 				$this->id = $in[7];
 				break;
 			case 'n': // associative array
-				if(!$in['name']) {
+				if(!isset($in['name'])) {
 					echo 'Error: name must be provided' . PHP_EOL;
 					return false;
 				}
@@ -110,8 +129,9 @@ class FacsEntry extends ListEntry {
 				echo 'Invalid code' . PHP_EOL;
 				break;
 		}
+		parent::__construct(self::$FacsEntry_commands);
 	}
-	function toarray() {
+	public function toArray() {
 		$out = array();
 		$out[] = $this->name;
 		$out[] = $this->getarray('nominators');
@@ -129,33 +149,55 @@ class FacsEntry extends ListEntry {
 			$this->$bool = $this->$bool ? 1 : NULL;
 		}
 	}
-	public function addnoms() {
+	public function addnoms(array $paras = array()) {
 	// add or overwrite nominators
 		// get noms
-		$factext = $this->p->bot->fetchwp($this->name);
-		preg_match('/(?<=\n)\s*:\s*<small>\'\'Nominator\(s\): (.*)(?=\n)/u',
+		$factext = $this->p->bot->fetchwp(array('page' => $this->name));
+		$name = $this->name;
+		$bot = $this->p->bot;
+		$noms = array();
+		preg_match(
+			'/(?<=\n)\s*:\s*<small>\'\'Nominator(\(?s\)?)?: (.*)(?=\n)/u',
 			$factext,
 			$matches
 		);
-		if(!isset($matches[0])) {
-			echo 'Unable to retrieve nominators for page ' . $this->name . PHP_EOL;
+		if(isset($matches[0])) {
+			$nomstext = $matches[0];
+			preg_match_all('/\[\[\s*[uU]ser( talk)?:\s*([^\|\]\/]+)/u',
+				$nomstext,
+				$matches,
+				PREG_PATTERN_ORDER
+			);
+			if(isset($matches[2])) {
+				foreach($matches[2] as $nom) {
+					$noms[trim($nom)] = true;
+				}
+			}
+		}
+		// try again
+		if(count($noms) === 0) {
+			preg_match('/\[\[User:(.*?)[|\]]/u', $factext, $matches);
+			if(isset($matches[1])) {
+				$noms[trim($matches[1])] = true;
+			}
+		}
+		// and now we give up
+		if(count($noms) === 0) {
+			echo 'Unable to retrieve nominators for page ' . $name . PHP_EOL;
+			$bot->writewp(array(
+				'page' => 'User talk:Ucucha',
+				'kind' => 'appendtext',
+				'text' => '
+==Nominators for ' . $name . '==
+I was unable to find the list of nominators for the FAC [[' . $name . ']]. Please fix the cause and run me again. ~~~~',
+				'donotmarkasbot' => true,
+				'summary' => 'Unable to retrieve nominators',
+			));
 			return false;
 		}
-		$nomstext = $matches[0];
-		preg_match_all('/\[\[\s*[uU]ser( talk)?:\s*([^\|\]\/]+)/u',
-			$nomstext,
-			$matches,
-			PREG_PATTERN_ORDER
-		);
-		if(!isset($matches[2])) {
-			echo 'Unable to retrieve nominators for page ' . $this->name . PHP_EOL;
-			return false;
-		}
-		$noms = array();
-		foreach($matches[2] as $nom)
-			$noms[trim($nom)] = true;
-		foreach($noms as $key => $value)
+		foreach($noms as $key => $value) {
 			$this->nominators[] = $key;
+		}
 		return true;
 	}
 }

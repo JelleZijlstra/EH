@@ -1,0 +1,19 @@
+@array [
+0 => @int 2
+1 => @int 4
+2 => @int 6
+3 => @int 8
+]
+@array [
+0 => @int 102
+1 => @int 98
+2 => @int 98
+]
+@array [
+0 => @bool true
+1 => @bool false
+]
+@array [
+0 => @bool true
+1 => @bool false
+]

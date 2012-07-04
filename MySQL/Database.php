@@ -2,91 +2,452 @@
 require_once(__DIR__ . "/../Common/common.php");
 require_once(BPATH . "/Common/ExecuteHandler.php");
 require_once(BPATH . "/MySQL/Database.settings.php");
-class Database extends ExecuteHandler {
-	private $err = false;
-	private $table; // table we're currently working on
-	private $columns; // columns in that table
-	private $verbose = true;
-	public $errmessage = '';
-	public function __construct() {
-		parent::__construct(self::$Database_commands);
-		if(mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD) === false) {
-			$this->err = true;
-			$this->errmessage = mysql_error();
-			return;
+class DatabaseException extends EHException {
+	public $query;
+	public function __construct($msg, $query = '') {
+		$msg = 'Database exception: ' . $msg;
+		if($query !== '') {
+			$msg = $msg . ' (query: "' . $query . '")';
 		}
-		$this->query("USE " . mysql_real_escape_string(DB_NAME));
+		parent::__construct($msg, EHException::E_RECOVERABLE);
 	}
+}
+
+class Database extends ExecuteHandler {
+	private $connection;
 	protected static $Database_commands = array(
 		'count' => array('name' => 'count',
-			'desc' => 'Count from a table',
-			'arg' => 'None',
-			'execute' => 'callmethod'),
-		'settable' => array('name' => 'settable',
-			'desc' => 'Set the default table to work with',
-			'arg' => 'Table name',
-			'execute' => 'callmethodarg'),
+			'aka' => 'dbcount',
+			'desc' => 'Count from a table'),
+		'query' => array('name' => 'query',
+			'desc' => 'Perform an arbitrary query'),
+		'select' => array('name' => 'select',
+			'desc' => 'Perform a SELECT query'),
+		'insert' => array('name' => 'insert',
+			'desc' => 'Perform an INSERT query'),
+		'delete' => array('name' => 'delete',
+			'desc' => 'Perform a DELETE query'),
+		'update' => array('name' => 'update',
+			'desc' => 'Perform an UPDATE query'),
 	);
-	public function cli() {
-		return $this->setup_commandline('Database');
-	}
-	private function query($sql) {
-		$result = mysql_query($sql);
-		if($result == false) {
-			$this->err = true;
-			$this->errmessage = mysql_error();
-			if($this->verbose) {
-				echo 'Query failed: ' . $sql . PHP_EOL;
-				echo 'Error message: ' . $this->errmessage . PHP_EOL;
-			}
+	/*
+	 * Constructor: does EH stuff and connects to DB
+	 */
+	public function __construct() {
+		parent::__construct(self::$Database_commands);
+		$connection = mysql_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
+		if($connection === false) {
+			throw new DatabaseException(mysql_error());
 		}
-		else {
-			$this->err = false;
+		$this->connection = $connection;
+		// go to the right database
+		$this->rawQuery("USE " . mysql_real_escape_string(DB_NAME));
+	}
+	
+	/*
+	 * Get a DB instance.
+	 */
+	public static function singleton() {
+		static $db = false;
+		if($db === false) {
+			$db = new Database();
+		}
+		return $db;
+	}
+	
+	/*
+	 * Perform a query, without additional protections. Callers outside this
+	 * class should use Database::query() instead.
+	 */
+	private function rawQuery(/* string */ $sql) {
+		var_dump($sql);
+		//debug_print_backtrace();
+		$result = mysql_query($sql, $this->connection);
+		if($result === false) {
+			throw new DatabaseException(mysql_error(), $sql);
 		}
 		return $result;
 	}
-	public function settable($table) {
-		$table = mysql_real_escape_string($table);
-		$columns = $this->query("SHOW COLUMNS FROM " . $table);
-		if(!$columns) {
-			echo 'Failed to set table' . PHP_EOL;
-			return false;
+	
+	/*
+	 * Wrapper for query to use as a command.
+	 */
+	public function query(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'toarray' => 'query',
+			'synonyms' => array(
+				0 => 'query',
+			),
+			'checklist' => array(
+				'query' => 'Query to perform',
+			),
+			'errorifempty' => array(
+				'query',
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$result = $this->rawQuery($paras['query']);
+		if(is_resource($result)) {
+			$result = self::arrayFromSql($result);
 		}
-		$this->table = $table;
-		$this->columns = array();
-		while($column = mysql_fetch_array($columns)) {
-			$this->columns[] = $column['Field'];
-		}
-		return true;
+		return $result;
 	}
-	public function count($paras = array()) {
-		$query = 'SELECT COUNT(*) FROM ' . $this->table . ' ' . $this->where($paras);
-		$result = $this->query($query);
-		if(!$result) return false;
+	
+	/*
+	 * Counting.
+	 */
+	public function count(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'from',
+				1 => 'where',
+			),
+			'checklist' => array(
+				'from' => 'Table to use',
+				'where' => 'Array of where clauses',
+			),
+			'errorifempty' => array(
+				'from',
+			),
+			'default' => array(
+				'where' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$query = 'SELECT COUNT(*) FROM ' . $paras['from'];
+		if($paras['where'] !== false) {
+			$query .= ' ' . self::where($paras['where']);
+		}
+		$result = $this->rawQuery($query);
 		$row = mysql_fetch_array($result);
 		return $row[0];
 	}
-	private function where($paras) {
-	// assemble where clause
-		$out = 'WHERE ';
-		foreach($paras as $key => $value) {
-			if(in_array($key, $this->columns)) {
-				$out .= mysql_real_escape_string($key) .
-					' = ' .
-					mysql_real_escape_string($value) .
-					' AND ';
-			}
+	
+	/*
+	 * Select.
+	 */
+	public function select(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'fields',
+				1 => 'from',
+				2 => 'where',
+			),
+			'checklist' => array(
+				'fields' => 'Array of fields',
+				'from' => 'Table to select from',
+				'where' => 'Where clauses. These are in the form of an array, '
+					. 'where the values may be strings (or, equivalently, '
+					. 'other scalars) or arrays. In the '
+					. 'former case, simple equality is used, and the array key '
+					. 'must be the field name. In the latter case, each entry '
+					. 'must contain three values: the field involved (which '
+					. 'may be in the form of an array of the table plus the '
+					. 'field name), the desired value, and the comparator '
+					. '(e.g., ">" or "RLIKE").',
+				'order_by' => 'ORDER BY clause',
+				'join' => 'JOIN clauses. These are in the form of an array, '
+					. 'where each key is a table name and each value is an ' 
+					. 'array with two elements of which the first is the field '
+					. 'in the table we are selecting from and the second is '
+					. 'the field in the table that is being joined.',
+			),
+			'errorifempty' => array(
+				'from',
+			),
+			'default' => array(
+				'fields' => '*',
+				'where' => false,
+				'order_by' => false,
+				'join' => false,
+			),
+			'checkparas' => array(
+				'fields' => function($val, $paras) {
+					return is_array($val);
+				},
+				'from' => function($val, $paras) {
+					return is_string($val);
+				},
+				'where' => function($val, $paras) {
+					if(!is_array($val)) {
+						return false;
+					}
+					foreach($val as $key => $value) {
+						if(is_array($value)) {
+							if(!isset($value['field'])) {
+								return false;
+							}
+							if(!isset($value['comparator']) || !in_array($value['compataror'], array('=', '>', '>=', '<=', '<', 'RLIKE'), true)) {
+								return false;
+							}
+							if(!isset($value['content'])) {
+								return false;
+							}
+						} else {
+							if(!is_string($key)) {
+								return false;
+							}
+						}
+					}
+					return true;
+				},
+				'order_by' => function($val, $paras) {
+					return is_string($val);
+				},
+				'join' => function($val) {
+					if(!is_array($val)) {
+						return false;
+					}
+					foreach($val as $key => $value) {
+						if(!is_string($key) || !is_array($value) || count($value) !== 2) {
+							return false;
+						}
+						foreach($value as $field) {
+							if(!is_string($field)) {
+								return false;
+							}
+						}
+					}
+					return true;
+				}
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$sql = 'SELECT ' 
+			. ($paras['fields'] === '*' 
+				? '*' 
+				: self::assembleFieldList($paras['fields']))
+			. ' FROM ' . self::escapeField($paras['from']);
+		if($paras['join'] !== false) {
+			$sql .= self::assembleJoinList($paras['join'], $paras['from']);
 		}
-		$out = preg_replace('/ AND $/u', '', $out);
+		if($paras['where'] !== false) {
+			$sql .= ' WHERE ' . self::where($paras['where']);
+		}
+		if($paras['order_by'] !== false) {
+			$sql .= ' ORDER BY ' . self::escapeField($paras['order_by']);
+		}
+		$result = $this->rawQuery($sql);
+		return self::arrayFromSql($result);
+	}
+	
+	/*
+	 * Insertion
+	 */
+	public function insert(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'into',
+				1 => 'values',
+			),
+			'checklist' => array(
+				'into' => 'Table to insert into',
+				'values' => 'Associative array of values',
+				'replace' => 'Whether to perform a REPLACE query rather than an INSERT one (i.e., replace existing values).',
+			),
+			'errorifempty' => array(
+				'into', 'values',
+			),
+			'checkparas' => array(
+				'into' => function($val, $paras) {
+					return is_string($val);
+				},
+				'values' => function($val, $paras) {
+					return is_array($val);
+				},
+				'replace' => function($val, $paras) {
+					return is_bool($val);
+				},
+			),
+			'default' => array(
+				'replace' => false,
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if($paras['replace']) {
+			$sql = 'REPLACE';
+		} else {
+			$sql = 'INSERT';
+		}
+		$sql .= ' INTO ' . self::escapeField($paras['into']) . '('
+			. implode(', ', array_map(
+				array('Database', 'escapeField'), array_keys($paras['values'])))
+			. ') VALUES(' 
+			. implode(', ', array_map(
+				array('Database', 'escapeValue'), $paras['values']))
+			. ')';
+		$result = $this->rawQuery($sql);
+		// return mysql_insert_id() if necessary
+		if($paras['replace']) {
+			return $result;
+		} else {
+			return mysql_insert_id();
+		}
+	}
+	
+	/*
+	 * Deletion
+	 */
+	public function delete(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'from',
+				1 => 'where',
+			),
+			'checklist' => array(
+				'from' => 'Table to delete from',
+				'where' => 'Where clauses',
+			),
+			'errorifempty' => array(
+				'from', 'where',
+			),
+			'checkparas' => array(
+				'from' => function($val, $paras) {
+					return is_string($val);
+				},
+				'where' => function($val, $paras) {
+					return is_array($val);
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$sql = 'DELETE FROM ' . self::escapeField($paras['from']) . ' WHERE '
+			. self::where($paras['where']);
+		return $this->rawQuery($sql);
+	}
+	
+	/*
+	 * Peform an update.
+	 */
+	public function update(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'table',
+				1 => 'set',
+				2 => 'where',
+			),
+			'checklist' => array(
+				'table' => 'Table to update',
+				'set' => 'Fields to set',
+				'where' => 'Where clauses',
+			),
+			'errorifempty' => array(
+				'table', 'set', 'where',
+			),
+			'checkparas' => array(
+				'table' => function($val, $paras) {
+					return is_string($val);
+				},
+				'set' => function($val, $paras) {
+					return is_array($val);
+				},
+				'where' => function($val, $paras) {
+					return is_array($val);
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$sql = 'UPDATE ' . self::escapeField($paras['table']) . ' SET '
+			. self::assembleSet($paras['set'])
+			. ' WHERE ' . self::where($paras['where']);
+		return $this->rawQuery($sql);		
+	}
+	
+	/*
+	 * Static functions used to assemble part of a query.
+	 */
+	 
+	/*
+	 * Assemble a WHERE ... AND ... clause.
+	 */
+	public static function where(array $conditions) {
+	// assemble where clause
+		return implode(' AND ', array_map(function($key, $value) {
+			if(is_array($value)) {
+				return Database::escapeField($value['field']) . ' '
+					. $value['comparator'] . ' ' 
+					. Database::escapeValue($value['content']);
+			} else {
+				return Database::escapeField($key) . ' = ' 
+					. Database::escapeValue($value);
+			}
+		}, array_keys($conditions), $conditions));
+	}
+	
+	/*
+	 * Assemble a list of fields like `name`, `id`.
+	 */
+	private static function assembleFieldList(array $fields) {
+		return implode(', ', 
+			array_map(array('Database', 'escapeField'), $fields)
+		);
+	}
+	
+	/*
+	 * Assemble a list of JOINed tables.
+	 */
+	private static function assembleJoinList(array $joins, $from) {
+		$out = '';
+		foreach($joins as $table => $fields) {
+			$out .= ' JOIN ' . self::escapeField($table) . ' ON ';
+			$out .= self::escapeField($from) . '.';
+			$out .= self::escapeField($fields[0]) . ' = ';
+			$out .= self::escapeField($table) . '.';
+			$out .= self::escapeField($fields[1]);
+		}
 		return $out;
 	}
-	public function showcolumns() {
-	// show columns in default table
-		if(!$this->table) return false;
-		echo 'Columns in table ' . $this->table . PHP_EOL;
-		foreach($this->columns as $column) {
-			echo $column . PHP_EOL;
+	
+	/*
+	 * Assemble something of the form `id` = 5, `name` = Jelle.
+	 */
+	public static function assembleSet(array $fields) {
+		return implode(', ', array_map(function($key, $value) {
+			return Database::escapeField($key) . ' = ' 
+				. Database::escapeValue($value);
+		}, array_keys($fields), $fields));
+	}
+	
+	/*
+	 * Escape a field name like name -> `name`. Throws an exception if
+	 * it is not a valid field name. Accepts only a subset of what MySQL
+	 * actually accepts.
+	 */
+	public static function escapeField(/* string */ $in) {
+		if(is_array($in)) {
+			return self::escapeField($in[0]) . '.' . self::escapeField($in[1]);
+		} elseif(is_string($in) and preg_match('/^[a-z_][a-z0-9_]*$/', $in)) {
+			return '`' . $in . '`';
+		} else {
+			throw new DatabaseException('Invalid field "' . $in . '"');
 		}
-		return true;
+	}
+	
+	/*
+	 * Convert a MySQL response resource into an array. 
+	 * Private since callers outside the class should never get such a 
+	 * resource.
+	 */
+	private static function arrayFromSql(/* resource */ $in) {
+		$out = array();
+		while(($row = mysql_fetch_assoc($in)) !== false) {
+			$out[] = $row;
+		}
+		return $out;
+	}
+	
+	/*
+	 * Convert a value into something that can go into a MySQL query.
+	 */
+	public static function escapeValue(/* mixed */ $in) {
+		if(is_integer($in) || is_float($in) || is_object($in)) {
+			return (string) $in;
+		} elseif(is_string($in)) {
+			return "'" . mysql_real_escape_string($in) . "'";
+		} elseif(is_bool($in)) {
+			return $in ? 'true' : 'false';
+		} else {
+			throw new DatabaseException('Invalid type ' . gettype($in));
+		}
 	}
 }

@@ -1,9 +1,31 @@
-The files in this directory provide a rudimentary parser for a subset of the EH scripting language. To compile:
-$ make interpreter
+The files in this directory provide a parser as well as a compiler and 
+interpreter for the EH scripting language. The parser provided here includes 
+numerous features not supported by the PHP-based interpreter and supports virtually all features found in that implementation.
 
-To use the compiler instead of the interpreter version, use
-$ make compiler
+The following are some bugs and missing features still existing in the 
+interpreter:
+- Massive memory leakage. It's hard to keep track of all malloc'ed memory within
+  the interpreter, but we can do better than the current situation.
+- Make more use of C++ features. Right now it's basically C compiled with a C++
+  compiler; let's use some of C++'s fancy features.
+- Foreach-like loops for objects and arrays.
+- When compiled with Clang++, exceptions thrown by eh_error don't get caught. 
+  Whether this is because I'm misusing exceptions (because control passes
+  through the C function yyparse?) or because of a Clang++ bug I'm not sure.
 
-To compile a file called "compile.eh"
-$ ./meh.sh compile
+To compile the interpreter (ehi), write:
+$ make ehi
+
+To use the compiler (ehc) instead, write:
+$ make ehc
+
+And for the ehphp PHP extension:
+$ make ehphp
+
+To compile and run a file called "compile.eh" with ehc:
+$ meh compile
 $ ./compile
+
+Other things to do:
+- Create a GeSHi spec for EH; see 
+  http://qbnz.com/highlighter/geshi-doc.html#language-file-example

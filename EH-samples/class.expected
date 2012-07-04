@@ -1,0 +1,14 @@
+2
+meh
+@object <Foo> [
+bar <public,non-static,non-constant>: @int 3
+baz <private,non-static,non-constant>: null
+mah <private,non-static,non-constant>: @function <user>: n
+meh <public,non-static,non-constant>: @function <user>: n
+]
+3
+@function <user>: n
+42
+Calling a private method
+No such object member: mah: EH runtime error
+2

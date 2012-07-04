@@ -1,14 +1,14 @@
 #!/usr/bin/ehi
 # To illustrate typecasting
-$ foo = '3'
-$ bar = @int $foo
+foo := '3'
+bar := @int $foo
 echo $bar
-$ baz = 3
-$ foobar = @string $baz
+baz := 3
+foobar := @string $baz
 echo $foobar
-$ more = @string $baz
+more := @string $baz
 echo 'If typecasting works, the following line should print 33:'
-echo $foobar + $more
+echo $foobar . $more
 if $foobar == $more
 	echo 'foobar and more are the same'
 endif

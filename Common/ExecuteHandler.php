@@ -1,229 +1,118 @@
 <?php
-define('PROCESS_PARAS_ERROR_FOUND', 0x1);
+/*
+ * ExecuteHandler.php
+ * Jelle Zijlstra, 2011 – January 2012
+ *
+ * The core of the ExecuteHandler framework, including functionality to keep
+ * track of commands and pre-process parameters. The actual interpretation of
+ * the EH scripting language is handled by the parent EHI class, which has been
+ * implemented both in PHP and more fully in C++.
+ */
+define('PROCESS_PARAS_ERROR_FOUND', false);
 require_once(BPATH . "/Common/EHException.php");
-// TODO: more effectively ignore Ctrl+P and stuff like that.
-// Fix function definitions in exec_file. Currently, they just do random stuff when executed outside the exec_file context.
-abstract class ExecuteHandler {
+class ExecuteHandler extends EHICore {
 	/* Class constants */
-	const EVALUATE_ERROR = 0x1;
-	const EVALUATE_FUNCTION_CALL = 0x2;
-	const CHECK_FLOW_IN_IF = 0x1;
-	const CHECK_FLOW_IN_FOR = 0x2;
-	const CHECK_FLOW_IN_FUNC = 0x3;
-	const CHECK_FLOW_IN_WHILE = 0x4;
-	const CHECK_FLOW_NOT_EXECUTING_IN_IF = 0x5;
 	const EXECUTE_NEXT = 0x0; // execute says: go on with next
 	const EXECUTE_PC = 0x1; // execute whatever is in the PC now
 	const EXECUTE_SYNTAX_ERROR = 0x2; // execute returned syntax error
 	const EXECUTE_QUIT = 0x3; // execute asked to quit the program
 	/* Private properties */
-	private $commands;
-	private $synonyms;
+	protected $commands;
+	protected $synonyms;
 	protected $config = array(
 		'debug' => false,
 	);
-	/* command history */
-	// holds all executed commands
-	private $history = array();
-	// history we're currently in
-	private $currhist = 0;
-	// length of history array
-	private $histlen = array(
-		0 => 0,
-	);
-	// where we are in execution (program counter)
-	private $pc = array(
-		0 => 0,
-	);
-	// array of variables defined internally. Three-dimensional, indexed by
-	// currhist, currscope, var name.
-	private $vars = array(
-		0 => array(
-			0 => array(),
-		),
-	);
-	// current scope (set to > 0 on function calls when we implement those)
-	private $currscope = array(
-		0 => 0,
-		1 => 0,
-	);
-	// array of control flow structures we're currently in
-	private $flow = array(
-		0 => array(
-			0 => array('type' => 'global', 'execute' => true),
-		),
-	);
-	// counter that holds the structure we're in at the moment
-	private $flowctr = array(
-		0 => 0,
-	);
-	// functions that we have defined (not indexed by hist)
-	private $funcs = array();
-	// holds last function return value
-	private $eax;
-	// set to true when a function has just executed, to let a line know that its function call has completed
-	private $funcexecuted = false;
-	// line to which function needs to return
-	private $retline = -1;
-	// holds arguments to a function being called
-	private $funcargs = array();
-	// return code of $this->evaluate()
-	private $evaluate_ret = 0;
-	// currently handled files
+	// currently handled files. Why is this in EH and not in ContainerList?
 	protected $current;
-	// array of codes that can be given in the 'execute' field of a command, and
-	// descriptions
-	private static $handlers = array(
-		'doallorcurr' => 'Execute a function for the argument only if there is one, and else for all entries. Users that use this handler must implement the doall() method and the method defined by the command\'s name.',
-		'docurr' => 'Execute a function for the current entries.',
-		'callmethod' => 'Execute the given method, with as its argument $paras.',
-		'callmethodarg' => 'As callmethod, with $rawarg as the first argument.',
-		'callfunc' => 'Execute the given function, with as its argument $paras.',
-		'callfuncarg' => 'As callfunc, with $rawarg as the first argument.',
-		'quit' => 'Quit the command line.',
-	);
-	// array of functions that shell code is allowed to call
-	private static $php_funcs = array(
-		'getinput',
-		'strlen',
-		'substr',
-	);
-	private static $basic_commands = array(
+	private static $ExecuteHandler_commands = array(
 		'execute_help' => array('name' => 'execute_help',
 			'aka' => array('h', 'help', 'man'),
 			'desc' => 'Get help information about the command line or a specific command',
-			'arg' => 'Command name',
-			'execute' => 'callmethodarg'),
-		'quit' => array('name' => 'quit',
-			'aka' => array('q'),
-			'desc' => 'Quit the program',
-			'arg' => 'None',
-			'execute' => 'quit'),
+			'arg' => 'Command name'),
 		'listcommands' => array('name' => 'listcommands',
 			'desc' => 'List legal commands',
 			'arg' => 'None',
 			'execute' => 'callmethod'),
-		'exec_file' => array('name' => 'exec_file',
-			'desc' => 'Execute a series of commands from a file',
-			'arg' => 'File path',
-			'execute' => 'callmethodarg'),
 		'shell' => array('name' => 'shell',
 			'aka' => 'exec_catch',
 			'desc' => 'Execute a command from the shell',
-			'arg' => 'Shell command',
-			'execute' => 'callmethodarg'),
+			'arg' => 'Shell command'),
 		'configset' => array('name' => 'configset',
 			'aka' => 'setconfig',
 			'desc' => 'Set a configuration variable',
-			'arg' => 'Variables to be set',
-			'execute' => 'callmethod'),
-		'myecho' => array('name' => 'myecho',
-			'aka' => 'echo',
-			'desc' => 'Echo input',
-			'arg' => 'Text to be echoed',
-			'execute' => 'callmethodarg'),
-		'put' => array('name' => 'put',
-			'desc' => 'Print input to terminal',
-			'arg' => 'Text to be printed',
-			'execute' => 'callmethodarg'),
+			'arg' => 'Variables to be set'),
+		'switchcli' => array('name' => 'switchcli',
+			'aka' => array('switch', 'cli'),
+			'desc' => 'Switch to a different command line',
+			'arg' => 'Name of command line to switch to'),
+		'print_paras' => array('name' => 'print_paras',
+			'desc' => 'Print its arguments',
+			'arg' => 'As many as you want'),
+		'return_para' => array('name' => 'return_para',
+			'desc' => 'Returns its first argument',
+			'arg' => 'One; everything else is ignored'),
 		'test' => array('name' => 'test',
 			'desc' => 'Do something random',
-			'arg' => 'None',
-			'execute' => 'callmethodarg'),
-	);
-	private static $constructs = array(
-		'$' => array('name' => '$',
-			'desc' => 'Declare and set a variable'
-			),
-		'if' => array('name' => 'if',
-			'desc' => 'Sets a condition',
-			),
-		'else' => array('name' => 'else',
-			'desc' => 'Executes if condition in if is false',
-			),
-		'endif' => array('name' => 'endif',
-			'desc' => 'Ends an if condition',
-			),
-		'for' => array('name' => 'for',
-			'desc' => 'Introduces a for loop',
-			),
-		'endfor' => array('name' => 'endfor',
-			'desc' => 'End a for loop',
-			),
-		'//' => array('name' => '//',
-			'desc' => 'Introduce a comment',
-			),
-		'while' => array('name' => 'while',
-			'desc' => 'Introduces a while loop',
-			),
-		'endwhile' => array('name' => 'endwhile',
-			'desc' => 'Ends a while loop',
-			),
-		'func' => array('name' => 'func',
-			'desc' => 'Starts a function definition',
-			),
-		'ret' => array('name' => 'ret',
-			'desc' => 'Returns from a function',
-			),
-		'endfunc' => array('name' => 'endfunc',
-			'desc' => 'Ends a function definition',
-			),
+			'arg' => 'None'),
+		'menu' => array('name' => 'menu',
+			'desc' => 'Create a menu'),
 		'call' => array('name' => 'call',
-			'desc' => 'Call a function (and discard its return value)',
-			),
-		'global' => array('name' => 'global',
-			'desc' => 'Includes a global variable',
-			),
+			'aka' => array('phpcall'),
+			'desc' => 'Call an arbitrary PHP function'),
 	);
-	public function __construct($commands) {
+	/* Setting up the EH interface */
+	protected function __construct(array $commands = array()) {
+		parent::__construct();
 		$this->setup_ExecuteHandler($commands);
 	}
-	public function setup_ExecuteHandler($commands = NULL) {
+	public function setup_ExecuteHandler(array $commands = array()) {
 	// sets up a handler.
 	// @param commands Array of commands to be added to the object's library
 		$this->current = array();
-		foreach(self::$basic_commands as $command) {
+		foreach(self::$ExecuteHandler_commands as $command) {
+			$this->addcommand($command);
+		}	
+		foreach(parent::$core_commands as $command) {
 			$this->addcommand($command);
 		}
-		if($commands) foreach($commands as $command) {
+		foreach($commands as $command) {
 			$this->addcommand($command);
 		}
 	}
-	public function addcommand($command) {
+	public function cli() { 
+	// sets up command line
+		$this->setup_commandline(get_called_class());
+	}
+	/* Handling commands and execution */
+	public function addcommand($command, array $paras = array()) {
 	// adds a command to the object's library
 	// @param command Array of data forming a command
 	// command can have the following components
 	// - name: String basic name of the command
 	// - aka: Array synonyms
-	// - execute: String member of self::$handlers used to execute the command
 	// - desc: String description of what the command does
 	// - arg: String description of the arguments the command takes
-	// - setcurrent: Bool whether $this->current needs to be set to $arg
-	// - rawarg: Bool whether the argument can be used "raw" (i.e., unprocessed)
-	// - method: String method called by the command
 		if(isset($this->commands[$command['name']])) {
-			if(!$paras['ignoreduplicates']) trigger_error('Command ' . $command['name'] . ' already exists', E_USER_NOTICE);
-			return false;
+			throw new EHException(
+				'Command ' . $command['name'] . ' already exists'
+			);
 		}
-		if(!self::testcommand($command)) return false;
+		self::testcommand($command);
 		if(isset($command['aka'])) {
 			if(!is_array($command['aka'])) {
-				if(isset($this->synonyms[$command['aka']]))
-					trigger_error('Error: ' . $aka . ' already exists as a synonym for ' . $this->synonyms[$aka], E_USER_NOTICE);
-				else
-					$this->synonyms[$command['aka']] = $command['name'];
+				$command['aka'] = array($command['aka']);
 			}
-			else foreach($command['aka'] as $aka) {
-				if(isset($this->synonyms[$aka]))
-					trigger_error('Error: ' . $aka . ' already exists as a synonym for ' . $this->synonyms[$aka], E_USER_NOTICE);
-				else
+			foreach($command['aka'] as $aka) {
+				if(isset($this->synonyms[$aka])) {
+					throw new EHException(
+						$aka . ' already exists as a synonym for ' 
+						. $this->synonyms[$aka]
+					);
+				} else {
 					$this->synonyms[$aka] = $command['name'];
+				}
 			}
 		}
-		if(!isset($command['setcurrent']))
-			$command['setcurrent'] = false;
-		if(!isset($command['rawarg']))
-			$command['rawarg'] = false;
 		$this->commands[$command['name']] = $command;
 		return true;
 	}
@@ -231,704 +120,44 @@ abstract class ExecuteHandler {
 		/* check and handle input */
 		// if we don't have those, little point in proceeding
 		if(!isset($command['name'])) {
-			trigger_error('No name given for new command', E_USER_NOTICE);
-			return false;
-		}
-		if(!isset($command['execute']) or !array_key_exists($command['execute'], self::$handlers)) {
-			trigger_error('No valid execute sequence given for new command ' . $command['name'], E_USER_NOTICE);
-			return false;
+			throw new EHException('No name given for new command');
 		}
 		// warn if no documentation
 		if(!isset($command['desc'])) {
-			trigger_error('No documentation given for new command ' . $command['name'], E_USER_NOTICE);
-		}
-		if(!isset($command['arg'])) {
-			trigger_error('No listing of arguments given for new command ' . $command['name'], E_USER_NOTICE);
+			throw new EHException(
+				'No documentation given for new command ' . $command['name']
+			);
 		}
 		return true;
 	}
-	private function setvar($var, $value) {
-	// set a variable in the internal language
-		$this->vars[$this->currhist][$this->curr('currscope')][$var] = $value;
+	private function listcommands() {
+		// sort commands and synonyms first
+		ksort($this->commands);
+		ksort($this->synonyms);
+		echo 'Commands:' . PHP_EOL;
+		foreach($this->commands as $command => $content)
+			echo "\t" . $command . PHP_EOL;
+		echo 'Synonyms:' . PHP_EOL;
+		foreach($this->synonyms as $from => $to)
+			echo "\t" . $from . ' -> ' . $to . PHP_EOL;
 	}
-	private function getvar($var) {
-	// get the value of an internal variable
-		if(!isset($this->vars[$this->currhist][$this->curr('currscope')][$var]))
-			return NULL;
-		else
-			return $this->vars[$this->currhist][$this->curr('currscope')][$var];
+	protected function hascommand($cmd) {
+		return isset($this->commands[$cmd]) || isset($this->synonyms[$cmd]);
 	}
-	private function evaluate($in) {
-		if($this->config['debug']) echo 'Evaluating: "' . $in . '"' . PHP_EOL;
-		$this->evaluate_ret = 0;
-		// function calls
-		if(preg_match(
-			"/^([a-zA-Z]+):\s+((.+,\s+)*.+)\$/u",
-			$in,
-			$matches)) {
-			if($this->funcexecuted) {
-			// we already executed the program
-				$this->funcexecuted = false;
-				return $this->eax;
-			}
-			else {
-				$funcname = $matches[1];
-				$vars = preg_split("/,\s+/u", $matches[2]);
-				if(!isset($this->funcs[$funcname])) {
-					// use inbuilt PHP functions
-					// TODO: add argcount checking here
-					if(in_array($funcname, self::$php_funcs)) {
-						$ret = call_user_func_array($funcname, $vars);
-						if(is_string($ret))
-							$ret = '"' . $ret . '"';
-						return $ret;
-					}
-					echo 'Error: unrecognized function ' . $funcname . PHP_EOL;
-					$this->evaluate_ret = self::EVALUATE_ERROR;
-					return NULL;
-				}
-				$func = $this->funcs[$funcname];
-				$argcount = count($vars);
-				if($argcount != $func['argcount']) {
-					echo "Error: incorrect variable number for function  $funcname (expected {$func['argcount']}, got $argcount)\n";
-					$this->evaluate_ret = self::EVALUATE_ERROR;
-					return NULL;
-				}
-				$this->funcargs = $vars;
-				$this->retline = $this->curr('pc');
-				$this->evaluate_ret = self::EVALUATE_FUNCTION_CALL;
-				$this->curr('pc', $func['line']);
-				return NULL;
-			}
+	public function execute_cmd($rawcmd, $paras) {
+		if($rawcmd === 'quit') {
+			// execute "quit" immediately. No need to account for ehphp here,
+			// because "quit" is built in to the language.
+			return self::EXECUTE_QUIT;
 		}
-		// function call without argument
-		else if(preg_match("/^([a-zA-Z]+):\s*\$/u", $in, $matches)) {
-			if($this->funcexecuted) {
-			// we already executed the program
-				$this->funcexecuted = false;
-				return $this->eax;
-			}
-			else {
-				$funcname = $matches[1];
-				$func = $this->funcs[$funcname];
-				if(!$func) {
-					if(in_array($funcname, self::$php_funcs)) {
-						$ret = call_user_func($funcname);
-						if(is_string($ret))
-							$ret = '"' . $ret . '"';
-						return $ret;
-					}
-					echo 'Error: unrecognized function ' . $funcname . PHP_EOL;
-					$this->evaluate_ret = self::EVALUATE_ERROR;
-					return NULL;
-				}
-				$this->retline = $this->curr('pc');
-				$this->evaluate_ret = self::EVALUATE_FUNCTION_CALL;
-				$this->curr('pc', $func['line']);
-				return NULL;
-			}
-		}
-		// math
-		else if(preg_match(
-			"/^(?![\"'])([^\s]*)\s*([+\-*\/=><]|!=|>=|<=)\s*([^\s]*)(?<![\"'])$/u",
-			$in,
-			$matches)) {
-			$lval = (float) trim($matches[1]);
-			$rval = (float) trim($matches[3]);
-			switch($matches[2]) {
-				case '+': return $lval + $rval;
-				case '-': return $lval - $rval;
-				case '*': return $lval * $rval;
-				case '/': return $lval / $rval;
-				case '=': return ($lval == $rval);
-				case '>': return ($lval > $rval);
-				case '<': return ($lval < $rval);
-				case '!=': return ($lval != $rval);
-				case '>=': return ($lval >= $rval);
-				case '<=': return ($lval <= $rval);
-			}
-		}
-		else
-			return $in;
-	}
-	private function substitutevars($in) {
-		// substitute variable references
-		if(preg_match_all("/\\\$(\{[a-zA-Z]+\}|[a-zA-Z]+)/u", $in, $matches)) {
-			foreach($matches[1] as $reference) {
-				// check for ${varname} syntax
-				if($reference[0] === '{')
-					$fmreference = substr($reference, 1, -1);
-				else
-					$fmreference = $reference;
-				// get variables in current scope
-				$cvars = $this->curr('vars');
-				if(isset($cvars[$fmreference])) {
-					// substitute them
-					$in = preg_replace(
-						"/\\\$" . preg_quote($reference) . "/u",
-						$cvars[$fmreference],
-						$in,
-						1
-					);
-				}
-				else {
-					echo "Notice: unrecognized variable " .
-						$fmreference .
-						" (in scope " .
-						$this->curr('currscope') .
-						")" . PHP_EOL;
-				}
-			}
-		}
-		return $in;
-	}
-	private function divide_cmd($arg) {
-	// transforms an argument string into a $paras array, taking care of quoted strings and output redirection
-		$endcmd = function($context) use(&$i, &$len) {
-			if($i === $len) {
-				throw new EHException(
-					"Unexpected end of command while in " . $context,
-					EHException::E_RECOVERABLE
-				);
-			}
-		};
-		$len = strlen($arg);
-		$next = false;
-		$key = 0; // array key, either 0 for the argument or a para name
-		// initialize
-		$paras[0] = '';
-		for($i = 0; $i < $len; $i++) {
-			if($arg[$i] === ' ' and ($i === 0 or $arg[$i-1] !== '\\')) {
-				// add space to separate parts of $argument
-				if($key === 0)
-					$paras[0] .= ' ';
-				$key = 0;
-			}
-			// handle parameter names
-			else if($arg[$i] === '-' and ($i === 0 or $arg[$i-1] === ' ')) {
-				$i++;
-				$endcmd("parameter definition");
-				// short-form or long-form?
-				// long form
-				if($arg[$i] === '-') {
-					$i++;
-					$key = '';
-					for( ; $arg[$i] !== '='; $i++) {
-						$endcmd("parameter name");
-						$key .= $arg[$i];
-					}
-					$paras[$key] = '';
-				}
-				// short form
-				else {
-					for( ; $i < $len and $arg[$i] !== ' '; $i++) {
-						if(in_array($arg[$i], array('=', '"', "'"))) {
-							throw new EHException(
-								"Unexpected {$arg[$i]}",
-								EHException::E_RECOVERABLE);
-						}
-						$paras[$arg[$i]] = true;
-					}
-				}
-			}
-			// output and return redirection (handled as special key)
-			else if(($arg[$i] === '>' or $arg[$i] === '}') and ($i === 0 or $arg[$i-1] === ' ')) {
-				$var = $arg[$i];
-				if($arg[$i+1] === '$') {
-					$i++;
-					$key = $var . '$';
-				}
-				else {
-					$key = $var;
-				}
-				// ignore space
-				if($arg[$i+1] === ' ')
-					$i++;
-			}
-			else if($arg[$i] === "'" and ($i === 0 or $arg[$i-1] !== '\\')) {
-				// consume characters until end of quoted string
-				$i++;
-				for( ; ; $i++) {
-					$endcmd("single-quoted string");
-					if($arg[$i] === "'" and $arg[$i-1] !== '\\')
-						break;
-					$paras[$key] .= $arg[$i];
-				}
-			}
-			else if($arg[$i] === '"' and ($i === 0 or $arg[$i-1] !== '\\')) {
-				// consume characters until end of quoted string
-				$i++;
-				for( ; ; $i++) {
-					$endcmd("double-quoted string");
-					if($arg[$i] === '"' and $arg[$i-1] !== '\\')
-						break;
-					$paras[$key] .= $arg[$i];
-				}
-			}
-			else
-				$paras[$key] .= $arg[$i];
-		}
-		return $paras;
-	}
-	private function check_flow() {
-		$f = $this->curr('flowo');
-		switch($f['type']) {
-			case 'global':
-				return 0;
-			case 'if':
-				if(!$f['execute'])
-					return self::CHECK_FLOW_NOT_EXECUTING_IN_IF;
-				if($f['part'] === 'then') {
-					if($f['condition'])
-						return 0;
-					else
-						return self::CHECK_FLOW_IN_IF;
-				}
-				else if($f['part'] === 'else') {
-					if($f['condition'])
-						return self::CHECK_FLOW_IN_IF;
-					else
-						return 0;
-				}
-			case 'for':
-				// only execute if the loop is supposed to be executed
-				if($f['max'] > 0)
-					return 0;
-				else
-					return self::CHECK_FLOW_IN_FOR;
-			case 'while':
-				if(!$f['execute'])
-					return self::CHECK_FLOW_IN_WHILE;
-				else
-					return 0;
-			case 'func':
-				if(!$f['execute'])
-					return self::CHECK_FLOW_IN_FUNC;
-				else
-					return 0;
-		}
-		return 0;
-	}
-	public function execute($in = NULL) {
-	// execute a single command
-		// by default, take current value of PC
-		if($in === NULL) {
-			$in = $this->curr('pcres');
-		}
-		// handle empty commands and ehi-style comments (do nothing)
-		if($in === '' or $in[0] === '#') {
-			return self::EXECUTE_NEXT;
-		}
-		// divide input into keyword and argument
-		preg_match("/^\s*([^\s]+)(\s+(.*))?\s*\$/u", $in, $matches);
-		$rawcmd = $matches[1];
-		$rawarg = isset($matches[3]) ? $matches[3] : '';
-		// if we're in an if statement that's executing, we need special rules
-		$inif = false;
-		// handle control flow, and exit if we are not executing this code
-		switch($this->check_flow()) {
-			case 0: break;
-			case self::CHECK_FLOW_IN_IF:
-				$inif = true;
-				if(in_array($rawcmd, array('if', 'else', 'endif')))
-					break;
-				else
-					return self::EXECUTE_NEXT;
-			case self::CHECK_FLOW_NOT_EXECUTING_IN_IF:
-				if(in_array($rawcmd, array('if', 'endif')))
-					break;
-				else
-					return self::EXECUTE_NEXT;
-			case self::CHECK_FLOW_IN_FOR:
-				if(in_array($rawcmd, array('for', 'endfor')))
-					break;
-				else
-					return self::EXECUTE_NEXT;
-			case self::CHECK_FLOW_IN_FUNC:
-				if(in_array($rawcmd, array('func', 'endfunc')))
-					break;
-				else
-					return self::EXECUTE_NEXT;
-			case self::CHECK_FLOW_IN_WHILE:
-				if(in_array($rawcmd, array('while', 'endwhile')))
-					break;
-				else
-					return self::EXECUTE_NEXT;
-		}
-		// substitute variables in argument
-		$arg = $this->substitutevars($rawarg);
-		if($this->config['debug'])
-			echo 'Executing command: ' . $rawcmd . PHP_EOL;
-		// execute language construct
-		switch($rawcmd) {
-			case '$': // variable assignment
-				if(preg_match('/^([a-zA-Z]+)\s*=\s*(.*)$/u', $arg, $matches)) {
-					$var = $matches[1];
-					if(!preg_match("/^[a-zA-Z]+$/u", $var)) {
-						echo "Syntax error: Invalid variable name: $var" . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					$rawassigned = $matches[2];
-					$rawassigned = $this->evaluate($rawassigned);
-					if($this->evaluate_ret === self::EVALUATE_FUNCTION_CALL)
-						return self::EXECUTE_PC;
-					if(preg_match("/^(\"|').*(\"|')$/u", $rawassigned, $matches)) {
-						// string assignment
-						$rawassigned = substr($rawassigned, 1, -1);
-						// remove quote escapes
-						$regex = "/\\\\(?=" . $matches[1] . ")/u";
-						$assigned = preg_replace($regex, '', $rawassigned);
-					}
-					else if(preg_match("/^-?(\d+|\d+\.\d+|0x\d+)$/u", $rawassigned)) {
-						// number
-						$assigned = $rawassigned;
-					}
-					else {
-						echo "Syntax error: Unrecognized assignment value: $rawassigned" . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					$this->setvar($var, $assigned);
-					return self::EXECUTE_NEXT;
-				}
-				else if(preg_match('/^([a-zA-Z]+)(\+\+|\-\-)$/u', $arg, $matches)) {
-					$varname = $matches[1];
-					$var = $this->getvar($varname);
-					if($var === NULL) {
-						echo 'Notice: Unrecognized variable ' . $varname;
-						return self::EXECUTE_NEXT;
-					}
-					switch($matches[2]) {
-						case '++': $var++; break;
-						case '--': $var--; break;
-					}
-					$this->setvar($varname, $var);
-					return self::EXECUTE_NEXT;
-				}
-				else {
-					echo "Syntax error: In line: " . $in . PHP_EOL;
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-			case 'if':
-				// evaluate condition
-				$condition = (bool) $this->evaluate($arg);
-				switch($this->evaluate_ret) {
-					case self::EVALUATE_FUNCTION_CALL:
-						return self::EXECUTE_PC;
-					case self::EVALUATE_ERROR:
-						return self::EXECUTE_SYNTAX_ERROR;
-				}
-				// execute?
-				// this gets set when we're in a non-executing part of an if
-				// statement that is getting evaluated
-				if($inif)
-					// not executing code we're in, so not executing this if either
-					$execute = false;
-				else {
-					// are we executing the outer flow object?
-					$f = $this->curr('flowo');
-					$execute = $f['execute'];
-				}
-				$this->curr('flowctr', '++');
-				$this->curr('flowo', array(
-					'type' => 'if',
-					'part' => 'then',
-					'condition' => $condition,
-					'line' => $this->curr('pc'),
-					'execute' => $execute,
-				));
-				return self::EXECUTE_NEXT;
-			case 'else':
-				$f =& $this->curr('flowo');
-				if($f['type'] !== 'if') {
-					echo 'Unexpected "else"' . PHP_EOL;
-					$this->pcinc();
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-				$f['part'] = 'else';
-				return self::EXECUTE_NEXT;
-			case 'endif':
-				$f =& $this->curr('flowo');
-				if($f['type'] !== 'if') {
-					echo 'Unexpected "endif"' . PHP_EOL;
-					$this->pcinc();
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-				$this->curr('flowctr', '--');
-				return self::EXECUTE_NEXT;
-			case 'for':
-				if(preg_match("/^(\d+)\s+count\s+(.*)$/u", $arg, $matches)) {
-					$max = (int) $matches[1];
-					$var = $matches[2];
-					if($max < 1)
-						$execute = false;
-					else {
-						$f = $this->curr('flowo');
-						$execute = $f['execute'];
-					}
-					$this->setvar($var, 0);
-					$this->curr('flowctr', '++');
-					$this->pcinc();
-					$this->curr('flowo', array(
-						'type' => 'for',
-						'subtype' => 'count',
-						'counter' => 0,
-						'max' => $max,
-						'countervar' => $var,
-						'line' => $this->curr('pc'),
-						'execute' => $execute,
-					));
-					return self::EXECUTE_PC;
-				}
-				else if(preg_match("/^(\d+)$/u", $arg, $matches)) {
-					$max = (int) $matches[1];
-					if($max < 1)
-						$execute = false;
-					else {
-						$f = $this->curr('flowo');
-						$execute = $f['execute'];
-					}
-					$this->curr('flowctr', '++');
-					$this->pcinc();
-					$this->curr('flowo', array(
-						'type' => 'for',
-						'subtype' => 'barecount',
-						'counter' => 0,
-						'max' => $max,
-						'line' => $this->curr('pc'),
-						'execute' => $execute,
-					));
-					return self::EXECUTE_PC;
-				}
-				else {
-					echo 'Syntax error: In line: ' . $in . PHP_EOL;
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-			case 'endfor':
-				$f =& $this->curr('flowo');
-				if($f['type'] !== 'for') {
-					echo 'Syntax error: Unexpected "endfor"' . PHP_EOL;
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-				// if we're not executing this, no point in looping
-				if(!$f['execute']) {
-					$this->curr('flowctr', '--');
-					return self::EXECUTE_NEXT;
-				}
-				if($f['subtype'] === 'count') {
-					$ctr = $this->getvar($f['countervar']);
-					$ctr++;
-					if($ctr < $f['max']) {
-						$this->curr('pc', $f['line']);
-						$this->setvar($f['countervar'], $ctr);
-					}
-					else {
-						$this->curr('flowctr', '--');
-						$this->pcinc();
-					}
-					return self::EXECUTE_PC;
-				}
-				else if($f['subtype'] === 'barecount') {
-					$f['counter']++;
-					if($f['counter'] < $f['max']) {
-						$this->curr('pc', $f['line']);
-					}
-					else {
-						$this->curr('flowctr', '--');
-						$this->pcinc();
-					}
-					return self::EXECUTE_PC;
-				}
-				else {
-					echo 'Unrecognized subtype: ' . $f['subtype'] . PHP_EOL;
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-			case '//': // comment, ignored
-				return self::EXECUTE_NEXT;
-			case 'while':
-				$condition = $rawarg;
-				$execute = (bool) $this->evaluate($this->substitutevars($condition));
-				switch($this->evaluate_ret) {
-					case self::EVALUATE_FUNCTION_CALL:
-						return self::EXECUTE_PC;
-					case self::EVALUATE_ERROR:
-						return self::EXECUTE_SYNTAX_ERROR;
-				}
-				// check whether we're executing this area at all
-				if($execute) {
-					$f = $this->curr('flowo');
-					if(!$f['execute'])
-						$execute = false;
-				}
-				$this->pcinc();
-				$this->curr('flowctr', '++');
-				$this->curr('flowo', array(
-					'type' => 'while',
-					'condition' => $condition,
-					'execute' => $execute,
-					'line' => $this->curr('pc'),
-				));
-				return self::EXECUTE_PC;
-			case 'endwhile':
-				$f =& $this->curr('flowo');
-				if($f['type'] !== 'while') {
-					echo 'Syntax error: Unexpected "endwhile"' . PHP_EOL;
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-				// if we're not executing this, no point in looping
-				if(!$f['execute']) {
-					$this->curr('flowctr', '--');
-					return self::EXECUTE_NEXT;
-				}
-				$f['execute'] = (bool) $this->evaluate($this->substitutevars($f['condition']));
-				if($this->evaluate_ret === self::EVALUATE_FUNCTION_CALL)
-					return self::EXECUTE_PC;
-				if($f['execute']) {
-					$this->curr('pc', $f['line']);
-					return self::EXECUTE_PC;
-				}
-				else {
-					$this->curr('flowctr', '--');
-					return self::EXECUTE_NEXT;
-				}
-			case 'func': // function introduction
-				// compile function definition
-				if(!preg_match(
-					"/^([a-zA-Z]+):\s+(([a-zA-Z]+,\s+)*[a-zA-Z]+)\$/u",
-					$arg,
-					$matches)) {
-					echo "Syntax error: In line: $in" . PHP_EOL;
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-				$name = $matches[1];
-				$vars = preg_split("/,\s+/", $matches[2]);
-				// functions get their own scope
-				$this->curr('currscope', '++');
-				$this->curr('vars', array());
-				// increment flowcounter so we can edit its variables
-				$this->curr('flowctr', '++');
-				if(isset($this->funcs[$name])) {
-					$f = $this->funcs[$name];
-					// function already exists; call it
-					if($this->retline < 0) {
-						echo "Syntax error: Redefinition of function $name" . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-					foreach($f['args'] as $key => $value) {
-						$this->setvar($value, $this->funcargs[$key]);
-					}
-					$flow = array(
-						'type' => 'func',
-						// we're assuming that we'll only get here when we're actually executing the code
-						'execute' => true,
-						'ret' => $this->retline,
-					);
-					// reset variables
-					$this->retline = -1;
-					$this->funcargs = array();
-				}
-				else {
-					// create new function
-					$func = array(
-						'name' => $name,
-						'args' => $vars,
-						'line' => $this->curr('pc'),
-						'argcount' => count($vars),
-					);
-					$this->funcs[$name] = $func;
-					$flow = array(
-						'type' => 'func',
-						// don't execute while we're loading function
-						'execute' => false,
-						'line' => $this->curr('pc'),
-						'function' => $name,
-					);
-				}
-				// note that flowctr has already been incremented
-				$this->curr('flowo', $flow);
-				return self::EXECUTE_NEXT;
-			case 'ret':
-				// loop through inner control flow structures until we find
-				// our function
-				$flow = $this->curr('flowctr');
-				do {
-					$f = $this->flow[$this->currhist][$flow];
-					if(!$f['execute'])
-						return self::EXECUTE_NEXT;
-					$flow--;
-					if($flow < 0) {
-						echo 'Syntax error: Unexpected "ret"' . PHP_EOL;
-						return self::EXECUTE_SYNTAX_ERROR;
-					}
-				} while($f['type'] !== 'func');
-				// return value is the same as the argument; does not get
-				// evaluated. If there is no argument, we return NULL.
-				$this->eax = $arg;
-				$this->curr('pc', $f['ret']);
-				$this->funcexecuted = true;
-				$this->curr('flowctr', $flow);
-				$this->curr('currscope', '--');
-				return self::EXECUTE_PC;
-			case 'endfunc':
-				$f = $this->curr('flowo');
-				if($f['type'] !== 'func') {
-					echo 'Syntax error: Unexpected "endfunc"' . PHP_EOL;
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-				if($f['execute']) {
-					// we reached end of an executing function, so return
-					// NULL
-					$this->eax = NULL;
-					$this->curr('pc', $f['ret']);
-					$this->funcexecuted = true;
-					$this->curr('flowctr', '--');
-					$this->curr('currscope', '--');
-					return self::EXECUTE_PC;
-				}
-				$this->curr('flowctr', '--');
-				$this->curr('currscope', '--');
-				return self::EXECUTE_NEXT;
-			case 'call':
-				// call makes no sense without an argument
-				if($arg === NULL) {
-					echo 'Syntax error: In line: ' . $in . PHP_EOL;
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-				// return value gets discarded; just evaluate argument
-				$this->evaluate($arg);
-				switch($this->evaluate_ret) {
-					case self::EVALUATE_FUNCTION_CALL:
-						return self::EXECUTE_PC;
-					case self::EVALUATE_ERROR:
-						return self::EXECUTE_SYNTAX_ERROR;
-				}
-				return self::EXECUTE_NEXT;
-			case 'global':
-				if(!preg_match("/^([a-zA-Z]+)\$/u", $arg, $matches)) {
-					echo 'Syntax error: In line: ' . $in . PHP_EOL;
-					return self::EXECUTE_SYNTAX_ERROR;
-				}
-				if($this->flowctr == 0) {
-					return self::EXECUTE_NEXT;
-				}
-				$var = $arg;
-				if($this->getvar($var) !== NULL) {
-					echo 'Notice: attempted global variable ' . $var . ' already exists locally' . PHP_EOL;
-					return self::EXECUTE_NEXT;
-				}
-				if(!isset($this->vars[$this->currhist][0][$var])) {
-					echo 'Notice: there is no global variable ' . $var . PHP_EOL;
-					$this->setvar($var, NULL);
-					return self::EXECUTE_NEXT;
-				}
-				// alias local variable to global
-				$this->vars[$this->currhist][$this->curr('currscope')][$var] =& $this->vars[$this->currhist][0][$var];
-				return self::EXECUTE_NEXT;
-		}
-		// now we're looking only at EH-defined commands, not language constructs
 		$cmd = $this->expand_cmd($rawcmd);
 		if(!$cmd) {
-			echo 'Invalid command: ' . $in . PHP_EOL;
-			return self::EXECUTE_NEXT;
+			echo 'Invalid command: ' . $rawcmd . PHP_EOL;
+			if(defined('IS_EHPHP')) {
+				return NULL;
+			} else {
+				return self::EXECUTE_NEXT;
+			}
 		}
 		$redirection = array(
 			'>' => false,
@@ -936,83 +165,62 @@ abstract class ExecuteHandler {
 			'}' => false,
 			'}$' => false,
 		);
-		if(isset($cmd['rawarg']) and $cmd['rawarg'] === true) {
-			/* Argument is simply the raw argument */
-			$argument = $arg;
-		}
-		else {
-			// split command into pieces
-			$paras = $this->divide_cmd($arg);
-			// separate argument from paras
-			$argument = trim($paras[0]);
-			unset($paras[0]);
-			// separate output redirection and friends
-			foreach($redirection as $key => $var) {
-				if(isset($paras[$key])) {
-					$redirection[$key] = $paras[$key];
-					unset($paras[$key]);
-				}
+		// separate output redirection and friends
+		foreach($redirection as $key => $var) {
+			if(isset($paras[$key])) {
+				$redirection[$key] = $paras[$key];
+				unset($paras[$key]);
 			}
-			// handle shortcut
-			if($argument === '*')
-				$argarray = $this->current;
-			else
-				$argarray = array($argument);
+		}
+		// handle shortcut
+		if(isset($paras[0]) and $paras[0] === '*') {
+			unset($paras[0]);
+			foreach($this->current as $file) {
+				$paras[] = $file;
+			}
 		}
 		// output redirection
-		if(($redirection['>'] !== false or $redirection['>$'] !== false) and
-			$cmd['execute'] !== 'quit') {
+		if($redirection['>'] !== false or $redirection['>$'] !== false) {
 			ob_start();
 		}
-		// return value of executed command
-		$ret = NULL;
-		// execute it
-		switch($cmd['execute']) {
-			case 'doallorcurr':
-				if(count($argarray) > 0 and $argarray[0] !== '') {
-					foreach($argarray as $file)
-						if(!($ret = $this->{$cmd['name']}($file, $paras)))
-							break;
-				}
-				else
-					$ret = $this->doall($cmd['name'], $paras);
-				break;
-			case 'docurr':
-				foreach($argarray as $entry) {
-					$ret = $this->{$cmd['name']}($entry, $paras);
-				}
-				break;
-			case 'callmethod':
-				$ret = $this->{$cmd['name']}($paras);
-				break;
-			case 'callmethodarg':
-				$ret = $this->{$cmd['name']}($argument, $paras);
-				break;
-			case 'callfunc':
-				$ret = $cmd['name']($paras);
-				break;
-			case 'callfuncarg':
-				$ret = $cmd['name']($argument, $paras);
-				break;
-			case 'quit':
-				return self::EXECUTE_QUIT;
-			default:
-				trigger_error('Unrecognized execution mode', E_USER_NOTICE);
-				break;
+		try {
+			// execute the command
+			$ret = $this->{$cmd['name']}($paras);
+		} catch(EHException $e) {
+			$e->handle();
+			echo "Error '" . $e->getMessage() . "' occurred while executing command '" . $cmd['name'] . "'" . PHP_EOL;
+			if(defined('IS_EHPHP')) {
+				return NULL;
+			} else {
+				return self::EXECUTE_NEXT;
+			}
+		} catch(StopException $e) {
+			echo 'Stopped ' . $cmd['name'] . ' (' . $e->getMessage() . ')' . PHP_EOL;
+			if(defined('IS_EHPHP')) {
+				return NULL;
+			} else {
+				return self::EXECUTE_NEXT;
+			}
 		}
-		if($cmd['setcurrent'] and (count($argarray) !== 0))
-			$this->current = $argarray;
+		// always make return value accessible to script
+		$this->setvar('ret', $ret);
+
+		// from here, return $ret if we're in ehphp, but EXECUTE_NEXT if we're in the pure-PHP implementation
+		if(defined('IS_EHPHP')) {
+			$returnvalue = $ret;
+		} else {
+			$returnvalue = self::EXECUTE_NEXT;
+		}
 		if($redirection['>'] !== false) {
 			$file = fopen($redirection['>'], 'w');
 			if(!$file) {
 				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
 				ob_end_clean();
-				return self::EXECUTE_NEXT;
+				return $returnvalue;
 			}
 			fwrite($file, ob_get_contents());
 			ob_end_clean();
-		}
-		else if($redirection['>$'] !== false) {
+		} elseif($redirection['>$'] !== false) {
 			$this->setvar($redirection['>$'], ob_get_contents());
 			ob_end_clean();
 		}
@@ -1021,7 +229,7 @@ abstract class ExecuteHandler {
 			if(!$file) {
 				trigger_error('Invalid rediction file: ' . $outputredir, E_USER_NOTICE);
 				ob_end_clean();
-				return self::EXECUTE_NEXT;
+				return $returnvalue;
 			}
 			fwrite($file, $ret);
 		}
@@ -1029,36 +237,45 @@ abstract class ExecuteHandler {
 		if($redirection['}$']) {
 			$this->setvar($redirect['}$'], $ret);
 		}
-		// always make return value accessible to script
-		$this->setvar('ret', $ret);
-		return self::EXECUTE_NEXT;
+		return $returnvalue;
 	}
 	private function expand_cmd($in) {
-		// substitute variable names in command
-		$cmd = $this->substitutevars($in);
 		// search for commands
-		if(isset($this->synonyms[$cmd]))
-			$cmd = $this->synonyms[$cmd];
-		if(isset($this->commands[$cmd]))
-			return $this->commands[$cmd];
-		else
+		if(isset($this->synonyms[$in])) {
+			$in = $this->synonyms[$in];
+		} 
+		if(isset($this->commands[$in])) {
+			return $this->commands[$in];
+		} else {
 			return false;
+		}
 	}
-	private function execute_help($in) {
+	/* Help functions */
+	private function execute_help(array $paras = array()) {
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'cmd'),
+			'checklist' => array('cmd' => 'Command to explain'),
+			'default' => array('cmd' => ''),
+		))) return false;
 		// array of functions with info
-		if(!$in) {
-			echo 'In command line, various options can be used to manipulate the list or its files. The following commands are available:' . PHP_EOL;
+		if($paras['cmd'] === '') {
+			echo 'The following commands are available in this ExecuteHandler interface:' . PHP_EOL;
 			$this->listcommands();
-			echo 'Type "help <command>" to get more information about that commmand. Commands will sometimes take an argument, often a filename.' . PHP_EOL;
+			echo 'Type "help <command>" or "<command> --help" to get more information about that commmand.' . PHP_EOL;
 			return true;
 		}
-		$in = $this->expand_cmd($in);
-		if($in) {
-			echo PHP_EOL . 'Function: ' . $in['name'] . PHP_EOL;
-			if(isset($in['aka']))
-				echo 'Aliases: ' . implode(', ', $in['aka']) . PHP_EOL;
-			echo 'Description: ' . $in['desc'] . PHP_EOL;
-			echo 'Arguments: ' . $in['arg'] . PHP_EOL;
+		$cmd = $this->expand_cmd($paras['cmd']);
+		if($cmd) {
+			echo PHP_EOL . 'Function: ' . $cmd['name'] . PHP_EOL;
+			if(isset($cmd['aka'])) {
+				if(is_array($cmd['aka'])) {
+					echo 'Aliases: ' . implode(', ', $cmd['aka']) . PHP_EOL;
+				} elseif(is_string($cmd['aka'])) {
+					echo 'Aliases: ' . $cmd['aka'] . PHP_EOL;
+				}
+			}
+			echo 'Description: ' . $cmd['desc'] . PHP_EOL;
 			return true;
 		}
 		else {
@@ -1066,38 +283,138 @@ abstract class ExecuteHandler {
 			return false;
 		}
 	}
-	static protected function expandargs(&$paras, $synonyms) {
-	// utility function for EH commands.
-	// Deprecated: use process_paras instead
-		if(!is_array($synonyms)) return false;
-		foreach($synonyms as $key => $result) {
-			if(isset($paras[$key]) and !isset($paras[$result]))
-				$paras[$result] = $paras[$key];
-		}
+	private function debugecho($var) {
+	// For debugging: adds output to a log file. Useful when debugging methods like fgetc()
+		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
+		shell_exec("echo '$var' >> $file");
 	}
-	static protected function setifneeded(&$paras, $field) {
-	// deprecated; use process_paras instead
-		if(isset($paras[$field]))
-			return;
-		$paras[$field] = getinput_label(ucfirst($field));
-	}
-	static protected function process_paras(&$paras, $pp_paras = NULL) {
-	// processes a function's $paras array, as specified in the $pp_paras parameter
-		if(!is_array($paras)) {
-			echo 'Error: invalid parameters given' . PHP_EOL;
-			return PROCESS_PARAS_ERROR_FOUND;
-		}
+	/* Input validation */
+	// paras that process_paras's checklist ignores
+	private static $pp_checklist_ignore = array('_ehphp');
+	protected function process_paras(&$paras, $pp_paras, &$split = NULL) {
+		/*
+		 *    int ExecuteHandler::process_paras(array &$paras, array $pp_paras,
+		 *      array &$split = NULL);
+		 *
+		 * This method processes a function's $paras array in the way specified
+		 * in the $pp_paras parameter. In addition, it will print a summary of
+		 * the method's usage if $paras['help'] is set. process_paras() will
+		 * return true if it is successful and false if it has
+		 * detected an error in its input.
+		 *
+		 * $pp_paras is an associative array with the following members:
+		 *   'name': Name of the calling function. This is used to generate the
+		 *      information printed by $paras['help'].
+		 *   'toarray': If $paras is not an array, convert it to an array with
+		 *      the non-array value associated with the key given by
+		 *      $pp_paras['toarray'].
+		 *   'synonyms': An associative array where the keys denote synonyms
+		 *      and the values the normalized names for parameters in $paras.
+		 *      For example, if 'synonyms' contains array('f' => 'force'), the
+		 *      value in $paras['f'] will be moved to $paras['force'].
+		 *   'checklist': An associative array with the names of parameters in
+		 *      the keys and a description of their usage in the values. Any
+		 *      parameter in $paras that is not a key in 'checklist' will
+		 *      generate an error (except if 'checkfunc' is set; see below). The
+		 *      descriptions are used by $paras['help'].
+		 *   'checkfunc': A function that is called if process_paras()
+		 *      encounters a key in $paras that is not in 'checklist'. If the
+		 *      functions returns true, the key is accepted; if not, an error
+		 *      is thrown.
+		 *   'default': An associative array where the key is a $paras key and
+		 *      the value is a default value. If the key is not set in $paras,
+		 *      the default value is inserted.
+		 *   'defaultfunc': Similar to 'default', but the value in the array is
+		 *		a function instead of a raw value. This function is executed 
+		 *		and its return value is put in $paras.
+		 *   'errorifempty': An array of keys. If any of the keys in this array
+		 *      is not set in $paras, an error is thrown.
+		 *   'askifempty': Similar to 'errorifempty', but instead of throwing
+		 *      an error, process_paras() asks the user to provide a value for
+		 *      the parameter.
+		 *   'checkparas': An associative array where the key is $paras key and
+		 *      the value is a function. process_paras() will call the function
+		 *      with the value for the key in $paras as its argument, and will
+		 *      throw an error if the function returns false. The default
+		 *      value of a parameter is always accepted.
+		 *    'listoptions': An associative array, similar to 'checkparas', but
+		 *      instead of a function, each para has an array associated with 
+		 *      it. The code throws an error if the value for a para is not in 
+		 *      the array for that para.
+		 *    'split': An array of paras that are to be split off into a
+		 *      separate array, the $split argument. This is useful when a
+		 *      method passes some of its parameters to another method, but also
+		 *      takes some parameters itself. If just set to "true", this
+		 *      parameter will split off all paras listed in 'checklist'.
+		 *
+		 * The order of the $pp_paras members is significant, because they will
+		 * be executed sequentially. For example, if 'checklist' is placed
+		 * before 'synonyms', 'checklist' will throw an error for synonyms
+		 * that are not listed separately in 'checklist'.
+		 */
 		if(!is_array($pp_paras)) {
-			// this means we only have to check whether $paras is an array
-			return 0;
+			// bogus input
+			echo 'process_paras: error: invalid pp_paras' . PHP_EOL;
+			return false;
 		}
+		if(!is_array($paras)) {
+			// apply 'toarray'
+			if(isset($pp_paras['toarray'])) {
+				$paras = array($pp_paras['toarray'] => $paras);
+			} else {
+				echo 'process_paras: error: $paras is not an array' . PHP_EOL;
+				return false;
+			}
+		}
+		// special parameter in all cases: help
+		if(isset($paras['help'])) {
+			if(isset($pp_paras['name'])) {
+				$this->execute_help(array($pp_paras['name']));
+			}
+			// without checklist, we can't do much
+			if(!isset($pp_paras['checklist'])) {
+				return false;
+			}
+			echo 'Parameters:' . PHP_EOL;
+			foreach($pp_paras['checklist'] as $name => $description) {
+				echo '- ' . $name . PHP_EOL;
+				echo $description . PHP_EOL;
+				if(isset($pp_paras['default'][$name])) {
+					echo 'Default: ';
+					Sanitizer::printVar($pp_paras['default'][$name]);
+					echo PHP_EOL;
+				}
+				if(isset($pp_paras['errorifempty']) and in_array($name, $pp_paras['errorifempty'], true)) {
+					echo 'This parameter is required.' . PHP_EOL;
+				}
+				if(isset($pp_paras['askifempty']) and in_array($name, $pp_paras['askifempty'], true)) {
+					echo 'This parameter is required; if it is not set, the user will be asked to provide a value.' . PHP_EOL;
+				}
+				echo PHP_EOL;
+			}
+			if(isset($pp_paras['synonyms'])) {
+				echo 'Synonyms:' . PHP_EOL;
+				foreach($pp_paras['synonyms'] as $key => $value)
+					echo $key . ' -> ' . $value . PHP_EOL;
+			}
+			// return "false": caller should stop after process_paras call
+			return false;
+		}
+		// variable used in checking input
 		$founderror = false;
+		$showerror = function($msg) use($pp_paras, &$founderror) {
+			if(isset($pp_paras['name'])) {
+				echo $pp_paras['name'] . ': ';
+			}
+			echo 'error: ' . $msg . PHP_EOL;
+			$founderror = true;
+		};
+		// perform the checks
 		foreach($pp_paras as $pp_key => $pp_value) {
 			switch($pp_key) {
-				case 'synonyms':
+				case 'synonyms': // rename paras
 					if(!is_array($pp_value)) {
-						echo 'Error: synonyms parameter is not an array' . PHP_EOL;
-						$founderror = true;
+						$showerror('synonyms parameter is not an array');
 						break;
 					}
 					foreach($pp_value as $key => $result) {
@@ -1107,289 +424,185 @@ abstract class ExecuteHandler {
 						}
 					}
 					break;
-				case 'askifempty':
-					if(!is_array($pp_value))
-						$pp_value = array($pp_value);
-					foreach($pp_value as $key) {
-						if(!isset($paras[$key])) {
-							$paras['key'] = $this->getline(array(
-								'prompt' => $key . ': ',
-							));
-						}
-					}
-					break;
-				case 'errorifempty':
-					if(!is_array($pp_value))
-						$pp_value = array($pp_value);
-					foreach($pp_value as $key) {
-						if(!isset($paras[$key])) {
-							echo 'Error: parameter ' . $key . ' should be set' . PHP_EOL;
-							$founderror = true;
-						}
-					}
-					break;
-				case 'default':
+				case 'askifempty': // if a para is empty, ask user for input
 					if(!is_array($pp_value)) {
-						echo 'Error: default parameter is not an array' . PHP_EOL;
-						$founderror = true;
+						$pp_value = array($pp_value);
+					}
+					foreach($pp_value as $key) {
+						if(!isset($paras[$key])) {
+							// paras for the menu() call
+							$menu_paras = array(
+								'prompt' => $key . ': ',
+								'options' => array(),
+							);
+							// use checkparas validation if possible
+							if(isset($pp_paras['checkparas'][$key])) {
+								$menu_paras['validfunction'] = 
+									$pp_paras['checkparas'][$key];
+							}
+							// else accept anything
+							else {
+								$menu_paras['validfunction'] = function($in) {
+									return true;
+								};
+							}
+							if(isset($pp_paras['checklist'][$key])) {
+								$menu_paras['helpinfo'] =
+									$pp_paras['checklist'][$key];
+							}
+							try {
+								$paras[$key] = $this->menu($menu_paras);
+							} catch(StopException $e) {
+								return false;
+							}
+						}
+					}
+					break;
+				case 'errorifempty': // if a para is empty, throw an error
+					if(!is_array($pp_value)) {
+						$pp_value = array($pp_value);
+					}
+					foreach($pp_value as $key) {
+						if(!isset($paras[$key])) {
+							$showerror('parameter "' . $key . '" should be set');
+						}
+					}
+					break;
+				case 'default': // set default values for paras
+					if(!is_array($pp_value)) {
+						$showerror('default parameter is not an array');
 						break;
 					}
 					foreach($pp_value as $key => $result) {
-						if(!isset($paras[$key]))
+						if(!isset($paras[$key])) {
 							$paras[$key] = $result;
-					}
-					break;
-				case 'checklist':
-					if(!is_array($pp_value)) {
-						echo 'Error: list of parameter is not an array' . PHP_EOL;
-						$founderror = true;
-						break;
-					}
-					foreach($paras as $key => $result) {
-						if(!in_array($key, $pp_value)) {
-							echo 'Warning: unrecognized parameter ' . $key . PHP_EOL;
 						}
 					}
 					break;
+				case 'defaultfunc':
+					// set default values for paras using information in the 
+					// rest of the paras array
+					if(!is_array($pp_value)) {
+						$showerror('defaultfunc parameter is not an array');
+						break;
+					}
+					foreach($pp_value as $key => $result) {
+						if(!isset($paras[$key])) {
+							$paras[$key] = $result($paras);
+						}
+					}
+					break;
+				case 'checklist': // check that all paras given are legal
+					if(!is_array($pp_value)) {
+						$showerror('checklist parameter is not an array');
+						break;
+					}
+					foreach($paras as $key => $result) {
+						if(!array_key_exists($key, $pp_value)) {
+							// ignore some
+							if(in_array($key, self::$pp_checklist_ignore, true)) {
+								continue;
+							}
+							// if the check function returns true, do not warn
+							if(isset($pp_paras['checkfunc']) and $pp_paras['checkfunc']($key)) {
+								continue;
+							}
+							// for now, ignore para 0, which is automatically set
+							if($key === 0) {
+								continue;
+							}
+							$showerror('unrecognized parameter "' . $key . '"');
+						}
+					}
+					break;
+				case 'checkparas': // functions used to check the validity of input for a given para
+					if(!is_array($pp_value)) {
+						$showerror('checkparas parameter is not an array');
+						break;
+					}
+					foreach($pp_value as $para => $func) {
+						// errorifempty may already have yelled
+						if(!isset($paras[$para])) {
+							continue;
+						}
+						// always accept default value
+						if(isset($pp_paras['default'][$para]) and ($paras[$para] === $pp_paras['default'][$para])) {
+							continue;
+						}
+						if(!$func($paras[$para], $paras)) {
+							$showerror('invalid value "' 
+								. Sanitizer::varToString($paras[$para]) 
+								. '" for parameter "' . $para . '"');
+						}
+					}
+					break;
+				case 'listoptions': // list options for a para
+					if(!is_array($pp_value)) {
+						$showerror('listoptions parameter is not an array');
+						break;
+					}
+					foreach($pp_value as $para => $options) {
+						if(!isset($paras[$para])) {
+							continue;
+						}
+						// always accept default value
+						if(isset($pp_paras['default'][$para]) and ($paras[$para] === $pp_paras['default'][$para])) {
+							continue;
+						}
+						if(!in_array($paras[$para], $options, true)) {
+							$showerror('invalid value "' 
+								. Sanitizer::varToString($paras[$para]) 
+								. '" for parameter "' . $para . '" (allowed ' 
+								. 'options: "' . implode('", "', $options) 
+								. '")'
+							);
+						}
+					}
+					break;
+				case 'split': // transfer paras
+					if(!is_array($split)) {
+						$showerror('split argument is not an array');
+						break;
+					}
+					$handlepara = function($para) use(&$paras, &$split) {
+						if(isset($paras[$para])) {
+							$split[$para] = $paras[$para];
+							unset($paras[$para]);
+						} else {
+							// with good pp_paras set, this will happen only if
+							// errorifempty has already yelled.
+							$split[$para] = NULL;
+						}
+					};
+					if($pp_value === true) {
+						foreach($pp_paras['checklist'] as $para => $desc) {
+							$handlepara($para);
+						}
+					} elseif(!is_array($pp_value)) {
+						$showerror('split parameter is not an array');
+					} else {
+						foreach($pp_value as $para) {
+							$handlepara($para);
+						}
+					}
+					break;
+				case 'checkfunc':
+				case 'name':
+				case 'toarray':
+					// ignore, used internally in other places
+					break;
 				default:
-					echo 'Error: unrecognized parameter ' . $pp_key . PHP_EOL;
-					$founderror = true;
+					$showerror('unrecognized process_paras parameter ' . $pp_key);
 					break;
 			}
 		}
-		if($founderror)
-			return PROCESS_PARAS_ERROR_FOUND;
-		else
-			return 0;
-	}
-	public function exec_file($file, $paras = '') {
-		// open input file
-		$in = fopen($file, 'r');
-		if(!$in) {
-			echo 'Invalid input file' . PHP_EOL;
+		if($founderror) {
 			return false;
-		}
-		$this->currhist++;
-		// set stuff up
-		$this->curr('currscope', 0);
-		$this->curr('vars', array());
-		$this->curr('history', array());
-		$this->curr('histlen', 0);
-		$this->curr('pc', 0);
-		$this->curr('flowctr', 0);
-		$this->curr('flowo', array(
-			'type' => 'global',
-			'start' => 0,
-			'execute' => true,
-		));
-		while(($line = fgets($in)) !== false) {
-			if(!$this->driver($line)) {
-				$this->currhist--;
-				return false;
-			}
-		}
-		$this->currhist--;
-		return true;
-	}
-	public function setup_commandline($name, $paras = array()) {
-	// Performs various functions in a pseudo-command line. A main entry point.
-	// stty stuff inspired by sfinktah at http://php.net/manual/en/function.fgetc.php
-		if(self::process_paras($paras, array(
-			'checklist' => array(
-				'undoable', // whether we should be able to undo changes to the object
-			),
-			'default' => array(
-				'undoable' => false,
-			),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		// perhaps kill this; I never use it
-		if($paras['undoable'] and !$this->hascommand('undo')) {
-			$this->tmp = clone $this;
-			$newcmd['name'] = 'undo';
-			$newcmd['desc'] = 'Return to the previous state of the object';
-			$newcmd['arg'] = 'None';
-			$newcmd['execute'] = 'callmethod';
-			$this->addcommand($newcmd, array('ignoreduplicates' => true));
-		}
-		echo 'Welcome to command line mode. Type "help" for help.' . PHP_EOL;
-		// initialize stuff
-		$this->curr('currscope', 0);
-		$this->curr('vars', array());
-		$this->curr('history', array());
-		$this->curr('histlen', 0);
-		$this->curr('pc', 0);
-		$this->curr('flowctr', 0);
-		$this->curr('flowo', array(
-			'type' => 'global',
-			'execute' => true,
-			'start' => 0,
-		));
-		// loop through commands
-		while(true) {
-			// get input
-			$cmd = $this->getline(array(
-				'lines' => $this->history[$this->currhist],
-				'prompt' => $name . '> ')
-			);
-			if($cmd === false)
-				$cmd = 'quit';
-			// execute the command
-			if(!$this->driver($cmd)) {
-				echo 'Goodbye.' . PHP_EOL;
-				return;
-			}
-		}
-	}
-	private function debugecho($var) {
-	// For debugging: adds output to a log file. Useful when debugging methods like fgetc()
-		$file = "/Users/jellezijlstra/Dropbox/git/Common/log";
-		shell_exec("echo '$var' >> $file");
-	}
-	private function stty($opt) {
-		$cmd = "/bin/stty " . $opt;
-		exec($cmd, $output, $return);
-		if($return !== 0) {
-			trigger_error("Failed to execute " . $cmd);
-			return false;
-		}
-		return implode("\n", $output);
-	}
-	protected function configset($paras = array()) {
-	// sets something in the $this->config array, which configures the EH instance
-		foreach($paras as $key => $value) {
-			if(array_key_exists($key, $this->config))
-				$this->config[$key] = $value;
-		}
-	}
-	abstract public function cli(); // sets up command line
-	private function undo() {
-		$blacklist = array('tmp', 'commands', 'synonyms', 'p', 'props');
-		$vars = get_object_vars($this);
-		foreach($vars as $key => $var) {
-			if(in_array($key, $blacklist)) continue;
-			$this->$key = $this->tmp->$key;
-		}
-	}
-	private function listcommands() {
-		echo 'Commands:' . PHP_EOL;
-		foreach($this->commands as $command => $content)
-			echo "\t" . $command . PHP_EOL;
-		echo 'Synonyms:' . PHP_EOL;
-		foreach($this->synonyms as $from => $to)
-			echo "\t" . $from . ' -> ' . $to . PHP_EOL;
-	}
-	protected function hascommand($cmd) {
-		if(isset($this->commands[$cmd]))
+		} else {
 			return true;
-		if(isset($this->synonyms[$cmd]))
-			return true;
-		return false;
-	}
-	static protected function testregex($in) {
-	// tests whether a regex pattern is valid
-		ob_start();
-		$t = @preg_match($in, 'test');
-		ob_end_clean();
-		// if regex was invalid, preg_match returned FALSE
-		if($t === false)
-			return false;
-		else
-			return true;
-	}
-	static private function shell($in) {
-		// cd won't actually change the shell until we do some special magic
-		if(preg_match('/^cd /', $in)) {
-			$dir = substr($in, 3);
-			// handle home directory
-			if($dir[0] === '~') {
-				$home = trim(shell_exec('echo $HOME'));
-				$dir = preg_replace('/^~/u', $home, $dir);
-			}
-			chdir($dir);
 		}
-		else
-			echo shell_exec($in);
 	}
-	protected function myecho($in) {
-		echo $in . PHP_EOL;
-	}
-	protected function put($in) {
-	// like myecho(), but does not put newline
-		echo $in;
-	}
-	private function driver($in) {
-	// adds lines to the history array, and handles execution
-		// add line to the history array
-		$this->history[$this->currhist][$this->histlen[$this->currhist]] = trim($in);
-		$this->curr('histlen', '++');
-		// continue executing as long as PC is below length of program
-		while($this->curr('pc') < $this->curr('histlen')) {
-			if($this->config['debug'])
-				echo "Feeding command (" . $this->curr('pc') . "): " .
-					$this->curr('pcres') . PHP_EOL;
-			try {
-				$ret = $this->execute();
-			}
-			catch(EHException $e) {
-				echo "Error '" . $e->getMessage() . "' occurred while executing command '" . $in . "'" . PHP_EOL;
-			}
-			switch($ret) {
-				case self::EXECUTE_NEXT:
-					$this->pcinc();
-					break;
-				case self::EXECUTE_PC:
-					break;
-				case self::EXECUTE_SYNTAX_ERROR:
-				case self::EXECUTE_QUIT:
-					return false;
-			}
-		}
-		return true;
-	}
-	private function &curr($var, $set = NULL) {
-		$ret = NULL;
-		switch($var) {
-			case 'pc':
-				$ret =& $this->pc[$this->currhist];
-				break;
-			case 'histlen':
-				$ret =& $this->histlen[$this->currhist];
-				break;
-			case 'history':
-				$ret =& $this->history[$this->currhist];
-				break;
-			case 'flow':
-				$ret =& $this->flow[$this->currhist];
-				break;
-			case 'flowo': // object pointing to current control flow block
-				$ret =& $this->flow[$this->currhist][$this->flowctr[$this->currhist]];
-				break;
-			case 'flowctr':
-				$ret =& $this->flowctr[$this->currhist];
-				break;
-			case 'pco': case 'pcres':
-				$ret =& $this->history[$this->currhist][$this->pc[$this->currhist]];
-				break;
-			case 'currscope':
-				$ret =& $this->currscope[$this->currhist];
-				break;
-			case 'vars':
-				$ret =& $this->vars[$this->currhist][$this->currscope[$this->currhist]];
-				break;
-		}
-		if($set === NULL) return $ret;
-		// can't use switch because 0 == '++'
-		if($set === '++')
-			$ret++;
-		else if($set === '--')
-			$ret--;
-		else
-			$ret = $set;
-		return $ret;
-	}
-	private function pcinc() {
-		$this->curr('pc', '++');
-	}
+	/* Input for EH methods */
 	protected function fgetc($infile) {
 	// re-implementation of fgetc that allows multi-byte characters
 		// internal version of fgetc(), converting number into integer
@@ -1424,7 +637,7 @@ abstract class ExecuteHandler {
 		if($test1($c1)) {
 			// Ctrl+D
 			if($c1 === 4)
-				return false;
+				return chr($c1);
 			// special-case KEY_UP etcetera
 			if($c1 === 27) {
 				$c2 = $fgetc(STDIN);
@@ -1468,20 +681,43 @@ abstract class ExecuteHandler {
 	protected function getline($paras = array()) {
 	// get a line from stdin, allowing for use of arrow keys, backspace, etc.
 	// Return false upon EOF or failure.
-		// common use case
-		if(is_string($paras))
-			$paras = array('prompt' => $paras);
-		if(self::process_paras($paras, array(
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'toarray' => 'prompt',
 			'checklist' => array(
-				'lines', // array of lines accessed upon KEY_UP, KEY_DOWN etcetera
-				'prompt', // Prompt to be printed.
+				'lines' =>
+					'Array of lines that can be accessed when KEY_UP and KEY_DOWN are pressed',
+				'prompt' =>
+					'Prompt to be printed',
+				'includenewlines' =>
+					'Whether to include newlines in the line returned',
+				'initialtext' =>
+					'Initial suggested text',
+				'autocompletion' =>
+					'Array of strings for autocompletion',
+				'autocompleter' =>
+					'Autocompleter object for autocompletion',
 			),
 			'default' => array(
 				'lines' => array(),
 				'prompt' => '> ',
+				'includenewlines' => false,
+				'initialtext' => false,
+				'autocompleter' => false,
+				'autocompletion' => false,
 			),
-		)) === PROCESS_PARAS_ERROR_FOUND)
-			return false;
+			'checkparas' => array(
+				'lines' => function($in) {
+					return is_array($in);
+				},
+				'autocompletion' => function($in) {
+					return is_array($in);
+				},
+				'autocompleter' => function($in) {
+					return ($in instanceof Autocompleter);
+				},
+			),
+		))) return false;
 		$promptoffset = strlen($paras['prompt']);
 		// start value of the pointer
 		$histptr = count($paras['lines']);
@@ -1500,7 +736,7 @@ abstract class ExecuteHandler {
 				return NULL;
 			}
 		};
-		$showcursor = function() use (&$cmdlen, &$keypos, $getcmd, $promptoffset) {
+		$showcursor = function() use(&$cmdlen, &$keypos, $getcmd, $promptoffset) {
 			// return to saved cursor position, clear line
 			// first move as far west as we can; 200 positions should suffice
 			echo "\033[200D\033[" . $promptoffset . "C\033[K";
@@ -1510,13 +746,41 @@ abstract class ExecuteHandler {
 			if($cmdlen > $keypos)
 				echo "\033[" . ($cmdlen - $keypos) . "D";
 		};
+		$addCharacter = function($c) use(&$cmdlen, &$keypos, &$cmd) {
+			$tmp = array();
+			$nchars = $cmdlen - $keypos;
+			for($i = $keypos; $i < $cmdlen; $i++) {
+				$tmp[] = $cmd[$i];
+			}
+			// add new character to command
+			$cmd[$keypos] = $c;
+			$cmdlen++;
+			$keypos++;
+			// add characters back to command
+			for($i = 0; $i < $nchars; $i++) {
+				$cmd[$keypos + $i] = $tmp[$i];
+			}
+		};
+		// prepare autocompletion
+		if($paras['autocompleter'] !== false) {
+			$autocompleter = $paras['autocompleter'];
+		} elseif($paras['autocompletion'] !== false) {
+			$autocompleter = new Autocompleter($paras['autocompletion']);
+		}
 		// set our settings
 		$this->stty('cbreak iutf8');
-		// get command
-		$cmd = array();
-		$cmdlen = 0;
-		$keypos = 0;
-		echo $paras['prompt'];
+		// always put cursor at beginning of line, and print prompt
+		echo "\033[200D" . $paras['prompt'];
+		if($paras['initialtext'] === false) {
+			// get command
+			$cmd = array();
+			$cmdlen = 0;
+			$keypos = 0;
+		} else {
+			echo $paras['initialtext'];
+			$cmd = mb_str_split($paras['initialtext']);
+			$cmdlen = $keypos = count($cmd);
+		}
 		while(true) {
 			// get input
 			$c = $this->fgetc(STDIN);
@@ -1535,18 +799,18 @@ abstract class ExecuteHandler {
 					if(!isset($paras['lines'][$histptr]))
 						$cmd = array();
 					else
-						$cmd = mb_str_split($paras['lines'][$histptr]);
+						$cmd = mb_str_split(trim($paras['lines'][$histptr]));
 					$cmdlen = count($cmd);
 					$keypos = $cmdlen;
 					break;
 				case "\033[B": // KEY_DOWN
 					// increment pointer
-					if($histptr < $this->curr('histlen'))
+					if(isset($paras['lines'][$histptr]))
 						$histptr++;
 					// get new command
-					if($histptr < $this->curr('histlen')) {
+					if(isset($paras['lines'][$histptr])) {
 						// TODO: get a $this->curr() method for this
-						$cmd = mb_str_split($paras['lines'][$histptr]);
+						$cmd = mb_str_split(trim($paras['lines'][$histptr]));
 						$cmdlen = count($cmd);
 						$keypos = $cmdlen;
 					}
@@ -1566,6 +830,9 @@ abstract class ExecuteHandler {
 						$keypos++;
 					break;
 				case "\177": // KEY_BACKSPACE
+					if($keypos === 0) {
+						break;
+					}
 					$tmp = array();
 					$nchars = $cmdlen - $keypos;
 					for($i = $keypos; $i < $cmdlen; $i++) {
@@ -1582,24 +849,35 @@ abstract class ExecuteHandler {
 					$cmdlen--;
 					break;
 				case "\012": // newline
+					if($paras['includenewlines'])
+						$cmd[$cmdlen++] = "\n";
 					$cmd = $getcmd();
 					if($cmd === NULL) return false;
 					// restore sane stty settings for the duration of command execution
 					$this->stty("sane");
 					return $cmd;
-				// more cases for Ctrl stuff needed
+				case "\011": // Tab and Ctrl+I
+					$command = $getcmd();
+					$offset = strrpos($command, "'", -($cmdlen - $keypos));
+					if(isset($autocompleter) && $offset !== false) {
+						$autocompleted = substr($command, $offset + 1);
+						$addition = $autocompleter->lookup($autocompleted);
+						if($addition !== false) {
+							for($i = 0, $len = strlen($addition); $i < $len; $i++) {
+								$addCharacter($addition[$i]);
+							}
+						}
+					}
+					break;
 				case "\001": // Ctrl+A
 				case "\002": // Ctrl+B
 				case "\005": // Ctrl+E
 				case "\006": // Ctrl+F
 				case "\007": // Ctrl+G
 				case "\010": // Ctrl+H
-				case "\011": // Ctrl+I
 				case "\013": // Ctrl+K
-				case "\014": // Ctrl+L
 				case "\016": // Ctrl+N
 				case "\020": // Ctrl+P
-				case "\022": // Ctrl+R
 				case "\024": // Ctrl+T
 				case "\025": // Ctrl+U
 				case "\026": // Ctrl+V
@@ -1608,101 +886,162 @@ abstract class ExecuteHandler {
 				case "\033": // Ctrl+[
 				case "\035": // Ctrl+]
 					break;
+				case "\014": // Ctrl+L(eft): go to beginning of line
+					$keypos = 0;
+					break;
+				case "\022": // Ctrl+R(ight): go to end of line
+					$keypos = $cmdlen;
+					break;
+				case "\004": // Ctrl+D: stop
+					echo PHP_EOL; // make newline
+					throw new StopException("fgetc");
 				default: // other characters: add to command
-					// temporary array to hold characters to be moved over
-					$tmp = array();
-					$nchars = $cmdlen - $keypos;
-					for($i = $keypos; $i < $cmdlen; $i++) {
-						$tmp[] = $cmd[$i];
-					}
-					// add new character to command
-					$cmd[$keypos] = $c;
-					$cmdlen++;
-					$keypos++;
-					// add characters back to command
-					for($i = 0; $i < $nchars; $i++) {
-						$cmd[$keypos + $i] = $tmp[$i];
-					}
+					$addCharacter($c);
 					break;
 			}
 			// show command
 			$showcursor();
 		}
 	}
-	protected function menu($paras) {
+	private function stty($opt) {
+		$cmd = "/bin/stty " . $opt . ' 2> /dev/null';
+		exec($cmd, $output, $return);
+		return implode("\n", $output);
+	}
+	public function menu(array $paras) {
 	// Function that creates a menu and gets input
-		if(self::process_paras($paras, array(
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'head', // Menu heading
-				'options', // List of options. Associative array, with option in key and description in value
-				'printoptions', // Always print options?
-				'helpcommand', // Make help command available? (If set to true, commands beginning with "help" will not get returned.)
-				'validfunction', // Function to determine validity of command
-				'process', // Array of callbacks to execute when a given option is called.
-				'processcommand', // Function used to process the command after input
+				'head' =>
+					'Menu heading',
+				'prompt' =>
+					'Prompt to be shown',
+				'headasprompt' =>
+					'Whether to show the heading as the prompt for input',
+				'options' =>
+					'List of options. Associative array, with option in key and description in value',
+				'printoptions' =>
+					'Whether options should always be printed',
+				'helpcommand' =>
+					'Whether to make the help command available. (If set to true, commands beginning with "help" will not get returned.)',
+				'helpinfo' =>
+					'Information that gets shown to the user when they type "help"',
+				'validfunction' =>
+					'Function to determine validity of command',
+				'process' =>
+					'Array of callbacks to execute when a given option is'
+						. ' called. These function take the command given and'
+						. ' the data produced by processcommand as arguments,'
+						. ' and they'
+						. ' should return either true (indicating that menu'
+						. ' should continue) or false (indicating that menu'
+						. ' should return).',
+				'processcommand' =>
+					'Function used to process the command after input. This'
+						. ' function may take a second reference argument of'
+						. ' data that is given to processcommand or to the'
+						. ' caller. This function may return false if the'
+						. ' command is invalid.',
 			),
 			'default' => array(
-				'head' => 'MENU',
+				'head' => false,
+				'prompt' => '> ',
 				'printoptions' => false,
 				'helpcommand' => true,
+				'options' => array(),
 				'validfunction' => function($in, $options) {
-					return in_array($in, $options);
+					return array_key_exists($in, $options);
 				},
 				'process' => array(),
 				'processcommand' => false,
+				'headasprompt' => false,
+				'helpinfo' => false,
 			),
-			'errorifempty' => array('options'),
-		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		))) return false;
 		// print menu heading
-		echo $paras['head'] . PHP_EOL;
+		if(!$paras['headasprompt']) {
+			if($paras['head'] !== false) {
+				echo $paras['head'] . PHP_EOL;
+			}
+		}
 		$printoptions = function() use($paras) {
+			if(count($paras['options']) === 0) {
+				return;
+			}
 			echo 'Options available:' . PHP_EOL;
 			foreach($paras['options'] as $cmd => $desc) {
 				echo "-'" . $cmd . "': " . $desc . PHP_EOL;
 			}
 		};
-		if($paras['printoptions'])
+		if($paras['printoptions']) {
 			$printoptions();
-		$options = array_keys($paras['options']);
+		}
+		$getlineparas = array('lines' => array_keys($paras['options']));
+		if($paras['headasprompt']) {
+			$getlineparas['prompt'] = $paras['head'];
+		} else {
+			$getlineparas['prompt'] = $paras['prompt'];
+		}
 		while(true) {
 			// get command
-			$cmd = $this->getline(array('lines' => $options));
-			if($cmd === false)
+			$cmd = $this->getline($getlineparas);
+			$data = NULL;
+			if($cmd === false) {
 				return false;
+			}
+			// remember command in history
+			$getlineparas['lines'][] = $cmd;
 			// provide help if necessary
 			if($paras['helpcommand']) {
 				// just 'help' prints all options
 				if($cmd === 'help') {
+					if($paras['helpinfo'] !== false) {
+						echo $paras['helpinfo'] . PHP_EOL;
+					}
 					$printoptions();
 					continue;
 				}
 				// help about a specific command
 				if(substr($cmd, 0, 5) === 'help ') {
 					$option = substr($cmd, 5);
-					if($paras['options'][$option])
+					if(isset($paras['options'][$option])) {
 						echo $option . ': ' . $paras['options'][$option] . PHP_EOL;
-					else
+					} else {
 						echo 'Option ' . $option . ' does not exist.' . PHP_EOL;
+					}
 					continue;
 				}
 			}
-			if($paras['processcommand'])
-				$cmd = $paras['processcommand']($cmd);
-			// return command if valid
-			if($paras['validfunction']($cmd, $options)) {
-				if(array_key_exists($cmd, $paras['process'])) {
-					$paras['process'][$cmd]();
-				}
-				else
-					return $cmd;
+			if($paras['processcommand'] && !array_key_exists($cmd, $paras['options'])) {
+				$cmd = $paras['processcommand']($cmd, $data);
 			}
-			else
-				echo 'Unrecognized option ' . $cmd . PHP_EOL;
+			// return command if valid
+			if($cmd !== false && ((is_string($cmd) 
+				&& array_key_exists($cmd, $paras['options'])) 
+				|| $paras['validfunction']($cmd, $paras['options'], $data))) {
+				if(isset($paras['process'][$cmd])) {
+					if($paras['process'][$cmd]($cmd, $data) === false) {
+						break;
+					}
+				} else {
+					break;
+				}
+			} else {
+				echo 'Invalid value ' . $cmd . PHP_EOL;
+			}
+		}
+		if($data === NULL) {
+			return $cmd;
+		} else {
+			return array($cmd, $data);
 		}
 	}
-	protected function ynmenu($head, $process = NULL) {
-	// Make a yes-no menu
-		return $this->menu(array(
+	/*
+	 * A specialization of ExecuteHandler::menu() to create a yes/no menu.
+	 */
+	public /* bool */ function ynmenu(/* string */ $head, /* callable */ $process = NULL) {
+		switch($this->menu(array(
 			'options' => array(
 				'y' => 'Yes',
 				'n' => 'No',
@@ -1716,19 +1055,214 @@ abstract class ExecuteHandler {
 					default: return $in;
 				}
 			},
-		));
-	}
-	public function test() {
-	// Test function that might do anything I currently want to test
-	// Currently, testing what arguments it is getting
-		$this->stty('cbreak iutf8');
-		while(1) {
-			$char = ord(fgetc(STDIN));
-			echo PHP_EOL;
-			echo $char . ' : ' . base_convert($char, 10, 8) . PHP_EOL;
-			if($char === 4) break;
+		))) {
+			case 'y': return true;
+			case 'n': return false;
 		}
-		var_dump(func_get_args());
+		throw new EHException("Execution should never reach here");
+	}
+	/* Testing the EH framework */
+	public function print_paras(array $paras) {
+	// dump the arguments it gets, useful for debugging ehphp
+		var_dump($paras);
+		return true;
+	}
+	public function return_para(array $paras) {
+	// return its first para
+		if(!isset($paras[0])) {
+			return NULL;
+		} else {
+			return $paras[0];
+		}
+	}
+	public function test($paras) {
+	// Test function that might do anything I currently want to test
+	// Currently, returning its argument
+		// and telling us what functions etcetera we have defined
+		eval($paras[0]);
+		return;
+		var_dump(array_keys($GLOBALS));
+		$funcs = get_defined_functions();
+		var_dump($funcs['user']);
+		var_dump(array_keys(get_defined_constants()));
+		var_dump(get_declared_classes());
+		return $paras[0];
+	}
+	/* Miscellaneous stuff */
+	public function getAutocompleter() {
+		// Autocompletion in getline(). Default is no autocompletion.
+		return false;
+	}
+	public function switchcli(array $paras) {
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'to'),
+			'checklist' => array('to' => 'CLI to switch to'),
+			'errorifempty' => array('to'),
+			'checkparas' => array(
+				'to' => function($to) {
+					// return false if class fails to load
+					try {
+						return (class_exists($to) 
+							&& is_subclass_of($to, 'ContainerList'));
+					} catch(EHException $e) {
+						return false;
+					}
+				}
+			),
+		))) return false;
+		return $paras['to']::singleton()->cli();
+	}
+	protected function configset(array $paras) {
+	// sets something in the $this->config array, which configures the EH instance
+		foreach($paras as $key => $value) {
+			if(array_key_exists($key, $this->config))
+				$this->config[$key] = $value;
+		}
+	}
+	public function shell($paras) {
+		// TODO: set up our own shell process with a persistent pipe, so we can
+		// keep state in the shell.
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'toarray' => 'cmd',
+			'synonyms' => array(
+				0 => 'cmd',
+				1 => 'arg',
+				'o' => 'stdout',
+				'e' => 'stderr',
+				'v' => 'printcmd',
+			),
+			'checklist' => array(
+				'cmd' => 'Command to be executed',
+				'arg' => 'Array of arguments to the command. These arguments are escaped by this command.',
+				'stdout' => 'Place to send stdout to',
+				'append-out' => 'Whether to append to the stdout file',
+				'stderr' => 'Place to send stderr to',
+				'append-err' => 'Whether to append to the stderr file',
+				'input' => 'Place to get input from',
+				'input-string' => 'String to send as stdin input',
+				'return' => 'What to return. Options are "success" (whether the command returned exit status 0), "output" (the stdout output), "outputlines" (the output as an array of lines), and "exitvalue" (the exit code of the command).',
+				'printcmd' => 'Print the command as it is executed',
+				'printout' => 'Whether to print the output',
+				'exceptiononerror' => 'Whether to throw an exception when an error occurs',
+			),
+			'default' => array(
+				'arg' => false,
+				'stdout' => false,
+				'append-out' => true,
+				'stderr' => false,
+				'append-err' => true,
+				'input' => false,
+				'input-string' => false,
+				'return' => 'success',
+				'printcmd' => false,
+				'printout' => true,
+				'exceptiononerror' => true,
+			),
+			'listoptions' => array(
+				'return' => array('success', 'output', 'exitvalue', 'outputlines'),
+			),
+			'checkparas' => array(
+				'arg' => function($in) {
+					return is_array($in);
+				},
+			),
+			'errorifempty' => array('cmd'),
+		))) return false;
+		$cmd = $paras['cmd'];
+		if($paras['arg']) {
+			$args = array_map('escapeshellarg', $paras['arg']);
+			$cmd .= ' ' . implode(' ', $args);
+		}
+		// cd won't actually change the shell until we do some special magic
+		if(substr($cmd, 0, 3) === 'cd ') {
+			$dir = substr($cmd, 3);
+			// more hack
+			if($dir[0] === "'") {
+				$dir = substr($dir, 1, -1);
+			}
+			// handle home directory
+			if($dir[0] === '~') {
+				$home = trim(shell_exec('echo $HOME'));
+				$dir = preg_replace('/^~/u', $home, $dir);
+			}
+			if($paras['printcmd']) {
+				echo 'cd ' . $dir . PHP_EOL;
+			}
+			return chdir($dir);
+		} else {
+			if($paras['stdout'] !== false) {
+				$cmd .= $paras['append-out'] ? ' >> ' : ' > ';
+				$cmd .= $paras['stdout'];
+			}
+			if($paras['stderr'] !== false) {
+				$cmd .= $paras['append-err'] ? ' 2>> ' : ' 2> ';
+				$cmd .= $paras['stderr'];
+			}
+			if($paras['input'] !== false) {
+				$cmd .= ' < ' . $paras['input'];
+			}
+			if($paras['input-string'] !== false) {
+				$cmd .= " <<INPUT\n" . $paras['input-string'] . "\nINPUT";
+			}
+			if($paras['printcmd']) {
+				echo $cmd . PHP_EOL;
+			}
+			exec($cmd, $output, $exitval);
+			if($paras['printout'] and count($output) > 0) {
+				echo implode(PHP_EOL, $output) . PHP_EOL;
+			}
+			if($paras['exceptiononerror'] && ($exitval !== 0)) {
+				throw new EHException(
+					'Error (exit value = ' . $exitval . ') occurred while '
+						. 'executing command ' . $cmd
+				);
+			}
+			switch($paras['return']) {
+				case 'success':
+					return ($exitval === 0);
+				case 'outputlines':
+					return $output;
+				case 'output':
+					return implode(PHP_EOL, $output);
+				case 'exitvalue':
+					return $exitval;
+			}
+		}
+	}
+	public function call($paras) {
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(
+				0 => 'function',
+				1 => 'arguments',
+				'p' => 'print',
+			),
+			'checklist' => array(
+				'function' => 'Function to call',
+				'arguments' => 'Arguments for the function call',
+				'print' => 'Whether to print the return value',
+			),
+			'errorifempty' => array('function'),
+			'default' => array(
+				'arguments' => array(),
+				'print' => false,
+			),
+			'checkparas' => array(
+				'function' => function($in) {
+					return function_exists($in);
+				},
+				'arguments' => function($in) {
+					return is_array($in);
+				}
+			),
+		))) return false;
+		$ret = call_user_func_array($paras['function'], $paras['arguments']);
+		if($paras['print']) {
+			Sanitizer::printVar($ret);
+			echo PHP_EOL;
+		}
+		return $ret;
 	}
 }
-?>

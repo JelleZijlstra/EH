@@ -1,0 +1,36 @@
+before 1
+0
+inner after 0
+after 1
+before 2
+0
+inner after 0
+1
+inner after 1
+after 2
+before 3
+0
+inner after 0
+1
+inner after 1
+2
+before 4
+0
+inner after 0
+1
+inner after 1
+2
+inner after 2
+3
+inner after 3
+after 4
+before 5
+0
+inner after 0
+1
+inner after 1
+2
+inner after 2
+3
+inner after 3
+4

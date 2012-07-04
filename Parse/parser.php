@@ -8,7 +8,7 @@
 require_once(__DIR__ . "/../Common/common.php");
 require_once(BPATH . "/Catalog/load.php");
 class Citation {
-	public $handle; // handle for this citation in $csvlist
+	public $handle; // handle for this citation in the ArticleList
 	public $text; // text of the citation
 	public $long; // long-form text
 	public $url; // url for Wikipedia citation
@@ -32,8 +32,7 @@ class Citation {
 				echo 'Could not retrieve sfn (no handle)' . PHP_EOL;
 				return false;
 			}
-			global $csvlist;
-			$this->sfn = $csvlist->getsfn($this->handle);
+			$this->sfn = CsvArticleList::singleton()->getsfn($this->handle);
 		}
 		$out = substr($this->sfn, 0, -2);
 		if($this->p) $out .= '|p=' . $this->p;
@@ -47,8 +46,8 @@ class Citation {
 				echo 'Could not retrieve refname (no handle)' . PHP_EOL;
 				return false;
 			}
-			global $csvlist;
-			$this->refname = $csvlist->getrefname($this->handle);
+			$this->refname = 
+				CsvArticleList::singleton()->getrefname($this->handle);
 			if(!$this->refname) {
 				echo 'Could not retrieve refname' . PHP_EOL;
 				return false;
@@ -57,7 +56,7 @@ class Citation {
 		return $this->refname;
 	}
 }
-class Parser {
+class Parser extends ExecuteHandler {
 	public $input; // string: input text. Parser::parse() may edit this text.
 	public $result; // string: resulting (parsed) text.
 	public $refs; // refs found in input
@@ -76,7 +75,7 @@ class Parser {
 		 * prepare for parsing
 		 */
 		$this->refs = array();
-		global $csvlist;
+		$csvlist = CsvArticleList::singleton();
 		$this->result = $this->input = $in;
 		$this->getcitetype();
 		$csvlist->verbosecite = true;
@@ -90,30 +89,40 @@ class Parser {
 			// if there is a { in here, it's not a cite, but a template, and we can ignore it
 			if(strpos($cite, '{') !== false) continue;
 			$citename = parsecite($cite, 'main');
-			if($csvlist->has($citename))
-			// there is already a citation
+			if($csvlist->has($citename)) {
+				// there is already a citation
 				$this->refs[$cite] = $this->cite($cite);
-			else {
-				makemenu(array('<enter>' => 'add source',
-					'q' => 'quit adding sources',
-					'r' => 'make into redirect',
-					'i' => 'ignore this citation',
-					), 'Source not found: ' . $citename);
-				switch(getinput()) {
-					case 'q': $this->shutdown();
+			} else {
+				$cmd = $this->menu(array(
+					'head' => 'Source not found: ' . $citename,
+					'options' => array(
+						'' => 'add source',
+						'q' => 'quit adding sources',
+						'r' => 'make into redirect',
+						'i' => 'ignore this citation',
+					),
+				));
+				switch($cmd) {
+					case 'q': 
+						$this->shutdown();
 					case 'r':
-						if(!$csvlist->add_redirect($citename))
+						if(!$csvlist->add_redirect(array('handle' => $citename)))
 							$this->shutdown();
 						$this->refs[$cite] = $this->cite($target);
 						break;
-					default:
-						if($csvlist->add_entry(new FullFile($citename, 'n'), array('isnew' => true))) {
+					case 'i': 
+						continue 2;
+					case '':
+						if($csvlist->addEntry(
+							new Article($citename, 'n', $csvlist), 
+							array('isnew' => true)
+						)) {
 							$this->refs[$cite] = $this->cite($cite);
-							break;
 						}
-						else
+						else {
 							echo 'Could not resolve source: ' . $citename . PHP_EOL;
-					case 'i': continue 2;
+						}
+						break;
 				}
 			}
 		}
@@ -146,19 +155,18 @@ class Parser {
 		}
 	}
 	function getcitetype() {
-		global $csvlist;
 		preg_match('/<!--CITETYPE (.*?)-->/', $this->input, $matches);
+		$csvlist = CsvArticleList::singleton();
 		if(isset($matches[1])) {
-			global $csvlist;
 			$csvlist->citetype = $matches[1];
-		}
-		else if(!isset($csvlist->citetype))
+		} elseif(!isset($csvlist->citetype)) {
 			$csvlist->citetype = 'paper';
+		}
 	}
 	public $mode; // string: parsing mode
 	public $includesfn; // bool: whether or not Sfn should be included in short-form citations
-	function usemode() {
-		global $csvlist;
+	public function usemode() {
+		$csvlist = CsvArticleList::singleton();
 		switch($this->mode) {
 			case 'wlist':
 				$this->replacement = 1;
@@ -204,19 +212,24 @@ class Parser {
 			case 'simple':
 				$this->replacement = 5;
 				$csvlist->citetype = 'paper';
+				break;
 			default:
-				echo 'Unrecognized mode: ' . $mode . PHP_EOL;
+				echo 'Unrecognized mode: ' . $this->mode . PHP_EOL;
 				break;
 		}
 		if(!isset($this->liststyle)) switch($csvlist->citetype) {
-			case 'wp': case 'normal': $this->liststyle = 1; break;
-			default: $this->liststyle = 0; break;
+			case 'wp': case 'normal': 
+				$this->liststyle = 1; 
+				break;
+			default: 
+				$this->liststyle = 0; 
+				break;
 		}
 
 	}
 	public $resolveredirects; // bool: whether self::input should be edited to resolve redirects
 	function cite($cite) {
-		global $csvlist;
+		$csvlist = CsvArticleList::singleton();
 		$c = parsecite($cite);
 		$tmp = $csvlist($c['main']);
 		if(is_array($tmp)) {
@@ -224,13 +237,15 @@ class Parser {
 			$text = $tmp[0];
 			$template = substr($text, 7, 3);
 			if(in_array($template, array('hdl', 'jst', 'doi', 'pmc', 'pmi')))
-				$url = $csvlist->get_citedoiurl($c['main'], $template);
+				$url = $csvlist->get_citedoiurl(array(
+					$c['main'], 'name' => $template
+				));
 			$long = $tmp[1];
-		}
-		else
+		} else {
 			$text = $tmp;
+		}
 		if($this->resolveredirects and $csvlist->isredirect($cite)) {
-			$replace = '{' . $csvlist->gettruename($c['main']);
+			$replace = '{' . $csvlist->resolve_redirect($c['main']);
 			if(isset($c['p'])) $replace .= '|p=' . $c['p'];
 			if(isset($c['pp'])) $replace .= '|pp=' . $c['pp'];
 			if(isset($c['loc'])) $replace .= '|loc=' . $c['loc'];
@@ -250,18 +265,25 @@ class Parser {
 	public $replacement; // int: what {cites} get replaced with. 1 = do nothing, leave them as they are; 2 = nothing; 3 = full ref; 4 = Sfn; 5 = just the ref text
 	function replacecites() {
 		if($this->replacement === 1) return;
-		$this->result = preg_replace_callback("/(?<!\{)\{(?![{|])(.*?)\}/", array($this, 'replacecites_cb'), $this->result);
-	}
-	function replacecites_cb($matches) {
-		if(!$this->refs[$matches[1]]) return $matches[0];
-		$ref = $this->refs[$matches[1]];
-		switch($this->replacement) {
-			case 1: return $matches[0];
-			case 2: return '';
-			case 3: return "<ref name='" . $ref->getrefname() . "'>"  . $ref->text . '</ref>';
-			case 4: return $ref->getsfn();
-			case 5: return $ref->text;
-		}
+		// work around because we can't use $this in the closure
+		$refs = $this->refs;
+		$replacement = $this->replacement;
+		$this->result = preg_replace_callback(
+			"/(?<!\{)\{(?![{|])(.*?)\}/",
+			function($matches) use($refs, $replacement) {
+				if(!$refs[$matches[1]])
+					return $matches[0];
+				$ref = $refs[$matches[1]];
+				switch($replacement) {
+					case 1: return $matches[0];
+					case 2: return '';
+					case 3: return "<ref name='" . $ref->getrefname() . "'>"  . $ref->text . '</ref>';
+					case 4: return $ref->getsfn();
+					case 5: return $ref->text;
+				}
+			},
+			$this->result
+		);
 	}
 	public $needsort; // sort the refs array?
 	function refsort() {
@@ -285,24 +307,23 @@ class Parser {
 	public $liststyle; // list style to use: 0 = html; 1 = wiki; 2 = text
 	function makereflist() {
 		if(!$this->usereflist) return;
-		global $csvlist;
 		$replacement = $this->reflistbegin;
 		// weed out duplicates called with different Sfns
-		if(is_array($this->refs))
+		$refs = array();
+		if(is_array($this->refs)) {
 			foreach($this->refs as $ref)
 				$refs[$ref->handle] = $ref->text;
-		if(is_array($refs)) {
-			foreach($refs as $ref) {
-				switch($this->liststyle) {
-					case 0: $replacement .= '<div class="references-item">'; break;
-					case 1: $replacement .= '*'; break;
-					case 2: $replacement .= "\t\t"; break;
-				}
-				$replacement .= $ref;
-				switch($this->liststyle) {
-					case 0: $replacement .= "</div>\n"; break;
-					case 1: case 2: $replacement .= "\n"; break;
-				}
+		}
+		foreach($refs as $ref) {
+			switch($this->liststyle) {
+				case 0: $replacement .= '<div class="references-item">'; break;
+				case 1: $replacement .= '*'; break;
+				case 2: $replacement .= "\t\t"; break;
+			}
+			$replacement .= $ref;
+			switch($this->liststyle) {
+				case 0: $replacement .= "</div>\n"; break;
+				case 1: case 2: $replacement .= "\n"; break;
 			}
 		}
 		$replacement .= $this->reflistend;
@@ -310,42 +331,49 @@ class Parser {
 		$this->result = preg_replace($toreplace, $replacement, $this->result, 1);
 	}
 	function applysfnm() {
-		$this->result = preg_replace_callback('/(\{\{Sfn\|[^}]*?\}\}){2,}/u', array($this, 'applysfnm_cb'), $this->result);
-	}
-	function applysfnm_cb($matches) {
-		$sfns = preg_split('/(?<=\}\})(?=\{\{)/u', $matches[0]);
-		foreach($sfns as $key => $sfn) {
-			$paras = explode('|', substr($sfn, 5, -2));
-			foreach($paras as $pkey => $para) {
-				if(strpos($para, '=') !== false) {
-					$para = explode('=', $para);
-					$osfns[$key][$para[0]] = $para[1];
+		$this->result = preg_replace_callback(
+			'/(\{\{Sfn\|[^}]*?\}\}){2,}/u',
+			function($matches) {
+				$sfns = preg_split('/(?<=\}\})(?=\{\{)/u', $matches[0]);
+				$osfns = array();
+				foreach($sfns as $key => $sfn) {
+					$paras = explode('|', substr($sfn, 5, -2));
+					$osfns[$key] = array();
+					foreach($paras as $pkey => $para) {
+						if(strpos($para, '=') !== false) {
+							$para = explode('=', $para);
+							$osfns[$key][$para[0]] = $para[1];
+						}
+						else if(preg_match('/^\d{4}$/', $para))
+							$osfns[$key]['year'] = $para;
+						else if($para)
+							$osfns[$key]['a' . $pkey] = $para;
+					}
 				}
-				else if(preg_match('/^\d{4}$/', $para))
-					$osfns[$key]['year'] = $para;
-				else if($para)
-					$osfns[$key]['a' . $pkey] = $para;
-			}
-		}
-		$out = '{{Sfnm';
-		foreach($osfns as $key => $sfn) {
-			foreach($sfn as $pkey => $para) {
-				if($pkey[0] === 'a') {
-					if($pkey === 'a1') $out .= '|' . $para;
-					else $out .= '|' . ($key + 1) . $pkey . '=' . $para;
+				$out = '{{Sfnm';
+				foreach($osfns as $key => $sfn) {
+					foreach($sfn as $pkey => $para) {
+						if($pkey[0] === 'a') {
+							if($pkey === 'a1')
+								$out .= '|' . $para;
+							else
+								$out .= '|' . ($key + 1) . $pkey . '=' . $para;
+						}
+					}
+					$out .= '|' . $sfn['year'];
+					foreach(array('p', 'pp', 'loc') as $pname) {
+						if(isset($sfn[$pname]))
+							$out .= '|' . ($key + 1) . $pname . '=' . $sfn[$pname];
+					}
 				}
-			}
-			$out .= '|' . $sfn['year'];
-			foreach(array('p', 'pp', 'loc') as $pname) {
-				if($sfn[$pname]) $out .= '|' . ($key + 1) . $pname . '=' . $sfn[$pname];
-			}
-		}
-		$out .= '}}';
-		return $out;
+				$out .= '}}';
+				return $out;
+			},
+			$this->result
+		);
 	}
 	function shutdown() {
-		global $csvlist;
-		$csvlist->saveifneeded();
+		CsvArticleList::singleton()->saveIfNeeded();
 		exit;
 	}
 }
@@ -367,24 +395,38 @@ function parsecite($in, $part = '') {
 		return $out[$part];
 	return $out;
 }
-function parse_wlist($in = '') {
-	global $wlist_p, $csvlist;
-	if(!$in) {
-		echo 'Text to parse: ';
-		$in = getinput();
-		if($in === 'q') return false;
+function parse_wlist($in) {
+	// make possible call from callfunc
+	if(is_array($in)) {
+		$in = $in[0];
+	} elseif(!is_string($in)) {
+		echo 'parse_wlist: invalid input' . PHP_EOL;
+		return false;
 	}
-	if(!$csvlist->citetype) $csvlist->citetype = 'wp';
-	if(!$wlist_p) $wlist_p = new Parser('wlist', array('echolong' => true));
+	global $wlist_p;
+	$csvlist = CsvArticleList::singleton();
+	if(!$csvlist->citetype) {
+		$csvlist->citetype = 'wp';
+	}
+	if(!$wlist_p) {
+		$wlist_p = new Parser('wlist', array('echolong' => true));
+	}
 	echo 'REFERENCE LIST' . PHP_EOL . $wlist_p($in);
 	return true;
 }
 function parse_paper($infile) {
 	return fileparse('paper', $infile);
-	global $csvlist, $paper_p;
-	if(!$csvlist->citetype) $citetype = 'paper';
-	if(!($text = @file_get_contents($infile))) mydie('Failed to open file');
-	if(!$paper_p) $paper_p = new Parser('paper');
+	global $paper_p;
+	$csvlist = CsvArticleList::singleton();
+	if(!$csvlist->citetype) {
+		$csvlist->citetype = 'paper';
+	}
+	if(!($text = file_get_contents($infile))) {
+		throw new EHException('Failed to open file', EHException::E_FATAL);
+	}
+	if(!$paper_p) {
+		$paper_p = new Parser('paper');
+	}
 	$parsed = $paper_p($text);
 	$newname = str_replace('.', '-parsed.', $infile);
 	file_put_contents($newname, $parsed);
@@ -406,7 +448,6 @@ function fileparse($mode, $infile) {
 	$newname = str_replace('.', '-parsed.', $infile);
 	file_put_contents($newname, $parsed);
 	$n = escape_shell($newname);
-	exec_catch("edit " . $n);
+	shell_exec("edit " . $n);
 	return $parsed;
 }
-?>

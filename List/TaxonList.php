@@ -1,10 +1,15 @@
-<?
-require_once(BPATH . '/Common/List.php');
-class TaxonList extends FileList {
+<?php
+require_once(AutoLoader::$BPATH . '/List/load.php');
+
+class TaxonList extends CsvContainerList {
 	public $extantonly; // whether output includes extinct species
 	public $par; // array of arrays that list the children for each parent
 	protected static $fileloc = LISTFILE;
-	protected static $childclass = 'Taxon';
+	protected static $childClass = 'Taxon';
+	// parsers
+	public $wref_p;
+	public $refend_p;
+	public $simple_p;
 	static $TaxonList_commands = array(
 		'outputhtml' => array('name' => 'outputhtml',
 			'aka' => array('html'),
@@ -15,7 +20,7 @@ class TaxonList extends FileList {
 			'aka' => array('text'),
 			'desc' => 'Outputs a text version of the list for a particular genus',
 			'arg' => 'Genus to be listed',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'outputwiki' => array('name' => 'outputwiki',
 			'aka' => array('wiki'),
 			'desc' => 'Ouputs a wikitext version of the list',
@@ -29,32 +34,37 @@ class TaxonList extends FileList {
 			'aka' => array('e'),
 			'desc' => 'Edits a particular taxon',
 			'arg' => 'Taxon name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'newtaxon' => array('name' => 'newtaxon',
 			'aka' => array('add', 'new'),
 			'desc' => 'Adds a taxon to the list',
 			'arg' => 'Taxon name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'remove' => array('name' => 'remove',
 			'desc' => 'Removes a taxon',
 			'arg' => 'Taxon name',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
 		'merge' => array('name' => 'merge',
 			'desc' => 'Merge a taxon into another',
 			'arg' => 'Taxon name; optionally --into=<taxon to be merged into>',
-			'execute' => 'callmethodarg'),
+			'execute' => 'callmethod'),
+		'getChildren' => array('name' => 'getChildren',
+			'desc' => 'Return an array of a taxon\'s children'),
+		'addCitations' => array('name' => 'addCitations',
+			'desc' => 'Add citations to taxa'),
 	);
-	function __construct() {
+	protected function __construct() {
 		parent::__construct(self::$TaxonList_commands);
 		// initial settings
 		$this->extantonly = true;
 	}
-	public function add_entry(ListEntry $file, array $paras = array()) {
-	// Adds a FullFile to this object
-		if(self::process_paras($paras, array(
+	public function addEntry(ListEntry $file, array $paras = array()) {
+	// Adds a Taxon to this object
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'name', //filename to write under (if different from $file->name)
-				'isnew', //whether we need to do things we do for new files (as opposed to old ones merely loaded into the catalog)
+				'name' => 'Name to write under',
+				'isnew' => 'Whether we need to do things we do for new entries (as opposed to old ones merely loaded into the catalog)',
 			),
 			'default' => array(
 				'name' => $file->name,
@@ -67,7 +77,7 @@ class TaxonList extends FileList {
 		}
 		while($this->has($paras['name'])) {
 			$cmd = $this->menu(array(
-				'head' => "File " . $paras['name'] . " already exists.",
+				'head' => "Taxon " . $paras['name'] . " already exists.",
 				'options' => array(
 					's' => 'skip this taxon',
 					'r' => 'overwrite the existing taxon',
@@ -86,12 +96,13 @@ class TaxonList extends FileList {
 					break;
 			}
 		}
-		$this->c[$paras['name']] = $file;
+		parent::addEntry($file);
 		$this->par[$file->parent][$paras['name']] = $paras['name'];
 		if($paras['isnew']) {
-			$this->log($file->name, 'Added file to catalog');
+			// No logging in List for now
+			//$this->log($file->name, 'Added file to catalog');
 			echo "Added to catalog!" . PHP_EOL;
-			$this->needsave = true;
+			$this->needsave();
 			$this->format($file->name);
 		}
 		return true;
@@ -101,31 +112,38 @@ class TaxonList extends FileList {
 		$func = array_shift($args);
 		// not quite sure why we need current here
 		$tax = current($this->par['root']);
-		return call_user_func_array(array($this->c[$tax], $func), $args);
+		return call_user_func_array(array($this->get($tax), $func), $args);
 	}
 	public function moveinlist($oldname, $newname) {
 		if($oldname === $newname) {
 			echo 'Error: old name ' . $oldname . ' and new name ' . $newname . ' are the same.' . PHP_EOL;
 			return false;
 		}
-		$this->c[$newname] = $this->c[$oldname];
-		unset($this->c[$oldname]);
-		$this->par[$this->c[$newname]->parent][$newname] = $newname;
-		unset($this->par[$this->c[$newname]->parent][$oldname]);
+		$this->moveEntry($oldname, $newname);
+		$parent = $this->get($newname)->parent;
+		$this->par[$parent][$newname] = $newname;
+		unset($this->par[$parent][$oldname]);
 		return true;
 	}
 	// static stuff for output
-	static public $separate_wiki = array('Rodentia', 'Chiroptera', 'Lipotyphla', 'Primates', 'Muridae', 'Cricetidae'); // taxa that need separate output files for wiki output
+	static public $separate_wiki = array('Rodentia', 'Chiroptera', 'Lipotyphla', 'Primates', 'Muridae', 'Cricetidae', 'Vespertilionidae', 'Carnivora', 'Artiodactyla', 'Sciuridae'); // taxa that need separate output files for wiki output
 	static private $start_html = "<html>\n<head>\n\t<title>List of currently recognized mammal species</title>\n\t<meta http-equiv='Content-Type' content='text/html;charset=utf-8'>\n\t<link rel='stylesheet' href='list.css'>\n</head>\n<body>"; // text that gets put at the beginning of HTML output
 	static private $end_html = "</body>\n</html>\n"; // at end
 	public $html_out; // resource to write HTML output to
 	public $refsend_p; // parser for comments
-	public function outputtext($taxon, $paras = '') {
-		if(!$taxon or ($this->c[$taxon]->rank !== 'genus')) {
+	public function outputtext(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'taxon'),
+			'checklist' => array('taxon' => 'Taxon to output'),
+			'errorifempty' => array('taxon'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$obj = $this->get($paras['taxon']);
+		if($obj->rank !== 'genus') {
 			echo 'Invalid taxon' . PHP_EOL;
 			return false;
 		}
-		$text = $this->text($taxon);
+		$text = $obj->text();
 		if($text) {
 			echo $text;
 			return true;
@@ -133,21 +151,28 @@ class TaxonList extends FileList {
 		else
 			return false;
 	}
-	public function outputhtml($paras = '') {
+	public function outputhtml(array $paras = array()) {
 	// generates a HTML version of The List
-		$this->expandargs($paras, array(0 => 'taxon'));
-		if($paras['taxon'])
-			$filename = $paras['taxon'];
-		else
-			$filename = 'list';
-		$outfile = $paras['out'] ?: BPATH . '/List/Output/' . $filename . '.html';
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'taxon'),
+			'checklist' => array(
+				'taxon' => 'Taxon to print output for',
+				'out' => 'File to write to',
+			),
+			'default' => array(
+				'taxon' => 'list',
+				'out' => false, // default used below needs $paras['taxon'] first
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$outfile = $paras['out'] ?: BPATH . '/List/data/' . $paras['taxon'] . '.html';
 		$this->html_out = $out = @fopen($outfile, 'w');
 		if(!$out) {
 			echo 'Error: could not open output file ' . $outfile . PHP_EOL;
 			return false;
 		}
 		fwrite($out, self::$start_html . PHP_EOL);
-		if(isset($paras['taxon'])) {
+		if($paras['taxon'] !== 'list') {
 			if($this->has($paras['taxon'])) {
 				$this->completedata($paras['taxon']);
 				$this->html($paras['taxon']);
@@ -161,48 +186,54 @@ class TaxonList extends FileList {
 			$this->call_root('html');
 		fwrite($out, self::$end_html);
 		fclose($out);
-		unset($this->html_out);
-		exec_catch('open ' . $outfile);
+		$this->html_out = NULL;
+		$this->shell('open ' . $outfile);
 		return true;
 	}
 	static $start_wiki = "This is part of a list of all currently recognized species of mammals:\n{{:Special:Prefixindex/User:Ucucha/List of mammals}}\nIt is based on the third edition of ''Mammal Species of the World'' (Wilson and Reeder, 2005) and incorporates changes made since then in the systematic literature. In addition, it strives to incorporate all mammal species that are known to have existed during the [[Holocene]], so as to give a more complete picture of Recent mammal diversity.\n\nThis document is intended primarily to gauge the completeness of our coverage of mammals. Please do not fix links or make changes in spelling and taxonomy, but let me know when you think you have discovered an error. In case of differences between this list and Wikipedia articles in spelling or taxonomy, this list is more likely to be correct. This file is generated automatically from a CSV file by a script.\n";
+	public $wiki_out = array();
 	static $end_wiki = "\n=References=\n{{reflist|colwidth=30em}}\n";
 	public function outputwiki(array $paras = array()) {
-		if(self::process_paras($paras, array(
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
 			'checklist' => array(
-				'taxon',
+				'taxon' => 'Taxon to write a file for',
 			),
 			'default' => array(
 				'taxon' => 'list',
 			),
 		)) === PROCESS_PARAS_ERROR_FOUND) return false;
-		global $csvlist;
-		$csvlist->citetype = 'wp';
+		CsvArticleList::singleton()->citetype = 'wp';
 		$this->wiki_out[$paras['taxon']] = fopen(BPATH . '/List/data/' . $paras['taxon'] . '.mw', "w");
 		fwrite($this->wiki_out[$paras['taxon']], self::$start_wiki);
 		if($paras['taxon'] === 'list') {
 			$this->call_root('completedata');
-			fwrite($this->wiki_out[$paras['taxon']], "*Total number of genera: " . $this->c['Mammalia']->ngen . PHP_EOL . "*Total number of species: " . $this->c['Mammalia']->nspec . PHP_EOL);
+			$mamm = $this->get('Mammalia');
+			fwrite($this->wiki_out[$paras['taxon']], 
+				"*Total number of genera: " . $mamm->ngen . PHP_EOL 
+				. "*Total number of species: " . $mamm->nspec . PHP_EOL);
 			$this->call_root('wiki', array('taxon' => 'list'));
 		}
 		else {
-			$this->c[$paras['taxon']]->completedata();
-			$this->c[$paras['taxon']]->wiki(array('taxon' => $paras['taxon']));
+			$taxon = $this->get($paras['taxon']);
+			$taxon->completedata();
+			$taxon->wiki(array('taxon' => $paras['taxon']));
 		}
 		fwrite($this->wiki_out[$paras['taxon']], self::$end_wiki);
 	}
 	static public function wikipublish() {
 		require_once(BPATH . '/UcuchaBot/Bot.php');
-		$bot = getbot();
+		$bot = Bot::singleton();
 		// get pagename
-		foreach(glob(BPATH. "/List/data/*.mw") as $file) {
+		foreach(glob(BPATH . "/List/data/*.mw") as $file) {
 			$filename = preg_replace("/.*\//u", "", $file);
 			if($filename === 'list.mw')
 				$pagename = 'User:Ucucha/List_of_mammals';
 			else
 				$pagename = 'User:Ucucha/List_of_mammals/' . ucfirst(substr($filename, 0, -3));
 			echo "Writing to $pagename...";
-			if(!$bot->writewp($pagename, array(
+			if(!$bot->writewp(array(
+				'page' => $pagename,
 				'file' => $file,
 				'summary' => 'Update'
 			)))
@@ -213,21 +244,77 @@ class TaxonList extends FileList {
 	public function cli() {
 		$this->setup_commandline('list');
 	}
-	public function newtaxon($name, array $paras = array()) {
-		while($this->has($name)) {
-			echo 'A taxon with this name already exists.' . PHP_EOL;
-			$name = $this->getline('Enter a new name: ');
-		}
-		return $this->add_entry(new Taxon($name, 'n'), array('isnew' => true));
+	public function newtaxon(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'name'),
+			'checklist' => array('name' => 'Name of new taxon'),
+			'checkfunc' => function($in) {
+				return property_exists('Taxon', $in);
+			},
+			'askifempty' => array('name'),
+			'checkparas' => array(
+				'name' => function($in) {
+					if(TaxonList::singleton()->has($in)) {
+						echo 'A taxon with this name already exists.' . PHP_EOL;
+						return false;
+					} else {
+						return true;
+					}
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		return $this->addEntry(
+			new Taxon($paras, 'n', $this),
+			array('isnew' => true)
+		);
 	}
-	public function remove($name) {
-		if(!$this->has($name)) return false;
-		unset($this->par[$this->c[$name]->parent][$name]);
-		unset($this->c[$name]);
+	public function remove(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'synonyms' => array(0 => 'name'),
+			'checklist' => array('name' => 'Taxon to be removed'),
+			'checkparas' => array(
+				'name' => function($in) {
+					return TaxonList::singleton()->has($in);
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		unset($this->par[$this->get($paras['name'])->parent][$paras['name']]);
+		$this->removeEntry($paras['name']);
 	}
 	public function sortchildren($name) {
 		if(!$this->par[$name]) return false;
 		ksort($this->par[$name]);
 	}
+	
+	/*
+	 * Populating citations.
+	 */
+	public function addCitations(array $paras) {
+		if(!$this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		))) return false;
+		$this->doall(array(
+			'populatecitation',
+			'continueiffalse' => true,
+		));
+		echo 'FALSE POSITIVES' . PHP_EOL;
+		foreach($this->falsePositives as $name) {
+			echo $name . PHP_EOL;
+		}
+		return $this->falsePositives;
+	}
+	private $falsePositives = array();
+	public function addFalsePositive($name) {
+		$this->falsePositives[] = $name;
+	}
+	
+	/*
+	 * SqlContainerList methods.
+	 */
+	protected function table() {
+		return 'taxon';
+	}
 }
-?>

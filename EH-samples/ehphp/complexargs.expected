@@ -1,0 +1,30 @@
+array(9) {
+  [0]=>
+  int(1)
+  ["baz"]=>
+  array(1) {
+    ["test"]=>
+    string(3) "baz"
+  }
+  ["d"]=>
+  bool(true)
+  ["foo"]=>
+  int(5)
+  ["test"]=>
+  int(3)
+  ["bar"]=>
+  array(3) {
+    [0]=>
+    int(1)
+    [1]=>
+    int(2)
+    [2]=>
+    int(3)
+  }
+  ["a"]=>
+  bool(true)
+  ["f"]=>
+  bool(true)
+  ["s"]=>
+  bool(true)
+}

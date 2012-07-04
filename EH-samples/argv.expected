@@ -1,0 +1,9 @@
+1
+@array [
+0 => @string 'argv.eh'
+]
+@int 1
+I did not get two arguments
+@string '1'
+I got 1 arguments
+argv.eh

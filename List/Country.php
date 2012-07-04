@@ -606,4 +606,3 @@ function cdecode($in) {
 		default: return false;
 	}
 }
-?>

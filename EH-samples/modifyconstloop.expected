@@ -1,0 +1,6 @@
+@object <Foo> [
+a <public,non-static,constant>: @int 3
+]
+@object <Foo> [
+a <public,non-static,constant>: @int 3
+]

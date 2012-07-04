@@ -1,0 +1,12 @@
+@object <Foo> [
+baz <private,non-static,constant>: @int 42
+foo <public,non-static,non-constant>: @function <user>: 
+quuz <private,non-static,constant>: @int 42
+]
+Attempt to write to constant variable: EH runtime error
+Attempt to write to constant variable: EH runtime error
+@object <Foo> [
+baz <private,non-static,constant>: @int 42
+foo <public,non-static,non-constant>: @function <user>: 
+quuz <private,non-static,constant>: @int 42
+]

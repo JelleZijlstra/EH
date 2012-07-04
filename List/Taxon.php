@@ -1,5 +1,5 @@
 <?php
-class Taxon extends ListEntry {
+class Taxon extends CsvListEntry {
 	public $rank;
 	public $name;
 	public $authority;
@@ -16,37 +16,36 @@ class Taxon extends ListEntry {
 	static $n_ids = array('iucn');
 	public $misc;
 	static $n_misc = array('rawr', 'originalref');
-	public $props;
-	static $parentlist = 'taxonlist';
 	protected static $arrays_to_check = array('ids', 'endemic', 'misc');
 	public $ngen;
 	public $nspec;
 	public $isextant;
+	public $citation; // citation to the original description
+	// flag to $this->p->addEntry() that this entry should not be added.
+	// Should get rid of it; perhaps instead just set $this->name to NULL, or
+	// use a StopException
+	public $discardthis;
+	public $temprange;
 	protected static $Taxon_commands = array(
-
+		'populatecitation' => array('name' => 'populatecitation',
+			'desc' => 'Attempt to populate the citation field',
+			'aka' => 'addcite'),
+		'getChildren' => array('name' => 'getChildren',
+			'desc' => 'Return an array of a taxon\'s children'),
 	);
-	protected static $Taxon_synonyms = array();
-	function __construct($in, $code) {
+	function __construct($in, $code, &$parent) {
 	// $in: input data (array or string)
-	// $code: kind of FullFile to make
-		if(!self::$Taxon_synonyms) {
-			foreach(self::$Taxon_commands as $cmd) {
-				if($cmd['aka']) foreach($cmd['aka'] as $aka) {
-					self::$Taxon_commands[$aka] = $cmd['name'];
-				}
-			}
-		}
-		global $csvlist;
-		if($csvlist) $this->p = $csvlist;
-		if(!$code) return;
+	// $code: kind of Taxon to make
+		$this->p =& $parent;
 		switch($code) {
 			case 'f': // loading from file
 				if(!is_array($in)) {
-					trigger_error('Invalid input to ' . __METHOD__, E_USER_NOTICE);
-					return;
+					throw new EHException(
+						"Input to Article constructor is not an array"
+					);
 				}
 				/* Elements of class Taxon are stored in CSV as follows:
-				NAME,AUTHORITY,MOVEDGENUS,YEAR,RANK,PARENT,COMMENTS,STATUS,ENDEMIC [as JSON'd array],RANGE [as JSON'd array],IDS [as serialized array, not JSON'd because of better object handling in serialize],MISC [as JSON'd array, miscellaneous properties]
+				NAME,AUTHORITY,MOVEDGENUS,YEAR,RANK,PARENT,COMMENTS,STATUS,CITATION,ENDEMIC [as JSON'd array],RANGE [as JSON'd array],IDS [as serialized array, not JSON'd because of better object handling in serialize],MISC [as JSON'd array, miscellaneous properties]
 				*/
 				$this->name = $in[0];
 				$this->authority = $in[1];
@@ -56,19 +55,21 @@ class Taxon extends ListEntry {
 				$this->parent = $in[5];
 				$this->comments = $in[6];
 				$this->status = $in[7];
-				$this->endemic = json_decode($in[8], true);
-				if($in[9]) $this->range = unserialize($in[9]);
-				if($in[10]) $this->temprange = unserialize($in[10]);
-				$this->ids = json_decode($in[11], true);
-				$this->misc = json_decode($in[12], true);
+				$this->citation = $in[8];
+				$this->endemic = json_decode($in[9], true);
+				if($in[9]) $this->range = unserialize($in[10]);
+				if($in[10]) $this->temprange = unserialize($in[11]);
+				$this->ids = json_decode($in[12], true);
+				$this->misc = json_decode($in[13], true);
 				break;
 			case 'n': // new file
-				$this->name = $in;
-				$this->newadd();
+				$this->newadd($in);
 				break;
+			default:
+				throw new EHException("Invalid input to Taxon constructor");
 		}
 	}
-	function toarray() {
+	public function toArray() {
 		$out = array();
 		$out[] = $this->name;
 		$out[] = $this->authority;
@@ -78,6 +79,7 @@ class Taxon extends ListEntry {
 		$out[] = $this->parent;
 		$out[] = $this->comments;
 		$out[] = $this->status;
+		$out[] = $this->citation;
 		$out[] = $this->getarray('endemic');
 		if($this->range)
 			$out[] = serialize($this->range);
@@ -101,14 +103,44 @@ class Taxon extends ListEntry {
 	public function format() {
 		/* FORMATTING */
 		$this->comments = trim($this->comments);
+		if(preg_match("/^A new species \([^)]+\)\{[^}]+\}\.?$/u", 
+			$this->comments) and $this->citation) {
+			$this->comments = 'A new species.';
+		}
+		if(preg_match(
+			'/^A new genus,? split from <i>[^<]+<\/i> \([^)]+\)\{[^}]+\}\.?$/u', 
+			$this->comments) and $this->citation) {
+			$this->comments = preg_replace(
+				'/^A new genus,? split from (<i>[^<]+<\/i>).*$/u',
+				'A new genus split from $1.',
+				$this->comments
+			);
+		}
 		/* WARNINGS */
 		if(!$this->p->has($this->parent))
 			$this->warn('Non-existent taxon', 'parent');
 		if($this->rank === 'species' and !$this->status)
 			$this->warn('No content for species', 'status');
+		if($this->citation) {
+			$regex = '/' . preg_quote($this->citation) . '/u';
+			if(preg_match($regex, $this->comments)) {
+				$this->warn('Original citation is cited', 'comments');
+			}
+		}
+		return true;
 	}
-	public function set($paras) {
-		if(self::process_paras($paras, array(
+	public function set(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'easy' =>
+					'Use easy mode: do not check for necessary concurrent changes',
+				'verbose' =>
+					'Print each property that is changed',
+			),
+			'checkfunc' => function($in) {
+				return true;
+			},
 			'default' => array(
 				'easy' => false,
 				'verbose' => false,
@@ -138,31 +170,46 @@ class Taxon extends ListEntry {
 					case 'name':
 						$oldname = $this->name;
 						$this->name = $content;
-						$this->p->add_entry($this);
-						$this->p->remove($oldname);
+						$this->p->addEntry($this);
+						$this->p->remove(array($oldname));
 						break;
 					default:
 						$this->$field = $content;
 						break;
 				}
-				if($paras['verbose']) echo 'Set ' . $field . ' to "' . $content . '".' . PHP_EOL;
+				if($paras['verbose'])
+					echo 'Set ' . $field . ' to "' . $content . '".' . PHP_EOL;
 				$this->p->needsave();
 			}
 		}
 		return true;
 	}
-	public function getchildren() {
+	public function children() {
 		if(!isset($this->p->par[$this->name]))
 			return NULL;
 		else
 			return $this->p->par[$this->name];
 	}
+	public function getChildren(array $paras) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array( /* No paras */ ),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$children = $this->children();
+		if($children === NULL) {
+			return array();
+		} else {
+			return array_keys($children);
+		}
+	}
 	private function call_children($func, array $paras) {
-		if(!isset($this->p->par[$this->name])) return;
+		if(!isset($this->p->par[$this->name]))
+			return;
 		$children = $this->p->par[$this->name];
 		foreach($children as $child) {
-			$this->p->$func($child, $paras);
+			$paras[] = $child;
 		}
+		$this->p->$func($paras);
 	}
 	public function html(array $paras = array()) {
 	// print taxon
@@ -187,7 +234,7 @@ class Taxon extends ListEntry {
 			$tmp .= "\t<ngen>Number of genera: " . $this->ngen . "</ngen>" . PHP_EOL;
 		fwrite($out, $tmp);
 		// print children
-		if($children = $this->getchildren()) foreach($children as $child)
+		if($children = $this->children()) foreach($children as $child)
 			$this->p->html($child);
 		fwrite($out, "</" . $this->rank . ">" . PHP_EOL);
 	}
@@ -201,20 +248,26 @@ class Taxon extends ListEntry {
 		}
 		else
 			$pre = "\t";
-		$out .= PHP_EOL . $pre . ucfirst($this->rank) . ': ' . $this->name . PHP_EOL;
+		$out = PHP_EOL . $pre . ucfirst($this->rank) . ': ' . $this->name . PHP_EOL;
 		$out .= $pre . 'Authority: ' . $this->constructauthority() . PHP_EOL;
 		if($this->originalref)
 			$out .= $pre . 'Original reference: ' . $this->parse('originalref', 'simple') . PHP_EOL;
 		if($this->comments)
 			$out .= $pre . 'Comments: ' . $this->parse('comments', 'refend');
-		else
-			$out .= PHP_EOL;
-		if($children = $this->getchildren()) foreach($children as $child) {
+		$out .= PHP_EOL;
+		if($children = $this->children()) foreach($children as $child) {
 			$out .= $this->p->text($child);
 		}
 		return $out;
 	}
-	public function wiki($paras) {
+	public function wiki(array $paras = array()) {
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'taxon' => 'Taxon associated with the file we are writing to'
+			),
+			'errorifempty' => array('taxon'),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
 		if(!$this->isextant()) return;
 		switch($this->rank) {
 			// omit some taxa
@@ -233,6 +286,13 @@ class Taxon extends ListEntry {
 		}
 		else {
 			if(isset($tmp)) {
+				if($this->citation and $this->citation !== 'Unknown') {
+					$csvlist = CsvArticleList::singleton();
+					$tmp .= ':::<small>Original description: ';
+					$csvlist->verbosecite = false;
+					$tmp .= $csvlist->cite($this->citation);
+					$tmp .= '</small>' . PHP_EOL;
+				}
 				if($this->comments) {
 					$tmp .= ':::<small>Comments: ';
 					$tmp .= $this->parse('comments', 'wref');
@@ -268,11 +328,11 @@ class Taxon extends ListEntry {
 		switch($this->rank) {
 			case "genus":
 				$this->ngen = 1;
-				$children = $this->getchildren();
+				$children = $this->children();
 				if(!$children) break;
 				$this->sortchildren();
 				foreach($children as $child) {
-					if($this->p->get($child, 'status') !== 'FO') {
+					if($this->p->get($child)->status !== 'FO') {
 						$this->nspec++;
 						$this->isextant = true;
 					}
@@ -282,15 +342,15 @@ class Taxon extends ListEntry {
 				$this->movedgenus = $this->movedgenus ? 1 : '';
 				break;
 			default:
-				$children = $this->getchildren();
+				$children = $this->children();
 				if(!$children) break;
 				// don't sort the orders
 				if($this->rank !== 'class') $this->sortchildren();
 				foreach($children as $child) {
 					$this->p->completedata($child);
-					if($this->p->get($child, 'isextant') === true) {
-						$this->ngen += $this->p->get($child, 'ngen');
-						$this->nspec += $this->p->get($child, 'nspec');
+					if($this->p->get($child)->isextant === true) {
+						$this->ngen += $this->p->get($child)->ngen;
+						$this->nspec += $this->p->get($child)->nspec;
 						$this->isextant = true;
 					}
 				}
@@ -337,20 +397,22 @@ class Taxon extends ListEntry {
 			if(preg_match("/<li class='country'>/", $line))
 				$this->rawr[$type][] = trim(str_replace(array("<li class='country'>", '</li>'), array('', ''), $line));
 		}
-		$this->p->needsave = true;
+		$this->p->needsave();
 		return true;
 	}
 	function expandrawr() {
-		if(!$this->rawr) return true;
+		if(!$this->rawr)
+			return true;
 		foreach($this->rawr as $key => $countries) {
 			foreach($countries as $country) {
 				$ccode = cencode($country);
 				if($ccode === false)
 					echo 'Unknown country: ' . $country . PHP_EOL;
 				else if(!$this->range[$ccode]) {
-					if(rencode($key) == 4) $comment = $key;
+					if(rencode($key) === 4)
+						$comment = $key;
 					$this->range[$ccode] = new Country($key, '{redlist}', $comment);
-					$needsave = true;
+					$this->p->needsave();
 				}
 			}
 		}
@@ -425,14 +487,14 @@ class Taxon extends ListEntry {
 					}
 					else
 						$this->range[$ccode] = new Country($cmd, $source, $comment);
-					$this->p->needsave = true;
+					$this->p->needsave();
 					break;
 				default: echo 'Invalid command' . PHP_EOL; break;
 			}
 		}
 	}
-	function my_inform() {
-		$this->inform();
+	public function inform(array $paras = array()) {
+		parent::inform($paras);
 		$this->informrange();
 		$this->informchildren();
 	}
@@ -449,7 +511,7 @@ class Taxon extends ListEntry {
 		return false;
 	}
 	function informchildren() {
-		$children = $this->getchildren();
+		$children = $this->children();
 		if($children) {
 			echo 'CHILDREN:' . PHP_EOL;
 			foreach($children as $child)
@@ -458,74 +520,104 @@ class Taxon extends ListEntry {
 		}
 		return false;
 	}
-	public function newadd() {
-		$fields = array('parent', 'rank', 'authority', 'year', 'movedgenus', 'comments', 'status');
-		if($pos = strpos($this->name, ' '))
-			$this->set(array('parent' => substr($this->name, 0, $pos), 'verbose' => true, 'easy' => true));
-		foreach($fields as $field) {
-			if($this->$field) continue;
-			if($field === 'parent' and $this->detectparent()) continue;
-			if($field === 'rank' and $this->detectrank()) continue;
-			if($field === 'movedgenus' and $this->rank !== 'species') continue;
-			self::setifneeded($paras, $field);
-			if($paras[$field] === 'q') {
-				$this->discardthis = true;
-				return false;
+	public function newadd(array $paras) {
+		// fields to fill
+		$fields = array(
+			'name', 'parent', 'rank', 'authority', 'year', 'movedgenus', 
+			'comments', 'status', 'citation',
+		);
+		// set things for species
+		if(isset($paras['name'])) {
+			$pos = strpos($paras['name'], ' ');
+			// if there is a space, this is a species
+			if($pos !== false) {
+				$paras['rank'] = 'species';
+				$paras['parent'] = substr($paras['name'], 0, $pos);
 			}
-			else if($paras[$field])
-				$this->$field = $paras[$field];
 		}
-	}
-	private function detectparent() {
-		if($this->rank === 'species') {
-			$parent = substr($this->name, 0, strpos($this->name, ' '));
-			if($this->p->has($parent)) {
-				$this->parent = $parent;
-				return true;
+		// detect rank
+		if(!isset($paras['rank'])) {
+			$rank = $this->detectrank($paras);
+			if($rank !== false) {
+				$paras['rank'] = $rank;
 			}
-			else
-				return false;
+		}
+		// movedgenus == 0 if this is not a species
+		if(!isset($paras['movedgenus']) and isset($paras['rank']) 
+			and $paras['rank'] !== 'species') {
+			$paras['movedgenus'] = 0;
+		}
+		// so that we kill this if the user interrupts during pp call
+		$this->discardthis = true;
+		// ask user
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checkfunc' => function($in) use($fields) {
+				return in_array($in, $fields, true);
+			},
+			'askifempty' => $fields,
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$this->discardthis = false;
+		$paras['verbose'] = true;
+		$paras['easy'] = true;
+		$this->set($paras);
+		return true;
+	}
+	private function detectrank(array $paras) {
+		if(isset($paras['parent'])) {
+			$parent = $paras['parent'];
+			$sisrank = $this->setranktosisters($parent);
+			if($sisrank !== false) {
+				return $sisrank;
+			}
+			$parentrank = $this->p->get($parent)->rank;
+			if($parentrank === 'genus') {
+				return 'species';
+			} else if($parentrank === 'subtribe') {
+				return 'genus';
+			}
+		}
+		if(isset($paras['name'])) {
+			$name = $paras['name'];
+			if(substr($name, -3) === 'ina') {
+				return 'subtribe';
+			} else if(substr($name, -3) === 'ini') {
+				return 'tribe';
+			} else if(substr($name, -4) === 'inae') {
+				return 'subfamily';
+			} else if(substr($name, -4) === 'idae') {
+				return 'family';
+			} else if(substr($name, -5) === 'oidea') {
+				return 'superfamily';
+			}
 		}
 		return false;
 	}
-	private function detectrank() {
-		if($this->rank) return true;
-		if($this->setranktosisters()) return true;
-		$parentrank = $this->p->get($this->parent, 'rank');
-		if($parentrank === 'genus')
-			$this->rank = 'species';
-		else if($parentrank === 'subtribe')
-			$this->rank = 'genus';
-		else if(substr($this->name, -3) === 'ina')
-			$this->rank = 'subtribe';
-		else if(substr($this->name, -3) === 'ini')
-			$this->rank = 'tribe';
-		else if(substr($this->name, -4) === 'inae')
-			$this->rank = 'subfamily';
-		else if(substr($this->name, -4) === 'idae')
-			$this->rank = 'family';
-		else if(substr($this->name, -5) === 'oidea')
-			$this->rank = 'superfamily';
-		return $this->rank ? true : false;
-	}
-	private function setranktosisters() {
-		$sisters = $this->p->getchildren($this->parent);
-		if(!$sisters) return false;
-		$rank;
-		foreach($sisters as $key => $sister) {
-			$nrank = $this->p->get($sister, 'rank');
-			if(!$nrank)
-				return false;
-			if(!$rank)
-				$rank = $nrank;
-			else if($rank !== $nrank)
-				return false;
+	private function setranktosisters($parent = NULL) {
+		if($parent === NULL) {
+			$parent = $this->parent;
 		}
-		if(!$rank) return false;
-		$this->set(array('rank' => $rank, 'verbose' => true, 'easy' => true));
-		return true;
+		$sisters = $this->p->children($parent);
+		if(!$sisters) {
+			return false;
+		}
+		foreach($sisters as $key => $sister) {
+			$nrank = $this->p->get($sister)->rank;
+			if(!$nrank) {
+				return false;
+			}
+			if(!isset($rank)) {
+				$rank = $nrank;
+			} else if($rank !== $nrank) {
+				return false;
+			}
+		}
+		if(!isset($rank))
+			return false;
+		return $rank;
 	}
-	static $rankendings = array('superfamily' => 'oidea',
+	static $rankendings = array(
+		'superfamily' => 'oidea',
 		'family' => 'idae',
 		'subfamily' => 'inae',
 		'tribe' => 'ini',
@@ -554,7 +646,8 @@ class Taxon extends ListEntry {
 		return in_array($this->rank, array('superfamily', 'family', 'subfamily', 'tribe', 'subtribe'));
 	}
 	public function remove() {
-		$this->p->remove($this->name);
+	// Wrapper function, do we really need it?
+		$this->p->remove(array($this->name));
 	}
 	public function isextant() {
 		if($this->isextant) return true;
@@ -562,17 +655,144 @@ class Taxon extends ListEntry {
 		return false;
 	}
 	public function merge(array $paras = array()) {
-		while(!$this->has($paras['into'])) {
-			$paras['into'] = $this->getline('Taxon to be merged into: ');
-			if($paras['into'] === 'q') return false;
-		}
-		$children = $this->p->getchildren($paras['into']);
+		if($this->process_paras($paras, array(
+			'name' => __FUNCTION__,
+			'checklist' => array(
+				'into' => 'Taxon that this taxon is to be merged into',
+			),
+			'askifempty' => array('into'),
+			'checkparas' => array(
+				'into' => function($in) {
+					return TaxonList::singleton()->has($in);
+				},
+			),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		$children = $this->children();
 		foreach($children as $child)
-			$this->p->set($child, array('parent' => $this->name));
-		$this->p->remove($paras['into']);
+			$this->p->set(array(0 => $child, 'parent' => $paras['into']));
+		$this->p->remove(array($this->name));
+		return true;
 	}
 	private function sortchildren() {
 		return $this->p->sortchildren($this->name);
 	}
+	public function populatecitation(array $paras = array()) {
+	// try to find citation
+		if($this->process_paras($paras, array(
+			'checklist' => array(
+				'f' => 'Whether to search even though a citation is already present',
+				'c' => 'Whether to search even though an "unknown" citation is already present'
+			),
+			'default' => array('f' => false, 'c' => false),
+		)) === PROCESS_PARAS_ERROR_FOUND) return false;
+		if($paras['c']) {
+			if($this->citation and $this->citation !== 'Unknown')
+				return false;
+		}
+		else if(!$paras['f']) {
+			if($this->citation)
+				return false;
+		}
+		// prepare bfind query
+		$authors = '/' .
+			preg_replace(
+				array('/,\s*|\s*&\s*|\s+|-|[A-Z]\./u', '/(\.\*)+/u'),
+				array('.*', '.*'),
+				$this->authority
+			) .
+			'/iu';
+		$title = '/\b' .
+			preg_replace('/\s+/u', '.*\b', $this->name);
+		if($this->rank !== 'genus')
+			$title .= '(?! [a-z]+ nov)\b.*\bnov\b/u';
+		else
+			$title .= ' \bnov\b/u';
+		$this->p->needsave();
+		echo 'Searching for possible citations for entry ' . $this->name . PHP_EOL;
+		echo 'Authority: ' . $this->authority . '; year: ' . $this->year. PHP_EOL;
+		if(!$this->authority or !$this->year) {
+			$this->citation = 'Unknown';
+			return false;
+		}
+		$csvlist = CsvArticleList::singleton();
+		$cites = array_merge(
+			$csvlist->bfind(array(
+				'authors' => $authors,
+				'year' => $this->year,
+				'quiet' => true,
+			)),
+			$csvlist->bfind(array(
+				'name' => $title,
+				'year' => $this->year,
+				'quiet' => true,
+			))
+		);
+		if(!$cites) {
+			echo 'Nothing found' . PHP_EOL;
+			$this->citation = 'Unknown';
+			return true;
+		}
+		foreach($cites as $cite) {
+			$taxon = $this;
+			$response = $this->menu(array(
+				'head' => 'Is this citation correct?' . PHP_EOL .
+					$cite->name . PHP_EOL .
+					$cite->cite(true),
+				'options' => array(
+					'y' => 'This citation is correct',
+					'n' => 'This citation is not correct',
+					's' => 'This citation is not correct, and stop listing others',
+					'ic' => 'Give more information about the citation',
+					'it' => 'Give more information about the taxon',
+					'o' => 'Open the citation file',
+				),
+				'process' => array(
+					'ic' => function() use($cite) {
+						$cite->inform();
+						return true;
+					},
+					'it' => function() use($taxon) {
+						$taxon->inform();
+						return true;
+					},
+					'o' => function() use($cite) {
+						$cite->openf();
+						return true;
+					}
+				),
+			));
+			switch($response) {
+				case 'y':
+					$this->citation = $cite->name;
+					return true;
+				case 'n': break;
+				case 's': break 2;
+			}
+		}
+		$this->p->addFalsePositive(
+			$this->name . ' ' . $this->authority . ', ' . $this->year
+		);
+		$this->citation = 'Unknown';
+		return true;
+	}
+	
+	/*
+	 * Field for SqlListEntry.
+	 */
+	protected static function fillFields() {
+		return array(
+			new SqlProperty(array(
+				'name' => 'id',
+				'type' => SqlProperty::ID)),
+			new SqlProperty(array(
+				'name' => 'name',
+				'type' => SqlProperty::STRING)),
+			new SqlProperty(array(
+				'name' => 'rank',
+				'type' => SqlProperty::INT)),
+			new SqlProperty(array(
+				'name' => 'comments',
+				'type' => SqlProperty::STRING)),
+		);
+	}
 }
-?>

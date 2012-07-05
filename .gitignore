@@ -3,6 +3,7 @@
 *.so
 *.dylib
 *.save
+*.output
 # Directories used for data that doesn't go into the repo
 data/
 dev/

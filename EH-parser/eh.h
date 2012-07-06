@@ -37,7 +37,6 @@ typedef enum type_enum {
 	type_e = 5, // for internal use with type casting
 	array_e,
 	func_e, // methods
-	reference_e, // for internal use with lvalues, and as a value for references
 	object_e,
 	op_e,
 	attribute_e,
@@ -101,18 +100,10 @@ typedef enum accessor_enum {
 /*
  * Parser and interpreter structs
  */
-// Operator
-typedef struct opnode_t {
-	int op; // Type of operator
-	int nparas; // Number of parameters
-	struct ehretval_t **paras; // Parameters
-} opnode_t;
 
 // EH value, and generic node
 typedef struct ehretval_t {
 private:
-	short refcount;
-	short is_shared;
 	type_enum _type;
 public:
 	union {
@@ -124,20 +115,19 @@ public:
 		// complex types
 		struct eharray_t *arrayval;
 		struct ehobj_t *objectval;
-		struct ehretval_t *referenceval;
 		struct ehobj_t *funcval;
 		struct ehrange_t *rangeval;
 		// pseudo-types for internal use
-		opnode_t *opval;
+		struct opnode_t *opval;
 		type_enum typeval;
 		attribute_enum attributeval;
 		attributes_t attributestrval;
 		accessor_enum accessorval;
 	};
 	// constructors
-	ehretval_t() : refcount(1), is_shared(0) {}
-	ehretval_t(type_enum type) : refcount(1), is_shared(0), _type(type), stringval(NULL) {}
-#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) : refcount(1), is_shared(0), _type(ehtype ## _e), ehtype ## val(in) {}
+	ehretval_t() : _type(null_e) {}
+	ehretval_t(type_enum type) : _type(type), stringval(NULL) {}
+#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) : _type(ehtype ## _e), ehtype ## val(in) {}
 	EHRV_CONS(int, int)
 	EHRV_CONS(char *, string)
 	EHRV_CONS(bool, bool)
@@ -145,36 +135,32 @@ public:
 	EHRV_CONS(double, float)
 	EHRV_CONS(struct eharray_t *, array)
 	EHRV_CONS(struct ehobj_t *, object)
-	EHRV_CONS(struct ehretval_t *, reference)
 	EHRV_CONS(struct ehrange_t *, range)
 #undef EHRV_CONS
+#define EHRV_SET(vtype, ehtype) void set(vtype in) { \
+	this->type(ehtype ## _e); \
+	this->ehtype ## val = in; \
+}
+	EHRV_SET(int, int)
+	EHRV_SET(char *, string)
+	EHRV_SET(bool, bool)
+	EHRV_SET(float, float)
+	EHRV_SET(double, float)
+	EHRV_SET(struct eharray_t *, array)
+	EHRV_SET(struct ehobj_t *, object)
+	EHRV_SET(struct ehrange_t *, range)
+#undef EHRV_SET
 
-	// manipulate the refcount
-	void inc_rc() {
-		refcount++;
-	}
-	void dec_rc() {
-		refcount--;
-		if(refcount == 0) {
-			// Commenting out the actual freeing until we actually keep track of 
-			// refcounts correctly.
-			//printf("Freeing ehretval_t at address %p\n", (void *)this);
-			//free();
-		}
-	}
-	void free();
-	ehretval_t *clone() const {
-		ehretval_t *out = new ehretval_t;
-		out->type(this->_type);
+	void overwrite(ehretval_t &in) {
+		this->type(in.type());
 		switch(this->_type) {
-#define COPY(type) case type ## _e: out->type ## val = type ## val; break
+#define COPY(type) case type ## _e: this->type ## val = in.type ## val; break
 			COPY(int);
 			COPY(string);
 			COPY(bool);
 			COPY(float);
 			COPY(array);
 			COPY(object);
-			COPY(reference);
 			COPY(func);
 			COPY(range);
 			COPY(op);
@@ -185,71 +171,6 @@ public:
 			case null_e: break;
 #undef COPY
 		}
-		return out;
-	}
-	// share this value with a new variable
-	ehretval_t *share() {
-		// can share if it's already shared or if there is only one reference
-		if(is_shared || (refcount == 1)) {
-			inc_rc();
-			is_shared++;
-			return this;
-		} else {
-			ehretval_t *out = clone();
-			return out;
-		}
-	}
-	// make a reference to this object, overwriting the ehretval_t * pointed to by in.
-	ehretval_t *reference(ehretval_t *&in) {
-		if(is_shared == 0) {
-			inc_rc();
-			return this;
-		} else {
-			ehretval_t *out = clone();
-			is_shared--;
-			dec_rc();
-			in = out;
-			// one for the reference, one for the actual object
-			out->inc_rc();
-			return out;
-		}
-	}
-	ehretval_t *overwrite(ehretval_t *in) {
-		if(is_shared == 0) {
-			// overwrite
-			if(in == NULL) {
-				this->_type = null_e;
-				return this;
-			}
-			this->_type = in->_type;
-			switch(this->_type) {
-#define COPY(type) case type ## _e: type ## val = in->type ## val; break
-				COPY(int);
-				COPY(string);
-				COPY(bool);
-				COPY(float);
-				COPY(array);
-				COPY(object);
-				COPY(reference);
-				COPY(func);
-				COPY(range);
-				COPY(op);
-				COPY(type);
-				COPY(attribute);
-				COPY(attributestr);
-				COPY(accessor);
-				case null_e: break;
-#undef COPY
-			}
-			return this;
-		} else {
-			is_shared--;
-			dec_rc();
-			return in->reference(in);
-		}
-	}
-	void make_shared() {
-		is_shared++;
 	}
 	
 	// other methods
@@ -264,28 +185,43 @@ public:
 		this->_type = type;
 	}
 	void print();
+	
+	~ehretval_t();
 } ehretval_t;
+typedef refcount_ptr<ehretval_t> ehretval_p;
+
+// Operator
+typedef struct opnode_t {
+	int op; // Type of operator
+	int nparas; // Number of parameters
+	ehretval_t **paras; // Parameters
+} opnode_t;
 
 // Variables and object members (which are the same)
 typedef struct ehmember_t {
 	attributes_t attribute;
-	struct ehretval_t *value;
+	ehretval_p value;
 
 	// destructor
 	~ehmember_t() {
-		// decrement refcount of the value
-		if(value != NULL) {
-			value->dec_rc();
-		}
 	}
 	
-	ehmember_t() {
+	ehmember_t() : value() {
 		attribute.visibility = public_e;
 		attribute.isstatic = nonstatic_e;
 		attribute.isconst = nonconst_e;
 	}
-	ehmember_t(attributes_t atts) : attribute(atts) {}
+	ehmember_t(attributes_t atts) : attribute(atts), value() {}
+	
+	// convenience methods
+	bool isstatic() {
+		return this->attribute.isstatic == static_e;
+	}
+	bool isconst() {
+		return this->attribute.isconst == const_e;
+	}
 } ehmember_t;
+typedef ehmember_t *ehmember_p;
 
 // in future, add type for type checking
 typedef struct eharg_t {
@@ -296,11 +232,11 @@ typedef struct eharg_t {
 typedef struct ehobj_t *ehcontext_t;
 
 // library functions, classes, etcetera
-typedef ehretval_t *(*ehlibfunc_t)(int, ehretval_t **, ehcontext_t, class EHI *);
+typedef ehretval_p (*ehlibfunc_t)(int, ehretval_p *, ehcontext_t, class EHI *);
 
 typedef void *(*ehconstructor_t)();
 
-typedef ehretval_t *(*ehlibmethod_t)(void *, int, ehretval_t **, ehcontext_t, class EHI *);
+typedef ehretval_p (*ehlibmethod_t)(void *, int, ehretval_p *, ehcontext_t, class EHI *);
 
 typedef struct ehlm_listentry_t {
 	const char *name;
@@ -313,15 +249,15 @@ typedef struct ehlibclass_t {
 } ehlibclass_t;
 
 // function executing a command
-typedef ehretval_t *(*ehcmd_t)(eharray_t *paras);
+typedef ehretval_p (*ehcmd_t)(eharray_t *paras);
 
 // EH array
 typedef struct eharray_t {
 	// typedefs
-	typedef std::map<int, ehretval_t *> int_map;
-	typedef std::map<std::string, ehretval_t *> string_map;
-	typedef std::pair<const int, ehretval_t *>& int_pair;
-	typedef std::pair<const std::string, ehretval_t *>& string_pair;
+	typedef std::map<int, ehretval_p > int_map;
+	typedef std::map<std::string, ehretval_p > string_map;
+	typedef std::pair<const int, ehretval_p >& int_pair;
+	typedef std::pair<const std::string, ehretval_p >& string_pair;
 	typedef int_map::iterator int_iterator;
 	typedef string_map::iterator string_iterator;
 
@@ -337,7 +273,7 @@ typedef struct eharray_t {
 		return this->int_indices.size() + this->string_indices.size();
 	}
 	
-	bool has(ehretval_t *index) const {
+	bool has(ehretval_p index) const {
 		switch(index->type()) {
 			case int_e: return this->int_indices.count(index->intval);
 			case string_e: return this->string_indices.count(index->stringval);
@@ -346,11 +282,32 @@ typedef struct eharray_t {
 	}
 	
 	// methods
-	ehretval_t * &operator[](ehretval_t *index);
-	void insert_retval(ehretval_t *index, ehretval_t *value);
+	ehretval_p &operator[](ehretval_p index);
+	void insert_retval(ehretval_p index, ehretval_p value);
 } eharray_t;
 #define ARRAY_FOR_EACH_STRING(array, varname) for(eharray_t::string_iterator varname = (array)->string_indices.begin(), end = (array)->string_indices.end(); varname != end; varname++)
 #define ARRAY_FOR_EACH_INT(array, varname) for(eharray_t::int_iterator varname = (array)->int_indices.begin(), end = (array)->int_indices.end(); varname != end; varname++)
+
+// struct with common infrastructure for procedures and methods
+typedef struct ehfm_t {
+	functype_enum type;
+	int argcount;
+	eharg_t *args;
+	ehretval_t *code;
+	union {
+		ehlibfunc_t libfunc_pointer;
+		ehlibmethod_t libmethod_pointer;
+	};
+	
+	ehfm_t(functype_enum _type) : type(_type), argcount(0), args(NULL), code(), libfunc_pointer(NULL) {}
+	
+	// we own the args thingy
+	~ehfm_t() {
+		if(args != NULL) {
+			delete[] args;
+		}
+	}
+} ehfm_t;
 
 // EH object
 typedef struct ehobj_t {
@@ -365,10 +322,10 @@ public:
 		void *selfptr;
 		ehconstructor_t constructor;
 	};
-	std::map<std::string, ehmember_t *> members;
+	std::map<std::string, ehmember_p > members;
 
 	// typedefs
-	typedef std::map<std::string, ehmember_t *> obj_map;
+	typedef std::map<std::string, ehmember_p > obj_map;
 	typedef obj_map::iterator obj_iterator;
 	
 	// constructors
@@ -379,12 +336,12 @@ public:
 		return members.size();
 	}
 	
-	ehmember_t *insert_retval(const char *name, attributes_t attribute, ehretval_t *value);
-	ehmember_t *get_recursive(const char *name, const ehcontext_t context, int token);
-	ehmember_t *get(const char *name, const ehcontext_t context, int token);
+	ehmember_p insert_retval(const char *name, attributes_t attribute, ehretval_p value);
+	ehmember_p get_recursive(const char *name, const ehcontext_t context, int token);
+	ehmember_p get(const char *name, const ehcontext_t context, int token);
 	void copy_member(obj_iterator &classmember, bool set_real_parent);
 
-	ehmember_t *&operator[](std::string key) {
+	ehmember_p &operator[](std::string key) {
 		return members[key];
 	}
 	
@@ -392,31 +349,23 @@ public:
 		return members.count(key);
 	}
 	
-	void insert(std::string &name, ehmember_t *value) {
+	void insert(std::string &name, ehmember_p value) {
 		members[name] = value;
 	}
-	void insert(const char *name, ehmember_t *value) {
+	void insert(const char *name, ehmember_p value) {
 		std::string str(name);
 		this->insert(str, value);
 	}
+	
+	~ehobj_t() {
+		if(this->function != NULL) {
+			//delete this->function;
+		}
+	}
 private:
-	ehmember_t *get_recursive_helper(const char *name, const ehcontext_t context);
+	ehmember_p get_recursive_helper(const char *name, const ehcontext_t context);
 } ehobj_t;
 #define OBJECT_FOR_EACH(obj, varname) for(ehobj_t::obj_iterator varname = (obj)->members.begin(), end = (obj)->members.end(); varname != end; varname++)
-
-// struct with common infrastructure for procedures and methods
-typedef struct ehfm_t {
-	functype_enum type;
-	int argcount;
-	eharg_t *args;
-	union {
-		ehretval_t *code;
-		ehlibfunc_t libfunc_pointer;
-		ehlibmethod_t libmethod_pointer;
-	};
-	
-	ehfm_t(functype_enum _type) : type(_type), argcount(0), args(NULL), code(NULL) {}
-} ehfm_t;
 
 // range
 typedef struct ehrange_t {
@@ -424,7 +373,7 @@ typedef struct ehrange_t {
 	int max;
 	
 	ehrange_t(int _min, int _max) : min(_min), max(_max) {}
-	ehrange_t() {}
+	ehrange_t() : min(0), max(0) {}
 } ehrange_t;
 
 /*
@@ -459,7 +408,7 @@ int eh_outer_exit(int exitval);
 void yyerror(void *, const char *s);
 void free_node(ehretval_t *in);
 ehretval_t *eh_addnode(int operations, int noperations, ...);
-void print_tree(const ehretval_t *const in, const int n);
+void print_tree(const ehretval_p in, const int n);
 
 // eh_get_x functions
 #define GETFUNCPROTO(name, vtype) ehretval_t *eh_get_ ## name(vtype value);
@@ -482,39 +431,39 @@ char *eh_getinput(void);
 #include "eh.bison.hpp"
 #include "ehi.h"
 
-ehretval_t *int_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
-ehretval_t *string_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
-ehretval_t *range_arrow_get(ehretval_t *operand1, ehretval_t *operand2);
-void int_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue);
-void string_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue);
-void range_arrow_set(ehretval_t *input, ehretval_t *index, ehretval_t *rvalue);
-ehretval_t *eh_count(const ehretval_t *in);
-ehretval_t *eh_op_tilde(ehretval_t *in);
-ehretval_t *eh_op_uminus(ehretval_t *in);
-ehretval_t *eh_op_dot(ehretval_t *operand1, ehretval_t *operand2);
-ehretval_t *eh_make_range(const int min, const int max);
+ehretval_p int_arrow_get(ehretval_p operand1, ehretval_p operand2);
+ehretval_p string_arrow_get(ehretval_p operand1, ehretval_p operand2);
+ehretval_p range_arrow_get(ehretval_p operand1, ehretval_p operand2);
+void int_arrow_set(ehretval_p input, ehretval_p index, ehretval_p rvalue);
+void string_arrow_set(ehretval_p input, ehretval_p index, ehretval_p rvalue);
+void range_arrow_set(ehretval_p input, ehretval_p index, ehretval_p rvalue);
+ehretval_p eh_count(const ehretval_p in);
+ehretval_p eh_op_tilde(ehretval_p in);
+ehretval_p eh_op_uminus(ehretval_p in);
+ehretval_p eh_op_dot(ehretval_p operand1, ehretval_p operand2);
+ehretval_p eh_make_range(const int min, const int max);
 bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
 
 // type casting
-ehretval_t *eh_cast(const type_enum type, ehretval_t *in);
-ehretval_t *eh_stringtoint(const char *const in);
-ehretval_t *eh_stringtofloat(const char *const in);
-ehretval_t *eh_stringtorange(const char *const in);
-eharray_t *eh_rangetoarray(const ehrange_t *const range);
+ehretval_p eh_cast(const type_enum type, ehretval_p in);
+ehretval_p eh_stringtoint(const char *const in);
+ehretval_p eh_stringtofloat(const char *const in);
+ehretval_p eh_stringtorange(const char *const in);
+ehretval_p eh_rangetoarray(const ehrange_t *const range);
 char *eh_inttostring(const int in);
-ehretval_t *eh_xtoarray(ehretval_t *in);
-ehretval_t *eh_xtoint(ehretval_t *in);
-ehretval_t *eh_xtofloat(ehretval_t *in);
-ehretval_t *eh_xtostring(ehretval_t *in);
-bool eh_xtobool(ehretval_t *in);
-ehretval_t *eh_xtorange(ehretval_t *in);
-ehretval_t *eh_looseequals(ehretval_t *operand1, ehretval_t *operand2);
-bool eh_strictequals(ehretval_t *operand1, ehretval_t *operand2);
+ehretval_p eh_xtoarray(ehretval_p in);
+ehretval_p eh_xtoint(ehretval_p in);
+ehretval_p eh_xtofloat(ehretval_p in);
+ehretval_p eh_xtostring(ehretval_p in);
+bool eh_xtobool(ehretval_p in);
+ehretval_p eh_xtorange(ehretval_p in);
+ehretval_p eh_looseequals(ehretval_p operand1, ehretval_p operand2);
+bool eh_strictequals(ehretval_p operand1, ehretval_p operand2);
 
 /*
  * Helper
  */
-int eh_getargs(ehretval_t *paras, int n, ehretval_t **args, ehcontext_t context, const char *name, EHI *obj);
-void print_retval(const ehretval_t *in);
+int eh_getargs(ehretval_p paras, int n, ehretval_p *args, ehcontext_t context, const char *name, EHI *obj);
+void print_retval(const ehretval_p in);
 
 #endif /* EH_H_ */

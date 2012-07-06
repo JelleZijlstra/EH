@@ -1,6 +1,8 @@
 4
 4
 3
-4
-4
-4
+Incorrect argument count for function: expected 1, got 0: EH runtime error
+Unsupported type string for typecast to int: EH notice
+Unsupported types int and null for operator &: EH runtime error
+(null)
+3

@@ -22,18 +22,18 @@ class printvar_t {
 private:
 	std::map<const void *, bool> seen;
 	
-	void retval(ehretval_t *in);
+	void retval(ehretval_p in);
 	void array(eharray_t *in);
 	void object(ehobj_t *in);
 
 public:
-	printvar_t(ehretval_t *in) : seen() {
+	printvar_t(ehretval_p in) : seen() {
 		this->retval(in);
 	}
 };
 
 // helper functions for printvar
-void printvar_t::retval(ehretval_t *in) {
+void printvar_t::retval(ehretval_p in) {
 	switch(in->type()) {
 		case null_e:
 			printf("null\n");
@@ -69,9 +69,6 @@ void printvar_t::retval(ehretval_t *in) {
 			} else {
 				printf("(recursion)\n");
 			}
-			break;
-		case reference_e:
-			this->retval(in->referenceval);
 			break;
 		case func_e:
 			printf("@function <");
@@ -247,7 +244,9 @@ EHLIBFUNC(include) {
 	ehretval_t parse_return = parser.parse_file(infile);
 	// we're no longer returning
 	obj->returning = false;
-	return (new ehretval_t)->overwrite(&parse_return);
+	ehretval_p out;
+	out->overwrite(parse_return);
+	return out;
 }
 
 // power
@@ -276,7 +275,7 @@ EHLIBFUNC(log) {
 		eh_error_argcount_lib("log", 1, nargs);
 		return NULL;
 	}
-	ehretval_t *arg = eh_xtofloat(args[0]);
+	ehretval_p arg = eh_xtofloat(args[0]);
 	if(arg->type() != float_e) {
 		eh_error_type("argument 0 to log", args[0]->type(), enotice_e);
 		return NULL;
@@ -289,7 +288,7 @@ EHLIBFUNC(eval) {
 		eh_error_argcount_lib("eval", 1, nargs);
 		return NULL;
 	}
-	ehretval_t *arg = eh_xtostring(args[0]);
+	ehretval_p arg = eh_xtostring(args[0]);
 	if(arg->type() != string_e) {
 		eh_error_type("argument 0 to eval", args[0]->type(), enotice_e);
 		return NULL;	
@@ -303,7 +302,7 @@ EHLIBFUNC(getinput) {
 		return NULL;
 	}
 	// more accurately, getint
-	ehretval_t *ret = new ehretval_t(int_e);
+	ehretval_p ret = new ehretval_t(int_e);
 	fscanf(stdin, "%d", &(ret->intval));
 	return ret;
 }

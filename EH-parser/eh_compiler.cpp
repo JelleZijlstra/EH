@@ -100,8 +100,9 @@ void EHI::eh_exit(void) {
 	return;
 }
 
-ehretval_t *EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
-	ehretval_t *ret = new ehretval_t(int_e);
+ehretval_p EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
+	ehretval_p ret;
+	ret->type(int_e);
 	if(node == NULL) {
 		ret->intval = 0;
 	//printf("Executing nodetype %d\n", node->type);
@@ -307,7 +308,7 @@ void EHI::eh_setarg(int argc, char **argv) {
 EHI::EHI() : eval_parser(NULL) {}
 EHI::~EHI() {}
 
-ehretval_t *EHI::execute_cmd(const char *cmd, eharray_t *paras) {
+ehretval_p EHI::execute_cmd(const char *cmd, eharray_t *paras) {
 	return NULL;
 }
 char *EHI::eh_getline(EHParser *parser) {

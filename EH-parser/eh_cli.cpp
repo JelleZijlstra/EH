@@ -18,7 +18,7 @@ void eh_usage(char *name) {
 }
 
 int main(int argc, char **argv) {
-	ehretval_t ret;
+	ehretval_t ret(int_e);
 
 	EHI interpreter;
 
@@ -45,12 +45,9 @@ int main(int argc, char **argv) {
 	}
 }
 
-ehretval_t *EHI::execute_cmd(const char *name, eharray_t *paras) {
+ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
 	eh_error("Use of commands outside of EH-PHP context", eerror_e);
 	return NULL;
-}
-EHI::~EHI(void) {
-	return;
 }
 char *EHI::eh_getline(EHParser *parser) {
 	if(parser->interactivity() == cli_prompt_e) {

@@ -32,45 +32,44 @@ private:
 	std::map<std::string, ehcmd_t> cmdtable;
 	
 	// hack: used to implement several forms of inter-method communication
-	ehretval_t *arrow_access_curr;
+	bool is_strange_arrow;
 	
 	void eh_init(void);
 	// helper functions
-	ehretval_t *eh_op_command(const char *name, ehretval_t *node, ehcontext_t context);
-	ehretval_t *eh_op_for(opnode_t *op, ehcontext_t context);
-	ehretval_t *eh_op_while(ehretval_t **paras, ehcontext_t context);
-	ehretval_t *eh_op_as(opnode_t *op, ehcontext_t context);
-	ehretval_t *eh_op_new(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_command(const char *name, ehretval_p node, ehcontext_t context);
+	ehretval_p eh_op_for(opnode_t *op, ehcontext_t context);
+	ehretval_p eh_op_while(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_as(opnode_t *op, ehcontext_t context);
+	ehretval_p eh_op_new(ehretval_t **paras, ehcontext_t context);
 	void eh_op_inherit(ehretval_t **paras, ehcontext_t context);
 	void eh_op_continue(opnode_t *op, ehcontext_t context);
 	void eh_op_break(opnode_t *op, ehcontext_t context);
-	ehretval_t *eh_op_array(ehretval_t *node, ehcontext_t context);
-	ehretval_t *eh_op_anonclass(ehretval_t *node, ehcontext_t context);
-	ehretval_t *eh_op_declareclosure(ehretval_t **paras, ehcontext_t context);
-	ehretval_t *eh_op_declareclass(opnode_t *op, ehcontext_t context);
+	ehretval_p eh_op_array(ehretval_p node, ehcontext_t context);
+	ehretval_p eh_op_anonclass(ehretval_p node, ehcontext_t context);
+	ehretval_p eh_op_declareclosure(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_declareclass(opnode_t *op, ehcontext_t context);
 	void eh_op_classmember(opnode_t *op, ehcontext_t context);
-	ehretval_t *eh_op_switch(ehretval_t **paras, ehcontext_t context);
-	ehretval_t *eh_op_given(ehretval_t **paras, ehcontext_t context);
-	ehretval_t *eh_op_colon(ehretval_t **paras, ehcontext_t context);
-	ehretval_t *eh_op_reference(opnode_t *op, ehcontext_t context);
-	ehretval_t *&eh_op_lvalue(opnode_t *op, ehcontext_t context);
-	ehretval_t *eh_op_dollar(ehretval_t *node, ehcontext_t context);
+	ehretval_p eh_op_switch(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_given(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_colon(ehretval_t **paras, ehcontext_t context);
+	ehretval_p &eh_op_lvalue(opnode_t *op, ehcontext_t context);
+	ehretval_p eh_op_dollar(ehretval_t *node, ehcontext_t context);
 	void eh_op_set(ehretval_t **paras, ehcontext_t context);
-	ehretval_t *eh_op_accessor(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_accessor(ehretval_t **paras, ehcontext_t context);
 	ehcmd_t get_command(const char *name);
 	void insert_command(const char *name, const ehcmd_t cmd);
 	void redirect_command(const char *redirect, const char *target);
 
 	// prototypes
-	ehretval_t *call_function(ehobj_t *obj, ehretval_t *args, ehcontext_t context);
-	ehretval_t *call_function_args(ehobj_t *obj, const int nargs, ehretval_t *args[], ehcontext_t context);
-	void array_insert(eharray_t *array, ehretval_t *in, int place, ehcontext_t context);
-	ehretval_t *&object_access(ehretval_t *name, ehretval_t *index, ehcontext_t context, int token);
-	ehretval_t *&colon_access(ehretval_t *operand1, ehretval_t *index, ehcontext_t context, int token);
+	ehretval_p call_function(ehobj_t *obj, ehretval_p args, ehcontext_t context);
+	ehretval_p call_function_args(ehobj_t *obj, const int nargs, ehretval_p args[], ehcontext_t context);
+	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
+	ehretval_p &object_access(ehretval_p name, ehretval_t *index, ehcontext_t context, int token);
+	ehretval_p &colon_access(ehretval_p operand1, ehretval_t *index, ehcontext_t context, int token);
 	ehobj_t *object_instantiate(ehobj_t *obj);
-	ehobj_t *get_class(ehretval_t *code, ehcontext_t context);
+	ehobj_t *get_class(ehretval_p code, ehcontext_t context);
 public:
-	ehretval_t *eh_execute(ehretval_t *node, const ehcontext_t context);
+	ehretval_p eh_execute(ehretval_t *node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
 	bool returning;
 	ehobj_t *global_object;
@@ -81,7 +80,7 @@ public:
 	EHI();
 	void eh_exit(void);
 
-	virtual ehretval_t *execute_cmd(const char *rawcmd, eharray_t *paras);
+	virtual ehretval_p execute_cmd(const char *rawcmd, eharray_t *paras);
 	virtual char *eh_getline(class EHParser *parser = NULL);
 	virtual ~EHI();
 };

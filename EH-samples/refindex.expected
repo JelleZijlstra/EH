@@ -1,6 +1,7 @@
-Unsupported type reference for bitwise access to integer: EH notice
+Unsupported type string for setting a character in a string: EH notice
+@string 'foo'
 @int 3
-@int 3
-Unsupported type reference for bitwise access to integer: EH notice
+Unsupported type string for character access to string: EH notice
 (null)
-0
+Unsupported type string for bitwise access to integer: EH notice
+(null)

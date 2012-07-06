@@ -79,29 +79,30 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc T_NEW
 %left <aValue> T_ACCESSOR
 %nonassoc T_RANGE
-%nonassoc '$' T_REFERENCE '~' '!' T_NEGATIVE T_COUNT
+%nonassoc '$' '~' '!' T_NEGATIVE T_COUNT
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_SHORTFUNCTION
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_get lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string shortfunc
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string shortfunc
 %%
 program:
 	global_list				{ 
 								// free stuff, somehow.
 								// Actually doing free_node($1) at this moment
-								// breaks include:
-								// One solution may be to make a linked list of
-								// ASTs that gets started in main(); an entry
-								// will get added by every include: call and at
-								// program shutdown we kill them all.
+								// breaks lots of stuff.
+								// I think the reason may be that some 
+								// methods directly read an AST value
+								// instead of calling eh_execute.
+								ehretval_t *ret = $1;
+								//free_node(ret);
 							}
 
 global_list:
 	/* NULL */				{ $$ = eh_addnode(T_SEPARATOR, 0); }
 	| statement				{
 								EHParser *parser = yyget_extra(scanner);
-								ehretval_t *ret = parser->_parent->eh_execute($1, parser->_parent->global_object);
+								ehretval_p ret = parser->_parent->eh_execute($1, parser->_parent->global_object);
 								// flush stdout after executing each statement
 								fflush(stdout);
 								if(parser->_parent->returning) {
@@ -245,8 +246,6 @@ expression:
 							}
 	| '$' expression
 							{ $$ = eh_addnode('$', 1, $2); }
-	| '&' lvalue_get %prec T_REFERENCE
-							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
 	| '@' T_TYPE expression %prec '@'	
 							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| expression ':' arglist
@@ -332,8 +331,6 @@ simple_expr:
 							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
 	| '$' simple_expr %prec '$'
 							{ $$ = eh_addnode('$', 1, $2); }
-	| '&' lvalue_get %prec T_REFERENCE
-							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
 	| '@' T_TYPE expression %prec '@'	
 							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| simple_expr ':' arglist
@@ -416,8 +413,6 @@ line_expr:
 							}
 	| '$' expression %prec '$'
 							{ $$ = eh_addnode('$', 1, $2); }
-	| '&' lvalue_get %prec T_REFERENCE
-							{ $$ = eh_addnode(T_REFERENCE, 1, $2); }
 	| '@' T_TYPE expression %prec '@'	
 							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
 	| bareword ':' arglist
@@ -616,13 +611,6 @@ lvalue_set:
 	bareword				{ $$ = eh_addnode(T_LVALUE_SET, 1, $1); }
 	| bareword T_ACCESSOR expression
 							{ $$ = eh_addnode(T_LVALUE_SET, 3, $1, 
-								eh_get_accessor($2), $3); }
-	;
-
-lvalue_get:
-	bareword				{ $$ = eh_addnode(T_LVALUE_GET, 1, $1); }
-	| bareword T_ACCESSOR expression
-							{ $$ = eh_addnode(T_LVALUE_GET, 3, $1, 
 								eh_get_accessor($2), $3); }
 	;
 

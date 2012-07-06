@@ -16,7 +16,9 @@ EH_METHOD(CountClass, docount) {
 		return NULL;
 	}
 	CountClass *selfptr = (CountClass *)obj;
-	return new ehretval_t((int) ++selfptr->count);
+	ehretval_p ret;
+	ret->set((int) ++selfptr->count);
+	return ret;
 }
 EH_METHOD(CountClass, setcount) {
 	if(nargs != 1) {
@@ -25,13 +27,15 @@ EH_METHOD(CountClass, setcount) {
 	}
 	CountClass *selfptr = (CountClass *)obj;
 
-	ehretval_t *newcounter = eh_xtoint(args[0]);
+	ehretval_p newcounter = eh_xtoint(args[0]);
 	if(newcounter->type() != int_e) {
 		return NULL;
 	}
 
 	selfptr->count = newcounter->intval;
-	return new ehretval_t(true);
+	ehretval_p ret;
+	ret->set(true);
+	return ret;
 }
 
 START_EHLC(File)
@@ -49,7 +53,7 @@ EH_METHOD(File, open) {
 		eh_error_argcount_lib("File::open", 1, nargs);
 		return NULL;
 	}
-	ehretval_t *filename = eh_xtostring(args[0]);
+	ehretval_p filename = eh_xtostring(args[0]);
 	if(filename->type() != string_e) {
 		return NULL;
 	}
@@ -58,7 +62,9 @@ EH_METHOD(File, open) {
 		return NULL;
 	}
 	selfptr->descriptor = mfile;
-	return new ehretval_t(true);
+	ehretval_p ret;
+	ret->set(true);
+	return ret;
 }
 
 EH_METHOD(File, getc) {
@@ -75,7 +81,8 @@ EH_METHOD(File, getc) {
 	if(c == -1) {
 		return NULL;
 	}
-	ehretval_t *ret = new ehretval_t(new char[2]);
+	ehretval_p ret;
+	ret->set(new char[2]);
 	ret->stringval[0] = c;
 	ret->stringval[1] = '\0';
 	return ret;
@@ -91,13 +98,13 @@ EH_METHOD(File, gets) {
 		return NULL;
 	}
 	
-	ehretval_t *ret = new ehretval_t(new char[512]);
+	ehretval_p ret;
+	ret->set(new char[512]);
 	
 	char *ptr = fgets(ret->stringval, 511, selfptr->descriptor);
 	if(ptr == NULL) {
 		delete[] ret->stringval;
-		delete ret;
-		return NULL;
+		ret->type(null_e);
 	}
 	return ret;
 }
@@ -112,18 +119,20 @@ EH_METHOD(File, puts) {
 		eh_error_argcount_lib("File::puts", 1, nargs);
 		return NULL;
 	}
-	ehretval_t *str = eh_xtostring(args[0]);
+	ehretval_p str = eh_xtostring(args[0]);
 	if(str->type() != string_e) {
 		return NULL;
 	}
 
-	int ret = fputs(str->stringval, selfptr->descriptor);
+	int count = fputs(str->stringval, selfptr->descriptor);
 	
-	if(ret == EOF) {
-		return new ehretval_t(false);
+	ehretval_p ret;
+	if(count == EOF) {
+		ret->set(false);
 	} else {
-		return new ehretval_t(true);
+		ret->set(true);
 	}
+	return ret;
 }
 
 EH_METHOD(File, close) {

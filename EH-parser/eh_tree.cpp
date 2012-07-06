@@ -12,7 +12,9 @@ void free_node(ehretval_t *in) {
 	}
 	switch(in->type()) {
 		case string_e:
+			/* Unsafe: there may be references retained.
 			delete[] in->stringval;
+			 */
 			break;
 		case op_e:
 			for(int i = 0; i < in->opval->nparas; i++) {
@@ -51,7 +53,7 @@ ehretval_t *eh_addnode(int operation, int nparas, ...) {
 	ret = new ehretval_t(op_e);
 	ret->opval = new opnode_t;
 	if(nparas) {
-		ret->opval->paras = new ehretval_t *[nparas];
+		ret->opval->paras = new ehretval_t *[nparas]();
 	} else {
 		ret->opval->paras = NULL;
 	}
@@ -78,7 +80,7 @@ static void printntabs(const int n) {
 	printf("Value: %" #format "\n", in-> vtype ## val); \
 	break;
 
-void print_tree(const ehretval_t *const in, const int n) {
+void print_tree(const ehretval_p in, const int n) {
 	printntabs(n); printf("Type: %s\n", get_typestring(in->type()));
 	switch(in->type()) {
 		PRINT_TREE_TYPE(string, s)
@@ -116,7 +118,6 @@ void print_tree(const ehretval_t *const in, const int n) {
 		case range_e:
 		case array_e:
 		case func_e:
-		case reference_e:
 		case object_e:
 			// don't appear in AST
 			break;
@@ -129,7 +130,6 @@ const char *get_typestring(type_enum type) {
 		case string_e: return "string";
 		case bool_e: return "bool";
 		case float_e: return "float";
-		case reference_e: return "reference";
 		case null_e: return "null";
 		case accessor_e: return "accessor";
 		case type_e: return "type";

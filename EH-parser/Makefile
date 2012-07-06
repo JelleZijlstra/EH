@@ -1,7 +1,7 @@
 CC = g++
-CCBASICFLAGS = -ggdb -fPIC -c
+CCBASICFLAGS = -ggdb -fPIC -c -I/opt/local/include
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic
-SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp eh_gc.cpp ehi.cpp
+SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
 INTERPRETER = $(SOURCES) eh_libfuncs.cpp eh_libclasses.cpp eh_libcmds.cpp eh_interpreter.cpp

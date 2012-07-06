@@ -4,11 +4,11 @@
 var := 3
 var2 := 3
 func foo: n
-	var := &n
+	var := $n
 	ret $var
 end
 func bar: n
-	var2 := &n
+	var2 := $n
 end
 b := foo: 2
 printvar: $b

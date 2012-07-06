@@ -1,2 +1,3 @@
 2
-Incorrect argument count for function: expected 0, got 1: EH fatal error
+Unsupported type string for typecast to int: EH notice
+Unsupported types int and null for operator &: EH runtime error

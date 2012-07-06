@@ -13,7 +13,7 @@
 #define END_EHLC() {NULL, NULL} };
 #define EXTERN_EHLC(name) extern ehlm_listentry_t ehlc_l_ ## name [];
 
-#define EH_METHOD(classn,name) ehretval_t *ehlm_ ## classn ## _ ## name(void *obj, int nargs, ehretval_t **args, ehcontext_t context, EHI *interpreter)
+#define EH_METHOD(classn,name) ehretval_p ehlm_ ## classn ## _ ## name(void *obj, int nargs, ehretval_p *args, ehcontext_t context, EHI *interpreter)
 
 /*
  * CountClass library class

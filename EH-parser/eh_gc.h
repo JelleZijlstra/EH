@@ -59,6 +59,8 @@ public:
 			this->pointer->content = *in;
 		}
 	}
+	
+	// TODO: fix warnings in g++4.5 about converting NULL to int. One solution is to have a private "dummy_class" here and have a constructor that takes a dummy_class* argument (https://groups.google.com/forum/?fromgroups#!topic/comp.lang.c++/4pIZb6Glxa4). However, that creates an ambiguity with the current T* constructor. That will no longer be an issue when we can kill that constructor (i.e., if we no longer have ehretval_t * flying around in the AST).
 	refcount_ptr(int in) {
 		if(in == 0) {
 			this->pointer = NULL;

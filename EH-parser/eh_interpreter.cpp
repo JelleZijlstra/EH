@@ -1194,11 +1194,6 @@ ehretval_p EHI::call_function_args(ehobj_t *obj, const int nargs, ehretval_p arg
 		return NULL;
 	}
 	ehobj_t *newcontext = object_instantiate(obj);
-	ehretval_p tmp;
-	tmp->set(newcontext);
-	ehmember_p m = new ehmember_t;
-	m->value = tmp;
-	global_object->insert("tmp", m);
 	
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {

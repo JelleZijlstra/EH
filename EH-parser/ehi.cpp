@@ -66,7 +66,7 @@ ehretval_t::~ehretval_t() {
 		case object_e:
 		case func_e:
 			//TODO: figure out what exactly goes wrong when we uncomment this
-			//delete this->objectval;
+			delete this->objectval;
 			break;
 		case array_e:
 			delete this->arrayval;

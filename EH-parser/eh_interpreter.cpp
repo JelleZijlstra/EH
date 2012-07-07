@@ -667,10 +667,6 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 		indexvar = context->get_recursive(indexname, context, T_LVALUE_SET);
 	}
 	if(object->type() == object_e || object->type() == weak_object_e) {
-		// object index is always a string
-		if(indexname != NULL) {
-			indexvar->value = ehretval_t::make_typed(string_e);
-		}
 		// check whether we're allowed to access private things
 		const bool doprivate = ehcontext_compare(object->objectval, context);
 		OBJECT_FOR_EACH(object->objectval, curr) {
@@ -684,7 +680,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 				// and a string_e is not. Perhaps solve this instead by
 				// creating a new cstring_e type?
 				//TODO: this is a GC hazard
-				indexvar->value->stringval = strdup(curr->first.c_str());
+				indexvar->value = ehretval_t::make(strdup(curr->first.c_str()));
 			}
 			ret = eh_execute(code, context);
 			LOOPCHECKS;
@@ -693,23 +689,17 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	} else {
 		// arrays
 		eharray_t *array = object->arrayval;
-		if(indexname) {
-			indexvar->value = ehretval_t::make_typed(int_e);
-		}
 		ARRAY_FOR_EACH_INT(array, i) {
 			if(indexname) {
-				indexvar->value->intval = i->first;
+				indexvar->value = ehretval_t::make(i->first);
 			}
 			membervar->value = i->second;
 			ret = eh_execute(code, context);
 			LOOPCHECKS;
 		}
-		if(indexname) {
-			indexvar->value = ehretval_t::make_typed(string_e);
-		}
 		ARRAY_FOR_EACH_STRING(array, i) {
 			if(indexname) {
-				indexvar->value->stringval = (char *)i->first.c_str();
+				indexvar->value = ehretval_t::make(strdup(i->first.c_str()));
 			}
 			membervar->value = i->second;
 			ret = eh_execute(code, context);

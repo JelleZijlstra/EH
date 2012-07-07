@@ -8,11 +8,6 @@
 #include "eh_error.h"
 #include "eh.bison.hpp"
 
-extern FILE *yyin;
-struct yy_buffer_state *yy_scan_string ( const char *str );
-
-EHI *interpreter;
-
 void eh_usage(char *name) {
 	fprintf(stderr, "Usage: %s\n\t%s file [arguments]\n\t%s -i\n\t%s -r code\n", name, name, name, name);
 	exit(-1);

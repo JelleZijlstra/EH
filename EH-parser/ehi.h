@@ -34,6 +34,9 @@ private:
 	// hack: used to implement several forms of inter-method communication
 	bool is_strange_arrow;
 	
+	// buffer for interactive prompt
+	char *buffer;
+	
 	void eh_init(void);
 	// helper functions
 	ehretval_p eh_op_command(const char *name, ehretval_p node, ehcontext_t context);

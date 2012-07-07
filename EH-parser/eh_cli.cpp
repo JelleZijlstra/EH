@@ -46,9 +46,11 @@ ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
 	return NULL;
 }
 char *EHI::eh_getline(EHParser *parser) {
+	if(this->buffer == NULL) {
+		this->buffer = new char[512];	
+	}
 	if(parser->interactivity() == cli_prompt_e) {
 		printf("> ");
 	}
-	char *buf = new char[512];
-	return fgets(buf, 511, stdin);
+	return fgets(buffer, 511, stdin);
 }

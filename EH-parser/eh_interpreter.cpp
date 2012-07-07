@@ -146,7 +146,7 @@ static inline int count_nodes(const ehretval_p node);
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), is_strange_arrow(false), returning(false), global_object(NULL) {
+EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), is_strange_arrow(false), buffer(NULL), returning(false), global_object(NULL) {
 	eh_init();
 }
 void EHI::eh_init(void) {
@@ -198,11 +198,13 @@ void EHI::eh_init(void) {
 	return;
 }
 void EHI::eh_exit(void) {
-	//this->global_object->members.erase("global");
-	if(eval_parser != NULL) {
-		delete eval_parser;
+	if(this->eval_parser != NULL) {
+		delete this->eval_parser;
 	}
-	delete global_object;
+	if(this->buffer != NULL) {
+		delete[] this->buffer;
+	}
+	delete this->global_object;
 	return;
 }
 EHI::~EHI() {

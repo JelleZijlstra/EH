@@ -968,15 +968,13 @@ ehretval_p EHI::eh_op_given(ehretval_t **paras, ehcontext_t context) {
 	return NULL;
 }
 ehretval_p EHI::eh_op_colon(ehretval_t **paras, ehcontext_t context) {
-	ehretval_p ret;
-	ehmember_p func;
-
 	ehretval_p function = eh_execute(paras[0], context);
 	// operand1 will be either a string (indicating a normal function call) or a 
 	// func_e (indicating a method or closure call)
 	switch(function->type()) {
 		case string_e:
-			func = context->get_recursive(
+		{
+			ehmember_p func = context->get_recursive(
 				function->stringval, context, T_LVALUE_GET
 			);
 			if(func == NULL) {
@@ -987,15 +985,10 @@ ehretval_p EHI::eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 				eh_error_type("function call", func->value->type(), eerror_e);
 				return NULL;
 			}
-			ret = call_function(
-				func->value->funcval, paras[1], context
-			);
-			break;
+			return call_function(func->value->funcval, paras[1], context);
+		}
 		case func_e:
-			ret = call_function(
-				function->funcval, paras[1], context
-			);
-			break;
+			return call_function(function->funcval, paras[1], context);
 		case null_e:
 			// ignore null functions to prevent duplicate warnings
 			return NULL;
@@ -1003,7 +996,7 @@ ehretval_p EHI::eh_op_colon(ehretval_t **paras, ehcontext_t context) {
 			eh_error_type("function call", function->type(), eerror_e);
 			return NULL;
 	}
-	return ret;
+	return NULL;
 }
 ehretval_p &EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	/*
@@ -1021,9 +1014,6 @@ ehretval_p &EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	 * ints and similar stuff.
 	 */
 	ehretval_p basevar = eh_execute(op->paras[0], context);
-	// We need this because of code in eh_op_set checking for this. Removing
-	// the check for NULL there yields a problem where $ foo->2 = 0 produces 
-	// $foo = @int 0.
 	switch(op->nparas) {
 		case 1:
 		{
@@ -2027,7 +2017,7 @@ void ehretval_t::print() {
 /*
  * eharray_t
  */
-ehretval_p  &eharray_t::operator[](ehretval_p index) {
+ehretval_p &eharray_t::operator[](ehretval_p index) {
 	switch(index->type()) {
 		case int_e:
 			return int_indices[index->intval];
@@ -2052,6 +2042,9 @@ void eharray_t::insert_retval(ehretval_p index, ehretval_p value) {
 			break;
 	}
 }
+/*
+ * ehobj_t
+ */
 ehmember_p ehobj_t::insert_retval(const char *name, attributes_t attribute, ehretval_p value) {
 	if(this->has(name)) {
 		eh_error("object member already set", enotice_e);
@@ -2066,9 +2059,6 @@ ehmember_p ehobj_t::insert_retval(const char *name, attributes_t attribute, ehre
 	members[name] = member;
 	return member;
 }
-/*
- * ehobj_t
- */
 ehmember_p ehobj_t::get(const char *name, const ehcontext_t context, int token) {
 	if(this->has(name)) {
 		ehmember_p out = this->members[name];

@@ -218,6 +218,12 @@ typedef struct opnode_t {
 	int op; // Type of operator
 	int nparas; // Number of parameters
 	ehretval_p *paras; // Parameters
+	
+	~opnode_t() {
+		if(paras != NULL) {
+			delete[] paras;
+		}
+	}
 } opnode_t;
 
 // Variables and object members (which are the same)

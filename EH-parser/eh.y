@@ -97,29 +97,22 @@ EHParser *yyget_extra(void *scanner);
 %type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string shortfunc
 %%
 program:
-	global_list				{ 
-								// free stuff, somehow.
-								// Actually doing free_node($1) at this moment
-								// breaks lots of stuff.
-								// I think the reason may be that some 
-								// methods directly read an AST value
-								// instead of calling eh_execute.
-								ehretval_p ret = ehretval_t::make($1);
-								//free_node(ret);
+	global_list				{ 	// Don't do anything. Destructors below take 
+								// care of cleanup.
 							}
 
 global_list:
 	/* NULL */				{ $$ = ADD_NODE0(T_SEPARATOR); }
 	| statement				{
 								EHParser *parser = yyget_extra(scanner);
-								ehretval_p ret = parser->_parent->eh_execute(ehretval_t::make($1), parser->_parent->global_object);
+								ehretval_p statement = ehretval_t::make($1);
+								ehretval_p ret = parser->_parent->eh_execute(statement, parser->_parent->global_object);
 								// flush stdout after executing each statement
 								fflush(stdout);
 								if(parser->_parent->returning) {
 									return (ret == NULL) ? 0 : ret->intval;
 								}
 							} global_list {
-								$$ = ADD_NODE2(T_SEPARATOR, $1, $3); 
 							}
 	;
 

@@ -284,10 +284,10 @@ typedef ehretval_p (*ehcmd_t)(eharray_t *paras);
 // EH array
 typedef struct eharray_t {
 	// typedefs
-	typedef std::map<int, ehretval_p > int_map;
-	typedef std::map<std::string, ehretval_p > string_map;
-	typedef std::pair<const int, ehretval_p >& int_pair;
-	typedef std::pair<const std::string, ehretval_p >& string_pair;
+	typedef std::map<const int, ehretval_p> int_map;
+	typedef std::map<const std::string, ehretval_p> string_map;
+	typedef std::pair<const int, ehretval_p>& int_pair;
+	typedef std::pair<const std::string, ehretval_p>& string_pair;
 	typedef int_map::iterator int_iterator;
 	typedef string_map::iterator string_iterator;
 
@@ -344,6 +344,10 @@ typedef refcount_ptr<ehfm_t> ehfm_p;
 // EH object
 typedef struct ehobj_t {
 public:
+	// typedefs
+	typedef std::map<const std::string, ehmember_p> obj_map;
+	typedef obj_map::iterator obj_iterator;
+	
 	// properties
 	ehfm_p function;
 	const char *classname;
@@ -352,12 +356,8 @@ public:
 	// for instantiated and non-instantiated library classes
 	void *selfptr;
 	ehconstructor_t constructor;
-	std::map<std::string, ehmember_p > members;
+	obj_map members;
 
-	// typedefs
-	typedef std::map<std::string, ehmember_p > obj_map;
-	typedef obj_map::iterator obj_iterator;
-	
 	// constructors
 	ehobj_t(const char *_classname = NULL, ehobj_t *_parent = NULL, ehobj_t *_real_parent = NULL) : function(), classname(_classname), parent(_parent), real_parent(_real_parent), selfptr(NULL), constructor(NULL), members() {}
 

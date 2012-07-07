@@ -38,6 +38,7 @@ typedef enum type_enum {
 	array_e,
 	func_e, // methods
 	object_e,
+	weak_object_e,
 	op_e,
 	attribute_e,
 	attributestr_e,
@@ -116,6 +117,7 @@ public:
 		// complex types
 		struct eharray_t *arrayval;
 		struct ehobj_t *objectval;
+		struct ehobj_t *weak_objectval;
 		struct ehobj_t *funcval;
 		struct ehrange_t *rangeval;
 		// pseudo-types for internal use
@@ -170,6 +172,7 @@ static ehretval_p make(vtype in) { \
 			COPY(bool);
 			COPY(float);
 			COPY(array);
+			case weak_object_e:
 			COPY(object);
 			COPY(func);
 			COPY(range);
@@ -241,8 +244,8 @@ typedef struct ehmember_t {
 		return this->attribute.isconst == const_e;
 	}
 } ehmember_t;
-//typedef refcount_ptr<ehmember_t> ehmember_p;
-typedef ehmember_t *ehmember_p;
+typedef refcount_ptr<ehmember_t> ehmember_p;
+//typedef ehmember_t *ehmember_p;
 
 // in future, add type for type checking
 typedef struct eharg_t {

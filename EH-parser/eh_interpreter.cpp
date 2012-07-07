@@ -153,7 +153,7 @@ void EHI::eh_init(void) {
 	global_object = new ehobj_t("AnonymousClass");
 	
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
-		ehmember_p func = new ehmember_t;
+		ehmember_p func;
 		func->value->type(func_e);
 		func->value->funcval = new ehobj_t("Closure", global_object);
 		ehfm_p f;
@@ -170,7 +170,7 @@ void EHI::eh_init(void) {
 		// attributes for library methods
 		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
 		for(int i = 0; members[i].name != NULL; i++) {
-			ehmember_p func = new ehmember_t;
+			ehmember_p func;
 			func->attribute = attributes;
 			func->value->type(func_e);
 			func->value->funcval = new ehobj_t("Closure", newclass);
@@ -180,7 +180,7 @@ void EHI::eh_init(void) {
 			func->value->funcval->function = f;
 			newclass->insert(members[i].name, func);
 		}
-		ehmember_p member = new ehmember_t;
+		ehmember_p member;
 		member->attribute = attributes;
 		member->value->set(newclass);
 		global_object->insert(newclass->classname, member);
@@ -193,14 +193,14 @@ void EHI::eh_init(void) {
 	}
 	// insert reference to global object
 	attributes_t attributes = attributes_t::make(public_e, nonstatic_e, const_e);
-	ehmember_p global = new ehmember_t;
+	ehmember_p global;
 	global->attribute = attributes;
 	global->value->set(global_object);
 	global_object->insert("global", global);
 	return;
 }
 void EHI::eh_exit(void) {
-	this->global_object->members.erase("global");
+	//this->global_object->members.erase("global");
 	if(eval_parser != NULL) {
 		delete eval_parser;
 	}
@@ -647,7 +647,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 
 	// get the object to be looped through and check its type
 	ehretval_p object = eh_execute(op->paras[0], context);
-	if(object->type() != array_e && object->type() != object_e) {
+	if(object->type() != array_e && object->type() != object_e && object->type() != weak_object_e) {
 		eh_error_type("for ... as operator", object->type(), enotice_e);
 		return ret;
 	}
@@ -675,7 +675,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	if(indexname != NULL) {
 		indexvar = context->get_recursive(indexname, context, T_LVALUE_SET);
 	}
-	if(object->type() == object_e) {
+	if(object->type() == object_e || object->type() == weak_object_e) {
 		// object index is always a string
 		if(indexname != NULL) {
 			indexvar->value->type(string_e);
@@ -864,6 +864,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	attributes_t thisattributes = attributes_t::make(private_e, nonstatic_e, const_e);
 	ehretval_p thisvalue;
 	thisvalue->set(classobj);
+	thisvalue->type(weak_object_e);
 	classobj->insert_retval("this", thisattributes, thisvalue);
 
 	eh_execute(code, classobj);
@@ -873,7 +874,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	ret->set(classobj);
 	if(op->nparas == 2) {
 		// insert variable
-		ehmember_p member = new ehmember_t;
+		ehmember_p member;
 		member->value = ret;
 		context->insert(name, member);
 	}
@@ -1124,6 +1125,7 @@ ehretval_p EHI::eh_op_accessor(ehretval_p *paras, ehcontext_t context) {
 						ret = basevar->arrayval->operator[](index);
 					}
 					break;
+				case weak_object_e:
 				case object_e:
 					if(index->type() != string_e) {
 						eh_error_type("access to object", index->type(), eerror_e);
@@ -1196,7 +1198,7 @@ ehretval_p EHI::call_function_args(ehobj_t *obj, const int nargs, ehretval_p arg
 	
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {
-		ehmember_p var = new ehmember_t;
+		ehmember_p var;
 		var->value = args[i];
 		newcontext->insert(f->args[i].name, var);
 	}
@@ -1256,6 +1258,7 @@ ehretval_p &EHI::object_access(ehretval_p operand1, ehretval_p index, ehcontext_
 			} else {
 				throw 0;
 			}
+		case weak_object_e:
 		case object_e:
 			label = eh_execute(index, context);
 			if(label->type() != string_e) {
@@ -1306,13 +1309,14 @@ ehobj_t *EHI::get_class(ehretval_p classname, ehcontext_t context) {
 				eh_error_unknown("class", classname->stringval, eerror_e);
 				return NULL;
 			}
-			if(member->value->type() != object_e) {
+			if(member->value->type() != object_e && member->value->type() != weak_object_e) {
 				eh_error_type("class", member->value->type(), eerror_e);
 				return NULL;
 			}
 			classobj = member->value->objectval;
 			break;
 		}
+		case weak_object_e:
 		case object_e:
 			classobj = classname->objectval;
 			break;
@@ -1359,13 +1363,13 @@ void EHI::array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t c
  */
 void EHI::eh_setarg(int argc, char **argv) {
 	// insert argc
-	ehmember_p argc_v = new ehmember_t;
+	ehmember_p argc_v;
 	// argc - 1, because argv[0] is ehi itself
 	argc_v->value->set((int) argc - 1);
 	global_object->insert("argc", argc_v);
 
 	// insert argv
-	ehmember_p argv_v = new ehmember_t;
+	ehmember_p argv_v;
 	argv_v->value->set(new eharray_t);
 
 	// all members of argv are strings
@@ -1707,6 +1711,7 @@ bool eh_xtobool(ehretval_p in) {
 			// range of length zero is false, everything else is true
 			return (in->rangeval->min == in->rangeval->max);
 		case object_e:
+		case weak_object_e:
 		case func_e:
 			// objects and functions are true if they exist
 			return true;
@@ -1786,6 +1791,7 @@ ehretval_p eh_xtoarray(ehretval_p in) {
 		case func_e:
 		case null_e:
 		case object_e:
+		case weak_object_e:
 			// create an array with just this variable in it
 			ret->set(new eharray_t);
 			ret->arrayval->int_indices[0] = in;
@@ -2060,7 +2066,7 @@ ehmember_p ehobj_t::insert_retval(const char *name, attributes_t attribute, ehre
 		return NULL;
 	}
 	// insert a member into a class
-	ehmember_p member = new ehmember_t;
+	ehmember_p member;
 	member->attribute = attribute;
 	member->value = value;
 
@@ -2080,7 +2086,7 @@ ehmember_p ehobj_t::get(const char *name, const ehcontext_t context, int token) 
 			return out;
 		}
 	} else if(token == T_LVALUE_SET) {
-		ehmember_p member = new ehmember_t;
+		ehmember_p member;
 		this->insert(name, member);
 		return this->members[name];
 	} else {
@@ -2092,8 +2098,8 @@ ehmember_p ehobj_t::get_recursive(const char *name, ehcontext_t context, int tok
 	if(token == T_LVALUE_SET) {
 		if(currvar == NULL) {
 			if(!this->has(name)) {
-				currvar = new ehmember_t;
-				this->insert(name, currvar);
+				ehmember_p newvar;
+				this->insert(name, newvar);
 				return this->members[name];
 			} else {
 				throw 0;
@@ -2103,7 +2109,12 @@ ehmember_p ehobj_t::get_recursive(const char *name, ehcontext_t context, int tok
 			throw 0;
 		}
 	}
-	return currvar;
+	// without this weird-looking code, it may create a useless ehmember_t
+	if(currvar == NULL) {
+		return NULL;
+	} else {
+		return currvar;
+	}
 }
 ehmember_p ehobj_t::get_recursive_helper(const char *name, const ehcontext_t context) {
 	if(this->has(name)) {
@@ -2127,20 +2138,18 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent) {
 	ehmember_p newmember;
 	if(classmember->first.compare("this") == 0) {
 		// handle $this pointer
-		newmember = new ehmember_t;
 		newmember->attribute = classmember->second->attribute;
 		newmember->value->set(this);
+		newmember->value->type(weak_object_e);
 	} else if(classmember->second->isstatic() || (classmember->second->isconst() && classmember->second->value->type() != func_e)) {
 		// we can safely share static members, as well as const members that are not functions
 		newmember = classmember->second;
 	} else {
-		newmember = new ehmember_t;
 		newmember->attribute = classmember->second->attribute;
 		if(classmember->second->value->type() == func_e) {
 			newmember->value->type(func_e);
 			ehobj_t *oldobj = classmember->second->value->funcval;
 			ehobj_t *f = new ehobj_t(oldobj->classname, this);
-			//TODO: this is a (the?) reason an ehobj_t can't kill its ehfm_t when it dies
 			newmember->value->funcval = f;
 			if(set_real_parent && oldobj->real_parent == NULL) {
 				f->real_parent = oldobj->parent->parent;
@@ -2153,6 +2162,5 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent) {
 			newmember->value = classmember->second->value;
 		}
 	}
-	this->operator[](classmember->first) = newmember;
-	return;
+	this->members[classmember->first] = newmember;
 }

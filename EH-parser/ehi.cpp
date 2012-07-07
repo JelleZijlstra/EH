@@ -71,6 +71,9 @@ ehretval_t::~ehretval_t() {
 		case array_e:
 			delete this->arrayval;
 			break;
+		case weak_object_e:
+			// we don't own the object
+			break;
 	}
 }
 

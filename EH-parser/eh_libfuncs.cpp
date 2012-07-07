@@ -61,6 +61,7 @@ void printvar_t::retval(ehretval_p in) {
 				printf("(recursion)\n");
 			}
 			break;
+		case weak_object_e:
 		case object_e:
 			if(this->seen.count((void *)in->objectval) == 0) {
 				this->seen[(void *)in->objectval] = true;

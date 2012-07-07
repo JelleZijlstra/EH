@@ -5,6 +5,7 @@
  * Code file for the EH error handling system.
  */
 #include "eh.h"
+#include "eh_error.h"
 #include <stdio.h>
 #include <stdlib.h>
 

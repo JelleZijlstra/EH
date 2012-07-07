@@ -4,6 +4,7 @@
  * EH library classes
  */
 #include "eh_libclasses.h"
+#include "eh_error.h"
 
 START_EHLC(CountClass)
 EHLC_ENTRY(CountClass, docount)

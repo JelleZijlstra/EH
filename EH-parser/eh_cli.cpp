@@ -5,6 +5,7 @@
  * Default implementation of EH, used in the standalone interpreter.
  */
 #include "eh.h"
+#include "eh_error.h"
 #include "eh.bison.hpp"
 
 extern FILE *yyin;

@@ -6,6 +6,7 @@
  */
 #include "eh.h"
 #include "eh_libfuncs.h"
+#include "eh_error.h"
 #include "eh.bison.hpp"
 #include <cmath>
 

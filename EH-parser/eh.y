@@ -9,6 +9,7 @@
  */
 #include "eh.h"
 #include "eh.bison.hpp"
+#include "eh_error.h"
 extern FILE *yyin;
 EHParser *yyget_extra(void *scanner);
 #define YYERROR_VERBOSE

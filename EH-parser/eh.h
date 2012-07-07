@@ -375,27 +375,6 @@ typedef struct ehrange_t {
 	ehrange_t(int _min, int _max) : min(_min), max(_max) {}
 	ehrange_t() : min(0), max(0) {}
 } ehrange_t;
-
-/*
- * EH error system
- */
-typedef enum {
-	efatal_e,
-	eparsing_e,
-	eerror_e, // runtime non-fatal error
-	enotice_e
-} errlevel_e;
-
-void eh_error(const char *message, errlevel_e level);
-void eh_error_type(const char *context, type_enum type, errlevel_e level);
-void eh_error_looplevels(const char *context, int levels);
-void eh_error_unknown(const char *kind, const char *name, errlevel_e level);
-void eh_error_redefine(const char *kind, const char *name, errlevel_e level);
-void eh_error_int(const char *message, int opcode, errlevel_e level);
-void eh_error_argcount(int expected, int received);
-void eh_error_line(int line, const char *msg);
-void eh_error_types(const char *context, type_enum type1, type_enum type2, errlevel_e level);
-void eh_error_argcount_lib(const char *name, int expected, int received);
 /*
  * Other global functions
  */
@@ -459,11 +438,5 @@ bool eh_xtobool(ehretval_p in);
 ehretval_p eh_xtorange(ehretval_p in);
 ehretval_p eh_looseequals(ehretval_p operand1, ehretval_p operand2);
 bool eh_strictequals(ehretval_p operand1, ehretval_p operand2);
-
-/*
- * Helper
- */
-int eh_getargs(ehretval_p paras, int n, ehretval_p *args, ehcontext_t context, const char *name, EHI *obj);
-void print_retval(const ehretval_p in);
 
 #endif /* EH_H_ */

@@ -5,7 +5,7 @@
 #include "eh_libcmds.h"
 
 EH_LIBCMD(quit) {
-	throw new std::exception;
+	throw std::exception();
 	return NULL;
 }
 

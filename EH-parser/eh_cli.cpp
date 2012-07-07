@@ -15,18 +15,17 @@ void eh_usage(char *name) {
 
 int main(int argc, char **argv) {
 	ehretval_p ret;
-	ret->type(int_e);
 
 	EHI interpreter;
 
 	try {
 		if(argc == 1) {
-			ret->intval = interpreter.eh_interactive(cli_no_prompt_e);
+			ret = ehretval_t::make(interpreter.eh_interactive(cli_no_prompt_e));
 		} else if(!strcmp(argv[1], "-i")) {
 			if(argc != 2) {
 				eh_usage(argv[0]);
 			}
-			ret->intval = interpreter.eh_interactive();
+			ret = ehretval_t::make(interpreter.eh_interactive());
 		} else if(!strcmp(argv[1], "-r")) {
 			if(argc != 3)
 				eh_usage(argv[0]);

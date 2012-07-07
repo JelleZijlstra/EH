@@ -154,8 +154,7 @@ void EHI::eh_init(void) {
 	
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
 		ehmember_p func;
-		func->value->type(func_e);
-		func->value->funcval = new ehobj_t("Closure", global_object);
+		func->value = ehretval_t::make_func(new ehobj_t("Closure", global_object));
 		ehfm_p f;
 		f->type = lib_e;
 		f->libfunc_pointer = libfuncs[i].code;
@@ -172,8 +171,7 @@ void EHI::eh_init(void) {
 		for(int i = 0; members[i].name != NULL; i++) {
 			ehmember_p func;
 			func->attribute = attributes;
-			func->value->type(func_e);
-			func->value->funcval = new ehobj_t("Closure", newclass);
+			func->value = ehretval_t::make_func(new ehobj_t("Closure", newclass));
 			ehfm_p f;
 			f->type = libmethod_e;
 			f->libmethod_pointer = members[i].func;
@@ -650,7 +648,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	char *membername;
 	ehmember_p membervar;
 	char *indexname;
-	ehmember_p indexvar = NULL;
+	ehmember_p indexvar;
 	ehretval_p code;
 	if(op->nparas == 3) {
 		// no index
@@ -685,6 +683,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 				// need the strdup here because currmember->name is const
 				// and a string_e is not. Perhaps solve this instead by
 				// creating a new cstring_e type?
+				//TODO: this is a GC hazard
 				indexvar->value->stringval = strdup(curr->first.c_str());
 			}
 			ret = eh_execute(code, context);
@@ -809,8 +808,7 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
-	ehretval_p ret = ehretval_t::make_typed(func_e);
-	ret->funcval = new ehobj_t;
+	ehretval_p ret = ehretval_t::make_func(new ehobj_t);
 	ret->funcval->parent = context;
 	ret->funcval->classname = "Closure";
 
@@ -2076,10 +2074,9 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent) {
 	} else {
 		newmember->attribute = classmember->second->attribute;
 		if(classmember->second->value->type() == func_e) {
-			newmember->value->type(func_e);
 			ehobj_t *oldobj = classmember->second->value->funcval;
 			ehobj_t *f = new ehobj_t(oldobj->classname, this);
-			newmember->value->funcval = f;
+			newmember->value = ehretval_t::make_func(f);
 			if(set_real_parent && oldobj->real_parent == NULL) {
 				f->real_parent = oldobj->parent->parent;
 			} else {

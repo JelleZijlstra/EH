@@ -1676,8 +1676,7 @@ ehretval_p eh_xtostring(ehretval_p in) {
 			if(in->boolval) {
 				ret->stringval = new char[5];
 				strcpy(ret->stringval, "true");
-			}
-			else {
+			} else {
 				ret->stringval = new char[6];
 				strcpy(ret->stringval, "false");
 			}

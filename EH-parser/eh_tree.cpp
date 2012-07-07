@@ -6,24 +6,6 @@
  */
 #include "eh.h"
 
-#define GETFUNC(name, vtype) ehretval_p eh_get_ ## name (vtype value) { \
-	ehretval_p ret; \
-	ret->type(name ## _e); \
-	ret->name ## val = value; \
-	return ret; \
-}
-GETFUNC(int, int)
-GETFUNC(string, char *)
-GETFUNC(float, float)
-ehretval_p eh_get_null(void) {
-	return NULL;
-}
-GETFUNC(type, type_enum)
-GETFUNC(accessor, accessor_enum)
-GETFUNC(bool, bool)
-GETFUNC(attribute, attribute_enum)
-GETFUNC(op, opnode_t *)
-
 opnode_t *eh_addnode_base(int opcode, int nparas, ehretval_p *paras) {
 	opnode_t *ret = new opnode_t;
 	ret->op = opcode;

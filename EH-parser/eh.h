@@ -420,7 +420,6 @@ typedef struct ehrange_t {
 const char *get_typestring(type_enum type);
 int eh_outer_exit(int exitval);
 void yyerror(void *, const char *s);
-char *eh_getinput(void);
 
 /*
  * EH interpreter

@@ -302,8 +302,7 @@ EHLIBFUNC(getinput) {
 		return NULL;
 	}
 	// more accurately, getint
-	ehretval_p ret;
-	ret->type(int_e);
+	ehretval_p ret = ehretval_t::make_typed(int_e);
 	fscanf(stdin, "%d", &(ret->intval));
 	return ret;
 }

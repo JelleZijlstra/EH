@@ -207,6 +207,13 @@ static ehretval_p make(vtype in) { \
 		out->typeval = type;
 		return out;
 	}
+	static ehretval_p make_typed(type_enum type) {
+		ehretval_p out;
+		out->type(type);
+		// this should NULL the union
+		out->stringval = NULL;
+		return out;
+	}
 	static ehretval_p make(ehretval_p in) {
 		return in;
 	}

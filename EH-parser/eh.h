@@ -106,6 +106,9 @@ typedef enum accessor_enum {
 typedef struct ehretval_t {
 private:
 	type_enum _type;
+	void type(type_enum type) {
+		this->_type = type;
+	}
 public:
 	typedef refcount_ptr<ehretval_t> ehretval_p;
 	union {
@@ -189,9 +192,6 @@ public:
 		} else {
 			return this->_type;
 		}
-	}
-	void type(type_enum type) {
-		this->_type = type;
 	}
 	void print();
 	

@@ -694,7 +694,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 		// arrays
 		eharray_t *array = object->arrayval;
 		if(indexname) {
-			indexvar->value = ehretval_t::make_typed(string_e);
+			indexvar->value = ehretval_t::make_typed(int_e);
 		}
 		ARRAY_FOR_EACH_INT(array, i) {
 			if(indexname) {

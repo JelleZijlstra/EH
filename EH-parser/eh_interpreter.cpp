@@ -669,7 +669,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	if(object->type() == object_e || object->type() == weak_object_e) {
 		// object index is always a string
 		if(indexname != NULL) {
-			indexvar->value->type(string_e);
+			indexvar->value = ehretval_t::make_typed(string_e);
 		}
 		// check whether we're allowed to access private things
 		const bool doprivate = ehcontext_compare(object->objectval, context);
@@ -694,7 +694,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 		// arrays
 		eharray_t *array = object->arrayval;
 		if(indexname) {
-			indexvar->value->type(int_e);
+			indexvar->value = ehretval_t::make_typed(string_e);
 		}
 		ARRAY_FOR_EACH_INT(array, i) {
 			if(indexname) {
@@ -705,7 +705,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 			LOOPCHECKS;
 		}
 		if(indexname) {
-			indexvar->value->type(string_e);
+			indexvar->value = ehretval_t::make_typed(string_e);
 		}
 		ARRAY_FOR_EACH_STRING(array, i) {
 			if(indexname) {

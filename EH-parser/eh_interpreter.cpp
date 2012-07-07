@@ -1441,63 +1441,56 @@ ehretval_p eh_count(const ehretval_p in) {
 }
 ehretval_p eh_op_tilde(ehretval_p in) {
 	// no const argument because it's modified below
-	ehretval_p ret;
 	switch(in->type()) {
 		// bitwise negation of a bool is just normal negation
 		case bool_e:
-			ret->set(!in->boolval);
-			break;
+			return ehretval_t::make(!in->boolval);
 		// else try to cast to int
 		default:
 			in = eh_xtoint(in);
 			if(in->type() != int_e) {
 				eh_error_type("bitwise negation", in->type(), eerror_e);
-				return ret;
+				return NULL;
 			}
 			// fall through to int case
 		case int_e:
-			ret->set(~in->intval);
-			break;
+			return ehretval_t::make(~in->intval);
 	}
-	return ret;
+	return NULL;
 }
 ehretval_p eh_op_uminus(ehretval_p in) {
-	ehretval_p ret;
 	switch(in->type()) {
 		// negation
 		case bool_e:
-			ret->set(!in->boolval);
-			break;
+			return ehretval_t::make(!in->boolval);
 		case float_e:
-			ret->set(-in->floatval);
-			break;
+			return ehretval_t::make(-in->floatval);
 		default:
 			in = eh_xtoint(in);
 			if(in->type() != int_e) {
 				eh_error_type("negation", in->type(), eerror_e);
-				return ret;
+				return NULL;
 			}
 			// fall through to int case
 		case int_e:
-			ret->set(-in->intval);
-			break;
+			return ehretval_t::make(-in->intval);
 	}
-	return ret;
+	return NULL;
 }
 ehretval_p eh_op_dot(ehretval_p operand1, ehretval_p operand2) {
-	ehretval_p ret;
 	operand1 = eh_xtostring(operand1);
 	operand2 = eh_xtostring(operand2);
 	if(operand1->type() == string_e && operand2->type() == string_e) {
 		// concatenate them
-		ret->type(string_e);
 		size_t len1 = strlen(operand1->stringval);
 		size_t len2 = strlen(operand2->stringval);
-		ret->stringval = new char[len1 + len2 + 1];
-		strcpy(ret->stringval, operand1->stringval);
-		strcpy(ret->stringval + len1, operand2->stringval);
+		char *out = new char[len1 + len2 + 1];
+		strcpy(out, operand1->stringval);
+		strcpy(out + len1, operand2->stringval);
+		return ehretval_t::make(out);
+	} else {
+		return NULL;
 	}
-	return ret;
 }
 
 /*
@@ -1519,12 +1512,10 @@ bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key) {
  * Type casting
  */
 ehretval_p eh_cast(const type_enum type, ehretval_p in) {
-	ehretval_p ret;
 	switch(type) {
 // macro for the common case
 #define EH_CAST_CASE(vtype) case vtype ## _e: \
-	ret = eh_xto ## vtype (in); \
-	break;
+	return ehretval_t::make(eh_xto ## vtype (in));
 		EH_CAST_CASE(int)
 		EH_CAST_CASE(string)
 		EH_CAST_CASE(float)
@@ -1532,13 +1523,12 @@ ehretval_p eh_cast(const type_enum type, ehretval_p in) {
 		EH_CAST_CASE(array)
 #undef EH_CAST_CASE
 		case bool_e:
-			ret->set(eh_xtobool(in));
-			break;
+			return ehretval_t::make(eh_xtobool(in));
 		default:
 			eh_error_type("typecast", type, eerror_e);
 			break;
 	}
-	return ret;
+	return NULL;
 }
 
 #define CASTERROR(totype) do { \
@@ -1553,8 +1543,7 @@ ehretval_p eh_cast(const type_enum type, ehretval_p in) {
 /* Casts between specific pairs of types */
 ehretval_p eh_stringtoint(const char *const in) {
 	char *endptr;
-	ehretval_p ret;
-	ret->set((int) strtol(in, &endptr, 0));
+	ehretval_p ret = ehretval_t::make((int) strtol(in, &endptr, 0));
 	// If in == endptr, strtol read no digits and there was no conversion.
 	if(in == endptr) {
 		CASTERROR_KNOWN(int, string);
@@ -1564,8 +1553,7 @@ ehretval_p eh_stringtoint(const char *const in) {
 }
 ehretval_p eh_stringtofloat(const char *const in) {
 	char *endptr;
-	ehretval_p ret;
-	ret->set(strtof(in, &endptr));
+	ehretval_p ret = ehretval_t::make(strtof(in, &endptr));
 	// If in == endptr, strtof read no digits and there was no conversion.
 	if(in == endptr) {
 		CASTERROR_KNOWN(float, string);
@@ -1594,10 +1582,9 @@ char *eh_rangetostring(const ehrange_t *const range) {
 	return buffer;
 }
 ehretval_p eh_rangetoarray(const ehrange_t *const range) {
-	ehretval_p ret;
-	ret->set(new eharray_t);
-	ret->arrayval->int_indices[0]->set(range->min);
-	ret->arrayval->int_indices[1]->set(range->max);
+	ehretval_p ret = ehretval_t::make(new eharray_t);
+	ret->arrayval->int_indices[0] = ehretval_t::make(range->min);
+	ret->arrayval->int_indices[1] = ehretval_t::make(range->max);
 	return ret;
 }
 ehretval_p eh_stringtorange(const char *const in) {

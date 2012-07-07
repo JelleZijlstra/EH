@@ -1,0 +1,6 @@
+@array [
+0 => @int 1
+1 => @int 3
+]
+Unsupported type array for typecast to range: EH notice
+null

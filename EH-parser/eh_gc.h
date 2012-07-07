@@ -51,7 +51,7 @@ public:
 	
 	// constructor
 	refcount_ptr() : pointer(NULL) {}
-	refcount_ptr(T *in) {
+	explicit refcount_ptr(T *in) {
 		if(in == NULL) {
 			this->pointer = NULL;
 		} else {

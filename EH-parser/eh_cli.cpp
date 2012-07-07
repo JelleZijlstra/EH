@@ -14,18 +14,19 @@ void eh_usage(char *name) {
 }
 
 int main(int argc, char **argv) {
-	ehretval_t ret(int_e);
+	ehretval_p ret;
+	ret->type(int_e);
 
 	EHI interpreter;
 
 	try {
 		if(argc == 1) {
-			ret.intval = interpreter.eh_interactive(cli_no_prompt_e);
+			ret->intval = interpreter.eh_interactive(cli_no_prompt_e);
 		} else if(!strcmp(argv[1], "-i")) {
 			if(argc != 2) {
 				eh_usage(argv[0]);
 			}
-			ret.intval = interpreter.eh_interactive();
+			ret->intval = interpreter.eh_interactive();
 		} else if(!strcmp(argv[1], "-r")) {
 			if(argc != 3)
 				eh_usage(argv[0]);
@@ -34,10 +35,10 @@ int main(int argc, char **argv) {
 			interpreter.eh_setarg(argc, argv);
 			ret = interpreter.parse_file(argv[1]);
 		}
-		exit(ret.intval);
+		return ret->intval;
 	}
 	catch(...) {
-		exit(-1);
+		return -1;
 	}
 }
 

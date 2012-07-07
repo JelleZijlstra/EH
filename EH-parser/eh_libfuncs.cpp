@@ -184,7 +184,7 @@ EHLIBFUNC(printvar) {
 		eh_error_argcount_lib("is_" #typev, 1, nargs); \
 		return NULL; \
 	} \
-	return new ehretval_t(args[0]->type() == typev ## _e); \
+	return ehretval_t::make(args[0]->type() == typev ## _e); \
 }
 
 TYPEFUNC(null)
@@ -210,7 +210,7 @@ EHLIBFUNC(class_is) {
 		eh_error_type("argument 1 to class_is", args[0]->type(), enotice_e);
 		return NULL;
 	}
-	return new ehretval_t(strcmp(args[1]->stringval, args[0]->objectval->classname) == 0);
+	return ehretval_t::make(strcmp(args[1]->stringval, args[0]->objectval->classname) == 0);
 }
 // get the type of a variable
 EHLIBFUNC(get_type) {
@@ -218,7 +218,7 @@ EHLIBFUNC(get_type) {
 		eh_error_argcount_lib("get_type", 1, nargs);
 		return NULL;
 	}
-	return new ehretval_t(strdup(get_typestring(args[0]->type())));
+	return ehretval_t::make(strdup(get_typestring(args[0]->type())));
 }
 
 /*
@@ -242,12 +242,10 @@ EHLIBFUNC(include) {
 		return NULL;
 	}
 	EHParser parser(end_is_end_e, obj);
-	ehretval_t parse_return = parser.parse_file(infile);
+	ehretval_p parse_return = parser.parse_file(infile);
 	// we're no longer returning
 	obj->returning = false;
-	ehretval_p out;
-	out->overwrite(parse_return);
-	return out;
+	return parse_return;
 }
 
 // power
@@ -257,13 +255,13 @@ EHLIBFUNC(pow) {
 		return NULL;
 	}
 	if(args[1]->type() == int_e && args[0]->type() == int_e) {
-		return new ehretval_t((int) pow((float) args[1]->intval, (float) args[0]->intval));
+		return ehretval_t::make((int) pow((float) args[1]->intval, (float) args[0]->intval));
 	} else if(args[1]->type() == int_e && args[0]->type() == float_e) {
-		return new ehretval_t(pow((float) args[1]->intval, args[0]->floatval));
+		return ehretval_t::make(pow((float) args[1]->intval, args[0]->floatval));
 	} else if(args[1]->type() == float_e && args[0]->type() == int_e) {
-		return new ehretval_t(pow(args[1]->floatval, (float) args[0]->intval));
+		return ehretval_t::make(pow(args[1]->floatval, (float) args[0]->intval));
 	} else if(args[1]->type() == float_e && args[0]->type() == float_e) {
-		return new ehretval_t(pow(args[1]->floatval, args[0]->floatval));
+		return ehretval_t::make(pow(args[1]->floatval, args[0]->floatval));
 	} else {
 		eh_error_type("argument 0 to pow", args[1]->type(), enotice_e);
 		eh_error_type("argument 1 to pow", args[0]->type(), enotice_e);
@@ -281,7 +279,7 @@ EHLIBFUNC(log) {
 		eh_error_type("argument 0 to log", args[0]->type(), enotice_e);
 		return NULL;
 	}
-	return new ehretval_t(log(arg->floatval));
+	return ehretval_t::make(log(arg->floatval));
 }
 
 EHLIBFUNC(eval) {
@@ -294,7 +292,7 @@ EHLIBFUNC(eval) {
 		eh_error_type("argument 0 to eval", args[0]->type(), enotice_e);
 		return NULL;	
 	}
-	return new ehretval_t(obj->parse_string(arg->stringval));
+	return obj->parse_string(arg->stringval);
 }
 
 EHLIBFUNC(getinput) {
@@ -303,7 +301,8 @@ EHLIBFUNC(getinput) {
 		return NULL;
 	}
 	// more accurately, getint
-	ehretval_p ret = new ehretval_t(int_e);
+	ehretval_p ret;
+	ret->type(int_e);
 	fscanf(stdin, "%d", &(ret->intval));
 	return ret;
 }

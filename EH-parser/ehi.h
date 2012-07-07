@@ -75,8 +75,8 @@ public:
 	ehobj_t *global_object;
 
 	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
-	ehretval_t parse_string(const char *cmd);
-	ehretval_t parse_file(const char *name);
+	ehretval_p parse_string(const char *cmd);
+	ehretval_p parse_file(const char *name);
 	EHI();
 	void eh_exit(void);
 
@@ -97,8 +97,8 @@ public:
 		return _parent->eh_getline(this);
 	}
 
-	ehretval_t parse_file(FILE *infile);
-	ehretval_t parse_string(const char *cmd);
+	ehretval_p parse_file(FILE *infile);
+	ehretval_p parse_string(const char *cmd);
 
 	EHParser(interactivity_enum inter, EHI *parent) :  _parent(parent), _interactivity(inter) {
 		yylex_init_extra(this, &_scanner);

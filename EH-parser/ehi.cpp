@@ -1,7 +1,7 @@
 #include "eh.h"
 
 int EHI::eh_interactive(interactivity_enum interactivity) {
-	ehretval_t ret;
+	ehretval_p ret;
 
 	EHParser parser(interactivity, this);
 	char *cmd = eh_getline(&parser);
@@ -14,14 +14,13 @@ int EHI::eh_interactive(interactivity_enum interactivity) {
 	} catch(...) {
 		// do nothing
 	}
-	return ret.intval;
+	return ret->intval;
 }
-ehretval_t EHI::parse_file(const char *name) {
-	ehretval_t ret(null_e);
+ehretval_p EHI::parse_file(const char *name) {
 	FILE *infile = fopen(name, "r");
 	if(!infile) {
 		fprintf(stderr, "Could not open input file\n");
-		return ret;
+		return NULL;
 	}
 	EHParser parser(end_is_end_e, this);
 	// if a syntax error occurs, stop parsing and return -1
@@ -29,7 +28,7 @@ ehretval_t EHI::parse_file(const char *name) {
 		return parser.parse_file(infile);
 	} catch(...) {
 		// TODO: actually do something useful with exceptions
-		return ret;
+		return NULL;
 	}
 }
 void EHI::init_eval_parser() {
@@ -38,7 +37,7 @@ void EHI::init_eval_parser() {
 		eval_parser = new EHParser(end_is_end_e, new EHI);
 	}
 }
-ehretval_t EHI::parse_string(const char *cmd) {
+ehretval_p EHI::parse_string(const char *cmd) {
 	init_eval_parser();
 	return eval_parser->parse_string(cmd);
 }

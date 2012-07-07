@@ -21,7 +21,7 @@ void usage(char **argv) {
 }
 
 int main(int argc, char **argv) {
-	ehretval_t ret;
+	ehretval_p ret;
 	char *infilename;
 
 	// parse arguments
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 		// set input
 		ret = interpreter.parse_file(infilename);
 		interpreter.eh_exit();
-		exit(ret.intval);
+		exit(ret->intval);
 	}
 	catch(...) {
 		exit(1);

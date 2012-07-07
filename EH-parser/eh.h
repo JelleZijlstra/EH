@@ -241,6 +241,7 @@ typedef struct ehmember_t {
 		return this->attribute.isconst == const_e;
 	}
 } ehmember_t;
+//typedef refcount_ptr<ehmember_t> ehmember_p;
 typedef ehmember_t *ehmember_p;
 
 // in future, add type for type checking

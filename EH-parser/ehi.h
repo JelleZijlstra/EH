@@ -29,7 +29,7 @@ private:
 	int inloop;
 	int breaking;
 	int continuing;
-	std::map<std::string, ehcmd_t> cmdtable;
+	std::map<const std::string, ehcmd_t> cmdtable;
 	
 	// hack: used to implement several forms of inter-method communication
 	bool is_strange_arrow;

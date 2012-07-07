@@ -267,7 +267,7 @@ typedef refcount_ptr<ehmember_t> ehmember_p;
 
 // in future, add type for type checking
 typedef struct eharg_t {
-	const char *name;
+	std::string name;
 } eharg_t;
 
 // context
@@ -362,7 +362,7 @@ public:
 	
 	// properties
 	ehfm_p function;
-	const char *classname;
+	std::string classname;
 	struct ehobj_t *parent;
 	struct ehobj_t *real_parent;
 	// for instantiated and non-instantiated library classes
@@ -371,7 +371,7 @@ public:
 	obj_map members;
 
 	// constructors
-	ehobj_t(const char *_classname = NULL, ehobj_t *_parent = NULL, ehobj_t *_real_parent = NULL) : function(), classname(_classname), parent(_parent), real_parent(_real_parent), selfptr(NULL), constructor(NULL), members() {}
+	ehobj_t(std::string _classname, ehobj_t *_parent = NULL, ehobj_t *_real_parent = NULL) : function(), classname(_classname), parent(_parent), real_parent(_real_parent), selfptr(NULL), constructor(NULL), members() {}
 
 	// methods
 	size_t size() const {
@@ -391,11 +391,11 @@ public:
 		return members.count(key);
 	}
 	
-	void insert(std::string &name, ehmember_p value) {
+	void insert(const std::string &name, ehmember_p value) {
 		members[name] = value;
 	}
 	void insert(const char *name, ehmember_p value) {
-		std::string str(name);
+		const std::string str(name);
 		this->insert(str, value);
 	}
 	

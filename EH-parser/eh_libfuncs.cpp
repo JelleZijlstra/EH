@@ -65,7 +65,7 @@ void printvar_t::retval(ehretval_p in) {
 		case object_e:
 			if(this->seen.count((void *)in->objectval) == 0) {
 				this->seen[(void *)in->objectval] = true;
-				printf("@object <%s> [\n", in->objectval->classname);
+				printf("@object <%s> [\n", in->objectval->classname.c_str());
 				this->object(in->objectval);
 				printf("]\n");
 			} else {
@@ -87,7 +87,7 @@ void printvar_t::retval(ehretval_p in) {
 			}
 			printf(">: ");
 			for(int i = 0; i < in->funcval->function->argcount; i++) {
-				printf("%s", in->funcval->function->args[i].name);
+				printf("%s", in->funcval->function->args[i].name.c_str());
 				if(i + 1 < in->funcval->function->argcount)
 					printf(", ");
 			}
@@ -211,7 +211,7 @@ EHLIBFUNC(class_is) {
 		eh_error_type("argument 1 to class_is", args[0]->type(), enotice_e);
 		return NULL;
 	}
-	return ehretval_t::make(strcmp(args[1]->stringval, args[0]->objectval->classname) == 0);
+	return ehretval_t::make(args[0]->objectval->classname.compare(args[1]->stringval) == 0);
 }
 // get the type of a variable
 EHLIBFUNC(get_type) {

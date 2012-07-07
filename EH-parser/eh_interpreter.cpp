@@ -808,9 +808,7 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
-	ehretval_p ret = ehretval_t::make_func(new ehobj_t);
-	ret->funcval->parent = context;
-	ret->funcval->classname = "Closure";
+	ehretval_p ret = ehretval_t::make_func(new ehobj_t("Closure", context));
 
 	ehfm_p f;
 	f->type = user_e;
@@ -844,9 +842,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 		code = op->paras[0];
 	}
 
-	ehobj_t *classobj = new ehobj_t();
-	classobj->parent = context;
-	classobj->classname = name;
+	ehobj_t *classobj = new ehobj_t(name, context);
 
 	// insert "this" pointer
 	attributes_t thisattributes = attributes_t::make(private_e, nonstatic_e, const_e);
@@ -1197,11 +1193,8 @@ ehretval_p EHI::call_function_args(ehobj_t *obj, const int nargs, ehretval_p arg
  * Classes
  */
 ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
-	ehobj_t *ret = new ehobj_t;
-	ret->classname = obj->classname;
+	ehobj_t *ret = new ehobj_t(obj->classname, obj->parent, obj->real_parent);
 	ret->function = obj->function;
-	ret->parent = obj->parent;
-	ret->real_parent = obj->real_parent;
 	if(obj->constructor != NULL) {
 		// insert selfptr
 		ret->selfptr = obj->constructor();
@@ -1359,7 +1352,7 @@ void EHI::eh_setarg(int argc, char **argv) {
 
 	// all members of argv are strings
 	for(int i = 1; i < argc; i++) {
-		argv_v->value->arrayval->int_indices[i - 1] = ehretval_t::make(argv[i]);
+		argv_v->value->arrayval->int_indices[i - 1] = ehretval_t::make(strdup(argv[i]));
 	}
 	global_object->insert("argv", argv_v);
 }
@@ -1474,7 +1467,7 @@ bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key) {
 	if(key == NULL) {
 		return false;
 	} else {
-		if(strcmp(lock->classname, key->classname) == 0) {
+		if(lock->classname.compare(key->classname) == 0) {
 			return true;
 		} else {
 			return ehcontext_compare(lock, key->parent);

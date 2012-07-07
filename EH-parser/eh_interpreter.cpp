@@ -196,6 +196,7 @@ void EHI::eh_init(void) {
 	ehmember_p global;
 	global->attribute = attributes;
 	global->value->set(global_object);
+	global->value->type(weak_object_e);
 	global_object->insert("global", global);
 	return;
 }

@@ -6,6 +6,7 @@
  */
 %{
 #include "eh.h"
+#include "eh_error.h"
 ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
 	return NULL;
 }

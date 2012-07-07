@@ -100,7 +100,7 @@ void EHI::eh_exit(void) {
 	return;
 }
 
-ehretval_p EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
+ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 	ehretval_p ret;
 	ret->type(int_e);
 	if(node == NULL) {

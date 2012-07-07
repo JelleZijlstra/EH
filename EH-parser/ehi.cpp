@@ -34,6 +34,7 @@ ehretval_t EHI::parse_file(const char *name) {
 }
 void EHI::init_eval_parser() {
 	if(eval_parser == NULL) {
+		// why does this thing get its own EHI?
 		eval_parser = new EHParser(end_is_end_e, new EHI);
 	}
 }
@@ -53,8 +54,8 @@ ehretval_t::~ehretval_t() {
 		case attribute_e:
 		case attributestr_e:
 			break;
-		// Handled by eh_tree
 		case op_e:
+			delete this->opval;
 			break;
 		// TODO
 		case string_e:

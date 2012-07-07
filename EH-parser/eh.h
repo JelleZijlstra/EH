@@ -106,6 +106,7 @@ typedef struct ehretval_t {
 private:
 	type_enum _type;
 public:
+	typedef refcount_ptr<ehretval_t> ehretval_p;
 	union {
 		// simple EH variable type
 		int intval;
@@ -140,6 +141,12 @@ public:
 #define EHRV_SET(vtype, ehtype) void set(vtype in) { \
 	this->type(ehtype ## _e); \
 	this->ehtype ## val = in; \
+} \
+static ehretval_p make(vtype in) { \
+	ehretval_p out; \
+	out->type(ehtype ## _e); \
+	out->set(in); \
+	return out; \
 }
 	EHRV_SET(int, int)
 	EHRV_SET(char *, string)
@@ -149,6 +156,9 @@ public:
 	EHRV_SET(struct eharray_t *, array)
 	EHRV_SET(struct ehobj_t *, object)
 	EHRV_SET(struct ehrange_t *, range)
+	EHRV_SET(struct opnode_t *, op)
+	EHRV_SET(accessor_enum, accessor)
+	EHRV_SET(attribute_enum, attribute)
 #undef EHRV_SET
 
 	void overwrite(ehretval_t &in) {
@@ -187,14 +197,24 @@ public:
 	void print();
 	
 	~ehretval_t();
+	
+	static ehretval_p make(type_enum type) {
+		ehretval_p out;
+		out->type(type_e);
+		out->typeval = type;
+		return out;
+	}
+	static ehretval_p make(ehretval_p in) {
+		return in;
+	}
 } ehretval_t;
-typedef refcount_ptr<ehretval_t> ehretval_p;
+typedef ehretval_t::ehretval_p ehretval_p;
 
 // Operator
 typedef struct opnode_t {
 	int op; // Type of operator
 	int nparas; // Number of parameters
-	ehretval_t **paras; // Parameters
+	ehretval_p *paras; // Parameters
 } opnode_t;
 
 // Variables and object members (which are the same)
@@ -293,7 +313,7 @@ typedef struct ehfm_t {
 	functype_enum type;
 	int argcount;
 	eharg_t *args;
-	ehretval_t *code;
+	ehretval_p code;
 	union {
 		ehlibfunc_t libfunc_pointer;
 		ehlibmethod_t libmethod_pointer;
@@ -380,28 +400,7 @@ typedef struct ehrange_t {
  */
 const char *get_typestring(type_enum type);
 int eh_outer_exit(int exitval);
-
-/*
- * Top-level functions
- */
 void yyerror(void *, const char *s);
-void free_node(ehretval_t *in);
-ehretval_t *eh_addnode(int operations, int noperations, ...);
-void print_tree(const ehretval_p in, const int n);
-
-// eh_get_x functions
-#define GETFUNCPROTO(name, vtype) ehretval_t *eh_get_ ## name(vtype value);
-ehretval_t *eh_get_null(void);
-GETFUNCPROTO(int, int)
-GETFUNCPROTO(string, char *)
-GETFUNCPROTO(float, float)
-GETFUNCPROTO(accessor, accessor_enum)
-GETFUNCPROTO(type, type_enum)
-GETFUNCPROTO(bool, bool)
-GETFUNCPROTO(visibility, visibility_enum)
-GETFUNCPROTO(attribute, attribute_enum)
-#undef GETFUNCPROTO
-
 char *eh_getinput(void);
 
 /*

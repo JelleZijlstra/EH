@@ -10,10 +10,18 @@
 #include "eh.h"
 #include "eh.bison.hpp"
 #include "eh_error.h"
+#include "eh_tree.h"
 extern FILE *yyin;
 EHParser *yyget_extra(void *scanner);
 #define YYERROR_VERBOSE
 #define YYLEX_PARAM scanner
+
+// can't overload macros
+#define ADD_NODE0(opcode) eh_addnode(opcode)
+#define ADD_NODE1(opcode, first) eh_addnode(opcode, ehretval_t::make(first))
+#define ADD_NODE2(opcode, first, second) eh_addnode(opcode, ehretval_t::make(first), ehretval_t::make(second))
+#define ADD_NODE3(opcode, first, second, third) eh_addnode(opcode, ehretval_t::make(first), ehretval_t::make(second), ehretval_t::make(third))
+#define ADD_NODE4(opcode, first, second, third, fourth) eh_addnode(opcode, ehretval_t::make(first), ehretval_t::make(second), ehretval_t::make(third), ehretval_t::make(fourth))
 %}
 %pure-parser
 %parse-param { void *scanner }
@@ -24,7 +32,7 @@ EHParser *yyget_extra(void *scanner);
 	type_enum tValue;
 	attribute_enum vValue;
 	bool bValue;
-	ehretval_t *ehNode;
+	opnode_t *ehNode;
 	accessor_enum aValue;
 };
 %token <iValue> T_INTEGER
@@ -58,6 +66,7 @@ EHParser *yyget_extra(void *scanner);
 %token T_ENDCLASS
 %token T_CLASSMEMBER
 %token T_INHERIT
+%token T_LITERAL
 %token T_LVALUE_GET T_LVALUE_SET
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
@@ -95,397 +104,395 @@ program:
 								// I think the reason may be that some 
 								// methods directly read an AST value
 								// instead of calling eh_execute.
-								ehretval_t *ret = $1;
+								ehretval_p ret = ehretval_t::make($1);
 								//free_node(ret);
 							}
 
 global_list:
-	/* NULL */				{ $$ = eh_addnode(T_SEPARATOR, 0); }
+	/* NULL */				{ $$ = ADD_NODE0(T_SEPARATOR); }
 	| statement				{
 								EHParser *parser = yyget_extra(scanner);
-								ehretval_p ret = parser->_parent->eh_execute($1, parser->_parent->global_object);
+								ehretval_p ret = parser->_parent->eh_execute(ehretval_t::make($1), parser->_parent->global_object);
 								// flush stdout after executing each statement
 								fflush(stdout);
 								if(parser->_parent->returning) {
 									return (ret == NULL) ? 0 : ret->intval;
 								}
 							} global_list {
-								$$ = eh_addnode(T_SEPARATOR, 2, $1, $3); 
+								$$ = ADD_NODE2(T_SEPARATOR, $1, $3); 
 							}
 	;
 
 statement_list:
-	/* NULL */				{ $$ = eh_addnode(T_SEPARATOR, 0); }
+	/* NULL */				{ $$ = ADD_NODE0(T_SEPARATOR); }
 	| statement statement_list
-							{ $$ = eh_addnode(T_SEPARATOR, 2, $1, $2); }
+							{ $$ = ADD_NODE2(T_SEPARATOR, $1, $2); }
 	;
 
 statement:
-	T_SEPARATOR				{ $$ = 0; }
+	T_SEPARATOR				{ $$ = ADD_NODE0(T_SEPARATOR); }
 	| line_expr T_SEPARATOR	{ $$ = $1; }
 	| lvalue_set T_ASSIGNMENT expression T_SEPARATOR
-							{ $$ = eh_addnode(T_SET, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_SET, $1, $3); }
 	| T_SET lvalue_set T_PLUSPLUS T_SEPARATOR
-							{ $$ = eh_addnode(T_PLUSPLUS, 1, $2); }
+							{ $$ = ADD_NODE1(T_PLUSPLUS, $2); }
 	| T_SET lvalue_set T_MINMIN T_SEPARATOR
-							{ $$ = eh_addnode(T_MINMIN, 1, $2); }
+							{ $$ = ADD_NODE1(T_MINMIN, $2); }
 		/* Using braces */
 	| T_IF expression '{' statement_list '}'
-							{ $$ = eh_addnode(T_IF, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_IF, $2, $4); }
 	| T_IF expression '{' statement_list '}' T_ELSE '{' statement_list '}'
-							{ $$ = eh_addnode(T_IF, 3, $2, $4, $8); }
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $8); }
 	| T_WHILE expression '{' statement_list '}'
-							{ $$ = eh_addnode(T_WHILE, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR expression '{' statement_list '}'
-							{ $$ = eh_addnode(T_FOR, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_FOR, $2, $4); }
 	| T_FOR expression T_COUNT bareword '{' statement_list '}'
-							{ $$ = eh_addnode(T_FOR, 3, $2, $4, $6); }
+							{ $$ = ADD_NODE3(T_FOR, $2, $4, $6); }
 	| T_FOR expression T_AS bareword '{' statement_list '}'
-							{ $$ = eh_addnode(T_AS, 3, $2, $4, $6); }
+							{ $$ = ADD_NODE3(T_AS, $2, $4, $6); }
 	| T_FOR expression T_AS bareword T_DOUBLEARROW bareword '{' statement_list '}'
-							{ $$ = eh_addnode(T_AS, 4, $2, $4, $6, $8); }
+							{ $$ = ADD_NODE4(T_AS, $2, $4, $6, $8); }
 	| T_FUNC bareword ':' parglist '{' statement_list '}'
-							{ $$ = eh_addnode(T_SET, 2,
-								eh_addnode(T_LVALUE_SET, 1, $2),
-								eh_addnode(T_FUNC, 2, $4, $6)); }
+							{ $$ = ADD_NODE2(T_SET,
+								ADD_NODE1(T_LVALUE_SET, $2),
+								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH expression '{' caselist '}'
-							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
 	| T_CLASS bareword '{' statement_list '}'
-							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 		/* Using T_END */
 	| T_IF expression T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_IF, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_IF, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_IF, 3, $2, $4, $7); }
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $7); }
 	| T_WHILE expression T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_WHILE, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR expression T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_FOR, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_FOR, $2, $4); }
 	| T_FOR expression T_COUNT bareword T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_FOR, 3, $2, $4, $6); }
+							{ $$ = ADD_NODE3(T_FOR, $2, $4, $6); }
 	| T_FOR expression T_AS bareword T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_AS, 3, $2, $4, $6); }
+							{ $$ = ADD_NODE3(T_AS, $2, $4, $6); }
 	| T_FOR expression T_AS bareword T_DOUBLEARROW bareword T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_AS, 4, $2, $4, $6, $8); }
+							{ $$ = ADD_NODE4(T_AS, $2, $4, $6, $8); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_SET, 2, 
-								eh_addnode(T_LVALUE_SET, 1, $2), 
-								eh_addnode(T_FUNC, 2, $4, $6)); }
+							{ $$ = ADD_NODE2(T_SET, 
+								ADD_NODE1(T_LVALUE_SET, $2), 
+								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH expression T_SEPARATOR caselist T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
 	| T_CLASS bareword T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 		/* Endif and endfor */
 	| T_IF expression T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
-							{ $$ = eh_addnode(T_IF, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_IF, $2, $4); }
 	| T_IF expression T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
-							{ $$ = eh_addnode(T_IF, 3, $2, $4, $7); }
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $7); }
 	| T_WHILE expression T_SEPARATOR statement_list T_ENDWHILE T_SEPARATOR
-							{ $$ = eh_addnode(T_WHILE, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR expression T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
-							{ $$ = eh_addnode(T_FOR, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_FOR, $2, $4); }
 	| T_FOR expression T_COUNT bareword T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
-							{ $$ = eh_addnode(T_FOR, 3, $2, $4, $6); }
+							{ $$ = ADD_NODE3(T_FOR, $2, $4, $6); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
-							{ $$ = eh_addnode(T_SET, 2,
-								eh_addnode(T_LVALUE_SET, 1, $2),
-								eh_addnode(T_FUNC, 2, $4, $6)); }
+							{ $$ = ADD_NODE2(T_SET,
+								ADD_NODE1(T_LVALUE_SET, $2),
+								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_FUNC bareword ':' parglist T_ACCESSOR expression %prec T_SHORTFUNCTION
-							{ $$ = eh_addnode(T_SET, 2,
-								eh_addnode(T_LVALUE_SET, 1, $2),
-								eh_addnode(T_FUNC, 2, $4, $6)); }
+							{ $$ = ADD_NODE2(T_SET,
+								ADD_NODE1(T_LVALUE_SET, $2),
+								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH expression T_SEPARATOR caselist T_ENDSWITCH T_SEPARATOR
-							{ $$ = eh_addnode(T_SWITCH, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
 	| T_CLASS bareword T_SEPARATOR statement_list T_ENDCLASS T_SEPARATOR
-							{ $$ = eh_addnode(T_CLASS, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 		/* Other statements */
 	| T_RET expression T_SEPARATOR
-							{ $$ = eh_addnode(T_RET, 1, $2); }
+							{ $$ = ADD_NODE1(T_RET, $2); }
 	| T_CONTINUE T_SEPARATOR
-							{ $$ = eh_addnode(T_CONTINUE, 0); }
+							{ $$ = ADD_NODE0(T_CONTINUE); }
 	| T_CONTINUE expression T_SEPARATOR
-							{ $$ = eh_addnode(T_CONTINUE, 1, $2); }
-	| T_BREAK T_SEPARATOR	{ $$ = eh_addnode(T_BREAK, 0); }
+							{ $$ = ADD_NODE1(T_CONTINUE, $2); }
+	| T_BREAK T_SEPARATOR	{ $$ = ADD_NODE0(T_BREAK); }
 	| T_BREAK expression T_SEPARATOR
-							{ $$ = eh_addnode(T_BREAK, 1, $2); }
+							{ $$ = ADD_NODE1(T_BREAK, $2); }
 	| command T_SEPARATOR	{ $$ = $1; }
 	| error T_SEPARATOR		{
 								yyerrok;
-								$$ = NULL;
+								$$ = ADD_NODE0(T_SEPARATOR);
 							}
 							/* property declaration */
 	| attributelist bareword	
-							{ $$ = eh_addnode(T_CLASSMEMBER, 2, $1, $2); }
+							{ $$ = ADD_NODE2(T_CLASSMEMBER, $1, $2); }
 	| attributelist bareword '=' expression
-							{ $$ = eh_addnode(T_CLASSMEMBER, 3, $1, $2, $4); }
+							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, $4); }
 	| attributelist bareword ':' parglist '{' statement_list '}'
-							{ $$ = eh_addnode(T_CLASSMEMBER, 3, $1, $2, 
-									eh_addnode(T_FUNC, 2, $4, $6)); }
+							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, 
+									ADD_NODE2(T_FUNC, $4, $6)); }
 	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(T_CLASSMEMBER, 3, $1, $2, 
-									eh_addnode(T_FUNC, 2, $4, $6)); }
+							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, 
+									ADD_NODE2(T_FUNC, $4, $6)); }
 	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC
-							{ $$ = eh_addnode(T_CLASSMEMBER, 3, $1, $2, 
-									eh_addnode(T_FUNC, 2, $4, $6)); }
-	| T_INHERIT expression	{ $$ = eh_addnode(T_INHERIT, 1, $2); }
+							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, 
+									ADD_NODE2(T_FUNC, $4, $6)); }
+	| T_INHERIT expression	{ $$ = ADD_NODE1(T_INHERIT, $2); }
 	;
 
 expression:
-	T_INTEGER				{ $$ = eh_get_int($1); }
-	| T_NULL				{ $$ = eh_get_null(); }
-	| T_BOOL				{ $$ = eh_get_bool($1); }
-	| T_FLOAT				{ $$ = eh_get_float($1); }
+	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_NULL				{ $$ = ADD_NODE0(T_LITERAL); }
+	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| string				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
-	| '~' expression		{ $$ = eh_addnode('~', 1, $2); }
-	| '!' expression		{ $$ = eh_addnode('!', 1, $2); }
+	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
+	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
 	| '-' expression %prec T_NEGATIVE
-							{ $$ = eh_addnode(T_NEGATIVE, 1, $2); }
+							{ $$ = ADD_NODE1(T_NEGATIVE, $2); }
 	| expression T_ACCESSOR expression
 							{
-								$$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3);
+								$$ = ADD_NODE3(T_ACCESSOR, $1, $2, $3);
 							}
 	| '$' expression
-							{ $$ = eh_addnode('$', 1, $2); }
+							{ $$ = ADD_NODE1('$', $2); }
 	| '@' T_TYPE expression %prec '@'	
-							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
+							{ $$ = ADD_NODE2('@', $2, $3); }
 	| expression ':' arglist
-							{ $$ = eh_addnode(':', 2, $1, $3); }
+							{ $$ = ADD_NODE2(':', $1, $3); }
 	| expression '=' expression
-							{ $$ = eh_addnode('=', 2, $1, $3); }
+							{ $$ = ADD_NODE2('=', $1, $3); }
 	| expression '>' expression
-							{ $$ = eh_addnode('>', 2, $1, $3); }
+							{ $$ = ADD_NODE2('>', $1, $3); }
 	| expression '<' expression
-							{ $$ = eh_addnode('<', 2, $1, $3); }
+							{ $$ = ADD_NODE2('<', $1, $3); }
 	| expression T_SE expression
-							{ $$ = eh_addnode(T_SE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_SE, $1, $3); }
 	| expression T_GE expression
-							{ $$ = eh_addnode(T_GE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_GE, $1, $3); }
 	| expression T_LE expression
-							{ $$ = eh_addnode(T_LE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_LE, $1, $3); }
 	| expression T_NE expression
-							{ $$ = eh_addnode(T_NE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_NE, $1, $3); }
 	| expression T_SNE expression
-							{ $$ = eh_addnode(T_SNE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
 	| expression '+' expression
-							{ $$ = eh_addnode('+', 2, $1, $3); }
+							{ $$ = ADD_NODE2('+', $1, $3); }
 	| expression '-' expression
-							{ $$ = eh_addnode('-', 2, $1, $3); }
+							{ $$ = ADD_NODE2('-', $1, $3); }
 	| expression '*' expression
-							{ $$ = eh_addnode('*', 2, $1, $3); }
+							{ $$ = ADD_NODE2('*', $1, $3); }
 	| expression '/' expression
-							{ $$ = eh_addnode('/', 2, $1, $3); }
+							{ $$ = ADD_NODE2('/', $1, $3); }
 	| expression '%' expression
-							{ $$ = eh_addnode('%', 2, $1, $3); }
+							{ $$ = ADD_NODE2('%', $1, $3); }
 	| expression '^' expression
-							{ $$ = eh_addnode('^', 2, $1, $3); }
+							{ $$ = ADD_NODE2('^', $1, $3); }
 	| expression '|' expression
-							{ $$ = eh_addnode('|', 2, $1, $3); }
+							{ $$ = ADD_NODE2('|', $1, $3); }
 	| expression '&' expression
-							{ $$ = eh_addnode('&', 2, $1, $3); }
+							{ $$ = ADD_NODE2('&', $1, $3); }
 	| expression '.' expression
-							{ $$ = eh_addnode('.', 2, $1, $3); }
+							{ $$ = ADD_NODE2('.', $1, $3); }
 	| expression T_AND expression
-							{ $$ = eh_addnode(T_AND, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_AND, $1, $3); }
 	| expression T_OR expression
-							{ $$ = eh_addnode(T_OR, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_OR, $1, $3); }
 	| expression T_XOR expression
-							{ $$ = eh_addnode(T_XOR, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
 	| expression T_RANGE expression
-							{ $$ = eh_addnode(T_RANGE, 2, $1, $3); }
-	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
-	| T_COUNT expression	{ $$ = eh_addnode(T_COUNT, 1, $2); }
-	| T_NEW expression		{ $$ = eh_addnode(T_NEW, 1, $2); }
+							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
+	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
+	| T_COUNT expression	{ $$ = ADD_NODE1(T_COUNT, $2); }
+	| T_NEW expression		{ $$ = ADD_NODE1(T_NEW, $2); }
 	| T_FUNC ':' parglist '{' statement_list '}'
-							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
+							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
+							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
-							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
+							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| shortfunc expression
-							{ $$ = eh_addnode(T_FUNC, 2, $1, $2); }
+							{ $$ = ADD_NODE2(T_FUNC, $1, $2); }
 	| T_CLASS T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(T_CLASS, 1, $3); }
+							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS T_SEPARATOR statement_list T_ENDCLASS
-							{ $$ = eh_addnode(T_CLASS, 1, $3); }
+							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS '{' statement_list '}'
-							{ $$ = eh_addnode(T_CLASS, 1, $3); }
+							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_GIVEN expression '{' exprcaselist '}'
-							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
-							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
-	| '{' anonclasslist '}'	{ $$ = eh_addnode('{', 1, $2); }
+	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
 	;
 
 simple_expr:
-	T_INTEGER				{ $$ = eh_get_int($1); }
-	| T_NULL				{ $$ = eh_get_null(); }
-	| T_BOOL				{ $$ = eh_get_bool($1); }
-	| T_FLOAT				{ $$ = eh_get_float($1); }
+	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_NULL				{ $$ = ADD_NODE0(T_LITERAL); }
+	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| string				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
-	| '~' simple_expr		{ $$ = eh_addnode('~', 1, $2); }
-	| '!' simple_expr		{ $$ = eh_addnode('!', 1, $2); }
+	| '~' simple_expr		{ $$ = ADD_NODE1('~', $2); }
+	| '!' simple_expr		{ $$ = ADD_NODE1('!', $2); }
 	| simple_expr T_ACCESSOR simple_expr
-							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, eh_get_accessor($2), $3); }
+							{ $$ = ADD_NODE3(T_ACCESSOR, $1, $2, $3); }
 	| '$' simple_expr %prec '$'
-							{ $$ = eh_addnode('$', 1, $2); }
+							{ $$ = ADD_NODE1('$', $2); }
 	| '@' T_TYPE expression %prec '@'	
-							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
+							{ $$ = ADD_NODE2('@', $2, $3); }
 	| simple_expr ':' arglist
-							{ $$ = eh_addnode(':', 2, $1, $3); }
+							{ $$ = ADD_NODE2(':', $1, $3); }
 	| simple_expr '=' simple_expr
-							{ $$ = eh_addnode('=', 2, $1, $3); }
+							{ $$ = ADD_NODE2('=', $1, $3); }
 	| simple_expr '<' simple_expr
-							{ $$ = eh_addnode('<', 2, $1, $3); }
+							{ $$ = ADD_NODE2('<', $1, $3); }
 	| simple_expr T_SE simple_expr
-							{ $$ = eh_addnode(T_SE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_SE, $1, $3); }
 	| simple_expr T_GE simple_expr
-							{ $$ = eh_addnode(T_GE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_GE, $1, $3); }
 	| simple_expr T_LE simple_expr
-							{ $$ = eh_addnode(T_LE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_LE, $1, $3); }
 	| simple_expr T_NE simple_expr
-							{ $$ = eh_addnode(T_NE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_NE, $1, $3); }
 	| simple_expr T_SNE simple_expr
-							{ $$ = eh_addnode(T_SNE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
 	| simple_expr '+' simple_expr
-							{ $$ = eh_addnode('+', 2, $1, $3); }
+							{ $$ = ADD_NODE2('+', $1, $3); }
 	| simple_expr '*' simple_expr
-							{ $$ = eh_addnode('*', 2, $1, $3); }
+							{ $$ = ADD_NODE2('*', $1, $3); }
 	| simple_expr '/' simple_expr
-							{ $$ = eh_addnode('/', 2, $1, $3); }
+							{ $$ = ADD_NODE2('/', $1, $3); }
 	| simple_expr '%' simple_expr
-							{ $$ = eh_addnode('%', 2, $1, $3); }
+							{ $$ = ADD_NODE2('%', $1, $3); }
 	| simple_expr '^' simple_expr
-							{ $$ = eh_addnode('^', 2, $1, $3); }
+							{ $$ = ADD_NODE2('^', $1, $3); }
 	| simple_expr '|' simple_expr
-							{ $$ = eh_addnode('|', 2, $1, $3); }
+							{ $$ = ADD_NODE2('|', $1, $3); }
 	| simple_expr '&' simple_expr
-							{ $$ = eh_addnode('&', 2, $1, $3); }
+							{ $$ = ADD_NODE2('&', $1, $3); }
 	| simple_expr '.' simple_expr
-							{ $$ = eh_addnode('.', 2, $1, $3); }
+							{ $$ = ADD_NODE2('.', $1, $3); }
 	| simple_expr T_AND simple_expr
-							{ $$ = eh_addnode(T_AND, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_AND, $1, $3); }
 	| simple_expr T_OR simple_expr
-							{ $$ = eh_addnode(T_OR, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_OR, $1, $3); }
 	| simple_expr T_XOR simple_expr
-							{ $$ = eh_addnode(T_XOR, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
 	| simple_expr T_RANGE simple_expr
-							{ $$ = eh_addnode(T_RANGE, 2, $1, $3); }
-	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
-	| T_COUNT simple_expr	{ $$ = eh_addnode(T_COUNT, 1, $2); }
-	| T_NEW simple_expr		{ $$ = eh_addnode(T_NEW, 1, $2); }
+							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
+	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
+	| T_COUNT simple_expr	{ $$ = ADD_NODE1(T_COUNT, $2); }
+	| T_NEW simple_expr		{ $$ = ADD_NODE1(T_NEW, $2); }
 	| T_CLASS T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(T_CLASS, 1, $3); }
+							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS T_SEPARATOR statement_list T_ENDCLASS
-							{ $$ = eh_addnode(T_CLASS, 1, $3); }
+							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS '{' statement_list '}'
-							{ $$ = eh_addnode(T_CLASS, 1, $3); }
+							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_GIVEN expression '{' exprcaselist '}'
-							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
-							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
-	| '{' anonclasslist '}'	{ $$ = eh_addnode('{', 1, $2); }
+	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
 	;
 
 line_expr:
 	/* need to separate expressions beginning with a bareword from commands */
-	T_INTEGER				{ $$ = eh_get_int($1); }
-	| T_NULL				{ $$ = eh_get_null(); }
-	| T_BOOL				{ $$ = eh_get_bool($1); }
-	| T_FLOAT				{ $$ = eh_get_float($1); }
-	| T_STRING				{ $$ = eh_get_string($1); }
+	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_NULL				{ $$ = ADD_NODE0(T_LITERAL); }
+	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| '(' expression ')'	{ $$ = $2; }
-	| '~' expression		{ $$ = eh_addnode('~', 1, $2); }
-	| '!' expression		{ $$ = eh_addnode('!', 1, $2); }
+	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
+	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
 	| '-' expression %prec T_NEGATIVE
-							{ $$ = eh_addnode(T_NEGATIVE, 1, $2); }
+							{ $$ = ADD_NODE1(T_NEGATIVE, $2); }
 	| line_expr T_ACCESSOR expression
-							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, 
-								eh_get_accessor($2), $3); 
+							{ $$ = ADD_NODE3(T_ACCESSOR, $1, $2, $3); 
 							}
 	| bareword T_ACCESSOR expression
-							{ $$ = eh_addnode(T_ACCESSOR, 3, $1, 
-								eh_get_accessor($2), $3); 
+							{ $$ = ADD_NODE3(T_ACCESSOR, $1, $2, $3); 
 							}
 	| '$' expression %prec '$'
-							{ $$ = eh_addnode('$', 1, $2); }
+							{ $$ = ADD_NODE1('$', $2); }
 	| '@' T_TYPE expression %prec '@'	
-							{ $$ = eh_addnode('@', 2, eh_get_type($2), $3); }
+							{ $$ = ADD_NODE2('@', $2, $3); }
 	| bareword ':' arglist
-							{ $$ = eh_addnode(':', 2, $1, $3); }
+							{ $$ = ADD_NODE2(':', $1, $3); }
 	| line_expr ':' arglist
-							{ $$ = eh_addnode(':', 2, $1, $3); }
+							{ $$ = ADD_NODE2(':', $1, $3); }
 	| line_expr '=' expression
-							{ $$ = eh_addnode('=', 2, $1, $3); }
+							{ $$ = ADD_NODE2('=', $1, $3); }
 	| line_expr '>' expression
-							{ $$ = eh_addnode('>', 2, $1, $3); }
+							{ $$ = ADD_NODE2('>', $1, $3); }
 	| line_expr '<' expression
-							{ $$ = eh_addnode('<', 2, $1, $3); }
+							{ $$ = ADD_NODE2('<', $1, $3); }
 	| line_expr T_SE expression
-							{ $$ = eh_addnode(T_SE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_SE, $1, $3); }
 	| line_expr T_GE expression
-							{ $$ = eh_addnode(T_GE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_GE, $1, $3); }
 	| line_expr T_LE expression
-							{ $$ = eh_addnode(T_LE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_LE, $1, $3); }
 	| line_expr T_NE expression
-							{ $$ = eh_addnode(T_NE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_NE, $1, $3); }
 	| line_expr T_SNE expression
-							{ $$ = eh_addnode(T_SNE, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
 	| line_expr '+' expression
-							{ $$ = eh_addnode('+', 2, $1, $3); }
+							{ $$ = ADD_NODE2('+', $1, $3); }
 	| line_expr '-' expression
-							{ $$ = eh_addnode('-', 2, $1, $3); }
+							{ $$ = ADD_NODE2('-', $1, $3); }
 	| line_expr '*' expression
-							{ $$ = eh_addnode('*', 2, $1, $3); }
+							{ $$ = ADD_NODE2('*', $1, $3); }
 	| line_expr '/' expression
-							{ $$ = eh_addnode('/', 2, $1, $3); }
+							{ $$ = ADD_NODE2('/', $1, $3); }
 	| line_expr '%' expression
-							{ $$ = eh_addnode('%', 2, $1, $3); }
+							{ $$ = ADD_NODE2('%', $1, $3); }
 	| line_expr '^' expression
-							{ $$ = eh_addnode('^', 2, $1, $3); }
+							{ $$ = ADD_NODE2('^', $1, $3); }
 	| line_expr '|' expression
-							{ $$ = eh_addnode('|', 2, $1, $3); }
+							{ $$ = ADD_NODE2('|', $1, $3); }
 	| line_expr '&' expression
-							{ $$ = eh_addnode('&', 2, $1, $3); }
+							{ $$ = ADD_NODE2('&', $1, $3); }
 	| line_expr '.' expression
-							{ $$ = eh_addnode('.', 2, $1, $3); }
+							{ $$ = ADD_NODE2('.', $1, $3); }
 	| line_expr T_AND expression
-							{ $$ = eh_addnode(T_AND, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_AND, $1, $3); }
 	| line_expr T_OR expression
-							{ $$ = eh_addnode(T_OR, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_OR, $1, $3); }
 	| line_expr T_XOR expression
-							{ $$ = eh_addnode(T_XOR, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
 	| line_expr T_RANGE expression
-							{ $$ = eh_addnode(T_RANGE, 2, $1, $3); }
-	| '[' arraylist ']'		{ $$ = eh_addnode('[', 1, $2); }
-	| T_COUNT expression	{ $$ = eh_addnode(T_COUNT, 1, $2); }
-	| T_NEW expression		{ $$ = eh_addnode(T_NEW, 1, $2); }
+							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
+	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
+	| T_COUNT expression	{ $$ = ADD_NODE1(T_COUNT, $2); }
+	| T_NEW expression		{ $$ = ADD_NODE1(T_NEW, $2); }
 	| T_FUNC ':' parglist '{' statement_list '}'
-							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
+							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
+							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
-							{ $$ = eh_addnode(T_FUNC, 2, $3, $5); }
+							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| shortfunc expression %prec T_SHORTFUNCTION
-							{ $$ = eh_addnode(T_FUNC, 2, $1, $2); }
+							{ $$ = ADD_NODE2(T_FUNC, $1, $2); }
 	| T_CLASS T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(T_CLASS, 1, $3); }
+							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS T_SEPARATOR statement_list T_ENDCLASS
-							{ $$ = eh_addnode(T_CLASS, 1, $3); }
+							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS '{' statement_list '}'
-							{ $$ = eh_addnode(T_CLASS, 1, $3); }
+							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_GIVEN expression '{' exprcaselist '}'
-							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
-							{ $$ = eh_addnode(T_GIVEN, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
-	| '{' anonclasslist '}'	{ $$ = eh_addnode('{', 1, $2); }
+	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
 	;
 
 shortfunc:
@@ -495,77 +502,77 @@ shortfunc:
 
 
 command:
-	bareword paralist		{ $$ = eh_addnode(T_COMMAND, 2, $1, $2); }
+	bareword paralist		{ $$ = ADD_NODE2(T_COMMAND, $1, $2); }
 	;
 
 paralist:
-	para paralist			{ $$ = eh_addnode(',', 2, $1, $2); }
-	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+	para paralist			{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 para:
 	simple_expr					{ $$ = $1; }
 	| T_MINMIN string '=' expression
-							{ $$ = eh_addnode(T_LONGPARA, 2, $2, $4); }
-	| T_MINMIN string		{ $$ = eh_addnode(T_LONGPARA, 1, $2); }
-	| '-' string			{ $$ = eh_addnode(T_SHORTPARA, 1, $2); }
+							{ $$ = ADD_NODE2(T_LONGPARA, $2, $4); }
+	| T_MINMIN string		{ $$ = ADD_NODE1(T_LONGPARA, $2); }
+	| '-' string			{ $$ = ADD_NODE1(T_SHORTPARA, $2); }
 	| '-' string '=' expression
-							{ $$ = eh_addnode(T_SHORTPARA, 2, $2, $4); }
-	| '>' string			{ $$ = eh_addnode(T_REDIRECT, 1, $2); }
-	| '}' string			{ $$ = eh_addnode('}', 1, $2); }
+							{ $$ = ADD_NODE2(T_SHORTPARA, $2, $4); }
+	| '>' string			{ $$ = ADD_NODE1(T_REDIRECT, $2); }
+	| '}' string			{ $$ = ADD_NODE1('}', $2); }
 	;
 
 bareword:
-	T_VARIABLE				{ $$ = eh_get_string($1); }
+	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	;
 
 string:
-	T_VARIABLE				{ $$ = eh_get_string($1); }
-	| T_STRING				{ $$ = eh_get_string($1); }
+	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	;
 
 arraylist:
 	arraylist_i arraymember ','
-							{ $$ = eh_addnode(',', 2, $1, $2); }
+							{ $$ = ADD_NODE2(',', $1, $2); }
 	| arraylist_i arraymember
-							{ $$ = eh_addnode(',', 2, $1, $2); }
-	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+							{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 arraylist_i:
 	arraylist_i arraymember ','
-							{ $$ = eh_addnode(',', 2, $1, $2); }
-	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+							{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 arraymember:
 	expression T_DOUBLEARROW expression
-							{ $$ = eh_addnode(T_ARRAYMEMBER, 2, $1, $3); }
-	| expression			{ $$ = eh_addnode(T_ARRAYMEMBER, 1, $1); }
+							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
+	| expression			{ $$ = ADD_NODE1(T_ARRAYMEMBER, $1); }
 	;
 
 anonclasslist:
 	anonclasslist_i anonclassmember ','
-							{ $$ = eh_addnode(',', 2, $1, $2); }
+							{ $$ = ADD_NODE2(',', $1, $2); }
 	| anonclasslist_i anonclassmember
-							{ $$ = eh_addnode(',', 2, $1, $2); }
-	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+							{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 anonclasslist_i:
 	anonclasslist_i anonclassmember ','
-							{ $$ = eh_addnode(',', 2, $1, $2); }
-	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+							{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 anonclassmember:
 	expression T_DOUBLEARROW expression
-							{ $$ = eh_addnode(T_ARRAYMEMBER, 2, $1, $3); }
+							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
 	;
 
 arglist:
-	arglist arg				{ $$ = eh_addnode(',', 2, $1, $2); }
-	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+	arglist arg				{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 arg:
@@ -575,8 +582,8 @@ arg:
 	;
 
 parglist:
-	parglist parg			{ $$ = eh_addnode(',', 2, $1, $2); }
-	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+	parglist parg			{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 parg:
@@ -585,46 +592,43 @@ parg:
 	;
 
 caselist:
-	acase caselist			{ $$ = eh_addnode(',', 2, $1, $2); }
-	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+	acase caselist			{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 acase:
 	T_CASE expression T_SEPARATOR statement_list
-							{ $$ = eh_addnode(T_CASE, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_CASE, $2, $4); }
 	| T_DEFAULT T_SEPARATOR statement_list
-							{ $$ = eh_addnode(T_CASE, 1, $3); }
+							{ $$ = ADD_NODE1(T_CASE, $3); }
 	;
 
 exprcaselist:
-	exprcase exprcaselist	{ $$ = eh_addnode(',', 2, $1, $2); }
-	| /* NULL */			{ $$ = eh_addnode(',', 0); }
+	exprcase exprcaselist	{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 exprcase:
 	T_CASE expression T_SEPARATOR expression T_SEPARATOR
-							{ $$ = eh_addnode(T_CASE, 2, $2, $4); }
+							{ $$ = ADD_NODE2(T_CASE, $2, $4); }
 	| T_DEFAULT T_SEPARATOR expression T_SEPARATOR
-							{ $$ = eh_addnode(T_CASE, 1, $3); }
+							{ $$ = ADD_NODE1(T_CASE, $3); }
 	;
 
 lvalue_set:
-	bareword				{ $$ = eh_addnode(T_LVALUE_SET, 1, $1); }
+	bareword				{ $$ = ADD_NODE1(T_LVALUE_SET, $1); }
 	| bareword T_ACCESSOR expression
-							{ $$ = eh_addnode(T_LVALUE_SET, 3, $1, 
-								eh_get_accessor($2), $3); }
+							{ $$ = ADD_NODE3(T_LVALUE_SET, $1, $2, $3); }
 	;
 
 attributelist:
 	attributelist_inner T_ATTRIBUTE
-							{ $$ = eh_addnode(T_ATTRIBUTE, 2, $1, 
-								eh_get_attribute($2)); }
+							{ $$ = ADD_NODE2(T_ATTRIBUTE, $1, $2); }
 
 attributelist_inner:
 	attributelist_inner T_ATTRIBUTE
-							{ $$ = eh_addnode(T_ATTRIBUTE, 2, $1, 
-								eh_get_attribute($2)); }
-	| /* NULL */			{ $$ = eh_addnode(T_ATTRIBUTE, 0); }
+							{ $$ = ADD_NODE2(T_ATTRIBUTE, $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(T_ATTRIBUTE); }
 	;
 %%
 int eh_outer_exit(int exitval) {

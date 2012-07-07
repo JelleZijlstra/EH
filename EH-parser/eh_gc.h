@@ -20,7 +20,7 @@ private:
 				this->shared--;
 			}
 			if(this->refcount == 0) {
-				delete this;
+				//delete this;
 			}
 		}
 	};

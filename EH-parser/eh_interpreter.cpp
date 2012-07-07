@@ -211,7 +211,7 @@ EHI::~EHI() {
 /*
  * Main execution function
  */
-ehretval_p EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
+ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 	// variables used
 	ehretval_p ret, operand1, operand2;
 	bool b1, b2;
@@ -222,13 +222,20 @@ ehretval_p EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 	}
 	try {
 		if(node->type() == op_e) {
+			//printf("Opcode %d: %d\n", node->opval->op, node->opval->nparas);
 			switch(node->opval->op) {
+				case T_LITERAL:
+					if(node->opval->nparas == 0) {
+						return NULL;
+					} else {
+						return node->opval->paras[0];
+					}
 			/*
 			 * Unary operators
 			 */
 				case '@': // type casting
 					ret = eh_cast(
-						node->opval->paras[0]->typeval,
+						eh_execute(node->opval->paras[0], context)->typeval,
 						eh_execute(node->opval->paras[1], context)
 					);
 					break;
@@ -288,7 +295,7 @@ ehretval_p EHI::eh_execute(ehretval_t *node, const ehcontext_t context) {
 					} else {
 						// check for empty statement; this means that the last
 						// actual statement in a function is returned
-						ehretval_t *new_node = node->opval->paras[1];
+						ehretval_p new_node = node->opval->paras[1];
 						if(new_node->type() == op_e && new_node->opval->op == T_SEPARATOR && new_node->opval->nparas == 0) {
 							return ret;
 						} else {
@@ -518,7 +525,7 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 	eharray_t paras;
 	// loop through the paras given
 	for( ; node->opval->nparas != 0; node = node->opval->paras[1]) {
-		ehretval_t *node2 = node->opval->paras[0];
+		ehretval_p node2 = node->opval->paras[0];
 		if(node2->type() == op_e) {
 			switch(node2->opval->op) {
 				case T_SHORTPARA:
@@ -608,7 +615,7 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 		}
 	} else {
 		// "for 5 count i; do stuff; endfor" construct
-		char *name = op->paras[1]->stringval;
+		char *name = eh_execute(op->paras[1], context)->stringval;
 		// this should perhaps create a new variable, or only overwrite variables in the current scope
 		ehmember_p var = context->get_recursive(name, context, T_LVALUE_SET);
 		// if we do T_LVALUE_SET, get_recursive never returns NULL
@@ -622,7 +629,7 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 	inloop--;
 	return ret;
 }
-ehretval_p EHI::eh_op_while(ehretval_t **paras, ehcontext_t context) {
+ehretval_p EHI::eh_op_while(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret = NULL;
 	inloop++;
 	breaking = 0;
@@ -649,16 +656,16 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	ehmember_p membervar;
 	char *indexname;
 	ehmember_p indexvar = NULL;
-	ehretval_t *code;
+	ehretval_p code;
 	if(op->nparas == 3) {
 		// no index
-		membername = op->paras[1]->stringval;
+		membername = eh_execute(op->paras[1], context)->stringval;
 		indexname = NULL;
 		code = op->paras[2];
 	} else {
 		// with index
-		indexname = op->paras[1]->stringval;
-		membername = op->paras[2]->stringval;
+		indexname = eh_execute(op->paras[1], context)->stringval;
+		membername = eh_execute(op->paras[2], context)->stringval;
 		code = op->paras[3];
 	}
 	// create variables
@@ -718,7 +725,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	inloop--;
 	return ret;
 }
-ehretval_p EHI::eh_op_new(ehretval_t **paras, ehcontext_t context) {
+ehretval_p EHI::eh_op_new(ehretval_p *paras, ehcontext_t context) {
 	ehobj_t *classobj = this->get_class(eh_execute(paras[0], context), context);
 	ehretval_p ret;
 	// get_class complains for us
@@ -727,7 +734,7 @@ ehretval_p EHI::eh_op_new(ehretval_t **paras, ehcontext_t context) {
 	}
 	return ret;
 }
-void EHI::eh_op_inherit(ehretval_t **paras, ehcontext_t context) {
+void EHI::eh_op_inherit(ehretval_p *paras, ehcontext_t context) {
 	ehobj_t *classobj = this->get_class(eh_execute(paras[0], context), context);
 	if(classobj != NULL) {
 		OBJECT_FOR_EACH(classobj, i) {
@@ -796,7 +803,7 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 	attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
 
 	for( ; node->opval->nparas != 0; node = node->opval->paras[0]) {
-		ehretval_t **myparas = node->opval->paras[1]->opval->paras;
+		ehretval_p *myparas = node->opval->paras[1]->opval->paras;
 		// nodes here will always have the name in para 0 and value in para 1
 		ehretval_p namev = eh_execute(myparas[0], ret->objectval);
 		if(namev->type() != string_e) {
@@ -808,7 +815,7 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 	}
 	return ret;
 }
-ehretval_p EHI::eh_op_declareclosure(ehretval_t **paras, ehcontext_t context) {
+ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret;
 	ret->type(func_e);
 	ret->funcval = new ehobj_t;
@@ -831,7 +838,7 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_t **paras, ehcontext_t context) {
 	int i = 0;
 	for(ehretval_p tmp = paras[0]; tmp->opval->nparas != 0; 
 		tmp = tmp->opval->paras[0]) {
-		f->args[i].name = tmp->opval->paras[1]->stringval;
+		f->args[i].name = eh_execute(tmp->opval->paras[1], context)->stringval;
 		i++;
 	}
 	return ret;
@@ -839,9 +846,9 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_t **paras, ehcontext_t context) {
 ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	// process parameters
 	const char *name;
-	ehretval_t *code;
+	ehretval_p code;
 	if(op->nparas == 2) {
-		name = op->paras[0]->stringval;
+		name = eh_execute(op->paras[0], context)->stringval;
 		code = op->paras[1];
 	} else {
 		name = "AnonymousClass";
@@ -875,7 +882,7 @@ void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	// rely on standard layout of the paras
 	ehretval_p attribute_v = eh_execute(op->paras[0], context);
 	attributes_t attribute = attribute_v->attributestrval;
-	char *name = op->paras[1]->stringval;
+	char *name = eh_execute(op->paras[1], context)->stringval;
 
 	// decide what we got
 	ehretval_p value;
@@ -889,7 +896,7 @@ void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	}
 	context->insert_retval(name, attribute, value);
 }
-ehretval_p EHI::eh_op_switch(ehretval_t **paras, ehcontext_t context) {
+ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret;
 	// because we use continue, we'll pretend this is a loop
 	inloop++;
@@ -940,7 +947,7 @@ ehretval_p EHI::eh_op_switch(ehretval_t **paras, ehcontext_t context) {
 	}
 	return NULL;
 }
-ehretval_p EHI::eh_op_given(ehretval_t **paras, ehcontext_t context) {
+ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 	// switch variable
 	ehretval_p switchvar = eh_execute(paras[0], context);
 	for(ehretval_p node = paras[1]; node->opval->nparas != 0; node = node->opval->paras[1]) {
@@ -968,7 +975,7 @@ ehretval_p EHI::eh_op_given(ehretval_t **paras, ehcontext_t context) {
 	}
 	return NULL;
 }
-ehretval_p EHI::eh_op_colon(ehretval_t **paras, ehcontext_t context) {
+ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p function = eh_execute(paras[0], context);
 	// operand1 will be either a string (indicating a normal function call) or a 
 	// func_e (indicating a method or closure call)
@@ -1030,7 +1037,7 @@ ehretval_p &EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 			break;
 		}
 		case 3:
-			switch(op->paras[1]->accessorval) {
+			switch(eh_execute(op->paras[1], context)->accessorval) {
 				case arrow_e:
 					return object_access(basevar, op->paras[2], context, op->op);
 				case doublecolon_e:
@@ -1040,7 +1047,7 @@ ehretval_p &EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	}
 	throw 0;
 }
-ehretval_p EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
+ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 	ehretval_p ret = eh_execute(node, context);
 	if(ret == NULL) {
 		return NULL;
@@ -1060,7 +1067,7 @@ ehretval_p EHI::eh_op_dollar(ehretval_t *node, ehcontext_t context) {
 		return var->value;
 	}
 }
-void EHI::eh_op_set(ehretval_t **paras, ehcontext_t context) {
+void EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 	try {
 		this->is_strange_arrow = false;
 		ehretval_p &lvalue = eh_op_lvalue(paras[0]->opval, context);
@@ -1091,11 +1098,11 @@ void EHI::eh_op_set(ehretval_t **paras, ehcontext_t context) {
 		// do nothing
 	}
 }
-ehretval_p EHI::eh_op_accessor(ehretval_t **paras, ehcontext_t context) {
+ehretval_p EHI::eh_op_accessor(ehretval_p *paras, ehcontext_t context) {
 	// this only gets executed for array-type int and string access
 	ehretval_p ret;
 	ehretval_p basevar = eh_execute(paras[0], context);
-	switch(paras[1]->accessorval) {
+	switch(eh_execute(paras[1], context)->accessorval) {
 		case arrow_e:
 		{
 			ehretval_p index = eh_execute(paras[2], context);
@@ -1230,7 +1237,7 @@ ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
 	}
 	return ret;
 }
-ehretval_p &EHI::object_access(ehretval_p operand1, ehretval_t *index, ehcontext_t context, int token) {
+ehretval_p &EHI::object_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token) {
 	ehmember_p member;
 
 	ehmember_p var = context->get_recursive(operand1->stringval, context, T_LVALUE_GET);
@@ -1267,7 +1274,7 @@ ehretval_p &EHI::object_access(ehretval_p operand1, ehretval_t *index, ehcontext
 	}
 	throw 0;
 }
-ehretval_p &EHI::colon_access(ehretval_p operand1, ehretval_t *index, ehcontext_t context, int token) {
+ehretval_p &EHI::colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token) {
 	ehretval_p label = eh_execute(index, context);
 	if(label->type() != string_e) {
 		eh_error_type("object member label", label->type(), eerror_e);

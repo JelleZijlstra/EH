@@ -102,7 +102,7 @@ program:
 							}
 
 global_list:
-	/* NULL */				{ $$ = ADD_NODE0(T_SEPARATOR); }
+	/* NULL */				{ }
 	| statement				{
 								EHParser *parser = yyget_extra(scanner);
 								ehretval_p statement = ehretval_t::make($1);

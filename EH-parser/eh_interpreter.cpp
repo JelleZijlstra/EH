@@ -156,9 +156,10 @@ void EHI::eh_init(void) {
 		ehmember_p func = new ehmember_t;
 		func->value->type(func_e);
 		func->value->funcval = new ehobj_t("Closure", global_object);
-		ehfm_t *f = new ehfm_t(lib_e);
-		func->value->funcval->function = f;
+		ehfm_p f;
+		f->type = lib_e;
 		f->libfunc_pointer = libfuncs[i].code;
+		func->value->funcval->function = f;
 		// other fields are irrelevant
 		global_object->insert(libfuncs[i].name, func);
 	}
@@ -173,9 +174,10 @@ void EHI::eh_init(void) {
 			func->attribute = attributes;
 			func->value->type(func_e);
 			func->value->funcval = new ehobj_t("Closure", newclass);
-			ehfm_t *f = new ehfm_t(libmethod_e);
-			func->value->funcval->function = f;
+			ehfm_p f;
+			f->type = libmethod_e;
 			f->libmethod_pointer = members[i].func;
+			func->value->funcval->function = f;
 			newclass->insert(members[i].name, func);
 		}
 		ehmember_p member = new ehmember_t;
@@ -822,17 +824,16 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ret->funcval->parent = context;
 	ret->funcval->classname = "Closure";
 
-	ehfm_t *f = new ehfm_t(user_e);
-	ret->funcval->function = f;
+	ehfm_p f;
+	f->type = user_e;
 	f->code = paras[1];
+	ret->funcval->function = f;
 
 	// determine argument count
 	f->argcount = count_nodes(paras[0]);
 	// if there are no arguments, the arglist can be NULL
 	if(f->argcount) {
 		f->args = new eharg_t[f->argcount]();
-	} else {
-		f->args = NULL;
 	}
 	// add arguments to arglist
 	int i = 0;
@@ -1175,7 +1176,7 @@ ehretval_p EHI::call_function(ehobj_t *obj, ehretval_p args, ehcontext_t context
 ehretval_p EHI::call_function_args(ehobj_t *obj, const int nargs, ehretval_p args[], ehcontext_t context) {
 	ehretval_p ret;
 	
-	ehfm_t *f = obj->function;
+	ehfm_p f = obj->function;
 	if(f == NULL) {
 		eh_error("Invalid object for function call", eerror_e);
 		return NULL;
@@ -1184,7 +1185,7 @@ ehretval_p EHI::call_function_args(ehobj_t *obj, const int nargs, ehretval_p arg
 	if(f->type == lib_e) {
 		return f->libfunc_pointer(nargs, args, context, this);
 	} else if(f->type == libmethod_e) {
-		return f->libmethod_pointer(obj->parent, nargs, args, context, this);
+		return f->libmethod_pointer(obj->parent->selfptr, nargs, args, context, this);
 	}
 	// check parameter count
 	if(nargs != f->argcount) {
@@ -1214,7 +1215,7 @@ ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
 	ret->function = obj->function;
 	ret->parent = obj->parent;
 	ret->real_parent = obj->real_parent;
-	if(obj->function != NULL && obj->function->type == libmethod_e) {
+	if(obj->constructor != NULL) {
 		// insert selfptr
 		ret->selfptr = obj->constructor();
 	}

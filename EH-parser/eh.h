@@ -320,6 +320,7 @@ typedef struct ehfm_t {
 	};
 	
 	ehfm_t(functype_enum _type) : type(_type), argcount(0), args(NULL), code(), libfunc_pointer(NULL) {}
+	ehfm_t() : type(user_e), argcount(0), args(NULL), code(), libfunc_pointer(NULL) {}
 	
 	// we own the args thingy
 	~ehfm_t() {
@@ -328,20 +329,19 @@ typedef struct ehfm_t {
 		}
 	}
 } ehfm_t;
+typedef refcount_ptr<ehfm_t> ehfm_p;
 
 // EH object
 typedef struct ehobj_t {
 public:
 	// properties
-	struct ehfm_t *function;
+	ehfm_p function;
 	const char *classname;
 	struct ehobj_t *parent;
 	struct ehobj_t *real_parent;
-	union {
-		// for instantiated and non-instantiated library classes
-		void *selfptr;
-		ehconstructor_t constructor;
-	};
+	// for instantiated and non-instantiated library classes
+	void *selfptr;
+	ehconstructor_t constructor;
 	std::map<std::string, ehmember_p > members;
 
 	// typedefs
@@ -349,7 +349,7 @@ public:
 	typedef obj_map::iterator obj_iterator;
 	
 	// constructors
-	ehobj_t(const char *_classname = NULL, ehobj_t *_parent = NULL, ehobj_t *_real_parent = NULL) : function(NULL), classname(_classname), parent(_parent), real_parent(_real_parent), selfptr(NULL), members() {}
+	ehobj_t(const char *_classname = NULL, ehobj_t *_parent = NULL, ehobj_t *_real_parent = NULL) : function(), classname(_classname), parent(_parent), real_parent(_real_parent), selfptr(NULL), constructor(NULL), members() {}
 
 	// methods
 	size_t size() const {
@@ -378,9 +378,6 @@ public:
 	}
 	
 	~ehobj_t() {
-		if(this->function != NULL) {
-			//delete this->function;
-		}
 	}
 private:
 	ehmember_p get_recursive_helper(const char *name, const ehcontext_t context);

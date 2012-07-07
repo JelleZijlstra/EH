@@ -140,14 +140,10 @@ public:
 	EHRV_CONS(struct ehobj_t *, object)
 	EHRV_CONS(struct ehrange_t *, range)
 #undef EHRV_CONS
-#define EHRV_SET(vtype, ehtype) void set(vtype in) { \
-	this->type(ehtype ## _e); \
-	this->ehtype ## val = in; \
-} \
-static ehretval_p make(vtype in) { \
+#define EHRV_SET(vtype, ehtype) static ehretval_p make(vtype in) { \
 	ehretval_p out; \
 	out->type(ehtype ## _e); \
-	out->set(in); \
+	out->ehtype ## val = in; \
 	return out; \
 }
 	EHRV_SET(int, int)
@@ -214,6 +210,15 @@ static ehretval_p make(vtype in) { \
 		out->stringval = NULL;
 		return out;
 	}
+#define EHRV_MAKE_TYPED(vtype, ehtype) static ehretval_p make_ ## ehtype(vtype content) { \
+	ehretval_p out; \
+	out->type(ehtype ## _e); \
+	out->ehtype ## val = content; \
+	return out; \
+}
+	EHRV_MAKE_TYPED(struct ehobj_t *, weak_object)
+	EHRV_MAKE_TYPED(struct ehobj_t *, func)
+#undef EHRV_MAKE_TYPED
 	static ehretval_p make(ehretval_p in) {
 		return in;
 	}

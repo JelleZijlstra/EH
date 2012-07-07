@@ -17,9 +17,7 @@ EH_METHOD(CountClass, docount) {
 		return NULL;
 	}
 	CountClass *selfptr = (CountClass *)obj;
-	ehretval_p ret;
-	ret->set((int) ++selfptr->count);
-	return ret;
+	return ehretval_t::make((int) ++selfptr->count);
 }
 EH_METHOD(CountClass, setcount) {
 	if(nargs != 1) {
@@ -34,9 +32,7 @@ EH_METHOD(CountClass, setcount) {
 	}
 
 	selfptr->count = newcounter->intval;
-	ehretval_p ret;
-	ret->set(true);
-	return ret;
+	return ehretval_t::make(true);
 }
 
 START_EHLC(File)
@@ -63,9 +59,7 @@ EH_METHOD(File, open) {
 		return NULL;
 	}
 	selfptr->descriptor = mfile;
-	ehretval_p ret;
-	ret->set(true);
-	return ret;
+	return ehretval_t::make(true);
 }
 
 EH_METHOD(File, getc) {
@@ -82,11 +76,10 @@ EH_METHOD(File, getc) {
 	if(c == -1) {
 		return NULL;
 	}
-	ehretval_p ret;
-	ret->set(new char[2]);
-	ret->stringval[0] = c;
-	ret->stringval[1] = '\0';
-	return ret;
+	char *out = new char[2];
+	out[0] = c;
+	out[1] = '\0';
+	return ehretval_t::make(out);
 }
 
 EH_METHOD(File, gets) {
@@ -99,15 +92,14 @@ EH_METHOD(File, gets) {
 		return NULL;
 	}
 	
-	ehretval_p ret;
-	ret->set(new char[512]);
-	
-	char *ptr = fgets(ret->stringval, 511, selfptr->descriptor);
+	char *out = new char[512];
+
+	char *ptr = fgets(out, 511, selfptr->descriptor);
 	if(ptr == NULL) {
-		delete[] ret->stringval;
-		ret->type(null_e);
+		delete[] out;
+		return NULL;
 	}
-	return ret;
+	return ehretval_t::make(out);
 }
 
 EH_METHOD(File, puts) {
@@ -127,13 +119,11 @@ EH_METHOD(File, puts) {
 
 	int count = fputs(str->stringval, selfptr->descriptor);
 	
-	ehretval_p ret;
 	if(count == EOF) {
-		ret->set(false);
+		return ehretval_t::make(false);
 	} else {
-		ret->set(true);
+		return ehretval_t::make(true);
 	}
-	return ret;
 }
 
 EH_METHOD(File, close) {

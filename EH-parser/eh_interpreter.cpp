@@ -182,7 +182,7 @@ void EHI::eh_init(void) {
 		}
 		ehmember_p member;
 		member->attribute = attributes;
-		member->value->set(newclass);
+		member->value = ehretval_t::make(newclass);
 		global_object->insert(newclass->classname, member);
 	}
 	for(int i = 0; libcmds[i].name != NULL; i++) {
@@ -195,8 +195,7 @@ void EHI::eh_init(void) {
 	attributes_t attributes = attributes_t::make(public_e, nonstatic_e, const_e);
 	ehmember_p global;
 	global->attribute = attributes;
-	global->value->set(global_object);
-	global->value->type(weak_object_e);
+	global->value = ehretval_t::make_weak_object(global_object);
 	global_object->insert("global", global);
 	return;
 }
@@ -531,7 +530,7 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 						value_r = eh_execute(node2->opval->paras[1], context);
 					} else {
 						// set to true by default
-						value_r->set(true);
+						value_r = ehretval_t::make(true);
 					}
 					node2 = node2->opval->paras[0];
 					for(int i = 0, len = strlen(node2->stringval); i < len; i++) {
@@ -546,7 +545,7 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 					// long-form paras
 					char *index = node2->opval->paras[0]->stringval;
 					if(node2->opval->nparas == 1) {
-						paras.string_indices[index]->set(true);
+						paras.string_indices[index] = ehretval_t::make(true);
 					} else {
 						paras.string_indices[index] = eh_execute(node2->opval->paras[1], context);
 					}
@@ -571,7 +570,7 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 		}
 	}
 	// insert indicator that this is an EH-PHP command
-	paras.string_indices["_ehphp"]->set(true);
+	paras.string_indices["_ehphp"] = ehretval_t::make(true);
 	// get the command to execute
 	const ehcmd_t libcmd = get_command(name);
 	ehretval_p ret;
@@ -616,7 +615,7 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 		ehmember_p var = context->get_recursive(name, context, T_LVALUE_SET);
 		// if we do T_LVALUE_SET, get_recursive never returns NULL
 		// count variable always gets to be an int
-		var->value->set((int) range.min);
+		var->value = ehretval_t::make((int) range.min);
 		for( ; var->value->intval <= range.max; var->value->intval++) {
 			ret = eh_execute(op->paras[2], context);
 			LOOPCHECKS;
@@ -853,9 +852,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 
 	// insert "this" pointer
 	attributes_t thisattributes = attributes_t::make(private_e, nonstatic_e, const_e);
-	ehretval_p thisvalue;
-	thisvalue->set(classobj);
-	thisvalue->type(weak_object_e);
+	ehretval_p thisvalue = ehretval_t::make_weak_object(classobj);
 	classobj->insert_retval("this", thisattributes, thisvalue);
 
 	eh_execute(code, classobj);
@@ -1355,16 +1352,16 @@ void EHI::eh_setarg(int argc, char **argv) {
 	// insert argc
 	ehmember_p argc_v;
 	// argc - 1, because argv[0] is ehi itself
-	argc_v->value->set((int) argc - 1);
+	argc_v->value = ehretval_t::make((int) argc - 1);
 	global_object->insert("argc", argc_v);
 
 	// insert argv
 	ehmember_p argv_v;
-	argv_v->value->set(new eharray_t);
+	argv_v->value = ehretval_t::make(new eharray_t);
 
 	// all members of argv are strings
 	for(int i = 1; i < argc; i++) {
-		argv_v->value->arrayval->int_indices[i - 1]->set(argv[i]);
+		argv_v->value->arrayval->int_indices[i - 1] = ehretval_t::make(argv[i]);
 	}
 	global_object->insert("argv", argv_v);
 }
@@ -1396,36 +1393,26 @@ void EHI::redirect_command(const char *redirect, const char *target) {
  * Opcode handlers.
  */
 ehretval_p eh_count(const ehretval_p in) {
-	ehretval_p ret;
-	ret->type(int_e);
 	switch(in->type()) {
 		case int_e:
-			ret->intval = sizeof(int) * 8;
-			break;
+			return ehretval_t::make((int) sizeof(int) * 8);
 		case float_e:
-			ret->intval = sizeof(float) * 8;
-			break;
+			return ehretval_t::make((int) sizeof(float) * 8);
 		case string_e:
-			ret->intval = strlen(in->stringval);
-			break;
+			return ehretval_t::make((int) strlen(in->stringval));
 		case array_e:
-			ret->intval = in->arrayval->size();
-			break;
+			return ehretval_t::make((int) in->arrayval->size());
 		case null_e:
-			ret->intval = 0;
-			break;
+			return ehretval_t::make((int) 0);
 		case bool_e:
-			ret->intval = 0;
-			break;
+			return ehretval_t::make((int) 0);
 		case range_e:
-			ret->intval = 2;
-			break;
+			return ehretval_t::make((int) 0);
 		default:
 			eh_error_type("count operator", in->type(), eerror_e);
-			ret->type(null_e);
-			break;
+			return NULL;
 	}
-	return ret;
+	return NULL;
 }
 ehretval_p eh_op_tilde(ehretval_p in) {
 	// no const argument because it's modified below
@@ -2082,8 +2069,7 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent) {
 	if(classmember->first.compare("this") == 0) {
 		// handle $this pointer
 		newmember->attribute = classmember->second->attribute;
-		newmember->value->set(this);
-		newmember->value->type(weak_object_e);
+		newmember->value = ehretval_t::make_weak_object(this);
 	} else if(classmember->second->isstatic() || (classmember->second->isconst() && classmember->second->value->type() != func_e)) {
 		// we can safely share static members, as well as const members that are not functions
 		newmember = classmember->second;

@@ -76,39 +76,29 @@ zval *arrtozval(eharray_t *paras) {
 }
 
 ehretval_p zvaltoeh(zval *in) {
-	ehretval_p ret;
 	switch(in->type) {
 		case IS_NULL:
-			break;
+			return NULL;
 		case IS_BOOL:
-			ret->type(bool_e);
 			// apparently, a bool is stored as a long
-			if(in->value.lval)
-				ret->boolval = true;
-			else
-				ret->boolval = false;
-			break;
+			return ehretval_t::make((bool) in->value.lval);
 		case IS_DOUBLE:
-			ret->set((float) in->value.dval);
-			break;
+			return ehretval_t::make((float) in->value.dval);
 		case IS_STRING:
 			// would be nice to use strndup with in->value.str.len, can't get it though
-			ret->set(strdup(in->value.str.val));
-			break;
+			return ehretval_t::make(strdup(in->value.str.val));
 		case IS_ARRAY:
 			// initialize array
-			ret->set(zvaltoeh_array(in->value.ht));
-			break;
+			return ehretval_t::make(zvaltoeh_array(in->value.ht));
 		case IS_LONG:
-			ret->set((int) in->value.lval);
-			break;
+			return ehretval_t::make((int) in->value.lval);
 		case IS_RESOURCE:
 		case IS_OBJECT:
 		default:
 			fprintf(stderr, "Unsupported PHP type %d\n", in->type);
-			break;
+			return NULL;
 	}
-	return ret;
+	return NULL;
 }
 
 eharray_t *zvaltoeh_array(HashTable *hash) {

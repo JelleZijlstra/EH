@@ -40,7 +40,7 @@
 			}
 [0-9]+		{
 				yylval_param->iValue = atoi(yytext);
-					return T_INTEGER;
+				return T_INTEGER;
 			}
 "int"		{
 				yylval_param->tValue = int_e;

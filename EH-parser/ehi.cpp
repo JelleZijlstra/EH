@@ -58,6 +58,7 @@ ehretval_t::~ehretval_t() {
 			break;
 		// TODO
 		case string_e:
+			//delete[] this->stringval;
 			break;
 		// Delete object. An ehretval_t owns the object pointed to.
 		case range_e:
@@ -65,7 +66,6 @@ ehretval_t::~ehretval_t() {
 			break;
 		case object_e:
 		case func_e:
-			//TODO: figure out what exactly goes wrong when we uncomment this
 			delete this->objectval;
 			break;
 		case array_e:

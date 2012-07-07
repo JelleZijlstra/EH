@@ -205,6 +205,7 @@ void EHI::eh_exit(void) {
 	if(eval_parser != NULL) {
 		delete eval_parser;
 	}
+	delete global_object;
 	return;
 }
 EHI::~EHI() {
@@ -510,7 +511,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					break;
 			}
 		} else {
-			ret = ehretval_p::clone(node);
+			ret = node;
 		}
 	} catch(int) {
 		// ignore all exceptions

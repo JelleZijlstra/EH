@@ -33,8 +33,7 @@ ehretval_p EHI::parse_file(const char *name) {
 }
 void EHI::init_eval_parser() {
 	if(eval_parser == NULL) {
-		// why does this thing get its own EHI?
-		eval_parser = new EHParser(end_is_end_e, new EHI);
+		eval_parser = new EHParser(end_is_end_e, this);
 	}
 }
 ehretval_p EHI::parse_string(const char *cmd) {

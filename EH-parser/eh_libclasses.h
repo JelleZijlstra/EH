@@ -5,8 +5,11 @@
  */
 #include "eh.h"
 
-#define EHLC_CONSTRUCTOR(name) inline void *ehlc_new_ ## name() { \
+#define EHLC_CONSTRUCTOR_DESTRUCTOR(name) inline void *ehlc_new_ ## name() { \
 	return (void *)new name(); \
+} \
+inline void ehlc_delete_ ## name(ehobj_t *in) { \
+	delete (name *)in->selfptr; \
 }
 #define START_EHLC(name) ehlm_listentry_t ehlc_l_ ## name [] = {
 #define EHLC_ENTRY(classn, name) { #name, &ehlm_ ## classn ## _ ## name },
@@ -28,7 +31,7 @@ public:
 EH_METHOD(CountClass, docount);
 EH_METHOD(CountClass, setcount);
 
-EHLC_CONSTRUCTOR(CountClass)
+EHLC_CONSTRUCTOR_DESTRUCTOR(CountClass)
 EXTERN_EHLC(CountClass)
 
 /*
@@ -47,5 +50,5 @@ EH_METHOD(File, gets);
 EH_METHOD(File, puts);
 EH_METHOD(File, close);
 
-EHLC_CONSTRUCTOR(File)
+EHLC_CONSTRUCTOR_DESTRUCTOR(File)
 EXTERN_EHLC(File)

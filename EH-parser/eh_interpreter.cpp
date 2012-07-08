@@ -41,7 +41,7 @@ typedef struct ehlc_listentry_t {
 	const char *name;
 	ehlibclass_t info;
 } ehlc_listentry_t;
-#define LIBCLASSENTRY(c) { #c, {ehlc_new_ ## c, ehlc_l_ ## c }},
+#define LIBCLASSENTRY(c) { #c, {ehlc_new_ ## c, ehlc_delete_ ## c, ehlc_l_ ## c }},
 ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(CountClass)
 	LIBCLASSENTRY(File)
@@ -165,6 +165,7 @@ void EHI::eh_init(void) {
 	for(int i = 0; libclasses[i].name != NULL; i++) {
 		ehobj_t *newclass = new ehobj_t(libclasses[i].name);
 		newclass->constructor = libclasses[i].info.constructor;
+		newclass->destructor = libclasses[i].info.destructor;
 		ehlm_listentry_t *members = libclasses[i].info.members;
 		// attributes for library methods
 		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
@@ -1187,6 +1188,7 @@ ehretval_p EHI::call_function_args(ehobj_t *obj, const int nargs, ehretval_p arg
 ehobj_t *EHI::object_instantiate(ehobj_t *obj) {
 	ehobj_t *ret = new ehobj_t(obj->classname, obj->parent, obj->real_parent);
 	ret->function = obj->function;
+	ret->destructor = obj->destructor;
 	if(obj->constructor != NULL) {
 		// insert selfptr
 		ret->selfptr = obj->constructor();

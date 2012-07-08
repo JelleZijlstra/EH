@@ -277,6 +277,7 @@ typedef struct ehobj_t *ehcontext_t;
 typedef ehretval_p (*ehlibfunc_t)(int, ehretval_p *, ehcontext_t, class EHI *);
 
 typedef void *(*ehconstructor_t)();
+typedef void (*ehdestructor_t)(ehobj_t *);
 
 typedef ehretval_p (*ehlibmethod_t)(void *, int, ehretval_p *, ehcontext_t, class EHI *);
 
@@ -287,6 +288,7 @@ typedef struct ehlm_listentry_t {
 
 typedef struct ehlibclass_t {
 	ehconstructor_t constructor;
+	ehdestructor_t destructor;
 	ehlm_listentry_t *members;
 } ehlibclass_t;
 
@@ -368,10 +370,11 @@ public:
 	// for instantiated and non-instantiated library classes
 	void *selfptr;
 	ehconstructor_t constructor;
+	ehdestructor_t destructor;
 	obj_map members;
 
 	// constructors
-	ehobj_t(std::string _classname, ehobj_t *_parent = NULL, ehobj_t *_real_parent = NULL) : function(), classname(_classname), parent(_parent), real_parent(_real_parent), selfptr(NULL), constructor(NULL), members() {}
+	ehobj_t(std::string _classname, ehobj_t *_parent = NULL, ehobj_t *_real_parent = NULL) : function(), classname(_classname), parent(_parent), real_parent(_real_parent), selfptr(NULL), constructor(NULL), destructor(NULL), members() {}
 
 	// methods
 	size_t size() const {
@@ -400,6 +403,9 @@ public:
 	}
 	
 	~ehobj_t() {
+		if(this->selfptr != NULL) {
+			this->destructor(this);
+		}
 	}
 private:
 	ehmember_p get_recursive_helper(const char *name, const ehcontext_t context);

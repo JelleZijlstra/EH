@@ -13,10 +13,10 @@ if(!$testfiles) {
 	exit(1);
 }
 $executer = trim(fgets($testfiles));
-if(!file_exists($executer)) {
+/*if(!file_exists($executer)) {
 	echo 'Invalid executer: ' . $executer . PHP_EOL;
 	exit(1);
-}
+}*/
 while($file = trim(fgets($testfiles))) {
 	echo "Testing $file...\n";
 	$expected = str_replace('.eh', '.expected', $file);

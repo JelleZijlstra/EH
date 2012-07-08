@@ -19,3 +19,11 @@ void eh_error_argcount(int expected, int received);
 void eh_error_line(int line, const char *msg);
 void eh_error_types(const char *context, type_enum type1, type_enum type2, errlevel_e level);
 void eh_error_argcount_lib(const char *name, int expected, int received);
+
+/*
+ * Exception types.
+ */
+class quit_exception : public std::exception {
+};
+class unknown_value_exception : public std::exception {
+};

@@ -505,7 +505,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		} else {
 			ret = node;
 		}
-	} catch(int) {
+	} catch(unknown_value_exception &e) {
 		// ignore all exceptions
 	}
 	return ret;
@@ -1021,7 +1021,7 @@ ehretval_p &EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 			}
 			break;
 	}
-	throw 0;
+	throw unknown_value_exception();
 }
 ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 	ehretval_p ret = eh_execute(node, context);
@@ -1070,7 +1070,7 @@ void EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 		} else {
 			lvalue = rvalue;
 		}
-	} catch(int) {
+	} catch(unknown_value_exception& e) {
 		// do nothing
 	}
 }
@@ -1123,7 +1123,7 @@ ehretval_p EHI::eh_op_accessor(ehretval_p *paras, ehcontext_t context) {
 		case doublecolon_e:
 			try {
 				ret = colon_access(basevar, paras[2], context, T_LVALUE_GET);
-			} catch(int) {
+			} catch(unknown_value_exception& e) {
 			}
 			break;
 		default:
@@ -1218,7 +1218,7 @@ ehretval_p &EHI::object_access(ehretval_p operand1, ehretval_p index, ehcontext_
 	ehmember_p var = context->get_recursive(operand1->stringval, context, T_LVALUE_GET);
 	if(var == NULL) {
 		eh_error("cannot access member of nonexistent variable", eerror_e);
-		throw 0;
+		throw unknown_value_exception();
 	}
 	ehretval_p label;
 
@@ -1228,18 +1228,18 @@ ehretval_p &EHI::object_access(ehretval_p operand1, ehretval_p index, ehcontext_
 			if(var->value->arrayval->has(label) or (token == T_LVALUE_SET)) {
 				return var->value->arrayval->operator[](label);
 			} else {
-				throw 0;
+				throw unknown_value_exception();
 			}
 		case weak_object_e:
 		case object_e:
 			label = eh_execute(index, context);
 			if(label->type() != string_e) {
 				eh_error_type("object member label", label->type(), eerror_e);
-				throw 0;
+				throw unknown_value_exception();
 			}
 			member = var->value->objectval->get(label->stringval, context, token);
 			if(member == NULL) {
-				throw 0;
+				throw unknown_value_exception();
 			} else {
 				return member->value;
 			}
@@ -1248,25 +1248,25 @@ ehretval_p &EHI::object_access(ehretval_p operand1, ehretval_p index, ehcontext_
 			this->is_strange_arrow = true;
 			return var->value;
 	}
-	throw 0;
+	throw unknown_value_exception();
 }
 ehretval_p &EHI::colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token) {
 	ehretval_p label = eh_execute(index, context);
 	if(label->type() != string_e) {
 		eh_error_type("object member label", label->type(), eerror_e);
-		throw 0;
+		throw unknown_value_exception();
 	}
 
 	ehobj_t *classobj = this->get_class(operand1, context);
 	if(classobj == NULL) {
-		throw 0;
+		throw unknown_value_exception();
 	}
 	ehmember_p member = classobj->get(label->stringval, context, token);
 	if(member == NULL) {
 		if(token == T_LVALUE_GET) {
 			eh_error_unknown("object member", label->stringval, eerror_e);		
 		}
-		throw 0;
+		throw unknown_value_exception();
 	} else {
 		return member->value;
 	}
@@ -1955,7 +1955,7 @@ ehretval_p &eharray_t::operator[](ehretval_p index) {
 			return string_indices[index->stringval];
 		default:
 			eh_error_type("array index", index->type(), enotice_e);
-			throw 0;
+			throw unknown_value_exception();
 	}
 }
 void eharray_t::insert_retval(ehretval_p index, ehretval_p value) {
@@ -2021,11 +2021,11 @@ ehmember_p ehobj_t::get_recursive(const char *name, ehcontext_t context, int tok
 				this->insert(name, newvar);
 				return this->members[name];
 			} else {
-				throw 0;
+				throw unknown_value_exception();
 			}
 		} else if(currvar->attribute.isconst == const_e) {
 			eh_error("Attempt to write to constant variable", eerror_e);
-			throw 0;
+			throw unknown_value_exception();
 		}
 	}
 	return currvar;

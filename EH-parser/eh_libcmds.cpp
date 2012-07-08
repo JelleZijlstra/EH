@@ -3,9 +3,10 @@
  */
 #include "eh.h"
 #include "eh_libcmds.h"
+#include "eh_error.h"
 
 EH_LIBCMD(quit) {
-	throw std::exception();
+	throw quit_exception();
 	return NULL;
 }
 

@@ -62,11 +62,9 @@ public:
 	}
 	
 	refcount_ptr(dummy_class *in) {
-		if(in == NULL) {
-			this->pointer = NULL;
-		} else {
-			throw 0;
-		}
+		// only for NULL initialization
+		assert(in == NULL);
+		this->pointer = NULL;
 	}
 
 	T &operator*() const {

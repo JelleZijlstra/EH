@@ -266,7 +266,7 @@ typedef struct eharg_t {
 } eharg_t;
 
 // context
-typedef struct ehobj_t *ehcontext_t;
+typedef ehretval_p /* with type object_e */ ehcontext_t;
 
 // library functions, classes, etcetera
 typedef ehretval_p (*ehlibfunc_t)(int, ehretval_p *, ehcontext_t, class EHI *);
@@ -358,37 +358,31 @@ public:
 	typedef obj_map::iterator obj_iterator;
 	
 	// properties
+	obj_map members;
 	ehfm_p function;
 	std::string classname;
-	struct ehobj_t *parent;
-	struct ehobj_t *real_parent;
-	// for instantiated and non-instantiated library classes
+	ehretval_p parent;
+	ehretval_p real_parent;
+	// for library classes
 	void *selfptr;
 	ehconstructor_t constructor;
 	ehdestructor_t destructor;
-	obj_map members;
 
 	// constructors
-	ehobj_t(std::string _classname, ehobj_t *_parent = NULL, ehobj_t *_real_parent = NULL) : function(), classname(_classname), parent(_parent), real_parent(_real_parent), selfptr(NULL), constructor(NULL), destructor(NULL), members() {}
+	ehobj_t(std::string _classname) : members(), function(), classname(_classname), parent(), real_parent(), selfptr(NULL), constructor(NULL), destructor(NULL) {}
 
-	// methods
-	size_t size() const {
-		return members.size();
-	}
-	
+	// method prototypes
 	ehmember_p insert_retval(const char *name, attributes_t attribute, ehretval_p value);
 	ehmember_p get_recursive(const char *name, const ehcontext_t context, int token);
 	ehmember_p get(const char *name, const ehcontext_t context, int token);
-	void copy_member(obj_iterator &classmember, bool set_real_parent);
+	void copy_member(obj_iterator &classmember, bool set_real_parent, ehretval_p ret);
+	bool context_compare(const ehcontext_t key) const;
 
-	ehmember_p &operator[](std::string key) {
-		return members[key];
+	// inline methods
+	size_t size() const {
+		return members.size();
 	}
-	
-	bool has(const std::string key) const {
-		return members.count(key);
-	}
-	
+
 	void insert(const std::string &name, ehmember_p value) {
 		members[name] = value;
 	}
@@ -397,6 +391,31 @@ public:
 		this->insert(str, value);
 	}
 	
+	ehmember_p &operator[](std::string key) {
+		return members[key];
+	}
+	
+	bool has(const std::string key) const {
+		return members.count(key);
+	}
+	
+	struct ehobj_t *get_parent() const {
+		if(ehretval_p::null(this->parent)) {
+			return NULL;
+		} else {
+			return this->parent->get_objectval();
+		}
+	}
+	
+	struct ehobj_t *get_real_parent() const {
+		if(ehretval_p::null(this->real_parent)) {
+			return NULL;
+		} else {
+			return this->real_parent->get_objectval();
+		}
+	}
+	
+	// destructor
 	~ehobj_t() {
 		if(this->selfptr != NULL) {
 			this->destructor(this);
@@ -439,7 +458,6 @@ ehretval_p eh_op_tilde(ehretval_p in);
 ehretval_p eh_op_uminus(ehretval_p in);
 ehretval_p eh_op_dot(ehretval_p operand1, ehretval_p operand2);
 ehretval_p eh_make_range(const int min, const int max);
-bool ehcontext_compare(const ehcontext_t lock, const ehcontext_t key);
 
 // type casting
 ehretval_p eh_cast(const type_enum type, ehretval_p in);

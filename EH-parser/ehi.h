@@ -69,13 +69,13 @@ private:
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
 	ehretval_p &object_access(ehretval_p name, ehretval_p index, ehcontext_t context, int token);
 	ehretval_p &colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token);
-	ehobj_t *object_instantiate(ehobj_t *obj);
+	ehretval_p object_instantiate(ehobj_t *obj);
 	ehobj_t *get_class(ehretval_p code, ehcontext_t context);
 public:
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
 	bool returning;
-	ehobj_t *global_object;
+	ehretval_p global_object;
 
 	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
 	ehretval_p parse_string(const char *cmd);

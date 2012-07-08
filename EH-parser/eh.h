@@ -133,33 +133,43 @@ public:
 	// constructors
 	ehretval_t() : _type(null_e) {}
 	ehretval_t(type_enum type) : _type(type), stringval(NULL) {}
-#define EHRV_CONS(vtype, ehtype) ehretval_t(vtype in) : _type(ehtype ## _e), ehtype ## val(in) {}
-	EHRV_CONS(int, int)
-	EHRV_CONS(char *, string)
-	EHRV_CONS(bool, bool)
-	EHRV_CONS(float, float)
-	EHRV_CONS(double, float)
-	EHRV_CONS(struct eharray_t *, array)
-	EHRV_CONS(struct ehobj_t *, object)
-	EHRV_CONS(struct ehrange_t *, range)
-#undef EHRV_CONS
-#define EHRV_SET(vtype, ehtype) static ehretval_p make(vtype in) { \
+	// overloaded factory method; should only be used if necessary (e.g., in eh.y)
+#define EHRV_MAKE(vtype, ehtype) static ehretval_p make(vtype in) { \
 	ehretval_p out; \
 	out->type(ehtype ## _e); \
 	out->ehtype ## val = in; \
 	return out; \
 }
+	EHRV_MAKE(int, int)
+	EHRV_MAKE(char *, string)
+	EHRV_MAKE(bool, bool)
+	EHRV_MAKE(float, float)
+	EHRV_MAKE(struct opnode_t *, op)
+	EHRV_MAKE(accessor_enum, accessor)
+#undef EHRV_MAKE
+#define EHRV_SET(vtype, ehtype) static ehretval_p make_ ## ehtype(vtype in) { \
+	ehretval_p out; \
+	out->type(ehtype ## _e); \
+	out->ehtype ## val = in; \
+	return out; \
+} \
+vtype get_ ## ehtype ## val() const { \
+	assert(this->type() == ehtype ## _e); \
+	return this->ehtype ## val; \
+}
 	EHRV_SET(int, int)
 	EHRV_SET(char *, string)
 	EHRV_SET(bool, bool)
 	EHRV_SET(float, float)
-	EHRV_SET(double, float)
 	EHRV_SET(struct eharray_t *, array)
 	EHRV_SET(struct ehobj_t *, object)
 	EHRV_SET(struct ehrange_t *, range)
 	EHRV_SET(struct opnode_t *, op)
 	EHRV_SET(accessor_enum, accessor)
 	EHRV_SET(attribute_enum, attribute)
+	EHRV_SET(struct ehobj_t *, weak_object)
+	EHRV_SET(struct ehobj_t *, func)
+	EHRV_SET(type_enum, type)
 #undef EHRV_SET
 
 	void overwrite(ehretval_t &in) {
@@ -197,12 +207,6 @@ public:
 	
 	~ehretval_t();
 	
-	static ehretval_p make(type_enum type) {
-		ehretval_p out;
-		out->type(type_e);
-		out->typeval = type;
-		return out;
-	}
 	static ehretval_p make_typed(type_enum type) {
 		ehretval_p out;
 		out->type(type);
@@ -210,15 +214,6 @@ public:
 		out->stringval = NULL;
 		return out;
 	}
-#define EHRV_MAKE_TYPED(vtype, ehtype) static ehretval_p make_ ## ehtype(vtype content) { \
-	ehretval_p out; \
-	out->type(ehtype ## _e); \
-	out->ehtype ## val = content; \
-	return out; \
-}
-	EHRV_MAKE_TYPED(struct ehobj_t *, weak_object)
-	EHRV_MAKE_TYPED(struct ehobj_t *, func)
-#undef EHRV_MAKE_TYPED
 	static ehretval_p make(ehretval_p in) {
 		return in;
 	}

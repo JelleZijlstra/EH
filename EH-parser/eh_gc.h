@@ -86,20 +86,18 @@ public:
 		if(this->pointer != NULL) {
 			this->pointer->dec_rc();
 		}
-		if(~rhs == NULL) {
-			!rhs = new container<T>;
-		}
 		this->pointer = ~rhs;
 		// and increase it for what we're now referring to
-		this->pointer->inc_rc();
+		if(this->pointer != NULL) {
+			this->pointer->inc_rc();
+		}
 		return *this;
 	}
 	refcount_ptr(const refcount_ptr<T> &rhs) {
-		if(~rhs == NULL) {
-			!rhs = new container<T>;
-		}
 		this->pointer = ~rhs;
-		this->pointer->inc_rc();
+		if(this->pointer != NULL) {
+			this->pointer->inc_rc();
+		}
 	}
 
 	bool operator==(const refcount_ptr<T> &rhs) {

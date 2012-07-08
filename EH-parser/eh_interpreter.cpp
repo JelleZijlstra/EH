@@ -2000,6 +2000,8 @@ ehmember_p ehobj_t::get(const char *name, const ehcontext_t context, int token) 
 		}
 	} else if(token == T_LVALUE_SET) {
 		ehmember_p member;
+		// force pointer target to be created
+		member->isstatic();
 		this->insert(name, member);
 		return this->members[name];
 	} else {
@@ -2012,6 +2014,8 @@ ehmember_p ehobj_t::get_recursive(const char *name, ehcontext_t context, int tok
 		if(currvar == NULL) {
 			if(!this->has(name)) {
 				ehmember_p newvar;
+				// force pointer target to be created
+				newvar->isstatic();
 				this->insert(name, newvar);
 				return this->members[name];
 			} else {
@@ -2022,12 +2026,7 @@ ehmember_p ehobj_t::get_recursive(const char *name, ehcontext_t context, int tok
 			throw 0;
 		}
 	}
-	// without this weird-looking code, it may create a useless ehmember_t
-	if(currvar == NULL) {
-		return NULL;
-	} else {
-		return currvar;
-	}
+	return currvar;
 }
 ehmember_p ehobj_t::get_recursive_helper(const char *name, const ehcontext_t context) {
 	if(this->has(name)) {

@@ -984,32 +984,21 @@ ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 }
 ehretval_p &EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	/*
-	 * Get an lvalue. This function normally returns a pointer to a pointer
-	 * to an ehretval_t: it points to the place where the pointer to the value
-	 * of the variable resides.
-	 *
-	 * Because of special needs of calling code, this function sometimes breaks
-	 * the normal conventions associating ehretval_t::type values with the
-	 * values in the ehretval_t::value union. If the lvalue does not exist,
-	 * it returns NULL.
-	 *
-	 * Otherwise, it returns an attribute_e with a pointer to the ehretval_t of
-	 * the variable referred to, so that eh_op_set can do its bitwise magic with
-	 * ints and similar stuff.
+	 * Get an lvalue. This function normally returns a reference to an 
+	 * ehretval_p, enabling calling code (notably eh_op_set) to change the 
+	 * value. If no lvalue can be found or created, it throws an
+	 * unknown_value_exception. In case of arrow access to basic types like 
+	 * integers, it (or rather the object_access method) sets the
+	 * is_strange_arrow flag.
 	 */
 	ehretval_p basevar = eh_execute(op->paras[0], context);
 	switch(op->nparas) {
-		case 1:
-		{
+		case 1: {
 			ehmember_p var = context->get_recursive(basevar->stringval, context, op->op);
 			// dereference variable
 			if(var != NULL) {
 				return var->value;
 			}
-			/*
-			 * If there is no variable of this name, and it is a
-			 * simple access, we throw.
-			 */
 			break;
 		}
 		case 3:

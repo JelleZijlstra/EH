@@ -1,4 +1,3 @@
-/usr/bin/valgrind -q --leak-check=full /usr/bin/ehi
 argv.eh
 arrays.eh
 associative.eh

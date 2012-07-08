@@ -12,7 +12,7 @@ interpreter:
   I'm not sure. The same or a similar issue arises with g++ 4.5. The exceptions 
   are getting caught only with Apple's versions of g++ 4.0 and 4.2---did Apple
   introduce some specific patches there to enable exception handling on Mac OS X 
-  10.5?
+  10.5? In fact, it also works with Clang++ 3.1, though not with 2.9.
 - Enable "method" calls on primitive types.
 - Create a common superclass ("Object") with some methods for all objects.
 - In general, move away from special language features for specific needs (e.g., 

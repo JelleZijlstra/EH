@@ -1,4 +1,4 @@
-CC = g++
+CC = clang++-mp-3.1
 CCBASICFLAGS = -ggdb -fPIC -c
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic
 LDFLAGS = 

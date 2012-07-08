@@ -185,7 +185,7 @@ EHLIBFUNC(printvar) {
 		eh_error_argcount_lib("is_" #typev, 1, nargs); \
 		return NULL; \
 	} \
-	return ehretval_t::make(args[0]->type() == typev ## _e); \
+	return ehretval_t::make_bool(args[0]->type() == typev ## _e); \
 }
 
 TYPEFUNC(null)
@@ -211,7 +211,7 @@ EHLIBFUNC(class_is) {
 		eh_error_type("argument 1 to class_is", args[0]->type(), enotice_e);
 		return NULL;
 	}
-	return ehretval_t::make(args[0]->objectval->classname.compare(args[1]->stringval) == 0);
+	return ehretval_t::make_bool(args[0]->objectval->classname.compare(args[1]->stringval) == 0);
 }
 // get the type of a variable
 EHLIBFUNC(get_type) {
@@ -219,7 +219,7 @@ EHLIBFUNC(get_type) {
 		eh_error_argcount_lib("get_type", 1, nargs);
 		return NULL;
 	}
-	return ehretval_t::make(strdup(get_typestring(args[0]->type())));
+	return ehretval_t::make_string(strdup(get_typestring(args[0]->type())));
 }
 
 /*
@@ -256,13 +256,13 @@ EHLIBFUNC(pow) {
 		return NULL;
 	}
 	if(args[1]->type() == int_e && args[0]->type() == int_e) {
-		return ehretval_t::make((int) pow((float) args[1]->intval, (float) args[0]->intval));
+		return ehretval_t::make_int(pow((float) args[1]->intval, (float) args[0]->intval));
 	} else if(args[1]->type() == int_e && args[0]->type() == float_e) {
-		return ehretval_t::make((float) pow((float) args[1]->intval, args[0]->floatval));
+		return ehretval_t::make_float(pow((float) args[1]->intval, args[0]->floatval));
 	} else if(args[1]->type() == float_e && args[0]->type() == int_e) {
-		return ehretval_t::make((float) pow(args[1]->floatval, (float) args[0]->intval));
+		return ehretval_t::make_float(pow(args[1]->floatval, (float) args[0]->intval));
 	} else if(args[1]->type() == float_e && args[0]->type() == float_e) {
-		return ehretval_t::make((float) pow(args[1]->floatval, args[0]->floatval));
+		return ehretval_t::make_float(pow(args[1]->floatval, args[0]->floatval));
 	} else {
 		eh_error_type("argument 0 to pow", args[1]->type(), enotice_e);
 		eh_error_type("argument 1 to pow", args[0]->type(), enotice_e);
@@ -280,7 +280,7 @@ EHLIBFUNC(log) {
 		eh_error_type("argument 0 to log", args[0]->type(), enotice_e);
 		return NULL;
 	}
-	return ehretval_t::make((float) log(arg->floatval));
+	return ehretval_t::make_float(log(arg->floatval));
 }
 
 EHLIBFUNC(eval) {

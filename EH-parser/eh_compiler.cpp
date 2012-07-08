@@ -103,7 +103,7 @@ void EHI::eh_exit(void) {
 ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 	ehretval_p ret;
 	if(node == NULL) {
-		ret = ehretval_t::make(0);
+		ret = ehretval_t::make_int(0);
 	//printf("Executing nodetype %d\n", node->type);
 	} else switch(node->type()) {
 		/* Not sure yet how to handle strings

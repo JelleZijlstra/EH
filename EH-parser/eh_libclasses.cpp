@@ -17,7 +17,7 @@ EH_METHOD(CountClass, docount) {
 		return NULL;
 	}
 	CountClass *selfptr = (CountClass *)obj;
-	return ehretval_t::make((int) ++selfptr->count);
+	return ehretval_t::make_int(++selfptr->count);
 }
 EH_METHOD(CountClass, setcount) {
 	if(nargs != 1) {
@@ -32,7 +32,7 @@ EH_METHOD(CountClass, setcount) {
 	}
 
 	selfptr->count = newcounter->intval;
-	return ehretval_t::make(true);
+	return ehretval_t::make_bool(true);
 }
 
 START_EHLC(File)
@@ -59,7 +59,7 @@ EH_METHOD(File, open) {
 		return NULL;
 	}
 	selfptr->descriptor = mfile;
-	return ehretval_t::make(true);
+	return ehretval_t::make_bool(true);
 }
 
 EH_METHOD(File, getc) {
@@ -79,7 +79,7 @@ EH_METHOD(File, getc) {
 	char *out = new char[2];
 	out[0] = c;
 	out[1] = '\0';
-	return ehretval_t::make(out);
+	return ehretval_t::make_string(out);
 }
 
 EH_METHOD(File, gets) {
@@ -99,7 +99,7 @@ EH_METHOD(File, gets) {
 		delete[] out;
 		return NULL;
 	}
-	return ehretval_t::make(out);
+	return ehretval_t::make_string(out);
 }
 
 EH_METHOD(File, puts) {
@@ -120,9 +120,9 @@ EH_METHOD(File, puts) {
 	int count = fputs(str->stringval, selfptr->descriptor);
 	
 	if(count == EOF) {
-		return ehretval_t::make(false);
+		return ehretval_t::make_bool(false);
 	} else {
-		return ehretval_t::make(true);
+		return ehretval_t::make_bool(true);
 	}
 }
 

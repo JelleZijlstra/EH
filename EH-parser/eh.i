@@ -82,17 +82,17 @@ ehretval_p zvaltoeh(zval *in) {
 			return NULL;
 		case IS_BOOL:
 			// apparently, a bool is stored as a long
-			return ehretval_t::make((bool) in->value.lval);
+			return ehretval_t::make_bool(in->value.lval);
 		case IS_DOUBLE:
-			return ehretval_t::make((float) in->value.dval);
+			return ehretval_t::make_float(in->value.dval);
 		case IS_STRING:
 			// would be nice to use strndup with in->value.str.len, can't get it though
-			return ehretval_t::make(strdup(in->value.str.val));
+			return ehretval_t::make_string(strdup(in->value.str.val));
 		case IS_ARRAY:
 			// initialize array
-			return ehretval_t::make(zvaltoeh_array(in->value.ht));
+			return ehretval_t::make_array(zvaltoeh_array(in->value.ht));
 		case IS_LONG:
-			return ehretval_t::make((int) in->value.lval);
+			return ehretval_t::make_int(in->value.lval);
 		case IS_RESOURCE:
 		case IS_OBJECT:
 		default:

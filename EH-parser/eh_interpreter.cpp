@@ -533,7 +533,7 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 						// set to true by default
 						value_r = ehretval_t::make(true);
 					}
-					node2 = node2->opval->paras[0];
+					node2 = eh_execute(node2->opval->paras[0], context);
 					for(int i = 0, len = strlen(node2->stringval); i < len; i++) {
 						char index[2];
 						index[0] = node2->stringval[i];
@@ -544,7 +544,7 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 				case T_LONGPARA:
 				{
 					// long-form paras
-					char *index = node2->opval->paras[0]->stringval;
+					char *index = eh_execute(node2->opval->paras[0], context)->stringval;
 					if(node2->opval->nparas == 1) {
 						paras.string_indices[index] = ehretval_t::make(true);
 					} else {

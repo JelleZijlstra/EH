@@ -1,6 +1,7 @@
 CC = g++
 CCBASICFLAGS = -ggdb -fPIC -c
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic
+LDFLAGS = 
 SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
@@ -26,14 +27,14 @@ eh_libfuncs.cpp: eh_libfuncs.h
 	$(CC) $(CCFLAGS) $< -o $@
 
 ehc: $(COMPILER_O)
-	$(CC) $(COMPILER_O) -o ehc
+	$(CC) $(LDFLAGS) $(COMPILER_O) -o ehc
 
 ehi: $(EHI_O)
-	$(CC) $(EHI_O) -o ehi
+	$(CC) $(LDFLAGS) $(EHI_O) -o ehi
 	sudo cp ehi /usr/bin/ehi
 
 ehphp: $(EHPHP_O)
-	./make_ehphp.sh "$(CC)" "$(SYMBOLS)" "$(EHPHP_O)"
+	./make_ehphp.sh "$(CC)" "$(LDFLAGS) $(SYMBOLS)" "$(EHPHP_O)"
 
 # If I don't do "/usr/bin/bison", y.tab.c won't compile because of a const char*
 # -> char* conversion.

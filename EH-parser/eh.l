@@ -15,7 +15,7 @@
 %option reentrant
 %option bison-bridge
 %option outfile="eh.flex.cpp"
-%option extra-type="struct EHParser *"
+%option extra-type="class EHParser *"
 %%
 ['][^']*[']	{
 				int len;

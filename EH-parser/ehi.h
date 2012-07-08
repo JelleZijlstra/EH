@@ -8,7 +8,7 @@
  * Flex and Bison
  */
 int yylex(YYSTYPE *, void *);
-int yylex_init_extra(struct EHParser *, void **);
+int yylex_init_extra(class EHParser *, void **);
 int yylex_destroy(void *);
 struct yy_buffer_state *yy_scan_string ( const char *str );
 

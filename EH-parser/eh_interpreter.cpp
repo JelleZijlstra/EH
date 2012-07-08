@@ -1168,18 +1168,18 @@ ehretval_p EHI::call_function_args(ehobj_t *obj, const int nargs, ehretval_p arg
 		eh_error_argcount(f->argcount, nargs);
 		return NULL;
 	}
-	ehobj_t *newcontext = object_instantiate(obj);
+	// not just an ehobj_t for exception safety reasons
+	ehretval_p newcontext = ehretval_t::make(object_instantiate(obj));
 	
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {
 		ehmember_p var;
 		var->value = args[i];
-		newcontext->insert(f->args[i].name, var);
+		newcontext->objectval->insert(f->args[i].name, var);
 	}
-	ret = eh_execute(f->code, newcontext);
+	ret = eh_execute(f->code, newcontext->objectval);
 	returning = false;
 	
-	delete newcontext;
 	return ret;
 }
 /*

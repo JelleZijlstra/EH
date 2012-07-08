@@ -8,9 +8,11 @@ far more full-featured language.
 The following are some bugs and missing features still existing in the 
 interpreter:
 - When compiled with Clang++, exceptions thrown by eh_error don't get caught. 
-  Whether this is because I'm misusing exceptions (because control passes
-  through the C function yyparse?) or because of a Clang++ bug I'm not sure. The 
-  same or a similar issue arises with g++ 4.5.
+  Whether this is because I'm misusing exceptions or because of a Clang++ bug 
+  I'm not sure. The same or a similar issue arises with g++ 4.5. The exceptions 
+  are getting caught only with Apple's versions of g++ 4.0 and 4.2---did Apple
+  introduce some specific patches there to enable exception handling on Mac OS X 
+  10.5?
 - Enable "method" calls on primitive types.
 - Create a common superclass ("Object") with some methods for all objects.
 - In general, move away from special language features for specific needs (e.g., 

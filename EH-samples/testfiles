@@ -132,3 +132,4 @@ derefclass.eh
 modifyconstloop.eh
 rangecast.eh
 modifyfor.eh
+returnfunc.eh

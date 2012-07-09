@@ -31,7 +31,7 @@ EH_METHOD(CountClass, setcount) {
 		return NULL;
 	}
 
-	selfptr->count = newcounter->intval;
+	selfptr->count = newcounter->get_intval();
 	return ehretval_t::make_bool(true);
 }
 
@@ -54,7 +54,7 @@ EH_METHOD(File, open) {
 	if(filename->type() != string_e) {
 		return NULL;
 	}
-	FILE *mfile = fopen(filename->stringval, "r+");
+	FILE *mfile = fopen(filename->get_stringval(), "r+");
 	if(mfile == NULL) {
 		return NULL;
 	}
@@ -117,7 +117,7 @@ EH_METHOD(File, puts) {
 		return NULL;
 	}
 
-	int count = fputs(str->stringval, selfptr->descriptor);
+	int count = fputs(str->get_stringval(), selfptr->descriptor);
 	
 	if(count == EOF) {
 		return ehretval_t::make_bool(false);

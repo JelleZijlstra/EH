@@ -1,17 +1,23 @@
 The files in this directory provide a parser as well as a compiler and 
 interpreter for the EH scripting language. The parser provided here includes 
-numerous features not supported by the PHP-based interpreter and supports virtually all features found in that implementation.
+numerous features not supported by the PHP-based interpreter and supports 
+virtually all features found in that implementation. This interpreter has
+evolved considerably since the PHP implementation was created and implements a f
+far more full-featured language.
 
 The following are some bugs and missing features still existing in the 
 interpreter:
-- Massive memory leakage. It's hard to keep track of all malloc'ed memory within
-  the interpreter, but we can do better than the current situation.
-- Make more use of C++ features. Right now it's basically C compiled with a C++
-  compiler; let's use some of C++'s fancy features.
-- Foreach-like loops for objects and arrays.
 - When compiled with Clang++, exceptions thrown by eh_error don't get caught. 
-  Whether this is because I'm misusing exceptions (because control passes
-  through the C function yyparse?) or because of a Clang++ bug I'm not sure.
+  Whether this is because I'm misusing exceptions or because of a Clang++ bug 
+  I'm not sure. The same or a similar issue arises with g++ 4.5. The exceptions 
+  are getting caught only with Apple's versions of g++ 4.0 and 4.2---did Apple
+  introduce some specific patches there to enable exception handling on Mac OS X 
+  10.5? In fact, it also works with Clang++ 3.1, though not with 2.9.
+- Enable "method" calls on primitive types.
+- Create a common superclass ("Object") with some methods for all objects.
+- In general, move away from special language features for specific needs (e.g., 
+  "count") and replace them with method calls.
+- Make ehretval_t objects fully read-only.
 
 To compile the interpreter (ehi), write:
 $ make ehi
@@ -29,3 +35,10 @@ $ ./compile
 Other things to do:
 - Create a GeSHi spec for EH; see 
   http://qbnz.com/highlighter/geshi-doc.html#language-file-example
+
+As of July 2012, the ehi interpreter is fully garbage collected using
+reference-counting smart pointers (see eh_gc.h). I am aware of one remaining 
+source of memory leaks: when the parser encounters a parsing error, it fails to
+deallocate some structures used in parsing the rest of the line. I have not been 
+able to come up with a fix for this issue; however, the leaks are small and 
+occur only with programs that have errors anyway.

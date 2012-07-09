@@ -5,12 +5,8 @@
  * Default implementation of EH, used in the standalone interpreter.
  */
 #include "eh.h"
+#include "eh_error.h"
 #include "eh.bison.hpp"
-
-extern FILE *yyin;
-struct yy_buffer_state *yy_scan_string ( const char *str );
-
-EHI *interpreter;
 
 void eh_usage(char *name) {
 	fprintf(stderr, "Usage: %s\n\t%s file [arguments]\n\t%s -i\n\t%s -r code\n", name, name, name, name);
@@ -18,18 +14,18 @@ void eh_usage(char *name) {
 }
 
 int main(int argc, char **argv) {
-	ehretval_t ret(int_e);
+	ehretval_p ret;
 
 	EHI interpreter;
 
 	try {
 		if(argc == 1) {
-			ret.intval = interpreter.eh_interactive(cli_no_prompt_e);
+			ret = ehretval_t::make_int(interpreter.eh_interactive(cli_no_prompt_e));
 		} else if(!strcmp(argv[1], "-i")) {
 			if(argc != 2) {
 				eh_usage(argv[0]);
 			}
-			ret.intval = interpreter.eh_interactive();
+			ret = ehretval_t::make_int(interpreter.eh_interactive());
 		} else if(!strcmp(argv[1], "-r")) {
 			if(argc != 3)
 				eh_usage(argv[0]);
@@ -38,10 +34,11 @@ int main(int argc, char **argv) {
 			interpreter.eh_setarg(argc, argv);
 			ret = interpreter.parse_file(argv[1]);
 		}
-		exit(ret.intval);
+		//TODO: let scripts determine exit status
+		return 0;
 	}
 	catch(...) {
-		exit(-1);
+		return -1;
 	}
 }
 
@@ -50,9 +47,11 @@ ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
 	return NULL;
 }
 char *EHI::eh_getline(EHParser *parser) {
+	if(this->buffer == NULL) {
+		this->buffer = new char[512];	
+	}
 	if(parser->interactivity() == cli_prompt_e) {
 		printf("> ");
 	}
-	char *buf = new char[512];
-	return fgets(buf, 511, stdin);
+	return fgets(buffer, 511, stdin);
 }

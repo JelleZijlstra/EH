@@ -6,67 +6,42 @@
  */
 #include "eh.h"
 
-void free_node(ehretval_t *in) {
-	if(in == NULL) {
-		return;
-	}
-	switch(in->type()) {
-		case string_e:
-			/* Unsafe: there may be references retained.
-			delete[] in->stringval;
-			 */
-			break;
-		case op_e:
-			for(int i = 0; i < in->opval->nparas; i++) {
-				free_node(in->opval->paras[i]);
-			}
-			break;
-		default:
-			// nothing to free (even for the last few ones; even though they
-			// always occupy malloc'ed memory, this function merely frees
-			// memory allocated by the parser)
-			break;
-	}
-	delete in;
-}
-
-#define GETFUNC(name, vtype) ehretval_t *eh_get_ ## name (vtype value) { \
-	ehretval_t *ret = new ehretval_t(name ## _e); \
-	ret->name ## val = value; \
-	return ret; \
-}
-GETFUNC(int, int)
-GETFUNC(string, char *)
-GETFUNC(float, float)
-ehretval_t *eh_get_null(void) {
-	return new ehretval_t(null_e);
-}
-GETFUNC(type, type_enum)
-GETFUNC(accessor, accessor_enum)
-GETFUNC(bool, bool)
-GETFUNC(attribute, attribute_enum)
-
-ehretval_t *eh_addnode(int operation, int nparas, ...) {
-	va_list args;
-	ehretval_t *ret;
-
-	ret = new ehretval_t(op_e);
-	ret->opval = new opnode_t;
-	if(nparas) {
-		ret->opval->paras = new ehretval_t *[nparas]();
-	} else {
-		ret->opval->paras = NULL;
-	}
-
-	ret->opval->op = operation;
-	ret->opval->nparas = nparas;
-	va_start(args, nparas);
-	for(int i = 0; i < nparas; i++) {
-		ret->opval->paras[i] = va_arg(args, ehretval_t *);
-	}
-	va_end(args);
-
+opnode_t *eh_addnode_base(int opcode, int nparas, ehretval_p *paras) {
+	opnode_t *ret = new opnode_t;
+	ret->op = opcode;
+	ret->nparas = nparas;
+	ret->paras = paras;
 	return ret;
+}
+
+opnode_t *eh_addnode(int opcode) {
+	return eh_addnode_base(opcode, 0, NULL);
+}
+opnode_t *eh_addnode(int opcode, ehretval_p first) {
+	ehretval_p *paras = new ehretval_p[1]();
+	paras[0] = first;
+	return eh_addnode_base(opcode, 1, paras);
+}
+opnode_t *eh_addnode(int opcode, ehretval_p first, ehretval_p second) {
+	ehretval_p *paras = new ehretval_p[2]();
+	paras[0] = first;
+	paras[1] = second;
+	return eh_addnode_base(opcode, 2, paras);
+}
+opnode_t *eh_addnode(int opcode, ehretval_p first, ehretval_p second, ehretval_p third) {
+	ehretval_p *paras = new ehretval_p[3]();
+	paras[0] = first;
+	paras[1] = second;
+	paras[2] = third;
+	return eh_addnode_base(opcode, 3, paras);
+}
+opnode_t *eh_addnode(int opcode, ehretval_p first, ehretval_p second, ehretval_p third, ehretval_p fourth) {
+	ehretval_p *paras = new ehretval_p[4]();
+	paras[0] = first;
+	paras[1] = second;
+	paras[2] = third;
+	paras[3] = fourth;
+	return eh_addnode_base(opcode, 4, paras);
 }
 
 static void printntabs(const int n) {
@@ -119,6 +94,7 @@ void print_tree(const ehretval_p in, const int n) {
 		case array_e:
 		case func_e:
 		case object_e:
+		case weak_object_e:
 			// don't appear in AST
 			break;
 	}
@@ -135,6 +111,7 @@ const char *get_typestring(type_enum type) {
 		case type_e: return "type";
 		case array_e: return "array";
 		case func_e: return "function";
+		case weak_object_e:
 		case object_e: return "object";
 		case op_e: return "op";
 		case attribute_e: return "attribute";

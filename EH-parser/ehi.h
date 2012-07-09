@@ -8,7 +8,7 @@
  * Flex and Bison
  */
 int yylex(YYSTYPE *, void *);
-int yylex_init_extra(struct EHParser *, void **);
+int yylex_init_extra(class EHParser *, void **);
 int yylex_destroy(void *);
 struct yy_buffer_state *yy_scan_string ( const char *str );
 
@@ -29,33 +29,36 @@ private:
 	int inloop;
 	int breaking;
 	int continuing;
-	std::map<std::string, ehcmd_t> cmdtable;
+	std::map<const std::string, ehcmd_t> cmdtable;
 	
 	// hack: used to implement several forms of inter-method communication
 	bool is_strange_arrow;
+	
+	// buffer for interactive prompt
+	char *buffer;
 	
 	void eh_init(void);
 	// helper functions
 	ehretval_p eh_op_command(const char *name, ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_for(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_while(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_while(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_as(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_new(ehretval_t **paras, ehcontext_t context);
-	void eh_op_inherit(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_new(ehretval_p *paras, ehcontext_t context);
+	void eh_op_inherit(ehretval_p *paras, ehcontext_t context);
 	void eh_op_continue(opnode_t *op, ehcontext_t context);
 	void eh_op_break(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_array(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_anonclass(ehretval_p node, ehcontext_t context);
-	ehretval_p eh_op_declareclosure(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_declareclosure(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_declareclass(opnode_t *op, ehcontext_t context);
 	void eh_op_classmember(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_switch(ehretval_t **paras, ehcontext_t context);
-	ehretval_p eh_op_given(ehretval_t **paras, ehcontext_t context);
-	ehretval_p eh_op_colon(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_switch(ehretval_p *paras, ehcontext_t context);
+	ehretval_p eh_op_given(ehretval_p *paras, ehcontext_t context);
+	ehretval_p eh_op_colon(ehretval_p *paras, ehcontext_t context);
 	ehretval_p &eh_op_lvalue(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_dollar(ehretval_t *node, ehcontext_t context);
-	void eh_op_set(ehretval_t **paras, ehcontext_t context);
-	ehretval_p eh_op_accessor(ehretval_t **paras, ehcontext_t context);
+	ehretval_p eh_op_dollar(ehretval_p node, ehcontext_t context);
+	void eh_op_set(ehretval_p *paras, ehcontext_t context);
+	ehretval_p eh_op_accessor(ehretval_p *paras, ehcontext_t context);
 	ehcmd_t get_command(const char *name);
 	void insert_command(const char *name, const ehcmd_t cmd);
 	void redirect_command(const char *redirect, const char *target);
@@ -64,19 +67,19 @@ private:
 	ehretval_p call_function(ehobj_t *obj, ehretval_p args, ehcontext_t context);
 	ehretval_p call_function_args(ehobj_t *obj, const int nargs, ehretval_p args[], ehcontext_t context);
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
-	ehretval_p &object_access(ehretval_p name, ehretval_t *index, ehcontext_t context, int token);
-	ehretval_p &colon_access(ehretval_p operand1, ehretval_t *index, ehcontext_t context, int token);
-	ehobj_t *object_instantiate(ehobj_t *obj);
+	ehretval_p &object_access(ehretval_p name, ehretval_p index, ehcontext_t context, int token);
+	ehretval_p &colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token);
+	ehretval_p object_instantiate(ehobj_t *obj);
 	ehobj_t *get_class(ehretval_p code, ehcontext_t context);
 public:
-	ehretval_p eh_execute(ehretval_t *node, const ehcontext_t context);
+	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
 	bool returning;
-	ehobj_t *global_object;
+	ehretval_p global_object;
 
 	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
-	ehretval_t parse_string(const char *cmd);
-	ehretval_t parse_file(const char *name);
+	ehretval_p parse_string(const char *cmd);
+	ehretval_p parse_file(const char *name);
 	EHI();
 	void eh_exit(void);
 
@@ -97,8 +100,8 @@ public:
 		return _parent->eh_getline(this);
 	}
 
-	ehretval_t parse_file(FILE *infile);
-	ehretval_t parse_string(const char *cmd);
+	ehretval_p parse_file(FILE *infile);
+	ehretval_p parse_string(const char *cmd);
 
 	EHParser(interactivity_enum inter, EHI *parent) :  _parent(parent), _interactivity(inter) {
 		yylex_init_extra(this, &_scanner);

@@ -7,17 +7,19 @@
  * Used to test the EH interpreter.
  * Ultimately, this should be rewritten in EH script itself.
  */
+// parse arguments
+if(isset($argv[1]) && $argv[1] === '--valgrind') {
+	$executer = '/usr/bin/valgrind -q --leak-check=full /usr/bin/ehi';
+} else {
+	$executer = '/usr/bin/ehi';
+}
+
 $testfiles = fopen("testfiles", "r");
-if(!$testfiles) {
+if($testfiles === false) {
 	echo "Unable to open testfiles\n";
 	exit(1);
 }
-$executer = trim(fgets($testfiles));
-if(!file_exists($executer)) {
-	echo 'Invalid executer: ' . $executer . PHP_EOL;
-	exit(1);
-}
-while($file = trim(fgets($testfiles))) {
+while(($file = trim(fgets($testfiles))) !== '') {
 	echo "Testing $file...\n";
 	$expected = str_replace('.eh', '.expected', $file);
 	$output = str_replace('.eh', '.output', $file);

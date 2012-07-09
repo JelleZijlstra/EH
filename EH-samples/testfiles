@@ -1,4 +1,3 @@
-/usr/bin/ehi
 argv.eh
 arrays.eh
 associative.eh
@@ -93,7 +92,6 @@ file.eh
 arraycount.eh
 breaklibclass.eh
 morecasts.eh
-morecasts.eh
 libcmds.eh
 testarray.eh
 anonclass.eh
@@ -132,3 +130,6 @@ breakinherit.eh
 anonymousclass.eh
 derefclass.eh
 modifyconstloop.eh
+rangecast.eh
+modifyfor.eh
+returnfunc.eh

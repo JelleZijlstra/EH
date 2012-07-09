@@ -4,14 +4,6 @@
  *
  * Function definitions for EH library functions
  */
-#define EHLF_RETFALSE do { \
-	*retval = new ehretval_t(false); \
-	return; \
-} while(0)
-#define EHLF_RETTRUE do { \
-	*retval = new ehretval_t(true); \
-	return; \
-} while(0)
 
 #define EHLIBFUNC(f) ehretval_p ehlf_ ## f(int nargs, ehretval_p args[], ehcontext_t context, EHI *obj)
 

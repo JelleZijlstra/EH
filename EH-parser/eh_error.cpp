@@ -5,6 +5,7 @@
  * Code file for the EH error handling system.
  */
 #include "eh.h"
+#include "eh_error.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -14,7 +15,7 @@ void eh_error(const char *message, errlevel_e level) {
 	switch(level) {
 		case efatal_e:
 			fprintf(stderr, ": EH fatal error\n");
-			throw new std::exception;
+			throw quit_exception();
 		case eparsing_e:
 			fprintf(stderr, ": EH parsing error\n");
 			// TODO: figure out whether we're interactive

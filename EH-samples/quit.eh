@@ -3,5 +3,5 @@ f := func:
 	quit
 	echo 42
 end
-# expect 0, because quit == ret 0
+# expect nothing to be printed, because quit exits immediately
 printvar: $f:

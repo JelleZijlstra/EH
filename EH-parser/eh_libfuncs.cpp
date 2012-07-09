@@ -6,6 +6,7 @@
  */
 #include "eh.h"
 #include "eh_libfuncs.h"
+#include "eh_error.h"
 #include "eh.bison.hpp"
 #include <cmath>
 
@@ -39,40 +40,48 @@ void printvar_t::retval(ehretval_p in) {
 			printf("null\n");
 			break;
 		case int_e:
-			printf("@int %d\n", in->intval);
+			printf("@int %d\n", in->get_intval());
 			break;
 		case string_e:
-			printf("@string '%s'\n", in->stringval);
+			printf("@string '%s'\n", in->get_stringval());
 			break;
 		case bool_e:
-			if(in->boolval)
+			if(in->get_boolval())
 				printf("@bool true\n");
 			else
 				printf("@bool false\n");
 			break;
 		case array_e:
-			if(this->seen.count((void *)in->arrayval) == 0) {
-				this->seen[(void *)in->arrayval] = true;
+			if(this->seen.count((void *)in->get_arrayval()) == 0) {
+				this->seen[(void *)in->get_arrayval()] = true;
 				printf("@array [\n");
-				this->array(in->arrayval);
+				this->array(in->get_arrayval());
 				printf("]\n");
 			} else {
 				printf("(recursion)\n");
 			}
 			break;
-		case object_e:
-			if(this->seen.count((void *)in->objectval) == 0) {
-				this->seen[(void *)in->objectval] = true;
-				printf("@object <%s> [\n", in->objectval->classname);
-				this->object(in->objectval);
+		case weak_object_e:
+		case object_e: {
+			ehobj_t *obj;
+			if(in->type() == object_e) {
+				obj = in->get_objectval();
+			} else {
+				obj = in->get_weak_objectval();
+			}
+			if(this->seen.count((void *)obj) == 0) {
+				this->seen[(void *)obj] = true;
+				printf("@object <%s> [\n", obj->classname.c_str());
+				this->object(obj);
 				printf("]\n");
 			} else {
 				printf("(recursion)\n");
 			}
 			break;
+		}
 		case func_e:
 			printf("@function <");
-			switch(in->funcval->function->type) {
+			switch(in->get_funcval()->function->type) {
 				case user_e:
 					printf("user");
 					break;
@@ -84,33 +93,33 @@ void printvar_t::retval(ehretval_p in) {
 					break;
 			}
 			printf(">: ");
-			for(int i = 0; i < in->funcval->function->argcount; i++) {
-				printf("%s", in->funcval->function->args[i].name);
-				if(i + 1 < in->funcval->function->argcount)
+			for(int i = 0; i < in->get_funcval()->function->argcount; i++) {
+				printf("%s", in->get_funcval()->function->args[i].name.c_str());
+				if(i + 1 < in->get_funcval()->function->argcount)
 					printf(", ");
 			}
 			printf("\n");
 			break;
 		case accessor_e:
-			printf("@accesor %d\n", in->accessorval);
+			printf("@accesor %d\n", in->get_accessorval());
 			break;
 		case type_e:
-			printf("@type %s\n", get_typestring(in->typeval));
+			printf("@type %s\n", get_typestring(in->get_typeval()));
 			break;
 		case op_e:
-			printf("@op %d\n", in->opval->op);
+			printf("@op %d\n", in->get_opval()->op);
 			break;
 		case attribute_e:
-			printf("@attribute %d\n", in->attributeval);
+			printf("@attribute %d\n", in->get_attributeval());
 			break;
 		case attributestr_e:
 			printf("@attributestr\n");
 			break;
 		case range_e:
-			printf("@range %d..%d\n", in->rangeval->min, in->rangeval->max);
+			printf("@range %d..%d\n", in->get_rangeval()->min, in->get_rangeval()->max);
 			break;
 		case float_e:
-			printf("@float %f\n", in->floatval);
+			printf("@float %f\n", in->get_floatval());
 			break;
 	}
 	return;
@@ -183,7 +192,7 @@ EHLIBFUNC(printvar) {
 		eh_error_argcount_lib("is_" #typev, 1, nargs); \
 		return NULL; \
 	} \
-	return new ehretval_t(args[0]->type() == typev ## _e); \
+	return ehretval_t::make_bool(args[0]->type() == typev ## _e); \
 }
 
 TYPEFUNC(null)
@@ -209,7 +218,7 @@ EHLIBFUNC(class_is) {
 		eh_error_type("argument 1 to class_is", args[0]->type(), enotice_e);
 		return NULL;
 	}
-	return new ehretval_t(strcmp(args[1]->stringval, args[0]->objectval->classname) == 0);
+	return ehretval_t::make_bool(args[0]->get_objectval()->classname.compare(args[1]->get_stringval()) == 0);
 }
 // get the type of a variable
 EHLIBFUNC(get_type) {
@@ -217,7 +226,7 @@ EHLIBFUNC(get_type) {
 		eh_error_argcount_lib("get_type", 1, nargs);
 		return NULL;
 	}
-	return new ehretval_t(strdup(get_typestring(args[0]->type())));
+	return ehretval_t::make_string(strdup(get_typestring(args[0]->type())));
 }
 
 /*
@@ -234,19 +243,17 @@ EHLIBFUNC(include) {
 		return NULL;
 	}
 	// do the work
-	FILE *infile = fopen(args[0]->stringval, "r");
+	FILE *infile = fopen(args[0]->get_stringval(), "r");
 	if(!infile) {
 		eh_error("Unable to open included file", enotice_e);
 		obj->returning = false;
 		return NULL;
 	}
 	EHParser parser(end_is_end_e, obj);
-	ehretval_t parse_return = parser.parse_file(infile);
+	ehretval_p parse_return = parser.parse_file(infile);
 	// we're no longer returning
 	obj->returning = false;
-	ehretval_p out;
-	out->overwrite(parse_return);
-	return out;
+	return parse_return;
 }
 
 // power
@@ -256,13 +263,13 @@ EHLIBFUNC(pow) {
 		return NULL;
 	}
 	if(args[1]->type() == int_e && args[0]->type() == int_e) {
-		return new ehretval_t((int) pow((float) args[1]->intval, (float) args[0]->intval));
+		return ehretval_t::make_int(pow((float) args[1]->get_intval(), (float) args[0]->get_intval()));
 	} else if(args[1]->type() == int_e && args[0]->type() == float_e) {
-		return new ehretval_t(pow((float) args[1]->intval, args[0]->floatval));
+		return ehretval_t::make_float(pow((float) args[1]->get_intval(), args[0]->get_floatval()));
 	} else if(args[1]->type() == float_e && args[0]->type() == int_e) {
-		return new ehretval_t(pow(args[1]->floatval, (float) args[0]->intval));
+		return ehretval_t::make_float(pow(args[1]->get_floatval(), (float) args[0]->get_intval()));
 	} else if(args[1]->type() == float_e && args[0]->type() == float_e) {
-		return new ehretval_t(pow(args[1]->floatval, args[0]->floatval));
+		return ehretval_t::make_float(pow(args[1]->get_floatval(), args[0]->get_floatval()));
 	} else {
 		eh_error_type("argument 0 to pow", args[1]->type(), enotice_e);
 		eh_error_type("argument 1 to pow", args[0]->type(), enotice_e);
@@ -280,7 +287,7 @@ EHLIBFUNC(log) {
 		eh_error_type("argument 0 to log", args[0]->type(), enotice_e);
 		return NULL;
 	}
-	return new ehretval_t(log(arg->floatval));
+	return ehretval_t::make_float(log(arg->get_floatval()));
 }
 
 EHLIBFUNC(eval) {
@@ -293,7 +300,7 @@ EHLIBFUNC(eval) {
 		eh_error_type("argument 0 to eval", args[0]->type(), enotice_e);
 		return NULL;	
 	}
-	return new ehretval_t(obj->parse_string(arg->stringval));
+	return obj->parse_string(arg->get_stringval());
 }
 
 EHLIBFUNC(getinput) {
@@ -302,7 +309,7 @@ EHLIBFUNC(getinput) {
 		return NULL;
 	}
 	// more accurately, getint
-	ehretval_p ret = new ehretval_t(int_e);
+	ehretval_p ret = ehretval_t::make_typed(int_e);
 	fscanf(stdin, "%d", &(ret->intval));
 	return ret;
 }

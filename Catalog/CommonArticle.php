@@ -2535,7 +2535,7 @@ IUCN. 2008. IUCN Red List of Threatened Species. <www.iucnredlist.org>. Download
 		return true;
 	}
 	private function trydoi() {
-		if(preg_match_all("/(doi|DOI)\s*(\/((full|abs|pdf)\/)?|:|\.org\/)?\s*(?!URL:)([^\s]*?),?\s/su", $this->pdfcontent, $matches)) {
+		if(preg_match_all("/(doi|DOI)\s*(\/((full|abs|pdf)\/)?|:|\.org\/)?\s*(?!URL:)([^\s]*?)(,?\s|$)/su", $this->pdfcontent, $matches)) {
 			echo "Detected possible DOI." . PHP_EOL;
 			foreach($matches[5] as $match) {
 				$doi = Sanitizer::trimdoi($match);

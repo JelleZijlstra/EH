@@ -4,6 +4,7 @@
  * EH library classes
  */
 #include "eh_libclasses.h"
+#include "eh_error.h"
 
 START_EHLC(CountClass)
 EHLC_ENTRY(CountClass, docount)
@@ -16,9 +17,7 @@ EH_METHOD(CountClass, docount) {
 		return NULL;
 	}
 	CountClass *selfptr = (CountClass *)obj;
-	ehretval_p ret;
-	ret->set((int) ++selfptr->count);
-	return ret;
+	return ehretval_t::make_int(++selfptr->count);
 }
 EH_METHOD(CountClass, setcount) {
 	if(nargs != 1) {
@@ -32,10 +31,8 @@ EH_METHOD(CountClass, setcount) {
 		return NULL;
 	}
 
-	selfptr->count = newcounter->intval;
-	ehretval_p ret;
-	ret->set(true);
-	return ret;
+	selfptr->count = newcounter->get_intval();
+	return ehretval_t::make_bool(true);
 }
 
 START_EHLC(File)
@@ -57,14 +54,12 @@ EH_METHOD(File, open) {
 	if(filename->type() != string_e) {
 		return NULL;
 	}
-	FILE *mfile = fopen(filename->stringval, "r+");
+	FILE *mfile = fopen(filename->get_stringval(), "r+");
 	if(mfile == NULL) {
 		return NULL;
 	}
 	selfptr->descriptor = mfile;
-	ehretval_p ret;
-	ret->set(true);
-	return ret;
+	return ehretval_t::make_bool(true);
 }
 
 EH_METHOD(File, getc) {
@@ -81,11 +76,10 @@ EH_METHOD(File, getc) {
 	if(c == -1) {
 		return NULL;
 	}
-	ehretval_p ret;
-	ret->set(new char[2]);
-	ret->stringval[0] = c;
-	ret->stringval[1] = '\0';
-	return ret;
+	char *out = new char[2];
+	out[0] = c;
+	out[1] = '\0';
+	return ehretval_t::make_string(out);
 }
 
 EH_METHOD(File, gets) {
@@ -98,15 +92,14 @@ EH_METHOD(File, gets) {
 		return NULL;
 	}
 	
-	ehretval_p ret;
-	ret->set(new char[512]);
-	
-	char *ptr = fgets(ret->stringval, 511, selfptr->descriptor);
+	char *out = new char[512];
+
+	char *ptr = fgets(out, 511, selfptr->descriptor);
 	if(ptr == NULL) {
-		delete[] ret->stringval;
-		ret->type(null_e);
+		delete[] out;
+		return NULL;
 	}
-	return ret;
+	return ehretval_t::make_string(out);
 }
 
 EH_METHOD(File, puts) {
@@ -124,15 +117,13 @@ EH_METHOD(File, puts) {
 		return NULL;
 	}
 
-	int count = fputs(str->stringval, selfptr->descriptor);
+	int count = fputs(str->get_stringval(), selfptr->descriptor);
 	
-	ehretval_p ret;
 	if(count == EOF) {
-		ret->set(false);
+		return ehretval_t::make_bool(false);
 	} else {
-		ret->set(true);
+		return ehretval_t::make_bool(true);
 	}
-	return ret;
 }
 
 EH_METHOD(File, close) {

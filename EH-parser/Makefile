@@ -1,6 +1,7 @@
-CC = g++
-CCBASICFLAGS = -ggdb -fPIC -c -I/opt/local/include
+CC = clang++-mp-3.1
+CCBASICFLAGS = -ggdb -fPIC -c
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic
+LDFLAGS = 
 SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
@@ -26,10 +27,10 @@ eh_libfuncs.cpp: eh_libfuncs.h
 	$(CC) $(CCFLAGS) $< -o $@
 
 ehc: $(COMPILER_O)
-	$(CC) $(COMPILER_O) -o ehc
+	$(CC) $(LDFLAGS) $(COMPILER_O) -o ehc
 
 ehi: $(EHI_O)
-	$(CC) $(EHI_O) -o ehi
+	$(CC) $(LDFLAGS) $(EHI_O) -o ehi
 	sudo cp ehi /usr/bin/ehi
 
 ehphp: $(EHPHP_O)

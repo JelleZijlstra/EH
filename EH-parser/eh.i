@@ -6,6 +6,7 @@
  */
 %{
 #include "eh.h"
+#include "eh_error.h"
 ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
 	return NULL;
 }
@@ -18,30 +19,31 @@ zval *arrtozval(eharray_t *paras);
 
 zval *ehtozval(ehretval_p in) {
 	if(in->type() == array_e) {
-		return arrtozval(in->arrayval);
+		return arrtozval(in->get_arrayval());
 	} else {
 		zval *out;
 		MAKE_STD_ZVAL(out);
 		switch(in->type()) {
 			case int_e:
-				ZVAL_LONG(out, in->intval);
+				ZVAL_LONG(out, in->get_intval());
 				break;
 			case string_e:
-				ZVAL_STRING(out, in->stringval, 0);
+				ZVAL_STRING(out, in->get_stringval(), 0);
 				break;
 			case bool_e:
-				ZVAL_BOOL(out, in->boolval);
+				ZVAL_BOOL(out, in->get_boolval());
 				break;
 			case array_e:
 				break;
 			case float_e:
-				ZVAL_DOUBLE(out, in->floatval);
+				ZVAL_DOUBLE(out, in->get_floatval());
 				break;
 			case null_e:
 				ZVAL_NULL(out);
 				break;
 			case range_e:
 			case func_e:
+			case weak_object_e:
 			case object_e:
 				// TODO
 				eh_error_type("conversion to PHP", in->type(), enotice_e);
@@ -75,39 +77,29 @@ zval *arrtozval(eharray_t *paras) {
 }
 
 ehretval_p zvaltoeh(zval *in) {
-	ehretval_p ret;
 	switch(in->type) {
 		case IS_NULL:
-			break;
+			return NULL;
 		case IS_BOOL:
-			ret->type(bool_e);
 			// apparently, a bool is stored as a long
-			if(in->value.lval)
-				ret->boolval = true;
-			else
-				ret->boolval = false;
-			break;
+			return ehretval_t::make_bool(in->value.lval);
 		case IS_DOUBLE:
-			ret->set((float) in->value.dval);
-			break;
+			return ehretval_t::make_float(in->value.dval);
 		case IS_STRING:
 			// would be nice to use strndup with in->value.str.len, can't get it though
-			ret->set(strdup(in->value.str.val));
-			break;
+			return ehretval_t::make_string(strdup(in->value.str.val));
 		case IS_ARRAY:
 			// initialize array
-			ret->set(zvaltoeh_array(in->value.ht));
-			break;
+			return ehretval_t::make_array(zvaltoeh_array(in->value.ht));
 		case IS_LONG:
-			ret->set((int) in->value.lval);
-			break;
+			return ehretval_t::make_int(in->value.lval);
 		case IS_RESOURCE:
 		case IS_OBJECT:
 		default:
 			fprintf(stderr, "Unsupported PHP type %d\n", in->type);
-			break;
+			return NULL;
 	}
-	return ret;
+	return NULL;
 }
 
 eharray_t *zvaltoeh_array(HashTable *hash) {
@@ -157,8 +149,8 @@ eharray_t *zvaltoeh_array(HashTable *hash) {
 class EHI {
 public:
 	int eh_interactive(void);
-	ehretval_t parse_file(const char *name);
-	ehretval_t parse_string(const char *cmd);
+	ehretval_p parse_file(const char *name);
+	ehretval_p parse_string(const char *cmd);
 
 	virtual ehretval_p execute_cmd(const char *name, eharray_t *paras);
 	virtual char *eh_getline(EHParser *parser = NULL);

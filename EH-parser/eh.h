@@ -18,7 +18,7 @@
 #include <exception>
 #include <iostream>
 
-#include "eh_gc.h"
+#include "refcount_ptr.h"
 
 #include <map>
 #include <iostream>

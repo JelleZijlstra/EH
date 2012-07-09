@@ -22,7 +22,7 @@
 #include <list>
 
 #include "refcount_ptr.h"
-
+#include "eh_gc.h"
 
 /*
  * Enums used in the parser and interpreter
@@ -110,6 +110,7 @@ private:
 		this->_type = type;
 	}
 public:
+	//typedef garbage_collector<ehretval_t>::pointer ehretval_p;
 	typedef refcount_ptr<ehretval_t> ehretval_p;
 	union {
 		// simple EH variable type

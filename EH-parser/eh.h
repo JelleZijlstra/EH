@@ -147,6 +147,7 @@ public:
 	EHRV_MAKE(float, float)
 	EHRV_MAKE(struct opnode_t *, op)
 	EHRV_MAKE(accessor_enum, accessor)
+	EHRV_MAKE(type_enum, type)
 #undef EHRV_MAKE
 #define EHRV_SET(vtype, ehtype) static ehretval_p make_ ## ehtype(vtype in) { \
 	ehretval_p out; \
@@ -168,6 +169,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(struct opnode_t *, op)
 	EHRV_SET(accessor_enum, accessor)
 	EHRV_SET(attribute_enum, attribute)
+	EHRV_SET(attributes_t, attributestr)
 	EHRV_SET(struct ehobj_t *, weak_object)
 	EHRV_SET(struct ehobj_t *, func)
 	EHRV_SET(type_enum, type)

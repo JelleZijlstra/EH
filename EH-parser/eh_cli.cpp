@@ -34,7 +34,8 @@ int main(int argc, char **argv) {
 			interpreter.eh_setarg(argc, argv);
 			ret = interpreter.parse_file(argv[1]);
 		}
-		return ret->intval;
+		//TODO: let scripts determine exit status
+		return 0;
 	}
 	catch(...) {
 		return -1;

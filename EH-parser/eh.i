@@ -19,24 +19,24 @@ zval *arrtozval(eharray_t *paras);
 
 zval *ehtozval(ehretval_p in) {
 	if(in->type() == array_e) {
-		return arrtozval(in->arrayval);
+		return arrtozval(in->get_arrayval());
 	} else {
 		zval *out;
 		MAKE_STD_ZVAL(out);
 		switch(in->type()) {
 			case int_e:
-				ZVAL_LONG(out, in->intval);
+				ZVAL_LONG(out, in->get_intval());
 				break;
 			case string_e:
-				ZVAL_STRING(out, in->stringval, 0);
+				ZVAL_STRING(out, in->get_stringval(), 0);
 				break;
 			case bool_e:
-				ZVAL_BOOL(out, in->boolval);
+				ZVAL_BOOL(out, in->get_boolval());
 				break;
 			case array_e:
 				break;
 			case float_e:
-				ZVAL_DOUBLE(out, in->floatval);
+				ZVAL_DOUBLE(out, in->get_floatval());
 				break;
 			case null_e:
 				ZVAL_NULL(out);

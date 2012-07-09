@@ -110,7 +110,7 @@ global_list:
 								// flush stdout after executing each statement
 								fflush(stdout);
 								if(parser->_parent->returning) {
-									return (ret == NULL) ? 0 : ret->intval;
+									return (ret == NULL) ? 0 : ret->get_intval();
 								}
 							} global_list {
 							}

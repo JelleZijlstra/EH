@@ -318,8 +318,8 @@ typedef struct eharray_t {
 	
 	bool has(ehretval_p index) const {
 		switch(index->type()) {
-			case int_e: return this->int_indices.count(index->intval);
-			case string_e: return this->string_indices.count(index->stringval);
+			case int_e: return this->int_indices.count(index->get_intval());
+			case string_e: return this->string_indices.count(index->get_stringval());
 			default: return false;
 		}
 	}

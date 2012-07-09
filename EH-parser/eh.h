@@ -17,12 +17,12 @@
 #include <errno.h>
 #include <exception>
 #include <iostream>
+#include <map>
+#include <algorithm>
+#include <list>
 
 #include "refcount_ptr.h"
 
-#include <map>
-#include <iostream>
-#include <algorithm>
 
 /*
  * Enums used in the parser and interpreter
@@ -204,6 +204,7 @@ vtype get_ ## ehtype ## val() const { \
 		}
 	}
 	void print();
+	std::list<ehretval_p> children();
 	
 	~ehretval_t();
 	

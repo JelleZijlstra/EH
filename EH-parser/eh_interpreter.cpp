@@ -1915,6 +1915,48 @@ void ehretval_t::print() {
 	}
 	return;
 }
+std::list<ehretval_p> ehretval_t::children() {
+	std::list<ehretval_p> out;
+	switch(this->type()) {
+		case object_e: {
+			ehobj_t *o = this->get_objectval();
+			OBJECT_FOR_EACH(o, i) {
+				out.push_back(i->second->value);
+			}
+			out.push_back(o->parent);
+			if(o->real_parent != NULL) {
+				out.push_back(o->real_parent);
+			}
+			break;
+		}
+		case weak_object_e:
+			// ignored for GC purposes
+			break;
+		case func_e: {
+			ehobj_t *f = this->get_funcval();
+			OBJECT_FOR_EACH(f, i) {
+				out.push_back(i->second->value);
+			}
+			out.push_back(f->parent);
+			if(f->real_parent != NULL) {
+				out.push_back(f->real_parent);
+			}
+			break;
+		}
+		case array_e:
+			ARRAY_FOR_EACH_INT(this->get_arrayval(), i) {
+				out.push_back(i->second);
+			}
+			ARRAY_FOR_EACH_STRING(this->get_arrayval(), i) {
+				out.push_back(i->second);
+			}
+			break;
+		default:
+			// no components
+			break;
+	}
+	return out;
+}
 
 /*
  * eharray_t

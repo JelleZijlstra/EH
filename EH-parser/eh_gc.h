@@ -81,7 +81,7 @@ private:
 			this->gc_data &= ~(1 << (15 - bit));		
 		}
 		bool get_gc_bit(int bit) const {
-			return (bool) this->gc_data & (1 << (15 - bit));
+			return (bool) (this->gc_data & (1 << (15 - bit)));
 		}
 
 		void inc_rc() {
@@ -126,7 +126,8 @@ private:
 		
 		~pool() {
 			if(next != NULL) {
-				delete next;
+				// No: next may still be valid. But GC destructor must free all the pools.
+				//delete next;
 			}
 		}
 		
@@ -337,14 +338,14 @@ private:
 	void do_mark(pointer root) {
 		int bit = this->current_bit.get();
 		// ignore already marked objects
-		if(root.get_gc_bit(bit)) {
+		if((~root)->get_gc_bit(bit)) {
 			return;
 		}
-		root.set_gc_bit(bit);
+		(~root)->set_gc_bit(bit);
 		// not sure whether this will compile
 		std::list<pointer> children = root->children();
 		for(typename std::list<pointer>::iterator i = children.begin(), end = children.end(); i != end; i++) {
-			this->do_mark(i);
+			this->do_mark(*i);
 		}
 	}
 	
@@ -354,12 +355,12 @@ private:
 		int previous_bit = this->current_bit.prev();
 		for(pool *p = this->first_pool, *prev = NULL; p != NULL; prev = p, p = p->next) {
 			for(int i = 0; i < pool_size; i++) {
-				block b = p->blocks[i];
+				block *b = (block *)&p->blocks[i * sizeof(block)];
 				if(b->is_allocated() && !b->get_gc_bit(current_bit)) {
 					p->dealloc(b);
 				} else {
 					// unset old GC bits
-					p->unset_gc_bit(previous_bit);
+					b->unset_gc_bit(previous_bit);
 					// assimilate self-freed blocks
 					if(b->is_self_freed()) {
 						p->harvest_self_freed(b);
@@ -373,9 +374,15 @@ private:
 						prev->next = p->next;
 					}
 					if(p == this->current_pool) {
-						this->current_pool = this->find_current_pool();
+						this->find_current_pool();
 					}
 					delete p;
+					if(prev == NULL) {
+						p = this->first_pool;
+					} else {
+						p = prev;
+					}
+					break;
 				}
 			}
 		}
@@ -387,10 +394,10 @@ public:
 		return pointer();
 	}
 	
-	void do_collect(pointer root) {
-		this->do_mark(root);
-		this->current_bit.inc();
-		this->do_sweep();
+	static void do_collect(pointer root) {
+		instance.do_mark(root);
+		instance.current_bit.inc();
+		instance.do_sweep();
 	}
 
 	// constructors and destructors

@@ -209,6 +209,8 @@ void EHI::eh_exit(void) {
 		delete[] this->buffer;
 	}
 	this->global_object->get_objectval()->members.erase("global");
+	// Currently frees some stuff it shouldn't free: look into selectively heap-allocating.
+	//garbage_collector<ehretval_t>::do_collect(this->global_object);
 	return;
 }
 EHI::~EHI() {

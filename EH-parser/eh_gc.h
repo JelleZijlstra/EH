@@ -33,6 +33,8 @@
  * root? We may be able to solve this to some extent by only running the GC
  * between statements; even then, stuff like eh_op_declareclass may be in 
  * trouble.
+ *
+ * Problems: write the pointer implementation.
  */
 #include <list>
 
@@ -236,7 +238,12 @@ private:
 	 * Garbage collection.
 	 */
 	void do_mark(pointer root) {
-		root.set_gc_bit(this->marking_bit.get());
+		int bit = this->marking_bit.get();
+		// ignore already marked objects
+		if(root.get_gc_bit(bit)) {
+			return;
+		}
+		root.set_gc_bit(bit);
 		// not sure whether this will compile
 		std::list<pointer> children = root->children();
 		for(typename std::list<pointer>::iterator i = children.begin(), end = children.end(); i != end; i++) {

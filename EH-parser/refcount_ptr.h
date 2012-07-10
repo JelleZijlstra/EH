@@ -28,12 +28,7 @@ private:
 	mutable container<T>* pointer;
 	
 	// this to make sure we can internally access pointer
-	container<T>* operator~() const {
-		return this->pointer;
-	}
-	
-	// need both a reference and a non-reference one
-	container<T>* &operator!() const {
+	container<T>* &operator~() const {
 		return this->pointer;
 	}
 	
@@ -42,7 +37,7 @@ public:
 	static refcount_ptr<T> clone(refcount_ptr<T> in) {
 		refcount_ptr<T> out;
 		if(~in != NULL) {
-			!out = new container<T>(*~in);
+			~out = new container<T>(*~in);
 		}
 		return out;		
 	}

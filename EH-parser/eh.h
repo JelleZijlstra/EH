@@ -110,8 +110,8 @@ private:
 		this->_type = type;
 	}
 public:
-	//typedef garbage_collector<ehretval_t>::pointer ehretval_p;
-	typedef refcount_ptr<ehretval_t> ehretval_p;
+	typedef garbage_collector<ehretval_t>::pointer ehretval_p;
+	//typedef refcount_ptr<ehretval_t> ehretval_p;
 	union {
 		// simple EH variable type
 		int intval;
@@ -222,6 +222,10 @@ vtype get_ ## ehtype ## val() const { \
 		return in;
 	}
 } ehretval_t;
+
+template<>
+garbage_collector<ehretval_t> garbage_collector<ehretval_t>::instance;
+
 typedef ehretval_t::ehretval_p ehretval_p;
 
 // Operator

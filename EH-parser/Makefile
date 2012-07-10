@@ -2,7 +2,7 @@ CC = clang++
 CCBASICFLAGS = -ggdb -fPIC -c
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic
 LDFLAGS = 
-SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp
+SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp eh_types.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
 INTERPRETER = $(SOURCES) eh_libfuncs.cpp eh_libclasses.cpp eh_libcmds.cpp eh_interpreter.cpp

@@ -116,37 +116,4 @@ public:
 			this->pointer->dec_rc();
 		}
 	}
-
-/*	// share this value with a new variable
-	static refcount_ptr<T> share(refcount_ptr<T> in) {
-	 	container<T>* con = ~in;
-		// can share if it's already shared or if there is only one reference
-		if(con->is_shared || (con->refcount == 1)) {
-			con->inc_rc();
-			con->is_shared++;
-			return in;
-		} else {
-			return clone(in);
-		}
-	}*/
-/* I think this is unnecessary.
-	// make a reference to this object, overwriting the ehretval_t * pointed to by in.
-	ehretval_t *reference(ehretval_t *&in) {
-		if(is_shared == 0) {
-			inc_rc();
-			return this;
-		} else {
-			ehretval_t *out = clone();
-			is_shared--;
-			dec_rc();
-			in = out;
-			// one for the reference, one for the actual object
-			out->inc_rc();
-			return out;
-		}
-	}*
-	void make_shared() {
-		is_shared++;
-	}*/
-
 };

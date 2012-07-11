@@ -206,6 +206,18 @@ vtype get_ ## ehtype ## val() const { \
 			return this->_type;
 		}
 	}
+	
+	bool belongs_in_gc() const {
+		switch(this->type()) {
+			case object_e:
+			case weak_object_e:
+			case array_e:
+				return true;
+			default:
+				return false;
+		}
+	}
+	
 	void print();
 	std::list<ehretval_p> children();
 	

@@ -33,6 +33,10 @@
  * root? We may be able to solve this to some extent by only running the GC
  * between statements; even then, stuff like eh_op_declareclass may be in 
  * trouble.
+ *
+ * Types included in this GC should have a method belongs_in_gc that tells the
+ * GC whether a particular object should be allocated within the GC-checked
+ * part of memory or within the normal heap.
  */
 #include <list>
 
@@ -57,6 +61,8 @@ private:
 		short gc_data;
 		// could we make an explicit union here? That might fail because T is not a POD. In any case, this is implicitly a union of a T and a block*
 		T content;
+		
+		block() : refcount(1), gc_data(0), content() {}
 		
 		// get the next pointer from a free block. Havoc will result if this is called on an allocated block.
 		block *get_next_pointer() const {
@@ -91,12 +97,16 @@ private:
 		void dec_rc() {
 			this->refcount--;
 			if(this->refcount == 0) {
-				// We can free this block now, but there is no way to let the
-				// pool know that this block is free. Thus, we instead set the
-				// next_pointer to 1, and the sweeper will understand that this
-				// is a self-freed block.
-				this->suicide();
-				this->set_next_pointer((block *)1);
+				if(this->content.belongs_in_gc()) {
+					// We can free this block now, but there is no way to let 
+					// the  pool know that this block is free. Thus, we instead 
+					// set the next_pointer to 1, and the sweeper will 
+					// understand that this is a self-freed block.
+					this->suicide();
+					this->set_next_pointer((block *)1);
+				} else {
+					delete this;
+				}
 			}
 		}
 		
@@ -124,7 +134,12 @@ private:
 		
 		pool(pool *_next = NULL) : next(_next), first_free_block((block *)&blocks[0]), free_blocks(pool_size), blocks() {}
 		
-		~pool() {}
+		~pool() {
+			if(free_blocks < pool_size) {
+				// kill everything
+				
+			}
+		}
 		
 		// methods
 		bool full() const {
@@ -147,6 +162,27 @@ private:
 			this->first_free_block = b;
 			free_blocks++;
 		}
+		
+		void sweep(previous_bit, current_bit) {
+			for(int i = 0; i < pool_size; i++) {
+				block *b = (block *)&this->blocks[i * sizeof(block)];
+				if(b->is_allocated() && !b->get_gc_bit(current_bit)) {
+					this->dealloc(b);
+				} else {
+					// unset old GC bits
+					b->unset_gc_bit(previous_bit);
+					// assimilate self-freed blocks
+					if(!b->is_allocated() && b->is_self_freed()) {
+						this->harvest_self_freed(b);
+					}
+				}
+				// if pool is now empty, no need to continue sweep
+				if(this->empty()) {
+					break;
+				}
+			}
+		
+		}
 	};
 	
 	class marking_bit {
@@ -164,7 +200,7 @@ private:
 			}
 		}
 		int next() const {
-			return this->value % sizeof(short);
+			return (this->value + 1) % sizeof(short);
 		}
 		int prev() const {
 			if(this->value == 0) {
@@ -182,7 +218,7 @@ public:
 	private:
 		mutable block *content;
 		
-		block *operator~() const {
+		block *&operator~() const {
 			return this->content;
 		}
 		class dummy_class {};
@@ -195,7 +231,11 @@ public:
 			if(in == NULL) {
 				this->content = NULL;
 			} else {
-				this->content = instance.real_allocate();
+				if(in->belongs_in_gc()) {
+					this->content = instance.real_allocate();
+				} else {
+					this->content = new block;
+				}
 				this->content->content = *in;
 			}
 		}
@@ -215,13 +255,13 @@ public:
 		 */
 		T &operator*() const {
 			if(this->content == NULL) {
-				this->content = instance.real_allocate();
+				this->content = new block;
 			}
 			return this->content->content;
 		}
 		T *operator->() const {
 			if(this->content == NULL) {
-				this->content = instance.real_allocate();
+				this->content = new block;
 			}
 			return &this->content->content;
 		}
@@ -235,6 +275,14 @@ public:
 			if(this->content != NULL) {
 				this->content->inc_rc();
 			}
+			return *this;
+		}
+		pointer &operator=(dummy_class *rhs) {
+			assert(rhs == NULL);
+			if(this->content != NULL) {
+				this->content->dec_rc();
+			}
+			this->content = NULL;
 			return *this;
 		}
 	
@@ -331,13 +379,13 @@ private:
 	 * Garbage collection.
 	 */
 	void do_mark(pointer root) {
-		int bit = this->current_bit.get();
+		int bit = this->current_bit.next();
 		// ignore already marked objects
 		if((~root)->get_gc_bit(bit)) {
 			return;
 		}
 		(~root)->set_gc_bit(bit);
-		// not sure whether this will compile
+
 		std::list<pointer> children = root->children();
 		for(typename std::list<pointer>::iterator i = children.begin(), end = children.end(); i != end; i++) {
 			this->do_mark(*i);
@@ -349,44 +397,35 @@ private:
 		int current_bit = this->current_bit.get();
 		int previous_bit = this->current_bit.prev();
 		for(pool *p = this->first_pool, *prev = NULL; p != NULL; prev = p, p = p->next) {
-			for(int i = 0; i < pool_size; i++) {
-				block *b = (block *)&p->blocks[i * sizeof(block)];
-				if(b->is_allocated() && !b->get_gc_bit(current_bit)) {
-					p->dealloc(b);
+			std::cout << "Before " << p->free_blocks << std::endl;
+			p->sweep(previous_bit, current_bit);
+			std::cout << "After " << p->free_blocks << std::endl;
+		}
+		// remove pools that are now empty
+		for(pool *p = this->first_pool, *prev = NULL; p != NULL; prev = p, p = p->next) {
+			if(p->empty()) {
+				if(prev == NULL) {
+					this->first_pool = p->next;
 				} else {
-					// unset old GC bits
-					b->unset_gc_bit(previous_bit);
-					// assimilate self-freed blocks
-					if(b->is_self_freed()) {
-						p->harvest_self_freed(b);
-					}
+					prev->next = p->next;
 				}
-				// GC pools
-				if(p->empty()) {
-					if(prev == NULL) {
-						this->first_pool = p->next;
-					} else {
-						prev->next = p->next;
-					}
-					if(p == this->current_pool) {
-						this->find_current_pool();
-					}
-					delete p;
-					if(prev == NULL) {
-						p = this->first_pool;
-					} else {
-						p = prev;
-					}
-					break;
+				if(p == this->current_pool) {
+					this->find_current_pool();
+				}
+				delete p;
+				if(prev == NULL) {
+					p = this->first_pool;
+				} else {
+					p = prev;
 				}
 			}
 		}
 	}
 public:
 	// public methods
-	pointer allocate() {
+	static void allocate(pointer &p) {
 		// this doesn't actually allocate anything: it just pretends to
-		return pointer();
+		~p = instance.real_allocate();
 	}
 	
 	static void do_collect(pointer root) {

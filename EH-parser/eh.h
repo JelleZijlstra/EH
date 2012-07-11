@@ -109,6 +109,18 @@ private:
 	void type(type_enum type) {
 		this->_type = type;
 	}
+	
+	static bool belongs_in_gc(type_enum type) {
+		switch(type) {
+			case object_e:
+			case weak_object_e:
+			case func_e:
+			case array_e:
+				return true;
+			default:
+				return false;
+		}	
+	}
 public:
 	typedef garbage_collector<ehretval_t>::pointer ehretval_p;
 	//typedef refcount_ptr<ehretval_t> ehretval_p;
@@ -151,6 +163,9 @@ public:
 #undef EHRV_MAKE
 #define EHRV_SET(vtype, ehtype) static ehretval_p make_ ## ehtype(vtype in) { \
 	ehretval_p out; \
+	if(belongs_in_gc(ehtype ## _e)) { \
+		garbage_collector<ehretval_t>::allocate(out); \
+	} \
 	out->type(ehtype ## _e); \
 	out->ehtype ## val = in; \
 	return out; \
@@ -206,6 +221,11 @@ vtype get_ ## ehtype ## val() const { \
 			return this->_type;
 		}
 	}
+	
+	bool belongs_in_gc() const {
+		return belongs_in_gc(this->type());
+	}
+	
 	void print();
 	std::list<ehretval_p> children();
 	
@@ -213,6 +233,9 @@ vtype get_ ## ehtype ## val() const { \
 	
 	static ehretval_p make_typed(type_enum type) {
 		ehretval_p out;
+		if(belongs_in_gc(type)) {
+			garbage_collector<ehretval_t>::allocate(out);
+		}
 		out->type(type);
 		// this should NULL the union
 		out->stringval = NULL;

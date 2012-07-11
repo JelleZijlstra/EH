@@ -155,7 +155,7 @@ void EHI::eh_init(void) {
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
 		ehmember_p func;
 		func->value = ehretval_t::make_func(new ehobj_t("Closure"));
-		func->value->funcval->parent = global_object;
+		func->value->get_funcval()->parent = global_object;
 		ehfm_p f;
 		f->type = lib_e;
 		f->libfunc_pointer = libfuncs[i].code;
@@ -210,7 +210,7 @@ void EHI::eh_exit(void) {
 	}
 	this->global_object->get_objectval()->members.erase("global");
 	// Currently frees some stuff it shouldn't free: look into selectively heap-allocating.
-	//garbage_collector<ehretval_t>::do_collect(this->global_object);
+	garbage_collector<ehretval_t>::do_collect(this->global_object);
 	return;
 }
 EHI::~EHI() {

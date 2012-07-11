@@ -124,12 +124,7 @@ private:
 		
 		pool(pool *_next = NULL) : next(_next), first_free_block((block *)&blocks[0]), free_blocks(pool_size), blocks() {}
 		
-		~pool() {
-			if(next != NULL) {
-				// No: next may still be valid. But GC destructor must free all the pools.
-				//delete next;
-			}
-		}
+		~pool() {}
 		
 		// methods
 		bool full() const {
@@ -407,6 +402,10 @@ public:
 	}
 	
 	~garbage_collector() {
-		delete first_pool;
+		pool *next = NULL;
+		for(pool *p = this->first_pool; p != NULL; p = next) {
+			next = p->next;
+			delete p;
+		}
 	}
 };

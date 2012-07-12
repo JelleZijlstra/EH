@@ -137,7 +137,18 @@ private:
 		~pool() {
 			if(free_blocks < pool_size) {
 				// kill everything
-				
+        for(int i = 0; i < pool_size; i++) {
+          block *b = (block *)&this->blocks[i * sizeof(block)];
+          if(b->is_allocated()) {
+            this->dealloc(b);
+          } else if(b->is_self_freed()) {
+            this->harvest_self_freed(b);
+          }
+          // if pool is now empty, no need to continue sweep
+          if(this->empty()) {
+            break;
+          }
+        }				
 			}
 		}
 		
@@ -163,7 +174,7 @@ private:
 			free_blocks++;
 		}
 		
-		void sweep(previous_bit, current_bit) {
+		void sweep(int previous_bit, int current_bit) {
 			for(int i = 0; i < pool_size; i++) {
 				block *b = (block *)&this->blocks[i * sizeof(block)];
 				if(b->is_allocated() && !b->get_gc_bit(current_bit)) {
@@ -181,7 +192,6 @@ private:
 					break;
 				}
 			}
-		
 		}
 	};
 	
@@ -227,18 +237,6 @@ public:
 		 * Constructors
 		 */
 		pointer() : content(NULL) {}
-		explicit pointer(T *in) {
-			if(in == NULL) {
-				this->content = NULL;
-			} else {
-				if(in->belongs_in_gc()) {
-					this->content = instance.real_allocate();
-				} else {
-					this->content = new block;
-				}
-				this->content->content = *in;
-			}
-		}
 		pointer(dummy_class *in) {
 			// only for NULL initialization
 			assert(in == NULL);
@@ -397,9 +395,9 @@ private:
 		int current_bit = this->current_bit.get();
 		int previous_bit = this->current_bit.prev();
 		for(pool *p = this->first_pool, *prev = NULL; p != NULL; prev = p, p = p->next) {
-			std::cout << "Before " << p->free_blocks << std::endl;
+			//std::cout << "Before " << p->free_blocks << std::endl;
 			p->sweep(previous_bit, current_bit);
-			std::cout << "After " << p->free_blocks << std::endl;
+			//std::cout << "After " << p->free_blocks << std::endl;
 		}
 		// remove pools that are now empty
 		for(pool *p = this->first_pool, *prev = NULL; p != NULL; prev = p, p = p->next) {

@@ -47,10 +47,6 @@ private:
 	 * constants
 	 */
 	const static int pool_size = 512;
-	/*
-	 * singleton
-	 */
-	static garbage_collector instance;
 
 	/*
 	 * types

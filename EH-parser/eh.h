@@ -257,9 +257,6 @@ vtype get_ ## ehtype ## val() const { \
 	}
 } ehretval_t;
 
-template<>
-garbage_collector<ehretval_t> garbage_collector<ehretval_t>::instance;
-
 typedef ehretval_t::ehretval_p ehretval_p;
 
 // Operator

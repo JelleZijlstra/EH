@@ -713,7 +713,8 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_new(ehretval_p *paras, ehcontext_t context) {
-	ehobj_t *classobj = this->get_class(eh_execute(paras[0], context), context);
+  ehretval_p ret = eh_execute(paras[0], context);
+	ehobj_t *classobj = this->get_class(ret, context);
 	// get_class complains for us
 	if(classobj == NULL) {
 		return NULL;

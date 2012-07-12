@@ -421,15 +421,14 @@ private:
 	}
 public:
 	// public methods
-	static void allocate(pointer &p) {
-		// this doesn't actually allocate anything: it just pretends to
-		~p = instance.real_allocate();
+	void allocate(pointer &p) {
+		~p = this->real_allocate();
 	}
 	
-	static void do_collect(pointer root) {
-		instance.do_mark(root);
-		instance.current_bit.inc();
-		instance.do_sweep();
+	void do_collect(pointer root) {
+		this->do_mark(root);
+		this->current_bit.inc();
+		this->do_sweep();
 	}
 
 	// constructors and destructors

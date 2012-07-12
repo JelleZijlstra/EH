@@ -146,15 +146,15 @@ static inline int count_nodes(const ehretval_p node);
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), is_strange_arrow(false), buffer(NULL), returning(false), global_object() {
+EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), is_strange_arrow(false), buffer(NULL), gc(), returning(false), global_object() {
 	eh_init();
 }
 void EHI::eh_init(void) {
-	global_object = ehretval_t::make_object(new ehobj_t("AnonymousClass"));
+	global_object = this->make_object(new ehobj_t("AnonymousClass"));
 	
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
 		ehmember_p func;
-		func->value = ehretval_t::make_func(new ehobj_t("Closure"));
+		func->value = this->make_func(new ehobj_t("Closure"));
 		func->value->get_funcval()->parent = global_object;
 		ehfm_p f;
 		f->type = lib_e;
@@ -165,7 +165,7 @@ void EHI::eh_init(void) {
 	}
 	for(int i = 0; libclasses[i].name != NULL; i++) {
 		ehobj_t *newclass = new ehobj_t(libclasses[i].name);
-		ehretval_p new_value = ehretval_t::make_object(newclass);
+		ehretval_p new_value = this->make_object(newclass);
 		newclass->constructor = libclasses[i].info.constructor;
 		newclass->destructor = libclasses[i].info.destructor;
 		ehlm_listentry_t *members = libclasses[i].info.members;
@@ -174,7 +174,7 @@ void EHI::eh_init(void) {
 		for(int i = 0; members[i].name != NULL; i++) {
 			ehmember_p func;
 			func->attribute = attributes;
-			func->value = ehretval_t::make_func(new ehobj_t("Closure"));
+			func->value = this->make_func(new ehobj_t("Closure"));
 			func->value->get_funcval()->parent = new_value;
 			ehfm_p f;
 			f->type = libmethod_e;
@@ -197,7 +197,7 @@ void EHI::eh_init(void) {
 	attributes_t attributes = attributes_t::make(public_e, nonstatic_e, const_e);
 	ehmember_p global;
 	global->attribute = attributes;
-	global->value = ehretval_t::make_weak_object(global_object->get_objectval());
+	global->value = this->make_weak_object(global_object->get_objectval());
 	global_object->get_objectval()->insert("global", global);
 	return;
 }
@@ -209,8 +209,7 @@ void EHI::eh_exit(void) {
 		delete[] this->buffer;
 	}
 	this->global_object->get_objectval()->members.erase("global");
-	// Currently frees some stuff it shouldn't free: look into selectively heap-allocating.
-	garbage_collector<ehretval_t>::do_collect(this->global_object);
+	this->gc.do_collect(this->global_object);
 	return;
 }
 EHI::~EHI() {
@@ -726,7 +725,7 @@ void EHI::eh_op_inherit(ehretval_p *paras, ehcontext_t context) {
 	ehobj_t *classobj = this->get_class(eh_execute(paras[0], context), context);
 	if(classobj != NULL) {
 		OBJECT_FOR_EACH(classobj, i) {
-			context->get_objectval()->copy_member(i, true, context);
+			context->get_objectval()->copy_member(i, true, context, this);
 		}
 	}
 }
@@ -771,7 +770,7 @@ void EHI::eh_op_continue(opnode_t *op, ehcontext_t context) {
 	return;
 }
 ehretval_p EHI::eh_op_array(ehretval_p node, ehcontext_t context) {
-	ehretval_p ret = ehretval_t::make_array(new eharray_t);
+	ehretval_p ret = this->make_array(new eharray_t);
 	// need to count array members first, because they are reversed in our node.
 	// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
 	int count = 0;
@@ -784,7 +783,7 @@ ehretval_p EHI::eh_op_array(ehretval_p node, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
-	ehretval_p ret = ehretval_t::make_object(new ehobj_t("AnonClass"));
+	ehretval_p ret = this->make_object(new ehobj_t("AnonClass"));
 	ret->get_objectval()->parent = context;
 	// all members are public, non-static, non-const
 	attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
@@ -803,7 +802,7 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
-	ehretval_p ret = ehretval_t::make_func(new ehobj_t("Closure"));
+	ehretval_p ret = this->make_func(new ehobj_t("Closure"));
 	ret->get_funcval()->parent = context;
 
 	ehfm_p f;
@@ -839,12 +838,12 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	}
 
 	// create the ehretval_t
-	ehretval_p ret = ehretval_t::make_object(new ehobj_t(name));
+	ehretval_p ret = this->make_object(new ehobj_t(name));
 	ret->get_objectval()->parent = context;
 
 	// insert "this" pointer
 	attributes_t thisattributes = attributes_t::make(private_e, nonstatic_e, const_e);
-	ehretval_p thisvalue = ehretval_t::make_weak_object(ret->get_objectval());
+	ehretval_p thisvalue = this->make_weak_object(ret->get_objectval());
 	ret->get_objectval()->insert_retval("this", thisattributes, thisvalue);
 
 	eh_execute(code, ret);
@@ -1184,7 +1183,7 @@ ehretval_p EHI::call_function_args(ehobj_t *obj, const int nargs, ehretval_p arg
  */
 ehretval_p EHI::object_instantiate(ehobj_t *obj) {
 	ehobj_t *new_obj = new ehobj_t(obj->classname);
-	ehretval_p ret = ehretval_t::make_object(new_obj);
+	ehretval_p ret = this->make_object(new_obj);
 	new_obj->parent = obj->parent;
 	new_obj->real_parent = obj->real_parent;
 	new_obj->function = obj->function;
@@ -1197,7 +1196,7 @@ ehretval_p EHI::object_instantiate(ehobj_t *obj) {
 	ehretval_p constructor = NULL;
 	for(int i = 0; i < VARTABLE_S; i++) {
 		OBJECT_FOR_EACH(obj, m) {
-			new_obj->copy_member(m, false, ret);
+			new_obj->copy_member(m, false, ret, this);
 			if(m->first.compare("constructor") == 0) {
 				constructor = m->second->value;
 			}
@@ -1349,7 +1348,7 @@ void EHI::eh_setarg(int argc, char **argv) {
 
 	// insert argv
 	ehmember_p argv_v;
-	argv_v->value = ehretval_t::make_array(new eharray_t);
+	argv_v->value = this->make_array(new eharray_t);
 
 	// all members of argv are strings
 	for(int i = 1; i < argc; i++) {
@@ -1463,7 +1462,7 @@ ehretval_p eh_op_dot(ehretval_p operand1, ehretval_p operand2) {
 /*
  * Type casting
  */
-ehretval_p eh_cast(const type_enum type, ehretval_p in) {
+ehretval_p EHI::eh_cast(const type_enum type, ehretval_p in) {
 	switch(type) {
 		case int_e: return eh_xtoint(in);
 		case string_e: return eh_xtostring(in);
@@ -1528,8 +1527,8 @@ char *eh_rangetostring(const ehrange_t *const range) {
 	
 	return buffer;
 }
-ehretval_p eh_rangetoarray(const ehrange_t *const range) {
-	ehretval_p ret = ehretval_t::make_array(new eharray_t);
+ehretval_p EHI::eh_rangetoarray(const ehrange_t *const range) {
+	ehretval_p ret = this->make_array(new eharray_t);
 	ret->get_arrayval()->int_indices[0] = ehretval_t::make_int(range->min);
 	ret->get_arrayval()->int_indices[1] = ehretval_t::make_int(range->max);
 	return ret;
@@ -1691,7 +1690,7 @@ ehretval_p eh_xtorange(ehretval_p in) {
 	}
 	return ret;
 }
-ehretval_p eh_xtoarray(ehretval_p in) {
+ehretval_p EHI::eh_xtoarray(ehretval_p in) {
 	switch(in->type()) {
 		case array_e:
 			return in;
@@ -1704,7 +1703,7 @@ ehretval_p eh_xtoarray(ehretval_p in) {
 		case null_e:
 		case object_e:
 		case weak_object_e: {
-			ehretval_p ret = ehretval_t::make_array(new eharray_t);
+			ehretval_p ret = this->make_array(new eharray_t);
 			// create an array with just this variable in it
 			ret->get_arrayval()->int_indices[0] = in;
 			return ret;
@@ -2077,12 +2076,12 @@ ehmember_p ehobj_t::get_recursive_helper(const char *name, const ehcontext_t con
 		}
 	}
 }
-void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent, ehretval_p ret) {
+void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent, ehretval_p ret, EHI *ehi) {
 	ehmember_p newmember;
 	if(classmember->first.compare("this") == 0) {
 		// handle $this pointer
 		newmember->attribute = classmember->second->attribute;
-		newmember->value = ehretval_t::make_weak_object(this);
+		newmember->value = ehi->make_weak_object(this);
 	} else if(classmember->second->isstatic() || (classmember->second->isconst() && classmember->second->value->type() != func_e)) {
 		// we can safely share static members, as well as const members that are not functions
 		newmember = classmember->second;
@@ -2091,7 +2090,7 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent, ehret
 		if(classmember->second->value->type() == func_e) {
 			ehobj_t *oldobj = classmember->second->value->get_funcval();
 			ehobj_t *f = new ehobj_t(oldobj->classname);
-			newmember->value = ehretval_t::make_func(f);
+			newmember->value = ehi->make_func(f);
 			f->parent = ret;
 			if(set_real_parent && oldobj->real_parent == NULL) {
 				f->real_parent = oldobj->get_parent()->parent;

@@ -164,7 +164,7 @@ public:
 #define EHRV_SET(vtype, ehtype) static ehretval_p make_ ## ehtype(vtype in) { \
 	ehretval_p out; \
 	if(belongs_in_gc(ehtype ## _e)) { \
-		garbage_collector<ehretval_t>::allocate(out); \
+		assert(false); \
 	} \
 	out->type(ehtype ## _e); \
 	out->ehtype ## val = in; \
@@ -189,6 +189,16 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(struct ehobj_t *, func)
 	EHRV_SET(type_enum, type)
 #undef EHRV_SET
+  // special constructors for GC'ed types
+#define EHRV_GC(vtype, ehtype) static void fill_ ## ehtype(ehretval_p in, vtype val) { \
+  in->type(ehtype ## _e); \
+  in->ehtype ## val = val; \
+}
+  EHRV_GC(ehobj_t *, object)
+  EHRV_GC(ehobj_t *, weak_object)
+  EHRV_GC(ehobj_t *, func)
+  EHRV_GC(eharray_t *, array)
+#undef EHRV_GC
 
 	void overwrite(ehretval_t &in) {
 		this->type(in.type());
@@ -234,7 +244,8 @@ vtype get_ ## ehtype ## val() const { \
 	static ehretval_p make_typed(type_enum type) {
 		ehretval_p out;
 		if(belongs_in_gc(type)) {
-			garbage_collector<ehretval_t>::allocate(out);
+		  // can't do that here
+			assert(false);
 		}
 		out->type(type);
 		// this should NULL the union
@@ -406,7 +417,7 @@ public:
 	ehmember_p insert_retval(const char *name, attributes_t attribute, ehretval_p value);
 	ehmember_p get_recursive(const char *name, const ehcontext_t context, int token);
 	ehmember_p get(const char *name, const ehcontext_t context, int token);
-	void copy_member(obj_iterator &classmember, bool set_real_parent, ehretval_p ret);
+	void copy_member(obj_iterator &classmember, bool set_real_parent, ehretval_p ret, EHI *ehi);
 	bool context_compare(const ehcontext_t key) const;
 
 	// inline methods
@@ -491,13 +502,10 @@ ehretval_p eh_op_dot(ehretval_p operand1, ehretval_p operand2);
 ehretval_p eh_make_range(const int min, const int max);
 
 // type casting
-ehretval_p eh_cast(const type_enum type, ehretval_p in);
 ehretval_p eh_stringtoint(const char *const in);
 ehretval_p eh_stringtofloat(const char *const in);
 ehretval_p eh_stringtorange(const char *const in);
-ehretval_p eh_rangetoarray(const ehrange_t *const range);
 char *eh_inttostring(const int in);
-ehretval_p eh_xtoarray(ehretval_p in);
 ehretval_p eh_xtoint(ehretval_p in);
 ehretval_p eh_xtofloat(ehretval_p in);
 ehretval_p eh_xtostring(ehretval_p in);

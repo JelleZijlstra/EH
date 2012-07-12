@@ -37,6 +37,9 @@ private:
 	// buffer for interactive prompt
 	char *buffer;
 	
+	// our GC
+	garbage_collector<ehretval_t> gc;
+	
 	void eh_init(void);
 	// helper functions
 	ehretval_p eh_op_command(const char *name, ehretval_p node, ehcontext_t context);
@@ -71,6 +74,10 @@ private:
 	ehretval_p &colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token);
 	ehretval_p object_instantiate(ehobj_t *obj);
 	ehobj_t *get_class(ehretval_p code, ehcontext_t context);
+  ehretval_p eh_rangetoarray(const ehrange_t *const range);
+  ehretval_p eh_xtoarray(ehretval_p in);
+  ehretval_p eh_cast(const type_enum type, ehretval_p in);
+
 public:
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
@@ -86,6 +93,19 @@ public:
 	virtual ehretval_p execute_cmd(const char *rawcmd, eharray_t *paras);
 	virtual char *eh_getline(class EHParser *parser = NULL);
 	virtual ~EHI();
+	
+	// stuff for GC'ed ehretval_ts
+#define EHRV_MAKE(ehtype, vtype) ehretval_p make_ ## ehtype(vtype in) { \
+  ehretval_p out; \
+  this->gc.allocate(out); \
+  ehretval_t::fill_ ## ehtype(out, in); \
+  return out; \
+}
+  EHRV_MAKE(object, ehobj_t *)
+  EHRV_MAKE(weak_object, ehobj_t *)
+  EHRV_MAKE(func, ehobj_t *)
+  EHRV_MAKE(array, eharray_t *)
+#undef ERHV_MAKE
 };
 
 /*

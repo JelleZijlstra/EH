@@ -85,15 +85,15 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(struct ehobj_t *, func)
 	EHRV_SET(type_enum, type)
 #undef EHRV_SET
-  // special constructors for GC'ed types
+	// special constructors for GC'ed types
 #define EHRV_GC(vtype, ehtype) static void fill_ ## ehtype(ehretval_p in, vtype val) { \
-  in->type(ehtype ## _e); \
-  in->ehtype ## val = val; \
+	in->type(ehtype ## _e); \
+	in->ehtype ## val = val; \
 }
-  EHRV_GC(ehobj_t *, object)
-  EHRV_GC(ehobj_t *, weak_object)
-  EHRV_GC(ehobj_t *, func)
-  EHRV_GC(eharray_t *, array)
+	EHRV_GC(ehobj_t *, object)
+	EHRV_GC(ehobj_t *, weak_object)
+	EHRV_GC(ehobj_t *, func)
+	EHRV_GC(eharray_t *, array)
 #undef EHRV_GC
 
 	void overwrite(ehretval_t &in) {
@@ -140,7 +140,7 @@ vtype get_ ## ehtype ## val() const { \
 	static ehretval_p make_typed(type_enum type) {
 		ehretval_p out;
 		if(belongs_in_gc(type)) {
-		  // can't do that here
+			// can't do that here
 			assert(false);
 		}
 		out->type(type);

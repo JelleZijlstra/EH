@@ -1,4 +1,4 @@
-CC = clang++
+CC = clang++-mp-3.1
 CCBASICFLAGS = -ggdb -fPIC -c
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic
 LDFLAGS = 
@@ -34,7 +34,7 @@ ehi: $(EHI_O)
 	sudo cp ehi /usr/bin/ehi
 
 ehphp: $(EHPHP_O)
-	#./make_ehphp.sh "$(CC)" "$(SYMBOLS)" "$(EHPHP_O)"
+	./make_ehphp.sh "$(CC)" "$(SYMBOLS)" "$(EHPHP_O)"
 
 # If I don't do "/usr/bin/bison", y.tab.c won't compile because of a const char*
 # -> char* conversion.
@@ -46,9 +46,9 @@ eh.flex.cpp: eh.l eh.bison.hpp
 
 eh_wrap.cpp: eh.i
 	swig -c++ -php5 eh.i
-# Need to change the generated .php files if we're in Mac OS X
+	# Need to change the generated .php files if we're in Mac OS X
 	if [ `uname` = 'Darwin' ]; then sed -e "s/'\.PHP_SHLIB_SUFFIX/dylib'/" -e "s/function __construct/protected function __construct/" -i '.save' ehphp.php; fi
-# And need to this to get dl to succeed on Linux
+	# And need to this to get dl to succeed on Linux
 	if [ `uname` = 'Linux' ]; then sed -e "s/zend_error_noreturn/zend_error/" -i'.save' eh_wrap.cpp; sed -e "s/function __construct/protected function __construct/" -i'.save' ehphp.php; fi
 
 clean:

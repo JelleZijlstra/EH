@@ -118,7 +118,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			//printf("Executing opcode: %d\n", node->get_opval()->op);
 			switch(node->get_opval()->op) {
 				case T_COMMAND:
-					if(node->get_opval()->paras[0]->type() == string_e 
+					if(node->get_opval()->paras[0]->type() == string_e
 						&& !strcmp(node->get_opval()->paras[0]->get_stringval(), "echo")) {
 						node = node->get_opval()->paras[1];
 						if(node->get_opval()->nparas != 2) {

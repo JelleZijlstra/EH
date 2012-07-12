@@ -92,7 +92,7 @@ ehretval_p &eharray_t::operator[](ehretval_p index) {
 	}
 }
 void eharray_t::insert_retval(ehretval_p index, ehretval_p value) {
-	// Inserts a member into an array. 
+	// Inserts a member into an array.
 	switch(index->type()) {
 		case int_e:
 			this->int_indices[index->get_intval()] = value;

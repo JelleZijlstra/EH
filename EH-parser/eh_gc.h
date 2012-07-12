@@ -4,34 +4,34 @@
  *
  * A tracing garbage collector for specific C++ types.
  *
- * This garbage collector takes care of a specific pool of memory, consisting of 
- * n blocks that can hold a single object of type T plus a word's worth of 
- * meta-information. In the beginning, the entire pool is set to 0, indicating 
+ * This garbage collector takes care of a specific pool of memory, consisting of
+ * n blocks that can hold a single object of type T plus a word's worth of
+ * meta-information. In the beginning, the entire pool is set to 0, indicating
  * that the blocks are free.
  *
- * Free blocks always have their meta-information set to all 0. They can either 
- * have the space for the object also set to 0, which indicates that the next 
+ * Free blocks always have their meta-information set to all 0. They can either
+ * have the space for the object also set to 0, which indicates that the next
  * free block is the one immediately following this block, or they can contain a
  * pointer to the next available free block.
  *
  * Occupied blocks have a non-zero refcount. They are periodically swept by the
  * garbage collector.
  *
- * There are only three basic operations: creating a garbage_collector object, 
+ * There are only three basic operations: creating a garbage_collector object,
  * requesting it to create a new T object, and requesting it to do a GC run.
  *
- * Something to think about: if we have circular references, what will happen 
- * when we free them here and something that refers back to them tries to 
- * decrease the refcount of the thing we freed in the first place? I think we 
+ * Something to think about: if we have circular references, what will happen
+ * when we free them here and something that refers back to them tries to
+ * decrease the refcount of the thing we freed in the first place? I think we
  * should set the refcount to 0 before calling the destructor; that way, the
  * reference count will perhaps fall to -1 or so, but we don't care. After the
  * destructor is done, we set the refcount to 0 again and put the block in the
  * free list.
  *
- * Another potential problem is the GC root. What if we have objects that have 
- * valid references on the stack, but that aren't yet reachable from the GC 
+ * Another potential problem is the GC root. What if we have objects that have
+ * valid references on the stack, but that aren't yet reachable from the GC
  * root? We may be able to solve this to some extent by only running the GC
- * between statements; even then, stuff like eh_op_declareclass may be in 
+ * between statements; even then, stuff like eh_op_declareclass may be in
  * trouble.
  *
  * Types included in this GC should have a method belongs_in_gc that tells the
@@ -94,9 +94,9 @@ private:
 			this->refcount--;
 			if(this->refcount == 0) {
 				if(this->content.belongs_in_gc()) {
-					// We can free this block now, but there is no way to let 
-					// the  pool know that this block is free. Thus, we instead 
-					// set the next_pointer to 1, and the sweeper will 
+					// We can free this block now, but there is no way to let
+					// the	pool know that this block is free. Thus, we instead
+					// set the next_pointer to 1, and the sweeper will
 					// understand that this is a self-freed block.
 					this->suicide();
 					this->set_next_pointer((block *)1);
@@ -131,24 +131,24 @@ private:
 		pool(pool *_next = NULL) : next(_next), first_free_block((block *)&blocks[0]), free_blocks(pool_size), blocks() {}
 		
 		~pool() {
-		  assert(free_blocks == pool_size);
+			assert(free_blocks == pool_size);
 		}
 		
 		void flush() {
 			if(free_blocks < pool_size) {
 				// kill everything
-        for(int i = 0; i < pool_size; i++) {
-          block *b = (block *)&this->blocks[i * sizeof(block)];
-          if(b->is_allocated()) {
-            this->dealloc(b);
-          } else if(b->is_self_freed()) {
-            this->harvest_self_freed(b);
-          }
-          // if pool is now empty, no need to continue sweep
-          if(this->empty()) {
-            break;
-          }
-        }				
+				for(int i = 0; i < pool_size; i++) {
+					block *b = (block *)&this->blocks[i * sizeof(block)];
+					if(b->is_allocated()) {
+						this->dealloc(b);
+					} else if(b->is_self_freed()) {
+						this->harvest_self_freed(b);
+					}
+					// if pool is now empty, no need to continue sweep
+					if(this->empty()) {
+						break;
+					}
+				}				
 			}
 		}
 		
@@ -438,9 +438,9 @@ public:
 	}
 	
 	~garbage_collector() {
-    for(pool *p = this->first_pool; p != NULL; p = p->next) {
-      p->flush();
-    }	
+		for(pool *p = this->first_pool; p != NULL; p = p->next) {
+			p->flush();
+		}	
 	
 		pool *next = NULL;
 		for(pool *p = this->first_pool; p != NULL; p = next) {

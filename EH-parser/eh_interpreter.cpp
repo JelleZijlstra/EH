@@ -713,8 +713,8 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_new(ehretval_p *paras, ehcontext_t context) {
-  // Otherwise the class may die before the object gets instantiated
-  ehretval_p ret = eh_execute(paras[0], context);
+	// Otherwise the class may die before the object gets instantiated
+	ehretval_p ret = eh_execute(paras[0], context);
 	ehobj_t *classobj = this->get_class(ret, context);
 	// get_class complains for us
 	if(classobj == NULL) {
@@ -820,7 +820,7 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	}
 	// add arguments to arglist
 	int i = 0;
-	for(ehretval_p tmp = paras[0]; tmp->get_opval()->nparas != 0; 
+	for(ehretval_p tmp = paras[0]; tmp->get_opval()->nparas != 0;
 		tmp = tmp->get_opval()->paras[0]) {
 		f->args[i].name = eh_execute(tmp->get_opval()->paras[1], context)->get_stringval();
 		i++;
@@ -957,7 +957,7 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p function = eh_execute(paras[0], context);
-	// operand1 will be either a string (indicating a normal function call) or a 
+	// operand1 will be either a string (indicating a normal function call) or a
 	// func_e (indicating a method or closure call)
 	switch(function->type()) {
 		case string_e:
@@ -988,10 +988,10 @@ ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 }
 ehretval_p &EHI::eh_op_lvalue(opnode_t *op, ehcontext_t context) {
 	/*
-	 * Get an lvalue. This function normally returns a reference to an 
-	 * ehretval_p, enabling calling code (notably eh_op_set) to change the 
+	 * Get an lvalue. This function normally returns a reference to an
+	 * ehretval_p, enabling calling code (notably eh_op_set) to change the
 	 * value. If no lvalue can be found or created, it throws an
-	 * unknown_value_exception. In case of arrow access to basic types like 
+	 * unknown_value_exception. In case of arrow access to basic types like
 	 * integers, it (or rather the object_access method) sets the
 	 * is_strange_arrow flag.
 	 */
@@ -1141,20 +1141,20 @@ ehretval_p EHI::call_function(ehobj_t *obj, ehretval_p args, ehcontext_t context
 	ehretval_p *new_args = new ehretval_p[nargs]();
 	
 	for(int i = 0; args->get_opval()->nparas != 0; args = args->get_opval()->paras[0], i++) {
-	  try {
-  		new_args[i] = eh_execute(args->get_opval()->paras[1], context);
-  	} catch(...) {
-  	  delete[] new_args;
-  	  throw;
-  	}
+		try {
+			new_args[i] = eh_execute(args->get_opval()->paras[1], context);
+		} catch(...) {
+			delete[] new_args;
+			throw;
+		}
 	}
 	ehretval_p ret;
 	try {
-  	ret = this->call_function_args(obj, nargs, new_args, context);
-  } catch(...) {
-    delete[] new_args;
-    throw;
-  }
+		ret = this->call_function_args(obj, nargs, new_args, context);
+	} catch(...) {
+		delete[] new_args;
+		throw;
+	}
 	delete[] new_args;
 
 	return ret;
@@ -1391,7 +1391,7 @@ void EHI::redirect_command(const char *redirect, const char *target) {
 }
 
 /*****************************************
- * Functions outside the EHI object.     *
+ * Functions outside the EHI object.		 *
  *****************************************/
 /*
  * Opcode handlers.
@@ -1521,7 +1521,7 @@ ehretval_p eh_stringtofloat(const char *const in) {
 	return ret;
 }
 char *eh_inttostring(const int in) {
-	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and 
+	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and
 	// null terminator) should suffice for the result string
 	char *buffer = new char[12];
 	snprintf(buffer, 12, "%d", in);
@@ -1783,7 +1783,7 @@ bool eh_strictequals(ehretval_p operand1, ehretval_p operand2) {
  * Variants of array access
  */
 ehretval_p int_arrow_get(ehretval_p operand1, ehretval_p operand2) {
-	// "array" access to integer returns the nth bit of the integer; for example 
+	// "array" access to integer returns the nth bit of the integer; for example
 	// (assuming sizeof(int) == 32), (2 -> 30) == 1, (2 -> 31) == 0
 	if(operand2->type() != int_e) {
 		eh_error_type("bitwise access to integer", operand2->type(), enotice_e);
@@ -1802,8 +1802,8 @@ ehretval_p int_arrow_get(ehretval_p operand1, ehretval_p operand2) {
 }
 ehretval_p string_arrow_get(ehretval_p operand1, ehretval_p operand2) {
 	// "array" access to string returns integer representing nth character.
-	// In the future, perhaps replace this with a char datatype or with a 
-	// "shortstring" datatype representing strings up to 3 or even 4 characters 
+	// In the future, perhaps replace this with a char datatype or with a
+	// "shortstring" datatype representing strings up to 3 or even 4 characters
 	// long
 	if(operand2->type() != int_e) {
 		eh_error_type("character access to string", operand2->type(), enotice_e);
@@ -1811,7 +1811,7 @@ ehretval_p string_arrow_get(ehretval_p operand1, ehretval_p operand2) {
 	}
 	int count = strlen(operand1->get_stringval());
 	if(operand2->get_intval() >= count) {
-		eh_error_int("Identifier too large for character access to string", 
+		eh_error_int("Identifier too large for character access to string",
 			operand2->get_intval(), enotice_e);
 		return NULL;
 	}
@@ -1840,7 +1840,7 @@ void int_arrow_set(ehretval_p input, ehretval_p index, ehretval_p rvalue) {
 		return;
 	}
 	if(index->get_intval() < 0 || (unsigned) index->get_intval() >= sizeof(int) * 8) {
-		eh_error_int("Identifier too large for bitwise access to integer", 
+		eh_error_int("Identifier too large for bitwise access to integer",
 			index->get_intval(), enotice_e);
 		return;
 	}
@@ -1865,7 +1865,7 @@ void string_arrow_set(ehretval_p input, ehretval_p index, ehretval_p rvalue) {
 	}
 	int count = strlen(input->get_stringval());
 	if(index->get_intval() >= count) {
-		eh_error_int("Identifier too large for character access to string", 
+		eh_error_int("Identifier too large for character access to string",
 			index->get_intval(), enotice_e);
 		return;
 	}
@@ -1901,8 +1901,8 @@ ehretval_p eh_make_range(const int min, const int max) {
 static inline int count_nodes(const ehretval_p node) {
 	// count a list like an argument list. Assumes correct layout.
 	int i = 0;
-	for(ehretval_p tmp = node; 
-		tmp->get_opval()->nparas != 0; 
+	for(ehretval_p tmp = node;
+		tmp->get_opval()->nparas != 0;
 		tmp = tmp->get_opval()->paras[0], i++
 	);
 	return i;

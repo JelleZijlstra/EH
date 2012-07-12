@@ -1141,9 +1141,20 @@ ehretval_p EHI::call_function(ehobj_t *obj, ehretval_p args, ehcontext_t context
 	ehretval_p *new_args = new ehretval_p[nargs]();
 	
 	for(int i = 0; args->get_opval()->nparas != 0; args = args->get_opval()->paras[0], i++) {
-		new_args[i] = eh_execute(args->get_opval()->paras[1], context);
+	  try {
+  		new_args[i] = eh_execute(args->get_opval()->paras[1], context);
+  	} catch(...) {
+  	  delete[] new_args;
+  	  throw;
+  	}
 	}
-	ehretval_p ret = this->call_function_args(obj, nargs, new_args, context);
+	ehretval_p ret;
+	try {
+  	ret = this->call_function_args(obj, nargs, new_args, context);
+  } catch(...) {
+    delete[] new_args;
+    throw;
+  }
 	delete[] new_args;
 
 	return ret;

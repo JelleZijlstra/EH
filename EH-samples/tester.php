@@ -9,7 +9,7 @@
  */
 // parse arguments
 if(isset($argv[1]) && $argv[1] === '--valgrind') {
-	$executer = '/usr/bin/valgrind -q --leak-check=full /usr/bin/ehi';
+	$executer = 'valgrind -q --leak-check=full /usr/bin/ehi';
 } else {
 	$executer = '/usr/bin/ehi';
 }

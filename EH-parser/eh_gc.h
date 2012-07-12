@@ -131,6 +131,10 @@ private:
 		pool(pool *_next = NULL) : next(_next), first_free_block((block *)&blocks[0]), free_blocks(pool_size), blocks() {}
 		
 		~pool() {
+		  assert(free_blocks == pool_size);
+		}
+		
+		void flush() {
 			if(free_blocks < pool_size) {
 				// kill everything
         for(int i = 0; i < pool_size; i++) {
@@ -434,6 +438,10 @@ public:
 	}
 	
 	~garbage_collector() {
+    for(pool *p = this->first_pool; p != NULL; p = p->next) {
+      p->flush();
+    }	
+	
 		pool *next = NULL;
 		for(pool *p = this->first_pool; p != NULL; p = next) {
 			next = p->next;

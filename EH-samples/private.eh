@@ -21,4 +21,4 @@ class Bar
 end
 # 2
 echo $foo
-Bar::try:
+$Bar->try:

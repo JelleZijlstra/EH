@@ -4,7 +4,7 @@ class Foo
 	public bar = 3
 endclass
 foo = new Foo
-Foo::baz = 2
+Foo->baz = 2
 bar = new Foo
 printvar: $foo
 printvar: $bar

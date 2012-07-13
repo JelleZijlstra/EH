@@ -12,7 +12,7 @@ class A {
 class C {
 	a = 4
 	class D {
-		inherit A::B
+		inherit $A->B
 	}
 	o = new D
 	

@@ -92,10 +92,6 @@
 "case"		return T_CASE;
 "default"	return T_DEFAULT;
 "new"		return T_NEW;
-"::"		{
-				yylval_param->aValue = doublecolon_e;
-				return T_ACCESSOR;
-			}
 "&&"		return T_AND;
 "and"		return T_AND;
 "||"		return T_OR;

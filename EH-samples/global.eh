@@ -8,10 +8,10 @@ class Foo
 	end
 end
 myvar = 42
-Foo::baz: 'test'
+$Foo->baz: 'test'
 myvar = 'foo'
-Foo::baz: 'bah'
-newvar = Foo::baz
+$Foo->baz: 'bah'
+newvar = $Foo->baz
 $newvar: 19
 put @string 19
 echo @string 19

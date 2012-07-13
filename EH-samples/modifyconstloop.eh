@@ -4,6 +4,6 @@ class Foo {
 }
 printvar: $Foo
 for $Foo as key => value {
-	value := 4
+	value = 4
 }
 printvar: $Foo

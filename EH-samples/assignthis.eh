@@ -3,7 +3,7 @@ class Foo
 	private baz = 42
 	public bar:
 		printvar: $this
-		this := 2
+		this = 2
 		echo $this->baz
 		ret $this
 	end
@@ -12,7 +12,7 @@ class Foo
 		ret $baz
 	end
 end
-f := new Foo
+f = new Foo
 printvar: $f->bar:
 printvar: $f
 printvar: $f->useprivate:

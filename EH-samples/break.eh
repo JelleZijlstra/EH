@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 # Illustrate uses of the break keyword
-n := 0
+n = 0
 while 1
 	set n++
 	echo $n

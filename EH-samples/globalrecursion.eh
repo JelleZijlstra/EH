@@ -3,5 +3,5 @@
 class A {
 	public foo = $global
 }
-o := new A
+o = new A
 printvar: $global

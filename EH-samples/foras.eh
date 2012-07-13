@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 # The for ... as operator
-arr := [ 'a' => 1, 'b' => 2, 3 => 'c' ]
+arr = [ 'a' => 1, 'b' => 2, 3 => 'c' ]
 echo 'Array with value only'
 for $arr as value
 	echo $value

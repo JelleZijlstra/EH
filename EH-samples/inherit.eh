@@ -12,5 +12,5 @@ class B {
 		echo 4
 	}
 }
-o := new B
+o = new B
 $o->b:

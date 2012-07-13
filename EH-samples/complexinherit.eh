@@ -53,5 +53,5 @@ class D {
 		}
 	}
 }
-o := new D::DD
+o = new D::DD
 $o->dd:

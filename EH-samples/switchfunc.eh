@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
-switcher := func: n
-	testfunc := func: n
+switcher = func: n
+	testfunc = func: n
 		if !(is_int: $n)
 			echo 'Error: input must be an integer'
 			ret false

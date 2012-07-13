@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # Examples of string variables in interpreted EH
-foo := 'test'
-bar := 'test'
+foo = 'test'
+bar = 'test'
 if $foo == $bar
 	echo 'It works!'
 else
@@ -14,6 +14,6 @@ else
 endif
 echo $foo
 echo $bar
-baz := $foo . $bar
+baz = $foo . $bar
 echo 'This should print "testtest":'
 echo $baz

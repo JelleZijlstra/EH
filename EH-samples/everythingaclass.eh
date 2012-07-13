@@ -2,10 +2,10 @@
 const foo = 3
 echo $foo
 # should generate an error
-foo := 4
+foo = 4
 echo $foo
 class Bar {
 	echo 5
-	mah := 42
+	mah = 42
 }
 printvar: new Bar

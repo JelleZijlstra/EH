@@ -3,8 +3,8 @@
 if $argc != 3
 	exit
 end
-var := $argv->1
-desc := $argv->2
+var = $argv->1
+desc = $argv->2
 echo "		if($this->process_paras($paras, array("
 echo "			'name' => __FUNCTION__,"
 echo "			'synonyms' => array(0 => '" + $var + "'),"

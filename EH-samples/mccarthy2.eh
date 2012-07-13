@@ -16,10 +16,10 @@ if $argc > 2
 	ret 1
 end
 if $argc == 2
-	input := @int $argv->1
+	input = @int $argv->1
 else
-	input := getinput:
+	input = getinput:
 end
-res := mccarthy: $input
+res = mccarthy: $input
 echo $res
 ret 0

@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # Illustrate the AND and OR operators
-bar := 3
-foo := 0
+bar = 3
+foo = 0
 printvar: @bool $foo
 printvar: $bar and $foo
 printvar: $bar && $foo

@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
-a := 3
-b := $a
-c := [foo => 1]
+a = 3
+b = $a
+c = [foo => 1]
 for $c as a => d
 	# foo
 	printvar: $a

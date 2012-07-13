@@ -1,8 +1,8 @@
 #!/usr/bin/ehi
 # I thought this might fail, but it seems to work.
-c1 := new CountClass
-c2 := new CountClass
-f := new File
+c1 = new CountClass
+c2 = new CountClass
+f = new File
 # 1, 0
 $c1->docount:
 # 2, 0

@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 # Illustrate closures that are not first declared as methods
-foo := func: n
+foo = func: n
 	echo $n
 end
 printvar: $foo

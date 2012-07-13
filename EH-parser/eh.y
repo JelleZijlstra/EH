@@ -52,7 +52,6 @@ EHParser *yyget_extra(void *scanner);
 %token T_SWITCH
 %token T_DEFAULT
 %token T_ENDSWITCH
-%token T_ASSIGNMENT
 %token T_CASE
 %token T_BREAK
 %token T_CONTINUE
@@ -125,7 +124,7 @@ statement_list:
 statement:
 	T_SEPARATOR				{ $$ = ADD_NODE0(T_SEPARATOR); }
 	| line_expr T_SEPARATOR	{ $$ = $1; }
-	| lvalue_set T_ASSIGNMENT expression T_SEPARATOR
+	| lvalue_set '=' expression T_SEPARATOR
 							{ $$ = ADD_NODE2(T_SET, $1, $3); }
 	| T_SET lvalue_set T_PLUSPLUS T_SEPARATOR
 							{ $$ = ADD_NODE1(T_PLUSPLUS, $2); }

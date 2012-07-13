@@ -10,6 +10,6 @@ test: 1
 
 test: 2
 
-b := test: 3
+b = test: 3
 
 echo $b

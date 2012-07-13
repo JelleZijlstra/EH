@@ -1,12 +1,12 @@
 #!/usr/bin/ehi
 # Try to break library classes; this previously segfaulted.
-var := new CountClass
-funcv := $var->docount
+var = new CountClass
+funcv = $var->docount
 printvar: $funcv:
 class Foo
 	public bar
 end
-f := new Foo
+f = new Foo
 echo $f->bar
 
 printvar: $funcv

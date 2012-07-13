@@ -9,5 +9,5 @@ class A {
 	inherit A
 	public a = new A
 }
-o := new A
+o = new A
 printvar: $o

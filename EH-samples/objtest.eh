@@ -3,17 +3,17 @@
 class Foo
 	public bar = 0
 	public set1:
-		this->bar := 1
+		this->bar = 1
 	end
 	public set2:
-		this->bar := 2
+		this->bar = 2
 	end
 	public useprop:
 		# Will use object property
 		echo $bar
 	end
 end
-o := new Foo
+o = new Foo
 
 # 0
 echo $o->bar

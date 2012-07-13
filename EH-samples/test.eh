@@ -9,19 +9,19 @@ func sum: a, b
 	echo $b
 	ret $a + $b
 end
-bar := 3
+bar = 3
 echo $bar
 echo 'test'
 if 2 == 2
 	echo 2
-	bar := sum: 1, 3
+	bar = sum: 1, 3
 	echo $bar
 else
 	echo 'This is false'
 end
 sum: 2, 3
 echo 'bar'
-bar := sum: 1, 5
+bar = sum: 1, 5
 if 2 == 2
 	echo 'hi'
 	echo 'a'
@@ -31,6 +31,6 @@ if 2 == 3
 end
 echo $bar
 while $bar
-	bar := $bar - 1
+	bar = $bar - 1
 	echo $bar
 end

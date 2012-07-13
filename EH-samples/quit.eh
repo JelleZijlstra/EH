@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-f := func:
+f = func:
 	quit
 	echo 42
 end

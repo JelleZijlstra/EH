@@ -129,7 +129,6 @@
 "$("		return T_DOLLARPAREN;
 "++"		return T_PLUSPLUS;
 "--"		return T_MINMIN;
-":="		return T_ASSIGNMENT;
 ("//"|#).*[;\n]	; /* Ignore comment */
 [;\n]		return T_SEPARATOR;
 [a-zA-Z][a-zA-Z0-9_]*	{

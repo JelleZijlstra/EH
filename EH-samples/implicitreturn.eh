@@ -1,3 +1,3 @@
 #!/usr/bin/ehi
-f := func: { 42; }
+f = func: { 42; }
 printvar: f:

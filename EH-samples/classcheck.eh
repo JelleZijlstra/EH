@@ -3,7 +3,7 @@
 class Foo
 	public bar = 42
 end
-bar := new Foo
+bar = new Foo
 # true
 echo class_is: Foo, $bar
 # error

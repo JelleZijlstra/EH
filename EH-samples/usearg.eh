@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
-foo := func: n
+foo = func: n
 	echo $n
-	m := 3
+	m = 3
 	echo $m
 end
 foo: 2

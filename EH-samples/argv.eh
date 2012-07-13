@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 func test:
-	bar := 3
+	bar = 3
 endfunc
 echo $argc
 printvar: $argv

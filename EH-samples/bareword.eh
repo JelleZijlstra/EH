@@ -7,7 +7,7 @@ class Foo
 	end
 end
 echo foo
-echo foo . bar
+echo foo + bar
 echo $foo
 foo = new Foo
 baz = $foo->'foo'

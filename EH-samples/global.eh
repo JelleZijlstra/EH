@@ -3,7 +3,7 @@
 class Foo
 	public bar
 	public baz: n
-		put $n . ' '
+		put @string $n + ' '
 		echo $myvar
 	end
 end

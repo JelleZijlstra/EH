@@ -14,6 +14,6 @@ else
 endif
 echo $foo
 echo $bar
-baz = $foo . $bar
+baz = $foo + $bar
 echo 'This should print "testtest":'
 echo $baz

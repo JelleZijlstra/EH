@@ -400,9 +400,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
 				EH_INTBOOL_CASE(T_LE, <=) // lesser-than or equal
 				EH_INTBOOL_CASE(T_NE, !=) // not equal
-				EH_FLOATINT_CASE('+', +) // addition
-				case '.': // string concatenation
-					ret = eh_op_dot(
+				case '+': // string concatenation, addition
+					ret = eh_op_plus(
 						eh_execute(node->get_opval()->paras[0], context),
 						eh_execute(node->get_opval()->paras[1], context)
 					);
@@ -1456,20 +1455,41 @@ ehretval_p eh_op_uminus(ehretval_p in) {
 	}
 	return NULL;
 }
-ehretval_p eh_op_dot(ehretval_p operand1, ehretval_p operand2) {
-	operand1 = eh_xtostring(operand1);
-	operand2 = eh_xtostring(operand2);
-	if(operand1->type() == string_e && operand2->type() == string_e) {
-		// concatenate them
-		size_t len1 = strlen(operand1->get_stringval());
-		size_t len2 = strlen(operand2->get_stringval());
-		char *out = new char[len1 + len2 + 1];
-		strcpy(out, operand1->get_stringval());
-		strcpy(out + len1, operand2->get_stringval());
-		return ehretval_t::make_string(out);
-	} else {
-		return NULL;
+ehretval_p eh_op_plus(ehretval_p operand1, ehretval_p operand2) {
+	switch(operand1->type()) {
+		case string_e: {
+			ehretval_p to_add = eh_xtostring(operand2);
+			// concatenate them
+			size_t len1 = strlen(operand1->get_stringval());
+			size_t len2 = strlen(to_add->get_stringval());
+			char *out = new char[len1 + len2 + 1];
+			strcpy(out, operand1->get_stringval());
+			strcpy(out + len1, to_add->get_stringval());
+			return ehretval_t::make_string(out);
+		}
+		case float_e: {
+			ehretval_p to_add = eh_xtofloat(operand2);
+			if(to_add->type() == float_e) {
+				return ehretval_t::make_float(operand1->get_floatval() + to_add->get_floatval());
+			} else {
+				break;
+			}
+		}
+		case int_e:
+			if(operand2->type() == float_e) {
+				return ehretval_t::make_float((float) operand1->get_intval() + operand2->get_floatval());
+			} else {
+				ehretval_p to_add = eh_xtoint(operand2);
+				if(to_add->type() == int_e) {
+					return ehretval_t::make_int(operand1->get_intval() + to_add->get_intval());
+				} else {
+					break;
+				}
+			}
+		default:
+			eh_error_type("operator +", operand1->type(), enotice_e);
 	}
+	return NULL;
 }
 
 /*

@@ -13,6 +13,6 @@ if $argc === 2
 else
 	echo 'I did not get two arguments'
 	printvar: @string $argc
-	echo 'I got ' . $argc . ' arguments'
+	echo 'I got ' + $argc + ' arguments'
 	echo $argv->0
 endif

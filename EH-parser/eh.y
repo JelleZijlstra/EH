@@ -80,7 +80,7 @@ EHParser *yyget_extra(void *scanner);
 %left T_AND T_OR T_XOR
 %left ':'
 %left '|' '^' '&'
-%left '+' '-' '.'
+%left '+' '-'
 %left '=' '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
@@ -284,8 +284,6 @@ expression:
 							{ $$ = ADD_NODE2('|', $1, $3); }
 	| expression '&' expression
 							{ $$ = ADD_NODE2('&', $1, $3); }
-	| expression '.' expression
-							{ $$ = ADD_NODE2('.', $1, $3); }
 	| expression T_AND expression
 							{ $$ = ADD_NODE2(T_AND, $1, $3); }
 	| expression T_OR expression
@@ -365,8 +363,6 @@ simple_expr:
 							{ $$ = ADD_NODE2('|', $1, $3); }
 	| simple_expr '&' simple_expr
 							{ $$ = ADD_NODE2('&', $1, $3); }
-	| simple_expr '.' simple_expr
-							{ $$ = ADD_NODE2('.', $1, $3); }
 	| simple_expr T_AND simple_expr
 							{ $$ = ADD_NODE2(T_AND, $1, $3); }
 	| simple_expr T_OR simple_expr
@@ -451,8 +447,6 @@ line_expr:
 							{ $$ = ADD_NODE2('|', $1, $3); }
 	| line_expr '&' expression
 							{ $$ = ADD_NODE2('&', $1, $3); }
-	| line_expr '.' expression
-							{ $$ = ADD_NODE2('.', $1, $3); }
 	| line_expr T_AND expression
 							{ $$ = ADD_NODE2(T_AND, $1, $3); }
 	| line_expr T_OR expression

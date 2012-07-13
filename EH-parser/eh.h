@@ -153,7 +153,7 @@ void range_arrow_set(ehretval_p input, ehretval_p index, ehretval_p rvalue);
 ehretval_p eh_count(const ehretval_p in);
 ehretval_p eh_op_tilde(ehretval_p in);
 ehretval_p eh_op_uminus(ehretval_p in);
-ehretval_p eh_op_dot(ehretval_p operand1, ehretval_p operand2);
+ehretval_p eh_op_plus(ehretval_p operand1, ehretval_p operand2);
 ehretval_p eh_make_range(const int min, const int max);
 
 // type casting

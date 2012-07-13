@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # The Sieve of Eratosthenes, using ranges instead of integer counts (as in
 # eratosthenes.eh). Illustrates that this is much easier to handle.
-if $argc = 2
+if $argc == 2
 	max := $argv->1
 else
 	max := 128
@@ -18,7 +18,7 @@ for 2..($max / 2) count i
 	end
 end
 for 1..$max count i
-	if $sieve->$i = true
+	if $sieve->$i == true
 		echo $i
 	end
 end

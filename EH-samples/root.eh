@@ -17,7 +17,7 @@ func sqrt: in
 	ret $out
 end
 
-if $argc = 2
+if $argc == 2
 	num := @int $argv->1
 else
 	num := 27

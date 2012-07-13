@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 // CS50 Problem Set 1: greedy
-if $argc = 2
+if $argc == 2
 	money := @int $argv->1
 else
 	money := 0

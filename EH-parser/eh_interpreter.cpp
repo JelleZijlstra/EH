@@ -379,7 +379,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			/*
 			 * Binary operators
 			 */
-				case '=': // equality
+				case T_EQ: // equality
 					ret = eh_looseequals(
 						eh_execute(node->get_opval()->paras[0], context),
 						eh_execute(node->get_opval()->paras[1], context)

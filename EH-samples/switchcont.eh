@@ -11,6 +11,6 @@ switch $argc
 	case "2"
 		echo 'And this?'
 end
-if 2 = "2"
+if 2 == "2"
 	echo 'They are loosely the same'
 end

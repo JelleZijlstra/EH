@@ -6,7 +6,7 @@ func factorial: n
 	if $n < 1
 		ret false
 	end
-	if $n = 1
+	if $n == 1
 		ret 1
 	else
 		# Parentheses are needed here because * has higher precedence than :.

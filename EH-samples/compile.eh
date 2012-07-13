@@ -4,7 +4,7 @@
 # that it does accept generates spectacularly inefficient assembly code).
 # $ a = 3
 echo 42
-if 2 = 2
+if 2 == 2
 	3 + 3
 	echo (2 - 3)
 endif

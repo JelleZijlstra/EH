@@ -15,7 +15,7 @@ if $argc > 2
 	echo 'Usage: ./mccarthy.eh [n]'
 	ret 1
 end
-if $argc = 2
+if $argc == 2
 	input := @int $argv->1
 else
 	input := getinput:

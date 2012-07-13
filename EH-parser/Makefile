@@ -1,4 +1,4 @@
-CC = clang++-mp-3.1
+CC = clang++
 CCBASICFLAGS = -ggdb -fPIC -c
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic
 LDFLAGS = 
@@ -34,7 +34,7 @@ ehi: $(EHI_O)
 	sudo cp ehi /usr/bin/ehi
 
 ehphp: $(EHPHP_O)
-	./make_ehphp.sh "$(CC)" "$(SYMBOLS)" "$(EHPHP_O)"
+	#./make_ehphp.sh "$(CC)" "$(SYMBOLS)" "$(EHPHP_O)"
 
 # If I don't do "/usr/bin/bison", y.tab.c won't compile because of a const char*
 # -> char* conversion.

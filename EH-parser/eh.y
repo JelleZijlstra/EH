@@ -82,7 +82,7 @@ EHParser *yyget_extra(void *scanner);
 %left ':'
 %left '|' '^' '&'
 %left '+' '-' '.'
-%left '=' '>' '<' T_GE T_LE T_NE T_SE T_SNE
+%left '=' '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
 %right '@'
@@ -253,8 +253,8 @@ expression:
 							{ $$ = ADD_NODE2('@', $2, $3); }
 	| expression ':' arglist
 							{ $$ = ADD_NODE2(':', $1, $3); }
-	| expression '=' expression
-							{ $$ = ADD_NODE2('=', $1, $3); }
+	| expression T_EQ expression
+							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| expression '>' expression
 							{ $$ = ADD_NODE2('>', $1, $3); }
 	| expression '<' expression
@@ -338,8 +338,8 @@ simple_expr:
 							{ $$ = ADD_NODE2('@', $2, $3); }
 	| simple_expr ':' arglist
 							{ $$ = ADD_NODE2(':', $1, $3); }
-	| simple_expr '=' simple_expr
-							{ $$ = ADD_NODE2('=', $1, $3); }
+	| simple_expr T_EQ simple_expr
+							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| simple_expr '<' simple_expr
 							{ $$ = ADD_NODE2('<', $1, $3); }
 	| simple_expr T_SE simple_expr
@@ -420,8 +420,8 @@ line_expr:
 							{ $$ = ADD_NODE2(':', $1, $3); }
 	| line_expr ':' arglist
 							{ $$ = ADD_NODE2(':', $1, $3); }
-	| line_expr '=' expression
-							{ $$ = ADD_NODE2('=', $1, $3); }
+	| line_expr T_EQ expression
+							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| line_expr '>' expression
 							{ $$ = ADD_NODE2('>', $1, $3); }
 	| line_expr '<' expression

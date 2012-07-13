@@ -12,7 +12,7 @@ end
 bar := 3
 echo $bar
 echo 'test'
-if 2 = 2
+if 2 == 2
 	echo 2
 	bar := sum: 1, 3
 	echo $bar
@@ -22,11 +22,11 @@ end
 sum: 2, 3
 echo 'bar'
 bar := sum: 1, 5
-if 2 = 2
+if 2 == 2
 	echo 'hi'
 	echo 'a'
 endif
-if 2 = 3
+if 2 == 3
 	echo 'b'
 end
 echo $bar

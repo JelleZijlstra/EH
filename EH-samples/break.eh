@@ -29,7 +29,7 @@ endwhile
 
 echo 'Will this ever get executed?'
 for $n count i
-	if ($i = 3) or ($i = 5)
+	if ($i == 3) or ($i == 5)
 		continue
 	endif
 	echo $i

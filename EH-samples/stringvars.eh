@@ -2,7 +2,7 @@
 # Examples of string variables in interpreted EH
 foo := 'test'
 bar := 'test'
-if $foo = $bar
+if $foo == $bar
 	echo 'It works!'
 else
 	echo 'This should not be happening'

@@ -19,13 +19,13 @@ else
 	echo true
 end
 
-if 3.0 = 3
+if 3.0 == 3
 	echo true
 else
 	echo false
 end
 
-if 1.0 = true
+if 1.0 == true
 	echo true
 else
 	echo false

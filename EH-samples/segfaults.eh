@@ -4,7 +4,7 @@ echo 'Test 1'
 echo data->2010
 
 echo 'Test 2'
-$data = data
+$data == data
 data->2010 := 4
 
 echo 'Test 3'

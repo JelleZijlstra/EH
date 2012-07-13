@@ -11,7 +11,7 @@ class Foo
 		echo $n
 		# Illustrate private method access from class context
 		bar = new Foo
-		$bar->mah : 'Calling a private method'
+		$bar->'mah' : 'Calling a private method'
 	endfunc
 	private mah: n
 		echo $n
@@ -19,11 +19,11 @@ class Foo
 endclass
 bar = new Foo
 printvar: $bar
-echo $bar->bar
-foo = $bar->meh
+echo $bar->'bar'
+foo = $bar->'meh'
 printvar: $foo
-$bar->meh: 42
+$bar->'meh': 42
 # Error: method is private
-($bar->mah): 'Calling a private method'
-bar->bar = 2
-echo $bar->bar
+($bar->'mah'): 'Calling a private method'
+bar->'bar' = 2
+echo $bar->'bar'

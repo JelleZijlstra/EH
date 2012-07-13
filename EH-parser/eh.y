@@ -66,7 +66,7 @@ EHParser *yyget_extra(void *scanner);
 %token T_CLASSMEMBER
 %token T_INHERIT
 %token T_LITERAL
-%token T_LVALUE_GET T_LVALUE_SET
+%token T_LVALUE_GET T_LVALUE_SET T_ARROW_SET T_DOT_SET
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
 %token T_EXPRESSION
@@ -77,23 +77,24 @@ EHParser *yyget_extra(void *scanner);
 %token <sValue> T_STRING
 %left T_LOWPREC /* Used to prevent S/R conflicts */
 %left ','
+%right '='
 %left T_AND T_OR T_XOR
 %left ':'
 %left '|' '^' '&'
 %left '+' '-'
-%left '=' '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ
+%left '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
 %right '@'
 %nonassoc T_NEW
-%left <aValue> T_ACCESSOR
+%left T_ARROW '.'
 %nonassoc T_RANGE
 %nonassoc '$' '~' '!' T_NEGATIVE T_COUNT
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_SHORTFUNCTION
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string shortfunc
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string shortfunc bareword_or_string
 %%
 program:
 	global_list				{ 	// Don't do anything. Destructors below take 
@@ -191,7 +192,7 @@ statement:
 							{ $$ = ADD_NODE2(T_SET,
 								ADD_NODE1(T_LVALUE_SET, $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
-	| T_FUNC bareword ':' parglist T_ACCESSOR expression %prec T_SHORTFUNCTION
+	| T_FUNC bareword ':' parglist T_ARROW expression %prec T_SHORTFUNCTION
 							{ $$ = ADD_NODE2(T_SET,
 								ADD_NODE1(T_LVALUE_SET, $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
@@ -231,22 +232,32 @@ statement:
 	| T_INHERIT expression	{ $$ = ADD_NODE1(T_INHERIT, $2); }
 	;
 
+lvalue_set:
+	bareword				{ $$ = ADD_NODE1(T_LVALUE_SET, $1); }
+	| line_expr T_ARROW expression
+							{ $$ = ADD_NODE2(T_ARROW_SET, $1, $3); }
+	| line_expr '.' bareword
+							{ $$ = ADD_NODE2(T_DOT_SET, $1, $3); }
+	;
+
+
 expression:
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_NULL				{ $$ = ADD_NODE0(T_LITERAL); }
 	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| bareword				{ $$ = ADD_NODE1('$', $1); }
 	| string				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
 	| '-' expression %prec T_NEGATIVE
 							{ $$ = ADD_NODE1(T_NEGATIVE, $2); }
-	| expression T_ACCESSOR expression
-							{
-								$$ = ADD_NODE3(T_ACCESSOR, $1, $2, $3);
-							}
-	| '$' expression
+	| expression T_ARROW expression
+							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
+	| expression '.' bareword
+							{ $$ = ADD_NODE2('.', $1, $3); }
+	| '$' bareword %prec '$'
 							{ $$ = ADD_NODE1('$', $2); }
 	| '@' T_TYPE expression %prec '@'
 							{ $$ = ADD_NODE2('@', $2, $3); }
@@ -323,13 +334,16 @@ simple_expr:
 	| T_NULL				{ $$ = ADD_NODE0(T_LITERAL); }
 	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| bareword				{ $$ = ADD_NODE1('$', $1); }
 	| string				{ $$ = $1; }
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' simple_expr		{ $$ = ADD_NODE1('~', $2); }
 	| '!' simple_expr		{ $$ = ADD_NODE1('!', $2); }
-	| simple_expr T_ACCESSOR simple_expr
-							{ $$ = ADD_NODE3(T_ACCESSOR, $1, $2, $3); }
-	| '$' simple_expr %prec '$'
+	| simple_expr T_ARROW simple_expr
+							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
+	| simple_expr '.' bareword
+							{ $$ = ADD_NODE2('.', $1, $3); }
+	| '$' bareword %prec '$'
 							{ $$ = ADD_NODE1('$', $2); }
 	| '@' T_TYPE expression %prec '@'	
 							{ $$ = ADD_NODE2('@', $2, $3); }
@@ -401,13 +415,11 @@ line_expr:
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
 	| '-' expression %prec T_NEGATIVE
 							{ $$ = ADD_NODE1(T_NEGATIVE, $2); }
-	| line_expr T_ACCESSOR expression
-							{ $$ = ADD_NODE3(T_ACCESSOR, $1, $2, $3); 
-							}
-	| bareword T_ACCESSOR expression
-							{ $$ = ADD_NODE3(T_ACCESSOR, $1, $2, $3); 
-							}
-	| '$' expression %prec '$'
+	| line_expr T_ARROW expression
+							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
+	| line_expr '.' bareword
+							{ $$ = ADD_NODE2('.', $1, $3); }
+	| '$' bareword %prec '$'
 							{ $$ = ADD_NODE1('$', $2); }
 	| '@' T_TYPE expression %prec '@'	
 							{ $$ = ADD_NODE2('@', $2, $3); }
@@ -482,7 +494,7 @@ line_expr:
 	;
 
 shortfunc:
-	T_FUNC ':' parglist T_ACCESSOR
+	T_FUNC ':' parglist T_ARROW
 							{ $$ = $3; }
 	;
 
@@ -498,23 +510,30 @@ paralist:
 
 para:
 	simple_expr					{ $$ = $1; }
-	| T_MINMIN string '=' expression
+	| T_MINMIN bareword_or_string '=' expression
 							{ $$ = ADD_NODE2(T_LONGPARA, $2, $4); }
-	| T_MINMIN string		{ $$ = ADD_NODE1(T_LONGPARA, $2); }
-	| '-' string			{ $$ = ADD_NODE1(T_SHORTPARA, $2); }
-	| '-' string '=' expression
+	| T_MINMIN bareword_or_string
+							{ $$ = ADD_NODE1(T_LONGPARA, $2); }
+	| '-' bareword_or_string
+							{ $$ = ADD_NODE1(T_SHORTPARA, $2); }
+	| '-' bareword_or_string '=' expression
 							{ $$ = ADD_NODE2(T_SHORTPARA, $2, $4); }
-	| '>' string			{ $$ = ADD_NODE1(T_REDIRECT, $2); }
-	| '}' string			{ $$ = ADD_NODE1('}', $2); }
+	| '>' bareword_or_string
+							{ $$ = ADD_NODE1(T_REDIRECT, $2); }
+	| '}' bareword_or_string
+							{ $$ = ADD_NODE1('}', $2); }
 	;
+	
+bareword_or_string:
+	bareword				{ $$ = $1; }
+	| string				{ $$ = $1; }
 
 bareword:
 	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	;
 
 string:
-	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	;
 
 arraylist:
@@ -599,12 +618,6 @@ exprcase:
 							{ $$ = ADD_NODE2(T_CASE, $2, $4); }
 	| T_DEFAULT T_SEPARATOR expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_CASE, $3); }
-	;
-
-lvalue_set:
-	bareword				{ $$ = ADD_NODE1(T_LVALUE_SET, $1); }
-	| bareword T_ACCESSOR expression
-							{ $$ = ADD_NODE3(T_LVALUE_SET, $1, $2, $3); }
 	;
 
 attributelist:

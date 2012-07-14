@@ -5,18 +5,18 @@
  */
 #include "eh.h"
 
-#define EHLC_CONSTRUCTOR_DESTRUCTOR(name) inline void *ehlc_new_ ## name() { \
-	return (void *)new name(); \
+#define EHLC_CONSTRUCTOR_DESTRUCTOR(name) inline ehretval_p ehlc_new_ ## name() { \
+	return ehretval_t::make_resource((void *)new name()); \
 } \
-inline void ehlc_delete_ ## name(ehobj_t *in) { \
-	delete (name *)in->object_data->get_resourceval(); \
+inline void ehlc_delete_ ## name(void *in) { \
+	delete (name *)in; \
 }
 #define START_EHLC(name) ehlm_listentry_t ehlc_l_ ## name [] = {
 #define EHLC_ENTRY(classn, name) { #name, &ehlm_ ## classn ## _ ## name },
 #define END_EHLC() {NULL, NULL} };
 #define EXTERN_EHLC(name) extern ehlm_listentry_t ehlc_l_ ## name [];
 
-#define EH_METHOD(classn,name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, int nargs, ehretval_p *args, ehcontext_t context, EHI *interpreter)
+#define EH_METHOD(classn,name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, int nargs, ehretval_p *args, ehcontext_t context, EHI *ehi)
 
 /*
  * CountClass library class
@@ -58,13 +58,16 @@ EXTERN_EHLC(File)
  */
 EH_METHOD(Integer, operator_plus);
 EH_METHOD(Integer, abs);
+EH_METHOD(Integer, getBit);
+EH_METHOD(Integer, setBit);
+EH_METHOD(Integer, length);
 
 EXTERN_EHLC(Integer)
 
 /*
  * Array class
  */
-EH_METHOD(Array, count);
+EH_METHOD(Array, length);
 EH_METHOD(Array, operator_arrow);
 EH_METHOD(Array, operator_arrow_equals);
 
@@ -76,6 +79,8 @@ EXTERN_EHLC(Array)
 EH_METHOD(Float, operator_plus);
 EH_METHOD(Float, abs);
 
+EXTERN_EHLC(Float)
+
 /*
  * String class
  */
@@ -83,3 +88,28 @@ EH_METHOD(String, length);
 EH_METHOD(String, operator_arrow);
 EH_METHOD(String, operator_arrow_equals);
 EH_METHOD(String, operator_plus);
+
+EXTERN_EHLC(String)
+
+/*
+ * Bool class
+ */
+EH_METHOD(Bool, toString);
+
+EXTERN_EHLC(Bool)
+
+/*
+ * Null class
+ */
+EH_METHOD(Null, toString);
+
+EXTERN_EHLC(Null)
+
+/*
+ * Range class
+ */
+EH_METHOD(Range, operator_arrow);
+EH_METHOD(Range, min);
+EH_METHOD(Range, max);
+
+EXTERN_EHLC(Range)

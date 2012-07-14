@@ -171,8 +171,8 @@ typedef ehretval_t::ehretval_p ehretval_p;
 // context
 typedef ehretval_p /* with type object_e */ ehcontext_t;
 
-typedef void *(*ehconstructor_t)();
-typedef void (*ehdestructor_t)(ehobj_t *);
+typedef ehretval_p (*ehconstructor_t)();
+typedef void (*ehdestructor_t)(void *);
 
 typedef ehretval_p (*ehlibmethod_t)(ehretval_p, int, ehretval_p *, ehcontext_t, class EHI *);
 
@@ -354,9 +354,11 @@ private:
 
 // range
 typedef struct ehrange_t {
-	int min;
-	int max;
+	ehretval_p min;
+	ehretval_p max;
 	
-	ehrange_t(int _min, int _max) : min(_min), max(_max) {}
-	ehrange_t() : min(0), max(0) {}
+	ehrange_t(ehretval_p _min, ehretval_p _max) : min(_min), max(_max) {
+	  assert(min->type() == max->type());
+	}
+	ehrange_t() : min(ehretval_t::make_int(0)), max(ehretval_t::make_int(0)) {}
 } ehrange_t;

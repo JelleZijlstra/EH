@@ -109,9 +109,19 @@ void printvar_t::retval(ehretval_p in) {
 		case attributestr_e:
 			printf("@attributestr\n");
 			break;
-		case range_e:
-			printf("@range %d..%d\n", in->get_rangeval()->min, in->get_rangeval()->max);
+		case range_e: {
+		  ehrange_t *range = in->get_rangeval();
+		  if(this->seen.count((void *)range) == 0) {
+        printf("@range [\n");
+        this->retval(range->min);
+        this->retval(range->max);
+        printf("]\n");
+        this->seen[(void *)range] = true;
+      } else {
+        printf("(recursion)\n");
+      }
 			break;
+		}
 		case float_e:
 			printf("@float %f\n", in->get_floatval());
 			break;
@@ -236,20 +246,20 @@ EHLIBFUNC(include) {
 	}
 	if(args[0]->type() != string_e) {
 		eh_error_type("argument 0 to include", args[0]->type(), enotice_e);
-		obj->returning = false;
+		ehi->returning = false;
 		return NULL;
 	}
 	// do the work
 	FILE *infile = fopen(args[0]->get_stringval(), "r");
 	if(!infile) {
 		eh_error("Unable to open included file", enotice_e);
-		obj->returning = false;
+		ehi->returning = false;
 		return NULL;
 	}
-	EHParser parser(end_is_end_e, obj);
+	EHParser parser(end_is_end_e, ehi);
 	ehretval_p parse_return = parser.parse_file(infile);
 	// we're no longer returning
-	obj->returning = false;
+	ehi->returning = false;
 	return parse_return;
 }
 
@@ -297,7 +307,7 @@ EHLIBFUNC(eval) {
 		eh_error_type("argument 0 to eval", args[0]->type(), enotice_e);
 		return NULL;	
 	}
-	return obj->parse_string(arg->get_stringval());
+	return ehi->parse_string(arg->get_stringval());
 }
 
 EHLIBFUNC(getinput) {

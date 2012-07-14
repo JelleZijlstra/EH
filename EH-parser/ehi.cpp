@@ -40,39 +40,3 @@ ehretval_p EHI::parse_string(const char *cmd) {
 	init_eval_parser();
 	return eval_parser->parse_string(cmd);
 }
-ehretval_t::~ehretval_t() {
-	switch(_type) {
-		// Simple types; nothing to do
-		case int_e:
-		case bool_e:
-		case float_e:
-		case type_e:
-		case null_e:
-		case accessor_e:
-		case attribute_e:
-		case attributestr_e:
-			break;
-		case op_e:
-			delete this->opval;
-			break;
-		// TODO
-		case string_e:
-			delete[] this->stringval;
-			break;
-		// Delete object. An ehretval_t owns the object pointed to.
-		case range_e:
-			delete this->rangeval;
-			break;
-		case object_e:
-		case func_e:
-			delete this->objectval;
-			break;
-		case array_e:
-			delete this->arrayval;
-			break;
-		case weak_object_e:
-			// we don't own the object
-			break;
-	}
-}
-

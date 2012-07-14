@@ -16,7 +16,7 @@ inline void ehlc_delete_ ## name(ehobj_t *in) { \
 #define END_EHLC() {NULL, NULL} };
 #define EXTERN_EHLC(name) extern ehlm_listentry_t ehlc_l_ ## name [];
 
-#define EH_METHOD(classn,name) ehretval_p ehlm_ ## classn ## _ ## name(void *obj, int nargs, ehretval_p *args, ehcontext_t context, EHI *interpreter)
+#define EH_METHOD(classn,name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, int nargs, ehretval_p *args, ehcontext_t context, EHI *interpreter)
 
 /*
  * CountClass library class
@@ -52,3 +52,34 @@ EH_METHOD(File, close);
 
 EHLC_CONSTRUCTOR_DESTRUCTOR(File)
 EXTERN_EHLC(File)
+
+/*
+ * Integer class
+ */
+EH_METHOD(Integer, operator_plus);
+EH_METHOD(Integer, abs);
+
+EXTERN_EHLC(Integer)
+
+/*
+ * Array class
+ */
+EH_METHOD(Array, count);
+EH_METHOD(Array, operator_arrow);
+EH_METHOD(Array, operator_arrow_equals);
+
+EXTERN_EHLC(Array)
+
+/*
+ * Float class
+ */
+EH_METHOD(Float, operator_plus);
+EH_METHOD(Float, abs);
+
+/*
+ * String class
+ */
+EH_METHOD(String, length);
+EH_METHOD(String, operator_arrow);
+EH_METHOD(String, operator_arrow_equals);
+EH_METHOD(String, operator_plus);

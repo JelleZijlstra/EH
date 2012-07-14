@@ -38,6 +38,7 @@ public:
 		attribute_enum attributeval;
 		attributes_t attributestrval;
 		accessor_enum accessorval;
+		void *resourceval;
 	};
 	// constructors
 	ehretval_t() : _type(null_e) {}
@@ -84,6 +85,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(struct ehobj_t *, weak_object)
 	EHRV_SET(struct ehobj_t *, func)
 	EHRV_SET(type_enum, type)
+	EHRV_SET(void *, resource)
 #undef EHRV_SET
 	// special constructors for GC'ed types
 #define EHRV_GC(vtype, ehtype) static void fill_ ## ehtype(ehretval_p in, vtype val) { \
@@ -132,6 +134,20 @@ vtype get_ ## ehtype ## val() const { \
 		return belongs_in_gc(this->type());
 	}
 	
+	bool is_object() const {
+	  switch(this->type()) {
+	    case object_e: case weak_object_e: case func_e:
+	      return true;
+	    default:
+	      return false;
+	  }
+	}
+	
+	ehobj_t *get_object() const {
+	  assert(this->is_object());
+	  return this->objectval;
+	}
+	
 	void print();
 	std::list<ehretval_p> children();
 	
@@ -158,13 +174,10 @@ typedef ehretval_t::ehretval_p ehretval_p;
 // context
 typedef ehretval_p /* with type object_e */ ehcontext_t;
 
-// library functions, classes, etcetera
-typedef ehretval_p (*ehlibfunc_t)(int, ehretval_p *, ehcontext_t, class EHI *);
-
 typedef void *(*ehconstructor_t)();
 typedef void (*ehdestructor_t)(ehobj_t *);
 
-typedef ehretval_p (*ehlibmethod_t)(void *, int, ehretval_p *, ehcontext_t, class EHI *);
+typedef ehretval_p (*ehlibmethod_t)(ehretval_p, int, ehretval_p *, ehcontext_t, class EHI *);
 
 // Variables and object members (which are the same)
 typedef struct ehmember_t {
@@ -271,7 +284,7 @@ public:
 	ehretval_p parent;
 	ehretval_p real_parent;
 	// for library classes
-	void *selfptr;
+	ehretval_p object_data;
 	ehconstructor_t constructor;
 	ehdestructor_t destructor;
 
@@ -288,6 +301,18 @@ public:
 	// inline methods
 	size_t size() const {
 		return members.size();
+	}
+	
+	// set with default attributes
+	void set(const char *name, ehretval_p value) {
+	  if(this->has(name)) {
+	    this->members[name]->value = value;
+	  } else {
+	    ehmember_p newmember;
+	    newmember->attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
+	    newmember->value = value;
+	    this->members[name] = newmember;
+	  }
 	}
 
 	void insert(const std::string &name, ehmember_p value) {

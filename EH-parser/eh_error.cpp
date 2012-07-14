@@ -65,3 +65,7 @@ void eh_error_line(int line, const char *msg) {
 	fprintf(stderr, "In line %d: ", line);
 	eh_error(msg, eparsing_e);
 }
+void eh_error_invalid_argument(const char *function, int n) {
+  fptintf(stderr, "Invalid value for argument %d to %s", n, function);
+  eh_error(msg, enotice_e);
+}

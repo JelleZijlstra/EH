@@ -43,7 +43,8 @@ typedef enum type_enum {
 	attribute_e,
 	attributestr_e,
 	range_e,
-	float_e
+	float_e,
+	resource_e
 } type_enum;
 
 // attributes of class members
@@ -88,15 +89,9 @@ typedef enum attribute_enum {
 } attribute_enum;
 
 typedef enum functype_enum {
-	user_e = 0,
-	lib_e = 1,
-	libmethod_e = 2
+	user_e,
+	lib_e
 } functype_enum;
-
-typedef enum accessor_enum {
-	arrow_e,
-	doublecolon_e
-} accessor_enum;
 
 #include "eh_types.h"
 

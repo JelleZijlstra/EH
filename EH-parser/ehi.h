@@ -23,6 +23,16 @@ typedef enum {
 
 class EHI {
 private:
+  // cache of commonly used classes
+  struct {
+    ehobj_t *Integer;
+    ehobj_t *Float;
+    ehobj_t *Bool;
+    ehobj_t *Null;
+    ehobj_t *String;
+    ehobj_t *Array;
+  } cache;
+
 	class EHParser *eval_parser;
 	void init_eval_parser();
 	// number of loops we're currently in
@@ -60,13 +70,11 @@ private:
 	ehretval_p eh_op_colon(ehretval_p *paras, ehcontext_t context);
 	ehretval_p &eh_op_lvalue(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_dollar(ehretval_p node, ehcontext_t context);
-	void eh_op_set(ehretval_p *paras, ehcontext_t context);
+	ehretval_p eh_op_set(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_accessor(ehretval_p *paras, ehcontext_t context);
 	ehcmd_t get_command(const char *name);
 	void insert_command(const char *name, const ehcmd_t cmd);
 	void redirect_command(const char *redirect, const char *target);
-
-	// prototypes
 	ehretval_p call_function(ehobj_t *obj, ehretval_p args, ehcontext_t context);
 	ehretval_p call_function_args(ehobj_t *obj, const int nargs, ehretval_p args[], ehcontext_t context);
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
@@ -77,6 +85,18 @@ private:
   ehretval_p eh_rangetoarray(const ehrange_t *const range);
   ehretval_p eh_xtoarray(ehretval_p in);
   ehretval_p eh_cast(const type_enum type, ehretval_p in);
+
+  ehobj_t *get_primitive_class(type_enum in) {
+    switch(in) {
+      case int_e: return this->cache.Integer;
+      case float_e: return this->cache.Float;
+      case bool_e: return this->cache.Bool;
+      case null_e: return this->cache.Null;
+      case string_e: return this->cache.String;
+      case array_e: return this->cache.Array;
+      default: return NULL;
+    }
+  }
 
 public:
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
@@ -106,6 +126,7 @@ public:
   EHRV_MAKE(func, ehobj_t *)
   EHRV_MAKE(array, eharray_t *)
 #undef ERHV_MAKE
+  ehretval_p promote(ehretval_p in);
 };
 
 /*

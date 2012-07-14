@@ -37,7 +37,6 @@ public:
 		type_enum typeval;
 		attribute_enum attributeval;
 		attributes_t attributestrval;
-		accessor_enum accessorval;
 		void *resourceval;
 	};
 	// constructors
@@ -55,7 +54,6 @@ public:
 	EHRV_MAKE(bool, bool)
 	EHRV_MAKE(float, float)
 	EHRV_MAKE(struct opnode_t *, op)
-	EHRV_MAKE(accessor_enum, accessor)
 	EHRV_MAKE(type_enum, type)
 #undef EHRV_MAKE
 #define EHRV_SET(vtype, ehtype) static ehretval_p make_ ## ehtype(vtype in) { \
@@ -79,7 +77,6 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(struct ehobj_t *, object)
 	EHRV_SET(struct ehrange_t *, range)
 	EHRV_SET(struct opnode_t *, op)
-	EHRV_SET(accessor_enum, accessor)
 	EHRV_SET(attribute_enum, attribute)
 	EHRV_SET(attributes_t, attributestr)
 	EHRV_SET(struct ehobj_t *, weak_object)
@@ -115,7 +112,7 @@ vtype get_ ## ehtype ## val() const { \
 			COPY(type);
 			COPY(attribute);
 			COPY(attributestr);
-			COPY(accessor);
+			COPY(resource);
 			case null_e: break;
 #undef COPY
 		}
@@ -253,13 +250,10 @@ typedef struct ehfm_t {
 	int argcount;
 	eharg_t *args;
 	ehretval_p code;
-	union {
-		ehlibfunc_t libfunc_pointer;
-		ehlibmethod_t libmethod_pointer;
-	};
+  ehlibmethod_t libmethod_pointer;
 	
-	ehfm_t(functype_enum _type) : type(_type), argcount(0), args(NULL), code(), libfunc_pointer(NULL) {}
-	ehfm_t() : type(user_e), argcount(0), args(NULL), code(), libfunc_pointer(NULL) {}
+	ehfm_t(functype_enum _type) : type(_type), argcount(0), args(NULL), code(), libmethod_pointer(NULL) {}
+	ehfm_t() : type(user_e), argcount(0), args(NULL), code(), libmethod_pointer(NULL) {}
 	
 	// we own the args thingy
 	~ehfm_t() {
@@ -289,7 +283,7 @@ public:
 	ehdestructor_t destructor;
 
 	// constructors
-	ehobj_t(std::string _classname) : members(), function(), classname(_classname), parent(), real_parent(), selfptr(NULL), constructor(NULL), destructor(NULL) {}
+	ehobj_t(std::string _classname) : members(), function(), classname(_classname), parent(), real_parent(), object_data(NULL), constructor(NULL), destructor(NULL) {}
 
 	// method prototypes
 	ehmember_p insert_retval(const char *name, attributes_t attribute, ehretval_p value);
@@ -309,7 +303,7 @@ public:
 	    this->members[name]->value = value;
 	  } else {
 	    ehmember_p newmember;
-	    newmember->attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
+	    newmember->attribute = attributes_t::make(public_e, nonstatic_e, nonconst_e);
 	    newmember->value = value;
 	    this->members[name] = newmember;
 	  }
@@ -349,7 +343,7 @@ public:
 	
 	// destructor
 	~ehobj_t() {
-		if(this->selfptr != NULL) {
+		if(this->object_data->type() == resource_e) {
 			this->destructor(this);
 		}
 	}

@@ -33,7 +33,6 @@ EHParser *yyget_extra(void *scanner);
 	attribute_enum vValue;
 	bool bValue;
 	opnode_t *ehNode;
-	accessor_enum aValue;
 };
 %token <iValue> T_INTEGER
 %token <fValue> T_FLOAT

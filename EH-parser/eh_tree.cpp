@@ -69,7 +69,6 @@ void print_tree(const ehretval_p in, const int n) {
 			break;
 		case null_e:
 			break;
-		PRINT_TREE_TYPE(accessor, d)
 		PRINT_TREE_TYPE(type, d)
 		PRINT_TREE_TYPE(attribute, d)
 		case attributestr_e:
@@ -94,6 +93,7 @@ void print_tree(const ehretval_p in, const int n) {
 		case array_e:
 		case func_e:
 		case object_e:
+		case resource_e:
 		case weak_object_e:
 			// don't appear in AST
 			break;
@@ -107,7 +107,7 @@ const char *get_typestring(type_enum type) {
 		case bool_e: return "bool";
 		case float_e: return "float";
 		case null_e: return "null";
-		case accessor_e: return "accessor";
+		case resource_e: return "resource";
 		case type_e: return "type";
 		case array_e: return "array";
 		case func_e: return "function";

@@ -189,7 +189,7 @@ EH_METHOD(Array, count) {
 EH_METHOD(Array, operator_arrow) {
   ASSERT_NARGS(1, "Array.operator->");
   try {
-    return obj->get_arrayval()[args[0]];
+    return obj->get_arrayval()->operator[](args[0]);
   } catch(unknown_value_exception &e) {
     return NULL;
   }
@@ -197,7 +197,7 @@ EH_METHOD(Array, operator_arrow) {
 EH_METHOD(Array, operator_arrow_equals) {
   ASSERT_NARGS(2, "Array.operator->=");
   try {
-    obj->get_arrayval()[args[0]] = args[1];
+    obj->get_arrayval()->operator[](args[0]) = args[1];
     return args[1];
   } catch(unknown_value_exception &e) {
     return NULL;
@@ -249,7 +249,7 @@ EH_METHOD(String, operator_arrow) {
   int index = operand->get_intval();
   size_t len = strlen(obj->get_stringval());
   if(index < 0 || index >= len) {
-    eh_error_invalid_argument(1, "String.operator->");
+    eh_error_invalid_argument("String.operator->", 1);
     return NULL;
   }
   char *out = new char[2]();
@@ -260,17 +260,17 @@ EH_METHOD(String, operator_arrow) {
 EH_METHOD(String, operator_arrow_equals) {
   ASSERT_NARGS(2, "String.operator->=");
   ehretval_p operand1 = args[0];
-  ASSERT_TYPE(operand, int_e, "String.operator->");
-  int index = operand->get_intval();
+  ASSERT_TYPE(operand1, int_e, "String.operator->");
+  int index = operand1->get_intval();
   size_t len = strlen(obj->get_stringval());
   if(index < 0 || index >= len) {
-    eh_error_invalid_argument(1, "String.operator->");
+    eh_error_invalid_argument("String.operator->", 1);
     return NULL;
   }
   ehretval_p operand2 = eh_xtostring(args[1]);
   ASSERT_TYPE(operand2, string_e, "String.operator->");
   if(strlen(operand2->get_stringval()) == 0) {
-    eh_error_invalid_argument(2, "String.operator->=");
+    eh_error_invalid_argument("String.operator->=", 2);
     return NULL;
   }
   obj->get_stringval()[index] = operand2->get_stringval()[0];
@@ -278,5 +278,5 @@ EH_METHOD(String, operator_arrow_equals) {
 }
 EH_METHOD(String, length) {
   ASSERT_NARGS(0, "String.length");
-  return strlen(obj->get_stringval());
+  return ehretval_t::make_int(strlen(obj->get_stringval()));
 }

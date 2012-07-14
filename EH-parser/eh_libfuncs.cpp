@@ -88,9 +88,6 @@ void printvar_t::retval(ehretval_p in) {
 				case lib_e:
 					printf("library");
 					break;
-				case libmethod_e:
-					printf("library method");
-					break;
 			}
 			printf(">: ");
 			for(int i = 0; i < in->get_funcval()->function->argcount; i++) {
@@ -99,9 +96,6 @@ void printvar_t::retval(ehretval_p in) {
 					printf(", ");
 			}
 			printf("\n");
-			break;
-		case accessor_e:
-			printf("@accesor %d\n", in->get_accessorval());
 			break;
 		case type_e:
 			printf("@type %s\n", get_typestring(in->get_typeval()));
@@ -121,6 +115,9 @@ void printvar_t::retval(ehretval_p in) {
 		case float_e:
 			printf("@float %f\n", in->get_floatval());
 			break;
+		case resource_e:
+		  printf("@resource\n");
+		  break;
 	}
 	return;
 }

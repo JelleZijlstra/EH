@@ -9,7 +9,7 @@
 	return (void *)new name(); \
 } \
 inline void ehlc_delete_ ## name(ehobj_t *in) { \
-	delete (name *)in->selfptr; \
+	delete (name *)in->object_data->get_resourceval(); \
 }
 #define START_EHLC(name) ehlm_listentry_t ehlc_l_ ## name [] = {
 #define EHLC_ENTRY(classn, name) { #name, &ehlm_ ## classn ## _ ## name },

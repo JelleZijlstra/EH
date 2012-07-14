@@ -33,7 +33,6 @@ typedef enum type_enum {
 	string_e = 1,
 	int_e = 2,
 	bool_e = 3,
-	accessor_e = 4, // for internal use with array/object accessors
 	type_e = 5, // for internal use with type casting
 	array_e,
 	func_e, // methods

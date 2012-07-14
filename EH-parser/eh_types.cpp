@@ -84,14 +84,12 @@ ehretval_t::~ehretval_t() {
 		case float_e:
 		case type_e:
 		case null_e:
-		case accessor_e:
 		case attribute_e:
 		case attributestr_e:
 			break;
 		case op_e:
 			delete this->opval;
 			break;
-		// TODO
 		case string_e:
 			delete[] this->stringval;
 			break;
@@ -109,6 +107,9 @@ ehretval_t::~ehretval_t() {
 		case weak_object_e:
 			// we don't own the object
 			break;
+		case resource_e:
+		  //TODO
+		  break;
 	}
 }
 

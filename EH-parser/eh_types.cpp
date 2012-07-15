@@ -166,6 +166,7 @@ ehmember_p ehobj_t::get(const char *name, const ehcontext_t context, int token) 
 	if(this->has(name)) {
 		ehmember_p out = this->members[name];
 		if(out->attribute.visibility == private_e && !this->context_compare(context)) {
+		  eh_error_unknown("object member", name, eerror_e);
 			return NULL;
 		} else if(token == T_LVALUE_SET && out->attribute.isconst == const_e) {
 			eh_error("Attempt to write to constant variable", eerror_e);
@@ -266,5 +267,21 @@ ehobj_t::~ehobj_t() {
   // only run finalizer for library classes for now
   if(this->object_data->type() == resource_e) {
     ehi->call_method_obj(this, "finalize", 0, NULL, NULL);
+  }
+}
+// set with default attributes
+void ehobj_t::set(const char *name, ehretval_p value) {
+  if(this->has(name)) {
+    ehmember_p member = this->members[name];
+    if(member->attribute.isconst == const_e) {
+      eh_error("Attempt to write to constant variable", eerror_e);
+    } else {
+      this->members[name]->value = value;
+    }
+  } else {
+    ehmember_p newmember;
+    newmember->attribute = attributes_t::make(public_e, nonstatic_e, nonconst_e);
+    newmember->value = value;
+    this->members[name] = newmember;
   }
 }

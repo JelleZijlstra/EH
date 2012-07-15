@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # Try to find array access bug
 foo = 1
-for (count $foo) count i
-	echo $foo->$i
+for (foo.length: * 8) count i
+	echo foo.getBit: i
 end
-echo $foo->1
+echo foo.getBit: 1

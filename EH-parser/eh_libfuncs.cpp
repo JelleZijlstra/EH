@@ -127,6 +127,10 @@ void printvar_t::retval(ehretval_p in) {
 		case resource_e:
 		  printf("@resource\n");
 		  break;
+		case binding_e:
+		  // pretend it's just a method
+		  this->retval(in->get_bindingval()->method);
+		  break;
 	}
 	return;
 }

@@ -44,6 +44,7 @@ typedef struct ehlc_listentry_t {
 ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(CountClass)
 	LIBCLASSENTRY(File)
+	LIBCLASSENTRY(Integer)
 	LIBCLASSENTRY(String)
 	LIBCLASSENTRY(Array)
 	LIBCLASSENTRY(Float)
@@ -475,32 +476,24 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					break;
 				case T_MINMIN:
 					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					if(operand1 == NULL) {
-						eh_error("Cannot set with -- operator", eerror_e);
-					} else {
-						switch(operand1->type()) {
-							case int_e:
-								operand1->intval--;
-								break;
-							default:
-								eh_error_type("-- operator", operand1->type(), eerror_e);
-								break;
-						}
+          switch(operand1->type()) {
+            case int_e:
+              operand1->intval--;
+              break;
+            default:
+              eh_error_type("-- operator", operand1->type(), eerror_e);
+              break;
 					}
 					break;
 				case T_PLUSPLUS:
 					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					if(operand1 == NULL) {
-						eh_error("Cannot set with ++ operator", eerror_e);
-					} else {
-						switch(operand1->type()) {
-							case int_e:
-								operand1->intval++;
-								break;
-							default:
-								eh_error_type("++ operator", operand1->type(), eerror_e);
-								break;
-						}
+          switch(operand1->type()) {
+            case int_e:
+              operand1->intval++;
+              break;
+            default:
+              eh_error_type("++ operator", operand1->type(), eerror_e);
+              break;
 					}
 					break;
 				case '$': // variable dereference
@@ -642,7 +635,7 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 		ehmember_p var = context->get_objectval()->get_recursive(name, context, T_LVALUE_SET);
 		// if we do T_LVALUE_SET, get_recursive never returns NULL
 		// count variable always gets to be an int
-		var->value = ehretval_t::make_int(range.second);
+		var->value = ehretval_t::make_int(range.first);
 		for( ; var->value->get_intval() <= range.second; var->value->intval++) {
 			ret = eh_execute(op->paras[2], context);
 			LOOPCHECKS;
@@ -1035,7 +1028,7 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
   ehretval_p base_var = eh_execute(internal_paras[0], context);
   ehretval_p rvalue = eh_execute(paras[1], context);
   switch(paras[0]->get_opval()->op) {
-    case T_ARROW_SET: {
+    case T_ARROW: {
       ehretval_p accessor = eh_execute(internal_paras[1], context);
       ehretval_p func;
       ehretval_p object_data;
@@ -1064,7 +1057,7 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
         return NULL;
       }
     }
-    case T_DOT_SET: {
+    case '.': {
       // This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.
       if(!base_var->is_object()) {
         eh_error_type("Cannot use operator.= on primitive", base_var->type(), enotice_e);
@@ -1076,7 +1069,7 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
       obj->set(accessor, rvalue);
       return rvalue;
     }
-    case T_LVALUE_SET: {
+    case '$': {
 			ehmember_p var = context->get_objectval()->get_recursive(base_var->get_stringval(), context, T_LVALUE_SET);
       var->value = rvalue;
       return rvalue;
@@ -1096,11 +1089,16 @@ ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
       eh_error_type("operator.", base_var->type(), enotice_e);
       return NULL;
     }
-    ehretval_p member = class_obj->get(accessor, context, T_LVALUE_GET)->value;
-    if(member->type() == func_e) {
-      return this->make_binding(new ehbinding_t(base_var, member));
+    if(class_obj->has(accessor)) {
+      ehretval_p member = class_obj->get(accessor, context, T_LVALUE_GET)->value;
+      if(member->type() == func_e) {
+        return this->make_binding(new ehbinding_t(base_var, member));
+      } else {
+        return member;
+      }
     } else {
-      return member;
+      eh_error_unknown("object member", accessor, eerror_e);
+      return NULL;
     }
   }
 }

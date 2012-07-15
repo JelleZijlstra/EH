@@ -1,7 +1,8 @@
 It works!
-Unsupported type string for typecast to int: EH notice
-Unsupported type string for typecast to int: EH notice
-Unsupported types null and null for operator >=: EH runtime error
+Cannot convert String to Integer: EH notice
+toInt does not return a int: EH notice
+Cannot convert String to Integer: EH notice
+toInt does not return a int: EH notice
 There should have been several error messages on the lines before this one
 test
 test

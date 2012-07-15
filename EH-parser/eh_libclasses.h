@@ -71,6 +71,7 @@ EH_METHOD(Integer, length);
 EH_METHOD(Integer, toString);
 EH_METHOD(Integer, toBool);
 EH_METHOD(Integer, toFloat);
+EH_METHOD(Integer, toInt);
 
 EXTERN_EHLC(Integer)
 
@@ -91,6 +92,7 @@ EH_METHOD(Float, abs);
 EH_METHOD(Float, toString);
 EH_METHOD(Float, toInt);
 EH_METHOD(Float, toBool);
+EH_METHOD(Float, toFloat);
 
 EXTERN_EHLC(Float)
 
@@ -106,6 +108,7 @@ EH_METHOD(String, toInt);
 EH_METHOD(String, toFloat);
 EH_METHOD(String, toBool);
 EH_METHOD(String, toRange);
+EH_METHOD(String, valueOfFirstChar);
 
 EXTERN_EHLC(String)
 
@@ -114,6 +117,7 @@ EXTERN_EHLC(String)
  */
 EH_METHOD(Bool, toString);
 EH_METHOD(Bool, toBool);
+EH_METHOD(Bool, toInt);
 
 EXTERN_EHLC(Bool)
 

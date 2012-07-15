@@ -146,7 +146,7 @@ statement:
 							{ $$ = ADD_NODE4(T_AS, $2, $4, $6, $8); }
 	| T_FUNC bareword ':' parglist '{' statement_list '}'
 							{ $$ = ADD_NODE2(T_SET,
-								ADD_NODE1(T_LVALUE_SET, $2),
+								ADD_NODE1('$', $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH expression '{' caselist '}'
 							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
@@ -169,7 +169,7 @@ statement:
 							{ $$ = ADD_NODE4(T_AS, $2, $4, $6, $8); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE2(T_SET, 
-								ADD_NODE1(T_LVALUE_SET, $2), 
+								ADD_NODE1('$', $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH expression T_SEPARATOR caselist T_END T_SEPARATOR
 							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
@@ -188,11 +188,11 @@ statement:
 							{ $$ = ADD_NODE3(T_FOR, $2, $4, $6); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
 							{ $$ = ADD_NODE2(T_SET,
-								ADD_NODE1(T_LVALUE_SET, $2),
+								ADD_NODE1('$', $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_FUNC bareword ':' parglist T_ARROW expression %prec T_SHORTFUNCTION
 							{ $$ = ADD_NODE2(T_SET,
-								ADD_NODE1(T_LVALUE_SET, $2),
+								ADD_NODE1('$', $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH expression T_SEPARATOR caselist T_ENDSWITCH T_SEPARATOR
 							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
@@ -231,11 +231,11 @@ statement:
 	;
 
 lvalue_set:
-	bareword				{ $$ = ADD_NODE1(T_LVALUE_SET, $1); }
+	bareword				{ $$ = ADD_NODE1('$', $1); }
 	| line_expr T_ARROW expression
-							{ $$ = ADD_NODE2(T_ARROW_SET, $1, $3); }
+							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| line_expr '.' bareword
-							{ $$ = ADD_NODE2(T_DOT_SET, $1, $3); }
+							{ $$ = ADD_NODE2('.', $1, $3); }
 	;
 
 

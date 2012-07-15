@@ -7,7 +7,7 @@ echo $foo -> 1
 # Casting null to a string gives an empty string
 baz = @string $bar
 echo $baz
-# Casting null to an int gives 0
+# Casting null to an int gives 0 and throws an error
 ban = @int $bar
 echo $ban
 printvar: $ban

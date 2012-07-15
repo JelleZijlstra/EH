@@ -1,5 +1,6 @@
 @float 3.000000
-@float 1.000000
+toFloat does not return a float: EH notice
+@float 0.000000
 @int 3
 @bool true
 @bool true

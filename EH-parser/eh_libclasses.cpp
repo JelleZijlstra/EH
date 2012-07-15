@@ -12,7 +12,7 @@
   return NULL; \
 }
 #define ASSERT_TYPE(operand, ehtype, method) if(operand->type() != ehtype) { \
-  eh_error_type("argument to" #method, operand->type(), enotice_e); \
+  eh_error_type("argument to " #method, operand->type(), enotice_e); \
   return NULL; \
 }
 
@@ -194,6 +194,7 @@ EHLC_ENTRY(Integer, length)
 EHLC_ENTRY(Integer, toString)
 EHLC_ENTRY(Integer, toBool)
 EHLC_ENTRY(Integer, toFloat)
+EHLC_ENTRY(Integer, toInt)
 END_EHLC()
 
 EH_METHOD(Integer, operator_plus) {
@@ -220,7 +221,7 @@ EH_METHOD(Integer, getBit) {
   ehretval_p operand = args[0];
   ASSERT_TYPE(operand, int_e, "Integer.getBit");
   int index = operand->get_intval();
-  if(index < 0 || index >= sizeof(int)) {
+  if(index < 0 || index >= sizeof(int) * 8) {
     eh_error_invalid_argument("Integer.getBit", 0);
     return NULL;
   }
@@ -235,7 +236,7 @@ EH_METHOD(Integer, setBit) {
   ehretval_p operand = args[0];
   ASSERT_TYPE(operand, int_e, "Integer.setBit");
   int index = operand->get_intval();
-  if(index < 0 || index >= sizeof(int)) {
+  if(index < 0 || index >= sizeof(int) * 8) {
     eh_error_invalid_argument("Integer.setBit", 0);
     return NULL;
   }
@@ -282,7 +283,11 @@ EH_METHOD(Integer, toBool) {
 }
 EH_METHOD(Integer, toFloat) {
   ASSERT_NARGS(0, "Integer.toFloat");
-  return ehretval_t::make_float((float) obj->get_floatval());
+  return ehretval_t::make_float((float) obj->get_intval());
+}
+EH_METHOD(Integer, toInt) {
+  ASSERT_NARGS(0, "Integer.toInt");
+  return obj;
 }
 
 START_EHLC(Array)
@@ -297,9 +302,10 @@ EH_METHOD(Array, length) {
 }
 EH_METHOD(Array, operator_arrow) {
   ASSERT_NARGS(1, "Array.operator->");
-  try {
-    return obj->get_arrayval()->operator[](args[0]);
-  } catch(unknown_value_exception &e) {
+  eharray_t *arr = obj->get_arrayval();
+  if(arr->has(args[0])) {
+    return arr->operator[](args[0]);
+  } else {
     return NULL;
   }
 }
@@ -319,6 +325,7 @@ EHLC_ENTRY(Float, abs)
 EHLC_ENTRY(Float, toString)
 EHLC_ENTRY(Float, toInt)
 EHLC_ENTRY(Float, toBool)
+EHLC_ENTRY(Float, toFloat)
 END_EHLC()
 
 EH_METHOD(Float, operator_plus) {
@@ -349,6 +356,10 @@ EH_METHOD(Float, toBool) {
   ASSERT_NARGS(0, "Float.toBool");
   return ehretval_t::make_bool(obj->get_floatval() != 0.0);
 }
+EH_METHOD(Float, toFloat) {
+  ASSERT_NARGS(0, "Float.toFloat");
+  return obj;
+}
 
 START_EHLC(String)
 EHLC_ENTRY(String, operator_plus)
@@ -360,6 +371,7 @@ EHLC_ENTRY(String, toInt)
 EHLC_ENTRY(String, toFloat)
 EHLC_ENTRY(String, toBool)
 EHLC_ENTRY(String, toRange)
+EHLC_ENTRY(String, valueOfFirstChar)
 END_EHLC()
 
 EH_METHOD(String, operator_plus) {
@@ -420,10 +432,10 @@ EH_METHOD(String, toInt) {
 	ehretval_p ret = ehretval_t::make_int(strtol(obj->get_stringval(), &endptr, 0));
 	// If in == endptr, strtol read no digits and there was no conversion.
 	if(obj->get_stringval() == endptr) {
-	  // get very angry
+	  eh_error("Cannot convert String to Integer", enotice_e);
+	  return NULL;
 	}
 	return ret;
-  
 }
 EH_METHOD(String, toFloat) {
   ASSERT_NARGS(0, "String.toFloat");
@@ -431,7 +443,8 @@ EH_METHOD(String, toFloat) {
 	ehretval_p ret = ehretval_t::make_float(strtof(obj->get_stringval(), &endptr));
 	// If in == endptr, strtof read no digits and there was no conversion.
 	if(obj->get_stringval() == endptr) {
-	  // get very angry
+	  eh_error("Cannot convert String to Float", enotice_e);
+	  return NULL;
 	}
 	return ret;
 }
@@ -470,10 +483,21 @@ EH_METHOD(String, toRange) {
 	ehrange_t *range = new ehrange_t(ehretval_t::make_int(min), ehretval_t::make_int(max));
 	return ehretval_t::make_range(range);
 }
+EH_METHOD(String, valueOfFirstChar) {
+  ASSERT_NARGS(0, "String.valueOfFirstChar");
+  const char *string = obj->get_stringval();
+  if(string[0] == '\0') {
+    eh_error("Cannot take value of first char of zero-length string", enotice_e);
+    return NULL;
+  } else {
+    return ehretval_t::make_int(string[0]);
+  }
+}
 
 START_EHLC(Bool)
 EHLC_ENTRY(Bool, toString)
 EHLC_ENTRY(Bool, toBool)
+EHLC_ENTRY(Bool, toInt)
 END_EHLC()
 
 EH_METHOD(Bool, toString) {
@@ -489,6 +513,14 @@ EH_METHOD(Bool, toString) {
 EH_METHOD(Bool, toBool) {
   ASSERT_NARGS(0, "Bool.toBool");
   return obj;
+}
+EH_METHOD(Bool, toInt) {
+  ASSERT_NARGS(0, "Bool.toInt");
+  if(obj->get_boolval()) {
+    return ehretval_t::make_int(1);
+  } else {
+    return ehretval_t::make_int(0);
+  }
 }
 
 START_EHLC(Null)

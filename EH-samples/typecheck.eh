@@ -5,7 +5,7 @@ echo is_int: 2
 # false
 echo is_int: false
 # true
-echo is_string: foo
+echo is_string: 'foo'
 # false
 echo is_string: 2
 class Foo

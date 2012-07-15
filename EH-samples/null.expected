@@ -1,6 +1,7 @@
 (null)
 (null)
 
+toInt does not return a int: EH notice
 0
 @int 0
 @array [

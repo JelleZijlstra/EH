@@ -5,12 +5,12 @@ class Foo
 end
 bar = new Foo
 # true
-echo class_is: Foo, $bar
+echo class_is: 'Foo', $bar
 # error
 echo class_is:
 # error
-echo class_is: Foo
+echo class_is: 'Foo'
 # error
-echo class_is: Foo, $bar, false
+echo class_is: 'Foo', $bar, false
 # false
-echo class_is: Bar, $bar
+echo class_is: 'Bar', $bar

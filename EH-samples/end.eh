@@ -29,6 +29,6 @@ else
 	echo 1
 end
 mah = new Foo
-$mah->bar: 42
+$mah.bar: 42
 test: 42
 $baz: 42

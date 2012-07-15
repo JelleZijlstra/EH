@@ -300,16 +300,7 @@ public:
 	}
 	
 	// set with default attributes
-	void set(const char *name, ehretval_p value) {
-	  if(this->has(name)) {
-	    this->members[name]->value = value;
-	  } else {
-	    ehmember_p newmember;
-	    newmember->attribute = attributes_t::make(public_e, nonstatic_e, nonconst_e);
-	    newmember->value = value;
-	    this->members[name] = newmember;
-	  }
-	}
+	void set(const char *name, ehretval_p value);
 
 	void insert(const std::string &name, ehmember_p value) {
 		members[name] = value;

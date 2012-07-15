@@ -6,7 +6,6 @@
  */
 #include "eh.h"
 #include "eh_libfuncs.h"
-#include "eh_error.h"
 #include "eh.bison.hpp"
 #include <cmath>
 
@@ -289,7 +288,7 @@ EHLIBFUNC(log) {
 		eh_error_argcount_lib("log", 1, nargs);
 		return NULL;
 	}
-	ehretval_p arg = eh_xtofloat(args[0]);
+	ehretval_p arg = ehi->to_float(args[0], context);
 	if(arg->type() != float_e) {
 		eh_error_type("argument 0 to log", args[0]->type(), enotice_e);
 		return NULL;
@@ -302,7 +301,7 @@ EHLIBFUNC(eval) {
 		eh_error_argcount_lib("eval", 1, nargs);
 		return NULL;
 	}
-	ehretval_p arg = eh_xtostring(args[0]);
+	ehretval_p arg = ehi->to_string(args[0], context);
 	if(arg->type() != string_e) {
 		eh_error_type("argument 0 to eval", args[0]->type(), enotice_e);
 		return NULL;	

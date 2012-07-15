@@ -16,19 +16,36 @@
   return NULL; \
 }
 
+START_EHLC(Object)
+EHLC_ENTRY(Object, initialize)
+EHLC_ENTRY(Object, toString)
+EHLC_ENTRY(Object, finalize)
+END_EHLC()
+
+EH_METHOD(Object, initialize) {
+  return NULL;
+}
 EH_METHOD(Object, toString) {
   ASSERT_NARGS(0, "Object.toString");
   const size_t len = sizeof(void *) * 2 + 3;
   char *out = new char[len]();
-  snprintf(out, len, "0x%x", reinterpret_cast<unsigned long>(obj.operator->()));
+  snprintf(out, len, "0x%p", reinterpret_cast<void *>(obj.operator->()));
   return ehretval_t::make_string(out);
+}
+EH_METHOD(Object, finalize) {
+  return NULL;
 }
 
 START_EHLC(CountClass)
+EHLC_ENTRY(CountClass, initialize)
 EHLC_ENTRY(CountClass, docount)
 EHLC_ENTRY(CountClass, setcount)
+EHLC_ENTRY(CountClass, finalize)
 END_EHLC()
 
+EH_METHOD(CountClass, initialize) {
+  return ehretval_t::make_resource((void *)new CountClass());
+}
 EH_METHOD(CountClass, docount) {
 	if(nargs != 0) {
 		eh_error_argcount_lib("CountClass::docount", 0, nargs);
@@ -44,7 +61,7 @@ EH_METHOD(CountClass, setcount) {
 	}
 	CountClass *selfptr = (CountClass *)obj->get_resourceval();
 
-	ehretval_p newcounter = eh_xtoint(args[0]);
+	ehretval_p newcounter = ehi->to_int(args[0], context);
 	if(newcounter->type() != int_e) {
 		return NULL;
 	}
@@ -52,15 +69,24 @@ EH_METHOD(CountClass, setcount) {
 	selfptr->count = newcounter->get_intval();
 	return ehretval_t::make_bool(true);
 }
+EH_METHOD(CountClass, finalize) {
+  delete (CountClass *)obj->get_resourceval();
+  return NULL;
+}
 
 START_EHLC(File)
+EHLC_ENTRY(File, initialize)
 EHLC_ENTRY(File, open)
 EHLC_ENTRY(File, getc)
 EHLC_ENTRY(File, gets)
 EHLC_ENTRY(File, puts)
 EHLC_ENTRY(File, close)
+EHLC_ENTRY(File, finalize)
 END_EHLC()
 
+EH_METHOD(File, initialize) {
+  return ehretval_t::make_resource((void *)new File());
+}
 EH_METHOD(File, open) {
 	File *selfptr = (File *) obj->get_resourceval();
 
@@ -68,7 +94,7 @@ EH_METHOD(File, open) {
 		eh_error_argcount_lib("File.open", 1, nargs);
 		return NULL;
 	}
-	ehretval_p filename = eh_xtostring(args[0]);
+	ehretval_p filename = ehi->to_string(args[0], context);
 	if(filename->type() != string_e) {
 		return NULL;
 	}
@@ -79,7 +105,6 @@ EH_METHOD(File, open) {
 	selfptr->descriptor = mfile;
 	return ehretval_t::make_bool(true);
 }
-
 EH_METHOD(File, getc) {
 	File *selfptr = (File *) obj->get_resourceval();
 	if(nargs != 0) {
@@ -99,7 +124,6 @@ EH_METHOD(File, getc) {
 	out[1] = '\0';
 	return ehretval_t::make_string(out);
 }
-
 EH_METHOD(File, gets) {
 	File *selfptr = (File *) obj->get_resourceval();
 	if(selfptr->descriptor == NULL) {
@@ -119,7 +143,6 @@ EH_METHOD(File, gets) {
 	}
 	return ehretval_t::make_string(out);
 }
-
 EH_METHOD(File, puts) {
 	File *selfptr = (File *) obj->get_resourceval();
 	if(selfptr->descriptor == NULL) {
@@ -130,7 +153,7 @@ EH_METHOD(File, puts) {
 		eh_error_argcount_lib("File::puts", 1, nargs);
 		return NULL;
 	}
-	ehretval_p str = eh_xtostring(args[0]);
+	ehretval_p str = ehi->to_string(args[0], context);
 	if(str->type() != string_e) {
 		return NULL;
 	}
@@ -143,7 +166,6 @@ EH_METHOD(File, puts) {
 		return ehretval_t::make_bool(true);
 	}
 }
-
 EH_METHOD(File, close) {
 	File *selfptr = (File *) obj->get_resourceval();
 	if(selfptr->descriptor == NULL) {
@@ -158,10 +180,20 @@ EH_METHOD(File, close) {
 	selfptr->descriptor = NULL;
 	return NULL;
 }
+EH_METHOD(File, finalize) {
+  delete (File *)obj->get_resourceval();
+  return NULL;
+}
 
 START_EHLC(Integer)
 EHLC_ENTRY(Integer, operator_plus)
 EHLC_ENTRY(Integer, abs)
+EHLC_ENTRY(Integer, getBit)
+EHLC_ENTRY(Integer, setBit)
+EHLC_ENTRY(Integer, length)
+EHLC_ENTRY(Integer, toString)
+EHLC_ENTRY(Integer, toBool)
+EHLC_ENTRY(Integer, toFloat)
 END_EHLC()
 
 EH_METHOD(Integer, operator_plus) {
@@ -170,7 +202,7 @@ EH_METHOD(Integer, operator_plus) {
   if(operand->type() == float_e) {
     return ehretval_t::make_float((float) obj->get_intval() + operand->get_floatval());
   } else {
-    operand = eh_xtoint(operand);
+    operand = ehi->to_int(operand, context);
     if(operand->type() == int_e) {
       return ehretval_t::make_int(obj->get_intval() + operand->get_intval());
     } else {
@@ -284,11 +316,14 @@ EH_METHOD(Array, operator_arrow_equals) {
 START_EHLC(Float)
 EHLC_ENTRY(Float, operator_plus)
 EHLC_ENTRY(Float, abs)
+EHLC_ENTRY(Float, toString)
+EHLC_ENTRY(Float, toInt)
+EHLC_ENTRY(Float, toBool)
 END_EHLC()
 
 EH_METHOD(Float, operator_plus) {
   ASSERT_NARGS(1, "Float.operator+");
-  ehretval_p operand = eh_xtofloat(args[0]);
+  ehretval_p operand = ehi->to_float(args[0], context);
   if(operand->type() == float_e) {
     return ehretval_t::make_float(obj->get_floatval() + operand->get_floatval());
   } else {
@@ -320,11 +355,16 @@ EHLC_ENTRY(String, operator_plus)
 EHLC_ENTRY(String, operator_arrow)
 EHLC_ENTRY(String, operator_arrow_equals)
 EHLC_ENTRY(String, length)
+EHLC_ENTRY(String, toString)
+EHLC_ENTRY(String, toInt)
+EHLC_ENTRY(String, toFloat)
+EHLC_ENTRY(String, toBool)
+EHLC_ENTRY(String, toRange)
 END_EHLC()
 
 EH_METHOD(String, operator_plus) {
   ASSERT_NARGS(1, "String.operator+");
-  ehretval_p operand = eh_xtostring(args[0]);
+  ehretval_p operand = ehi->to_string(args[0], context);
   ASSERT_TYPE(operand, string_e, "String.operator+");
   size_t len1 = strlen(obj->get_stringval());
   size_t len2 = strlen(operand->get_stringval());
@@ -358,8 +398,7 @@ EH_METHOD(String, operator_arrow_equals) {
     eh_error_invalid_argument("String.operator->", 1);
     return NULL;
   }
-  ehretval_p operand2 = eh_xtostring(args[1]);
-  ASSERT_TYPE(operand2, string_e, "String.operator->");
+  ehretval_p operand2 = ehi->to_string(args[1], context);
   if(strlen(operand2->get_stringval()) == 0) {
     eh_error_invalid_argument("String.operator->=", 2);
     return NULL;
@@ -432,6 +471,11 @@ EH_METHOD(String, toRange) {
 	return ehretval_t::make_range(range);
 }
 
+START_EHLC(Bool)
+EHLC_ENTRY(Bool, toString)
+EHLC_ENTRY(Bool, toBool)
+END_EHLC()
+
 EH_METHOD(Bool, toString) {
   ASSERT_NARGS(0, "Bool.toString");
   char *str;
@@ -447,6 +491,11 @@ EH_METHOD(Bool, toBool) {
   return obj;
 }
 
+START_EHLC(Null)
+EHLC_ENTRY(Null, toString)
+EHLC_ENTRY(Null, toBool)
+END_EHLC()
+
 EH_METHOD(Null, toString) {
   ASSERT_NARGS(0, "Null.toString");
   return ehretval_t::make_string(strdup(""));
@@ -455,6 +504,14 @@ EH_METHOD(Null, toBool) {
   ASSERT_NARGS(0, "Null.toBool");
   return ehretval_t::make_bool(false);
 }
+
+START_EHLC(Range)
+EHLC_ENTRY(Range, min)
+EHLC_ENTRY(Range, max)
+EHLC_ENTRY(Range, operator_arrow)
+EHLC_ENTRY(Range, toString)
+EHLC_ENTRY(Range, toArray)
+END_EHLC()
 
 EH_METHOD(Range, min) {
   ASSERT_NARGS(0, "Range.min");

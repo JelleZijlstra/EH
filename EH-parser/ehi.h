@@ -32,6 +32,7 @@ private:
     ehobj_t *Null;
     ehobj_t *String;
     ehobj_t *Array;
+    ehobj_t *Range;
   } cache;
 
 	class EHParser *eval_parser;
@@ -71,16 +72,20 @@ private:
 	ehretval_p eh_op_colon(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_dollar(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_set(ehretval_p *paras, ehcontext_t context);
+  ehretval_p eh_op_tilde(ehretval_p in, ehcontext_t context);
+  ehretval_p eh_op_uminus(ehretval_p in, ehcontext_t context);
+  ehretval_p eh_op_dot(ehretval_p *paras, ehcontext_t context);
+  ehretval_p eh_looseequals(ehretval_p operand1, ehretval_p operand2, ehcontext_t context);
   ehretval_p perform_op(const char *name, const char *user_name, ehretval_p *paras, ehcontext_t context);
 	ehcmd_t get_command(const char *name);
 	void insert_command(const char *name, const ehcmd_t cmd);
 	void redirect_command(const char *redirect, const char *target);
-	ehretval_p call_function(ehobj_t *obj, ehretval_p args, ehcontext_t context);
-	ehretval_p call_function_args(ehobj_t *obj, const int nargs, ehretval_p args[], ehcontext_t context);
+	ehretval_p call_function(ehobj_t *obj, ehretval_p object_data, ehretval_p args, ehcontext_t context);
+	ehretval_p call_function_args(ehobj_t *obj, ehretval_p object_data, const int nargs, ehretval_p args[], ehcontext_t context);
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
 	ehretval_p &object_access(ehretval_p name, ehretval_p index, ehcontext_t context, int token);
 	ehretval_p &colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token);
-	ehretval_p object_instantiate(ehobj_t *obj);
+	ehretval_p object_instantiate(ehobj_t *obj, ehcontext_t context);
 	ehobj_t *get_class(ehretval_p code, ehcontext_t context);
   ehretval_p eh_rangetoarray(const ehrange_t *const range);
   ehretval_p eh_xtoarray(ehretval_p in);
@@ -117,6 +122,7 @@ public:
 	// stuff for GC'ed ehretval_ts
 #define EHRV_MAKE(ehtype, vtype) ehretval_p make_ ## ehtype(vtype in) { \
   ehretval_p out; \
+  in->ehi = this; \
   this->gc.allocate(out); \
   ehretval_t::fill_ ## ehtype(out, in); \
   return out; \
@@ -124,11 +130,23 @@ public:
   EHRV_MAKE(object, ehobj_t *)
   EHRV_MAKE(weak_object, ehobj_t *)
   EHRV_MAKE(func, ehobj_t *)
-  EHRV_MAKE(array, eharray_t *)
 #undef ERHV_MAKE
-  ehretval_p promote(ehretval_p in);
+  ehretval_p make_binding(ehbinding_t *in) {
+    ehretval_p out;
+    this->gc.allocate(out);
+    ehretval_t::fill_binding(out, in);
+    return out;
+  }
+  ehretval_p make_array(eharray_t *in) {
+    ehretval_p out;
+    this->gc.allocate(out);
+    ehretval_t::fill_array(out, in);
+    return out;
+  }
+  ehretval_p promote(ehretval_p in, ehcontext_t context);
   ehretval_p call_method(ehretval_p in, const char *name, int nargs, ehretval_p *args, ehcontext_t context);
-  
+  ehretval_p call_method_obj(ehobj_t *obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context);
+
   // conversion methods, guaranteed to return the type they're supposed to return
 #define CASTER(method_name, ehtype, fallback_value) ehretval_p to_ ## ehtype(ehretval_p in, ehcontext_t context) { \
   static ehretval_p fallback = ehretval_t::make_ ## ehtype(fallback_value); \
@@ -136,7 +154,7 @@ public:
   if(out->type() == ehtype ## _e) { \
     return out; \
   } else { \
-    eh_error_type(#method_name "does not return a" #ehtype, out->type(), enotice_e); \
+    eh_error(#method_name " does not return a " #ehtype, enotice_e); \
     return fallback; \
   } \
 }
@@ -145,6 +163,25 @@ public:
   CASTER(toFloat, float, 0.0)
   CASTER(toBool, bool, false)
 #undef CASTER
+  ehretval_p to_array(ehretval_p in, ehcontext_t context) {
+    ehretval_p out = call_method(in, "toArray", 0, NULL, context);
+    if(out->type() == array_e) {
+      return out;
+    } else {
+      eh_error_type("toArray does not return an array", out->type(), enotice_e);
+      eharray_t *arr = new eharray_t;
+      arr->int_indices[0] = in;
+      return this->make_array(arr);
+    }
+  }
+  bool eh_floatequals(float infloat, ehretval_p operand2, ehcontext_t context) {
+    ehretval_p operand = this->to_int(operand2, context);
+    // checks whether a float equals an int. C handles this correctly.
+    if(operand->type() != int_e) {
+      return false;
+    }
+    return (infloat == operand->get_intval());
+  }
 };
 
 /*

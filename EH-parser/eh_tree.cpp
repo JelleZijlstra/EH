@@ -95,6 +95,7 @@ void print_tree(const ehretval_p in, const int n) {
 		case object_e:
 		case resource_e:
 		case weak_object_e:
+		case binding_e:
 			// don't appear in AST
 			break;
 	}
@@ -117,6 +118,7 @@ const char *get_typestring(type_enum type) {
 		case attribute_e: return "attribute";
 		case attributestr_e: return "attributestr";
 		case range_e: return "range";
+		case binding_e: return "binding";
 	}
 	// to keep the compiler happy
 	return "null";

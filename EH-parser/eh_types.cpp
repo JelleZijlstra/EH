@@ -1,5 +1,4 @@
 #include "eh.h"
-#include "eh_error.h"
 
 /*
  * ehretval_t
@@ -26,7 +25,9 @@ void ehretval_t::print() {
 			printf("%f", this->get_floatval());
 			break;
 		case range_e:
-			printf("%d to %d", this->get_rangeval()->min, this->get_rangeval()->max);
+		  this->get_rangeval()->min->print();
+		  printf(" to ");
+		  this->get_rangeval()->max->print();
 			break;
 		default:
 			eh_error_type("echo operator", this->type(), enotice_e);
@@ -109,6 +110,9 @@ ehretval_t::~ehretval_t() {
 			break;
 		case resource_e:
 		  //TODO
+		  break;
+		case binding_e:
+		  delete this->bindingval;
 		  break;
 	}
 }
@@ -257,4 +261,10 @@ bool ehobj_t::context_compare(const ehcontext_t key) const {
 			return this->context_compare(key->get_objectval()->parent);
 		}
 	}
+}
+ehobj_t::~ehobj_t() {
+  // only run finalizer for library classes for now
+  if(this->object_data->type() == resource_e) {
+    ehi->call_method_obj(this, "finalize", 0, NULL, NULL);
+  }
 }

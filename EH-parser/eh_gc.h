@@ -285,7 +285,7 @@ public:
 		}
 	
 		bool operator==(const pointer &rhs) {
-			return this->pointer == ~rhs;
+			return this->content == ~rhs;
 		}
 		bool operator==(void *rhs) {
 			return (void *)this->content == rhs;

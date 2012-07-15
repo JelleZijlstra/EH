@@ -12,6 +12,7 @@ private:
 			case weak_object_e:
 			case func_e:
 			case array_e:
+			case binding_e:
 				return true;
 			default:
 				return false;
@@ -38,6 +39,7 @@ public:
 		attribute_enum attributeval;
 		attributes_t attributestrval;
 		void *resourceval;
+		struct ehbinding_t *bindingval;
 	};
 	// constructors
 	ehretval_t() : _type(null_e) {}
@@ -83,6 +85,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(struct ehobj_t *, func)
 	EHRV_SET(type_enum, type)
 	EHRV_SET(void *, resource)
+	EHRV_SET(ehbinding_t *, binding)
 #undef EHRV_SET
 	// special constructors for GC'ed types
 #define EHRV_GC(vtype, ehtype) static void fill_ ## ehtype(ehretval_p in, vtype val) { \
@@ -93,6 +96,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_GC(ehobj_t *, weak_object)
 	EHRV_GC(ehobj_t *, func)
 	EHRV_GC(eharray_t *, array)
+	EHRV_GC(ehbinding_t *, binding)
 #undef EHRV_GC
 
 	void overwrite(ehretval_t &in) {
@@ -113,6 +117,7 @@ vtype get_ ## ehtype ## val() const { \
 			COPY(attribute);
 			COPY(attributestr);
 			COPY(resource);
+			COPY(binding);
 			case null_e: break;
 #undef COPY
 		}
@@ -170,9 +175,6 @@ typedef ehretval_t::ehretval_p ehretval_p;
 
 // context
 typedef ehretval_p /* with type object_e */ ehcontext_t;
-
-typedef ehretval_p (*ehconstructor_t)();
-typedef void (*ehdestructor_t)(void *);
 
 typedef ehretval_p (*ehlibmethod_t)(ehretval_p, int, ehretval_p *, ehcontext_t, class EHI *);
 
@@ -279,11 +281,11 @@ public:
 	ehretval_p real_parent;
 	// for library classes
 	ehretval_p object_data;
-	ehconstructor_t constructor;
-	ehdestructor_t destructor;
+	// constructor needs it
+	EHI *ehi;
 
 	// constructors
-	ehobj_t(std::string _classname) : members(), function(), classname(_classname), parent(), real_parent(), object_data(NULL), constructor(NULL), destructor(NULL) {}
+	ehobj_t(std::string _classname) : members(), function(), classname(_classname), parent(), real_parent(), object_data(NULL) {}
 
 	// method prototypes
 	ehmember_p insert_retval(const char *name, attributes_t attribute, ehretval_p value);
@@ -342,11 +344,7 @@ public:
 	}
 	
 	// destructor
-	~ehobj_t() {
-		if(this->object_data->type() == resource_e) {
-			this->destructor(this);
-		}
-	}
+	~ehobj_t();
 private:
 	ehmember_p get_recursive_helper(const char *name, const ehcontext_t context);
 } ehobj_t;
@@ -362,3 +360,11 @@ typedef struct ehrange_t {
 	}
 	ehrange_t() : min(ehretval_t::make_int(0)), max(ehretval_t::make_int(0)) {}
 } ehrange_t;
+
+// method binding
+typedef struct ehbinding_t {
+  ehretval_p value;
+  ehretval_p method;
+
+  ehbinding_t(ehretval_p _value, ehretval_p _method) : value(_value), method(_method) {}
+} ehbinding_t;

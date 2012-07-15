@@ -43,7 +43,8 @@ typedef enum type_enum {
 	attributestr_e,
 	range_e,
 	float_e,
-	resource_e
+	resource_e,
+	binding_e
 } type_enum;
 
 // attributes of class members
@@ -117,8 +118,6 @@ typedef struct ehlm_listentry_t {
 } ehlm_listentry_t;
 
 typedef struct ehlibclass_t {
-	ehconstructor_t constructor;
-	ehdestructor_t destructor;
 	ehlm_listentry_t *members;
 } ehlibclass_t;
 
@@ -138,29 +137,7 @@ void yyerror(void *, const char *s);
 #include "eh.bison.hpp"
 #include "ehi.h"
 
-ehretval_p int_arrow_get(ehretval_p operand1, ehretval_p operand2);
-ehretval_p string_arrow_get(ehretval_p operand1, ehretval_p operand2);
-ehretval_p range_arrow_get(ehretval_p operand1, ehretval_p operand2);
-void int_arrow_set(ehretval_p input, ehretval_p index, ehretval_p rvalue);
-void string_arrow_set(ehretval_p input, ehretval_p index, ehretval_p rvalue);
-void range_arrow_set(ehretval_p input, ehretval_p index, ehretval_p rvalue);
 ehretval_p eh_count(const ehretval_p in);
-ehretval_p eh_op_tilde(ehretval_p in);
-ehretval_p eh_op_uminus(ehretval_p in);
-ehretval_p eh_op_plus(ehretval_p operand1, ehretval_p operand2);
-ehretval_p eh_make_range(const int min, const int max);
-
-// type casting
-ehretval_p eh_stringtoint(const char *const in);
-ehretval_p eh_stringtofloat(const char *const in);
-ehretval_p eh_stringtorange(const char *const in);
-char *eh_inttostring(const int in);
-ehretval_p eh_xtoint(ehretval_p in);
-ehretval_p eh_xtofloat(ehretval_p in);
-ehretval_p eh_xtostring(ehretval_p in);
-bool eh_xtobool(ehretval_p in);
-ehretval_p eh_xtorange(ehretval_p in);
-ehretval_p eh_looseequals(ehretval_p operand1, ehretval_p operand2);
 bool eh_strictequals(ehretval_p operand1, ehretval_p operand2);
 
 #endif /* EH_H_ */

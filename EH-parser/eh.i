@@ -6,7 +6,6 @@
  */
 %{
 #include "eh.h"
-#include "eh_error.h"
 ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
 	return NULL;
 }
@@ -48,10 +47,10 @@ zval *ehtozval(ehretval_p in) {
 				// TODO
 				eh_error_type("conversion to PHP", in->type(), enotice_e);
 				break;
-			case accessor_e:
 			case type_e:
 			case op_e:
 			case attribute_e:
+			case resource_e:
 			case attributestr_e:
 				// these shouldn't even appear as user-visible types
 				eh_error_type("conversion to PHP", in->type(), efatal_e);

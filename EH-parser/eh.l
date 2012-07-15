@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "eh.h"
-#include "eh_error.h"
 #include "eh.bison.hpp"
 %}
 %option yylineno

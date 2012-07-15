@@ -5,18 +5,23 @@
  */
 #include "eh.h"
 
-#define EHLC_CONSTRUCTOR_DESTRUCTOR(name) inline ehretval_p ehlc_new_ ## name() { \
-	return ehretval_t::make_resource((void *)new name()); \
-} \
-inline void ehlc_delete_ ## name(void *in) { \
-	delete (name *)in; \
-}
+// Summary
+
 #define START_EHLC(name) ehlm_listentry_t ehlc_l_ ## name [] = {
 #define EHLC_ENTRY(classn, name) { #name, &ehlm_ ## classn ## _ ## name },
 #define END_EHLC() {NULL, NULL} };
 #define EXTERN_EHLC(name) extern ehlm_listentry_t ehlc_l_ ## name [];
 
-#define EH_METHOD(classn,name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, int nargs, ehretval_p *args, ehcontext_t context, EHI *ehi)
+#define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, int nargs, ehretval_p *args, ehcontext_t context, EHI *ehi)
+
+/*
+ * Object class
+ */
+EH_METHOD(Object, initialize);
+EH_METHOD(Object, toString);
+EH_METHOD(Object, finalize);
+
+EXTERN_EHLC(Object)
 
 /*
  * CountClass library class
@@ -28,10 +33,11 @@ public:
 		count = 0;
 	}
 };
+EH_METHOD(CountClass, initialize);
 EH_METHOD(CountClass, docount);
 EH_METHOD(CountClass, setcount);
+EH_METHOD(CountClass, finalize);
 
-EHLC_CONSTRUCTOR_DESTRUCTOR(CountClass)
 EXTERN_EHLC(CountClass)
 
 /*
@@ -44,13 +50,14 @@ public:
 		descriptor = NULL;
 	}
 };
+EH_METHOD(File, initialize);
 EH_METHOD(File, open);
 EH_METHOD(File, getc);
 EH_METHOD(File, gets);
 EH_METHOD(File, puts);
 EH_METHOD(File, close);
+EH_METHOD(File, finalize);
 
-EHLC_CONSTRUCTOR_DESTRUCTOR(File)
 EXTERN_EHLC(File)
 
 /*
@@ -61,6 +68,9 @@ EH_METHOD(Integer, abs);
 EH_METHOD(Integer, getBit);
 EH_METHOD(Integer, setBit);
 EH_METHOD(Integer, length);
+EH_METHOD(Integer, toString);
+EH_METHOD(Integer, toBool);
+EH_METHOD(Integer, toFloat);
 
 EXTERN_EHLC(Integer)
 
@@ -78,6 +88,9 @@ EXTERN_EHLC(Array)
  */
 EH_METHOD(Float, operator_plus);
 EH_METHOD(Float, abs);
+EH_METHOD(Float, toString);
+EH_METHOD(Float, toInt);
+EH_METHOD(Float, toBool);
 
 EXTERN_EHLC(Float)
 
@@ -88,6 +101,11 @@ EH_METHOD(String, length);
 EH_METHOD(String, operator_arrow);
 EH_METHOD(String, operator_arrow_equals);
 EH_METHOD(String, operator_plus);
+EH_METHOD(String, toString);
+EH_METHOD(String, toInt);
+EH_METHOD(String, toFloat);
+EH_METHOD(String, toBool);
+EH_METHOD(String, toRange);
 
 EXTERN_EHLC(String)
 
@@ -95,6 +113,7 @@ EXTERN_EHLC(String)
  * Bool class
  */
 EH_METHOD(Bool, toString);
+EH_METHOD(Bool, toBool);
 
 EXTERN_EHLC(Bool)
 
@@ -102,6 +121,7 @@ EXTERN_EHLC(Bool)
  * Null class
  */
 EH_METHOD(Null, toString);
+EH_METHOD(Null, toBool);
 
 EXTERN_EHLC(Null)
 
@@ -111,5 +131,7 @@ EXTERN_EHLC(Null)
 EH_METHOD(Range, operator_arrow);
 EH_METHOD(Range, min);
 EH_METHOD(Range, max);
+EH_METHOD(Range, toString);
+EH_METHOD(Range, toArray);
 
 EXTERN_EHLC(Range)

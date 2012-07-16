@@ -176,11 +176,15 @@ void eharray_t::insert_retval(ehretval_p index, ehretval_p value) {
  * ehobj_t
  */
 ehmember_p ehobj_t::insert_retval(const char *name, attributes_t attribute, ehretval_p value) {
-  // We may want to re-enable this check once inheritance is revamped
-/*	if(this->has(name)) {
-		eh_error("object member already set", enotice_e);
-		return NULL;
-	}*/
+	if(this->has(name)) {
+		// We may want to re-enable this check once inheritance is revamped
+		//eh_error("object member already set", enotice_e);
+		//return NULL;
+		if(members[name]->isconst()) {
+			eh_error("Attempt to write to constant variable", eerror_e);
+			return NULL;
+		}
+	}
 	// insert a member into a class
 	ehmember_p member;
 	member->attribute = attribute;

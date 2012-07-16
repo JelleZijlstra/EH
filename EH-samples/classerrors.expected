@@ -1,5 +1,5 @@
-object member already set: EH notice
-object member already set: EH notice
-object member already set: EH notice
-object member already set: EH notice
+Attempt to write to constant variable: EH runtime error
+Attempt to write to constant variable: EH runtime error
+Attempt to write to constant variable: EH runtime error
+Attempt to write to constant variable: EH runtime error
 10

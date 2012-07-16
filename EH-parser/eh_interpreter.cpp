@@ -1180,6 +1180,11 @@ ehretval_p EHI::call_function_args(ehobj_t *obj, ehretval_p object_data, const i
 		var->value = args[i];
 		newcontext->get_objectval()->insert(f->args[i].name, var);
 	}
+	// insert self variable with the object_data
+	ehmember_p self_member;
+	self_member->value = object_data;
+	newcontext->get_objectval()->insert("self", self_member);
+	
 	ehretval_p ret = eh_execute(f->code, newcontext);
 	returning = false;
 	

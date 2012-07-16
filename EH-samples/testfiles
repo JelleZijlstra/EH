@@ -133,3 +133,5 @@ modifyconstloop.eh
 rangecast.eh
 modifyfor.eh
 returnfunc.eh
+tostring.eh
+editinteger.eh

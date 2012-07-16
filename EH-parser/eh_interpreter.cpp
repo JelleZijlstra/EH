@@ -42,7 +42,7 @@ typedef struct ehlc_listentry_t {
 } ehlc_listentry_t;
 #define LIBCLASSENTRY(c) { #c, ehlc_l_ ## c},
 ehlc_listentry_t libclasses[] = {
-  LIBCLASSENTRY(Object)
+	LIBCLASSENTRY(Object)
 	LIBCLASSENTRY(CountClass)
 	LIBCLASSENTRY(File)
 	LIBCLASSENTRY(Integer)
@@ -176,9 +176,9 @@ void EHI::eh_init(void) {
 		ehretval_p new_value = this->make_object(newclass);
 		// inherit from Object
 		if(strcmp(libclasses[i].name, "Object") != 0) {
-		  OBJECT_FOR_EACH(this->cache.Object, member) {
-		    newclass->copy_member(member, false, new_value, this);
-		  }
+			OBJECT_FOR_EACH(this->cache.Object, member) {
+				newclass->copy_member(member, false, new_value, this);
+			}
 		}
 		ehlm_listentry_t *members = libclasses[i].members;
 		// attributes for library methods
@@ -204,21 +204,23 @@ void EHI::eh_init(void) {
 		// insert into our cache
 		const char *name = libclasses[i].name;
 		if(strcmp(name, "String") == 0) {
-		  this->cache.String = newclass;
+			this->cache.String = newclass;
 		} else if(strcmp(name, "Integer") == 0) {
-		  this->cache.Integer = newclass;
+			this->cache.Integer = newclass;
 		} else if(strcmp(name, "Float") == 0) {
-		  this->cache.Float = newclass;
+			this->cache.Float = newclass;
 		} else if(strcmp(name, "Bool") == 0) {
-		  this->cache.Bool = newclass;
+			this->cache.Bool = newclass;
 		} else if(strcmp(name, "Null") == 0) {
-		  this->cache.Null = newclass;
+			this->cache.Null = newclass;
 		} else if(strcmp(name, "Array") == 0) {
-		  this->cache.Array = newclass;
+			this->cache.Array = newclass;
 		} else if(strcmp(name, "Range") == 0) {
-		  this->cache.Range = newclass;
+			this->cache.Range = newclass;
 		} else if(strcmp(name, "Object") == 0) {
-		  this->cache.Object = newclass;
+			this->cache.Object = newclass;
+		} else if(strcmp(name, "Hash") == 0) {
+			this->cache.Hash = newclass;
 		}
 	}
 	for(int i = 0; libcmds[i].name != NULL; i++) {
@@ -408,17 +410,17 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			/*
 			 * Binary operators
 			 */
-			  case '.':
-			    return eh_op_dot(node->get_opval()->paras, context);
-			  case T_ARROW:
-			    return perform_op("operator_arrow", "operator->", node->get_opval()->paras, context);
+				case '.':
+					return eh_op_dot(node->get_opval()->paras, context);
+				case T_ARROW:
+					return perform_op("operator_arrow", "operator->", node->get_opval()->paras, context);
 				case T_EQ: // strict equality
-				  operand1 = eh_execute(node->get_opval()->paras[0], context);
-				  operand2 = eh_execute(node->get_opval()->paras[1], context);
+					operand1 = eh_execute(node->get_opval()->paras[0], context);
+					operand2 = eh_execute(node->get_opval()->paras[1], context);
 					return ehretval_t::make_bool(operand1->equals(operand2));
 				case T_NE: // strict non-equality
-				  operand1 = eh_execute(node->get_opval()->paras[0], context);
-				  operand2 = eh_execute(node->get_opval()->paras[1], context);
+					operand1 = eh_execute(node->get_opval()->paras[0], context);
+					operand2 = eh_execute(node->get_opval()->paras[1], context);
 					return ehretval_t::make_bool(!operand1->equals(operand2));
 				EH_INTBOOL_CASE('>', >) // greater-than
 				EH_INTBOOL_CASE('<', <) // lesser-than
@@ -463,8 +465,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					operand1 = eh_execute(node->get_opval()->paras[0], context);
 					operand2 = eh_execute(node->get_opval()->paras[1], context);
 					if(operand1->type() != operand2->type()) {
-					  eh_error("Incompatible types for range", enotice_e);
-					  return NULL;
+						eh_error("Incompatible types for range", enotice_e);
+						return NULL;
 					}
 					ret = this->make_range(new ehrange_t(operand1, operand2));
 					break;
@@ -473,24 +475,24 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					break;
 				case T_MINMIN:
 					operand1 = eh_execute(node->get_opval()->paras[0], context);
-          switch(operand1->type()) {
-            case int_e:
-              operand1->intval--;
-              break;
-            default:
-              eh_error_type("-- operator", operand1->type(), eerror_e);
-              break;
+					switch(operand1->type()) {
+						case int_e:
+							operand1->intval--;
+							break;
+						default:
+							eh_error_type("-- operator", operand1->type(), eerror_e);
+							break;
 					}
 					break;
 				case T_PLUSPLUS:
 					operand1 = eh_execute(node->get_opval()->paras[0], context);
-          switch(operand1->type()) {
-            case int_e:
-              operand1->intval++;
-              break;
-            default:
-              eh_error_type("++ operator", operand1->type(), eerror_e);
-              break;
+					switch(operand1->type()) {
+						case int_e:
+							operand1->intval++;
+							break;
+						default:
+							eh_error_type("++ operator", operand1->type(), eerror_e);
+							break;
 					}
 					break;
 				case '$': // variable dereference
@@ -602,14 +604,14 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 	// get the count
 	ehretval_p count_r = eh_execute(op->paras[0], context);
 	if(count_r->type() == range_e) {
-	  ehrange_t *rangeval = count_r->get_rangeval();
-	  if(rangeval->min->type() == int_e) {
-	    range.first = rangeval->min->get_intval();
-	    range.second = rangeval->max->get_intval();
-	  } else {
-	    eh_error_type("count", rangeval->min->type(), enotice_e);
-	    return NULL;
-	  }
+		ehrange_t *rangeval = count_r->get_rangeval();
+		if(rangeval->min->type() == int_e) {
+			range.first = rangeval->min->get_intval();
+			range.second = rangeval->max->get_intval();
+		} else {
+			eh_error_type("count", rangeval->min->type(), enotice_e);
+			return NULL;
+		}
 	} else {
 		count_r = this->to_int(count_r, context);
 		if(count_r->type() != int_e) {
@@ -856,10 +858,10 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	ehretval_p thisvalue = this->make_weak_object(ret->get_objectval());
 	ret->get_objectval()->insert_retval("this", thisattributes, thisvalue);
 
-  // inherit from Object
-  OBJECT_FOR_EACH(this->cache.Object, member) {
-    ret->get_objectval()->copy_member(member, false, ret, this);
-  }
+	// inherit from Object
+	OBJECT_FOR_EACH(this->cache.Object, member) {
+		ret->get_objectval()->copy_member(member, false, ret, this);
+	}
 
 	eh_execute(code, ret);
 	
@@ -991,7 +993,7 @@ ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 		case func_e:
 			return call_function(function->get_funcval(), NULL, paras[1], context);
 		case binding_e:
-		  return call_function(function->get_bindingval()->method->get_funcval(), function->get_bindingval()->value, paras[1], context);
+			return call_function(function->get_bindingval()->method->get_funcval(), function->get_bindingval()->value, paras[1], context);
 		case null_e:
 			// ignore null functions to prevent duplicate warnings
 			return NULL;
@@ -1022,105 +1024,105 @@ ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 	}
 }
 ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
-  ehretval_p *internal_paras = paras[0]->get_opval()->paras;
-  ehretval_p base_var = eh_execute(internal_paras[0], context);
-  ehretval_p rvalue = eh_execute(paras[1], context);
-  switch(paras[0]->get_opval()->op) {
-    case T_ARROW: {
-      //TODO: thread-safety or smart pointer
-      ehretval_p *args = new ehretval_p[2]();
-      args[0] = eh_execute(internal_paras[1], context);
-      args[1] = rvalue;
-      return call_method(base_var, "operator_arrow_equals", 2, args, context);
-      delete[] args;
-    }
-    case '.': {
-      // This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.
-      if(!base_var->is_object()) {
-        eh_error_type("Cannot use operator.= on primitive", base_var->type(), enotice_e);
-        return NULL;      
-      }
-      ehobj_t *obj = base_var->get_object();
-      // accessor is guaranteed to be a string
-      char *accessor = eh_execute(internal_paras[1], context)->get_stringval();
-      obj->set(accessor, rvalue);
-      return rvalue;
-    }
-    case '$': {
+	ehretval_p *internal_paras = paras[0]->get_opval()->paras;
+	ehretval_p base_var = eh_execute(internal_paras[0], context);
+	ehretval_p rvalue = eh_execute(paras[1], context);
+	switch(paras[0]->get_opval()->op) {
+		case T_ARROW: {
+			//TODO: thread-safety or smart pointer
+			ehretval_p *args = new ehretval_p[2]();
+			args[0] = eh_execute(internal_paras[1], context);
+			args[1] = rvalue;
+			return call_method(base_var, "operator_arrow_equals", 2, args, context);
+			delete[] args;
+		}
+		case '.': {
+			// This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.
+			if(!base_var->is_object()) {
+				eh_error_type("Cannot use operator.= on primitive", base_var->type(), enotice_e);
+				return NULL;			
+			}
+			ehobj_t *obj = base_var->get_object();
+			// accessor is guaranteed to be a string
+			char *accessor = eh_execute(internal_paras[1], context)->get_stringval();
+			obj->set(accessor, rvalue);
+			return rvalue;
+		}
+		case '$': {
 			ehmember_p var = context->get_objectval()->get_recursive(base_var->get_stringval(), context, T_LVALUE_SET);
-      var->value = rvalue;
-      return rvalue;
-    }
-  }
-  assert(false);
-  return NULL;
+			var->value = rvalue;
+			return rvalue;
+		}
+	}
+	assert(false);
+	return NULL;
 }
 ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
-  ehretval_p base_var = eh_execute(paras[0], context);
-  const char *accessor = eh_execute(paras[1], context)->get_stringval();
-  if(base_var->is_object()) {
-    return base_var->get_object()->get(accessor, context, T_LVALUE_GET)->value;
-  } else {
-    ehobj_t *class_obj = this->get_primitive_class(base_var->type());
-    if(class_obj == NULL) {
-      eh_error_type("operator.", base_var->type(), enotice_e);
-      return NULL;
-    }
-    if(class_obj->has(accessor)) {
-      ehretval_p member = class_obj->get(accessor, context, T_LVALUE_GET)->value;
-      if(member->type() == func_e) {
-        return this->make_binding(new ehbinding_t(base_var, member));
-      } else {
-        return member;
-      }
-    } else {
-      eh_error_unknown("object member", accessor, eerror_e);
-      return NULL;
-    }
-  }
+	ehretval_p base_var = eh_execute(paras[0], context);
+	const char *accessor = eh_execute(paras[1], context)->get_stringval();
+	if(base_var->is_object()) {
+		return base_var->get_object()->get(accessor, context, T_LVALUE_GET)->value;
+	} else {
+		ehobj_t *class_obj = this->get_primitive_class(base_var->type());
+		if(class_obj == NULL) {
+			eh_error_type("operator.", base_var->type(), enotice_e);
+			return NULL;
+		}
+		if(class_obj->has(accessor)) {
+			ehretval_p member = class_obj->get(accessor, context, T_LVALUE_GET)->value;
+			if(member->type() == func_e) {
+				return this->make_binding(new ehbinding_t(base_var, member));
+			} else {
+				return member;
+			}
+		} else {
+			eh_error_unknown("object member", accessor, eerror_e);
+			return NULL;
+		}
+	}
 }
 // Perform an arbitrary operation defined as a method taking a single argument
 ehretval_p EHI::perform_op(const char *name, const char *user_name, ehretval_p *paras, ehcontext_t context) {
-  ehretval_p base_var = eh_execute(paras[0], context);
-  ehretval_p *args = new ehretval_p[1]();
-  args[0] = eh_execute(paras[1], context);
-  ehretval_p ret = call_method(base_var, name, 1, args, context);
-  delete[] args;
-  return ret;
+	ehretval_p base_var = eh_execute(paras[0], context);
+	ehretval_p *args = new ehretval_p[1]();
+	args[0] = eh_execute(paras[1], context);
+	ehretval_p ret = call_method(base_var, name, 1, args, context);
+	delete[] args;
+	return ret;
 }
 ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context) {
-  ehretval_p func, object_data;
-  if(obj->is_object()) {
-    func = obj->get_object()->get(name, context, T_LVALUE_GET)->value;
-    object_data = NULL;
-  } else {
-    ehobj_t *class_obj = this->get_primitive_class(obj->type());
-    if(class_obj == NULL) {
-      eh_error_type(name, obj->type(), enotice_e);
-      return NULL;
-    }
-    func = class_obj->get(name, context, T_LVALUE_GET)->value;
-    object_data = obj;
-  }
-  if(func == NULL) {
-    return NULL;
-  } else if(func->type() == func_e) {
-    return call_function_args(func->get_funcval(), object_data, nargs, args, context);
-  } else {
-    eh_error_type(name, func->type(), enotice_e);
-    return NULL;  
-  }
+	ehretval_p func, object_data;
+	if(obj->is_object()) {
+		func = obj->get_object()->get(name, context, T_LVALUE_GET)->value;
+		object_data = NULL;
+	} else {
+		ehobj_t *class_obj = this->get_primitive_class(obj->type());
+		if(class_obj == NULL) {
+			eh_error_type(name, obj->type(), enotice_e);
+			return NULL;
+		}
+		func = class_obj->get(name, context, T_LVALUE_GET)->value;
+		object_data = obj;
+	}
+	if(func == NULL) {
+		return NULL;
+	} else if(func->type() == func_e) {
+		return call_function_args(func->get_funcval(), object_data, nargs, args, context);
+	} else {
+		eh_error_type(name, func->type(), enotice_e);
+		return NULL;	
+	}
 }
 ehretval_p EHI::call_method_obj(ehobj_t *obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context) {
-  ehretval_p func = obj->get(name, context, T_LVALUE_GET)->value;
-  if(func == NULL) {
-    return NULL;
-  } else if(func->type() == func_e) {
-    return call_function_args(func->get_funcval(), NULL, nargs, args, context);
-  } else {
-    eh_error_type(name, func->type(), enotice_e);
-    return NULL;
-  }
+	ehretval_p func = obj->get(name, context, T_LVALUE_GET)->value;
+	if(func == NULL) {
+		return NULL;
+	} else if(func->type() == func_e) {
+		return call_function_args(func->get_funcval(), NULL, nargs, args, context);
+	} else {
+		eh_error_type(name, func->type(), enotice_e);
+		return NULL;
+	}
 }
 /*
  * Functions
@@ -1152,7 +1154,7 @@ ehretval_p EHI::call_function(ehobj_t *obj, ehretval_p object_data, ehretval_p a
 }
 ehretval_p EHI::call_function_args(ehobj_t *obj, ehretval_p object_data, const int nargs, ehretval_p args[], ehcontext_t context) {
 	if(object_data == NULL) {
-	  object_data = obj->get_parent()->object_data;
+		object_data = obj->get_parent()->object_data;
 	}
 	
 	ehfm_p f = obj->function;
@@ -1299,14 +1301,14 @@ ehobj_t *EHI::get_class(ehretval_p classname, ehcontext_t context) {
 }
 // Promotes a pseudo-object of a builtin class to a real object
 ehretval_p EHI::promote(ehretval_p in, ehcontext_t context) {
-  ehobj_t *the_class = this->get_primitive_class(in->type());
-  if(the_class == NULL) {
-    eh_error_type("promotion", in->type(), enotice_e);
-    return NULL;
-  }
-  ehretval_p obj = this->object_instantiate(the_class, context);
-  obj->get_objectval()->object_data = in;
-  return obj;
+	ehobj_t *the_class = this->get_primitive_class(in->type());
+	if(the_class == NULL) {
+		eh_error_type("promotion", in->type(), enotice_e);
+		return NULL;
+	}
+	ehretval_p obj = this->object_instantiate(the_class, context);
+	obj->get_objectval()->object_data = in;
+	return obj;
 }
 
 /*

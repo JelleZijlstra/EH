@@ -24,17 +24,18 @@ typedef enum {
 
 class EHI {
 private:
-  // cache of commonly used classes
-  struct {
-    ehobj_t *Integer;
-    ehobj_t *Float;
-    ehobj_t *Bool;
-    ehobj_t *Null;
-    ehobj_t *String;
-    ehobj_t *Array;
-    ehobj_t *Range;
-    ehobj_t *Object;
-  } cache;
+	// cache of commonly used classes
+	struct {
+		ehobj_t *Integer;
+		ehobj_t *Float;
+		ehobj_t *Bool;
+		ehobj_t *Null;
+		ehobj_t *String;
+		ehobj_t *Array;
+		ehobj_t *Range;
+		ehobj_t *Object;
+		ehobj_t *Hash;
+	} cache;
 
 	class EHParser *eval_parser;
 	void init_eval_parser();
@@ -73,10 +74,10 @@ private:
 	ehretval_p eh_op_colon(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_dollar(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_set(ehretval_p *paras, ehcontext_t context);
-  ehretval_p eh_op_tilde(ehretval_p in, ehcontext_t context);
-  ehretval_p eh_op_uminus(ehretval_p in, ehcontext_t context);
-  ehretval_p eh_op_dot(ehretval_p *paras, ehcontext_t context);
-  ehretval_p perform_op(const char *name, const char *user_name, ehretval_p *paras, ehcontext_t context);
+	ehretval_p eh_op_tilde(ehretval_p in, ehcontext_t context);
+	ehretval_p eh_op_uminus(ehretval_p in, ehcontext_t context);
+	ehretval_p eh_op_dot(ehretval_p *paras, ehcontext_t context);
+	ehretval_p perform_op(const char *name, const char *user_name, ehretval_p *paras, ehcontext_t context);
 	ehcmd_t get_command(const char *name);
 	void insert_command(const char *name, const ehcmd_t cmd);
 	void redirect_command(const char *redirect, const char *target);
@@ -87,22 +88,23 @@ private:
 	ehretval_p &colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token);
 	ehretval_p object_instantiate(ehobj_t *obj, ehcontext_t context);
 	ehobj_t *get_class(ehretval_p code, ehcontext_t context);
-  ehretval_p eh_rangetoarray(const ehrange_t *const range);
-  ehretval_p eh_xtoarray(ehretval_p in);
-  ehretval_p eh_cast(const type_enum type, ehretval_p in, ehcontext_t context);
+	ehretval_p eh_rangetoarray(const ehrange_t *const range);
+	ehretval_p eh_xtoarray(ehretval_p in);
+	ehretval_p eh_cast(const type_enum type, ehretval_p in, ehcontext_t context);
 
-  ehobj_t *get_primitive_class(type_enum in) {
-    switch(in) {
-      case int_e: return this->cache.Integer;
-      case float_e: return this->cache.Float;
-      case bool_e: return this->cache.Bool;
-      case null_e: return this->cache.Null;
-      case string_e: return this->cache.String;
-      case array_e: return this->cache.Array;
-      case range_e: return this->cache.Range;
-      default: return NULL;
-    }
-  }
+	ehobj_t *get_primitive_class(type_enum in) {
+		switch(in) {
+			case int_e: return this->cache.Integer;
+			case float_e: return this->cache.Float;
+			case bool_e: return this->cache.Bool;
+			case null_e: return this->cache.Null;
+			case string_e: return this->cache.String;
+			case array_e: return this->cache.Array;
+			case range_e: return this->cache.Range;
+			case hash_e: return this->cache.Hash;
+			default: return NULL;
+		}
+	}
 
 public:
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
@@ -122,90 +124,90 @@ public:
 	
 	// stuff for GC'ed ehretval_ts
 #define EHRV_MAKE(ehtype, vtype) ehretval_p make_ ## ehtype(vtype in) { \
-  ehretval_p out; \
-  in->ehi = this; \
-  this->gc.allocate(out); \
-  ehretval_t::fill_ ## ehtype(out, in); \
-  return out; \
+	ehretval_p out; \
+	in->ehi = this; \
+	this->gc.allocate(out); \
+	ehretval_t::fill_ ## ehtype(out, in); \
+	return out; \
 }
-  EHRV_MAKE(object, ehobj_t *)
-  EHRV_MAKE(weak_object, ehobj_t *)
-  EHRV_MAKE(func, ehobj_t *)
+	EHRV_MAKE(object, ehobj_t *)
+	EHRV_MAKE(weak_object, ehobj_t *)
+	EHRV_MAKE(func, ehobj_t *)
 #undef ERHV_MAKE
-  ehretval_p make_binding(ehbinding_t *in) {
-    ehretval_p out;
-    this->gc.allocate(out);
-    ehretval_t::fill_binding(out, in);
-    return out;
-  }
-  ehretval_p make_range(ehrange_t *in) {
-    ehretval_p out;
-    this->gc.allocate(out);
-    ehretval_t::fill_range(out, in);
-    return out;
-  }
-  ehretval_p make_array(eharray_t *in) {
-    ehretval_p out;
-    this->gc.allocate(out);
-    ehretval_t::fill_array(out, in);
-    return out;
-  }
-  ehretval_p make_hash(ehhash_t *in) {
-  	ehretval_p out;
-  	this->gc.allocate(out);
-  	ehretval_t::fill_hash(out, in);
-  	return out;
-  }
-  ehretval_p promote(ehretval_p in, ehcontext_t context);
-  ehretval_p call_method(ehretval_p in, const char *name, int nargs, ehretval_p *args, ehcontext_t context);
-  ehretval_p call_method_obj(ehobj_t *obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context);
+	ehretval_p make_binding(ehbinding_t *in) {
+		ehretval_p out;
+		this->gc.allocate(out);
+		ehretval_t::fill_binding(out, in);
+		return out;
+	}
+	ehretval_p make_range(ehrange_t *in) {
+		ehretval_p out;
+		this->gc.allocate(out);
+		ehretval_t::fill_range(out, in);
+		return out;
+	}
+	ehretval_p make_array(eharray_t *in) {
+		ehretval_p out;
+		this->gc.allocate(out);
+		ehretval_t::fill_array(out, in);
+		return out;
+	}
+	ehretval_p make_hash(ehhash_t *in) {
+		ehretval_p out;
+		this->gc.allocate(out);
+		ehretval_t::fill_hash(out, in);
+		return out;
+	}
+	ehretval_p promote(ehretval_p in, ehcontext_t context);
+	ehretval_p call_method(ehretval_p in, const char *name, int nargs, ehretval_p *args, ehcontext_t context);
+	ehretval_p call_method_obj(ehobj_t *obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context);
 
-  // conversion methods, guaranteed to return the type they're supposed to return
+	// conversion methods, guaranteed to return the type they're supposed to return
 #define CASTER(method_name, ehtype, fallback_value) ehretval_p to_ ## ehtype(ehretval_p in, ehcontext_t context) { \
-  static ehretval_p fallback = ehretval_t::make_ ## ehtype(fallback_value); \
-  ehretval_p out = call_method(in, #method_name, 0, NULL, context); \
-  if(out->type() == ehtype ## _e) { \
-    return out; \
-  } else { \
-    eh_error(#method_name " does not return a " #ehtype, enotice_e); \
-    return fallback; \
-  } \
+	static ehretval_p fallback = ehretval_t::make_ ## ehtype(fallback_value); \
+	ehretval_p out = call_method(in, #method_name, 0, NULL, context); \
+	if(out->type() == ehtype ## _e) { \
+		return out; \
+	} else { \
+		eh_error(#method_name " does not return a " #ehtype, enotice_e); \
+		return fallback; \
+	} \
 }
-  CASTER(toString, string, strdup(""))
-  CASTER(toInt, int, 0)
-  CASTER(toFloat, float, 0.0)
-  CASTER(toBool, bool, false)
+	CASTER(toString, string, strdup(""))
+	CASTER(toInt, int, 0)
+	CASTER(toFloat, float, 0.0)
+	CASTER(toBool, bool, false)
 #undef CASTER
-  ehretval_p to_array(ehretval_p in, ehcontext_t context) {
-    ehretval_p out = call_method(in, "toArray", 0, NULL, context);
-    if(out->type() == array_e) {
-      return out;
-    } else {
-      eh_error("toArray does not return an array", enotice_e);
-      eharray_t *arr = new eharray_t;
-      arr->int_indices[0] = in;
-      return this->make_array(arr);
-    }
-  }
-  ehretval_p to_range(ehretval_p in, ehcontext_t context) {
-    ehretval_p out = call_method(in, "toRange", 0, NULL, context);
-    if(out->type() == range_e) {
-      return out;
-    } else {
-      eh_error("toRange does not return a range", enotice_e);
-      ehrange_t *range = new ehrange_t(in, in);
-      return this->make_range(range);
-    }
-  }
+	ehretval_p to_array(ehretval_p in, ehcontext_t context) {
+		ehretval_p out = call_method(in, "toArray", 0, NULL, context);
+		if(out->type() == array_e) {
+			return out;
+		} else {
+			eh_error("toArray does not return an array", enotice_e);
+			eharray_t *arr = new eharray_t;
+			arr->int_indices[0] = in;
+			return this->make_array(arr);
+		}
+	}
+	ehretval_p to_range(ehretval_p in, ehcontext_t context) {
+		ehretval_p out = call_method(in, "toRange", 0, NULL, context);
+		if(out->type() == range_e) {
+			return out;
+		} else {
+			eh_error("toRange does not return a range", enotice_e);
+			ehrange_t *range = new ehrange_t(in, in);
+			return this->make_range(range);
+		}
+	}
 
-  bool eh_floatequals(float infloat, ehretval_p operand2, ehcontext_t context) {
-    ehretval_p operand = this->to_int(operand2, context);
-    // checks whether a float equals an int. C handles this correctly.
-    if(operand->type() != int_e) {
-      return false;
-    }
-    return (infloat == operand->get_intval());
-  }
+	bool eh_floatequals(float infloat, ehretval_p operand2, ehcontext_t context) {
+		ehretval_p operand = this->to_int(operand2, context);
+		// checks whether a float equals an int. C handles this correctly.
+		if(operand->type() != int_e) {
+			return false;
+		}
+		return (infloat == operand->get_intval());
+	}
 };
 
 /*
@@ -223,7 +225,7 @@ public:
 	ehretval_p parse_file(FILE *infile);
 	ehretval_p parse_string(const char *cmd);
 
-	EHParser(interactivity_enum inter, EHI *parent) :  _parent(parent), _interactivity(inter) {
+	EHParser(interactivity_enum inter, EHI *parent) :	_parent(parent), _interactivity(inter) {
 		yylex_init_extra(this, &_scanner);
 	}
 	~EHParser(void) {

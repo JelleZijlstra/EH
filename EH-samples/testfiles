@@ -136,3 +136,4 @@ returnfunc.eh
 tostring.eh
 editinteger.eh
 extendbase.eh
+hash.eh

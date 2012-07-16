@@ -1,5 +1,8 @@
 @object <Foo> [
 bar <public,non-static,non-constant>: @function <user>: n
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]
 @function <user>: n
 4

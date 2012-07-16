@@ -14,7 +14,16 @@ Array not previously declared
 2
 3
 Object
+Unsupported type function for echo operator: EH notice
+Unsupported type function for echo operator: EH notice
+Unsupported type function for echo operator: EH notice
 bar
 2
+finalize
+
+initialize
+
 mah
 4
+toString
+

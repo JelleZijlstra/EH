@@ -2,9 +2,18 @@ No such class: A: EH runtime error
 @object <A> [
 A <public,non-static,non-constant>: @object <A> [
 b <public,non-static,non-constant>: null
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]
 a <public,non-static,non-constant>: @object <A> [
 b <public,non-static,non-constant>: null
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]
 b <public,non-static,non-constant>: null
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]

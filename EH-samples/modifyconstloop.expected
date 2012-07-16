@@ -1,6 +1,12 @@
 @object <Foo> [
 a <public,non-static,constant>: @int 3
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]
 @object <Foo> [
 a <public,non-static,constant>: @int 3
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]

@@ -42,6 +42,7 @@ typedef struct ehlc_listentry_t {
 } ehlc_listentry_t;
 #define LIBCLASSENTRY(c) { #c, ehlc_l_ ## c},
 ehlc_listentry_t libclasses[] = {
+  LIBCLASSENTRY(Object)
 	LIBCLASSENTRY(CountClass)
 	LIBCLASSENTRY(File)
 	LIBCLASSENTRY(Integer)
@@ -172,6 +173,12 @@ void EHI::eh_init(void) {
 	for(int i = 0; libclasses[i].name != NULL; i++) {
 		ehobj_t *newclass = new ehobj_t(libclasses[i].name);
 		ehretval_p new_value = this->make_object(newclass);
+		// inherit from Object
+		if(strcmp(libclasses[i].name, "Object") != 0) {
+		  OBJECT_FOR_EACH(this->cache.Object, member) {
+		    newclass->copy_member(member, false, new_value, this);
+		  }
+		}
 		ehlm_listentry_t *members = libclasses[i].members;
 		// attributes for library methods
 		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
@@ -209,6 +216,8 @@ void EHI::eh_init(void) {
 		  this->cache.Array = newclass;
 		} else if(strcmp(name, "Range") == 0) {
 		  this->cache.Range = newclass;
+		} else if(strcmp(name, "Object") == 0) {
+		  this->cache.Object = newclass;
 		}
 	}
 	for(int i = 0; libcmds[i].name != NULL; i++) {

@@ -33,6 +33,7 @@ private:
     ehobj_t *String;
     ehobj_t *Array;
     ehobj_t *Range;
+    ehobj_t *Object;
   } cache;
 
 	class EHParser *eval_parser;

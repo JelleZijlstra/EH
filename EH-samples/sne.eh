@@ -30,4 +30,3 @@ if 1.0 != true
 else
 	echo false
 end
-

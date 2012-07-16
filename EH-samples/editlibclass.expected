@@ -8,4 +8,5 @@ initialize <public,non-static,non-constant>: @function <library>:
 open <public,non-static,non-constant>: @function <library>: 
 puts <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]

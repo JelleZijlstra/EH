@@ -39,7 +39,7 @@ public:
 		type_enum typeval;
 		attribute_enum attributeval;
 		attributes_t attributestrval;
-		void *resourceval;
+		class LibraryBaseClass *resourceval;
 		struct ehbinding_t *bindingval;
 	};
 	// constructors
@@ -85,7 +85,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(struct ehobj_t *, weak_object)
 	EHRV_SET(struct ehobj_t *, func)
 	EHRV_SET(type_enum, type)
-	EHRV_SET(void *, resource)
+	EHRV_SET(class LibraryBaseClass *, resource)
 	EHRV_SET(ehbinding_t *, binding)
 #undef EHRV_SET
 	// special constructors for GC'ed types

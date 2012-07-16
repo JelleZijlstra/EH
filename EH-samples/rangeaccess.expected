@@ -1,4 +1,10 @@
 @int 1
 @int 3
-@range 2..3
-@range 2..4
+@range [
+@int 2
+@int 3
+]
+@range [
+@int 3
+@int 4
+]

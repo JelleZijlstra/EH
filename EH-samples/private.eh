@@ -5,20 +5,20 @@ class Bar
 	private foo = 3
 	public try:
 		# 3
-		echo $foo
+		echo foo
 		# 3
-		echo $this->foo
+		echo this.foo
 		# 4
-		echo $baz
+		echo baz
 		# error
-		echo $this->baz
-		this->baz = 5
+		echo this.baz
+		$this.baz = 5
 		# 5
-		echo $this->baz
+		echo this.baz
 		# 5
-		echo $baz
+		echo baz
 	end
 end
 # 2
-echo $foo
-$Bar->try:
+echo foo
+$Bar.try:

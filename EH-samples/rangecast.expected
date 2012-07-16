@@ -2,5 +2,12 @@
 0 => @int 1
 1 => @int 3
 ]
-Unsupported type array for typecast to range: EH notice
-null
+No such object member: toRange: EH notice
+toRange does not return a range: EH notice
+@range [
+@array [
+0 => @int 1
+1 => @int 3
+]
+(recursion)
+]

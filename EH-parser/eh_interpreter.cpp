@@ -810,7 +810,7 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 		// nodes here will always have the name in para 0 and value in para 1
 		ehretval_p namev = eh_execute(myparas[0], ret);
 		if(namev->type() != string_e) {
-			eh_error_type("Class member label", namev->type(), eerror_e);
+			eh_error_type("class member label", namev->type(), eerror_e);
 			continue;
 		}
 		ehretval_p value = eh_execute(myparas[1], ret);
@@ -1105,10 +1105,6 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretva
     object_data = obj;
   }
   if(func == NULL) {
-    // HACK until all objects inherit from Object: ignore absent initializer
-    if(strcmp(name, "initialize") != 0) {
-      eh_error_unknown("object member", name, enotice_e);
-    }
     return NULL;
   } else if(func->type() == func_e) {
     return call_function_args(func->get_funcval(), object_data, nargs, args, context);

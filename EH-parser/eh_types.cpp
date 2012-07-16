@@ -1,4 +1,5 @@
 #include "eh.h"
+#include "eh_libclasses.h"
 
 /*
  * ehretval_t
@@ -109,7 +110,7 @@ ehretval_t::~ehretval_t() {
 			// we don't own the object
 			break;
 		case resource_e:
-		  //TODO
+		  delete this->resourceval;
 		  break;
 		case binding_e:
 		  delete this->bindingval;
@@ -166,7 +167,7 @@ ehmember_p ehobj_t::get(const char *name, const ehcontext_t context, int token) 
 	if(this->has(name)) {
 		ehmember_p out = this->members[name];
 		if(out->attribute.visibility == private_e && !this->context_compare(context)) {
-		  eh_error_unknown("object member", name, eerror_e);
+		  eh_error_unknown("object member", name, enotice_e);
 			return NULL;
 		} else if(token == T_LVALUE_SET && out->attribute.isconst == const_e) {
 			eh_error("Attempt to write to constant variable", eerror_e);
@@ -181,6 +182,10 @@ ehmember_p ehobj_t::get(const char *name, const ehcontext_t context, int token) 
 		this->insert(name, member);
 		return this->members[name];
 	} else {
+    // HACK until all objects inherit from Object: ignore absent initializer
+    if(strcmp(name, "initialize") != 0) {
+      eh_error_unknown("object member", name, enotice_e);
+    }
 		return NULL;
 	}
 }
@@ -264,10 +269,8 @@ bool ehobj_t::context_compare(const ehcontext_t key) const {
 	}
 }
 ehobj_t::~ehobj_t() {
-  // only run finalizer for library classes for now
-  if(this->object_data->type() == resource_e) {
-    ehi->call_method_obj(this, "finalize", 0, NULL, NULL);
-  }
+  // Commenting out for now until I figure out how to get it working.
+  //ehi->call_method_obj(this, "finalize", 0, NULL, NULL);
 }
 // set with default attributes
 void ehobj_t::set(const char *name, ehretval_p value) {

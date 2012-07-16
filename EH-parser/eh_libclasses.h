@@ -12,6 +12,11 @@
 
 #define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, int nargs, ehretval_p *args, ehcontext_t context, EHI *ehi)
 
+class LibraryBaseClass {
+public:
+  virtual ~LibraryBaseClass() {};
+};
+
 /*
  * Object class
  */
@@ -24,29 +29,26 @@ EXTERN_EHLC(Object)
 /*
  * CountClass library class
  */
-class CountClass {
+class CountClass : public LibraryBaseClass {
 public:
 	int count;
-	CountClass() {
-		count = 0;
-	}
+	CountClass() : count(0) {}
+	~CountClass() {}
 };
 EH_METHOD(CountClass, initialize);
 EH_METHOD(CountClass, docount);
 EH_METHOD(CountClass, setcount);
-EH_METHOD(CountClass, finalize);
 
 EXTERN_EHLC(CountClass)
 
 /*
  * File library class
  */
-class File {
+class File : public LibraryBaseClass {
 public:
 	FILE *descriptor;
-	File() {
-		descriptor = NULL;
-	}
+	File() : descriptor(NULL) {}
+	~File() {}
 };
 EH_METHOD(File, initialize);
 EH_METHOD(File, open);
@@ -54,6 +56,7 @@ EH_METHOD(File, getc);
 EH_METHOD(File, gets);
 EH_METHOD(File, puts);
 EH_METHOD(File, close);
+EH_METHOD(File, toBool);
 EH_METHOD(File, finalize);
 
 EXTERN_EHLC(File)

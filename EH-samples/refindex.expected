@@ -1,7 +1,7 @@
-Unsupported type string for setting a character in a string: EH notice
+Invalid value for argument 0 to String.operator->=: EH notice
 @string 'foo'
 @int 3
-Unsupported type string for character access to string: EH notice
+Invalid value for argument 0 to String.operator->: EH notice
 (null)
-Unsupported type string for bitwise access to integer: EH notice
+No such object member: operator_arrow: EH notice
 (null)

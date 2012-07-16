@@ -1,19 +1,18 @@
 Test 1
-Identifier too large for character access to string: 2010: EH notice
+Invalid value for argument 0 to String.operator->: EH notice
 (null)
 Test 2
-Unsupported type string for typecast to int: EH notice
-cannot access member of nonexistent variable: EH runtime error
+No such object member: operator_arrow_equals: EH notice
 Test 3
-Identifier too large for character access to string: 2010: EH notice
-Unsupported type null for bitwise access to integer: EH notice
+No such object member: operator_arrow: EH notice
+No such object member: operator_arrow_equals: EH notice
 Test 4
-Identifier too large for character access to string: 2010: EH notice
-Unsupported type null for character access to string: EH notice
+Invalid value for argument 0 to String.operator->: EH notice
+No such object member: operator_arrow: EH notice
 (null)
 Test 5
-Identifier too large for character access to string: 5: EH notice
+No such object member: operator_arrow: EH notice
 Unsupported type null for array index: EH notice
 Test 6
-Identifier too large for character access to string: 2010: EH notice
+Invalid value for argument 0 to String.operator->: EH notice
 Unsupported type null for for ... as operator: EH notice

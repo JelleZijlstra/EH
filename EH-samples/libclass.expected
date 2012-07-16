@@ -1,6 +1,7 @@
 @object <CountClass> [
-docount <public,non-static,non-constant>: @function <library method>: 
-setcount <public,non-static,non-constant>: @function <library method>: 
+docount <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+setcount <public,non-static,non-constant>: @function <library>: 
 ]
 1
 2

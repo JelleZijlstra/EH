@@ -5,10 +5,10 @@ class Foo
 	private const quuz = 42
 	public foo:
 		baz = 43
-		this->quuz = 43
+		$this.quuz = 43
 	end
 end
 f = new Foo
-printvar: $f
-$f->foo:
-printvar: $f
+printvar: f
+$f.foo:
+printvar: f

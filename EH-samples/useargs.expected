@@ -2,7 +2,7 @@
 4
 3
 Incorrect argument count for function: expected 1, got 0: EH runtime error
-Unsupported type string for typecast to int: EH notice
-Unsupported types int and null for operator &: EH runtime error
-(null)
+No such object member: toInt: EH notice
+toInt does not return a int: EH notice
+0
 3

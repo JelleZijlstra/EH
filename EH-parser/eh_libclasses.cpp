@@ -40,11 +40,10 @@ START_EHLC(CountClass)
 EHLC_ENTRY(CountClass, initialize)
 EHLC_ENTRY(CountClass, docount)
 EHLC_ENTRY(CountClass, setcount)
-EHLC_ENTRY(CountClass, finalize)
 END_EHLC()
 
 EH_METHOD(CountClass, initialize) {
-  return ehretval_t::make_resource((void *)new CountClass());
+  return ehretval_t::make_resource((LibraryBaseClass *)new CountClass());
 }
 EH_METHOD(CountClass, docount) {
 	if(nargs != 0) {
@@ -69,10 +68,6 @@ EH_METHOD(CountClass, setcount) {
 	selfptr->count = newcounter->get_intval();
 	return ehretval_t::make_bool(true);
 }
-EH_METHOD(CountClass, finalize) {
-  delete (CountClass *)obj->get_resourceval();
-  return NULL;
-}
 
 START_EHLC(File)
 EHLC_ENTRY(File, initialize)
@@ -81,11 +76,12 @@ EHLC_ENTRY(File, getc)
 EHLC_ENTRY(File, gets)
 EHLC_ENTRY(File, puts)
 EHLC_ENTRY(File, close)
+EHLC_ENTRY(File, toBool)
 EHLC_ENTRY(File, finalize)
 END_EHLC()
 
 EH_METHOD(File, initialize) {
-  return ehretval_t::make_resource((void *)new File());
+  return ehretval_t::make_resource((LibraryBaseClass *)new File());
 }
 EH_METHOD(File, open) {
 	File *selfptr = (File *) obj->get_resourceval();
@@ -180,8 +176,17 @@ EH_METHOD(File, close) {
 	selfptr->descriptor = NULL;
 	return NULL;
 }
+EH_METHOD(File, toBool) {
+  ASSERT_NARGS(0, "File.toBool");
+  File *selfptr = (File *)obj->get_resourceval();
+  return ehretval_t::make_bool(selfptr->descriptor != NULL);
+}
 EH_METHOD(File, finalize) {
-  delete (File *)obj->get_resourceval();
+  File *selfptr = (File *)obj->get_resourceval();
+  if(selfptr->descriptor != NULL) {
+    fclose(selfptr->descriptor);
+    selfptr->descriptor = NULL;
+  }
   return NULL;
 }
 
@@ -403,16 +408,16 @@ EH_METHOD(String, operator_arrow) {
 EH_METHOD(String, operator_arrow_equals) {
   ASSERT_NARGS(2, "String.operator->=");
   ehretval_p operand1 = args[0];
-  ASSERT_TYPE(operand1, int_e, "String.operator->");
+  ASSERT_TYPE(operand1, int_e, "String.operator->=");
   int index = operand1->get_intval();
   size_t len = strlen(obj->get_stringval());
   if(index < 0 || index >= len) {
-    eh_error_invalid_argument("String.operator->", 1);
+    eh_error_invalid_argument("String.operator->=", 0);
     return NULL;
   }
   ehretval_p operand2 = ehi->to_string(args[1], context);
   if(strlen(operand2->get_stringval()) == 0) {
-    eh_error_invalid_argument("String.operator->=", 2);
+    eh_error_invalid_argument("String.operator->=", 1);
     return NULL;
   }
   obj->get_stringval()[index] = operand2->get_stringval()[0];

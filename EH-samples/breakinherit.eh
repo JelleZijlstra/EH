@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 class A {
-	inherit A
+	inherit 'A'
 	
 	class A {
 		public b

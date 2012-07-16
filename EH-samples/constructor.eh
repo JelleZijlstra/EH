@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 class Foo {
-	public constructor = func: {
+	public initialize = func: {
 		echo 42
 	}
 }

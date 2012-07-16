@@ -13,4 +13,4 @@ class B {
 	}
 }
 o = new B
-$o->b:
+$o.b:

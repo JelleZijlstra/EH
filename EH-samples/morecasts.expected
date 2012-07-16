@@ -1,7 +1,16 @@
 @string '1 to 3'
-@bool true
-@bool true
-@range 3..3
+@bool false
+No such object member: toBool: EH notice
+toBool does not return a bool: EH notice
+@bool false
+No such object member: toRange: EH notice
+toRange does not return a range: EH notice
+@range [
+@float 3.140000
+@float 3.140000
+]
+No such object member: toArray: EH notice
+toArray does not return an array: EH notice
 @array [
 0 => null
 ]

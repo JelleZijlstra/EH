@@ -1,8 +1,11 @@
 @object <File> [
-close <public,non-static,non-constant>: @function <library method>: 
+close <public,non-static,non-constant>: @function <library>: 
+finalize <public,non-static,non-constant>: @function <library>: 
 foo <public,non-static,non-constant>: @string 'bar'
-getc <public,non-static,non-constant>: @function <library method>: 
-gets <public,non-static,non-constant>: @function <library method>: 
-open <public,non-static,non-constant>: @function <library method>: 
-puts <public,non-static,non-constant>: @function <library method>: 
+getc <public,non-static,non-constant>: @function <library>: 
+gets <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+open <public,non-static,non-constant>: @function <library>: 
+puts <public,non-static,non-constant>: @function <library>: 
+toBool <public,non-static,non-constant>: @function <library>: 
 ]

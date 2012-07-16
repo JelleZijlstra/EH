@@ -1,14 +1,71 @@
 @object <AnonymousClass> [
-CountClass <public,non-static,non-constant>: @object <CountClass> [
-docount <public,non-static,non-constant>: @function <library method>: 
-setcount <public,non-static,non-constant>: @function <library method>: 
+Array <public,non-static,constant>: @object <Array> [
+length <public,non-static,non-constant>: @function <library>: 
+operator_arrow <public,non-static,non-constant>: @function <library>: 
+operator_arrow_equals <public,non-static,non-constant>: @function <library>: 
 ]
-File <public,non-static,non-constant>: @object <File> [
-close <public,non-static,non-constant>: @function <library method>: 
-getc <public,non-static,non-constant>: @function <library method>: 
-gets <public,non-static,non-constant>: @function <library method>: 
-open <public,non-static,non-constant>: @function <library method>: 
-puts <public,non-static,non-constant>: @function <library method>: 
+Bool <public,non-static,constant>: @object <Bool> [
+toBool <public,non-static,non-constant>: @function <library>: 
+toInt <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
+CountClass <public,non-static,constant>: @object <CountClass> [
+docount <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+setcount <public,non-static,non-constant>: @function <library>: 
+]
+File <public,non-static,constant>: @object <File> [
+close <public,non-static,non-constant>: @function <library>: 
+finalize <public,non-static,non-constant>: @function <library>: 
+getc <public,non-static,non-constant>: @function <library>: 
+gets <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+open <public,non-static,non-constant>: @function <library>: 
+puts <public,non-static,non-constant>: @function <library>: 
+toBool <public,non-static,non-constant>: @function <library>: 
+]
+Float <public,non-static,constant>: @object <Float> [
+abs <public,non-static,non-constant>: @function <library>: 
+operator_plus <public,non-static,non-constant>: @function <library>: 
+toBool <public,non-static,non-constant>: @function <library>: 
+toFloat <public,non-static,non-constant>: @function <library>: 
+toInt <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
+Integer <public,non-static,constant>: @object <Integer> [
+abs <public,non-static,non-constant>: @function <library>: 
+getBit <public,non-static,non-constant>: @function <library>: 
+length <public,non-static,non-constant>: @function <library>: 
+operator_plus <public,non-static,non-constant>: @function <library>: 
+setBit <public,non-static,non-constant>: @function <library>: 
+toBool <public,non-static,non-constant>: @function <library>: 
+toFloat <public,non-static,non-constant>: @function <library>: 
+toInt <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
+Null <public,non-static,constant>: @object <Null> [
+toBool <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
+Range <public,non-static,constant>: @object <Range> [
+max <public,non-static,non-constant>: @function <library>: 
+min <public,non-static,non-constant>: @function <library>: 
+operator_arrow <public,non-static,non-constant>: @function <library>: 
+toArray <public,non-static,non-constant>: @function <library>: 
+toRange <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
+String <public,non-static,constant>: @object <String> [
+charAtPosition <public,non-static,non-constant>: @function <library>: 
+length <public,non-static,non-constant>: @function <library>: 
+operator_arrow <public,non-static,non-constant>: @function <library>: 
+operator_arrow_equals <public,non-static,non-constant>: @function <library>: 
+operator_plus <public,non-static,non-constant>: @function <library>: 
+toBool <public,non-static,non-constant>: @function <library>: 
+toFloat <public,non-static,non-constant>: @function <library>: 
+toInt <public,non-static,non-constant>: @function <library>: 
+toRange <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]
 argc <public,non-static,non-constant>: @int 1
 argv <public,non-static,non-constant>: @array [

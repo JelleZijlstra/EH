@@ -10,9 +10,9 @@ printvar: @array 42
 printvar: @array true
 # 1..42
 printvar: @range '1 to 42'
-# 42..42
+# error
 printvar: @range 42
-# true
+# error
 printvar: @bool [1]
-# false
+# error
 printvar: @bool []

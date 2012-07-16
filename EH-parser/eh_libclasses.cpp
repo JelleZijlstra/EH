@@ -371,7 +371,7 @@ EHLC_ENTRY(String, toInt)
 EHLC_ENTRY(String, toFloat)
 EHLC_ENTRY(String, toBool)
 EHLC_ENTRY(String, toRange)
-EHLC_ENTRY(String, valueOfFirstChar)
+EHLC_ENTRY(String, charAtPosition)
 END_EHLC()
 
 EH_METHOD(String, operator_plus) {
@@ -481,16 +481,19 @@ EH_METHOD(String, toRange) {
 		}
 	}
 	ehrange_t *range = new ehrange_t(ehretval_t::make_int(min), ehretval_t::make_int(max));
-	return ehretval_t::make_range(range);
+	return ehi->make_range(range);
 }
-EH_METHOD(String, valueOfFirstChar) {
-  ASSERT_NARGS(0, "String.valueOfFirstChar");
+EH_METHOD(String, charAtPosition) {
+  ASSERT_NARGS(1, "String.charAtPosition");
+  ehretval_p index_var = args[0];
+  ASSERT_TYPE(index_var, int_e, "String.charAtPosition");
+  int index = index_var->get_intval();
   const char *string = obj->get_stringval();
-  if(string[0] == '\0') {
-    eh_error("Cannot take value of first char of zero-length string", enotice_e);
+  if(index < 0 || index >= strlen(string)) {
+    eh_error_invalid_argument("String.charAtPosition", index);
     return NULL;
   } else {
-    return ehretval_t::make_int(string[0]);
+    return ehretval_t::make_int(string[index]);
   }
 }
 
@@ -543,6 +546,7 @@ EHLC_ENTRY(Range, max)
 EHLC_ENTRY(Range, operator_arrow)
 EHLC_ENTRY(Range, toString)
 EHLC_ENTRY(Range, toArray)
+EHLC_ENTRY(Range, toRange)
 END_EHLC()
 
 EH_METHOD(Range, min) {
@@ -588,4 +592,8 @@ EH_METHOD(Range, toArray) {
   array->get_arrayval()->int_indices[0] = obj->get_rangeval()->min;
   array->get_arrayval()->int_indices[1] = obj->get_rangeval()->max;
   return array;
+}
+EH_METHOD(Range, toRange) {
+  ASSERT_NARGS(0, "Range.toRange");
+  return obj;
 }

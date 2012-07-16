@@ -5,8 +5,6 @@
  */
 #include "eh.h"
 
-// Summary
-
 #define START_EHLC(name) ehlm_listentry_t ehlc_l_ ## name [] = {
 #define EHLC_ENTRY(classn, name) { #name, &ehlm_ ## classn ## _ ## name },
 #define END_EHLC() {NULL, NULL} };
@@ -108,7 +106,7 @@ EH_METHOD(String, toInt);
 EH_METHOD(String, toFloat);
 EH_METHOD(String, toBool);
 EH_METHOD(String, toRange);
-EH_METHOD(String, valueOfFirstChar);
+EH_METHOD(String, charAtPosition);
 
 EXTERN_EHLC(String)
 
@@ -137,5 +135,6 @@ EH_METHOD(Range, min);
 EH_METHOD(Range, max);
 EH_METHOD(Range, toString);
 EH_METHOD(Range, toArray);
+EH_METHOD(Range, toRange);
 
 EXTERN_EHLC(Range)

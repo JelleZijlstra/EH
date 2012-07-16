@@ -5,9 +5,9 @@
 3 => @int 8
 ]
 @array [
-0 => @int 102
-1 => @int 98
-2 => @int 98
+0 => @string 'f'
+1 => @string 'b'
+2 => @string 'b'
 ]
 @array [
 0 => @bool true

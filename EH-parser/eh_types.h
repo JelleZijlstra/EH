@@ -13,6 +13,7 @@ private:
 			case func_e:
 			case array_e:
 			case binding_e:
+			case range_e:
 				return true;
 			default:
 				return false;
@@ -97,6 +98,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_GC(ehobj_t *, func)
 	EHRV_GC(eharray_t *, array)
 	EHRV_GC(ehbinding_t *, binding)
+	EHRV_GC(ehrange_t *, range)
 #undef EHRV_GC
 
 	void overwrite(ehretval_t &in) {

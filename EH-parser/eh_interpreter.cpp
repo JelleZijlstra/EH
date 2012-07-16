@@ -469,7 +469,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					  eh_error("Incompatible types for range", enotice_e);
 					  return NULL;
 					}
-					ret = ehretval_t::make_range(new ehrange_t(operand1, operand2));
+					ret = this->make_range(new ehrange_t(operand1, operand2));
 					break;
 				case T_SET:
 					eh_op_set(node->get_opval()->paras, context);
@@ -1029,33 +1029,12 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
   ehretval_p rvalue = eh_execute(paras[1], context);
   switch(paras[0]->get_opval()->op) {
     case T_ARROW: {
-      ehretval_p accessor = eh_execute(internal_paras[1], context);
-      ehretval_p func;
-      ehretval_p object_data;
-      if(base_var->type() == object_e) {
-        object_data = base_var->get_objectval()->object_data;
-        func = base_var->get_objectval()->get("operator_arrow_equals", context, T_LVALUE_GET)->value;
-      } else {
-        ehobj_t *class_obj = this->get_primitive_class(base_var->type());
-        if(class_obj == NULL) {
-          eh_error_type("operator->=", base_var->type(), enotice_e);
-          return NULL;
-        }
-        object_data = base_var;
-        func = class_obj->get("operator_arrow_equals", context, T_LVALUE_GET)->value;
-      }
-      if(func == NULL) {
-        return NULL;
-      } else if(func->type() == func_e) {
-        //TODO: thread-safety or smart pointer
-        ehretval_p *args = new ehretval_p[2]();
-        args[0] = accessor;
-        args[1] = rvalue;
-        return call_function_args(func->get_funcval(), object_data, 2, args, context);
-      } else {
-        eh_error_type("operator->=", func->type(), enotice_e);
-        return NULL;
-      }
+      //TODO: thread-safety or smart pointer
+      ehretval_p *args = new ehretval_p[2]();
+      args[0] = eh_execute(internal_paras[1], context);
+      args[1] = rvalue;
+      return call_method(base_var, "operator_arrow_equals", 2, args, context);
+      delete[] args;
     }
     case '.': {
       // This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.
@@ -1126,6 +1105,10 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretva
     object_data = obj;
   }
   if(func == NULL) {
+    // HACK until all objects inherit from Object: ignore absent initializer
+    if(strcmp(name, "initialize") != 0) {
+      eh_error_unknown("object member", name, enotice_e);
+    }
     return NULL;
   } else if(func->type() == func_e) {
     return call_function_args(func->get_funcval(), object_data, nargs, args, context);
@@ -1476,6 +1459,7 @@ ehretval_p EHI::eh_cast(const type_enum type, ehretval_p in, ehcontext_t context
 		case float_e: return this->to_float(in, context);
 		case bool_e: return this->to_bool(in, context);
 		case array_e: return this->to_array(in, context);
+		case range_e: return this->to_range(in, context);
 		default:
 			eh_error_type("typecast", type, eerror_e);
 			break;
@@ -1520,8 +1504,8 @@ bool eh_strictequals(ehretval_p operand1, ehretval_p operand2) {
 		case float_e:
 			return (operand1->get_floatval() == operand2->get_floatval());
 		case range_e:
-			return (operand1->get_rangeval()->min == operand2->get_rangeval()->min)
-				&& (operand1->get_rangeval()->max == operand2->get_rangeval()->max);
+			return eh_strictequals(operand1->get_rangeval()->min, operand2->get_rangeval()->min)
+				&& eh_strictequals(operand1->get_rangeval()->max, operand2->get_rangeval()->max);
 		default:
 			// TODO: array comparison
 			return false;

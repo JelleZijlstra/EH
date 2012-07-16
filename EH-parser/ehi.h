@@ -99,6 +99,7 @@ private:
       case null_e: return this->cache.Null;
       case string_e: return this->cache.String;
       case array_e: return this->cache.Array;
+      case range_e: return this->cache.Range;
       default: return NULL;
     }
   }
@@ -137,6 +138,12 @@ public:
     ehretval_t::fill_binding(out, in);
     return out;
   }
+  ehretval_p make_range(ehrange_t *in) {
+    ehretval_p out;
+    this->gc.allocate(out);
+    ehretval_t::fill_range(out, in);
+    return out;
+  }
   ehretval_p make_array(eharray_t *in) {
     ehretval_p out;
     this->gc.allocate(out);
@@ -168,12 +175,23 @@ public:
     if(out->type() == array_e) {
       return out;
     } else {
-      eh_error_type("toArray does not return an array", out->type(), enotice_e);
+      eh_error("toArray does not return an array", enotice_e);
       eharray_t *arr = new eharray_t;
       arr->int_indices[0] = in;
       return this->make_array(arr);
     }
   }
+  ehretval_p to_range(ehretval_p in, ehcontext_t context) {
+    ehretval_p out = call_method(in, "toRange", 0, NULL, context);
+    if(out->type() == range_e) {
+      return out;
+    } else {
+      eh_error("toRange does not return a range", enotice_e);
+      ehrange_t *range = new ehrange_t(in, in);
+      return this->make_range(range);
+    }
+  }
+
   bool eh_floatequals(float infloat, ehretval_p operand2, ehcontext_t context) {
     ehretval_p operand = this->to_int(operand2, context);
     // checks whether a float equals an int. C handles this correctly.

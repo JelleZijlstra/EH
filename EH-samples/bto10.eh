@@ -4,27 +4,27 @@
 # gets the core of the job done.
 func bto10: in, base
 	getn = func: in, n
-		char = $in->$n
-		if $char >= 48 and $char <= 57
-			ret $char - 48
+		char = in.charAtPosition: n
+		if char >= 48 and char <= 57
+			ret char - 48
 		end
 		# lowercase letters
-		if ($char >= 97) and ($char <= 122)
-			ret $char - 87
+		if (char >= 97) and (char <= 122)
+			ret char - 87
 		end
 		# uppercase letters
-		if $char >= 65 and $char <= 90
-			ret $char - 55
+		if char >= 65 and char <= 90
+			ret char - 55
 		end
 		ret false
 	end
 	out = 0
-	len = count $in
-	for $len count i
-		value = $getn: $in, $i
-		out = $out + $value * (pow: $base, ($len - 1 - $i))
+	len = in.length:
+	for len count i
+		value = getn: in, i
+		out = out + value * (pow: base, (len - 1 - i))
 	end
-	ret $out
+	ret out
 end
 
 # 42

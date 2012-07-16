@@ -1,6 +1,6 @@
-cannot access member of nonexistent variable: EH runtime error
-Unsupported type null for arrow access: EH runtime error
+No such object member: operator_arrow_equals: EH notice
+No such object member: operator_arrow: EH notice
 (null)
-cannot access member of nonexistent variable: EH runtime error
-Unsupported type null for arrow access: EH runtime error
+No such object member: operator_arrow_equals: EH notice
+No such object member: operator_arrow: EH notice
 (null)

@@ -302,7 +302,6 @@ expression:
 	| expression T_RANGE expression
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
-	| T_COUNT expression	{ $$ = ADD_NODE1(T_COUNT, $2); }
 	| T_NEW expression		{ $$ = ADD_NODE1(T_NEW, $2); }
 	| T_FUNC ':' parglist '{' statement_list '}'
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
@@ -384,7 +383,6 @@ simple_expr:
 	| simple_expr T_RANGE simple_expr
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
-	| T_COUNT simple_expr	{ $$ = ADD_NODE1(T_COUNT, $2); }
 	| T_NEW simple_expr		{ $$ = ADD_NODE1(T_NEW, $2); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
@@ -466,7 +464,6 @@ line_expr:
 	| line_expr T_RANGE expression
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
-	| T_COUNT expression	{ $$ = ADD_NODE1(T_COUNT, $2); }
 	| T_NEW expression		{ $$ = ADD_NODE1(T_NEW, $2); }
 	| T_FUNC ':' parglist '{' statement_list '}'
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }

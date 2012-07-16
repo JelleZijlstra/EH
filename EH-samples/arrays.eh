@@ -22,8 +22,8 @@ baz = 1
 echo $baz.getBit: 0
 # prints 1
 echo $baz.getBit: 31
-echo count $baz
-echo count ($bar -> 3)
+echo $baz.length:
+echo ($bar -> 3).length:
 echo $bar.length:
 empty = []
 printvar: $empty

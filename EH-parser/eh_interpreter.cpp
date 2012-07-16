@@ -272,9 +272,6 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 						context
 					);
 					break;
-				case T_COUNT:
-					ret = eh_count(eh_execute(node->get_opval()->paras[0], context));
-					break;
 				case '~': // bitwise negation
 					ret = eh_op_tilde(eh_execute(node->get_opval()->paras[0], context), context);
 					break;
@@ -1384,28 +1381,6 @@ void EHI::redirect_command(const char *redirect, const char *target) {
 /*
  * Opcode handlers.
  */
-ehretval_p eh_count(const ehretval_p in) {
-	switch(in->type()) {
-		case int_e:
-			return ehretval_t::make_int(sizeof(int) * 8);
-		case float_e:
-			return ehretval_t::make_int((int) sizeof(float) * 8);
-		case string_e:
-			return ehretval_t::make_int(strlen(in->get_stringval()));
-		case array_e:
-			return ehretval_t::make_int(in->get_arrayval()->size());
-		case null_e:
-			return ehretval_t::make_int(0);
-		case bool_e:
-			return ehretval_t::make_int(0);
-		case range_e:
-			return ehretval_t::make_int(0);
-		default:
-			eh_error_type("count operator", in->type(), eerror_e);
-			return NULL;
-	}
-	return NULL;
-}
 ehretval_p EHI::eh_op_tilde(ehretval_p in, ehcontext_t context) {
 	// no const argument because it's modified below
 	switch(in->type()) {

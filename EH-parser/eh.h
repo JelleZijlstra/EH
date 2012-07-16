@@ -137,7 +137,6 @@ void yyerror(void *, const char *s);
 #include "eh.bison.hpp"
 #include "ehi.h"
 
-ehretval_p eh_count(const ehretval_p in);
 bool eh_strictequals(ehretval_p operand1, ehretval_p operand2);
 
 #endif /* EH_H_ */

@@ -10,5 +10,5 @@ meh <public,non-static,non-constant>: @function <user>: n
 @function <user>: n
 42
 Calling a private method
-No such object member: mah: EH runtime error
+No such object member: mah: EH notice
 2

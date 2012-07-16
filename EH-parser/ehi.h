@@ -150,6 +150,12 @@ public:
     ehretval_t::fill_array(out, in);
     return out;
   }
+  ehretval_p make_hash(ehhash_t *in) {
+  	ehretval_p out;
+  	this->gc.allocate(out);
+  	ehretval_t::fill_hash(out, in);
+  	return out;
+  }
   ehretval_p promote(ehretval_p in, ehcontext_t context);
   ehretval_p call_method(ehretval_p in, const char *name, int nargs, ehretval_p *args, ehcontext_t context);
   ehretval_p call_method_obj(ehobj_t *obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context);

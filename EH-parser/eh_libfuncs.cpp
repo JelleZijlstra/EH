@@ -109,28 +109,35 @@ void printvar_t::retval(ehretval_p in) {
 			printf("@attributestr\n");
 			break;
 		case range_e: {
-		  ehrange_t *range = in->get_rangeval();
-		  if(this->seen.count((void *)range) == 0) {
-        printf("@range [\n");
-        this->retval(range->min);
-        this->retval(range->max);
-        printf("]\n");
-        this->seen[(void *)range] = true;
-      } else {
-        printf("(recursion)\n");
-      }
+			ehrange_t *range = in->get_rangeval();
+			if(this->seen.count((void *)range) == 0) {
+				printf("@range [\n");
+				this->retval(range->min);
+				this->retval(range->max);
+				printf("]\n");
+				this->seen[(void *)range] = true;
+			} else {
+				printf("(recursion)\n");
+			}
 			break;
 		}
 		case float_e:
 			printf("@float %f\n", in->get_floatval());
 			break;
 		case resource_e:
-		  printf("@resource\n");
-		  break;
+			printf("@resource\n");
+			break;
 		case binding_e:
-		  // pretend it's just a method
-		  this->retval(in->get_bindingval()->method);
-		  break;
+			// pretend it's just a method
+			this->retval(in->get_bindingval()->method);
+			break;
+		case hash_e:
+			printf("@hash [\n");
+			HASH_FOR_EACH(in->get_hashval(), i) {
+				printf("'%s': ", i->first.c_str());
+				this->retval(i->second);
+			}
+			printf("]\n");
 	}
 	return;
 }

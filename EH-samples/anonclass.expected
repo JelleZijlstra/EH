@@ -1,4 +1,4 @@
-@object <AnonClass> [
-foo <public,non-static,non-constant>: @string 'bar'
-test <public,non-static,non-constant>: @int 2
+@hash [
+'foo': @string 'bar'
+'test': @int 2
 ]

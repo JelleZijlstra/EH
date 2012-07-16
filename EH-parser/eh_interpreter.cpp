@@ -52,6 +52,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(Bool)
 	LIBCLASSENTRY(Null)
 	LIBCLASSENTRY(Range)
+	LIBCLASSENTRY(Hash)
 	{NULL, NULL}
 };
 
@@ -796,21 +797,17 @@ ehretval_p EHI::eh_op_array(ehretval_p node, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
-	ehretval_p ret = this->make_object(new ehobj_t("AnonClass"));
-	ret->get_objectval()->parent = context;
-	// all members are public, non-static, non-const
-	attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
-
+	ehretval_p ret = this->make_hash(new ehhash_t());
 	for( ; node->get_opval()->nparas != 0; node = node->get_opval()->paras[0]) {
 		ehretval_p *myparas = node->get_opval()->paras[1]->get_opval()->paras;
 		// nodes here will always have the name in para 0 and value in para 1
 		ehretval_p namev = eh_execute(myparas[0], ret);
 		if(namev->type() != string_e) {
-			eh_error_type("class member label", namev->type(), eerror_e);
+			eh_error_type("hash member label", namev->type(), eerror_e);
 			continue;
 		}
 		ehretval_p value = eh_execute(myparas[1], ret);
-		ret->get_objectval()->insert_retval(namev->get_stringval(), attributes, value);
+		ret->get_hashval()->set(namev->get_stringval(), value);
 	}
 	return ret;
 }

@@ -15,10 +15,13 @@ char *EHI::eh_getline(EHParser *parser) {
 
 eharray_t *zvaltoeh_array(HashTable *hash);
 zval *arrtozval(eharray_t *paras);
+zval *hashtozval(ehhash_t *hash);
 
 zval *ehtozval(ehretval_p in) {
 	if(in->type() == array_e) {
 		return arrtozval(in->get_arrayval());
+	} else if(in->type() == hash_e) {
+		return hashtozval(in->get_hashval());
 	} else {
 		zval *out;
 		MAKE_STD_ZVAL(out);
@@ -33,6 +36,7 @@ zval *ehtozval(ehretval_p in) {
 				ZVAL_BOOL(out, in->get_boolval());
 				break;
 			case array_e:
+			case hash_e:
 				break;
 			case float_e:
 				ZVAL_DOUBLE(out, in->get_floatval());
@@ -59,6 +63,17 @@ zval *ehtozval(ehretval_p in) {
 		}
 		return out;
 	}
+}
+
+zval *hashtozval(ehhash_t *hash) {
+	zval *arr;
+	MAKE_STD_ZVAL(arr);
+	
+	array_init(arr);
+	HASH_FOR_EACH(hash, i) {
+		add_assoc_zval(arr, i->first.c_str(), ehtozval(i->second));
+	}
+	return arr;
 }
 
 zval *arrtozval(eharray_t *paras) {

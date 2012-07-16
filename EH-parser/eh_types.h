@@ -13,6 +13,7 @@ private:
 			case func_e:
 			case array_e:
 			case binding_e:
+			case hash_e:
 			case range_e:
 				return true;
 			default:
@@ -41,6 +42,7 @@ public:
 		attributes_t attributestrval;
 		class LibraryBaseClass *resourceval;
 		struct ehbinding_t *bindingval;
+		struct ehhash_t *hashval;
 	};
 	// constructors
 	ehretval_t() : _type(null_e) {}
@@ -87,6 +89,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(type_enum, type)
 	EHRV_SET(class LibraryBaseClass *, resource)
 	EHRV_SET(ehbinding_t *, binding)
+	EHRV_SET(struct ehhash_t *, hash)
 #undef EHRV_SET
 	// special constructors for GC'ed types
 #define EHRV_GC(vtype, ehtype) static void fill_ ## ehtype(ehretval_p in, vtype val) { \
@@ -99,6 +102,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_GC(eharray_t *, array)
 	EHRV_GC(ehbinding_t *, binding)
 	EHRV_GC(ehrange_t *, range)
+	EHRV_GC(struct ehhash_t *, hash)
 #undef EHRV_GC
 
 	void overwrite(ehretval_t &in) {
@@ -120,6 +124,7 @@ vtype get_ ## ehtype ## val() const { \
 			COPY(attributestr);
 			COPY(resource);
 			COPY(binding);
+			COPY(hash);
 			case null_e: break;
 #undef COPY
 		}
@@ -362,3 +367,33 @@ typedef struct ehbinding_t {
 
   ehbinding_t(ehretval_p _value, ehretval_p _method) : value(_value), method(_method) {}
 } ehbinding_t;
+
+// hash
+typedef struct ehhash_t {
+private:
+	typedef std::map<std::string, ehretval_p> hash;
+	hash members;
+public:
+	typedef hash::iterator hash_iterator;
+	
+	ehhash_t() : members() {}
+	
+	bool has(const char *key) {
+		return members.count(key);
+	}
+	void set(const char *key, ehretval_p value) {
+		members[key] = value;
+	}
+	ehretval_p get(const char *key) {
+		return members[key];
+	}
+	
+	hash_iterator begin_iterator() {
+		return members.begin();
+	}
+	hash_iterator end_iterator() {
+		return members.end();
+	}
+} ehhash_t;
+#define HASH_FOR_EACH(obj, varname) for(ehhash_t::hash_iterator varname = (obj)->begin_iterator(), end = (obj)->end_iterator(); varname != end; varname++)
+

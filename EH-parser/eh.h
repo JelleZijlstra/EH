@@ -35,6 +35,7 @@ typedef enum type_enum {
 	bool_e = 3,
 	type_e = 5, // for internal use with type casting
 	array_e,
+	hash_e,
 	func_e, // methods
 	object_e,
 	weak_object_e,

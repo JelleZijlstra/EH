@@ -602,3 +602,44 @@ EH_METHOD(Range, toRange) {
   ASSERT_NARGS(0, "Range.toRange");
   return obj;
 }
+
+START_EHLC(Hash)
+EHLC_ENTRY(Hash, toArray)
+EHLC_ENTRY(Hash, operator_arrow)
+EHLC_ENTRY(Hash, operator_arrow_equals)
+EHLC_ENTRY(Hash, has)
+END_EHLC()
+
+EH_METHOD(Hash, toArray) {
+	ASSERT_NARGS(0, "Hash.toArray");
+	ehhash_t *hash = obj->get_hashval();
+	eharray_t *arr = new eharray_t();
+	ehretval_p out = ehi->make_array(arr);
+	HASH_FOR_EACH(hash, i) {
+		arr->string_indices[i->first.c_str()] = i->second;
+	}
+	return out;
+}
+EH_METHOD(Hash, operator_arrow) {
+	ASSERT_NARGS(1, "Hash.operator->");
+	ehretval_p index = args[0];
+	ASSERT_TYPE(index, string_e, "Hash.operator->");
+	ehhash_t *hash = obj->get_hashval();
+	return hash->get(index->get_stringval());
+}
+EH_METHOD(Hash, operator_arrow_equals) {
+	ASSERT_NARGS(2, "Hash.operator->=");
+	ehretval_p index = args[0];
+	ASSERT_TYPE(index, string_e, "Hash.operator->=");
+	ehretval_p value = args[1];
+	ehhash_t *hash = obj->get_hashval();
+	hash->set(index->get_stringval(), value);
+	return value;
+}
+EH_METHOD(Hash, has) {
+	ASSERT_NARGS(1, "Hash.has");
+	ehretval_p index = args[0];
+	ASSERT_TYPE(index, string_e, "Hash.has");
+	ehhash_t *hash = obj->get_hashval();
+	return ehretval_t::make_bool(hash->has(index->get_stringval()));
+}

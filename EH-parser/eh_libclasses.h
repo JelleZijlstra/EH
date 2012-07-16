@@ -141,3 +141,13 @@ EH_METHOD(Range, toArray);
 EH_METHOD(Range, toRange);
 
 EXTERN_EHLC(Range)
+
+/*
+ * Hash class
+ */
+EH_METHOD(Hash, toArray);
+EH_METHOD(Hash, operator_arrow);
+EH_METHOD(Hash, operator_arrow_equals);
+EH_METHOD(Hash, has);
+
+EXTERN_EHLC(Hash)

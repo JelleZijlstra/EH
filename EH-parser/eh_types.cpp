@@ -26,9 +26,9 @@ void ehretval_t::print() {
 			printf("%f", this->get_floatval());
 			break;
 		case range_e:
-		  this->get_rangeval()->min->print();
-		  printf(" to ");
-		  this->get_rangeval()->max->print();
+			this->get_rangeval()->min->print();
+			printf(" to ");
+			this->get_rangeval()->max->print();
 			break;
 		default:
 			eh_error_type("echo operator", this->type(), enotice_e);
@@ -72,6 +72,20 @@ std::list<ehretval_p> ehretval_t::children() {
 				out.push_back(i->second);
 			}
 			break;
+		case range_e:
+			out.push_back(this->get_rangeval()->min);
+			out.push_back(this->get_rangeval()->max);
+			break;
+		case binding_e:
+			out.push_back(this->get_bindingval()->method);
+			out.push_back(this->get_bindingval()->value);
+			break;
+		case hash_e: {
+			ehhash_t *f = this->get_hashval();
+			HASH_FOR_EACH(f, i) {
+				out.push_back(i->second);
+			}
+		}
 		default:
 			// no components
 			break;
@@ -79,10 +93,10 @@ std::list<ehretval_p> ehretval_t::children() {
 	return out;
 }
 bool ehretval_t::equals(ehretval_p rhs) {
-  if(this->type() != rhs->type()) {
-    return false;
-  }
-  switch(this->type()) {
+	if(this->type() != rhs->type()) {
+		return false;
+	}
+	switch(this->type()) {
 		case int_e:
 			return (this->get_intval() == rhs->get_intval());
 		case string_e:
@@ -98,11 +112,11 @@ bool ehretval_t::equals(ehretval_p rhs) {
 			return this->get_rangeval()->min->equals(rhs->get_rangeval()->min)
 				&& this->get_rangeval()->max->equals(rhs->get_rangeval()->max);
 		case resource_e:
-		  return this->get_resourceval() == rhs->get_resourceval();
+			return this->get_resourceval() == rhs->get_resourceval();
 		default:
 			// TODO: array comparison
 			return false;
-  }
+	}
 }
 ehretval_t::~ehretval_t() {
 	switch(_type) {
@@ -136,11 +150,14 @@ ehretval_t::~ehretval_t() {
 			// we don't own the object
 			break;
 		case resource_e:
-		  delete this->resourceval;
-		  break;
+			delete this->resourceval;
+			break;
 		case binding_e:
-		  delete this->bindingval;
-		  break;
+			delete this->bindingval;
+			break;
+		case hash_e:
+			delete this->hashval;
+			break;
 	}
 }
 
@@ -198,7 +215,7 @@ ehmember_p ehobj_t::get(const char *name, const ehcontext_t context, int token) 
 	if(this->has(name)) {
 		ehmember_p out = this->members[name];
 		if(out->attribute.visibility == private_e && !this->context_compare(context)) {
-		  eh_error_unknown("object member", name, enotice_e);
+			eh_error_unknown("object member", name, enotice_e);
 			return NULL;
 		} else if(token == T_LVALUE_SET && out->attribute.isconst == const_e) {
 			eh_error("Attempt to write to constant variable", eerror_e);
@@ -213,10 +230,10 @@ ehmember_p ehobj_t::get(const char *name, const ehcontext_t context, int token) 
 		this->insert(name, member);
 		return this->members[name];
 	} else {
-    // HACK until all objects inherit from Object: ignore absent initializer
-    if(strcmp(name, "initialize") != 0) {
-      eh_error_unknown("object member", name, enotice_e);
-    }
+		// HACK until all objects inherit from Object: ignore absent initializer
+		if(strcmp(name, "initialize") != 0) {
+			eh_error_unknown("object member", name, enotice_e);
+		}
 		return NULL;
 	}
 }
@@ -300,22 +317,22 @@ bool ehobj_t::context_compare(const ehcontext_t key) const {
 	}
 }
 ehobj_t::~ehobj_t() {
-  // Commenting out for now until I figure out how to get it working.
-  //ehi->call_method_obj(this, "finalize", 0, NULL, NULL);
+	// Commenting out for now until I figure out how to get it working.
+	//ehi->call_method_obj(this, "finalize", 0, NULL, NULL);
 }
 // set with default attributes
 void ehobj_t::set(const char *name, ehretval_p value) {
-  if(this->has(name)) {
-    ehmember_p member = this->members[name];
-    if(member->attribute.isconst == const_e) {
-      eh_error("Attempt to write to constant variable", eerror_e);
-    } else {
-      this->members[name]->value = value;
-    }
-  } else {
-    ehmember_p newmember;
-    newmember->attribute = attributes_t::make(public_e, nonstatic_e, nonconst_e);
-    newmember->value = value;
-    this->members[name] = newmember;
-  }
+	if(this->has(name)) {
+		ehmember_p member = this->members[name];
+		if(member->attribute.isconst == const_e) {
+			eh_error("Attempt to write to constant variable", eerror_e);
+		} else {
+			this->members[name]->value = value;
+		}
+	} else {
+		ehmember_p newmember;
+		newmember->attribute = attributes_t::make(public_e, nonstatic_e, nonconst_e);
+		newmember->value = value;
+		this->members[name] = newmember;
+	}
 }

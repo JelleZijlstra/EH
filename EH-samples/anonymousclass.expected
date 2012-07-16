@@ -1,13 +1,22 @@
 @object <AnonymousClass> [
 a <private,non-static,non-constant>: @int 3
 b <public,non-static,non-constant>: @function <user>: 
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]
 @int 4
 @object <AnonymousClass> [
 a <private,non-static,non-constant>: @int 4
 b <public,non-static,non-constant>: @function <user>: 
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]
 @object <AnonymousClass> [
 a <private,non-static,non-constant>: @int 4
 b <public,non-static,non-constant>: @function <user>: 
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]

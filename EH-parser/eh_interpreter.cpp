@@ -859,6 +859,11 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	ehretval_p thisvalue = this->make_weak_object(ret->get_objectval());
 	ret->get_objectval()->insert_retval("this", thisattributes, thisvalue);
 
+  // inherit from Object
+  OBJECT_FOR_EACH(this->cache.Object, member) {
+    ret->get_objectval()->copy_member(member, false, ret, this);
+  }
+
 	eh_execute(code, ret);
 	
 	if(op->nparas == 2) {

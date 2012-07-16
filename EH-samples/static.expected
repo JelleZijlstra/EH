@@ -1,9 +1,12 @@
 @object <Foo> [
 bar <public,static,non-constant>: null
 baz <public,non-static,non-constant>: null
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
 mah <public,non-static,non-constant>: null
 meh <public,non-static,constant>: @function <user>: n
 muh <public,non-static,constant>: @int 2
+toString <public,non-static,non-constant>: @function <library>: 
 ]
 2
 3

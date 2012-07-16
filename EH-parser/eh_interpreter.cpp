@@ -410,15 +410,13 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					);
 					break;
 				case T_SE: // strict equality
-					return ehretval_t::make_bool(eh_strictequals(
-						eh_execute(node->get_opval()->paras[0], context),
-						eh_execute(node->get_opval()->paras[1], context)
-					));
+				  operand1 = eh_execute(node->get_opval()->paras[0], context);
+				  operand2 = eh_execute(node->get_opval()->paras[1], context);
+					return ehretval_t::make_bool(operand1->equals(operand2));
 				case T_SNE: // strict non-equality
-					return ehretval_t::make_bool(!eh_strictequals(
-						eh_execute(node->get_opval()->paras[0], context),
-						eh_execute(node->get_opval()->paras[1], context)
-					));
+				  operand1 = eh_execute(node->get_opval()->paras[0], context);
+				  operand2 = eh_execute(node->get_opval()->paras[1], context);
+					return ehretval_t::make_bool(!operand1->equals(operand2));
 				EH_INTBOOL_CASE('>', >) // greater-than
 				EH_INTBOOL_CASE('<', <) // lesser-than
 				EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
@@ -1441,7 +1439,7 @@ ehretval_p EHI::eh_cast(const type_enum type, ehretval_p in, ehcontext_t context
 /* Casts from arbitrary types */
 ehretval_p EHI::eh_looseequals(ehretval_p operand1, ehretval_p operand2, ehcontext_t context) {
 	// first try strict comparison
-	if(eh_strictequals(operand1, operand2)) {
+	if(operand1->equals(operand2)) {
 		return ehretval_t::make_bool(true);
 	} else if(operand1->type() == float_e) {
 		return ehretval_t::make_bool(eh_floatequals(operand1->get_floatval(), operand2, context));
@@ -1456,32 +1454,6 @@ ehretval_p EHI::eh_looseequals(ehretval_p operand1, ehretval_p operand2, ehconte
 			return NULL;
 		}
 	}
-}
-bool eh_strictequals(ehretval_p operand1, ehretval_p operand2) {
-	if(operand1->type() != operand2->type()) {
-		// strict comparison between different types always returns false
-		return false;
-	}
-	switch(operand1->type()) {
-		case int_e:
-			return (operand1->get_intval() == operand2->get_intval());
-		case string_e:
-			return !strcmp(operand1->get_stringval(), operand2->get_stringval());
-		case bool_e:
-			return (operand1->get_boolval() == operand2->get_boolval());
-		case null_e:
-			// null always equals null
-			return true;
-		case float_e:
-			return (operand1->get_floatval() == operand2->get_floatval());
-		case range_e:
-			return eh_strictequals(operand1->get_rangeval()->min, operand2->get_rangeval()->min)
-				&& eh_strictequals(operand1->get_rangeval()->max, operand2->get_rangeval()->max);
-		default:
-			// TODO: array comparison
-			return false;
-	}
-	return false;
 }
 
 /*

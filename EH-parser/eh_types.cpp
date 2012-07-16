@@ -78,6 +78,32 @@ std::list<ehretval_p> ehretval_t::children() {
 	}
 	return out;
 }
+bool ehretval_t::equals(ehretval_p rhs) {
+  if(this->type() != rhs->type()) {
+    return false;
+  }
+  switch(this->type()) {
+		case int_e:
+			return (this->get_intval() == rhs->get_intval());
+		case string_e:
+			return strcmp(this->get_stringval(), rhs->get_stringval()) == 0;
+		case bool_e:
+			return (this->get_boolval() == rhs->get_boolval());
+		case null_e:
+			// null always equals null
+			return true;
+		case float_e:
+			return (this->get_floatval() == rhs->get_floatval());
+		case range_e:
+			return this->get_rangeval()->min->equals(rhs->get_rangeval()->min)
+				&& this->get_rangeval()->max->equals(rhs->get_rangeval()->max);
+		case resource_e:
+		  return this->get_resourceval() == rhs->get_resourceval();
+		default:
+			// TODO: array comparison
+			return false;
+  }
+}
 ehretval_t::~ehretval_t() {
 	switch(_type) {
 		// Simple types; nothing to do

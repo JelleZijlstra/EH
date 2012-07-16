@@ -6,7 +6,7 @@ echo $argc
 printvar: $argv
 printvar: $argc
 test:
-if $argc === 2
+if $argc == 2
 	echo 'I got two arguments'
 	echo $argv->0
 	echo $argv->1

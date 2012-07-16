@@ -6,11 +6,11 @@ switch $argc
 		continue
 	case 2
 		echo 'I got two'
-	case true
+	case is_int
 		echo 'Will this get executed?'
 	case "2"
 		echo 'And this?'
 end
-if 2 == "2"
+if 2.toString: == "2"
 	echo 'They are loosely the same'
 end

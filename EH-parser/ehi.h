@@ -75,7 +75,6 @@ private:
   ehretval_p eh_op_tilde(ehretval_p in, ehcontext_t context);
   ehretval_p eh_op_uminus(ehretval_p in, ehcontext_t context);
   ehretval_p eh_op_dot(ehretval_p *paras, ehcontext_t context);
-  ehretval_p eh_looseequals(ehretval_p operand1, ehretval_p operand2, ehcontext_t context);
   ehretval_p perform_op(const char *name, const char *user_name, ehretval_p *paras, ehcontext_t context);
 	ehcmd_t get_command(const char *name);
 	void insert_command(const char *name, const ehcmd_t cmd);

@@ -138,9 +138,7 @@
 ">="		return T_GE;
 "<="		return T_LE;
 "!="		return T_NE;
-"!=="		return T_SNE;
-"=="    	return T_EQ;
-"==="		return T_SE;
+"=="    return T_EQ;
 "=>"		return T_DOUBLEARROW;
 "->"		return T_ARROW;
 [@=$+\-*/<>(),:\[\]&\|^%~!{}\.]	return *yytext; /* Single character tokens */

@@ -402,18 +402,11 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			    return eh_op_dot(node->get_opval()->paras, context);
 			  case T_ARROW:
 			    return perform_op("operator_arrow", "operator->", node->get_opval()->paras, context);
-				case T_EQ: // equality
-					ret = eh_looseequals(
-						eh_execute(node->get_opval()->paras[0], context),
-						eh_execute(node->get_opval()->paras[1], context),
-						context
-					);
-					break;
-				case T_SE: // strict equality
+				case T_EQ: // strict equality
 				  operand1 = eh_execute(node->get_opval()->paras[0], context);
 				  operand2 = eh_execute(node->get_opval()->paras[1], context);
 					return ehretval_t::make_bool(operand1->equals(operand2));
-				case T_SNE: // strict non-equality
+				case T_NE: // strict non-equality
 				  operand1 = eh_execute(node->get_opval()->paras[0], context);
 				  operand2 = eh_execute(node->get_opval()->paras[1], context);
 					return ehretval_t::make_bool(!operand1->equals(operand2));
@@ -421,7 +414,6 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				EH_INTBOOL_CASE('<', <) // lesser-than
 				EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
 				EH_INTBOOL_CASE(T_LE, <=) // lesser-than or equal
-				EH_INTBOOL_CASE(T_NE, !=) // not equal
 				case '+': // string concatenation, addition
 					ret = perform_op("operator_plus", "operator+", node->get_opval()->paras, context);
 					break;
@@ -909,7 +901,7 @@ ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 					return NULL;
 				}
 			} else {
-				decider = eh_looseequals(switchvar, casevar, context);
+				decider = ehretval_t::make_bool(switchvar->equals(casevar));
 			}
 			// apply the decider
 			if(decider->get_boolval()) {
@@ -957,7 +949,7 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 				return NULL;
 			}
 		} else {
-			decider = eh_looseequals(switchvar, casevar, context);
+			decider = ehretval_t::make_bool(switchvar->equals(casevar));
 		}
 		if(decider->get_boolval()) {
 			return eh_execute(op->paras[1], context);
@@ -1434,26 +1426,6 @@ ehretval_p EHI::eh_cast(const type_enum type, ehretval_p in, ehcontext_t context
 			break;
 	}
 	return NULL;
-}
-
-/* Casts from arbitrary types */
-ehretval_p EHI::eh_looseequals(ehretval_p operand1, ehretval_p operand2, ehcontext_t context) {
-	// first try strict comparison
-	if(operand1->equals(operand2)) {
-		return ehretval_t::make_bool(true);
-	} else if(operand1->type() == float_e) {
-		return ehretval_t::make_bool(eh_floatequals(operand1->get_floatval(), operand2, context));
-	} else if(operand2->type() == float_e) {
-		return ehretval_t::make_bool(eh_floatequals(operand2->get_floatval(), operand1, context));
-	} else {
-		operand1 = this->to_int(operand1, context);
-		operand2 = this->to_int(operand2, context);
-		if(operand1->type() == int_e && operand2->type() == int_e) {
-			return ehretval_t::make_bool(operand1->get_intval() == operand2->get_intval());
-		} else {
-			return NULL;
-		}
-	}
 }
 
 /*

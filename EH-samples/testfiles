@@ -138,3 +138,5 @@ editinteger.eh
 extendbase.eh
 hash.eh
 negativeindex.eh
+xnew.eh
+breaking_things.eh

@@ -22,11 +22,21 @@
 #define ASSERT_NARGS_AND_TYPE(count, ehtype, method) ASSERT_NARGS(count, method); ASSERT_OBJ_TYPE(ehtype, method);
 
 START_EHLC(Object)
+EHLC_ENTRY(Object, xnew)
 EHLC_ENTRY(Object, initialize)
 EHLC_ENTRY(Object, toString)
 EHLC_ENTRY(Object, finalize)
 END_EHLC()
 
+EH_METHOD(Object, xnew) {
+  ehretval_p this_pointer = context->get_objectval()->get_recursive("this", context, T_LVALUE_GET)->value;
+  if(this_pointer->type() != weak_object_e) {
+    eh_error("this is not an object", enotice_e);
+    return NULL;
+  }
+  ehobj_t *object = this_pointer->get_weak_objectval();
+  return ehi->object_instantiate(object, context);
+}
 EH_METHOD(Object, initialize) {
   return NULL;
 }

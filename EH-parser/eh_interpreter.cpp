@@ -1288,12 +1288,12 @@ ehobj_t *EHI::get_class(ehretval_p classname, ehcontext_t context) {
 				eh_error_type("class", member->value->type(), eerror_e);
 				return NULL;
 			}
-			classobj = member->value->get_objectval();
+			classobj = member->value->get_object();
 			break;
 		}
 		case weak_object_e:
 		case object_e:
-			classobj = classname->get_objectval();
+			classobj = classname->get_object();
 			break;
 		default:
 			eh_error_type("class name", classname->type(), eerror_e);

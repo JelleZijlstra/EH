@@ -20,6 +20,7 @@ public:
 /*
  * Object class
  */
+EH_METHOD(Object, xnew);
 EH_METHOD(Object, initialize);
 EH_METHOD(Object, toString);
 EH_METHOD(Object, finalize);
@@ -164,4 +165,4 @@ EXTERN_EHLC(Hash)
  */
 EH_METHOD(Function, operator_colon);
 
-EXTERN_EHLC(Function);
+EXTERN_EHLC(Function)

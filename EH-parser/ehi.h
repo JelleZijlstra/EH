@@ -86,7 +86,6 @@ private:
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
 	ehretval_p &object_access(ehretval_p name, ehretval_p index, ehcontext_t context, int token);
 	ehretval_p &colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token);
-	ehretval_p object_instantiate(ehobj_t *obj, ehcontext_t context);
 	ehobj_t *get_class(ehretval_p code, ehcontext_t context);
 	ehretval_p eh_rangetoarray(const ehrange_t *const range);
 	ehretval_p eh_xtoarray(ehretval_p in);
@@ -159,6 +158,7 @@ public:
 		return out;
 	}
 	ehretval_p promote(ehretval_p in, ehcontext_t context);
+	ehretval_p object_instantiate(ehobj_t *obj, ehcontext_t context);
 	ehretval_p call_method(ehretval_p in, const char *name, int nargs, ehretval_p *args, ehcontext_t context);
 	ehretval_p call_method_obj(ehobj_t *obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context);
 

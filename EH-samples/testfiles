@@ -142,3 +142,5 @@ xnew.eh
 breaking_things.eh
 singleton.eh
 constructorargs.eh
+operatornames.eh
+self.eh

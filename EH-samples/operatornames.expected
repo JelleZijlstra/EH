@@ -1,0 +1,6 @@
+syntax error, unexpected T_VARIABLE: EH parsing error
+syntax error, unexpected T_VARIABLE: EH parsing error
+Unsupported type null for Cannot use operator.= on primitive: EH notice
+syntax error, unexpected T_VARIABLE: EH parsing error
+No such object member: operator_plus: EH notice
+null

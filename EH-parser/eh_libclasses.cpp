@@ -371,6 +371,10 @@ EH_METHOD(String, operator_arrow) {
   ASSERT_TYPE(operand, int_e, "String.operator->");
   int index = operand->get_intval();
   size_t len = strlen(obj->get_stringval());
+  // allow negative index
+  if(index < 0) {
+    index += len;
+  }
   if(index < 0 || index >= len) {
     eh_error_invalid_argument("String.operator->", 0);
     return NULL;
@@ -386,6 +390,9 @@ EH_METHOD(String, operator_arrow_equals) {
   ASSERT_TYPE(operand1, int_e, "String.operator->=");
   int index = operand1->get_intval();
   size_t len = strlen(obj->get_stringval());
+  if(index < 0) {
+    index += len;
+  }
   if(index < 0 || index >= len) {
     eh_error_invalid_argument("String.operator->=", 0);
     return NULL;

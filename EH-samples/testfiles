@@ -137,3 +137,4 @@ tostring.eh
 editinteger.eh
 extendbase.eh
 hash.eh
+negativeindex.eh

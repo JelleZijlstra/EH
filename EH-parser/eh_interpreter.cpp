@@ -736,7 +736,9 @@ ehretval_p EHI::eh_op_new(ehretval_p *paras, ehcontext_t context) {
 	if(classobj == NULL) {
 		return NULL;
 	} else {
-		return this->object_instantiate(classobj, context);
+		ehretval_p out = this->object_instantiate(classobj, context);
+		out->get_objectval()->object_data = this->call_method(out, "initialize", NULL, 0, out);
+		return out;
 	}
 }
 void EHI::eh_op_inherit(ehretval_p *paras, ehcontext_t context) {
@@ -1166,7 +1168,7 @@ ehretval_p EHI::call_function_args(ehobj_t *obj, ehretval_p object_data, const i
 	}
 
 	if(f->type == lib_e) {
-		return f->libmethod_pointer(object_data, nargs, args, context, this);
+		return f->libmethod_pointer(object_data, nargs, args, obj->parent, this);
 	}
 	// check parameter count
 	if(nargs != f->argcount) {
@@ -1200,12 +1202,9 @@ ehretval_p EHI::object_instantiate(ehobj_t *obj, ehcontext_t context) {
 	new_obj->parent = obj->parent;
 	new_obj->real_parent = obj->real_parent;
 	new_obj->function = obj->function;
-	for(int i = 0; i < VARTABLE_S; i++) {
-		OBJECT_FOR_EACH(obj, m) {
-			new_obj->copy_member(m, false, ret, this);
-		}
+	OBJECT_FOR_EACH(obj, m) {
+		new_obj->copy_member(m, false, ret, this);
 	}
-	new_obj->object_data = call_method(ret, "initialize", 0, NULL, context);
 	return ret;
 }
 ehretval_p &EHI::object_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token) {

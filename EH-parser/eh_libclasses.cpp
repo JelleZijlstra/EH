@@ -731,3 +731,12 @@ EH_METHOD(Hash, has) {
 	ehhash_t *hash = obj->get_hashval();
 	return ehretval_t::make_bool(hash->has(index->get_stringval()));
 }
+
+START_EHLC(Function)
+EHLC_ENTRY(Function, operator_colon)
+END_EHLC()
+
+EH_METHOD(Function, operator_colon) {
+  ASSERT_NARGS_AND_TYPE(1, func_e, "Function.operator:");
+  return NULL;
+}

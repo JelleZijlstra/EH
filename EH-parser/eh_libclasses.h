@@ -158,3 +158,10 @@ EH_METHOD(Hash, operator_arrow_equals);
 EH_METHOD(Hash, has);
 
 EXTERN_EHLC(Hash)
+
+/*
+ * Function class
+ */
+EH_METHOD(Function, operator_colon);
+
+EXTERN_EHLC(Function);

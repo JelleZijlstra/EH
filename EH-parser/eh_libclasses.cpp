@@ -167,6 +167,10 @@ EH_METHOD(File, finalize) {
 
 START_EHLC(Integer)
 EHLC_ENTRY(Integer, operator_plus)
+EHLC_ENTRY(Integer, operator_minus)
+EHLC_ENTRY(Integer, operator_times)
+EHLC_ENTRY(Integer, operator_divide)
+EHLC_ENTRY(Integer, operator_modulo)
 EHLC_ENTRY(Integer, abs)
 EHLC_ENTRY(Integer, getBit)
 EHLC_ENTRY(Integer, setBit)
@@ -191,6 +195,71 @@ EH_METHOD(Integer, operator_plus) {
       return NULL;
     }
   }
+}
+EH_METHOD(Integer, operator_minus) {
+  ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator-");
+  ehretval_p operand = args[0];
+  if(operand->type() == float_e) {
+    return ehretval_t::make_float((float) obj->get_intval() - operand->get_floatval());
+  } else {
+    operand = ehi->to_int(operand, context);
+    if(operand->type() == int_e) {
+      return ehretval_t::make_int(obj->get_intval() - operand->get_intval());
+    } else {
+      eh_error_type("argument to Integer.operator-", args[0]->type(), enotice_e);
+      return NULL;
+    }
+  }
+}
+EH_METHOD(Integer, operator_times) {
+  ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator*");
+  ehretval_p operand = args[0];
+  if(operand->type() == float_e) {
+    return ehretval_t::make_float((float) obj->get_intval() * operand->get_floatval());
+  } else {
+    operand = ehi->to_int(operand, context);
+    if(operand->type() == int_e) {
+      return ehretval_t::make_int(obj->get_intval() * operand->get_intval());
+    } else {
+      eh_error_type("argument to Integer.operator*", args[0]->type(), enotice_e);
+      return NULL;
+    }
+  }
+}
+EH_METHOD(Integer, operator_divide) {
+  ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator/");
+  ehretval_p operand = args[0];
+  if(operand->type() == float_e) {
+    float val = operand->get_floatval();
+    if(val == 0.0) {
+      eh_error("Divide by zero", enotice_e);
+      return NULL;
+    }
+    return ehretval_t::make_float((float) obj->get_intval() / val);
+  } else {
+    operand = ehi->to_int(operand, context);
+    if(operand->type() == int_e) {
+      int val = operand->get_intval();
+      if(val == 0) {
+        eh_error("Divide by zero", enotice_e);
+        return NULL;
+      }
+      return ehretval_t::make_int(obj->get_intval() / operand->get_intval());
+    } else {
+      eh_error_type("argument to Integer.operator/", args[0]->type(), enotice_e);
+      return NULL;
+    }
+  }
+}
+EH_METHOD(Integer, operator_modulo) {
+  ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator%");
+  ehretval_p operand = ehi->to_int(args[0], context);
+  ASSERT_TYPE(operand, int_e, "Integer.operator%");
+  if(operand->get_intval() == 0) {
+    eh_error("Divide by zero", enotice_e);
+    return NULL;
+  }
+  return ehretval_t::make_int(obj->get_intval() % operand->get_intval());
 }
 EH_METHOD(Integer, abs) {
   ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.abs");
@@ -301,6 +370,9 @@ EH_METHOD(Array, operator_arrow_equals) {
 
 START_EHLC(Float)
 EHLC_ENTRY(Float, operator_plus)
+EHLC_ENTRY(Float, operator_minus)
+EHLC_ENTRY(Float, operator_times)
+EHLC_ENTRY(Float, operator_divide)
 EHLC_ENTRY(Float, abs)
 EHLC_ENTRY(Float, toString)
 EHLC_ENTRY(Float, toInt)
@@ -315,6 +387,40 @@ EH_METHOD(Float, operator_plus) {
     return ehretval_t::make_float(obj->get_floatval() + operand->get_floatval());
   } else {
     eh_error_type("argument to Float.operator+", args[0]->type(), enotice_e);
+    return NULL;
+  }
+}
+EH_METHOD(Float, operator_minus) {
+  ASSERT_NARGS_AND_TYPE(1, float_e, "Float.operator-");
+  ehretval_p operand = ehi->to_float(args[0], context);
+  if(operand->type() == float_e) {
+    return ehretval_t::make_float(obj->get_floatval() - operand->get_floatval());
+  } else {
+    eh_error_type("argument to Float.operator-", args[0]->type(), enotice_e);
+    return NULL;
+  }
+}
+EH_METHOD(Float, operator_times) {
+  ASSERT_NARGS_AND_TYPE(1, float_e, "Float.operator*");
+  ehretval_p operand = ehi->to_float(args[0], context);
+  if(operand->type() == float_e) {
+    return ehretval_t::make_float(obj->get_floatval() * operand->get_floatval());
+  } else {
+    eh_error_type("argument to Float.operator*", args[0]->type(), enotice_e);
+    return NULL;
+  }
+}
+EH_METHOD(Float, operator_divide) {
+  ASSERT_NARGS_AND_TYPE(1, float_e, "Float.operator/");
+  ehretval_p operand = ehi->to_float(args[0], context);
+  if(operand->type() == float_e) {
+    if(operand->get_floatval() == 0.0) {
+      eh_error("Divide by zero", enotice_e);
+      return NULL;
+    }
+    return ehretval_t::make_float(obj->get_floatval() / operand->get_floatval());
+  } else {
+    eh_error_type("argument to Float.operator/", args[0]->type(), enotice_e);
     return NULL;
   }
 }

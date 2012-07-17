@@ -65,6 +65,10 @@ EXTERN_EHLC(File)
  * Integer class
  */
 EH_METHOD(Integer, operator_plus);
+EH_METHOD(Integer, operator_minus);
+EH_METHOD(Integer, operator_times);
+EH_METHOD(Integer, operator_divide);
+EH_METHOD(Integer, operator_modulo);
 EH_METHOD(Integer, abs);
 EH_METHOD(Integer, getBit);
 EH_METHOD(Integer, setBit);
@@ -89,6 +93,9 @@ EXTERN_EHLC(Array)
  * Float class
  */
 EH_METHOD(Float, operator_plus);
+EH_METHOD(Float, operator_minus);
+EH_METHOD(Float, operator_times);
+EH_METHOD(Float, operator_divide);
 EH_METHOD(Float, abs);
 EH_METHOD(Float, toString);
 EH_METHOD(Float, toInt);

@@ -36,7 +36,10 @@ Float <public,non-static,constant>: @object <Float> [
 abs <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+operator_divide <public,non-static,non-constant>: @function <library>: 
+operator_minus <public,non-static,non-constant>: @function <library>: 
 operator_plus <public,non-static,non-constant>: @function <library>: 
+operator_times <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toFloat <public,non-static,non-constant>: @function <library>: 
 toInt <public,non-static,non-constant>: @function <library>: 
@@ -57,7 +60,11 @@ finalize <public,non-static,non-constant>: @function <library>:
 getBit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
+operator_divide <public,non-static,non-constant>: @function <library>: 
+operator_minus <public,non-static,non-constant>: @function <library>: 
+operator_modulo <public,non-static,non-constant>: @function <library>: 
 operator_plus <public,non-static,non-constant>: @function <library>: 
+operator_times <public,non-static,non-constant>: @function <library>: 
 setBit <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toFloat <public,non-static,non-constant>: @function <library>: 

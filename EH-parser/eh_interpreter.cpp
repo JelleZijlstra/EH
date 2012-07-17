@@ -429,7 +429,9 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				case '+': // string concatenation, addition
 					ret = perform_op("operator_plus", "operator+", node->get_opval()->paras, context);
 					break;
-				EH_FLOATINT_CASE('-', -) // subtraction
+				case '-': // subtraction
+				  ret = perform_op("operator_minus", "operator-", node->get_opval()->paras, context);
+				  break;
 				EH_FLOATINT_CASE('*', *) // multiplication
 				EH_FLOATINT_CASE('/', /) // division
 				EH_INT_CASE('%', %) // modulo

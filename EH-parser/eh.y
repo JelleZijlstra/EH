@@ -84,7 +84,6 @@ EHParser *yyget_extra(void *scanner);
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
 %right '@'
-%nonassoc T_NEW
 %left T_ARROW '.'
 %nonassoc T_RANGE
 %nonassoc '$' '~' '!' T_NEGATIVE T_COUNT
@@ -302,7 +301,6 @@ expression:
 	| expression T_RANGE expression
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
-	| T_NEW expression		{ $$ = ADD_NODE1(T_NEW, $2); }
 	| T_FUNC ':' parglist '{' statement_list '}'
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
@@ -383,7 +381,6 @@ simple_expr:
 	| simple_expr T_RANGE simple_expr
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
-	| T_NEW simple_expr		{ $$ = ADD_NODE1(T_NEW, $2); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS T_SEPARATOR statement_list T_ENDCLASS
@@ -464,7 +461,6 @@ line_expr:
 	| line_expr T_RANGE expression
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
-	| T_NEW expression		{ $$ = ADD_NODE1(T_NEW, $2); }
 	| T_FUNC ':' parglist '{' statement_list '}'
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END

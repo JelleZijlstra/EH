@@ -4,4 +4,4 @@ class Foo {
 		echo 42
 	}
 }
-new Foo
+$Foo.new:

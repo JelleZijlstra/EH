@@ -9,7 +9,7 @@ end
 echo 'foo'
 echo 'foo' + 'bar'
 echo foo
-foo = new Foo
+foo = Foo.new:
 baz = foo.foo
 baz:
 $foo.foo:

@@ -6,5 +6,6 @@ Attempt to write to constant variable: EH runtime error
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 mah <public,non-static,non-constant>: @int 42
+new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]

@@ -20,7 +20,7 @@ public:
 /*
  * Object class
  */
-EH_METHOD(Object, xnew);
+EH_METHOD(Object, new);
 EH_METHOD(Object, initialize);
 EH_METHOD(Object, toString);
 EH_METHOD(Object, finalize);

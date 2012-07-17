@@ -11,6 +11,6 @@ class A {
 
 class B {
 	public foo = 4
-	o = new A.C
+	o = A.C.new:
 	$o.bar:
 }

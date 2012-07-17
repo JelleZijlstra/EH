@@ -28,7 +28,7 @@ if 4 > 2
 else
 	echo 1
 end
-mah = new Foo
+mah = Foo.new:
 $mah.bar: 42
 test: 42
 $baz: 42

@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # Testing various toString methods
 class Foo {}
-o = new Foo
+o = Foo.new:
 printvar: o.toString:
 printvar: [].toString:
 printvar: 2.toString:

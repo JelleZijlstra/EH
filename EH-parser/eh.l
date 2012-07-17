@@ -90,7 +90,6 @@
 "end"		return T_END;
 "case"		return T_CASE;
 "default"	return T_DEFAULT;
-"new"		return T_NEW;
 "&&"		return T_AND;
 "and"		return T_AND;
 "||"		return T_OR;

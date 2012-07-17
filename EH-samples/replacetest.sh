@@ -1,2 +1,4 @@
 #!/bin/bash
-ehi $1.eh > $1.expected 2>&1
+for var in "$@"; do
+	ehi "$var.eh" > "$var.expected" 2>&1
+done

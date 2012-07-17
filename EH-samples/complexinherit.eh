@@ -53,5 +53,5 @@ class D {
 		}
 	}
 }
-o = new D.DD
+o = D.new:.DD
 $o.dd:

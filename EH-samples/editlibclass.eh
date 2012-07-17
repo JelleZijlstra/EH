@@ -1,4 +1,4 @@
 #!/usr/bin/ehi
 $File.foo = 'bar'
-f = new File
+f = File.new:
 printvar: f

@@ -14,7 +14,7 @@ class C {
 	class D {
 		inherit A.B
 	}
-	o = new D
+	o = D.new:
 	
 	# Expect 3, though currently EHI prints 4.
 	$o.b:

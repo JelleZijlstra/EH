@@ -2,6 +2,6 @@
 # Testing the include: function
 include: 'end.eh'
 echo 'We just included a file'
-maha = new Foo
+maha = Foo.new:
 printvar: maha
 printvar: baz

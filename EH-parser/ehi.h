@@ -60,7 +60,6 @@ private:
 	ehretval_p eh_op_for(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_while(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_as(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_new(ehretval_p *paras, ehcontext_t context);
 	void eh_op_inherit(ehretval_p *paras, ehcontext_t context);
 	void eh_op_continue(opnode_t *op, ehcontext_t context);
 	void eh_op_break(opnode_t *op, ehcontext_t context);

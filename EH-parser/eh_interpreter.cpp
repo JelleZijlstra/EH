@@ -360,9 +360,6 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				case ':': // function call
 					ret = eh_op_colon(node->get_opval()->paras, context);
 					break;
-				case T_NEW: // object declaration
-					ret = eh_op_new(node->get_opval()->paras, context);
-					break;
 			/*
 			 * Object definitions
 			 */
@@ -727,19 +724,6 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	}
 	inloop--;
 	return ret;
-}
-ehretval_p EHI::eh_op_new(ehretval_p *paras, ehcontext_t context) {
-	// Otherwise the class may die before the object gets instantiated
-	ehretval_p ret = eh_execute(paras[0], context);
-	ehobj_t *classobj = this->get_class(ret, context);
-	// get_class complains for us
-	if(classobj == NULL) {
-		return NULL;
-	} else {
-		ehretval_p out = this->object_instantiate(classobj, context);
-		out->get_objectval()->object_data = this->call_method(out, "initialize", NULL, 0, out);
-		return out;
-	}
 }
 void EHI::eh_op_inherit(ehretval_p *paras, ehcontext_t context) {
 	ehobj_t *classobj = this->get_class(eh_execute(paras[0], context), context);

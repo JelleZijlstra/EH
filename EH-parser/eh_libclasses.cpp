@@ -22,13 +22,13 @@
 #define ASSERT_NARGS_AND_TYPE(count, ehtype, method) ASSERT_NARGS(count, method); ASSERT_OBJ_TYPE(ehtype, method);
 
 START_EHLC(Object)
-EHLC_ENTRY(Object, xnew)
+EHLC_ENTRY(Object, new)
 EHLC_ENTRY(Object, initialize)
 EHLC_ENTRY(Object, toString)
 EHLC_ENTRY(Object, finalize)
 END_EHLC()
 
-EH_METHOD(Object, xnew) {
+EH_METHOD(Object, new) {
 	ehretval_p ret = ehi->object_instantiate(context->get_objectval(), context);
 	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", nargs, args, ret);
 	return ret;

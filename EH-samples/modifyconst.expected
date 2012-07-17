@@ -3,6 +3,7 @@ baz <private,non-static,constant>: @int 42
 finalize <public,non-static,non-constant>: @function <library>: 
 foo <public,non-static,non-constant>: @function <user>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 quuz <private,non-static,constant>: @int 42
 toString <public,non-static,non-constant>: @function <library>: 
 ]
@@ -13,6 +14,7 @@ baz <private,non-static,constant>: @int 42
 finalize <public,non-static,non-constant>: @function <library>: 
 foo <public,non-static,non-constant>: @function <user>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 quuz <private,non-static,constant>: @int 42
 toString <public,non-static,non-constant>: @function <library>: 
 ]

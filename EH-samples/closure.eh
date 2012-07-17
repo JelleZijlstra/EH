@@ -6,7 +6,7 @@ class Foo
 		ret 42
 	endfunc
 endclass
-foo = new Foo
+foo = Foo.new:
 printvar: foo
 baz = foo.bar
 printvar: baz

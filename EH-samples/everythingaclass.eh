@@ -8,4 +8,4 @@ class Bar {
 	echo 5
 	mah = 42
 }
-printvar: new Bar
+printvar: Bar.new:

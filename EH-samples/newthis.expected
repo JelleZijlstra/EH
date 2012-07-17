@@ -3,6 +3,7 @@ bar <public,non-static,non-constant>: @function <user>:
 baz <private,non-static,non-constant>: @int 42
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 useprivate <public,non-static,non-constant>: @function <user>: 
 ]
@@ -11,6 +12,7 @@ bar <public,non-static,non-constant>: @function <user>:
 baz <private,non-static,non-constant>: @int 42
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 useprivate <public,non-static,non-constant>: @function <user>: 
 ]

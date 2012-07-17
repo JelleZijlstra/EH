@@ -7,6 +7,7 @@ finalize <public,non-static,non-constant>: @function <library>:
 initialize <public,non-static,non-constant>: @function <library>: 
 mah <private,non-static,non-constant>: @function <user>: n
 meh <public,non-static,non-constant>: @function <user>: n
+new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 3

@@ -20,7 +20,7 @@ class Foo
 	const mah = 4
 end
 echo 'Object'
-for new Foo as key => value
+for Foo.new: as key => value
 	echo $key
 	echo $value
 end

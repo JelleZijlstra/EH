@@ -13,7 +13,7 @@ class Foo
 		echo bar
 	end
 end
-o = new Foo
+o = Foo.new:
 
 # 0
 echo o.bar

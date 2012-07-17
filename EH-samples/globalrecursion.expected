@@ -3,12 +3,14 @@ A <public,non-static,non-constant>: @object <A> [
 finalize <public,non-static,non-constant>: @function <library>: 
 foo <public,non-static,non-constant>: (recursion)
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Array <public,non-static,constant>: @object <Array> [
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 operator_arrow <public,non-static,non-constant>: @function <library>: 
 operator_arrow_equals <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
@@ -16,6 +18,7 @@ toString <public,non-static,non-constant>: @function <library>:
 Bool <public,non-static,constant>: @object <Bool> [
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toInt <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
@@ -24,6 +27,7 @@ CountClass <public,non-static,constant>: @object <CountClass> [
 docount <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 setcount <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
@@ -33,6 +37,7 @@ finalize <public,non-static,non-constant>: @function <library>:
 getc <public,non-static,non-constant>: @function <library>: 
 gets <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 open <public,non-static,non-constant>: @function <library>: 
 puts <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
@@ -42,6 +47,7 @@ Float <public,non-static,constant>: @object <Float> [
 abs <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 operator_divide <public,non-static,non-constant>: @function <library>: 
 operator_minus <public,non-static,non-constant>: @function <library>: 
 operator_plus <public,non-static,non-constant>: @function <library>: 
@@ -55,6 +61,7 @@ Hash <public,non-static,constant>: @object <Hash> [
 finalize <public,non-static,non-constant>: @function <library>: 
 has <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 operator_arrow <public,non-static,non-constant>: @function <library>: 
 operator_arrow_equals <public,non-static,non-constant>: @function <library>: 
 toArray <public,non-static,non-constant>: @function <library>: 
@@ -66,6 +73,7 @@ finalize <public,non-static,non-constant>: @function <library>:
 getBit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 operator_divide <public,non-static,non-constant>: @function <library>: 
 operator_minus <public,non-static,non-constant>: @function <library>: 
 operator_modulo <public,non-static,non-constant>: @function <library>: 
@@ -80,12 +88,14 @@ toString <public,non-static,non-constant>: @function <library>:
 Null <public,non-static,constant>: @object <Null> [
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Object <public,non-static,constant>: @object <Object> [
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Range <public,non-static,constant>: @object <Range> [
@@ -93,6 +103,7 @@ finalize <public,non-static,non-constant>: @function <library>:
 initialize <public,non-static,non-constant>: @function <library>: 
 max <public,non-static,non-constant>: @function <library>: 
 min <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 operator_arrow <public,non-static,non-constant>: @function <library>: 
 toArray <public,non-static,non-constant>: @function <library>: 
 toRange <public,non-static,non-constant>: @function <library>: 
@@ -103,6 +114,7 @@ charAtPosition <public,non-static,non-constant>: @function <library>:
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 operator_arrow <public,non-static,non-constant>: @function <library>: 
 operator_arrow_equals <public,non-static,non-constant>: @function <library>: 
 operator_plus <public,non-static,non-constant>: @function <library>: 
@@ -135,6 +147,7 @@ o <public,non-static,non-constant>: @object <A> [
 finalize <public,non-static,non-constant>: @function <library>: 
 foo <public,non-static,non-constant>: (recursion)
 initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 pow <public,non-static,non-constant>: @function <library>: 

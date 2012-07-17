@@ -8,7 +8,7 @@ class Foo
 		$this.quuz = 43
 	end
 end
-f = new Foo
+f = Foo.new:
 printvar: f
 $f.foo:
 printvar: f

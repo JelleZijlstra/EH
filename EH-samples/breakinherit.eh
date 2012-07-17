@@ -7,7 +7,7 @@ class A {
 	}
 
 	inherit A
-	public a = new A
+	public a = A.new:
 }
-o = new A
+o = A.new:
 printvar: $o

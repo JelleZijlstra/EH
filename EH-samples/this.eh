@@ -12,5 +12,5 @@ class Foo
 		$this.bar: n
 	endfunc
 endclass
-foo = new Foo
+foo = Foo.new:
 $foo.baz: 42

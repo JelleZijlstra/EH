@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 # Illustrates the File class
-f = new File
+f = File.new:
 $f.open: "file.eh.helper"
 c = false
 while c != null

@@ -10,3 +10,8 @@ Iterate
 foo
 bar
 quux
+Filter
+@array [
+0 => @string 'foo'
+1 => @string 'bar'
+]

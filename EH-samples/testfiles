@@ -144,3 +144,4 @@ singleton.eh
 constructorargs.eh
 operatornames.eh
 self.eh
+monkeypatch.eh

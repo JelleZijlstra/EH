@@ -89,22 +89,6 @@ static inline int count_nodes(const ehretval_p node);
 		eh_error_types(#operator, operand1->type(), operand2->type(), eerror_e); \
 	} \
 	break;
-// take ints or floats, return an int or float
-#define EH_FLOATINT_CASE(token, operator) case token: \
-	operand1 = eh_execute(node->get_opval()->paras[0], context); \
-	operand2 = eh_execute(node->get_opval()->paras[1], context); \
-	if(operand1->type() == float_e && operand2->type() == float_e) { \
-		return ehretval_t::make_float((operand1->get_floatval() operator operand2->get_floatval())); \
-	} else { \
-		operand1 = this->to_int(operand1, context); \
-		operand2 = this->to_int(operand2, context); \
-		if(operand1->type() == int_e && operand2->type() == int_e) { \
-			return ehretval_t::make_int((operand1->get_intval() operator operand2->get_intval())); \
-		} else { \
-			eh_error_types(#operator, operand1->type(), operand2->type(), eerror_e); \
-		} \
-	} \
-	break;
 // take ints or floats, return a bool
 #define EH_INTBOOL_CASE(token, operator) case token: \
 	operand1 = eh_execute(node->get_opval()->paras[0], context); \
@@ -120,12 +104,6 @@ static inline int count_nodes(const ehretval_p node);
 			eh_error_types(#operator, operand1->type(), operand2->type(), eerror_e); \
 		} \
 	} \
-	break;
-// take bools, return a bool
-#define EH_BOOL_CASE(token, operator) case token: \
-	operand1 = this->to_bool(eh_execute(node->get_opval()->paras[0], context), context); \
-	operand2 = this->to_bool(eh_execute(node->get_opval()->paras[1], context), context); \
-	return ehretval_t::make_bool(operand1->get_boolval() operator operand2->get_boolval()); \
 	break;
 
 /*
@@ -424,14 +402,15 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
 				EH_INTBOOL_CASE(T_LE, <=) // lesser-than or equal
 				case '+': // string concatenation, addition
-					ret = perform_op("operator_plus", "operator+", node->get_opval()->paras, context);
-					break;
+					return perform_op("operator_plus", "operator+", node->get_opval()->paras, context);
 				case '-': // subtraction
-				  ret = perform_op("operator_minus", "operator-", node->get_opval()->paras, context);
-				  break;
-				EH_FLOATINT_CASE('*', *) // multiplication
-				EH_FLOATINT_CASE('/', /) // division
-				EH_INT_CASE('%', %) // modulo
+					return perform_op("operator_minus", "operator-", node->get_opval()->paras, context);
+				case '*':
+					return perform_op("operator_times", "operator*", node->get_opval()->paras, context);
+				case '/':
+					return perform_op("operator_divide", "operator/", node->get_opval()->paras, context);
+				case '%':
+					return perform_op("operator_modulo", "operator%", node->get_opval()->paras, context);
 				EH_INT_CASE('&', &) // bitwise AND
 				EH_INT_CASE('^', ^) // bitwise XOR
 				EH_INT_CASE('|', |) // bitwise OR

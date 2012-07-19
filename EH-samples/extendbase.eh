@@ -44,5 +44,5 @@ $Array.filter = func: f {
 	ret out
 }
 
-arr2 = arr.filter: func: k, v -> (v.length: == 3)
-printvar: arr2
+f = func: key, value -> (value.length:) > 3
+printvar: arr.filter: f

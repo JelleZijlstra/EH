@@ -78,6 +78,7 @@ EH_METHOD(Integer, toString);
 EH_METHOD(Integer, toBool);
 EH_METHOD(Integer, toFloat);
 EH_METHOD(Integer, toInt);
+EH_METHOD(Integer, sqrt);
 
 EXTERN_EHLC(Integer)
 
@@ -102,6 +103,7 @@ EH_METHOD(Float, toString);
 EH_METHOD(Float, toInt);
 EH_METHOD(Float, toBool);
 EH_METHOD(Float, toFloat);
+EH_METHOD(Float, sqrt);
 
 EXTERN_EHLC(Float)
 

@@ -12,6 +12,5 @@ bar
 quux
 Filter
 @array [
-0 => @string 'foo'
-1 => @string 'bar'
+2 => @string 'quux'
 ]

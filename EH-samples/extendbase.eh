@@ -32,3 +32,17 @@ $Array.each = func: f {
 }
 
 $arr.each: (func: key, value { echo value; })
+
+echo "Filter"
+$Array.filter = func: f {
+  out = []
+  for self as key => value {
+    if (f: key, value) {
+      $out->key = value
+    }
+  }
+  ret out
+}
+
+f = func: key, value -> (value.length:) > 3
+printvar: $arr.filter: f

@@ -144,3 +144,5 @@ singleton.eh
 constructorargs.eh
 operatornames.eh
 self.eh
+complex.eh
+sqrt.eh

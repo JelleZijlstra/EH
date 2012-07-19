@@ -185,6 +185,7 @@ EHLC_ENTRY(Integer, toString)
 EHLC_ENTRY(Integer, toBool)
 EHLC_ENTRY(Integer, toFloat)
 EHLC_ENTRY(Integer, toInt)
+EHLC_ENTRY(Integer, sqrt)
 END_EHLC()
 
 EH_METHOD(Integer, operator_plus) {
@@ -344,6 +345,10 @@ EH_METHOD(Integer, toInt) {
 	ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.toInt");
 	return obj;
 }
+EH_METHOD(Integer, sqrt) {
+  ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.sqrt");
+  return ehretval_t::make_int((int) sqrt((double) obj->get_intval()));
+}
 
 START_EHLC(Array)
 EHLC_ENTRY(Array, length)
@@ -384,6 +389,7 @@ EHLC_ENTRY(Float, toString)
 EHLC_ENTRY(Float, toInt)
 EHLC_ENTRY(Float, toBool)
 EHLC_ENTRY(Float, toFloat)
+EHLC_ENTRY(Float, sqrt)
 END_EHLC()
 
 EH_METHOD(Float, operator_plus) {
@@ -451,6 +457,10 @@ EH_METHOD(Float, toBool) {
 EH_METHOD(Float, toFloat) {
 	ASSERT_NARGS_AND_TYPE(0, float_e, "Float.toFloat");
 	return obj;
+}
+EH_METHOD(Float, sqrt) {
+  ASSERT_NARGS_AND_TYPE(0, float_e, "Float.sqrt");
+  return ehretval_t::make_float(sqrt(obj->get_floatval()));
 }
 
 START_EHLC(String)

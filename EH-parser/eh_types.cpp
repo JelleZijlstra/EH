@@ -53,17 +53,9 @@ std::list<ehretval_p> ehretval_t::children() {
 		case weak_object_e:
 			// ignored for GC purposes
 			break;
-		case func_e: {
-			ehobj_t *f = this->get_funcval();
-			OBJECT_FOR_EACH(f, i) {
-				out.push_back(i->second->value);
-			}
-			out.push_back(f->parent);
-			if(f->real_parent != NULL) {
-				out.push_back(f->real_parent);
-			}
+		case func_e:
+			out.push_back(this->get_funcval()->parent);
 			break;
-		}
 		case array_e:
 			ARRAY_FOR_EACH_INT(this->get_arrayval(), i) {
 				out.push_back(i->second);

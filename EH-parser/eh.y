@@ -417,7 +417,7 @@ line_expr:
 	| '@' T_TYPE expression %prec '@'	
 							{ $$ = ADD_NODE2('@', $2, $3); }
 	| bareword ':' arglist
-							{ $$ = ADD_NODE2(':', $1, $3); }
+							{ $$ = ADD_NODE2(':', ADD_NODE1('$', $1), $3); }
 	| line_expr ':' arglist
 							{ $$ = ADD_NODE2(':', $1, $3); }
 	| line_expr T_EQ expression

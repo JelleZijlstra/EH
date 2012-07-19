@@ -140,13 +140,10 @@ void EHI::eh_init(void) {
 	
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
 		ehmember_p func;
-		func->value = this->make_func(new ehobj_t("Closure"));
-		func->value->get_funcval()->parent = global_object;
-		ehfm_p f;
-		f->type = lib_e;
+		ehfunc_t *f = new ehfunc_t(lib_e);
+		func->value = this->make_func(f);
+		f->parent = global_object;
 		f->libmethod_pointer = libfuncs[i].code;
-		func->value->funcval->function = f;
-		// other fields are irrelevant
 		global_object->get_objectval()->insert(libfuncs[i].name, func);
 	}
 	for(int i = 0; libclasses[i].name != NULL; i++) {
@@ -164,12 +161,10 @@ void EHI::eh_init(void) {
 		for(int i = 0; members[i].name != NULL; i++) {
 			ehmember_p func;
 			func->attribute = attributes;
-			func->value = this->make_func(new ehobj_t("Closure"));
-			func->value->get_funcval()->parent = new_value;
-			ehfm_p f;
-			f->type = lib_e;
+			ehfunc_t *f = new ehfunc_t(lib_e);
+			func->value = this->make_func(f);
+			f->parent = new_value;
 			f->libmethod_pointer = members[i].func;
-			func->value->funcval->function = f;
 			newclass->insert(members[i].name, func);
 		}
 		ehmember_p member;
@@ -199,6 +194,8 @@ void EHI::eh_init(void) {
 			this->cache.Object = newclass;
 		} else if(strcmp(name, "Hash") == 0) {
 			this->cache.Hash = newclass;
+		} else if(strcmp(name, "Function") == 0) {
+			this->cache.Function = newclass;
 		}
 	}
 	for(int i = 0; libcmds[i].name != NULL; i++) {
@@ -781,18 +778,15 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
-	ehretval_p ret = this->make_func(new ehobj_t("Closure"));
-	ret->get_funcval()->parent = context;
-
-	ehfm_p f;
-	f->type = user_e;
+	ehfunc_t *f = new ehfunc_t(user_e);
+	ehretval_p ret = this->make_func(f);
+	f->parent = context;
 	f->code = paras[1];
-	ret->funcval->function = f;
 
 	// determine argument count
 	f->argcount = count_nodes(paras[0]);
 	// if there are no arguments, the arglist can be NULL
-	if(f->argcount) {
+	if(f->argcount != 0) {
 		f->args = new eharg_t[f->argcount]();
 	}
 	// add arguments to arglist
@@ -874,8 +868,8 @@ ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 			ehretval_p casevar = eh_execute(op->paras[0], context);
 			ehretval_p decider;
 			// try to call function
-			if(casevar->type() == func_e) {
-				decider = call_function_args(casevar->get_funcval(), NULL, 1, &switchvar, context);
+			if(casevar->type() == func_e || casevar->type() == binding_e) {
+				decider = call_function(casevar, 1, &switchvar, context);
 				if(decider->type() != bool_e) {
 					eh_error("Switch case method does not return bool", eerror_e);
 					return NULL;
@@ -920,10 +914,8 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 		}
 		ehretval_p casevar = eh_execute(op->paras[0], context);
 		ehretval_p decider;
-		if(casevar->type() == func_e) {
-			decider = call_function_args(
-				casevar->get_funcval(), NULL, 1, &switchvar, context
-			);
+		if(casevar->type() == func_e || casevar->type() == binding_e) {
+			decider = call_function(casevar, 1, &switchvar, context);
 			if(decider->type() != bool_e) {
 				eh_error("Given case method does not return bool", eerror_e);
 				return NULL;
@@ -938,37 +930,30 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 	return NULL;
 }
 ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
-	ehretval_p function = eh_execute(paras[0], context);
-	// operand1 will be either a string (indicating a normal function call) or a
-	// func_e (indicating a method or closure call)
-	switch(function->type()) {
-		case string_e:
-		{
-			ehmember_p func = context->get_objectval()->get_recursive(
-				function->get_stringval(), context, T_LVALUE_GET
-			);
-			if(func == NULL) {
-				eh_error_unknown("function", function->get_stringval(), eerror_e);
-				return NULL;
-			}
-			if(func->value->type() != func_e) {
-				eh_error_type("function call", func->value->type(), eerror_e);
-				return NULL;
-			}
-			return call_function(func->value->get_funcval(), NULL, paras[1], context);
+	// parse arguments
+	ehretval_p args = paras[1];
+	int nargs = count_nodes(args);
+	ehretval_p *new_args = new ehretval_p[nargs]();
+	
+	for(int i = 0; args->get_opval()->nparas != 0; args = args->get_opval()->paras[0], i++) {
+		try {
+			new_args[i] = eh_execute(args->get_opval()->paras[1], context);
+		} catch(...) {
+			delete[] new_args;
+			throw;
 		}
-		case func_e:
-			return call_function(function->get_funcval(), NULL, paras[1], context);
-		case binding_e:
-			return call_function(function->get_bindingval()->method->get_funcval(), function->get_bindingval()->value, paras[1], context);
-		case null_e:
-			// ignore null functions to prevent duplicate warnings
-			return NULL;
-		default:
-			eh_error_type("function call", function->type(), eerror_e);
-			return NULL;
 	}
-	return NULL;
+	ehretval_p function = eh_execute(paras[0], context);
+	ehretval_p ret;
+	try {
+		ret = call_function(function, nargs, new_args, context);
+	} catch(...) {
+		delete[] new_args;
+		throw;
+	}
+	delete[] new_args;
+
+	return ret;
 }
 ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 	ehretval_p ret = eh_execute(node, context);
@@ -1058,103 +1043,35 @@ ehretval_p EHI::perform_op(const char *name, const char *user_name, ehretval_p *
 	return ret;
 }
 ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context) {
-	ehretval_p func, object_data;
+	ehretval_p func;
 	if(obj->is_object()) {
 		func = obj->get_object()->get(name, context, T_LVALUE_GET)->value;
-		object_data = NULL;
 	} else {
 		ehobj_t *class_obj = this->get_primitive_class(obj->type());
 		if(class_obj == NULL) {
 			eh_error_type(name, obj->type(), enotice_e);
 			return NULL;
 		}
-		func = class_obj->get(name, context, T_LVALUE_GET)->value;
-		object_data = obj;
+		ehretval_p method = class_obj->get(name, context, T_LVALUE_GET)->value;
+		func = this->make_binding(new ehbinding_t(obj, method));
 	}
 	if(func == NULL) {
 		return NULL;
-	} else if(func->type() == func_e) {
-		return call_function_args(func->get_funcval(), object_data, nargs, args, context);
 	} else {
-		eh_error_type(name, func->type(), enotice_e);
-		return NULL;	
-	}
-}
-ehretval_p EHI::call_method_obj(ehobj_t *obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context) {
-	ehretval_p func = obj->get(name, context, T_LVALUE_GET)->value;
-	if(func == NULL) {
-		return NULL;
-	} else if(func->type() == func_e) {
-		return call_function_args(func->get_funcval(), NULL, nargs, args, context);
-	} else {
-		eh_error_type(name, func->type(), enotice_e);
-		return NULL;
+		return call_function(func, nargs, args, context);
 	}
 }
 /*
  * Functions
  */
-ehretval_p EHI::call_function(ehobj_t *obj, ehretval_p object_data, ehretval_p args, ehcontext_t context) {
-	// this is a wrapper for call_function_args; it parses the arguments and
-	// puts them in an array
-	int nargs = count_nodes(args);
-	ehretval_p *new_args = new ehretval_p[nargs]();
-	
-	for(int i = 0; args->get_opval()->nparas != 0; args = args->get_opval()->paras[0], i++) {
-		try {
-			new_args[i] = eh_execute(args->get_opval()->paras[1], context);
-		} catch(...) {
-			delete[] new_args;
-			throw;
-		}
+ehretval_p EHI::call_function(ehretval_p function, int nargs, ehretval_p *args, ehcontext_t context) {
+	// We special-case function calls on func_e and binding_e types; otherwise we'd end up in an infinite loop
+	if(function->type() != func_e && function->type() != binding_e) {
+		return call_method(function, "operator_colon", nargs, args, context);
+	} else {
+		// This one time, we call a library method directly. If you want to override Function.operator_colon, too bad.
+		return ehlm_Function_operator_colon(function, nargs, args, context, this);
 	}
-	ehretval_p ret;
-	try {
-		ret = this->call_function_args(obj, object_data, nargs, new_args, context);
-	} catch(...) {
-		delete[] new_args;
-		throw;
-	}
-	delete[] new_args;
-
-	return ret;
-}
-ehretval_p EHI::call_function_args(ehobj_t *obj, ehretval_p object_data, const int nargs, ehretval_p args[], ehcontext_t context) {
-	if(object_data == NULL) {
-		object_data = obj->get_parent()->object_data;
-	}
-	
-	ehfm_p f = obj->function;
-	if(f == NULL) {
-		eh_error("Invalid object for function call", eerror_e);
-		return NULL;
-	}
-
-	if(f->type == lib_e) {
-		return f->libmethod_pointer(object_data, nargs, args, obj->parent, this);
-	}
-	// check parameter count
-	if(nargs != f->argcount) {
-		eh_error_argcount(f->argcount, nargs);
-		return NULL;
-	}
-	ehretval_p newcontext = object_instantiate(obj, context);
-	
-	// set parameters as necessary
-	for(int i = 0; i < nargs; i++) {
-		ehmember_p var;
-		var->value = args[i];
-		newcontext->get_objectval()->insert(f->args[i].name, var);
-	}
-	// insert self variable with the object_data
-	ehmember_p self_member;
-	self_member->value = object_data;
-	newcontext->get_objectval()->insert("self", self_member);
-	
-	ehretval_p ret = eh_execute(f->code, newcontext);
-	returning = false;
-	
-	return ret;
 }
 /*
  * Classes
@@ -1164,7 +1081,6 @@ ehretval_p EHI::object_instantiate(ehobj_t *obj, ehcontext_t context) {
 	ehretval_p ret = this->make_object(new_obj);
 	new_obj->parent = obj->parent;
 	new_obj->real_parent = obj->real_parent;
-	new_obj->function = obj->function;
 	OBJECT_FOR_EACH(obj, m) {
 		new_obj->copy_member(m, false, ret, this);
 	}

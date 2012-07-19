@@ -743,6 +743,47 @@ EHLC_ENTRY(Function, operator_colon)
 END_EHLC()
 
 EH_METHOD(Function, operator_colon) {
-	ASSERT_NARGS_AND_TYPE(1, func_e, "Function.operator:");
-	return NULL;
+	// This is probably the most important library method in EH. It works
+	// on both Function and binding objects.
+	ehretval_p object_data;
+	ehfunc_t *f;
+	if(obj->type() == func_e) {
+		f = obj->get_funcval();
+		//TODO: handle method calls within objects
+		object_data = NULL;
+	} else if(obj->type() == binding_e) {
+		ehbinding_t *binding = obj->get_bindingval();
+		f = binding->method->get_funcval();
+		object_data = binding->value;
+	} else {
+		eh_error_type("base object of Function.operator:", obj->type(), enotice_e);
+		return NULL;
+	}
+
+	if(f->type == lib_e) {
+		//TODO: what should the context be?
+		return f->libmethod_pointer(object_data, nargs, args, context, ehi);
+	}
+	// check parameter count
+	if(nargs != f->argcount) {
+		eh_error_argcount(f->argcount, nargs);
+		return NULL;
+	}
+	ehretval_p newcontext = ehi->make_object(new ehobj_t("Call"));
+	newcontext->get_objectval()->parent = f->parent;
+	
+	// set parameters as necessary
+	for(int i = 0; i < nargs; i++) {
+		ehmember_p var;
+		var->value = args[i];
+		newcontext->get_objectval()->insert(f->args[i].name, var);
+	}
+	// insert self variable with the object_data
+	ehmember_p self_member;
+	self_member->value = object_data;
+	newcontext->get_objectval()->insert("self", self_member);
+	
+	ehretval_p ret = ehi->eh_execute(f->code, newcontext);
+	ehi->returning = false;
+	return ret;
 }

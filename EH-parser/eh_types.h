@@ -10,10 +10,10 @@ private:
 		switch(type) {
 			case object_e:
 			case weak_object_e:
-			case func_e:
 			case array_e:
 			case binding_e:
 			case hash_e:
+			case func_e:
 			case range_e:
 				return true;
 			default:
@@ -33,7 +33,7 @@ public:
 		struct eharray_t *arrayval;
 		struct ehobj_t *objectval;
 		struct ehobj_t *weak_objectval;
-		struct ehobj_t *funcval;
+		struct ehfunc_t *funcval;
 		struct ehrange_t *rangeval;
 		// pseudo-types for internal use
 		struct opnode_t *opval;
@@ -85,7 +85,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(attribute_enum, attribute)
 	EHRV_SET(attributes_t, attributestr)
 	EHRV_SET(struct ehobj_t *, weak_object)
-	EHRV_SET(struct ehobj_t *, func)
+	EHRV_SET(struct ehfunc_t *, func)
 	EHRV_SET(type_enum, type)
 	EHRV_SET(class LibraryBaseClass *, resource)
 	EHRV_SET(ehbinding_t *, binding)
@@ -98,11 +98,11 @@ vtype get_ ## ehtype ## val() const { \
 }
 	EHRV_GC(ehobj_t *, object)
 	EHRV_GC(ehobj_t *, weak_object)
-	EHRV_GC(ehobj_t *, func)
 	EHRV_GC(eharray_t *, array)
 	EHRV_GC(ehbinding_t *, binding)
 	EHRV_GC(ehrange_t *, range)
 	EHRV_GC(struct ehhash_t *, hash)
+	EHRV_GC(struct ehfunc_t *, func)
 #undef EHRV_GC
 
 	void overwrite(ehretval_t &in) {
@@ -144,17 +144,17 @@ vtype get_ ## ehtype ## val() const { \
 	}
 	
 	bool is_object() const {
-	  switch(this->type()) {
-	    case object_e: case weak_object_e: case func_e:
-	      return true;
-	    default:
-	      return false;
-	  }
+		switch(this->type()) {
+			case object_e: case weak_object_e: case func_e:
+				return true;
+			default:
+				return false;
+		}
 	}
 	
 	ehobj_t *get_object() const {
-	  assert(this->is_object());
-	  return this->objectval;
+		assert(this->is_object());
+		return this->objectval;
 	}
 	
 	void print();
@@ -255,24 +255,23 @@ typedef struct eharray_t {
 #define ARRAY_FOR_EACH_INT(array, varname) for(eharray_t::int_iterator varname = (array)->int_indices.begin(), end = (array)->int_indices.end(); varname != end; varname++)
 
 // struct with common infrastructure for procedures and methods
-typedef struct ehfm_t {
+typedef struct ehfunc_t {
 	functype_enum type;
 	int argcount;
 	eharg_t *args;
 	ehretval_p code;
-  ehlibmethod_t libmethod_pointer;
+	ehlibmethod_t libmethod_pointer;
+	ehretval_p parent;
 	
-	ehfm_t(functype_enum _type) : type(_type), argcount(0), args(NULL), code(), libmethod_pointer(NULL) {}
-	ehfm_t() : type(user_e), argcount(0), args(NULL), code(), libmethod_pointer(NULL) {}
+	ehfunc_t(functype_enum _type = user_e) : type(_type), argcount(0), args(NULL), code(), libmethod_pointer(NULL), parent() {}
 	
 	// we own the args thingy
-	~ehfm_t() {
+	~ehfunc_t() {
 		if(args != NULL) {
 			delete[] args;
 		}
 	}
-} ehfm_t;
-typedef refcount_ptr<ehfm_t> ehfm_p;
+} ehfunc_t;
 
 // EH object
 typedef struct ehobj_t {
@@ -283,17 +282,16 @@ public:
 	
 	// properties
 	obj_map members;
-	ehfm_p function;
 	std::string classname;
 	ehretval_p parent;
 	ehretval_p real_parent;
 	// for library classes
 	ehretval_p object_data;
-	// constructor needs it
+	// destructor needs it
 	EHI *ehi;
 
 	// constructors
-	ehobj_t(std::string _classname) : members(), function(), classname(_classname), parent(), real_parent(), object_data(NULL) {}
+	ehobj_t(std::string _classname) : members(), classname(_classname), parent(), real_parent(), object_data(NULL) {}
 
 	// method prototypes
 	ehmember_p insert_retval(const char *name, attributes_t attribute, ehretval_p value);
@@ -355,17 +353,17 @@ typedef struct ehrange_t {
 	ehretval_p max;
 	
 	ehrange_t(ehretval_p _min, ehretval_p _max) : min(_min), max(_max) {
-	  assert(min->type() == max->type());
+		assert(min->type() == max->type());
 	}
 	ehrange_t() : min(ehretval_t::make_int(0)), max(ehretval_t::make_int(0)) {}
 } ehrange_t;
 
 // method binding
 typedef struct ehbinding_t {
-  ehretval_p value;
-  ehretval_p method;
+	ehretval_p value;
+	ehretval_p method;
 
-  ehbinding_t(ehretval_p _value, ehretval_p _method) : value(_value), method(_method) {}
+	ehbinding_t(ehretval_p _value, ehretval_p _method) : value(_value), method(_method) {}
 } ehbinding_t;
 
 // hash

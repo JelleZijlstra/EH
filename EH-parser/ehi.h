@@ -35,6 +35,7 @@ private:
 		ehobj_t *Range;
 		ehobj_t *Object;
 		ehobj_t *Hash;
+		ehobj_t *Function;
 	} cache;
 
 	class EHParser *eval_parser;
@@ -80,8 +81,7 @@ private:
 	ehcmd_t get_command(const char *name);
 	void insert_command(const char *name, const ehcmd_t cmd);
 	void redirect_command(const char *redirect, const char *target);
-	ehretval_p call_function(ehobj_t *obj, ehretval_p object_data, ehretval_p args, ehcontext_t context);
-	ehretval_p call_function_args(ehobj_t *obj, ehretval_p object_data, const int nargs, ehretval_p args[], ehcontext_t context);
+	ehretval_p call_function(ehretval_p function, int nargs, ehretval_p *args, ehcontext_t context);
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
 	ehretval_p &object_access(ehretval_p name, ehretval_p index, ehcontext_t context, int token);
 	ehretval_p &colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token);
@@ -100,6 +100,7 @@ private:
 			case array_e: return this->cache.Array;
 			case range_e: return this->cache.Range;
 			case hash_e: return this->cache.Hash;
+			case func_e: return this->cache.Function;
 			default: return NULL;
 		}
 	}
@@ -130,8 +131,13 @@ public:
 }
 	EHRV_MAKE(object, ehobj_t *)
 	EHRV_MAKE(weak_object, ehobj_t *)
-	EHRV_MAKE(func, ehobj_t *)
 #undef ERHV_MAKE
+	ehretval_p make_func(ehfunc_t *in) {
+		ehretval_p out;
+		this->gc.allocate(out);
+		ehretval_t::fill_func(out, in);
+		return out;
+	}
 	ehretval_p make_binding(ehbinding_t *in) {
 		ehretval_p out;
 		this->gc.allocate(out);

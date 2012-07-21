@@ -757,13 +757,13 @@ EH_METHOD(Function, operator_colon) {
 	// on both Function and binding objects.
 	ehretval_p object_data;
 	ehfunc_t *f;
-	if(obj->type() == func_e) {
-		f = obj->get_funcval();
+	if(obj->is_a(func_e)) {
+		f = obj->get_objectval()->object_data->get_funcval();
 		//TODO: handle method calls within objects
 		object_data = NULL;
 	} else if(obj->type() == binding_e) {
 		ehbinding_t *binding = obj->get_bindingval();
-		f = binding->method->get_funcval();
+		f = binding->method->get_objectval()->object_data->get_funcval();
 		object_data = binding->value;
 	} else {
 		eh_error_type("base object of Function.operator:", obj->type(), enotice_e);
@@ -779,8 +779,9 @@ EH_METHOD(Function, operator_colon) {
 		eh_error_argcount(f->argcount, nargs);
 		return NULL;
 	}
-	ehretval_p newcontext = ehi->make_object(new ehobj_t("Call"));
-	newcontext->get_objectval()->parent = f->parent;
+	ehretval_p newcontext = ehi->make_object(new ehobj_t());
+	newcontext->get_objectval()->type_id = func_e;
+	newcontext->get_objectval()->parent = context->get_objectval()->parent;
 	
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {

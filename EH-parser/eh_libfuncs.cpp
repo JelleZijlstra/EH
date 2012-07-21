@@ -70,7 +70,8 @@ void printvar_t::retval(ehretval_p in) {
 			}
 			if(this->seen.count((void *)obj) == 0) {
 				this->seen[(void *)obj] = true;
-				printf("@object <%s> [\n", obj->classname.c_str());
+				//TODO: print the classname somehow
+				printf("@object [\n");
 				this->object(obj);
 				printf("]\n");
 			} else {
@@ -78,9 +79,10 @@ void printvar_t::retval(ehretval_p in) {
 			}
 			break;
 		}
-		case func_e:
+		case func_e: {
+			ehfunc_t *f = in->get_funcval();
 			printf("@function <");
-			switch(in->get_funcval()->function->type) {
+			switch(f->type) {
 				case user_e:
 					printf("user");
 					break;
@@ -89,13 +91,15 @@ void printvar_t::retval(ehretval_p in) {
 					break;
 			}
 			printf(">: ");
-			for(int i = 0; i < in->get_funcval()->function->argcount; i++) {
-				printf("%s", in->get_funcval()->function->args[i].name.c_str());
-				if(i + 1 < in->get_funcval()->function->argcount)
+			for(int i = 0; i < f->argcount; i++) {
+				printf("%s", f->args[i].name.c_str());
+				if(i + 1 < f->argcount) {
 					printf(", ");
+				}
 			}
 			printf("\n");
 			break;
+		}
 		case type_e:
 			printf("@type %s\n", get_typestring(in->get_typeval()));
 			break;
@@ -138,6 +142,9 @@ void printvar_t::retval(ehretval_p in) {
 				this->retval(i->second);
 			}
 			printf("]\n");
+		case base_object_e:
+			// Well hidden
+			break;
 	}
 	return;
 }
@@ -235,7 +242,8 @@ EHLIBFUNC(class_is) {
 		eh_error_type("argument 1 to class_is", args[0]->type(), enotice_e);
 		return NULL;
 	}
-	return ehretval_t::make_bool(args[0]->get_objectval()->classname.compare(args[1]->get_stringval()) == 0);
+	ehobj_t *classobj = ehi->get_class(args[1], context);
+	return ehretval_t::make_bool(args[0]->get_objectval()->type_id == classobj->type_id);
 }
 // get the type of a variable
 EHLIBFUNC(get_type) {

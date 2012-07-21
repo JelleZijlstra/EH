@@ -39,21 +39,22 @@ ehlf_listentry_t libfuncs[] = {
 typedef struct ehlc_listentry_t {
 	const char *name;
 	ehlm_listentry_t *members;
+	int type_id;
 } ehlc_listentry_t;
-#define LIBCLASSENTRY(c) { #c, ehlc_l_ ## c},
+#define LIBCLASSENTRY(c, is_core) { #c, ehlc_l_ ## c, is_core},
 ehlc_listentry_t libclasses[] = {
-	LIBCLASSENTRY(Object)
-	LIBCLASSENTRY(CountClass)
-	LIBCLASSENTRY(File)
-	LIBCLASSENTRY(Integer)
-	LIBCLASSENTRY(String)
-	LIBCLASSENTRY(Array)
-	LIBCLASSENTRY(Float)
-	LIBCLASSENTRY(Bool)
-	LIBCLASSENTRY(Null)
-	LIBCLASSENTRY(Range)
-	LIBCLASSENTRY(Hash)
-	{NULL, NULL}
+	LIBCLASSENTRY(Object, base_object_e)
+	LIBCLASSENTRY(CountClass, -1)
+	LIBCLASSENTRY(File, -1)
+	LIBCLASSENTRY(Integer, int_e)
+	LIBCLASSENTRY(String, string_e)
+	LIBCLASSENTRY(Array, array_e)
+	LIBCLASSENTRY(Float, float_e)
+	LIBCLASSENTRY(Bool, bool_e)
+	LIBCLASSENTRY(Null, null_e)
+	LIBCLASSENTRY(Range, range_e)
+	LIBCLASSENTRY(Hash, hash_e)
+	{NULL, NULL, 0}
 };
 
 typedef struct ehcmd_listentry_t {
@@ -132,26 +133,42 @@ static inline int count_nodes(const ehretval_p node);
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), is_strange_arrow(false), buffer(NULL), gc(), returning(false), global_object() {
+EHI::EHI() : repo(), eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), is_strange_arrow(false), buffer(NULL), gc(), returning(false), global_object() {
 	eh_init();
 }
 void EHI::eh_init(void) {
-	global_object = this->make_object(new ehobj_t("AnonymousClass"));
+	global_object = this->make_object(new ehobj_t());
 	
 	for(int i = 0; libfuncs[i].code != NULL; i++) {
 		ehmember_p func;
+		ehobj_t *obj = new ehobj_t();
+		obj->type_id = func_e;
+		obj->parent = global_object;
 		ehfunc_t *f = new ehfunc_t(lib_e);
-		func->value = this->make_func(f);
-		f->parent = global_object;
 		f->libmethod_pointer = libfuncs[i].code;
+		obj->object_data = ehretval_t::make_func(f);
+		func->value = this->make_object(obj);
 		global_object->get_objectval()->insert(libfuncs[i].name, func);
 	}
+	ehobj_t *base_object;
 	for(int i = 0; libclasses[i].name != NULL; i++) {
-		ehobj_t *newclass = new ehobj_t(libclasses[i].name);
+		ehobj_t *newclass = new ehobj_t();
 		ehretval_p new_value = this->make_object(newclass);
-		// inherit from Object
-		if(strcmp(libclasses[i].name, "Object") != 0) {
-			OBJECT_FOR_EACH(this->cache.Object, member) {
+		// register class
+		int type_id;
+		if(libclasses[i].type_id == -1) {
+			type_id = this->repo.register_class(libclasses[i].name, new_value);
+		} else {
+			type_id = libclasses[i].type_id;
+			this->repo.register_known_class(type_id, libclasses[i].name, new_value);
+		}
+		newclass->type_id = type_id;
+
+		// inherit from Object. This relies on Object always being the first library class loaded
+		if(libclasses[i].type_id == base_object_e) {
+			base_object = newclass;
+		} else {
+			OBJECT_FOR_EACH(base_object, member) {
 				newclass->copy_member(member, false, new_value, this);
 			}
 		}
@@ -161,10 +178,12 @@ void EHI::eh_init(void) {
 		for(int i = 0; members[i].name != NULL; i++) {
 			ehmember_p func;
 			func->attribute = attributes;
+			ehobj_t *function_object = new ehobj_t();
+			func->value = this->make_object(function_object);
+			function_object->parent = new_value;
 			ehfunc_t *f = new ehfunc_t(lib_e);
-			func->value = this->make_func(f);
-			f->parent = new_value;
 			f->libmethod_pointer = members[i].func;
+			function_object->object_data = ehretval_t::make_func(f);
 			newclass->insert(members[i].name, func);
 		}
 		ehmember_p member;
@@ -172,31 +191,7 @@ void EHI::eh_init(void) {
 		attributes.isconst = const_e;
 		member->attribute = attributes;
 		member->value = new_value;
-		global_object->get_objectval()->insert(newclass->classname, member);
-
-		// insert into our cache
-		const char *name = libclasses[i].name;
-		if(strcmp(name, "String") == 0) {
-			this->cache.String = newclass;
-		} else if(strcmp(name, "Integer") == 0) {
-			this->cache.Integer = newclass;
-		} else if(strcmp(name, "Float") == 0) {
-			this->cache.Float = newclass;
-		} else if(strcmp(name, "Bool") == 0) {
-			this->cache.Bool = newclass;
-		} else if(strcmp(name, "Null") == 0) {
-			this->cache.Null = newclass;
-		} else if(strcmp(name, "Array") == 0) {
-			this->cache.Array = newclass;
-		} else if(strcmp(name, "Range") == 0) {
-			this->cache.Range = newclass;
-		} else if(strcmp(name, "Object") == 0) {
-			this->cache.Object = newclass;
-		} else if(strcmp(name, "Hash") == 0) {
-			this->cache.Hash = newclass;
-		} else if(strcmp(name, "Function") == 0) {
-			this->cache.Function = newclass;
-		}
+		global_object->get_objectval()->insert(libclasses[i].name, member);
 	}
 	for(int i = 0; libcmds[i].name != NULL; i++) {
 		insert_command(libcmds[i].name, libcmds[i].cmd);
@@ -208,9 +203,8 @@ void EHI::eh_init(void) {
 	attributes_t attributes = attributes_t::make(public_e, nonstatic_e, const_e);
 	ehmember_p global;
 	global->attribute = attributes;
-	global->value = this->make_weak_object(global_object->get_objectval());
+	global->value = global_object;
 	global_object->get_objectval()->insert("global", global);
-	return;
 }
 void EHI::eh_exit(void) {
 	if(this->eval_parser != NULL) {
@@ -634,7 +628,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 
 	// get the object to be looped through and check its type
 	ehretval_p object = eh_execute(op->paras[0], context);
-	if(object->type() != array_e && object->type() != object_e && object->type() != weak_object_e) {
+	if(object->type() != array_e && object->type() != object_e) {
 		eh_error_type("for ... as operator", object->type(), enotice_e);
 		return ret;
 	}
@@ -662,7 +656,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	if(indexname != NULL) {
 		indexvar = context->get_objectval()->get_recursive(indexname, context, T_LVALUE_SET);
 	}
-	if(object->type() == object_e || object->type() == weak_object_e) {
+	if(object->type() == object_e) {
 		// check whether we're allowed to access private things
 		const bool doprivate = object->get_objectval()->context_compare(context);
 		OBJECT_FOR_EACH(object->get_objectval(), curr) {
@@ -779,8 +773,11 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehfunc_t *f = new ehfunc_t(user_e);
-	ehretval_p ret = this->make_func(f);
-	f->parent = context;
+	ehretval_p object_data = ehretval_t::make_func(f);
+	ehobj_t *function_object = new ehobj_t;
+	ehretval_p ret = this->make_object(function_object);
+	function_object->parent = context;
+	function_object->object_data = object_data;
 	f->code = paras[1];
 
 	// determine argument count
@@ -799,28 +796,32 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
+	// create the ehretval_t
+	ehretval_p ret = this->make_object(new ehobj_t());
+
 	// process parameters
-	const char *name;
 	ehretval_p code;
+	int type_id;
+	const char *name;
 	if(op->nparas == 2) {
 		name = eh_execute(op->paras[0], context)->get_stringval();
+		type_id = this->repo.register_class(name, ret);
 		code = op->paras[1];
 	} else {
-		name = "AnonymousClass";
+		type_id = base_object_e;
 		code = op->paras[0];
 	}
 
-	// create the ehretval_t
-	ehretval_p ret = this->make_object(new ehobj_t(name));
+	ret->get_objectval()->type_id = type_id;
 	ret->get_objectval()->parent = context;
 
 	// insert "this" pointer
 	attributes_t thisattributes = attributes_t::make(private_e, nonstatic_e, const_e);
-	ehretval_p thisvalue = this->make_weak_object(ret->get_objectval());
-	ret->get_objectval()->insert_retval("this", thisattributes, thisvalue);
+	ret->get_objectval()->insert_retval("this", thisattributes, ret);
 
 	// inherit from Object
-	OBJECT_FOR_EACH(this->cache.Object, member) {
+	ehobj_t *object_class = this->repo.get_object(base_object_e)->get_objectval();
+	OBJECT_FOR_EACH(object_class, member) {
 		ret->get_objectval()->copy_member(member, false, ret, this);
 	}
 
@@ -1066,19 +1067,20 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretva
  */
 ehretval_p EHI::call_function(ehretval_p function, int nargs, ehretval_p *args, ehcontext_t context) {
 	// We special-case function calls on func_e and binding_e types; otherwise we'd end up in an infinite loop
-	if(function->type() != func_e && function->type() != binding_e) {
-		return call_method(function, "operator_colon", nargs, args, context);
-	} else {
+	if(function->type() == binding_e || function->is_a(func_e)) {
 		// This one time, we call a library method directly. If you want to override Function.operator_colon, too bad.
 		return ehlm_Function_operator_colon(function, nargs, args, context, this);
+	} else {
+		return call_method(function, "operator_colon", nargs, args, context);
 	}
 }
 /*
  * Classes
  */
 ehretval_p EHI::object_instantiate(ehobj_t *obj, ehcontext_t context) {
-	ehobj_t *new_obj = new ehobj_t(obj->classname);
+	ehobj_t *new_obj = new ehobj_t();
 	ehretval_p ret = this->make_object(new_obj);
+	new_obj->type_id = obj->type_id;
 	new_obj->parent = obj->parent;
 	new_obj->real_parent = obj->real_parent;
 	OBJECT_FOR_EACH(obj, m) {
@@ -1104,19 +1106,13 @@ ehretval_p &EHI::object_access(ehretval_p operand1, ehretval_p index, ehcontext_
 			} else {
 				throw unknown_value_exception();
 			}
-		case weak_object_e:
 		case object_e: {
 			label = eh_execute(index, context);
 			if(label->type() != string_e) {
 				eh_error_type("object member label", label->type(), eerror_e);
 				throw unknown_value_exception();
 			}
-			ehobj_t *obj;
-			if(var->value->type() == object_e) {
-				obj = var->value->get_objectval();
-			} else {
-				obj = var->value->get_weak_objectval();
-			}
+			ehobj_t *obj = var->value->get_objectval();
 			member = obj->get(label->get_stringval(), context, token);
 			if(member == NULL) {
 				throw unknown_value_exception();
@@ -1162,16 +1158,15 @@ ehobj_t *EHI::get_class(ehretval_p classname, ehcontext_t context) {
 				eh_error_unknown("class", classname->get_stringval(), eerror_e);
 				return NULL;
 			}
-			if(member->value->type() != object_e && member->value->type() != weak_object_e) {
+			if(member->value->type() != object_e) {
 				eh_error_type("class", member->value->type(), eerror_e);
 				return NULL;
 			}
 			classobj = member->value->get_object();
 			break;
 		}
-		case weak_object_e:
 		case object_e:
-			classobj = classname->get_object();
+			classobj = classname->get_objectval();
 			break;
 		default:
 			eh_error_type("class name", classname->type(), eerror_e);

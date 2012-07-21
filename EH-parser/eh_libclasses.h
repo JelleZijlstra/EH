@@ -165,6 +165,22 @@ EXTERN_EHLC(Hash)
 /*
  * Function class
  */
+class Function : public LibraryBaseClass {
+	functype_enum type;
+	int argcount;
+	eharg_t *args;
+	ehretval_p code;
+	ehlibmethod_t libmethod_pointer;
+	
+	Function(functype_enum _type = user_e) : type(_type), argcount(0), args(NULL), code(), libmethod_pointer(NULL) {}
+	
+	// we own the args thingy
+	~Function() {
+		if(args != NULL) {
+			delete[] args;
+		}
+	}	
+};
 EH_METHOD(Function, operator_colon);
 
 EXTERN_EHLC(Function)

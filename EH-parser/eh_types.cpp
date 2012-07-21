@@ -54,7 +54,6 @@ std::list<ehretval_p> ehretval_t::children() {
 			// ignored for GC purposes
 			break;
 		case func_e:
-			out.push_back(this->get_funcval()->parent);
 			break;
 		case array_e:
 			ARRAY_FOR_EACH_INT(this->get_arrayval(), i) {
@@ -110,6 +109,13 @@ bool ehretval_t::equals(ehretval_p rhs) {
 			return false;
 	}
 }
+bool ehretval_t::is_a(int in) {
+	if(this->type() == in) {
+		return true;
+	} else {
+		return this->type() == object_e && this->get_objectval()->object_data->type() == in;
+	}
+}
 ehretval_t::~ehretval_t() {
 	switch(_type) {
 		// Simple types; nothing to do
@@ -120,6 +126,7 @@ ehretval_t::~ehretval_t() {
 		case null_e:
 		case attribute_e:
 		case attributestr_e:
+		case base_object_e:
 			break;
 		case op_e:
 			delete this->opval;
@@ -273,23 +280,22 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent, ehret
 		// handle $this pointer
 		newmember->attribute = classmember->second->attribute;
 		newmember->value = ehi->make_weak_object(this);
-	} else if(classmember->second->isstatic() || (classmember->second->isconst() && classmember->second->value->type() != func_e)) {
+	} else if(classmember->second->isstatic() || (classmember->second->isconst() && !classmember->second->value->is_a(func_e))) {
 		// we can safely share static members, as well as const members that are not functions
 		newmember = classmember->second;
 	} else {
 		newmember->attribute = classmember->second->attribute;
-		if(classmember->second->value->type() == func_e) {
-			ehobj_t *oldobj = classmember->second->value->get_funcval();
-			ehobj_t *f = new ehobj_t(oldobj->classname);
-			newmember->value = ehi->make_func(f);
-			f->parent = ret;
+		if(classmember->second->value->is_a(func_e)) {
+			ehobj_t *oldobj = classmember->second->value->get_objectval();
+			ehobj_t *obj = new ehobj_t();
+			obj->type_id = func_e;
+			newmember->value = ehi->make_object(obj);
+			obj->parent = ret;
 			if(set_real_parent && oldobj->real_parent == NULL) {
-				f->real_parent = oldobj->get_parent()->parent;
+				obj->real_parent = oldobj->get_parent()->parent;
 			} else {
-				f->real_parent = oldobj->real_parent;
+				obj->real_parent = oldobj->real_parent;
 			}
-			f->function = oldobj->function;
-			f->members = oldobj->members;
 		} else {
 			newmember->value = classmember->second->value;
 		}
@@ -301,7 +307,7 @@ bool ehobj_t::context_compare(const ehcontext_t key) const {
 	if(ehretval_p::null(key) || key->get_objectval()->get_parent() == NULL) {
 		return false;
 	} else {
-		if(this->classname.compare(key->get_objectval()->classname) == 0) {
+		if(this->type_id == key->get_objectval()->type_id) {
 			return true;
 		} else {
 			return this->context_compare(key->get_objectval()->parent);

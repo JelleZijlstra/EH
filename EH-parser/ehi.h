@@ -24,19 +24,7 @@ typedef enum {
 
 class EHI {
 private:
-	// cache of commonly used classes
-	struct {
-		ehobj_t *Integer;
-		ehobj_t *Float;
-		ehobj_t *Bool;
-		ehobj_t *Null;
-		ehobj_t *String;
-		ehobj_t *Array;
-		ehobj_t *Range;
-		ehobj_t *Object;
-		ehobj_t *Hash;
-		ehobj_t *Function;
-	} cache;
+	type_repository repo;
 
 	class EHParser *eval_parser;
 	void init_eval_parser();
@@ -85,27 +73,16 @@ private:
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
 	ehretval_p &object_access(ehretval_p name, ehretval_p index, ehcontext_t context, int token);
 	ehretval_p &colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token);
-	ehobj_t *get_class(ehretval_p code, ehcontext_t context);
 	ehretval_p eh_rangetoarray(const ehrange_t *const range);
 	ehretval_p eh_xtoarray(ehretval_p in);
 	ehretval_p eh_cast(const type_enum type, ehretval_p in, ehcontext_t context);
 
 	ehobj_t *get_primitive_class(type_enum in) {
-		switch(in) {
-			case int_e: return this->cache.Integer;
-			case float_e: return this->cache.Float;
-			case bool_e: return this->cache.Bool;
-			case null_e: return this->cache.Null;
-			case string_e: return this->cache.String;
-			case array_e: return this->cache.Array;
-			case range_e: return this->cache.Range;
-			case hash_e: return this->cache.Hash;
-			case func_e: return this->cache.Function;
-			default: return NULL;
-		}
+		return this->repo.get_object(in)->get_objectval();
 	}
 
 public:
+	ehobj_t *get_class(ehretval_p code, ehcontext_t context);
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
 	bool returning;
@@ -132,12 +109,6 @@ public:
 	EHRV_MAKE(object, ehobj_t *)
 	EHRV_MAKE(weak_object, ehobj_t *)
 #undef ERHV_MAKE
-	ehretval_p make_func(ehfunc_t *in) {
-		ehretval_p out;
-		this->gc.allocate(out);
-		ehretval_t::fill_func(out, in);
-		return out;
-	}
 	ehretval_p make_binding(ehbinding_t *in) {
 		ehretval_p out;
 		this->gc.allocate(out);

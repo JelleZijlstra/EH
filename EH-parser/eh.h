@@ -28,25 +28,26 @@
  * Enums used in the parser and interpreter
  */
 
-typedef enum type_enum {
+enum type_enum {
 	null_e = 0,
 	string_e = 1,
 	int_e = 2,
 	bool_e = 3,
-	type_e = 5, // for internal use with type casting
-	array_e,
-	hash_e,
-	func_e, // methods
-	object_e,
-	weak_object_e,
-	op_e,
-	attribute_e,
-	attributestr_e,
-	range_e,
-	float_e,
-	resource_e,
-	binding_e
-} type_enum;
+	type_e = 4, // for internal use with type casting
+	array_e = 5,
+	hash_e = 6,
+	func_e = 7, // methods
+	object_e = 8,
+	weak_object_e = 9,
+	op_e = 10,
+	attribute_e = 11,
+	attributestr_e = 12,
+	range_e = 13,
+	float_e = 14,
+	resource_e = 15,
+	binding_e = 16,
+	base_object_e = 17
+};
 
 // attributes of class members
 typedef enum visibility_enum {

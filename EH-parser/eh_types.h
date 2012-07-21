@@ -13,7 +13,6 @@ private:
 			case array_e:
 			case binding_e:
 			case hash_e:
-			case func_e:
 			case range_e:
 				return true;
 			default:
@@ -43,6 +42,7 @@ public:
 		class LibraryBaseClass *resourceval;
 		struct ehbinding_t *bindingval;
 		struct ehhash_t *hashval;
+		void *base_objectval;
 	};
 	// constructors
 	ehretval_t() : _type(null_e) {}
@@ -125,6 +125,7 @@ vtype get_ ## ehtype ## val() const { \
 			COPY(resource);
 			COPY(binding);
 			COPY(hash);
+			COPY(base_object);
 			case null_e: break;
 #undef COPY
 		}
@@ -145,7 +146,7 @@ vtype get_ ## ehtype ## val() const { \
 	
 	bool is_object() const {
 		switch(this->type()) {
-			case object_e: case weak_object_e: case func_e:
+			case object_e: case weak_object_e:
 				return true;
 			default:
 				return false;
@@ -156,6 +157,8 @@ vtype get_ ## ehtype ## val() const { \
 		assert(this->is_object());
 		return this->objectval;
 	}
+	
+	bool is_a(int in);
 	
 	void print();
 	bool equals(ehretval_p rhs);
@@ -254,25 +257,6 @@ typedef struct eharray_t {
 #define ARRAY_FOR_EACH_STRING(array, varname) for(eharray_t::string_iterator varname = (array)->string_indices.begin(), end = (array)->string_indices.end(); varname != end; varname++)
 #define ARRAY_FOR_EACH_INT(array, varname) for(eharray_t::int_iterator varname = (array)->int_indices.begin(), end = (array)->int_indices.end(); varname != end; varname++)
 
-// struct with common infrastructure for procedures and methods
-typedef struct ehfunc_t {
-	functype_enum type;
-	int argcount;
-	eharg_t *args;
-	ehretval_p code;
-	ehlibmethod_t libmethod_pointer;
-	ehretval_p parent;
-	
-	ehfunc_t(functype_enum _type = user_e) : type(_type), argcount(0), args(NULL), code(), libmethod_pointer(NULL), parent() {}
-	
-	// we own the args thingy
-	~ehfunc_t() {
-		if(args != NULL) {
-			delete[] args;
-		}
-	}
-} ehfunc_t;
-
 // EH object
 typedef struct ehobj_t {
 public:
@@ -282,16 +266,18 @@ public:
 	
 	// properties
 	obj_map members;
-	std::string classname;
+	// the object's state data
+	ehretval_p object_data;
+	// the type
+	int type_id;
+	// for scoping
 	ehretval_p parent;
 	ehretval_p real_parent;
-	// for library classes
-	ehretval_p object_data;
 	// destructor needs it
 	EHI *ehi;
 
 	// constructors
-	ehobj_t(std::string _classname) : members(), classname(_classname), parent(), real_parent(), object_data(NULL) {}
+	ehobj_t() : members(), object_data(NULL), type_id(null_e), parent(), real_parent() {}
 
 	// method prototypes
 	ehmember_p insert_retval(const char *name, attributes_t attribute, ehretval_p value);
@@ -347,6 +333,28 @@ private:
 } ehobj_t;
 #define OBJECT_FOR_EACH(obj, varname) for(ehobj_t::obj_iterator varname = (obj)->members.begin(), end = (obj)->members.end(); varname != end; varname++)
 
+/*
+ * EH functions. Unlike other primitive types, functions must always be wrapped
+ * in objects in order to preserve scope.
+ */
+typedef struct ehfunc_t {
+	functype_enum type;
+	int argcount;
+	eharg_t *args;
+	ehretval_p code;
+	ehlibmethod_t libmethod_pointer;
+	
+	ehfunc_t(functype_enum _type = user_e) : type(_type), argcount(0), args(NULL), code(), libmethod_pointer(NULL) {}
+	
+	// we own the args thingy
+	~ehfunc_t() {
+		if(args != NULL) {
+			delete[] args;
+		}
+	}
+} ehfunc_t;
+
+
 // range
 typedef struct ehrange_t {
 	ehretval_p min;
@@ -394,4 +402,46 @@ public:
 	}
 } ehhash_t;
 #define HASH_FOR_EACH(obj, varname) for(ehhash_t::hash_iterator varname = (obj)->begin_iterator(), end = (obj)->end_iterator(); varname != end; varname++)
+
+class type_repository {
+private:
+	std::map<int, std::string> id_to_string;
+	std::map<int, ehretval_p> id_to_object;
+	int next_available;
+	
+	const static int first_user_type = 18;
+public:
+	
+	void register_known_class(int id, std::string name, ehretval_p object) {
+		assert(id < first_user_type);
+		id_to_string[id] = name;
+		id_to_object[id] = object;
+	}
+	
+	int register_class(std::string name, ehretval_p object) {
+		id_to_string[next_available] = name;
+		id_to_object[next_available] = object;
+		next_available++;
+		return next_available - 1;
+	}
+	
+	std::string get_name(int id) {
+		if(id_to_string.count(id) == 1) {
+			return id_to_string[id];
+		} else {
+			assert(false);
+			return NULL;
+		}
+	}
+	ehretval_p get_object(int id) {
+		if(id_to_object.count(id) == 1) {
+			return id_to_object[id];
+		} else {
+			assert(false);
+			return NULL;
+		}
+	}
+	
+	type_repository() : id_to_string(), id_to_object(), next_available(first_user_type) {}
+};
 

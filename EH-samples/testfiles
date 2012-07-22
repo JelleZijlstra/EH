@@ -146,3 +146,4 @@ operatornames.eh
 self.eh
 monkeypatch.eh
 overload_colon.eh
+more_colon.eh

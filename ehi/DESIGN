@@ -1,0 +1,21 @@
+For classes, we have a repository that, based on type_enum, holds information on classes. When a class is created, we assign it the next available number from the pool, and that number is what's actually stored in its object_data. We retire the classname. Operations like instanceof and context_compare can use the number.
+
+There are four possible kinds of procedure calls:
+- Library methods on pseudo-objects (e.g., "foo".length:)
+- Library methods on actual objects (e.g., class Foo{}; Foo.new:)
+- User methods on pseudo-objects (e.g. Array.size = func: -> self.length:)
+- User methods on real objects (e.g. class Foo { public bar: { printvar: this; }}
+
+In the second case, the library method should get the object in its context argument, and the object_data in its obj argument. This should also work with something like:
+class Foo {
+	private static count = 0
+	public factory: {
+		count = count + 1
+		new:
+	}
+}
+In that case, we should be smart enough to associate the context with the object. In fact, that would be done by using "bindings" more generally.
+
+For the first case, we should send the library class itself as the context.
+
+For user methods, we create a new context object with the object as a parent scope, and a convenience $this variable that refers to it, as well as a self variable representing this->object_data.

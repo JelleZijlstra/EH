@@ -154,3 +154,5 @@ fun.eh
 throw.eh
 uncaught.eh
 mythrow.eh
+catchthem.eh
+exception.eh

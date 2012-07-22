@@ -785,6 +785,7 @@ EH_METHOD(Function, operator_colon) {
 		return NULL;
 	}
 	ehretval_p newcontext = ehi->object_instantiate(function_object->get_objectval(), context);
+	newcontext->get_objectval()->object_data = function_object->get_objectval()->object_data;
 	newcontext->get_objectval()->type_id = func_e;
 	newcontext->get_objectval()->parent = parent;
 	newcontext->get_objectval()->real_parent = real_parent;

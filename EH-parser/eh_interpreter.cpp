@@ -782,6 +782,10 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	function_object->object_data = object_data;
 	f->code = paras[1];
 
+	// insert "scope" pointer
+	attributes_t thisattributes = attributes_t::make(private_e, nonstatic_e, const_e);
+	ret->get_objectval()->insert_retval("scope", thisattributes, ret);
+
 	// determine argument count
 	f->argcount = count_nodes(paras[0]);
 	// if there are no arguments, the arglist can be NULL

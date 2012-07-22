@@ -282,6 +282,10 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent, ehret
 		// handle $this pointer
 		newmember->attribute = classmember->second->attribute;
 		newmember->value = ehi->make_weak_object(this);
+	} else if(classmember->first.compare("scope") == 0) {
+		// handle $scope pointer
+		newmember->attribute = classmember->second->attribute;
+		newmember->value = ret;
 	} else if(classmember->second->isstatic() || (classmember->second->isconst() && !classmember->second->value->is_a(func_e))) {
 		// we can safely share static members, as well as const members that are not functions
 		newmember = classmember->second;

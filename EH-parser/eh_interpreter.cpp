@@ -133,7 +133,7 @@ static inline int count_nodes(const ehretval_p node);
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHI::EHI() : repo(), eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), is_strange_arrow(false), buffer(NULL), gc(), returning(false), global_object() {
+EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), is_strange_arrow(false), buffer(NULL), gc(), returning(false), repo(), global_object() {
 	eh_init();
 }
 void EHI::eh_init(void) {
@@ -988,8 +988,9 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 			ehretval_p *args = new ehretval_p[2]();
 			args[0] = eh_execute(internal_paras[1], context);
 			args[1] = rvalue;
-			return call_method(base_var, "operator_arrow_equals", 2, args, context);
+			ehretval_p ret = call_method(base_var, "operator_arrow_equals", 2, args, context);
 			delete[] args;
+			return ret;
 		}
 		case '.': {
 			// This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.

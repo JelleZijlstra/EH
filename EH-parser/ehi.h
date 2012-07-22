@@ -23,8 +23,6 @@ typedef enum {
 #define VARTABLE_S 1024
 
 class EHI {
-public:
-	type_repository repo;
 private:
 	class EHParser *eval_parser;
 	void init_eval_parser();
@@ -86,6 +84,7 @@ public:
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
 	bool returning;
+	type_repository repo;
 	ehretval_p global_object;
 
 	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);

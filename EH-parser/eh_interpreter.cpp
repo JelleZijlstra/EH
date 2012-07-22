@@ -1215,51 +1215,6 @@ void EHI::redirect_command(const char *redirect, const char *target) {
 	insert_command(redirect, targetcmd);
 }
 
-/*****************************************
- * Functions outside the EHI object.		 *
- *****************************************/
-/*
- * Opcode handlers.
- */
-ehretval_p EHI::eh_op_tilde(ehretval_p in, ehcontext_t context) {
-	// no const argument because it's modified below
-	switch(in->type()) {
-		// bitwise negation of a bool is just normal negation
-		case bool_e:
-			return ehretval_t::make_bool(!in->get_boolval());
-		// else try to cast to int
-		default:
-			in = this->to_int(in, context);
-			if(in->type() != int_e) {
-				eh_error_type("bitwise negation", in->type(), eerror_e);
-				return NULL;
-			}
-			// fall through to int case
-		case int_e:
-			return ehretval_t::make_int(~in->get_intval());
-	}
-	return NULL;
-}
-ehretval_p EHI::eh_op_uminus(ehretval_p in, ehcontext_t context) {
-	switch(in->type()) {
-		// negation
-		case bool_e:
-			return ehretval_t::make_bool(!in->get_boolval());
-		case float_e:
-			return ehretval_t::make_float(-in->get_floatval());
-		default:
-			in = this->to_int(in, context);
-			if(in->type() != int_e) {
-				eh_error_type("negation", in->type(), eerror_e);
-				return NULL;
-			}
-			// fall through to int case
-		case int_e:
-			return ehretval_t::make_int(-in->get_intval());
-	}
-	return NULL;
-}
-
 /*
  * Type casting
  */
@@ -1279,7 +1234,7 @@ ehretval_p EHI::eh_cast(const type_enum type, ehretval_p in, ehcontext_t context
 }
 
 /*
- * Other types
+ * Helper
  */
 static inline int count_nodes(const ehretval_p node) {
 	// count a list like an argument list. Assumes correct layout.

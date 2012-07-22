@@ -112,3 +112,36 @@ public:
 		}
 	}
 };
+
+template<class T>
+class unique_ptr {
+private:
+	T *pointer;
+public:
+	unique_ptr() {
+		this->pointer = NULL;
+	}
+	unique_ptr(T *rhs) {
+		this->pointer = rhs;
+	}
+	
+	unique_ptr operator=(const T *&rhs) {
+		delete this->pointer;
+		this->pointer = rhs;
+	}
+
+	T *operator->() {
+		return pointer;
+	}
+	T *operator*() {
+		return pointer;
+	}
+	T &operator[](int i) {
+		return pointer[i];
+	}
+
+	~unique_ptr() {
+		// no need to check for NULL - delete automatically ignores it
+		delete this->pointer;
+	}
+};

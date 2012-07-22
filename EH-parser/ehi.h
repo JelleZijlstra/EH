@@ -69,8 +69,6 @@ private:
 	void redirect_command(const char *redirect, const char *target);
 	ehretval_p call_function(ehretval_p function, int nargs, ehretval_p *args, ehcontext_t context);
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
-	ehretval_p &object_access(ehretval_p name, ehretval_p index, ehcontext_t context, int token);
-	ehretval_p &colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token);
 	ehretval_p eh_rangetoarray(const ehrange_t *const range);
 	ehretval_p eh_xtoarray(ehretval_p in);
 	ehretval_p eh_cast(const type_enum type, ehretval_p in, ehcontext_t context);

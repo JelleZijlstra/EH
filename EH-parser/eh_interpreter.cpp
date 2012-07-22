@@ -1046,6 +1046,9 @@ ehretval_p EHI::perform_op(const char *name, const char *user_name, ehretval_p *
 	delete[] args;
 	return ret;
 }
+/*
+ * Functions
+ */
 ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context) {
 	ehretval_p func = NULL;
 	if(obj->is_object()) {
@@ -1067,9 +1070,6 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretva
 		return call_function(func, nargs, args, context);
 	}
 }
-/*
- * Functions
- */
 ehretval_p EHI::call_function(ehretval_p function, int nargs, ehretval_p *args, ehcontext_t context) {
 	// We special-case function calls on func_e and binding_e types; otherwise we'd end up in an infinite loop
 	if(function->type() == binding_e || function->is_a(func_e)) {
@@ -1095,66 +1095,6 @@ ehretval_p EHI::object_instantiate(ehobj_t *obj, ehcontext_t context) {
 		new_obj->copy_member(m, false, ret, this);
 	}
 	return ret;
-}
-ehretval_p &EHI::object_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token) {
-	ehmember_p member;
-
-	ehmember_p var = context->get_objectval()->get_recursive(operand1->get_stringval(), context, T_LVALUE_GET);
-	if(var == NULL) {
-		eh_error("cannot access member of nonexistent variable", eerror_e);
-		throw unknown_value_exception();
-	}
-	ehretval_p label;
-
-	switch(var->value->type()) {
-		case array_e:
-			label = eh_execute(index, context);
-			if(var->value->get_arrayval()->has(label) or (token == T_LVALUE_SET)) {
-				return var->value->get_arrayval()->operator[](label);
-			} else {
-				throw unknown_value_exception();
-			}
-		case object_e: {
-			label = eh_execute(index, context);
-			if(label->type() != string_e) {
-				eh_error_type("object member label", label->type(), eerror_e);
-				throw unknown_value_exception();
-			}
-			ehobj_t *obj = var->value->get_objectval();
-			member = obj->get(label->get_stringval(), context, token);
-			if(member == NULL) {
-				throw unknown_value_exception();
-			} else {
-				return member->value;
-			}
-			break;
-		}
-		default:
-			this->is_strange_arrow = true;
-			return var->value;
-	}
-	throw unknown_value_exception();
-}
-ehretval_p &EHI::colon_access(ehretval_p operand1, ehretval_p index, ehcontext_t context, int token) {
-	ehretval_p label = eh_execute(index, context);
-	if(label->type() != string_e) {
-		eh_error_type("object member label", label->type(), eerror_e);
-		throw unknown_value_exception();
-	}
-
-	ehobj_t *classobj = this->get_class(operand1, context);
-	if(classobj == NULL) {
-		throw unknown_value_exception();
-	}
-	ehmember_p member = classobj->get(label->get_stringval(), context, token);
-	if(member == NULL) {
-		if(token == T_LVALUE_GET) {
-			eh_error_unknown("object member", label->get_stringval(), eerror_e);		
-		}
-		throw unknown_value_exception();
-	} else {
-		return member->value;
-	}
 }
 ehobj_t *EHI::get_class(ehretval_p classname, ehcontext_t context) {
 	ehobj_t *classobj;

@@ -1,4 +1,0 @@
-@hash [
-'foo': @string 'bar'
-'test': @int 2
-]

@@ -1,9 +1,0 @@
-foo
-@array [
-'test' => @string 'foo'
-]
-@array [
-'baz' => @string 'bah'
-'foo' => @string 'bar'
-]
-2

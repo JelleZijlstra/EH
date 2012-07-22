@@ -25,7 +25,7 @@ require_once(BPATH . '/Common/EHException.php');
 // load interface
 require_once(BPATH . '/Common/EHICore.interface.php');
 // try to get the C++ EHI loaded
-require_once(BPATH . "/EH-parser/EHICore-SWIG.php");
+require_once(BPATH . "/../EH/EH-parser/EHICore-SWIG.php");
 // if we failed, use pure-PHP solutions
 if(extension_loaded("ehphp")) {
 	define('EHI_LOADED', 1);

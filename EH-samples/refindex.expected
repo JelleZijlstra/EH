@@ -1,7 +1,0 @@
-Invalid value for argument 0 to String.operator->=: EH notice
-@string 'foo'
-@int 3
-Invalid value for argument 0 to String.operator->: EH notice
-(null)
-No such object member: operator_arrow: EH notice
-(null)

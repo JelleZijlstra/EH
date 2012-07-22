@@ -1,8 +1,0 @@
-@string 'foo'
-@int 1
-@string 'foo'
-@int 3
-@array [
-'foo' => @int 1
-]
-@int 1

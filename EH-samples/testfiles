@@ -145,3 +145,4 @@ constructorargs.eh
 operatornames.eh
 self.eh
 monkeypatch.eh
+overload_colon.eh

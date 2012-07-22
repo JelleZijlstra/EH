@@ -152,3 +152,4 @@ preserve_scope.eh
 binary_operators.eh
 fun.eh
 throw.eh
+uncaught.eh

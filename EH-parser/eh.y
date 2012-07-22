@@ -106,7 +106,12 @@ global_list:
 	| statement				{
 								EHParser *parser = yyget_extra(scanner);
 								ehretval_p statement = ehretval_t::make($1);
-								ehretval_p ret = parser->_parent->eh_execute(statement, parser->_parent->global_object);
+								ehretval_p ret;
+								try {
+									ret = parser->_parent->eh_execute(statement, parser->_parent->global_object);
+								} catch(eh_exception &e) {
+									std::cerr << "Uncaught exception: " << parser->_parent->to_string(e.content, parser->_parent->global_object)->get_stringval() << std::endl;
+								}
 								// flush stdout after executing each statement
 								fflush(stdout);
 								if(parser->_parent->returning) {

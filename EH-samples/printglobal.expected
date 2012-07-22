@@ -147,4 +147,5 @@ is_string <public,non-static,non-constant>: @function <library>:
 log <public,non-static,non-constant>: @function <library>: 
 pow <public,non-static,non-constant>: @function <library>: 
 printvar <public,non-static,non-constant>: @function <library>: 
+throw <public,non-static,non-constant>: @function <library>: 
 ]

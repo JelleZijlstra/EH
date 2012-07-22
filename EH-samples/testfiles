@@ -153,3 +153,4 @@ binary_operators.eh
 fun.eh
 throw.eh
 uncaught.eh
+mythrow.eh

@@ -8,6 +8,7 @@
 try {
 	include_once(BPATH . "/EH-parser/ehphp.php");
 } catch(EHException $e) {
+	echo $e;
 	return;
 }
 if(extension_loaded("ehphp"))  {

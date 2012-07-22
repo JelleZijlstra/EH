@@ -52,6 +52,7 @@ zval *ehtozval(ehretval_p in) {
 				// TODO
 				eh_error_type("conversion to PHP", in->type(), enotice_e);
 				break;
+			case base_object_e:
 			case type_e:
 			case op_e:
 			case attribute_e:

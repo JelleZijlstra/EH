@@ -1,7 +1,8 @@
 #!/usr/bin/ehi
 # Can printvar handle this?
+class B {}
 class A {
-	public foo = $global
+	public foo = $B
 }
-o = A.new:
-printvar: $global
+$B.o = A.new:
+printvar: $B

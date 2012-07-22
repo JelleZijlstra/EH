@@ -183,7 +183,7 @@ vtype get_ ## ehtype ## val() const { \
 } ehretval_t;
 
 typedef ehretval_t::ehretval_p ehretval_p;
-typedef unique_ptr<ehretval_p> ehretval_u;
+typedef array_ptr<ehretval_p> ehretval_a;
 
 // context
 typedef ehretval_p /* with type object_e */ ehcontext_t;

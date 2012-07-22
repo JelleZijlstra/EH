@@ -5,7 +5,7 @@
  * Function definitions for EH library functions
  */
 
-#define EHLIBFUNC(f) ehretval_p ehlf_ ## f(ehretval_p obj, int nargs, ehretval_p args[], ehcontext_t context, EHI *ehi)
+#define EHLIBFUNC(f) ehretval_p ehlf_ ## f(ehretval_p obj, int nargs, ehretval_p *args, ehcontext_t context, EHI *ehi)
 
 EHLIBFUNC(getinput);
 EHLIBFUNC(printvar);

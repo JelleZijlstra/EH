@@ -114,34 +114,29 @@ public:
 };
 
 template<class T>
-class unique_ptr {
+class array_ptr {
 private:
 	T *pointer;
 public:
-	unique_ptr() {
-		this->pointer = NULL;
-	}
-	unique_ptr(T *rhs) {
-		this->pointer = rhs;
+	// Only provide this constructor, since others would be risky
+	array_ptr(int n) {
+		if(n == 0) {
+			this->pointer = NULL;
+		} else {
+			this->pointer = new T[n]();
+		}
 	}
 	
-	unique_ptr operator=(const T *&rhs) {
-		delete this->pointer;
-		this->pointer = rhs;
-	}
-
-	T *operator->() {
-		return pointer;
-	}
-	T *operator*() {
-		return pointer;
-	}
 	T &operator[](int i) {
 		return pointer[i];
 	}
+	
+	operator T *() {
+		return pointer;
+	}
 
-	~unique_ptr() {
+	~array_ptr() {
 		// no need to check for NULL - delete automatically ignores it
-		delete this->pointer;
+		delete[] this->pointer;
 	}
 };

@@ -944,27 +944,13 @@ ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 	// parse arguments
 	ehretval_p args = paras[1];
 	int nargs = count_nodes(args);
-	ehretval_p *new_args = new ehretval_p[nargs]();
+	ehretval_a new_args(nargs);
 	
 	for(int i = 0; args->get_opval()->nparas != 0; args = args->get_opval()->paras[0], i++) {
-		try {
-			new_args[i] = eh_execute(args->get_opval()->paras[1], context);
-		} catch(...) {
-			delete[] new_args;
-			throw;
-		}
+		new_args[i] = eh_execute(args->get_opval()->paras[1], context);
 	}
 	ehretval_p function = eh_execute(paras[0], context);
-	ehretval_p ret;
-	try {
-		ret = call_function(function, nargs, new_args, context);
-	} catch(...) {
-		delete[] new_args;
-		throw;
-	}
-	delete[] new_args;
-
-	return ret;
+	return call_function(function, nargs, new_args, context);
 }
 ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 	ehretval_p ret = eh_execute(node, context);
@@ -992,13 +978,10 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p rvalue = eh_execute(paras[1], context);
 	switch(paras[0]->get_opval()->op) {
 		case T_ARROW: {
-			//TODO: thread-safety or smart pointer
-			ehretval_p *args = new ehretval_p[2]();
+			ehretval_a args(2);
 			args[0] = eh_execute(internal_paras[1], context);
 			args[1] = rvalue;
-			ehretval_p ret = call_method(base_var, "operator_arrow_equals", 2, args, context);
-			delete[] args;
-			return ret;
+			return call_method(base_var, "operator_arrow_equals", 2, args, context);
 		}
 		case '.': {
 			// This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.
@@ -1083,16 +1066,11 @@ ehretval_p EHI::eh_always_execute(ehretval_p code, ehcontext_t context) {
 // Perform an arbitrary operation defined as a method taking a single argument
 ehretval_p EHI::perform_op(const char *name, const char *user_name, int nargs, ehretval_p *paras, ehcontext_t context) {
 	ehretval_p base_var = eh_execute(paras[0], context);
-	ehretval_p *args = NULL;
-	if(nargs > 0) {
-	  args = new ehretval_p[nargs]();
-	  for(int i = 0; i < nargs; i++) {
-	    args[i] = eh_execute(paras[i + 1], context);
-	  }
+	ehretval_a args(nargs);
+	for(int i = 0; i < nargs; i++) {
+		args[i] = eh_execute(paras[i + 1], context);
 	}
-	ehretval_p ret = call_method(base_var, name, nargs, args, context);
-	delete[] args;
-	return ret;
+	return call_method(base_var, name, nargs, args, context);
 }
 /*
  * Functions

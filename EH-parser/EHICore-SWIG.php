@@ -6,7 +6,7 @@
  * PHP interface for the C++ EHI interpreter.
  */
 try {
-	include_once(BPATH . "/EH-parser/ehphp.php");
+	include_once("ehphp.php");
 } catch(EHException $e) {
 	echo $e;
 	return;

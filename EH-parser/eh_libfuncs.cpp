@@ -21,13 +21,14 @@
 class printvar_t {
 private:
 	std::map<const void *, bool> seen;
+	EHI *ehi;
 	
 	void retval(ehretval_p in);
 	void array(eharray_t *in);
 	void object(ehobj_t *in);
 
 public:
-	printvar_t(ehretval_p in) : seen() {
+	printvar_t(ehretval_p in, EHI *_ehi) : seen(), ehi(_ehi) {
 		this->retval(in);
 	}
 };
@@ -68,14 +69,36 @@ void printvar_t::retval(ehretval_p in) {
 			} else {
 				obj = in->get_weak_objectval();
 			}
-			if(this->seen.count((void *)obj) == 0) {
-				this->seen[(void *)obj] = true;
-				//TODO: print the classname somehow
-				printf("@object [\n");
-				this->object(obj);
-				printf("]\n");
+			if(obj->type_id != func_e) {
+				if(this->seen.count((void *)obj) == 0) {
+					this->seen[(void *)obj] = true;
+					//TODO: print the classname somehow
+					const char *name = ehi->repo.get_name(obj->type_id).c_str();
+					printf("@object <%s> [\n", name);
+					this->object(obj);
+					printf("]\n");
+				} else {
+					printf("(recursion)\n");
+				}
 			} else {
-				printf("(recursion)\n");
+				ehfunc_t *f = obj->object_data->get_funcval();
+				printf("@function <");
+				switch(f->type) {
+					case user_e:
+						printf("user");
+						break;
+					case lib_e:
+						printf("library");
+						break;
+				}
+				printf(">: ");
+				for(int i = 0; i < f->argcount; i++) {
+					printf("%s", f->args[i].name.c_str());
+					if(i + 1 < f->argcount) {
+						printf(", ");
+					}
+				}
+				printf("\n");
 			}
 			break;
 		}
@@ -202,7 +225,7 @@ EHLIBFUNC(printvar) {
 	if(nargs != 1) {
 		eh_error_argcount_lib("printvar", 1, nargs);
 	} else {
-		printvar_t printer(args[0]);
+		printvar_t printer(args[0], ehi);
 	}
 	// this function always returns NULL
 	return NULL;
@@ -243,7 +266,11 @@ EHLIBFUNC(class_is) {
 		return NULL;
 	}
 	ehobj_t *classobj = ehi->get_class(args[1], context);
-	return ehretval_t::make_bool(args[0]->get_objectval()->type_id == classobj->type_id);
+	if(classobj == NULL) {
+		return ehretval_t::make_bool(false);
+	} else {
+		return ehretval_t::make_bool(args[0]->get_objectval()->type_id == classobj->type_id);
+	}
 }
 // get the type of a variable
 EHLIBFUNC(get_type) {

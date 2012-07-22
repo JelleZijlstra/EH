@@ -1,4 +1,4 @@
-@object <AnonymousClass> [
+@object <Null> [
 A <public,non-static,non-constant>: @object <A> [
 finalize <public,non-static,non-constant>: @function <library>: 
 foo <public,non-static,non-constant>: (recursion)
@@ -52,6 +52,7 @@ operator_divide <public,non-static,non-constant>: @function <library>:
 operator_minus <public,non-static,non-constant>: @function <library>: 
 operator_plus <public,non-static,non-constant>: @function <library>: 
 operator_times <public,non-static,non-constant>: @function <library>: 
+sqrt <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toFloat <public,non-static,non-constant>: @function <library>: 
 toInt <public,non-static,non-constant>: @function <library>: 
@@ -80,6 +81,7 @@ operator_modulo <public,non-static,non-constant>: @function <library>:
 operator_plus <public,non-static,non-constant>: @function <library>: 
 operator_times <public,non-static,non-constant>: @function <library>: 
 setBit <public,non-static,non-constant>: @function <library>: 
+sqrt <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toFloat <public,non-static,non-constant>: @function <library>: 
 toInt <public,non-static,non-constant>: @function <library>: 

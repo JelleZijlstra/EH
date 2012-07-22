@@ -23,9 +23,9 @@ typedef enum {
 #define VARTABLE_S 1024
 
 class EHI {
-private:
+public:
 	type_repository repo;
-
+private:
 	class EHParser *eval_parser;
 	void init_eval_parser();
 	// number of loops we're currently in

@@ -23,8 +23,8 @@ class C {
 		private cp = 30
 		inherit A.AA
 		public cc: {
-			echo $a
-			echo $c
+			echo a
+			echo c
 		}
 	}
 }

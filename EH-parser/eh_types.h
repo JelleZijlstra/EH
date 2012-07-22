@@ -368,10 +368,10 @@ typedef struct ehrange_t {
 
 // method binding
 typedef struct ehbinding_t {
-	ehretval_p value;
+	ehretval_p object_data;
 	ehretval_p method;
 
-	ehbinding_t(ehretval_p _value, ehretval_p _method) : value(_value), method(_method) {}
+	ehbinding_t(ehretval_p _object_data, ehretval_p _method) : object_data(_object_data),  method(_method) {}
 } ehbinding_t;
 
 // hash

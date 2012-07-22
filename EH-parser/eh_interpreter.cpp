@@ -181,6 +181,7 @@ void EHI::eh_init(void) {
 			ehobj_t *function_object = new ehobj_t();
 			func->value = this->make_object(function_object);
 			function_object->parent = new_value;
+			function_object->type_id = func_e;
 			ehfunc_t *f = new ehfunc_t(lib_e);
 			f->libmethod_pointer = members[i].func;
 			function_object->object_data = ehretval_t::make_func(f);
@@ -777,6 +778,7 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehobj_t *function_object = new ehobj_t;
 	ehretval_p ret = this->make_object(function_object);
 	function_object->parent = context;
+	function_object->type_id = func_e;
 	function_object->object_data = object_data;
 	f->code = paras[1];
 
@@ -869,7 +871,7 @@ ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 			ehretval_p casevar = eh_execute(op->paras[0], context);
 			ehretval_p decider;
 			// try to call function
-			if(casevar->type() == func_e || casevar->type() == binding_e) {
+			if(casevar->is_a(func_e) || casevar->type() == binding_e) {
 				decider = call_function(casevar, 1, &switchvar, context);
 				if(decider->type() != bool_e) {
 					eh_error("Switch case method does not return bool", eerror_e);
@@ -915,7 +917,7 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 		}
 		ehretval_p casevar = eh_execute(op->paras[0], context);
 		ehretval_p decider;
-		if(casevar->type() == func_e || casevar->type() == binding_e) {
+		if(casevar->is_a(func_e) || casevar->type() == binding_e) {
 			decider = call_function(casevar, 1, &switchvar, context);
 			if(decider->type() != bool_e) {
 				eh_error("Given case method does not return bool", eerror_e);
@@ -1023,7 +1025,7 @@ ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
 		}
 		if(class_obj->has(accessor)) {
 			ehretval_p member = class_obj->get(accessor, context, T_LVALUE_GET)->value;
-			if(member->type() == func_e) {
+			if(member->is_a(func_e)) {
 				return this->make_binding(new ehbinding_t(base_var, member));
 			} else {
 				return member;
@@ -1044,7 +1046,7 @@ ehretval_p EHI::perform_op(const char *name, const char *user_name, ehretval_p *
 	return ret;
 }
 ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context) {
-	ehretval_p func;
+	ehretval_p func = NULL;
 	if(obj->is_object()) {
 		func = obj->get_object()->get(name, context, T_LVALUE_GET)->value;
 	} else {
@@ -1053,8 +1055,10 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretva
 			eh_error_type(name, obj->type(), enotice_e);
 			return NULL;
 		}
-		ehretval_p method = class_obj->get(name, context, T_LVALUE_GET)->value;
-		func = this->make_binding(new ehbinding_t(obj, method));
+		ehmember_p method = class_obj->get(name, context, T_LVALUE_GET);
+		if(method != NULL) {
+			func = this->make_binding(new ehbinding_t(obj, method->value));
+		}
 	}
 	if(func == NULL) {
 		return NULL;
@@ -1069,7 +1073,10 @@ ehretval_p EHI::call_function(ehretval_p function, int nargs, ehretval_p *args, 
 	// We special-case function calls on func_e and binding_e types; otherwise we'd end up in an infinite loop
 	if(function->type() == binding_e || function->is_a(func_e)) {
 		// This one time, we call a library method directly. If you want to override Function.operator_colon, too bad.
-		return ehlm_Function_operator_colon(function, nargs, args, context, this);
+		return ehlm_Function_operator_colon(NULL, nargs, args, function, this);
+	} else if(function->type() == null_e) {
+		// Silently ignore NULL
+		return NULL;
 	} else {
 		return call_method(function, "operator_colon", nargs, args, context);
 	}

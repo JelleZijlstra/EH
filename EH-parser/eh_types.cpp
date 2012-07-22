@@ -69,7 +69,7 @@ std::list<ehretval_p> ehretval_t::children() {
 			break;
 		case binding_e:
 			out.push_back(this->get_bindingval()->method);
-			out.push_back(this->get_bindingval()->value);
+			out.push_back(this->get_bindingval()->object_data);
 			break;
 		case hash_e: {
 			ehhash_t *f = this->get_hashval();
@@ -113,7 +113,7 @@ bool ehretval_t::is_a(int in) {
 	if(this->type() == in) {
 		return true;
 	} else {
-		return this->type() == object_e && this->get_objectval()->object_data->type() == in;
+		return this->type() == object_e && this->get_objectval()->type_id == in;
 	}
 }
 ehretval_t::~ehretval_t() {
@@ -139,8 +139,10 @@ ehretval_t::~ehretval_t() {
 			delete this->rangeval;
 			break;
 		case object_e:
-		case func_e:
 			delete this->objectval;
+			break;
+		case func_e:
+			delete this->funcval;
 			break;
 		case array_e:
 			delete this->arrayval;
@@ -289,6 +291,7 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent, ehret
 			ehobj_t *oldobj = classmember->second->value->get_objectval();
 			ehobj_t *obj = new ehobj_t();
 			obj->type_id = func_e;
+			obj->object_data = oldobj->object_data;
 			newmember->value = ehi->make_object(obj);
 			obj->parent = ret;
 			if(set_real_parent && oldobj->real_parent == NULL) {

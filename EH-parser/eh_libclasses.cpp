@@ -757,22 +757,26 @@ EH_METHOD(Function, operator_colon) {
 	// on both Function and binding objects.
 	ehretval_p object_data;
 	ehfunc_t *f;
-	if(obj->is_a(func_e)) {
-		f = obj->get_objectval()->object_data->get_funcval();
-		//TODO: handle method calls within objects
-		object_data = NULL;
-	} else if(obj->type() == binding_e) {
-		ehbinding_t *binding = obj->get_bindingval();
+	ehretval_p parent;
+	ehretval_p real_parent;
+	if(context->is_a(func_e)) {
+		f = context->get_objectval()->object_data->get_funcval();
+		parent = context->get_objectval()->parent;
+		real_parent = context->get_objectval()->real_parent;
+		object_data = context->get_objectval()->parent->get_objectval()->object_data;
+	} else if(context->type() == binding_e) {
+		ehbinding_t *binding = context->get_bindingval();
 		f = binding->method->get_objectval()->object_data->get_funcval();
-		object_data = binding->value;
+		parent = binding->method->get_objectval()->parent;
+		real_parent = binding->method->get_objectval()->real_parent;
+		object_data = binding->object_data;
 	} else {
-		eh_error_type("base object of Function.operator:", obj->type(), enotice_e);
+		eh_error_type("base object of Function.operator:", context->type(), enotice_e);
 		return NULL;
 	}
 
 	if(f->type == lib_e) {
-		//TODO: what should the context be?
-		return f->libmethod_pointer(object_data, nargs, args, context, ehi);
+		return f->libmethod_pointer(object_data, nargs, args, parent, ehi);
 	}
 	// check parameter count
 	if(nargs != f->argcount) {
@@ -781,7 +785,8 @@ EH_METHOD(Function, operator_colon) {
 	}
 	ehretval_p newcontext = ehi->make_object(new ehobj_t());
 	newcontext->get_objectval()->type_id = func_e;
-	newcontext->get_objectval()->parent = context->get_objectval()->parent;
+	newcontext->get_objectval()->parent = parent;
+	newcontext->get_objectval()->real_parent = real_parent;
 	
 	// set parameters as necessary
 	for(int i = 0; i < nargs; i++) {

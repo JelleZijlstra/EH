@@ -5,4 +5,5 @@ Incorrect argument count for function class_is: expected 2, got 1: EH runtime er
 (null)
 Incorrect argument count for function class_is: expected 2, got 3: EH runtime error
 (null)
+No such class: Bar: EH runtime error
 (false)

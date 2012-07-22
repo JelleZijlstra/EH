@@ -64,6 +64,9 @@ EHParser *yyget_extra(void *scanner);
 %token T_CLASSMEMBER
 %token T_INHERIT
 %token T_LITERAL
+%token T_TRY
+%token T_CATCH
+%token T_FINALLY
 %token T_LVALUE_GET T_LVALUE_SET T_ARROW_SET T_DOT_SET
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
@@ -227,6 +230,8 @@ statement:
 							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, 
 									ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_INHERIT expression	{ $$ = ADD_NODE1(T_INHERIT, $2); }
+	| T_TRY '{' statement_list '}' T_CATCH '{' statement_list '}' T_FINALLY '{' statement_list '}'
+	            { $$ = ADD_NODE3(T_TRY, $3, $7, $11); }
 	;
 
 lvalue_set:

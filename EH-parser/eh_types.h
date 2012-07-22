@@ -445,3 +445,11 @@ public:
 	type_repository() : id_to_string(), id_to_object(), next_available(first_user_type) {}
 };
 
+class eh_exception : public std::exception {
+public:
+  ehretval_p content;
+
+  eh_exception(ehretval_p _content) : content(_content) {}
+
+  virtual ~eh_exception() throw() {}
+};

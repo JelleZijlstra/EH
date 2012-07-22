@@ -365,3 +365,11 @@ EHLIBFUNC(getinput) {
 	fscanf(stdin, "%d", &(ret->intval));
 	return ret;
 }
+
+EHLIBFUNC(throw) {
+	if(nargs != 1) {
+		eh_error_argcount_lib("throw", 1, nargs);
+		return NULL;
+	}
+	throw eh_exception(args[0]);
+}

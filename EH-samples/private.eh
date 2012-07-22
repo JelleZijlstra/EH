@@ -3,7 +3,7 @@ foo = 2
 baz = 4
 class Bar
 	private foo = 3
-	public try:
+	public tryIt:
 		# 3
 		echo foo
 		# 3
@@ -21,4 +21,4 @@ class Bar
 end
 # 2
 echo foo
-$Bar.try:
+$Bar.tryIt:

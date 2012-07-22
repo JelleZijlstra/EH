@@ -96,6 +96,9 @@
 "or"		return T_OR;
 "^^"		return T_XOR;
 "xor"		return T_XOR;
+"try"   return T_TRY;
+"catch" return T_CATCH;
+"finally" return T_FINALLY;
 "public"	{
 				yylval_param->vValue = publica_e;
 				return T_ATTRIBUTE;

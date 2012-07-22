@@ -33,6 +33,7 @@ ehlf_listentry_t libfuncs[] = {
 	LIBFUNCENTRY(pow)
 	LIBFUNCENTRY(log)
 	LIBFUNCENTRY(eval)
+	LIBFUNCENTRY(throw)
 	{NULL, NULL}
 };
 
@@ -288,6 +289,9 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				case T_GIVEN: // inline switch statements
 					ret = eh_op_given(node->get_opval()->paras, context);
 					break;
+				case T_TRY:
+				  ret = eh_op_try(node->get_opval()->paras, context);
+				  break;
 			/*
 			 * Miscellaneous
 			 */
@@ -1040,6 +1044,41 @@ ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
 			return NULL;
 		}
 	}
+}
+ehretval_p EHI::eh_op_try(ehretval_p *paras, ehcontext_t context) {
+  ehretval_p ret;
+  ehretval_p try_block = paras[0];
+  ehretval_p catch_block = paras[1];
+  ehretval_p finally_block = paras[2];
+  try {
+    try {
+      ret = eh_execute(try_block, context);
+    } catch(eh_exception& e) {
+      // inject the exception into the current scope
+      attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
+      context->get_objectval()->insert_retval("exception", attributes, e.content);
+      ret = eh_execute(catch_block, context);
+    }
+    eh_always_execute(finally_block, context);
+  } catch(eh_exception &e) {
+    eh_always_execute(finally_block, context);
+    throw;
+  }
+  return ret;
+}
+ehretval_p EHI::eh_always_execute(ehretval_p code, ehcontext_t context) {
+  // Execute even if we're breaking or continuing or whatever
+  bool old_returning = returning;
+  returning = false;
+  int old_breaking = breaking;
+  breaking = 0;
+  int old_continuing = continuing;
+  continuing = 0;
+  ehretval_p ret = eh_execute(code, context);
+  continuing = old_continuing;
+  breaking = old_breaking;
+  returning = old_returning;
+  return ret;
 }
 // Perform an arbitrary operation defined as a method taking a single argument
 ehretval_p EHI::perform_op(const char *name, const char *user_name, int nargs, ehretval_p *paras, ehcontext_t context) {

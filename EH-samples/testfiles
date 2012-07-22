@@ -150,3 +150,4 @@ more_colon.eh
 functions_are_objects.eh
 preserve_scope.eh
 binary_operators.eh
+fun.eh

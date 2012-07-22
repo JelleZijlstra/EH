@@ -1069,9 +1069,12 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretva
 			return NULL;
 		}
 		ehmember_p method = class_obj->get(name, context, T_LVALUE_GET);
-		if(method != NULL) {
-			func = this->make_binding(new ehbinding_t(obj, method->value));
+		if(method == NULL || !method->value->is_a(func_e)) {
+		  // Don't throw an error, as it's likely to cascade
+		  //eh_error_type("method", method->value->type(), enotice_e);
+		  return NULL;
 		}
+    func = this->make_binding(new ehbinding_t(obj, method->value));
 	}
 	if(func == NULL) {
 		return NULL;

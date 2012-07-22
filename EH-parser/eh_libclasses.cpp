@@ -843,3 +843,20 @@ EH_METHOD(Function, operator_colon) {
 	ehi->returning = false;
 	return ret;
 }
+
+START_EHLC(Exception)
+EHLC_ENTRY(Exception, initialize)
+EHLC_ENTRY(Exception, toString)
+END_EHLC()
+
+EH_METHOD(Exception, initialize) {
+	ASSERT_NARGS(1, "Exception.initialize");
+	ehretval_p msg = args[0];
+	ASSERT_TYPE(msg, string_e, "Exception.initialize");
+	return ehretval_t::make_resource(new Exception(msg->get_stringval()));
+}
+EH_METHOD(Exception, toString) {
+	ASSERT_NARGS_AND_TYPE(0, resource_e, "Exception.toString");
+	Exception *exc = (Exception *)obj->get_resourceval();
+	return ehretval_t::make_string(strdup(exc->msg));
+}

@@ -55,6 +55,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(Null, null_e)
 	LIBCLASSENTRY(Range, range_e)
 	LIBCLASSENTRY(Hash, hash_e)
+	LIBCLASSENTRY(Exception, -1)
 	{NULL, NULL, 0}
 };
 

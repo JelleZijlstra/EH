@@ -756,17 +756,17 @@ EH_METHOD(Function, operator_colon) {
 	// This is probably the most important library method in EH. It works
 	// on both Function and binding objects.
 	ehretval_p object_data;
-	ehfunc_t *f;
+	ehretval_p function_object;
 	ehretval_p parent;
 	ehretval_p real_parent;
 	if(context->is_a(func_e)) {
-		f = context->get_objectval()->object_data->get_funcval();
+		function_object = context;
 		parent = context->get_objectval()->parent;
 		real_parent = context->get_objectval()->real_parent;
 		object_data = context->get_objectval()->parent->get_objectval()->object_data;
 	} else if(context->type() == binding_e) {
 		ehbinding_t *binding = context->get_bindingval();
-		f = binding->method->get_objectval()->object_data->get_funcval();
+		function_object = binding->method;
 		parent = binding->method->get_objectval()->parent;
 		real_parent = binding->method->get_objectval()->real_parent;
 		object_data = binding->object_data;
@@ -774,6 +774,7 @@ EH_METHOD(Function, operator_colon) {
 		eh_error_type("base object of Function.operator:", context->type(), enotice_e);
 		return NULL;
 	}
+	ehfunc_t *f = function_object->get_objectval()->object_data->get_funcval();
 
 	if(f->type == lib_e) {
 		return f->libmethod_pointer(object_data, nargs, args, parent, ehi);
@@ -783,7 +784,7 @@ EH_METHOD(Function, operator_colon) {
 		eh_error_argcount(f->argcount, nargs);
 		return NULL;
 	}
-	ehretval_p newcontext = ehi->make_object(new ehobj_t());
+	ehretval_p newcontext = ehi->object_instantiate(function_object->get_objectval(), context);
 	newcontext->get_objectval()->type_id = func_e;
 	newcontext->get_objectval()->parent = parent;
 	newcontext->get_objectval()->real_parent = real_parent;

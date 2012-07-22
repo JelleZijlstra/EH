@@ -147,3 +147,4 @@ self.eh
 monkeypatch.eh
 overload_colon.eh
 more_colon.eh
+functions_are_objects.eh

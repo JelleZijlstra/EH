@@ -1,0 +1,4 @@
+@function <user>: n
+@int 42
+No such object member: foo: EH notice
+null

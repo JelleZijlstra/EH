@@ -255,14 +255,11 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					);
 					break;
 				case '~': // bitwise negation
-					ret = eh_op_tilde(eh_execute(node->get_opval()->paras[0], context), context);
-					break;
+				  return perform_op("operator_tilde", "operator~", 0, node->get_opval()->paras, context);
 				case T_NEGATIVE: // sign change
-					ret = eh_op_uminus(eh_execute(node->get_opval()->paras[0], context), context);
-					break;
+				  return perform_op("operator_uminus", "operator-", 0, node->get_opval()->paras, context);
 				case '!': // Boolean not
-					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					return ehretval_t::make_bool(!this->to_bool(operand1, context)->get_boolval());
+				  return perform_op("operator_bang", "operator!", 0, node->get_opval()->paras, context);
 			/*
 			 * Control flow
 			 */
@@ -380,7 +377,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				case '.':
 					return eh_op_dot(node->get_opval()->paras, context);
 				case T_ARROW:
-					return perform_op("operator_arrow", "operator->", node->get_opval()->paras, context);
+					return perform_op("operator_arrow", "operator->", 1, node->get_opval()->paras, context);
 				case T_EQ: // strict equality
 					operand1 = eh_execute(node->get_opval()->paras[0], context);
 					operand2 = eh_execute(node->get_opval()->paras[1], context);
@@ -394,18 +391,21 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
 				EH_INTBOOL_CASE(T_LE, <=) // lesser-than or equal
 				case '+': // string concatenation, addition
-					return perform_op("operator_plus", "operator+", node->get_opval()->paras, context);
+					return perform_op("operator_plus", "operator+", 1, node->get_opval()->paras, context);
 				case '-': // subtraction
-					return perform_op("operator_minus", "operator-", node->get_opval()->paras, context);
+					return perform_op("operator_minus", "operator-", 1, node->get_opval()->paras, context);
 				case '*':
-					return perform_op("operator_times", "operator*", node->get_opval()->paras, context);
+					return perform_op("operator_times", "operator*", 1, node->get_opval()->paras, context);
 				case '/':
-					return perform_op("operator_divide", "operator/", node->get_opval()->paras, context);
+					return perform_op("operator_divide", "operator/", 1, node->get_opval()->paras, context);
 				case '%':
-					return perform_op("operator_modulo", "operator%", node->get_opval()->paras, context);
-				EH_INT_CASE('&', &) // bitwise AND
-				EH_INT_CASE('^', ^) // bitwise XOR
-				EH_INT_CASE('|', |) // bitwise OR
+					return perform_op("operator_modulo", "operator%", 1, node->get_opval()->paras, context);
+				case '&':
+				  return perform_op("operator_and", "operator&", 1, node->get_opval()->paras, context);
+				case '^':
+				  return perform_op("operator_xor", "operator^", 1, node->get_opval()->paras, context);
+				case '|':
+				  return perform_op("operator_or", "operator|", 1, node->get_opval()->paras, context);
 				case T_AND: // AND; use short-circuit operation
 					operand1 = eh_execute(node->get_opval()->paras[0], context);
 					if(!this->to_bool(operand1, context)->get_boolval()) {
@@ -1042,11 +1042,16 @@ ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
 	}
 }
 // Perform an arbitrary operation defined as a method taking a single argument
-ehretval_p EHI::perform_op(const char *name, const char *user_name, ehretval_p *paras, ehcontext_t context) {
+ehretval_p EHI::perform_op(const char *name, const char *user_name, int nargs, ehretval_p *paras, ehcontext_t context) {
 	ehretval_p base_var = eh_execute(paras[0], context);
-	ehretval_p *args = new ehretval_p[1]();
-	args[0] = eh_execute(paras[1], context);
-	ehretval_p ret = call_method(base_var, name, 1, args, context);
+	ehretval_p *args = NULL;
+	if(nargs > 0) {
+	  args = new ehretval_p[nargs]();
+	  for(int i = 0; i < nargs; i++) {
+	    args[i] = eh_execute(paras[i + 1], context);
+	  }
+	}
+	ehretval_p ret = call_method(base_var, name, nargs, args, context);
 	delete[] args;
 	return ret;
 }

@@ -70,6 +70,11 @@ EH_METHOD(Integer, operator_minus);
 EH_METHOD(Integer, operator_times);
 EH_METHOD(Integer, operator_divide);
 EH_METHOD(Integer, operator_modulo);
+EH_METHOD(Integer, operator_and);
+EH_METHOD(Integer, operator_or);
+EH_METHOD(Integer, operator_xor);
+EH_METHOD(Integer, operator_tilde);
+EH_METHOD(Integer, operator_uminus);
 EH_METHOD(Integer, abs);
 EH_METHOD(Integer, getBit);
 EH_METHOD(Integer, setBit);
@@ -98,6 +103,7 @@ EH_METHOD(Float, operator_plus);
 EH_METHOD(Float, operator_minus);
 EH_METHOD(Float, operator_times);
 EH_METHOD(Float, operator_divide);
+EH_METHOD(Float, operator_uminus);
 EH_METHOD(Float, abs);
 EH_METHOD(Float, toString);
 EH_METHOD(Float, toInt);
@@ -129,6 +135,7 @@ EXTERN_EHLC(String)
 EH_METHOD(Bool, toString);
 EH_METHOD(Bool, toBool);
 EH_METHOD(Bool, toInt);
+EH_METHOD(Bool, operator_bang);
 
 EXTERN_EHLC(Bool)
 

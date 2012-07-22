@@ -6,6 +6,6 @@ foo = 1
 echo (-$foo)
 baz = false
 echo !$baz
-echo !$foo
+echo !($foo.toBool:)
 # Even pathological stuff is allowed by ehi
-echo (!-~$foo)
+echo (!(-~$foo.toBool:))

@@ -177,6 +177,11 @@ EHLC_ENTRY(Integer, operator_minus)
 EHLC_ENTRY(Integer, operator_times)
 EHLC_ENTRY(Integer, operator_divide)
 EHLC_ENTRY(Integer, operator_modulo)
+EHLC_ENTRY(Integer, operator_and)
+EHLC_ENTRY(Integer, operator_or)
+EHLC_ENTRY(Integer, operator_xor)
+EHLC_ENTRY(Integer, operator_tilde)
+EHLC_ENTRY(Integer, operator_uminus)
 EHLC_ENTRY(Integer, abs)
 EHLC_ENTRY(Integer, getBit)
 EHLC_ENTRY(Integer, setBit)
@@ -267,6 +272,32 @@ EH_METHOD(Integer, operator_modulo) {
 		return NULL;
 	}
 	return ehretval_t::make_int(obj->get_intval() % operand->get_intval());
+}
+EH_METHOD(Integer, operator_and) {
+  ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator&");
+  ehretval_p operand = args[0];
+  ASSERT_TYPE(operand, int_e, "Integer.operator&");
+  return ehretval_t::make_int(obj->get_intval() & operand->get_intval());
+}
+EH_METHOD(Integer, operator_or) {
+  ASSERT_NARGS_AND_TYPE(1, int_e, "integer.operator|");
+  ehretval_p operand = args[0];
+  ASSERT_TYPE(operand, int_e, "Integer.operator|");
+  return ehretval_t::make_int(obj->get_intval() | operand->get_intval());
+}
+EH_METHOD(Integer, operator_xor) {
+  ASSERT_NARGS_AND_TYPE(1, int_e, "integer.operator^");
+  ehretval_p operand = args[0];
+  ASSERT_TYPE(operand, int_e, "Integer.operator^");
+  return ehretval_t::make_int(obj->get_intval() ^ operand->get_intval());
+}
+EH_METHOD(Integer, operator_tilde) {
+  ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.operator~");
+  return ehretval_t::make_int(~obj->get_intval());
+}
+EH_METHOD(Integer, operator_uminus) {
+  ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.operator-");
+  return ehretval_t::make_int(-obj->get_intval());
 }
 EH_METHOD(Integer, abs) {
 	ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.abs");
@@ -384,6 +415,7 @@ EHLC_ENTRY(Float, operator_plus)
 EHLC_ENTRY(Float, operator_minus)
 EHLC_ENTRY(Float, operator_times)
 EHLC_ENTRY(Float, operator_divide)
+EHLC_ENTRY(Float, operator_uminus)
 EHLC_ENTRY(Float, abs)
 EHLC_ENTRY(Float, toString)
 EHLC_ENTRY(Float, toInt)
@@ -435,6 +467,10 @@ EH_METHOD(Float, operator_divide) {
 		eh_error_type("argument to Float.operator/", args[0]->type(), enotice_e);
 		return NULL;
 	}
+}
+EH_METHOD(Float, operator_uminus) {
+  ASSERT_NARGS_AND_TYPE(0, float_e, "Float.operator-");
+  return ehretval_t::make_float(-obj->get_floatval());
 }
 EH_METHOD(Float, abs) {
 	ASSERT_NARGS_AND_TYPE(0, float_e, "Float.abs");
@@ -610,6 +646,7 @@ START_EHLC(Bool)
 EHLC_ENTRY(Bool, toString)
 EHLC_ENTRY(Bool, toBool)
 EHLC_ENTRY(Bool, toInt)
+EHLC_ENTRY(Bool, operator_bang)
 END_EHLC()
 
 EH_METHOD(Bool, toString) {
@@ -633,6 +670,10 @@ EH_METHOD(Bool, toInt) {
 	} else {
 		return ehretval_t::make_int(0);
 	}
+}
+EH_METHOD(Bool, operator_bang) {
+  ASSERT_NARGS_AND_TYPE(0, bool_e, "Bool.operator!");
+  return ehretval_t::make_bool(!obj->get_boolval());
 }
 
 START_EHLC(Null)

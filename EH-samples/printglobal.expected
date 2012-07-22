@@ -12,6 +12,7 @@ Bool <public,non-static,constant>: @object <Bool> [
 finalize <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
+operator_bang <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toInt <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
@@ -45,6 +46,7 @@ operator_divide <public,non-static,non-constant>: @function <library>:
 operator_minus <public,non-static,non-constant>: @function <library>: 
 operator_plus <public,non-static,non-constant>: @function <library>: 
 operator_times <public,non-static,non-constant>: @function <library>: 
+operator_uminus <public,non-static,non-constant>: @function <library>: 
 sqrt <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toFloat <public,non-static,non-constant>: @function <library>: 
@@ -68,11 +70,16 @@ getBit <public,non-static,non-constant>: @function <library>:
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
+operator_and <public,non-static,non-constant>: @function <library>: 
 operator_divide <public,non-static,non-constant>: @function <library>: 
 operator_minus <public,non-static,non-constant>: @function <library>: 
 operator_modulo <public,non-static,non-constant>: @function <library>: 
+operator_or <public,non-static,non-constant>: @function <library>: 
 operator_plus <public,non-static,non-constant>: @function <library>: 
+operator_tilde <public,non-static,non-constant>: @function <library>: 
 operator_times <public,non-static,non-constant>: @function <library>: 
+operator_uminus <public,non-static,non-constant>: @function <library>: 
+operator_xor <public,non-static,non-constant>: @function <library>: 
 setBit <public,non-static,non-constant>: @function <library>: 
 sqrt <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 

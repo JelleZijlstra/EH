@@ -8,7 +8,7 @@ printvar: pi * e
 printvar: pi / e
 printvar: answer / pi
 printvar: pi.toInt: % (e.toInt:)
-printvar: pi & e
+printvar: pi.toInt: & (e.toInt:)
 printvar: pi * answer
 printvar: pi + answer
 printvar: pi * (@float answer)

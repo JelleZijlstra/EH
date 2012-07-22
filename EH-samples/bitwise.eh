@@ -1,8 +1,8 @@
 #!/usr/bin/ehi
 # Bitwise complement
-printvar: ~true
-printvar: ~3.14
+printvar: ~(true.toInt:)
+printvar: ~(3.14.toInt:)
 # Should give same result
 printvar: ~3
 printvar: ~42
-printvar: ~"19"
+printvar: ~("19".toInt:)

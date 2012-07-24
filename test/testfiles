@@ -157,3 +157,4 @@ mythrow.eh
 catchthem.eh
 exception.eh
 constructors.eh
+loopvar.eh

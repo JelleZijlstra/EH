@@ -610,7 +610,8 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 		// if we do T_LVALUE_SET, get_recursive never returns NULL
 		// count variable always gets to be an int
 		var->value = ehretval_t::make_int(range.first);
-		for( ; var->value->get_intval() <= range.second; var->value->intval++) {
+		for(int i = range.first; i <= range.second; i++) {
+			var->value = ehretval_t::make_int(i);
 			ret = eh_execute(op->paras[2], context);
 			LOOPCHECKS;
 		}

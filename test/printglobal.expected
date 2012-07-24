@@ -25,6 +25,12 @@ new <public,non-static,non-constant>: @function <library>:
 setcount <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
+Exception <public,non-static,constant>: @object <Exception> [
+finalize <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
 File <public,non-static,constant>: @object <File> [
 close <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 

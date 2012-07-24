@@ -65,6 +65,7 @@ EXTERN_EHLC(File)
 /*
  * Integer class
  */
+EH_METHOD(Integer, initialize);
 EH_METHOD(Integer, operator_plus);
 EH_METHOD(Integer, operator_minus);
 EH_METHOD(Integer, operator_times);
@@ -90,6 +91,7 @@ EXTERN_EHLC(Integer)
 /*
  * Array class
  */
+EH_METHOD(Array, initialize);
 EH_METHOD(Array, length);
 EH_METHOD(Array, operator_arrow);
 EH_METHOD(Array, operator_arrow_equals);
@@ -99,6 +101,7 @@ EXTERN_EHLC(Array)
 /*
  * Float class
  */
+EH_METHOD(Float, initialize);
 EH_METHOD(Float, operator_plus);
 EH_METHOD(Float, operator_minus);
 EH_METHOD(Float, operator_times);
@@ -116,6 +119,7 @@ EXTERN_EHLC(Float)
 /*
  * String class
  */
+EH_METHOD(String, initialize);
 EH_METHOD(String, length);
 EH_METHOD(String, operator_arrow);
 EH_METHOD(String, operator_arrow_equals);
@@ -132,6 +136,7 @@ EXTERN_EHLC(String)
 /*
  * Bool class
  */
+EH_METHOD(Bool, initialize);
 EH_METHOD(Bool, toString);
 EH_METHOD(Bool, toBool);
 EH_METHOD(Bool, toInt);
@@ -142,6 +147,7 @@ EXTERN_EHLC(Bool)
 /*
  * Null class
  */
+EH_METHOD(Null, initialize);
 EH_METHOD(Null, toString);
 EH_METHOD(Null, toBool);
 
@@ -150,6 +156,7 @@ EXTERN_EHLC(Null)
 /*
  * Range class
  */
+EH_METHOD(Range, initialize);
 EH_METHOD(Range, operator_arrow);
 EH_METHOD(Range, min);
 EH_METHOD(Range, max);

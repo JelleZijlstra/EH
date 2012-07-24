@@ -193,6 +193,10 @@ EHLC_ENTRY(Integer, toInt)
 EHLC_ENTRY(Integer, sqrt)
 END_EHLC()
 
+EH_METHOD(Integer, initialize) {
+	ASSERT_NARGS(1, "Integer.initialize");
+	return ehi->to_int(args[0], context);
+}
 EH_METHOD(Integer, operator_plus) {
 	ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator+");
 	ehretval_p operand = args[0];
@@ -382,11 +386,16 @@ EH_METHOD(Integer, sqrt) {
 }
 
 START_EHLC(Array)
+EHLC_ENTRY(Array, initialize)
 EHLC_ENTRY(Array, length)
 EHLC_ENTRY(Array, operator_arrow)
 EHLC_ENTRY(Array, operator_arrow_equals)
 END_EHLC()
 
+EH_METHOD(Array, initialize) {
+	ASSERT_NARGS(1, "Array.initialize");
+	return ehi->to_array(args[0], context);
+}
 EH_METHOD(Array, length) {
 	ASSERT_NARGS_AND_TYPE(0, array_e, "Array.length");
 	return ehretval_t::make_int(obj->get_arrayval()->size());
@@ -411,6 +420,7 @@ EH_METHOD(Array, operator_arrow_equals) {
 }
 
 START_EHLC(Float)
+EHLC_ENTRY(Float, initialize)
 EHLC_ENTRY(Float, operator_plus)
 EHLC_ENTRY(Float, operator_minus)
 EHLC_ENTRY(Float, operator_times)
@@ -424,6 +434,10 @@ EHLC_ENTRY(Float, toFloat)
 EHLC_ENTRY(Float, sqrt)
 END_EHLC()
 
+EH_METHOD(Float, initialize) {
+	ASSERT_NARGS(1, "Float.initialize");
+	return ehi->to_float(args[0], context);
+}
 EH_METHOD(Float, operator_plus) {
 	ASSERT_NARGS_AND_TYPE(1, float_e, "Float.operator+");
 	ehretval_p operand = ehi->to_float(args[0], context);
@@ -500,6 +514,7 @@ EH_METHOD(Float, sqrt) {
 }
 
 START_EHLC(String)
+EHLC_ENTRY(String, initialize)
 EHLC_ENTRY(String, operator_plus)
 EHLC_ENTRY(String, operator_arrow)
 EHLC_ENTRY(String, operator_arrow_equals)
@@ -512,6 +527,10 @@ EHLC_ENTRY(String, toRange)
 EHLC_ENTRY(String, charAtPosition)
 END_EHLC()
 
+EH_METHOD(String, initialize) {
+	ASSERT_NARGS(1, "String.initialize");
+	return ehi->to_string(args[0], context);
+}
 EH_METHOD(String, operator_plus) {
 	ASSERT_NARGS_AND_TYPE(1, string_e, "String.operator+");
 	ehretval_p operand = ehi->to_string(args[0], context);
@@ -643,12 +662,17 @@ EH_METHOD(String, charAtPosition) {
 }
 
 START_EHLC(Bool)
+EHLC_ENTRY(Bool, initialize)
 EHLC_ENTRY(Bool, toString)
 EHLC_ENTRY(Bool, toBool)
 EHLC_ENTRY(Bool, toInt)
 EHLC_ENTRY(Bool, operator_bang)
 END_EHLC()
 
+EH_METHOD(Bool, initialize) {
+	ASSERT_NARGS(1, "Bool.initialize");
+	return ehi->to_bool(args[0], context);
+}
 EH_METHOD(Bool, toString) {
 	ASSERT_NARGS_AND_TYPE(0, bool_e, "Bool.toString");
 	char *str;
@@ -677,10 +701,15 @@ EH_METHOD(Bool, operator_bang) {
 }
 
 START_EHLC(Null)
+EHLC_ENTRY(Null, initialize)
 EHLC_ENTRY(Null, toString)
 EHLC_ENTRY(Null, toBool)
 END_EHLC()
 
+EH_METHOD(Null, initialize) {
+	ASSERT_NARGS(0, "Null.initialize");
+	return NULL;
+}
 EH_METHOD(Null, toString) {
 	ASSERT_NARGS_AND_TYPE(0, null_e, "Null.toString");
 	return ehretval_t::make_string(strdup(""));
@@ -699,6 +728,10 @@ EHLC_ENTRY(Range, toArray)
 EHLC_ENTRY(Range, toRange)
 END_EHLC()
 
+EH_METHOD(Range, initialize) {
+	ASSERT_NARGS(1, "Range.initialize");
+	return ehi->to_range(args[0], context);
+}
 EH_METHOD(Range, min) {
 	ASSERT_NARGS_AND_TYPE(0, range_e, "Range.min");
 	return obj->get_rangeval()->min;

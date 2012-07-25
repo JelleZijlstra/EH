@@ -158,3 +158,4 @@ catchthem.eh
 exception.eh
 constructors.eh
 loopvar.eh
+curry.eh

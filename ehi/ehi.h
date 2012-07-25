@@ -80,7 +80,6 @@ private:
 	}
 
 public:
-	ehobj_t *get_class(ehretval_p code, ehcontext_t context);
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
 	bool returning;

@@ -1134,32 +1134,6 @@ ehretval_p EHI::object_instantiate(ehobj_t *obj, ehcontext_t context) {
 	}
 	return ret;
 }
-ehobj_t *EHI::get_class(ehretval_p classname, ehcontext_t context) {
-	ehobj_t *classobj;
-	switch(classname->type()) {
-		case string_e:
-		{
-			ehmember_p member = context->get_objectval()->get_recursive(classname->get_stringval(), context, T_LVALUE_GET);
-			if(member == NULL) {
-				eh_error_unknown("class", classname->get_stringval(), eerror_e);
-				return NULL;
-			}
-			if(member->value->type() != object_e) {
-				eh_error_type("class", member->value->type(), eerror_e);
-				return NULL;
-			}
-			classobj = member->value->get_object();
-			break;
-		}
-		case object_e:
-			classobj = classname->get_objectval();
-			break;
-		default:
-			eh_error_type("class name", classname->type(), eerror_e);
-			return NULL;
-	}
-	return classobj;
-}
 // Promotes a pseudo-object of a builtin class to a real object
 ehretval_p EHI::promote(ehretval_p in, ehcontext_t context) {
 	ehobj_t *the_class = this->get_primitive_class(in->type());

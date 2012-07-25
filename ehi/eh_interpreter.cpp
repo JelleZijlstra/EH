@@ -82,16 +82,6 @@ static inline int count_nodes(const ehretval_p node);
 /*
  * macros for interpreter behavior
  */
-// take ints, return an int
-#define EH_INT_CASE(token, operator) case token: \
-	operand1 = this->to_int(eh_execute(node->get_opval()->paras[0], context), context); \
-	operand2 = this->to_int(eh_execute(node->get_opval()->paras[1], context), context); \
-	if(operand1->type() == int_e && operand2->type() == int_e) { \
-		return ehretval_t::make_int((operand1->get_intval() operator operand2->get_intval())); \
-	} else {\
-		eh_error_types(#operator, operand1->type(), operand2->type(), eerror_e); \
-	} \
-	break;
 // take ints or floats, return a bool
 #define EH_INTBOOL_CASE(token, operator) case token: \
 	operand1 = eh_execute(node->get_opval()->paras[0], context); \
@@ -955,16 +945,7 @@ ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 	return call_function(function, nargs, new_args, context);
 }
 ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
-	ehretval_p ret = eh_execute(node, context);
-	if(ret == NULL) {
-		return NULL;
-	}
-	
-	ehretval_p varname = this->to_string(ret, context);
-	if(varname == NULL) {
-		return NULL;
-	}
-	
+	ehretval_p varname = eh_execute(node, context);
 	ehmember_p var = context->get_objectval()->get_recursive(
 		varname->get_stringval(), context, T_LVALUE_GET
 	);

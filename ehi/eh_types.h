@@ -1,3 +1,5 @@
+#include <tr1/unordered_map>
+
 // EH value, and generic node
 typedef struct ehretval_t {
 private:

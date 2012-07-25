@@ -160,3 +160,4 @@ constructors.eh
 loopvar.eh
 curry.eh
 allthrows.eh
+isa.eh

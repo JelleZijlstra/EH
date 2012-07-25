@@ -27,6 +27,7 @@ EHLC_ENTRY(Object, inherit)
 EHLC_ENTRY(Object, initialize)
 EHLC_ENTRY(Object, toString)
 EHLC_ENTRY(Object, finalize)
+EHLC_ENTRY(Object, isA)
 END_EHLC()
 
 EH_METHOD(Object, new) {
@@ -58,6 +59,14 @@ EH_METHOD(Object, toString) {
 }
 EH_METHOD(Object, finalize) {
 	return NULL;
+}
+EH_METHOD(Object, isA) {
+  ASSERT_NARGS(1, "Object.isA");
+  int type = args[0]->type();
+  if(type == object_e) {
+    type = args[0]->get_objectval()->type_id;
+  }
+  return ehretval_t::make_bool(context->is_a(type));
 }
 
 START_EHLC(CountClass)

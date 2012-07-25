@@ -25,6 +25,7 @@ EH_METHOD(Object, inherit);
 EH_METHOD(Object, initialize);
 EH_METHOD(Object, toString);
 EH_METHOD(Object, finalize);
+EH_METHOD(Object, isA);
 
 EXTERN_EHLC(Object)
 

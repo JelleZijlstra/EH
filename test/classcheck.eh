@@ -1,16 +1,17 @@
 #!/usr/bin/ehi
-# Illustrate the class_is function, as well as parameter checking for library functions.
+# Illustrate the isA method, as well as parameter checking for library functions.
 class Foo
 	public bar = 42
 end
 bar = Foo.new:
 # true
-echo class_is: 'Foo', $bar
+echo bar.isA: Foo
 # error
-echo class_is:
+echo bar.isA:
 # error
-echo class_is: 'Foo'
+echo pow: 3
 # error
-echo class_is: 'Foo', $bar, false
+echo pow: 3, 2, false
 # false
-echo class_is: 'Bar', $bar
+class Bar{}
+echo bar.isA: Bar

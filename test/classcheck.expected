@@ -1,9 +1,8 @@
 (true)
-Incorrect argument count for function class_is: expected 2, got 0: EH runtime error
+Incorrect argument count for function "Object.isA": expected 1, got 0: EH runtime error
 (null)
-Incorrect argument count for function class_is: expected 2, got 1: EH runtime error
+Incorrect argument count for function pow: expected 2, got 1: EH runtime error
 (null)
-Incorrect argument count for function class_is: expected 2, got 3: EH runtime error
+Incorrect argument count for function pow: expected 2, got 3: EH runtime error
 (null)
-No such class: Bar: EH runtime error
 (false)

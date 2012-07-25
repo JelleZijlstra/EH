@@ -250,28 +250,6 @@ TYPEFUNC(float)
 TYPEFUNC(array)
 TYPEFUNC(object)
 TYPEFUNC(range)
-// check whether a variable is a member of a specified class
-EHLIBFUNC(class_is) {
-	if(nargs != 2) {
-		eh_error_argcount_lib("class_is", 2, nargs);
-		return NULL;
-	}
-	// they are in reverse order
-	if(args[1]->type() != string_e) {
-		eh_error_type("argument 0 to class_is", args[1]->type(), enotice_e);
-		return NULL;
-	}
-	if(args[0]->type() != object_e) {
-		eh_error_type("argument 1 to class_is", args[0]->type(), enotice_e);
-		return NULL;
-	}
-	ehobj_t *classobj = ehi->get_class(args[1], context);
-	if(classobj == NULL) {
-		return ehretval_t::make_bool(false);
-	} else {
-		return ehretval_t::make_bool(args[0]->get_objectval()->type_id == classobj->type_id);
-	}
-}
 // get the type of a variable
 EHLIBFUNC(get_type) {
 	if(nargs != 1) {

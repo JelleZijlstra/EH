@@ -27,7 +27,6 @@ ehlf_listentry_t libfuncs[] = {
 	LIBFUNCENTRY(is_object)
 	LIBFUNCENTRY(is_range)
 	LIBFUNCENTRY(is_float)
-	LIBFUNCENTRY(class_is)
 	LIBFUNCENTRY(get_type)
 	LIBFUNCENTRY(include)
 	LIBFUNCENTRY(pow)

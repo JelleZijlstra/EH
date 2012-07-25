@@ -19,6 +19,7 @@ Unsupported type object for echo operator: EH notice
 Unsupported type object for echo operator: EH notice
 Unsupported type object for echo operator: EH notice
 Unsupported type object for echo operator: EH notice
+Unsupported type object for echo operator: EH notice
 bar
 2
 finalize
@@ -26,6 +27,8 @@ finalize
 inherit
 
 initialize
+
+isA
 
 mah
 4

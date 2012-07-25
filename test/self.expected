@@ -4,6 +4,7 @@ null
 finalize <public,non-static,non-constant>: @function <library>: 
 inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <user>: 
+isA <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 new_ <public,non-static,non-constant>: @function <user>: 
 toString <public,non-static,non-constant>: @function <library>: 
@@ -12,6 +13,7 @@ toString <public,non-static,non-constant>: @function <library>:
 finalize <public,non-static,non-constant>: @function <library>: 
 inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+isA <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 

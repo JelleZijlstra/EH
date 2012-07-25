@@ -161,3 +161,5 @@ loopvar.eh
 curry.eh
 allthrows.eh
 isa.eh
+compare.eh
+xinherit.eh

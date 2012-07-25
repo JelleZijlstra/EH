@@ -16,6 +16,6 @@ class C {
 	}
 	o = D.new:
 	
-	# Expect 3, though currently EHI prints 4.
+	# Expect 3, because inherited methods retain their original parent scope
 	$o.b:
 }

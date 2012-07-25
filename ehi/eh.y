@@ -237,6 +237,16 @@ statement:
 	| T_INHERIT expression	{ $$ = ADD_NODE1(T_INHERIT, $2); }
 	| T_TRY '{' statement_list '}' T_CATCH '{' statement_list '}' T_FINALLY '{' statement_list '}'
 	            { $$ = ADD_NODE3(T_TRY, $3, $7, $11); }
+	| T_TRY '{' statement_list '}' T_CATCH '{' statement_list '}'
+	            { $$ = ADD_NODE2(T_CATCH, $3, $7); }
+	| T_TRY '{' statement_list '}' T_FINALLY '{' statement_list '}'
+	            { $$ = ADD_NODE2(T_FINALLY, $3, $7); }
+	| T_TRY T_SEPARATOR statement_list T_CATCH T_SEPARATOR statement_list T_FINALLY T_SEPARATOR statement_list T_END T_SEPARATOR
+	            { $$ = ADD_NODE3(T_TRY, $3, $6, $9); }
+	| T_TRY T_SEPARATOR statement_list T_CATCH T_SEPARATOR statement_list T_END T_SEPARATOR
+	            { $$ = ADD_NODE2(T_CATCH, $3, $6); }
+	| T_TRY T_SEPARATOR statement_list T_FINALLY T_SEPARATOR statement_list T_END T_SEPARATOR
+	            { $$ = ADD_NODE2(T_FINALLY, $3, $6); }
 	;
 
 lvalue_set:

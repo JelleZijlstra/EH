@@ -290,8 +290,17 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				case T_GIVEN: // inline switch statements
 					ret = eh_op_given(node->get_opval()->paras, context);
 					break;
+			/*
+			 * Exceptions
+			 */
 				case T_TRY:
 				  ret = eh_op_try(node->get_opval()->paras, context);
+				  break;
+				case T_CATCH:
+				  ret = eh_op_catch(node->get_opval()->paras, context);
+				  break;
+				case T_FINALLY:
+				  ret = eh_op_catch(node->get_opval()->paras, context);
 				  break;
 			/*
 			 * Miscellaneous
@@ -1044,6 +1053,33 @@ ehretval_p EHI::eh_op_try(ehretval_p *paras, ehcontext_t context) {
       context->get_objectval()->insert_retval("exception", attributes, e.content);
       ret = eh_execute(catch_block, context);
     }
+    eh_always_execute(finally_block, context);
+  } catch(eh_exception &e) {
+    eh_always_execute(finally_block, context);
+    throw;
+  }
+  return ret;
+}
+ehretval_p EHI::eh_op_catch(ehretval_p *paras, ehcontext_t context) {
+  ehretval_p ret;
+  ehretval_p try_block = paras[0];
+  ehretval_p catch_block = paras[1];
+  try {
+    ret = eh_execute(try_block, context);
+  } catch(eh_exception& e) {
+    // inject the exception into the current scope
+    attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
+    context->get_objectval()->insert_retval("exception", attributes, e.content);
+    ret = eh_execute(catch_block, context);
+  }
+  return ret;
+}
+ehretval_p EHI::eh_op_finally(ehretval_p *paras, ehcontext_t context) {
+  ehretval_p ret;
+  ehretval_p try_block = paras[0];
+  ehretval_p finally_block = paras[1];
+  try {
+    ret = eh_execute(try_block, context);
     eh_always_execute(finally_block, context);
   } catch(eh_exception &e) {
     eh_always_execute(finally_block, context);

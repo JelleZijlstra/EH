@@ -159,3 +159,4 @@ exception.eh
 constructors.eh
 loopvar.eh
 curry.eh
+allthrows.eh

@@ -13,15 +13,18 @@ char *EHI::eh_getline(EHParser *parser) {
 	return NULL;
 }
 
-eharray_t *zvaltoeh_array(HashTable *hash);
+eharray_t *zvaltoeh_array(HashTable *hash, EHI *ehi);
 zval *arrtozval(eharray_t *paras);
 zval *hashtozval(ehhash_t *hash);
+zval *tupletozval(ehtuple_t *tuple);
 
 zval *ehtozval(ehretval_p in) {
 	if(in->type() == array_e) {
 		return arrtozval(in->get_arrayval());
 	} else if(in->type() == hash_e) {
 		return hashtozval(in->get_hashval());
+	} else if(in->type() == tuple_e) {
+		return tupletozval(in->get_tupleval());
 	} else {
 		zval *out;
 		MAKE_STD_ZVAL(out);
@@ -37,6 +40,7 @@ zval *ehtozval(ehretval_p in) {
 				break;
 			case array_e:
 			case hash_e:
+			case tuple_e:
 				break;
 			case float_e:
 				ZVAL_DOUBLE(out, in->get_floatval());
@@ -77,6 +81,17 @@ zval *hashtozval(ehhash_t *hash) {
 	return arr;
 }
 
+zval *tupletozval(ehtuple_t *tuple) {
+	zval *arr;
+	MAKE_STD_ZVAL(arr);
+	
+	array_init(arr);
+	for(int i = 0, size = tuple->size(); i < size; i++) {
+		add_index_zval(arr, i, ehtozval(tuple->get(i)));
+	}
+	return arr;
+}
+
 zval *arrtozval(eharray_t *paras) {
 	zval *arr;
 	MAKE_STD_ZVAL(arr);
@@ -92,7 +107,7 @@ zval *arrtozval(eharray_t *paras) {
 	return arr;
 }
 
-ehretval_p zvaltoeh(zval *in) {
+ehretval_p zvaltoeh(zval *in, EHI *ehi) {
 	switch(in->type) {
 		case IS_NULL:
 			return NULL;
@@ -106,7 +121,7 @@ ehretval_p zvaltoeh(zval *in) {
 			return ehretval_t::make_string(strdup(in->value.str.val));
 		case IS_ARRAY:
 			// initialize array
-			return ehretval_t::make_array(zvaltoeh_array(in->value.ht));
+			return ehi->make_array(zvaltoeh_array(in->value.ht, ehi));
 		case IS_LONG:
 			return ehretval_t::make_int(in->value.lval);
 		case IS_RESOURCE:
@@ -118,7 +133,7 @@ ehretval_p zvaltoeh(zval *in) {
 	return NULL;
 }
 
-eharray_t *zvaltoeh_array(HashTable *hash) {
+eharray_t *zvaltoeh_array(HashTable *hash, EHI *ehi) {
     eharray_t *retval = new eharray_t;
 	// variables for our new array
 	ehretval_p index, value;
@@ -126,7 +141,7 @@ eharray_t *zvaltoeh_array(HashTable *hash) {
 		// apparently the pDataPtr actually points to the zval
 		// see Zend/zend_hash.h for definition of the Bucket. No idea
 		// what the pData actually points to.
-		value = zvaltoeh((zval *)curr->pDataPtr);
+		value = zvaltoeh((zval *)curr->pDataPtr, ehi);
 		// determine index type and value
 		if(curr->nKeyLength == 0) {
 	    	// numeric index
@@ -156,7 +171,7 @@ eharray_t *zvaltoeh_array(HashTable *hash) {
 
 // Typemap for returning stuff from execute_cmd
 %typemap(directorout) ehretval_p  {
-	$result = zvaltoeh($1);
+	$result = zvaltoeh($1, this);
 }
 %typemap(out) ehretval_t {
 	$result = ehtozval(&$1);

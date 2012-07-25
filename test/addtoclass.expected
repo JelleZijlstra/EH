@@ -1,6 +1,7 @@
 @object <Foo> [
 bar <public,non-static,non-constant>: @int 3
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
@@ -9,6 +10,7 @@ toString <public,non-static,non-constant>: @function <library>:
 bar <public,non-static,non-constant>: @int 3
 baz <public,non-static,non-constant>: @int 2
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
@@ -17,6 +19,7 @@ toString <public,non-static,non-constant>: @function <library>:
 bar <public,non-static,non-constant>: @int 3
 baz <public,non-static,non-constant>: @int 2
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 meh <public,non-static,non-constant>: @int 4
 new <public,non-static,non-constant>: @function <library>: 

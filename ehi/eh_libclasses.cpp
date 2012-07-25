@@ -23,6 +23,7 @@
 
 START_EHLC(Object)
 EHLC_ENTRY(Object, new)
+EHLC_ENTRY(Object, inherit)
 EHLC_ENTRY(Object, initialize)
 EHLC_ENTRY(Object, toString)
 EHLC_ENTRY(Object, finalize)
@@ -32,6 +33,18 @@ EH_METHOD(Object, new) {
 	ehretval_p ret = ehi->object_instantiate(context->get_objectval(), context);
 	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", nargs, args, ret);
 	return ret;
+}
+EH_METHOD(Object, inherit) {
+  ASSERT_NARGS(1, "Object.inherit");
+  ehretval_p operand = args[0];
+  ASSERT_TYPE(operand, object_e, "Object.inherit");
+	ehobj_t *classobj = operand->get_objectval();
+	if(classobj != NULL) {
+		OBJECT_FOR_EACH(classobj, i) {
+			context->get_objectval()->copy_member(i, true, context, ehi);
+		}
+	}
+  return NULL;
 }
 EH_METHOD(Object, initialize) {
 	return NULL;
@@ -182,6 +195,7 @@ EHLC_ENTRY(Integer, operator_or)
 EHLC_ENTRY(Integer, operator_xor)
 EHLC_ENTRY(Integer, operator_tilde)
 EHLC_ENTRY(Integer, operator_uminus)
+EHLC_ENTRY(Integer, operator_compare)
 EHLC_ENTRY(Integer, abs)
 EHLC_ENTRY(Integer, getBit)
 EHLC_ENTRY(Integer, setBit)
@@ -302,6 +316,19 @@ EH_METHOD(Integer, operator_tilde) {
 EH_METHOD(Integer, operator_uminus) {
   ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.operator-");
   return ehretval_t::make_int(-obj->get_intval());
+}
+EH_METHOD(Integer, operator_compare) {
+  ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator<=>");
+  ASSERT_TYPE(args[0], int_e, "Integer.operator<=>");
+  int lhs = obj->get_intval();
+  int rhs = args[0]->get_intval();
+  if(lhs < rhs) {
+    return ehretval_t::make_int(-1);
+  } else if(lhs == rhs) {
+    return ehretval_t::make_int(0);
+  } else {
+    return ehretval_t::make_int(1);
+  }
 }
 EH_METHOD(Integer, abs) {
 	ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.abs");
@@ -426,6 +453,7 @@ EHLC_ENTRY(Float, operator_minus)
 EHLC_ENTRY(Float, operator_times)
 EHLC_ENTRY(Float, operator_divide)
 EHLC_ENTRY(Float, operator_uminus)
+EHLC_ENTRY(Float, operator_compare)
 EHLC_ENTRY(Float, abs)
 EHLC_ENTRY(Float, toString)
 EHLC_ENTRY(Float, toInt)
@@ -486,6 +514,19 @@ EH_METHOD(Float, operator_uminus) {
   ASSERT_NARGS_AND_TYPE(0, float_e, "Float.operator-");
   return ehretval_t::make_float(-obj->get_floatval());
 }
+EH_METHOD(Float, operator_compare) {
+  ASSERT_NARGS_AND_TYPE(1, float_e, "Float.operator<=>");
+  ASSERT_TYPE(args[0], float_e, "Float.operator<=>");
+  float lhs = obj->get_floatval();
+  float rhs = args[0]->get_floatval();
+  if(lhs < rhs) {
+    return ehretval_t::make_int(-1);
+  } else if(lhs == rhs) {
+    return ehretval_t::make_int(0);
+  } else {
+    return ehretval_t::make_int(1);
+  }
+}
 EH_METHOD(Float, abs) {
 	ASSERT_NARGS_AND_TYPE(0, float_e, "Float.abs");
 	return ehretval_t::make_float(abs(obj->get_floatval()));
@@ -518,6 +559,7 @@ EHLC_ENTRY(String, initialize)
 EHLC_ENTRY(String, operator_plus)
 EHLC_ENTRY(String, operator_arrow)
 EHLC_ENTRY(String, operator_arrow_equals)
+EHLC_ENTRY(String, operator_compare)
 EHLC_ENTRY(String, length)
 EHLC_ENTRY(String, toString)
 EHLC_ENTRY(String, toInt)
@@ -581,6 +623,13 @@ EH_METHOD(String, operator_arrow_equals) {
 	}
 	obj->get_stringval()[index] = operand2->get_stringval()[0];
 	return operand2;
+}
+EH_METHOD(String, operator_compare) {
+  ASSERT_NARGS_AND_TYPE(1, string_e, "String.operator<=>");
+  ASSERT_TYPE(args[0], string_e, "String.operator<=>");
+  const char *lhs = obj->get_stringval();
+  const char *rhs = args[0]->get_stringval();
+  return ehretval_t::make_int(strcmp(lhs, rhs));
 }
 EH_METHOD(String, length) {
 	ASSERT_NARGS_AND_TYPE(0, string_e, "String.length");

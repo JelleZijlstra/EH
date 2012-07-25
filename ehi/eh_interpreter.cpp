@@ -353,9 +353,6 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				case T_CLASSMEMBER:
 					eh_op_classmember(node->get_opval(), context);
 					break;
-				case T_INHERIT:
-					eh_op_inherit(node->get_opval()->paras, context);
-					break;
 				case T_ATTRIBUTE: // class member attributes
 					if(node->get_opval()->nparas == 0) {
 						return ehretval_t::make_typed(attributestr_e);
@@ -404,6 +401,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				EH_INTBOOL_CASE('<', <) // lesser-than
 				EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
 				EH_INTBOOL_CASE(T_LE, <=) // lesser-than or equal
+				case T_COMPARE:
+				  return perform_op("operator_compare", "operator<=>", 1, node->get_opval()->paras, context);
 				case '+': // string concatenation, addition
 					return perform_op("operator_plus", "operator+", 1, node->get_opval()->paras, context);
 				case '-': // subtraction
@@ -710,14 +709,6 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	}
 	inloop--;
 	return ret;
-}
-void EHI::eh_op_inherit(ehretval_p *paras, ehcontext_t context) {
-	ehobj_t *classobj = this->get_class(eh_execute(paras[0], context), context);
-	if(classobj != NULL) {
-		OBJECT_FOR_EACH(classobj, i) {
-			context->get_objectval()->copy_member(i, true, context, this);
-		}
-	}
 }
 void EHI::eh_op_break(opnode_t *op, ehcontext_t context) {
 	int level;

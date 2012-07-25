@@ -21,7 +21,7 @@ class C {
 	private c = 3
 	class CC {
 		private cp = 30
-		inherit A.AA
+		inherit: A.AA
 		public cc: {
 			echo a
 			echo c
@@ -33,8 +33,8 @@ class D {
 	private d = 4
 	class DD {
 		private dp = 40
-		inherit B.BB
-		inherit C.CC
+		inherit: B.BB
+		inherit: C.CC
 		public dd: {
 			# Expect 1
 			$this.aa:

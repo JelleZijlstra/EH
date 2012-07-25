@@ -1,12 +1,12 @@
 #!/usr/bin/ehi
 class A {
-	inherit 'A'
+	inherit: A
 	
 	class A {
 		public b
 	}
 
-	inherit A
+	inherit: A
 	public a = A.new:
 }
 o = A.new:

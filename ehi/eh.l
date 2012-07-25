@@ -83,7 +83,6 @@
 "null"		return T_NULL;
 "class"		return T_CLASS;
 "endclass"	return T_ENDCLASS;
-"inherit"	return T_INHERIT;
 "switch"	return T_SWITCH;
 "endswitch"	return T_ENDSWITCH;
 "given"		return T_GIVEN;
@@ -143,6 +142,7 @@
 "=="    return T_EQ;
 "=>"		return T_DOUBLEARROW;
 "->"		return T_ARROW;
+"<=>"   return T_COMPARE;
 [@=$+\-*/<>(),:\[\]&\|^%~!{}\.]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{

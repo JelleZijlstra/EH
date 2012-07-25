@@ -4,6 +4,7 @@ Attempt to write to constant variable: EH runtime error
 5
 @object <Bar> [
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 mah <public,non-static,non-constant>: @int 42
 new <public,non-static,non-constant>: @function <library>: 

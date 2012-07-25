@@ -1,6 +1,7 @@
 @object <Null> [
 Array <public,non-static,constant>: @object <Array> [
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
@@ -10,6 +11,7 @@ toString <public,non-static,non-constant>: @function <library>:
 ]
 Bool <public,non-static,constant>: @object <Bool> [
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 operator_bang <public,non-static,non-constant>: @function <library>: 
@@ -20,6 +22,7 @@ toString <public,non-static,non-constant>: @function <library>:
 CountClass <public,non-static,constant>: @object <CountClass> [
 docount <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 setcount <public,non-static,non-constant>: @function <library>: 
@@ -27,6 +30,7 @@ toString <public,non-static,non-constant>: @function <library>:
 ]
 Exception <public,non-static,constant>: @object <Exception> [
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
@@ -36,6 +40,7 @@ close <public,non-static,non-constant>: @function <library>:
 finalize <public,non-static,non-constant>: @function <library>: 
 getc <public,non-static,non-constant>: @function <library>: 
 gets <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 open <public,non-static,non-constant>: @function <library>: 
@@ -46,8 +51,10 @@ toString <public,non-static,non-constant>: @function <library>:
 Float <public,non-static,constant>: @object <Float> [
 abs <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
+operator_compare <public,non-static,non-constant>: @function <library>: 
 operator_divide <public,non-static,non-constant>: @function <library>: 
 operator_minus <public,non-static,non-constant>: @function <library>: 
 operator_plus <public,non-static,non-constant>: @function <library>: 
@@ -62,6 +69,7 @@ toString <public,non-static,non-constant>: @function <library>:
 Hash <public,non-static,constant>: @object <Hash> [
 finalize <public,non-static,non-constant>: @function <library>: 
 has <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 operator_arrow <public,non-static,non-constant>: @function <library>: 
@@ -73,10 +81,12 @@ Integer <public,non-static,constant>: @object <Integer> [
 abs <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
 getBit <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 operator_and <public,non-static,non-constant>: @function <library>: 
+operator_compare <public,non-static,non-constant>: @function <library>: 
 operator_divide <public,non-static,non-constant>: @function <library>: 
 operator_minus <public,non-static,non-constant>: @function <library>: 
 operator_modulo <public,non-static,non-constant>: @function <library>: 
@@ -95,6 +105,7 @@ toString <public,non-static,non-constant>: @function <library>:
 ]
 Null <public,non-static,constant>: @object <Null> [
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
@@ -102,12 +113,14 @@ toString <public,non-static,non-constant>: @function <library>:
 ]
 Object <public,non-static,constant>: @object <Object> [
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Range <public,non-static,constant>: @object <Range> [
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 max <public,non-static,non-constant>: @function <library>: 
 min <public,non-static,non-constant>: @function <library>: 
@@ -120,11 +133,13 @@ toString <public,non-static,non-constant>: @function <library>:
 String <public,non-static,constant>: @object <String> [
 charAtPosition <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 operator_arrow <public,non-static,non-constant>: @function <library>: 
 operator_arrow_equals <public,non-static,non-constant>: @function <library>: 
+operator_compare <public,non-static,non-constant>: @function <library>: 
 operator_plus <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toFloat <public,non-static,non-constant>: @function <library>: 

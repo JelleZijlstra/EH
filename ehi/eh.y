@@ -62,7 +62,6 @@ EHParser *yyget_extra(void *scanner);
 %token T_CLASS
 %token T_ENDCLASS
 %token T_CLASSMEMBER
-%token T_INHERIT
 %token T_LITERAL
 %token T_TRY
 %token T_CATCH
@@ -83,7 +82,7 @@ EHParser *yyget_extra(void *scanner);
 %left ':'
 %left '|' '^' '&'
 %left '+' '-'
-%left '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ
+%left '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ T_COMPARE
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
 %right '@'
@@ -234,7 +233,6 @@ statement:
 	| attributelist bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC
 							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, 
 									ADD_NODE2(T_FUNC, $4, $6)); }
-	| T_INHERIT expression	{ $$ = ADD_NODE1(T_INHERIT, $2); }
 	| T_TRY '{' statement_list '}' T_CATCH '{' statement_list '}' T_FINALLY '{' statement_list '}'
 	            { $$ = ADD_NODE3(T_TRY, $3, $7, $11); }
 	| T_TRY '{' statement_list '}' T_CATCH '{' statement_list '}'
@@ -296,6 +294,8 @@ expression:
 							{ $$ = ADD_NODE2(T_NE, $1, $3); }
 	| expression T_SNE expression
 							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
+	| expression T_COMPARE expression
+	            { $$ = ADD_NODE2(T_COMPARE, $1, $3); }
 	| expression '+' expression
 							{ $$ = ADD_NODE2('+', $1, $3); }
 	| expression '-' expression
@@ -378,6 +378,8 @@ simple_expr:
 							{ $$ = ADD_NODE2(T_NE, $1, $3); }
 	| simple_expr T_SNE simple_expr
 							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
+	| simple_expr T_COMPARE simple_expr
+	            { $$ = ADD_NODE2(T_COMPARE, $1, $3); }
 	| simple_expr '+' simple_expr
 							{ $$ = ADD_NODE2('+', $1, $3); }
 	| simple_expr '*' simple_expr
@@ -456,6 +458,8 @@ line_expr:
 							{ $$ = ADD_NODE2(T_NE, $1, $3); }
 	| line_expr T_SNE expression
 							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
+	| line_expr T_COMPARE expression
+	            { $$ = ADD_NODE2(T_COMPARE, $1, $3); }
 	| line_expr '+' expression
 							{ $$ = ADD_NODE2('+', $1, $3); }
 	| line_expr '-' expression

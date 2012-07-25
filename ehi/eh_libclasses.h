@@ -21,6 +21,7 @@ public:
  * Object class
  */
 EH_METHOD(Object, new);
+EH_METHOD(Object, inherit);
 EH_METHOD(Object, initialize);
 EH_METHOD(Object, toString);
 EH_METHOD(Object, finalize);
@@ -76,6 +77,7 @@ EH_METHOD(Integer, operator_or);
 EH_METHOD(Integer, operator_xor);
 EH_METHOD(Integer, operator_tilde);
 EH_METHOD(Integer, operator_uminus);
+EH_METHOD(Integer, operator_compare);
 EH_METHOD(Integer, abs);
 EH_METHOD(Integer, getBit);
 EH_METHOD(Integer, setBit);
@@ -107,6 +109,7 @@ EH_METHOD(Float, operator_minus);
 EH_METHOD(Float, operator_times);
 EH_METHOD(Float, operator_divide);
 EH_METHOD(Float, operator_uminus);
+EH_METHOD(Float, operator_compare);
 EH_METHOD(Float, abs);
 EH_METHOD(Float, toString);
 EH_METHOD(Float, toInt);
@@ -124,6 +127,7 @@ EH_METHOD(String, length);
 EH_METHOD(String, operator_arrow);
 EH_METHOD(String, operator_arrow_equals);
 EH_METHOD(String, operator_plus);
+EH_METHOD(String, operator_compare);
 EH_METHOD(String, toString);
 EH_METHOD(String, toInt);
 EH_METHOD(String, toFloat);

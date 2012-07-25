@@ -6,7 +6,7 @@ class A {
 	}
 }
 class B {
-	inherit A
+	inherit: A
 	public c = 5
 	public d: {
 		echo 4

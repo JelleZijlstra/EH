@@ -4,6 +4,7 @@ meh
 bar <public,non-static,non-constant>: @int 3
 baz <private,non-static,non-constant>: null
 finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 mah <private,non-static,non-constant>: @function <user>: n
 meh <public,non-static,non-constant>: @function <user>: n

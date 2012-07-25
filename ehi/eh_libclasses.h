@@ -203,3 +203,12 @@ EH_METHOD(Exception, toString);
 EH_METHOD(Exception, initialize);
 
 EXTERN_EHLC(Exception)
+
+/*
+ * Tuple class
+ */
+EH_METHOD(Tuple, initialize);
+EH_METHOD(Tuple, operator_arrow);
+EH_METHOD(Tuple, length);
+
+EXTERN_EHLC(Tuple)

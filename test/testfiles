@@ -163,3 +163,4 @@ allthrows.eh
 isa.eh
 compare.eh
 xinherit.eh
+tuple.eh

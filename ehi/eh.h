@@ -46,7 +46,8 @@ enum type_enum {
 	float_e = 14,
 	resource_e = 15,
 	binding_e = 16,
-	base_object_e = 17
+	base_object_e = 17,
+	tuple_e = 18
 };
 
 // attributes of class members

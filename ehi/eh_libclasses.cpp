@@ -951,3 +951,27 @@ EH_METHOD(Exception, toString) {
 	Exception *exc = (Exception *)obj->get_resourceval();
 	return ehretval_t::make_string(strdup(exc->msg));
 }
+
+START_EHLC(Tuple)
+EHLC_ENTRY(Tuple, initialize)
+EHLC_ENTRY(Tuple, operator_arrow)
+EHLC_ENTRY(Tuple, length)
+END_EHLC()
+
+EH_METHOD(Tuple, initialize) {
+  return ehi->make_tuple(new ehtuple_t(nargs, args));
+}
+EH_METHOD(Tuple, operator_arrow) {
+  ASSERT_NARGS_AND_TYPE(1, tuple_e, "Tuple.operator->");
+  ASSERT_TYPE(args[0], int_e, "Tuple.operator->");
+  int index = args[0]->get_intval();
+  if(index < 0 || index > obj->get_tupleval()->size()) {
+    eh_error_invalid_argument("Tuple.operator->", 0);
+    return NULL;
+  }
+  return obj->get_tupleval()->get(index);
+}
+EH_METHOD(Tuple, length) {
+  ASSERT_NARGS_AND_TYPE(0, tuple_e, "Tuple.length");
+  return ehretval_t::make_int(obj->get_tupleval()->size());
+}

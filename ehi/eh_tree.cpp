@@ -89,15 +89,7 @@ void print_tree(const ehretval_p in, const int n) {
 			break;
 		PRINT_TREE_TYPE(bool, u)
 		PRINT_TREE_TYPE(float, f)
-		case range_e:
-		case array_e:
-		case func_e:
-		case object_e:
-		case resource_e:
-		case weak_object_e:
-		case binding_e:
-		case hash_e:
-		case base_object_e:
+		default:
 			// don't appear in AST
 			break;
 	}
@@ -123,6 +115,7 @@ const char *get_typestring(type_enum type) {
 		case binding_e: return "binding";
 		case hash_e: return "hash";
 		case base_object_e: return "object";
+		case tuple_e: return "tuple";
 	}
 	// to keep the compiler happy
 	return "null";

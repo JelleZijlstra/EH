@@ -131,6 +131,10 @@ public:
 		return pointer[i];
 	}
 	
+	T operator[](int i) const {
+	  return pointer[i];
+	}
+	
 	operator T *() {
 		return pointer;
 	}

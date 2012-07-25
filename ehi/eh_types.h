@@ -13,6 +13,7 @@ private:
 			case array_e:
 			case binding_e:
 			case hash_e:
+			case tuple_e:
 			case range_e:
 				return true;
 			default:
@@ -43,6 +44,7 @@ public:
 		struct ehbinding_t *bindingval;
 		struct ehhash_t *hashval;
 		void *base_objectval;
+		class ehtuple_t *tupleval;
 	};
 	// constructors
 	ehretval_t() : _type(null_e) {}
@@ -90,6 +92,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(class LibraryBaseClass *, resource)
 	EHRV_SET(ehbinding_t *, binding)
 	EHRV_SET(struct ehhash_t *, hash)
+	EHRV_SET(class ehtuple_t *, tuple)
 #undef EHRV_SET
 	// special constructors for GC'ed types
 #define EHRV_GC(vtype, ehtype) static void fill_ ## ehtype(ehretval_p in, vtype val) { \
@@ -103,6 +106,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_GC(ehrange_t *, range)
 	EHRV_GC(struct ehhash_t *, hash)
 	EHRV_GC(struct ehfunc_t *, func)
+	EHRV_GC(class ehtuple_t *, tuple)
 #undef EHRV_GC
 
 	void overwrite(ehretval_t &in) {
@@ -126,6 +130,7 @@ vtype get_ ## ehtype ## val() const { \
 			COPY(binding);
 			COPY(hash);
 			COPY(base_object);
+			COPY(tuple);
 			case null_e: break;
 #undef COPY
 		}
@@ -355,7 +360,6 @@ typedef struct ehfunc_t {
 	}
 } ehfunc_t;
 
-
 // range
 typedef struct ehrange_t {
 	ehretval_p min;
@@ -409,8 +413,9 @@ private:
 	std::map<int, std::string> id_to_string;
 	std::map<int, ehretval_p> id_to_object;
 	int next_available;
-	
-	const static int first_user_type = 18;
+
+	// the size of type_enum
+	const static int first_user_type = 19;
 public:
 	
 	void register_known_class(int id, std::string name, ehretval_p object) {
@@ -453,4 +458,25 @@ public:
   eh_exception(ehretval_p _content) : content(_content) {}
 
   virtual ~eh_exception() throw() {}
+};
+
+// EH tuples
+class ehtuple_t {
+private:
+  const int _size;
+  ehretval_a content;
+public:
+  ehtuple_t(int size, ehretval_p *in) : _size(size), content(size) {
+    for(int i = 0; i < size; i++) {
+      content[i] = in[i];
+    }
+  }
+  
+  int size() const {
+    return this->_size;
+  }
+  ehretval_p get(int i) const {
+    assert(i >= 0 && i < _size);
+    return this->content[i];
+  }
 };

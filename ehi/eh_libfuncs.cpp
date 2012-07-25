@@ -26,6 +26,7 @@ private:
 	void retval(ehretval_p in);
 	void array(eharray_t *in);
 	void object(ehobj_t *in);
+	void tuple(ehtuple_t *in);
 
 public:
 	printvar_t(ehretval_p in, EHI *_ehi) : seen(), ehi(_ehi) {
@@ -61,6 +62,16 @@ void printvar_t::retval(ehretval_p in) {
 				printf("(recursion)\n");
 			}
 			break;
+		case tuple_e:
+		  if(this->seen.count((void *)in->get_tupleval()) == 0) {
+		    this->seen[(void *)in->get_tupleval()] = true;
+		    printf("@tuple <%d> [\n", in->get_tupleval()->size());
+		    this->tuple(in->get_tupleval());
+		    printf("]\n");
+		  } else {
+		    printf("(recursion)");
+		  }
+		  break;
 		case weak_object_e:
 		case object_e: {
 			ehobj_t *obj;
@@ -218,6 +229,12 @@ void printvar_t::array(eharray_t *in) {
 		printf("%d => ", i->first);
 		this->retval(i->second);	
 	}
+}
+void printvar_t::tuple(ehtuple_t *in) {
+  int size = in->size();
+  for(int i = 0; i < size; i++) {
+    this->retval(in->get(i));
+  }
 }
 
 EHLIBFUNC(printvar) {

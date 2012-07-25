@@ -159,6 +159,9 @@ ehretval_t::~ehretval_t() {
 		case hash_e:
 			delete this->hashval;
 			break;
+		case tuple_e:
+		  delete this->tupleval;
+		  break;
 	}
 }
 
@@ -281,7 +284,7 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent, ehret
 	if(classmember->first.compare("this") == 0) {
 		// handle $this pointer
 		newmember->attribute = classmember->second->attribute;
-		newmember->value = ehi->make_weak_object(this);
+		newmember->value = ret;
 	} else if(classmember->first.compare("scope") == 0) {
 		// handle $scope pointer
 		newmember->attribute = classmember->second->attribute;

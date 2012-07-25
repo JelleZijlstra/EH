@@ -54,6 +54,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(Null, null_e)
 	LIBCLASSENTRY(Range, range_e)
 	LIBCLASSENTRY(Hash, hash_e)
+	LIBCLASSENTRY(Tuple, tuple_e)
 	LIBCLASSENTRY(Exception, -1)
 	{NULL, NULL, 0}
 };
@@ -154,6 +155,7 @@ void EHI::eh_init(void) {
 			this->repo.register_known_class(type_id, libclasses[i].name, new_value);
 		}
 		newclass->type_id = type_id;
+		newclass->parent = global_object;
 
 		// inherit from Object. This relies on Object always being the first library class loaded
 		if(libclasses[i].type_id == base_object_e) {

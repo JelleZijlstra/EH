@@ -4,7 +4,7 @@ class Foo
 	public bar:
 		printvar: this
 		this = 2
-		echo this.baz
+		$echo this.baz
 		ret this
 	end
 	public useprivate:
@@ -16,4 +16,4 @@ f = Foo.new:
 printvar: f.bar:
 printvar: f
 printvar: f.useprivate:
-echo baz
+$echo baz

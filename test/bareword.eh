@@ -3,16 +3,16 @@
 foo = 3
 class Foo
 	public foo:
-		echo 'baz'
+		$echo 'baz'
 	end
 end
-echo 'foo'
-echo 'foo' + 'bar'
-echo foo
+$echo 'foo'
+$echo 'foo' + 'bar'
+$echo foo
 foo = Foo.new:
 baz = foo.foo
 baz:
-$foo.foo:
+foo.foo:
 muh = 'foo'
-$foo.foo:
+foo.foo:
 baz:

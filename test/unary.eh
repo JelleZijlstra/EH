@@ -1,11 +1,11 @@
 #!/usr/bin/ehi
 # Test the unary operators
 bar = 0
-echo ~$bar
+$echo ~bar
 foo = 1
-echo (-$foo)
+$echo (-foo)
 baz = false
-echo !$baz
-echo !($foo.toBool:)
+$echo !baz
+$echo !(foo.toBool:)
 # Even pathological stuff is allowed by ehi
-echo (!(-~$foo.toBool:))
+$echo (!(-~foo.toBool:))

@@ -3,18 +3,18 @@
 foo = 'test'
 bar = 'test'
 if foo == bar
-	echo 'It works!'
+	$echo 'It works!'
 else
-	echo 'This should not be happening'
+	$echo 'This should not be happening'
 endif
 # >= currently does a cast to integer, which won't work for either foo or bar. Therefore, EHI::to_int will return the fallback value 0 for both, and the test will evaluate to true.
 if foo >= bar
-	echo 'There should have been several error messages on the lines before this one'
+	$echo 'There should have been several error messages on the lines before this one'
 else
-  echo 'This is reasonable too'
+  $echo 'This is reasonable too'
 endif
-echo foo
-echo bar
+$echo foo
+$echo bar
 baz = foo + bar
-echo 'This should print "testtest":'
-echo baz
+$echo 'This should print "testtest":'
+$echo baz

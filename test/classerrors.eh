@@ -7,5 +7,5 @@ class Foo {
 	for 10 count i
 		set mah++
 	end
-	echo $mah
+	$echo mah
 }

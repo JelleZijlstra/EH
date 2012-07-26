@@ -1,9 +1,9 @@
 #!/usr/bin/ehi
 # Explore function arguments and expressions
 func giveargs: a, b, c
-	echo $a
-	echo $b
-	echo $c
+	$echo a
+	$echo b
+	$echo c
 	ret 0
 end
 # Expect 1

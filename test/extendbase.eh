@@ -1,9 +1,9 @@
 #!/usr/bin/ehi
-echo "Map"
-$Array.map = func: f {
+$echo "Map"
+Array.map = func: f {
 	out = []
 	for self as key => value {
-		$out->key = f: value
+		out->key = f: value
 	}
 	ret out
 }
@@ -12,8 +12,8 @@ arr = ["foo", "bar", "quux"]
 f = func: x -> x.length:
 printvar: (arr.map: f)
 
-echo "Reduce"
-$Array.reduce = func: f, base {
+$echo "Reduce"
+Array.reduce = func: f, base {
 	out = base
 	for self as value {
 		out = f: out, value
@@ -24,21 +24,21 @@ $Array.reduce = func: f, base {
 f = func: counter, value -> counter + 1
 printvar: (arr.reduce: f, 0)
 
-echo "Iterate"
-$Array.each = func: f {
+$echo "Iterate"
+Array.each = func: f {
 	for self as key => value {
 		f: key, value
 	}
 }
 
-$arr.each: (func: key, value { echo value; })
+arr.each: (func: key, value { $echo value; })
 
-echo "Filter"
-$Array.filter = func: f {
+$echo "Filter"
+Array.filter = func: f {
 	out = []
 	for self as key => value {
 		if (f: key, value) {
-			$out->key = value
+			out->key = value
 		}
 	}
 	ret out

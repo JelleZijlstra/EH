@@ -3,8 +3,8 @@
 # (It is significantly less crazy now that we no longer support references.)
 foo = 3
 bar = 'foo'
-$bar->foo = 1
+bar->foo = 1
 printvar: bar
 printvar: foo
-echo bar->foo
-echo foo->bar
+$echo bar->foo
+$echo foo->bar

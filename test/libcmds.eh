@@ -1,3 +1,3 @@
 #!/usr/bin/ehi
-echo 2
+$echo 2
 q

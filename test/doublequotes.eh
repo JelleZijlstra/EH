@@ -3,6 +3,6 @@
 foo = "test"
 bar = 'test'
 baz = 'test'
-echo $foo
-echo $bar
-echo $baz
+$echo foo
+$echo bar
+$echo baz

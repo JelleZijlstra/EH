@@ -5,13 +5,13 @@ class Foo
 end
 bar = Foo.new:
 # true
-echo bar.isA: Foo
+$echo bar.isA: Foo
 # error
-echo bar.isA:
+$echo bar.isA:
 # error
-echo pow: 3
+$echo pow: 3
 # error
-echo pow: 3, 2, false
+$echo pow: 3, 2, false
 # false
 class Bar{}
-echo bar.isA: Bar
+$echo bar.isA: Bar

@@ -4,7 +4,7 @@ class A {
 	public foo = 3
 	class C {
 		public bar: {
-			echo foo
+			$echo foo
 		}
 	}
 }
@@ -12,5 +12,5 @@ class A {
 class B {
 	public foo = 4
 	o = A.C.new:
-	$o.bar:
+	o.bar:
 }

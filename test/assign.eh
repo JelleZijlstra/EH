@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 foo = 42
-printvar: $foo
+printvar: foo
 bar = 42
-printvar: $bar
+printvar: bar
 baz = 42
-printvar: $bar
+printvar: bar

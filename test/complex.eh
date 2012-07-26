@@ -5,8 +5,8 @@ class Complex {
   private b_
   
   initialize = func: a, b {
-    $this.a_ = a
-    $this.b_ = b
+    this.a_ = a
+    this.b_ = b
   }
   
   a = func: -> a_
@@ -16,11 +16,11 @@ class Complex {
   abs = func: -> (a*a + b*b).sqrt:
   
   operator_plus = func: rhs {
-    $Complex.new: (this.a:) + (rhs.a:), (this.b:) + (rhs.b:)
+    Complex.new: (this.a:) + (rhs.a:), (this.b:) + (rhs.b:)
   }
 
   operator_minus = func: rhs {
-    $Complex.new: (this.a:) - (rhs.a:), (this.b:) - (rhs.b:)
+    Complex.new: (this.a:) - (rhs.a:), (this.b:) - (rhs.b:)
   }
   
   operator_times = func: rhs {
@@ -35,6 +35,6 @@ class Complex {
 }
 
 x = Complex.new: 0, 1
-echo x.toString:
-echo (x + x).toString:
-echo (x.operator_times: x).toString:
+$echo x.toString:
+$echo (x + x).toString:
+$echo (x.operator_times: x).toString:

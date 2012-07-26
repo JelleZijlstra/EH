@@ -93,7 +93,7 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_SHORTFUNCTION
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr line_expr global_list string shortfunc bareword_or_string
+%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr global_list string shortfunc bareword_or_string
 %%
 program:
 	global_list				{ 	// Don't do anything. Destructors below take 
@@ -128,7 +128,7 @@ statement_list:
 
 statement:
 	T_SEPARATOR				{ $$ = ADD_NODE0(T_SEPARATOR); }
-	| line_expr T_SEPARATOR	{ $$ = $1; }
+	| expression T_SEPARATOR	{ $$ = $1; }
 	| lvalue_set '=' expression T_SEPARATOR
 							{ $$ = ADD_NODE2(T_SET, $1, $3); }
 	| T_SET lvalue_set T_PLUSPLUS T_SEPARATOR
@@ -249,12 +249,11 @@ statement:
 
 lvalue_set:
 	bareword				{ $$ = ADD_NODE1('$', $1); }
-	| line_expr T_ARROW expression
+	| expression T_ARROW expression
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
-	| line_expr '.' bareword
+	| expression '.' bareword
 							{ $$ = ADD_NODE2('.', $1, $3); }
 	;
-
 
 expression:
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
@@ -272,8 +271,6 @@ expression:
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| expression '.' bareword
 							{ $$ = ADD_NODE2('.', $1, $3); }
-	| '$' bareword %prec '$'
-							{ $$ = ADD_NODE1('$', $2); }
 	| '@' T_TYPE expression %prec '@'
 							{ $$ = ADD_NODE2('@', $2, $3); }
 	| expression ':' arglist
@@ -358,8 +355,6 @@ simple_expr:
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| simple_expr '.' bareword
 							{ $$ = ADD_NODE2('.', $1, $3); }
-	| '$' bareword %prec '$'
-							{ $$ = ADD_NODE1('$', $2); }
 	| '@' T_TYPE expression %prec '@'	
 							{ $$ = ADD_NODE2('@', $2, $3); }
 	| simple_expr ':' arglist
@@ -418,104 +413,13 @@ simple_expr:
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
 	;
 
-line_expr:
-	/* need to separate expressions beginning with a bareword from commands */
-	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_NULL				{ $$ = ADD_NODE0(T_LITERAL); }
-	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| '(' expression ')'	{ $$ = $2; }
-	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
-	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
-	| '-' expression %prec T_NEGATIVE
-							{ $$ = ADD_NODE1(T_NEGATIVE, $2); }
-	| line_expr T_ARROW expression
-							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
-	| line_expr '.' bareword
-							{ $$ = ADD_NODE2('.', $1, $3); }
-	| '$' bareword %prec '$'
-							{ $$ = ADD_NODE1('$', $2); }
-	| '@' T_TYPE expression %prec '@'	
-							{ $$ = ADD_NODE2('@', $2, $3); }
-	| bareword ':' arglist
-							{ $$ = ADD_NODE2(':', ADD_NODE1('$', $1), $3); }
-	| line_expr ':' arglist
-							{ $$ = ADD_NODE2(':', $1, $3); }
-	| line_expr T_EQ expression
-							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
-	| line_expr '>' expression
-							{ $$ = ADD_NODE2('>', $1, $3); }
-	| line_expr '<' expression
-							{ $$ = ADD_NODE2('<', $1, $3); }
-	| line_expr T_SE expression
-							{ $$ = ADD_NODE2(T_SE, $1, $3); }
-	| line_expr T_GE expression
-							{ $$ = ADD_NODE2(T_GE, $1, $3); }
-	| line_expr T_LE expression
-							{ $$ = ADD_NODE2(T_LE, $1, $3); }
-	| line_expr T_NE expression
-							{ $$ = ADD_NODE2(T_NE, $1, $3); }
-	| line_expr T_SNE expression
-							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
-	| line_expr T_COMPARE expression
-	            { $$ = ADD_NODE2(T_COMPARE, $1, $3); }
-	| line_expr '+' expression
-							{ $$ = ADD_NODE2('+', $1, $3); }
-	| line_expr '-' expression
-							{ $$ = ADD_NODE2('-', $1, $3); }
-	| line_expr '*' expression
-							{ $$ = ADD_NODE2('*', $1, $3); }
-	| line_expr '/' expression
-							{ $$ = ADD_NODE2('/', $1, $3); }
-	| line_expr '%' expression
-							{ $$ = ADD_NODE2('%', $1, $3); }
-	| line_expr '^' expression
-							{ $$ = ADD_NODE2('^', $1, $3); }
-	| line_expr '|' expression
-							{ $$ = ADD_NODE2('|', $1, $3); }
-	| line_expr '&' expression
-							{ $$ = ADD_NODE2('&', $1, $3); }
-	| line_expr T_AND expression
-							{ $$ = ADD_NODE2(T_AND, $1, $3); }
-	| line_expr T_OR expression
-							{ $$ = ADD_NODE2(T_OR, $1, $3); }
-	| line_expr T_XOR expression
-							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
-	| line_expr T_RANGE expression
-							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
-	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
-	| T_FUNC ':' parglist '{' statement_list '}'
-							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
-	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
-	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
-							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
-	| shortfunc expression %prec T_SHORTFUNCTION
-							{ $$ = ADD_NODE2(T_FUNC, $1, $2); }
-	| T_CLASS T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_CLASS T_SEPARATOR statement_list T_ENDCLASS
-							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_CLASS '{' statement_list '}'
-							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_GIVEN expression '{' exprcaselist '}'
-							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_GIVEN expression T_SEPARATOR exprcaselist T_END
-							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_DOLLARPAREN command ')'
-							{ $$ = $2; }
-	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
-	;
-
 shortfunc:
 	T_FUNC ':' parglist T_ARROW
 							{ $$ = $3; }
 	;
 
-
 command:
-	bareword paralist		{ $$ = ADD_NODE2(T_COMMAND, $1, $2); }
+	'$' bareword paralist		{ $$ = ADD_NODE2(T_COMMAND, $2, $3); }
 	;
 
 paralist:

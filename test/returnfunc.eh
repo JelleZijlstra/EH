@@ -3,10 +3,10 @@
 func a: {
 	b = 3
 	c = func: {
-		echo $b
+		$echo b
 	}
 	c:
-	ret $c
+	ret c
 }
-f = $a:
-$f:
+f = a:
+f:

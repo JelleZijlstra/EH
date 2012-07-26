@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-echo 2
+$echo 2
 func foo:
 	ret 1
 endfunc

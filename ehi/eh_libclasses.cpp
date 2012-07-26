@@ -426,6 +426,7 @@ EHLC_ENTRY(Array, initialize)
 EHLC_ENTRY(Array, length)
 EHLC_ENTRY(Array, operator_arrow)
 EHLC_ENTRY(Array, operator_arrow_equals)
+EHLC_ENTRY(Array, toArray)
 END_EHLC()
 
 EH_METHOD(Array, initialize) {
@@ -453,6 +454,17 @@ EH_METHOD(Array, operator_arrow_equals) {
 	} catch(unknown_value_exception &e) {
 		return NULL;
 	}
+}
+EH_METHOD(Array, toArray) {
+  ASSERT_NARGS_AND_TYPE(0, array_e, "Array.toArray");
+  return obj;
+}
+EH_METHOD(Array, toTuple) {
+  ASSERT_NARGS_AND_TYPE(0, array_e, "Array.toTuple");
+  eharray_t *arr = obj->get_arrayval();
+  int length = arr->size();
+  //TODO
+  return NULL;
 }
 
 START_EHLC(Float)

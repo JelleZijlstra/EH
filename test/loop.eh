@@ -4,8 +4,8 @@
 in = 10
 # counter variable
 total = 1
-for $in count i
-	total = $total * $in
+for in count i
+	total = total * in
 	set in--
 end
-echo $total
+$echo total

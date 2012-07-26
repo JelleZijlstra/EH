@@ -1,2 +1,2 @@
 #!/usr/bin/ehi
-printvar: $argc
+printvar: argc

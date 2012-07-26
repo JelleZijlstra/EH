@@ -14,15 +14,15 @@ try {
   try
     throw: 44
   finally
-    echo 'This is important'
+    $echo 'This is important'
   end
 } catch {
-  echo 'got it at the top level'
+  $echo 'got it at the top level'
   printvar: exception
 }
 
 try {
   throw: 45
 } finally {
-  echo 'Not catching it!'
+  $echo 'Not catching it!'
 }

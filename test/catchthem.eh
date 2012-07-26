@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 try {
-	print 3
+	$print 3
 } catch {
 	printvar: exception
 } finally {

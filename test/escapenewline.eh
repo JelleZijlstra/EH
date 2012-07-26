@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-echo \
+$echo \
 "test" +\
 @string 3\
 + "test"

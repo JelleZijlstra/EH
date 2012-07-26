@@ -2,7 +2,7 @@
 # Can printvar handle this?
 class B {}
 class A {
-	public foo = $B
+	public foo = B
 }
-$B.o = A.new:
-printvar: $B
+B.o = A.new:
+printvar: B

@@ -8,6 +8,6 @@ for t.length: count i
 end
 
 # Because the EH object model isn't quite implemented, this is the only way we can actually see printvar on action on a tuple
-$Tuple.printvar = func: -> (global.printvar): self
+Tuple.printvar = func: -> (global.printvar): self
 t2 = Tuple.new: false, [], 42
-($t2.printvar:)
+(t2.printvar:)

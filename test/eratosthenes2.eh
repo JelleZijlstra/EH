@@ -8,15 +8,15 @@ else
 end
 sieve = []
 for 1..max count i
-	$sieve->i = true
+	sieve->i = true
 end
 for 2..(max / 2) count i
 	for 2..(max / i) count j
-		$sieve->(i * j) = false
+		sieve->(i * j) = false
 	end
 end
 for 1..max count i
 	if sieve->i == true
-		echo i
+		$echo i
 	end
 end

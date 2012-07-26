@@ -9,6 +9,6 @@ endswitch
 if bar == null
 	bar = 'I got some other number of command-line options'
 endif
-echo bar
+$echo bar
 baz = given foo; case 1; 'None'; case 2; 'Got one'; end
-echo baz
+$echo baz

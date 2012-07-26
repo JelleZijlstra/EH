@@ -1,16 +1,16 @@
 #!/usr/bin/ehi
 # The default keyword, and some type juggling
-switch $argc
+switch argc
 	case 0
-		echo 'That is impossible'
+		$echo 'That is impossible'
 	case 1
-		echo 'That is one'
+		$echo 'That is one'
 	case 2
-		echo 'That is two'
+		$echo 'That is two'
 	default
-		echo 'That is some other number'
+		$echo 'That is some other number'
 	case 4
-		echo 'That will not work'
+		$echo 'That will not work'
 end
 bar = given true
 	case 2
@@ -20,4 +20,4 @@ bar = given true
 	default
 		1..3
 end
-echo $bar
+$echo bar

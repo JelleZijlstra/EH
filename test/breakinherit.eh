@@ -10,4 +10,4 @@ class A {
 	public a = A.new:
 }
 o = A.new:
-printvar: $o
+printvar: o

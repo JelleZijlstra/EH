@@ -2,7 +2,7 @@
 # Testing various toString methods
 class Foo {}
 o = Foo.new:
-# This uses the standard Object.toString method, which prints the object's memory address and is therefore inherently unportable and generally unpredictable. On my system at least, its return value is consistent from one version of the interpreter to another.
+# This uses the standard Object.toString method, which prints the object's memory address and is therefore inherently unportable and generally unpredictable. On my system at least, its return value is consistent from one invocation of the interpreter to another.
 printvar: o.toString:
 printvar: [].toString:
 printvar: 2.toString:

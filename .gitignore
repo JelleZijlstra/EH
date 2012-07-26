@@ -19,3 +19,5 @@ ehi/ehc
 ehi/ehi
 ehi/ehphp.php
 ehi/php_ehphp.h
+# Editor stuff
+*.sublime-*

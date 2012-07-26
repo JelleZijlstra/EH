@@ -253,7 +253,13 @@ lvalue_set:
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| expression '.' bareword
 							{ $$ = ADD_NODE2('.', $1, $3); }
+/*	| lvalue_list bareword	{ $$ = ADD_NODE2(',', $1, $2); } */
 	;
+
+/* lvalue_list:
+//	lvalue_list bareword ','
+//							{ $$ = ADD_NODE2(',', $1, $2); }
+//	|						{ $$ = ADD_NODE0(','); } */
 
 expression:
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }

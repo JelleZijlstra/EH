@@ -5,8 +5,8 @@ func a: {
 	c = func: {
 		$echo b
 	}
-	c:
+	c: ()
 	ret c
 }
-f = a:
-f:
+f = a: ()
+f: ()

@@ -8,7 +8,7 @@ class A {
 		$echo global.foo
 	}
 }
-A.f:
+A.f: ()
 $echo foo
 $echo global.foo
 $echo A.foo

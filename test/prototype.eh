@@ -4,9 +4,9 @@ class Foo
 	public bar = 2
 endclass
 $echo Foo.bar
-mah = Foo.new:
+mah = Foo.new: ()
 Foo.bar = 3
 $echo Foo.bar
-meh = Foo.new:
+meh = Foo.new: ()
 $echo mah.bar
 $echo meh.bar

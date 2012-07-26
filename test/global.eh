@@ -18,4 +18,4 @@ $echo @string 19
 func unknownglobal:
 	printvar: nosuchvar
 end
-unknownglobal:
+unknownglobal: ()

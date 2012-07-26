@@ -12,6 +12,6 @@ class Foo
 	public bar
 endclass
 # true
-$echo is_object: Foo.new:
+$echo is_object: Foo.new: ()
 # false
 $echo is_object: 'hello'

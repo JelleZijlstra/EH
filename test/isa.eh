@@ -3,6 +3,6 @@ printvar: 3.isA: Integer
 printvar: 4.isA: Bool
 class Foo {
 }
-f = Foo.new:
+f = Foo.new: ()
 printvar: f.isA: Foo
-printvar: (Foo.new:).isA: f
+printvar: (Foo.new: ()).isA: f

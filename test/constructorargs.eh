@@ -7,4 +7,4 @@ class Foo {
   }
 }
 o1 = Foo.new: "a", "b"
-o2 = Foo.new:
+o2 = Foo.new: ()

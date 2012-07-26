@@ -373,6 +373,9 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				case '{': // anonymous class
 					ret = eh_op_anonclass(node->get_opval()->paras[0], context);
 					break;
+				case ',': // tuple
+					ret = eh_op_tuple(node, context);
+					break;
 			/*
 			 * Binary operators
 			 */
@@ -838,6 +841,29 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	}
 	return ret;
 }
+ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
+	// count a list like an argument list. Assumes correct layout.
+	int nargs = 1;
+	for(ehretval_p tmp = node;
+		tmp->type() == op_e && tmp->get_opval()->op == ',' && tmp->get_opval()->nparas != 0;
+		tmp = tmp->get_opval()->paras[0], nargs++
+	);
+	ehretval_a new_args(nargs);
+	
+	ehretval_p arg_node = node;
+	for(int i = nargs - 1; i >= 0; i--) {
+		opnode_t *op = arg_node->get_opval();
+		if(op->op == ',') {
+			new_args[i] = eh_execute(op->paras[1], context);
+			arg_node = arg_node->get_opval()->paras[0];
+		} else {
+			new_args[i] = eh_execute(arg_node, context);
+			assert(i == 0);
+			break;
+		}
+	}
+	return this->make_tuple(new ehtuple_t(nargs, new_args));
+}
 void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	// rely on standard layout of the paras
 	ehretval_p attribute_v = eh_execute(op->paras[0], context);
@@ -873,7 +899,7 @@ ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 			ehretval_p decider;
 			// try to call function
 			if(casevar->is_a(func_e) || casevar->type() == binding_e) {
-				decider = call_function(casevar, 1, &switchvar, context);
+				decider = call_function(casevar, switchvar, context);
 				if(decider->type() != bool_e) {
 					eh_error("Switch case method does not return bool", eerror_e);
 					return NULL;
@@ -919,7 +945,7 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 		ehretval_p casevar = eh_execute(op->paras[0], context);
 		ehretval_p decider;
 		if(casevar->is_a(func_e) || casevar->type() == binding_e) {
-			decider = call_function(casevar, 1, &switchvar, context);
+			decider = call_function(casevar, switchvar, context);
 			if(decider->type() != bool_e) {
 				eh_error("Given case method does not return bool", eerror_e);
 				return NULL;
@@ -935,15 +961,9 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 	// parse arguments
-	ehretval_p args = paras[1];
-	int nargs = count_nodes(args);
-	ehretval_a new_args(nargs);
-	
-	for(int i = 0; args->get_opval()->nparas != 0; args = args->get_opval()->paras[0], i++) {
-		new_args[i] = eh_execute(args->get_opval()->paras[1], context);
-	}
 	ehretval_p function = eh_execute(paras[0], context);
-	return call_function(function, nargs, new_args, context);
+	ehretval_p args = eh_execute(paras[1], context);
+	return call_function(function, args, context);
 }
 ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 	ehretval_p varname = eh_execute(node, context);
@@ -962,10 +982,10 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p rvalue = eh_execute(paras[1], context);
 	switch(paras[0]->get_opval()->op) {
 		case T_ARROW: {
-			ehretval_a args(2);
+			ehretval_p args[2];
 			args[0] = eh_execute(internal_paras[1], context);
 			args[1] = rvalue;
-			return call_method(base_var, "operator_arrow_equals", 2, args, context);
+			return call_method(base_var, "operator_arrow_equals", this->make_tuple(new ehtuple_t(2, args)), context);
 		}
 		case '.': {
 			// This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.
@@ -1077,16 +1097,22 @@ ehretval_p EHI::eh_always_execute(ehretval_p code, ehcontext_t context) {
 // Perform an arbitrary operation defined as a method taking a single argument
 ehretval_p EHI::perform_op(const char *name, const char *user_name, int nargs, ehretval_p *paras, ehcontext_t context) {
 	ehretval_p base_var = eh_execute(paras[0], context);
-	ehretval_a args(nargs);
-	for(int i = 0; i < nargs; i++) {
-		args[i] = eh_execute(paras[i + 1], context);
+	ehretval_p args = NULL;
+	if(nargs == 1) {
+		args = eh_execute(paras[1], context);
+	} else if(nargs > 1) {
+		ehretval_a args_array(nargs);
+		for(int i = 0; i < nargs; i++) {
+			args_array[i] = eh_execute(paras[i + 1], context);
+		}
+		args = this->make_tuple(new ehtuple_t(nargs, args_array));
 	}
-	return call_method(base_var, name, nargs, args, context);
+	return call_method(base_var, name, args, context);
 }
 /*
  * Functions
  */
-ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretval_p *args, ehcontext_t context) {
+ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, ehcontext_t context) {
 	ehretval_p func = NULL;
 	if(obj->is_object()) {
 		func = obj->get_object()->get(name, context, T_LVALUE_GET)->value;
@@ -1107,19 +1133,19 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, int nargs, ehretva
 	if(func == NULL) {
 		return NULL;
 	} else {
-		return call_function(func, nargs, args, context);
+		return call_function(func, args, context);
 	}
 }
-ehretval_p EHI::call_function(ehretval_p function, int nargs, ehretval_p *args, ehcontext_t context) {
+ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t context) {
 	// We special-case function calls on func_e and binding_e types; otherwise we'd end up in an infinite loop
 	if(function->type() == binding_e || function->is_a(func_e)) {
 		// This one time, we call a library method directly. If you want to override Function.operator_colon, too bad.
-		return ehlm_Function_operator_colon(NULL, nargs, args, function, this);
+		return ehlm_Function_operator_colon(NULL, args, function, this);
 	} else if(function->type() == null_e) {
 		// Silently ignore NULL
 		return NULL;
 	} else {
-		return call_method(function, "operator_colon", nargs, args, context);
+		return call_method(function, "operator_colon", args, context);
 	}
 }
 /*

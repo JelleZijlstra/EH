@@ -195,7 +195,7 @@ typedef array_ptr<ehretval_p> ehretval_a;
 // context
 typedef ehretval_p /* with type object_e */ ehcontext_t;
 
-typedef ehretval_p (*ehlibmethod_t)(ehretval_p, int, ehretval_p *, ehcontext_t, class EHI *);
+typedef ehretval_p (*ehlibmethod_t)(ehretval_p, ehretval_p, ehcontext_t, class EHI *);
 
 // Variables and object members (which are the same)
 typedef struct ehmember_t {
@@ -301,6 +301,7 @@ public:
 	
 	// set with default attributes
 	void set(const char *name, ehretval_p value);
+	void set(std::string name, ehretval_p value);
 
 	void insert(const std::string &name, ehmember_p value) {
 		members[name] = value;

@@ -6,7 +6,7 @@ class Foo {
 		ret n + this.bar
 	}
 }
-f = func: { ret Foo.new:; }
+f = func: { ret Foo.new: (); }
 if 4 > 3 {
 	$echo true
 } else {

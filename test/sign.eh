@@ -2,7 +2,7 @@
 
 include: 'arrayfunc_lib.eh'
 
-arr = [1, -1, 0, 2, -2]
+arr = [1, (-1), 0, 2, (-2)]
 arr = arrayfunc: arr, func: in
 	if in > 0
 		ret 1

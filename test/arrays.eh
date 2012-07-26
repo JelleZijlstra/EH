@@ -22,8 +22,8 @@ baz = 1
 $echo baz.getBit: 0
 # prints 1
 $echo baz.getBit: 31
-$echo baz.length:
-$echo (bar -> 3).length:
-$echo bar.length:
+$echo baz.length: ()
+$echo (bar -> 3).length: ()
+$echo bar.length: ()
 empty = []
 printvar: empty

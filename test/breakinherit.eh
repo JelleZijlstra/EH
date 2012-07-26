@@ -7,7 +7,7 @@ class A {
 	}
 
 	inherit: A
-	public a = A.new:
+	public a = A.new: ()
 }
-o = A.new:
+o = A.new: ()
 printvar: o

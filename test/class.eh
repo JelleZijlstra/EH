@@ -10,14 +10,14 @@ class Foo
 	public meh: n
 		$echo n
 		# Illustrate private method access from class context
-		bar = Foo.new:
+		bar = Foo.new: ()
 		bar.mah: 'Calling a private method'
 	endfunc
 	private mah: n
 		$echo n
 	endfunc
 endclass
-bar = Foo.new:
+bar = Foo.new: ()
 printvar: bar
 $echo bar.bar
 foo = bar.meh

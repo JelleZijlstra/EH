@@ -19,7 +19,7 @@ func bto10: in, base
 		ret false
 	end
 	out = 0
-	len = in.length:
+	len = in.length: ()
 	for len count i
 		value = getn: in, i
 		out = out + value * (pow: base, (len - 1 - i))
@@ -28,6 +28,6 @@ func bto10: in, base
 end
 
 # 42
-$echo bto10: "2a", 16
+$echo (bto10: "2a", 16)
 # 44
-$echo bto10: "35", 13
+$echo (bto10: "35", 13)

@@ -10,10 +10,10 @@ printvar: bar || foo
 func test: n
 	$echo 'This is a function ' + n
 endfunc
-false and test: 1
-true and test: 2
-false or test: 3
-true or test: 4
+false and (test: 1)
+true and (test: 2)
+false or (test: 3)
+true or (test: 4)
 # true
 printvar: foo xor bar
 # false

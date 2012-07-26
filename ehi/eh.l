@@ -139,10 +139,11 @@
 ">="		return T_GE;
 "<="		return T_LE;
 "!="		return T_NE;
-"=="    return T_EQ;
+"=="    	return T_EQ;
 "=>"		return T_DOUBLEARROW;
 "->"		return T_ARROW;
-"<=>"   return T_COMPARE;
+"<=>"   	return T_COMPARE;
+"()"		return T_NULL;
 [@=$+\-*/<>(),:\[\]&\|^%~!{}\.]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{

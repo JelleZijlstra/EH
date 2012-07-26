@@ -9,7 +9,7 @@ Array.map = func: f {
 }
 
 arr = ["foo", "bar", "quux"]
-f = func: x -> x.length:
+f = func: x -> x.length: ()
 printvar: (arr.map: f)
 
 $echo "Reduce"
@@ -44,5 +44,5 @@ Array.filter = func: f {
 	ret out
 }
 
-f = func: key, value -> (value.length:) > 3
+f = func: key, value -> (value.length: ()) > 3
 printvar: arr.filter: f

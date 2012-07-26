@@ -10,7 +10,7 @@
 #define END_EHLC() {NULL, NULL} };
 #define EXTERN_EHLC(name) extern ehlm_listentry_t ehlc_l_ ## name [];
 
-#define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, int nargs, ehretval_p *args, ehcontext_t context, EHI *ehi)
+#define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, ehretval_p args, ehcontext_t context, EHI *ehi)
 
 class LibraryBaseClass {
 public:
@@ -212,5 +212,6 @@ EXTERN_EHLC(Exception)
 EH_METHOD(Tuple, initialize);
 EH_METHOD(Tuple, operator_arrow);
 EH_METHOD(Tuple, length);
+EH_METHOD(Tuple, toTuple);
 
 EXTERN_EHLC(Tuple)

@@ -330,6 +330,9 @@ ehobj_t::~ehobj_t() {
 }
 // set with default attributes
 void ehobj_t::set(const char *name, ehretval_p value) {
+	this->set(std::string(name), value);
+}
+void ehobj_t::set(std::string name, ehretval_p value) {
 	if(this->has(name)) {
 		ehmember_p member = this->members[name];
 		if(member->attribute.isconst == const_e) {

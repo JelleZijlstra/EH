@@ -9,7 +9,7 @@ class Foo
 		$echo n
 	endfunc
 endclass
-foo = Foo.new:
+foo = Foo.new: ()
 printvar: foo
 # Because bar is static, this will also modify bar as it appears in foo
 Foo.bar = 2

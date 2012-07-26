@@ -19,7 +19,7 @@ class Foo {
     $echo 'Negation'
   }
 }
-f = Foo.new:
+f = Foo.new: ()
 f & 2
 f ^ 3
 f | 4

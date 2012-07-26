@@ -12,5 +12,5 @@ class Foo
 		this.bar: n
 	endfunc
 endclass
-foo = Foo.new:
+foo = Foo.new: ()
 foo.baz: 42

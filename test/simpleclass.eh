@@ -2,5 +2,5 @@
 class Foo
 	public bar = 3
 endclass
-baz = Foo.new:
+baz = Foo.new: ()
 $echo baz.bar

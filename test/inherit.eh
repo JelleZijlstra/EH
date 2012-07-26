@@ -12,5 +12,5 @@ class B {
 		$echo 4
 	}
 }
-o = B.new:
-o.b:
+o = B.new: ()
+o.b: ()

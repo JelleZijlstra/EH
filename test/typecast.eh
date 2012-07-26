@@ -15,7 +15,7 @@ endif
 if foobar == baz
 	$echo 'That is not true'
 endif
-if 3 == ('3'.toInt:)
+if 3 == ('3'.toInt: ())
 	$echo 'Type juggling works!'
 endif
 if 3 == '3'

@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <cmath>
 
-#define ASSERT_NARGS(count, method) if(nargs != count) { \
-	eh_error_argcount_lib(#method, count, nargs); \
+#define ASSERT_NARGS(count, method) if(args->type() != tuple_e || args->get_tupleval()->size() != count) { \
+	eh_error_argcount_lib(#method, count, args->get_tupleval()->size()); \
 	return NULL; \
 }
 #define ASSERT_TYPE(operand, ehtype, method) if(operand->type() != ehtype) { \
@@ -19,7 +19,12 @@
 	eh_error_type("base object of " #method, obj->type(), enotice_e); \
 	return NULL; \
 }
+#define ASSERT_NULL(method) if(args->type() != null_e) { \
+	eh_error_argcount_lib(#method, 0, 1); \
+	return NULL; \
+}
 #define ASSERT_NARGS_AND_TYPE(count, ehtype, method) ASSERT_NARGS(count, method); ASSERT_OBJ_TYPE(ehtype, method);
+#define ASSERT_NULL_AND_TYPE(ehtype, method) ASSERT_NULL(method); ASSERT_OBJ_TYPE(ehtype, method);
 
 START_EHLC(Object)
 EHLC_ENTRY(Object, new)
@@ -32,14 +37,12 @@ END_EHLC()
 
 EH_METHOD(Object, new) {
 	ehretval_p ret = ehi->object_instantiate(context->get_objectval(), context);
-	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", nargs, args, ret);
+	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", args, ret);
 	return ret;
 }
 EH_METHOD(Object, inherit) {
-  ASSERT_NARGS(1, "Object.inherit");
-  ehretval_p operand = args[0];
-  ASSERT_TYPE(operand, object_e, "Object.inherit");
-	ehobj_t *classobj = operand->get_objectval();
+  	ASSERT_TYPE(args, object_e, "Object.inherit");
+	ehobj_t *classobj = args->get_objectval();
 	if(classobj != NULL) {
 		OBJECT_FOR_EACH(classobj, i) {
 			context->get_objectval()->copy_member(i, true, context, ehi);
@@ -51,7 +54,7 @@ EH_METHOD(Object, initialize) {
 	return NULL;
 }
 EH_METHOD(Object, toString) {
-	ASSERT_NARGS(0, "Object.toString");
+	ASSERT_TYPE(args, null_e, "Object.toString");
 	const size_t len = sizeof(void *) * 2 + 3;
 	char *out = new char[len]();
 	snprintf(out, len, "%p", reinterpret_cast<void *>(obj.operator->()));
@@ -61,10 +64,9 @@ EH_METHOD(Object, finalize) {
 	return NULL;
 }
 EH_METHOD(Object, isA) {
-  ASSERT_NARGS(1, "Object.isA");
-  int type = args[0]->type();
+  int type = args->type();
   if(type == object_e) {
-    type = args[0]->get_objectval()->type_id;
+    type = args->get_objectval()->type_id;
   }
   return ehretval_t::make_bool(context->is_a(type));
 }
@@ -79,16 +81,14 @@ EH_METHOD(CountClass, initialize) {
 	return ehretval_t::make_resource((LibraryBaseClass *)new CountClass());
 }
 EH_METHOD(CountClass, docount) {
-	ASSERT_NARGS(0, "CountClass.docount");
+	ASSERT_TYPE(args, null_e, "CountClass.docount");
 	CountClass *selfptr = (CountClass *)obj->get_resourceval();
 	return ehretval_t::make_int(++selfptr->count);
 }
 EH_METHOD(CountClass, setcount) {
-	ASSERT_NARGS(1, "CountClass.setcount");
 	CountClass *selfptr = (CountClass *)obj->get_resourceval();
-	ehretval_p newcounter = args[0];
-	ASSERT_TYPE(newcounter, int_e, "CountClass.setcount");
-	selfptr->count = newcounter->get_intval();
+	ASSERT_TYPE(args, int_e, "CountClass.setcount");
+	selfptr->count = args->get_intval();
 	return ehretval_t::make_bool(true);
 }
 
@@ -107,10 +107,9 @@ EH_METHOD(File, initialize) {
 	return ehretval_t::make_resource((LibraryBaseClass *)new File());
 }
 EH_METHOD(File, open) {
-	ASSERT_NARGS(1, "File.open");
 	File *selfptr = (File *) obj->get_resourceval();
 
-	ehretval_p filename = ehi->to_string(args[0], context);
+	ehretval_p filename = ehi->to_string(args, context);
 	ASSERT_TYPE(filename, string_e, "File.open");
 	FILE *mfile = fopen(filename->get_stringval(), "r+");
 	if(mfile == NULL) {
@@ -120,7 +119,7 @@ EH_METHOD(File, open) {
 	return ehretval_t::make_bool(true);
 }
 EH_METHOD(File, getc) {
-	ASSERT_NARGS(0, "File.getc");
+	ASSERT_TYPE(args, null_e, "File.getc");
 	File *selfptr = (File *) obj->get_resourceval();
 
 	if(selfptr->descriptor == NULL) {
@@ -136,7 +135,7 @@ EH_METHOD(File, getc) {
 	return ehretval_t::make_string(out);
 }
 EH_METHOD(File, gets) {
-	ASSERT_NARGS(0, "File.gets");
+	ASSERT_TYPE(args, null_e, "File.gets");
 	File *selfptr = (File *) obj->get_resourceval();
 	if(selfptr->descriptor == NULL) {
 		return NULL;
@@ -152,16 +151,14 @@ EH_METHOD(File, gets) {
 	return ehretval_t::make_string(out);
 }
 EH_METHOD(File, puts) {
-	ASSERT_NARGS(1, "File.puts");
 	File *selfptr = (File *) obj->get_resourceval();
 	if(selfptr->descriptor == NULL) {
 		return NULL;
 	}
 	
-	ehretval_p str = args[0];
-	ASSERT_TYPE(str, string_e, "File.puts");
+	ASSERT_TYPE(args, string_e, "File.puts");
 
-	int count = fputs(str->get_stringval(), selfptr->descriptor);
+	int count = fputs(args->get_stringval(), selfptr->descriptor);
 	
 	if(count == EOF) {
 		return ehretval_t::make_bool(false);
@@ -170,7 +167,7 @@ EH_METHOD(File, puts) {
 	}
 }
 EH_METHOD(File, close) {
-	ASSERT_NARGS(0, "File.close");
+	ASSERT_TYPE(args, null_e, "File.close");
 	File *selfptr = (File *) obj->get_resourceval();
 	if(selfptr->descriptor == NULL) {
 		return NULL;
@@ -180,7 +177,7 @@ EH_METHOD(File, close) {
 	return NULL;
 }
 EH_METHOD(File, toBool) {
-	ASSERT_NARGS(0, "File.toBool");
+	ASSERT_TYPE(args, null_e, "File.toBool");
 	File *selfptr = (File *)obj->get_resourceval();
 	return ehretval_t::make_bool(selfptr->descriptor != NULL);
 }
@@ -217,82 +214,77 @@ EHLC_ENTRY(Integer, sqrt)
 END_EHLC()
 
 EH_METHOD(Integer, initialize) {
-	ASSERT_NARGS(1, "Integer.initialize");
-	return ehi->to_int(args[0], context);
+	return ehi->to_int(args, context);
 }
 EH_METHOD(Integer, operator_plus) {
-	ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator+");
-	ehretval_p operand = args[0];
-	if(operand->type() == float_e) {
-		return ehretval_t::make_float((float) obj->get_intval() + operand->get_floatval());
+	ASSERT_OBJ_TYPE(int_e, "Integer.operator+");
+	if(args->type() == float_e) {
+		return ehretval_t::make_float((float) obj->get_intval() + args->get_floatval());
 	} else {
-		operand = ehi->to_int(operand, context);
-		if(operand->type() == int_e) {
-			return ehretval_t::make_int(obj->get_intval() + operand->get_intval());
+		args = ehi->to_int(args, context);
+		if(args->type() == int_e) {
+			return ehretval_t::make_int(obj->get_intval() + args->get_intval());
 		} else {
-			eh_error_type("argument to Integer.operator+", args[0]->type(), enotice_e);
+			eh_error_type("argument to Integer.operator+", args->type(), enotice_e);
 			return NULL;
 		}
 	}
 }
 EH_METHOD(Integer, operator_minus) {
-	ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator-");
-	ehretval_p operand = args[0];
-	if(operand->type() == float_e) {
-		return ehretval_t::make_float((float) obj->get_intval() - operand->get_floatval());
+	ASSERT_OBJ_TYPE(int_e, "Integer.operator-");
+	if(args->type() == float_e) {
+		return ehretval_t::make_float((float) obj->get_intval() - args->get_floatval());
 	} else {
-		operand = ehi->to_int(operand, context);
-		if(operand->type() == int_e) {
-			return ehretval_t::make_int(obj->get_intval() - operand->get_intval());
+		args = ehi->to_int(args, context);
+		if(args->type() == int_e) {
+			return ehretval_t::make_int(obj->get_intval() - args->get_intval());
 		} else {
-			eh_error_type("argument to Integer.operator-", args[0]->type(), enotice_e);
+			eh_error_type("argument to Integer.operator-", args->type(), enotice_e);
 			return NULL;
 		}
 	}
 }
 EH_METHOD(Integer, operator_times) {
-	ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator*");
-	ehretval_p operand = args[0];
-	if(operand->type() == float_e) {
-		return ehretval_t::make_float((float) obj->get_intval() * operand->get_floatval());
+	ASSERT_OBJ_TYPE(int_e, "Integer.operator*");
+	if(args->type() == float_e) {
+		return ehretval_t::make_float((float) obj->get_intval() * args->get_floatval());
 	} else {
-		operand = ehi->to_int(operand, context);
-		if(operand->type() == int_e) {
-			return ehretval_t::make_int(obj->get_intval() * operand->get_intval());
+		args = ehi->to_int(args, context);
+		if(args->type() == int_e) {
+			return ehretval_t::make_int(obj->get_intval() * args->get_intval());
 		} else {
-			eh_error_type("argument to Integer.operator*", args[0]->type(), enotice_e);
+			eh_error_type("argument to Integer.operator*", args->type(), enotice_e);
 			return NULL;
 		}
 	}
 }
 EH_METHOD(Integer, operator_divide) {
-	ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator/");
-	ehretval_p operand = args[0];
-	if(operand->type() == float_e) {
-		float val = operand->get_floatval();
+	ASSERT_OBJ_TYPE(int_e, "Integer.operator/");
+	if(args->type() == float_e) {
+		float val = args->get_floatval();
 		if(val == 0.0) {
 			eh_error("Divide by zero", enotice_e);
 			return NULL;
 		}
 		return ehretval_t::make_float((float) obj->get_intval() / val);
 	} else {
-		operand = ehi->to_int(operand, context);
-		if(operand->type() == int_e) {
-			int val = operand->get_intval();
+		args = ehi->to_int(args, context);
+		if(args->type() == int_e) {
+			int val = args->get_intval();
 			if(val == 0) {
 				eh_error("Divide by zero", enotice_e);
 				return NULL;
 			}
-			return ehretval_t::make_int(obj->get_intval() / operand->get_intval());
+			return ehretval_t::make_int(obj->get_intval() / args->get_intval());
 		} else {
-			eh_error_type("argument to Integer.operator/", args[0]->type(), enotice_e);
+			eh_error_type("argument to Integer.operator/", args->type(), enotice_e);
 			return NULL;
 		}
 	}
 }
 EH_METHOD(Integer, operator_modulo) {
-	ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator%");
-	ehretval_p operand = ehi->to_int(args[0], context);
+	ASSERT_OBJ_TYPE(int_e, "Integer.operator%");
+	ehretval_p operand = ehi->to_int(args, context);
 	ASSERT_TYPE(operand, int_e, "Integer.operator%");
 	if(operand->get_intval() == 0) {
 		eh_error("Divide by zero", enotice_e);
@@ -301,36 +293,33 @@ EH_METHOD(Integer, operator_modulo) {
 	return ehretval_t::make_int(obj->get_intval() % operand->get_intval());
 }
 EH_METHOD(Integer, operator_and) {
-  ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator&");
-  ehretval_p operand = args[0];
-  ASSERT_TYPE(operand, int_e, "Integer.operator&");
-  return ehretval_t::make_int(obj->get_intval() & operand->get_intval());
+  ASSERT_OBJ_TYPE(int_e, "Integer.operator&");
+  ASSERT_TYPE(args, int_e, "Integer.operator&");
+  return ehretval_t::make_int(obj->get_intval() & args->get_intval());
 }
 EH_METHOD(Integer, operator_or) {
-  ASSERT_NARGS_AND_TYPE(1, int_e, "integer.operator|");
-  ehretval_p operand = args[0];
-  ASSERT_TYPE(operand, int_e, "Integer.operator|");
-  return ehretval_t::make_int(obj->get_intval() | operand->get_intval());
+  ASSERT_OBJ_TYPE(int_e, "integer.operator|");
+  ASSERT_TYPE(args, int_e, "Integer.operator|");
+  return ehretval_t::make_int(obj->get_intval() | args->get_intval());
 }
 EH_METHOD(Integer, operator_xor) {
-  ASSERT_NARGS_AND_TYPE(1, int_e, "integer.operator^");
-  ehretval_p operand = args[0];
-  ASSERT_TYPE(operand, int_e, "Integer.operator^");
-  return ehretval_t::make_int(obj->get_intval() ^ operand->get_intval());
+  ASSERT_OBJ_TYPE(int_e, "integer.operator^");
+  ASSERT_TYPE(args, int_e, "Integer.operator^");
+  return ehretval_t::make_int(obj->get_intval() ^ args->get_intval());
 }
 EH_METHOD(Integer, operator_tilde) {
-  ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.operator~");
+  ASSERT_NULL_AND_TYPE(int_e, "Integer.operator~");
   return ehretval_t::make_int(~obj->get_intval());
 }
 EH_METHOD(Integer, operator_uminus) {
-  ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.operator-");
+  ASSERT_NULL_AND_TYPE(int_e, "Integer.operator-");
   return ehretval_t::make_int(-obj->get_intval());
 }
 EH_METHOD(Integer, operator_compare) {
-  ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.operator<=>");
-  ASSERT_TYPE(args[0], int_e, "Integer.operator<=>");
+  ASSERT_OBJ_TYPE(int_e, "Integer.operator<=>");
+  ASSERT_TYPE(args, int_e, "Integer.operator<=>");
   int lhs = obj->get_intval();
-  int rhs = args[0]->get_intval();
+  int rhs = args->get_intval();
   if(lhs < rhs) {
     return ehretval_t::make_int(-1);
   } else if(lhs == rhs) {
@@ -340,14 +329,13 @@ EH_METHOD(Integer, operator_compare) {
   }
 }
 EH_METHOD(Integer, abs) {
-	ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.abs");
+	ASSERT_NULL_AND_TYPE(int_e, "Integer.abs");
 	return ehretval_t::make_int(abs(obj->get_intval()));
 }
 EH_METHOD(Integer, getBit) {
-	ASSERT_NARGS_AND_TYPE(1, int_e, "Integer.getBit");
-	ehretval_p operand = args[0];
-	ASSERT_TYPE(operand, int_e, "Integer.getBit");
-	int index = operand->get_intval();
+	ASSERT_OBJ_TYPE(int_e, "Integer.getBit");
+	ASSERT_TYPE(args, int_e, "Integer.getBit");
+	int index = args->get_intval();
 	if(index < 0 || index >= sizeof(int) * 8) {
 		eh_error_invalid_argument("Integer.getBit", 0);
 		return NULL;
@@ -360,7 +348,7 @@ EH_METHOD(Integer, getBit) {
 }
 EH_METHOD(Integer, setBit) {
 	ASSERT_NARGS_AND_TYPE(2, int_e, "Integer.setBit");
-	ehretval_p operand = args[0];
+	ehretval_p operand = args->get_tupleval()->get(0);
 	ASSERT_TYPE(operand, int_e, "Integer.setBit");
 	int index = operand->get_intval();
 	if(index < 0 || index >= sizeof(int) * 8) {
@@ -368,7 +356,7 @@ EH_METHOD(Integer, setBit) {
 		return NULL;
 	}
 	int new_value;
-	ehretval_p value = args[1];
+	ehretval_p value = args->get_tupleval()->get(1);
 	if(value->type() == int_e) {
 		int int_value = value->get_intval();
 		if(int_value != 0 && int_value != 1) {
@@ -393,11 +381,11 @@ EH_METHOD(Integer, setBit) {
 	return ehretval_t::make_int(out);
 }
 EH_METHOD(Integer, length) {
-	ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.length");
+	ASSERT_NULL_AND_TYPE(int_e, "Integer.length");
 	return ehretval_t::make_int(sizeof(int));
 }
 EH_METHOD(Integer, toString) {
-	ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.toString");
+	ASSERT_NULL_AND_TYPE(int_e, "Integer.toString");
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and
 	// null terminator) should suffice for the result string
 	char *buffer = new char[12]();
@@ -405,19 +393,19 @@ EH_METHOD(Integer, toString) {
 	return ehretval_t::make_string(buffer);
 }
 EH_METHOD(Integer, toBool) {
-	ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.toBool");
+	ASSERT_NULL_AND_TYPE(int_e, "Integer.toBool");
 	return ehretval_t::make_bool(obj->get_intval() != 0);
 }
 EH_METHOD(Integer, toFloat) {
-	ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.toFloat");
+	ASSERT_NULL_AND_TYPE(int_e, "Integer.toFloat");
 	return ehretval_t::make_float((float) obj->get_intval());
 }
 EH_METHOD(Integer, toInt) {
-	ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.toInt");
+	ASSERT_NULL_AND_TYPE(int_e, "Integer.toInt");
 	return obj;
 }
 EH_METHOD(Integer, sqrt) {
-  ASSERT_NARGS_AND_TYPE(0, int_e, "Integer.sqrt");
+  ASSERT_NULL_AND_TYPE(int_e, "Integer.sqrt");
   return ehretval_t::make_int((int) sqrt((double) obj->get_intval()));
 }
 
@@ -430,18 +418,17 @@ EHLC_ENTRY(Array, toArray)
 END_EHLC()
 
 EH_METHOD(Array, initialize) {
-	ASSERT_NARGS(1, "Array.initialize");
-	return ehi->to_array(args[0], context);
+	return ehi->to_array(args, context);
 }
 EH_METHOD(Array, length) {
-	ASSERT_NARGS_AND_TYPE(0, array_e, "Array.length");
+	ASSERT_NULL_AND_TYPE(array_e, "Array.length");
 	return ehretval_t::make_int(obj->get_arrayval()->size());
 }
 EH_METHOD(Array, operator_arrow) {
-	ASSERT_NARGS_AND_TYPE(1, array_e, "Array.operator->");
+	ASSERT_OBJ_TYPE(array_e, "Array.operator->");
 	eharray_t *arr = obj->get_arrayval();
-	if(arr->has(args[0])) {
-		return arr->operator[](args[0]);
+	if(arr->has(args)) {
+		return arr->operator[](args);
 	} else {
 		return NULL;
 	}
@@ -449,18 +436,18 @@ EH_METHOD(Array, operator_arrow) {
 EH_METHOD(Array, operator_arrow_equals) {
 	ASSERT_NARGS_AND_TYPE(2, array_e, "Array.operator->=");
 	try {
-		obj->get_arrayval()->operator[](args[0]) = args[1];
-		return args[1];
+		obj->get_arrayval()->operator[](args->get_tupleval()->get(0)) = args->get_tupleval()->get(1);
+		return args->get_tupleval()->get(1);
 	} catch(unknown_value_exception &e) {
 		return NULL;
 	}
 }
 EH_METHOD(Array, toArray) {
-  ASSERT_NARGS_AND_TYPE(0, array_e, "Array.toArray");
+  ASSERT_NULL_AND_TYPE(array_e, "Array.toArray");
   return obj;
 }
 EH_METHOD(Array, toTuple) {
-  ASSERT_NARGS_AND_TYPE(0, array_e, "Array.toTuple");
+  ASSERT_NULL_AND_TYPE(array_e, "Array.toTuple");
   eharray_t *arr = obj->get_arrayval();
   int length = arr->size();
   //TODO
@@ -484,42 +471,41 @@ EHLC_ENTRY(Float, sqrt)
 END_EHLC()
 
 EH_METHOD(Float, initialize) {
-	ASSERT_NARGS(1, "Float.initialize");
-	return ehi->to_float(args[0], context);
+	return ehi->to_float(args, context);
 }
 EH_METHOD(Float, operator_plus) {
-	ASSERT_NARGS_AND_TYPE(1, float_e, "Float.operator+");
-	ehretval_p operand = ehi->to_float(args[0], context);
+	ASSERT_OBJ_TYPE(float_e, "Float.operator+");
+	ehretval_p operand = ehi->to_float(args, context);
 	if(operand->type() == float_e) {
 		return ehretval_t::make_float(obj->get_floatval() + operand->get_floatval());
 	} else {
-		eh_error_type("argument to Float.operator+", args[0]->type(), enotice_e);
+		eh_error_type("argument to Float.operator+", args->type(), enotice_e);
 		return NULL;
 	}
 }
 EH_METHOD(Float, operator_minus) {
-	ASSERT_NARGS_AND_TYPE(1, float_e, "Float.operator-");
-	ehretval_p operand = ehi->to_float(args[0], context);
+	ASSERT_OBJ_TYPE(float_e, "Float.operator-");
+	ehretval_p operand = ehi->to_float(args, context);
 	if(operand->type() == float_e) {
 		return ehretval_t::make_float(obj->get_floatval() - operand->get_floatval());
 	} else {
-		eh_error_type("argument to Float.operator-", args[0]->type(), enotice_e);
+		eh_error_type("argument to Float.operator-", args->type(), enotice_e);
 		return NULL;
 	}
 }
 EH_METHOD(Float, operator_times) {
-	ASSERT_NARGS_AND_TYPE(1, float_e, "Float.operator*");
-	ehretval_p operand = ehi->to_float(args[0], context);
+	ASSERT_OBJ_TYPE(float_e, "Float.operator*");
+	ehretval_p operand = ehi->to_float(args, context);
 	if(operand->type() == float_e) {
 		return ehretval_t::make_float(obj->get_floatval() * operand->get_floatval());
 	} else {
-		eh_error_type("argument to Float.operator*", args[0]->type(), enotice_e);
+		eh_error_type("argument to Float.operator*", args->type(), enotice_e);
 		return NULL;
 	}
 }
 EH_METHOD(Float, operator_divide) {
-	ASSERT_NARGS_AND_TYPE(1, float_e, "Float.operator/");
-	ehretval_p operand = ehi->to_float(args[0], context);
+	ASSERT_OBJ_TYPE(float_e, "Float.operator/");
+	ehretval_p operand = ehi->to_float(args, context);
 	if(operand->type() == float_e) {
 		if(operand->get_floatval() == 0.0) {
 			eh_error("Divide by zero", enotice_e);
@@ -527,19 +513,19 @@ EH_METHOD(Float, operator_divide) {
 		}
 		return ehretval_t::make_float(obj->get_floatval() / operand->get_floatval());
 	} else {
-		eh_error_type("argument to Float.operator/", args[0]->type(), enotice_e);
+		eh_error_type("argument to Float.operator/", args->type(), enotice_e);
 		return NULL;
 	}
 }
 EH_METHOD(Float, operator_uminus) {
-  ASSERT_NARGS_AND_TYPE(0, float_e, "Float.operator-");
+  ASSERT_NULL_AND_TYPE(float_e, "Float.operator-");
   return ehretval_t::make_float(-obj->get_floatval());
 }
 EH_METHOD(Float, operator_compare) {
-  ASSERT_NARGS_AND_TYPE(1, float_e, "Float.operator<=>");
-  ASSERT_TYPE(args[0], float_e, "Float.operator<=>");
+  ASSERT_OBJ_TYPE(float_e, "Float.operator<=>");
+  ASSERT_TYPE(args, float_e, "Float.operator<=>");
   float lhs = obj->get_floatval();
-  float rhs = args[0]->get_floatval();
+  float rhs = args->get_floatval();
   if(lhs < rhs) {
     return ehretval_t::make_int(-1);
   } else if(lhs == rhs) {
@@ -549,29 +535,29 @@ EH_METHOD(Float, operator_compare) {
   }
 }
 EH_METHOD(Float, abs) {
-	ASSERT_NARGS_AND_TYPE(0, float_e, "Float.abs");
+	ASSERT_NULL_AND_TYPE(float_e, "Float.abs");
 	return ehretval_t::make_float(abs(obj->get_floatval()));
 }
 EH_METHOD(Float, toString) {
-	ASSERT_NARGS_AND_TYPE(0, float_e, "Float.toString");
+	ASSERT_NULL_AND_TYPE(float_e, "Float.toString");
 	char *buffer = new char[12];
 	snprintf(buffer, 12, "%f", obj->get_floatval());
 	return ehretval_t::make_string(buffer);
 }
 EH_METHOD(Float, toInt) {
-	ASSERT_NARGS_AND_TYPE(0, float_e, "Float.toInt");
+	ASSERT_NULL_AND_TYPE(float_e, "Float.toInt");
 	return ehretval_t::make_int((int) obj->get_floatval());
 }
 EH_METHOD(Float, toBool) {
-	ASSERT_NARGS_AND_TYPE(0, float_e, "Float.toBool");
+	ASSERT_NULL_AND_TYPE(float_e, "Float.toBool");
 	return ehretval_t::make_bool(obj->get_floatval() != 0.0);
 }
 EH_METHOD(Float, toFloat) {
-	ASSERT_NARGS_AND_TYPE(0, float_e, "Float.toFloat");
+	ASSERT_NULL_AND_TYPE(float_e, "Float.toFloat");
 	return obj;
 }
 EH_METHOD(Float, sqrt) {
-  ASSERT_NARGS_AND_TYPE(0, float_e, "Float.sqrt");
+  ASSERT_NULL_AND_TYPE(float_e, "Float.sqrt");
   return ehretval_t::make_float(sqrt(obj->get_floatval()));
 }
 
@@ -591,12 +577,11 @@ EHLC_ENTRY(String, charAtPosition)
 END_EHLC()
 
 EH_METHOD(String, initialize) {
-	ASSERT_NARGS(1, "String.initialize");
-	return ehi->to_string(args[0], context);
+	return ehi->to_string(args, context);
 }
 EH_METHOD(String, operator_plus) {
-	ASSERT_NARGS_AND_TYPE(1, string_e, "String.operator+");
-	ehretval_p operand = ehi->to_string(args[0], context);
+	ASSERT_OBJ_TYPE(string_e, "String.operator+");
+	ehretval_p operand = ehi->to_string(args, context);
 	ASSERT_TYPE(operand, string_e, "String.operator+");
 	size_t len1 = strlen(obj->get_stringval());
 	size_t len2 = strlen(operand->get_stringval());
@@ -606,10 +591,9 @@ EH_METHOD(String, operator_plus) {
 	return ehretval_t::make_string(out); 
 }
 EH_METHOD(String, operator_arrow) {
-	ASSERT_NARGS_AND_TYPE(1, string_e, "String.operator->");
-	ehretval_p operand = args[0];
-	ASSERT_TYPE(operand, int_e, "String.operator->");
-	int index = operand->get_intval();
+	ASSERT_OBJ_TYPE(string_e, "String.operator->");
+	ASSERT_TYPE(args, int_e, "String.operator->");
+	int index = args->get_intval();
 	size_t len = strlen(obj->get_stringval());
 	// allow negative index
 	if(index < 0) {
@@ -626,7 +610,7 @@ EH_METHOD(String, operator_arrow) {
 }
 EH_METHOD(String, operator_arrow_equals) {
 	ASSERT_NARGS_AND_TYPE(2, string_e, "String.operator->=");
-	ehretval_p operand1 = args[0];
+	ehretval_p operand1 = args->get_tupleval()->get(0);
 	ASSERT_TYPE(operand1, int_e, "String.operator->=");
 	int index = operand1->get_intval();
 	size_t len = strlen(obj->get_stringval());
@@ -637,7 +621,7 @@ EH_METHOD(String, operator_arrow_equals) {
 		eh_error_invalid_argument("String.operator->=", 0);
 		return NULL;
 	}
-	ehretval_p operand2 = ehi->to_string(args[1], context);
+	ehretval_p operand2 = ehi->to_string(args->get_tupleval()->get(1), context);
 	if(strlen(operand2->get_stringval()) == 0) {
 		eh_error_invalid_argument("String.operator->=", 1);
 		return NULL;
@@ -646,22 +630,22 @@ EH_METHOD(String, operator_arrow_equals) {
 	return operand2;
 }
 EH_METHOD(String, operator_compare) {
-  ASSERT_NARGS_AND_TYPE(1, string_e, "String.operator<=>");
-  ASSERT_TYPE(args[0], string_e, "String.operator<=>");
+  ASSERT_OBJ_TYPE(string_e, "String.operator<=>");
+  ASSERT_TYPE(args, string_e, "String.operator<=>");
   const char *lhs = obj->get_stringval();
-  const char *rhs = args[0]->get_stringval();
+  const char *rhs = args->get_stringval();
   return ehretval_t::make_int(strcmp(lhs, rhs));
 }
 EH_METHOD(String, length) {
-	ASSERT_NARGS_AND_TYPE(0, string_e, "String.length");
+	ASSERT_NULL_AND_TYPE(string_e, "String.length");
 	return ehretval_t::make_int(strlen(obj->get_stringval()));
 }
 EH_METHOD(String, toString) {
-	ASSERT_NARGS_AND_TYPE(0, string_e, "String.toString");
+	ASSERT_NULL_AND_TYPE(string_e, "String.toString");
 	return obj;
 }
 EH_METHOD(String, toInt) {
-	ASSERT_NARGS_AND_TYPE(0, string_e, "String.toInt");
+	ASSERT_NULL_AND_TYPE(string_e, "String.toInt");
 	char *endptr;
 	ehretval_p ret = ehretval_t::make_int(strtol(obj->get_stringval(), &endptr, 0));
 	// If in == endptr, strtol read no digits and there was no conversion.
@@ -672,7 +656,7 @@ EH_METHOD(String, toInt) {
 	return ret;
 }
 EH_METHOD(String, toFloat) {
-	ASSERT_NARGS_AND_TYPE(0, string_e, "String.toFloat");
+	ASSERT_NULL_AND_TYPE(string_e, "String.toFloat");
 	char *endptr;
 	ehretval_p ret = ehretval_t::make_float(strtof(obj->get_stringval(), &endptr));
 	// If in == endptr, strtof read no digits and there was no conversion.
@@ -683,11 +667,11 @@ EH_METHOD(String, toFloat) {
 	return ret;
 }
 EH_METHOD(String, toBool) {
-	ASSERT_NARGS_AND_TYPE(0, string_e, "String.toBool");
+	ASSERT_NULL_AND_TYPE(string_e, "String.toBool");
 	return ehretval_t::make_bool(obj->get_stringval()[0] != '\0');
 }
 EH_METHOD(String, toRange) {
-	ASSERT_NARGS_AND_TYPE(0, string_e, "String.toRange");
+	ASSERT_NULL_AND_TYPE(string_e, "String.toRange");
 	// attempt to find two integers in the string
 	int min, max;
 	char *in = obj->get_stringval();
@@ -718,10 +702,9 @@ EH_METHOD(String, toRange) {
 	return ehi->make_range(range);
 }
 EH_METHOD(String, charAtPosition) {
-	ASSERT_NARGS_AND_TYPE(1, string_e, "String.charAtPosition");
-	ehretval_p index_var = args[0];
-	ASSERT_TYPE(index_var, int_e, "String.charAtPosition");
-	int index = index_var->get_intval();
+	ASSERT_OBJ_TYPE(string_e, "String.charAtPosition");
+	ASSERT_TYPE(args, int_e, "String.charAtPosition");
+	int index = args->get_intval();
 	const char *string = obj->get_stringval();
 	if(index < 0 || index >= strlen(string)) {
 		eh_error_invalid_argument("String.charAtPosition", index);
@@ -740,11 +723,10 @@ EHLC_ENTRY(Bool, operator_bang)
 END_EHLC()
 
 EH_METHOD(Bool, initialize) {
-	ASSERT_NARGS(1, "Bool.initialize");
-	return ehi->to_bool(args[0], context);
+	return ehi->to_bool(args, context);
 }
 EH_METHOD(Bool, toString) {
-	ASSERT_NARGS_AND_TYPE(0, bool_e, "Bool.toString");
+	ASSERT_NULL_AND_TYPE(bool_e, "Bool.toString");
 	char *str;
 	if(obj->get_boolval()) {
 		str = strdup("true");
@@ -754,11 +736,11 @@ EH_METHOD(Bool, toString) {
 	return ehretval_t::make_string(str);
 }
 EH_METHOD(Bool, toBool) {
-	ASSERT_NARGS_AND_TYPE(0, bool_e, "Bool.toBool");
+	ASSERT_NULL_AND_TYPE(bool_e, "Bool.toBool");
 	return obj;
 }
 EH_METHOD(Bool, toInt) {
-	ASSERT_NARGS_AND_TYPE(0, bool_e, "Bool.toInt");
+	ASSERT_NULL_AND_TYPE(bool_e, "Bool.toInt");
 	if(obj->get_boolval()) {
 		return ehretval_t::make_int(1);
 	} else {
@@ -766,7 +748,7 @@ EH_METHOD(Bool, toInt) {
 	}
 }
 EH_METHOD(Bool, operator_bang) {
-  ASSERT_NARGS_AND_TYPE(0, bool_e, "Bool.operator!");
+  ASSERT_NULL_AND_TYPE(bool_e, "Bool.operator!");
   return ehretval_t::make_bool(!obj->get_boolval());
 }
 
@@ -777,15 +759,14 @@ EHLC_ENTRY(Null, toBool)
 END_EHLC()
 
 EH_METHOD(Null, initialize) {
-	ASSERT_NARGS(0, "Null.initialize");
 	return NULL;
 }
 EH_METHOD(Null, toString) {
-	ASSERT_NARGS_AND_TYPE(0, null_e, "Null.toString");
+	ASSERT_NULL_AND_TYPE(null_e, "Null.toString");
 	return ehretval_t::make_string(strdup(""));
 }
 EH_METHOD(Null, toBool) {
-	ASSERT_NARGS_AND_TYPE(0, null_e, "Null.toBool");
+	ASSERT_NULL_AND_TYPE(null_e, "Null.toBool");
 	return ehretval_t::make_bool(false);
 }
 
@@ -799,22 +780,20 @@ EHLC_ENTRY(Range, toRange)
 END_EHLC()
 
 EH_METHOD(Range, initialize) {
-	ASSERT_NARGS(1, "Range.initialize");
-	return ehi->to_range(args[0], context);
+	return ehi->to_range(args, context);
 }
 EH_METHOD(Range, min) {
-	ASSERT_NARGS_AND_TYPE(0, range_e, "Range.min");
+	ASSERT_NULL_AND_TYPE(range_e, "Range.min");
 	return obj->get_rangeval()->min;
 }
 EH_METHOD(Range, max) {
-	ASSERT_NARGS_AND_TYPE(0, range_e, "Range.max");
+	ASSERT_NULL_AND_TYPE(range_e, "Range.max");
 	return obj->get_rangeval()->max;
 }
 EH_METHOD(Range, operator_arrow) {
-	ASSERT_NARGS_AND_TYPE(1, range_e, "Range.operator->");
-	ehretval_p operand = args[0];
-	ASSERT_TYPE(operand, int_e, "Range.operator->");
-	int index = operand->get_intval();
+	ASSERT_OBJ_TYPE(range_e, "Range.operator->");
+	ASSERT_TYPE(args, int_e, "Range.operator->");
+	int index = args->get_intval();
 	if(index == 0) {
 		return obj->get_rangeval()->min;
 	} else if(index == 1) {
@@ -825,7 +804,7 @@ EH_METHOD(Range, operator_arrow) {
 	}
 }
 EH_METHOD(Range, toString) {
-	ASSERT_NARGS_AND_TYPE(0, range_e, "Range.toString");
+	ASSERT_NULL_AND_TYPE(range_e, "Range.toString");
 	ehrange_t *range = obj->get_rangeval();
 	ehretval_p str1 = ehi->to_string(range->min, context);
 	ehretval_p str2 = ehi->to_string(range->max, context);
@@ -840,14 +819,14 @@ EH_METHOD(Range, toString) {
 	return ehretval_t::make_string(out);
 }
 EH_METHOD(Range, toArray) {
-	ASSERT_NARGS_AND_TYPE(0, range_e, "Range.toArray");
+	ASSERT_NULL_AND_TYPE(range_e, "Range.toArray");
 	ehretval_p array = ehi->make_array(new eharray_t);
 	array->get_arrayval()->int_indices[0] = obj->get_rangeval()->min;
 	array->get_arrayval()->int_indices[1] = obj->get_rangeval()->max;
 	return array;
 }
 EH_METHOD(Range, toRange) {
-	ASSERT_NARGS_AND_TYPE(0, range_e, "Range.toRange");
+	ASSERT_NULL_AND_TYPE(range_e, "Range.toRange");
 	return obj;
 }
 
@@ -859,7 +838,7 @@ EHLC_ENTRY(Hash, has)
 END_EHLC()
 
 EH_METHOD(Hash, toArray) {
-	ASSERT_NARGS_AND_TYPE(0, hash_e, "Hash.toArray");
+	ASSERT_NULL_AND_TYPE(hash_e, "Hash.toArray");
 	ehhash_t *hash = obj->get_hashval();
 	eharray_t *arr = new eharray_t();
 	ehretval_p out = ehi->make_array(arr);
@@ -869,27 +848,25 @@ EH_METHOD(Hash, toArray) {
 	return out;
 }
 EH_METHOD(Hash, operator_arrow) {
-	ASSERT_NARGS_AND_TYPE(1, hash_e, "Hash.operator->");
-	ehretval_p index = args[0];
-	ASSERT_TYPE(index, string_e, "Hash.operator->");
+	ASSERT_OBJ_TYPE(hash_e, "Hash.operator->");
+	ASSERT_TYPE(args, string_e, "Hash.operator->");
 	ehhash_t *hash = obj->get_hashval();
-	return hash->get(index->get_stringval());
+	return hash->get(args->get_stringval());
 }
 EH_METHOD(Hash, operator_arrow_equals) {
 	ASSERT_NARGS_AND_TYPE(2, hash_e, "Hash.operator->=");
-	ehretval_p index = args[0];
+	ehretval_p index = args->get_tupleval()->get(0);
 	ASSERT_TYPE(index, string_e, "Hash.operator->=");
-	ehretval_p value = args[1];
+	ehretval_p value = args->get_tupleval()->get(1);
 	ehhash_t *hash = obj->get_hashval();
 	hash->set(index->get_stringval(), value);
 	return value;
 }
 EH_METHOD(Hash, has) {
-	ASSERT_NARGS_AND_TYPE(1, hash_e, "Hash.has");
-	ehretval_p index = args[0];
-	ASSERT_TYPE(index, string_e, "Hash.has");
+	ASSERT_OBJ_TYPE(hash_e, "Hash.has");
+	ASSERT_TYPE(args, string_e, "Hash.has");
 	ehhash_t *hash = obj->get_hashval();
-	return ehretval_t::make_bool(hash->has(index->get_stringval()));
+	return ehretval_t::make_bool(hash->has(args->get_stringval()));
 }
 
 START_EHLC(Function)
@@ -921,21 +898,33 @@ EH_METHOD(Function, operator_colon) {
 	ehfunc_t *f = function_object->get_objectval()->object_data->get_funcval();
 
 	if(f->type == lib_e) {
-		return f->libmethod_pointer(object_data, nargs, args, parent, ehi);
-	}
-	// check parameter count
-	if(nargs != f->argcount) {
-		eh_error_argcount(f->argcount, nargs);
-		return NULL;
+		return f->libmethod_pointer(object_data, args, parent, ehi);
 	}
 	ehretval_p newcontext = ehi->object_instantiate(function_object->get_objectval(), context);
 	newcontext->get_objectval()->object_data = function_object->get_objectval()->object_data;
-	
-	// set parameters as necessary
-	for(int i = 0; i < nargs; i++) {
-		ehmember_p var;
-		var->value = args[i];
-		newcontext->get_objectval()->insert(f->args[i].name, var);
+
+	// check parameter count
+	if(f->argcount == 0) {
+		if(args->type() != null_e) {
+			eh_error_argcount(0, 1);
+			return NULL;
+		}
+	} else if(f->argcount == 1) {
+		newcontext->get_objectval()->set(f->args[0].name, args);
+	} else {
+		if(args->type() != tuple_e) {
+			eh_error_argcount(f->argcount, 1);
+			return NULL;
+		} else if(args->get_tupleval()->size() != f->argcount) {
+			eh_error_argcount(f->argcount, args->get_tupleval()->size());
+			return NULL;
+		} else {
+			// set parameters as necessary
+			ehtuple_t *tuple = args->get_tupleval();
+			for(int i = 0; i < f->argcount; i++) {
+				newcontext->get_objectval()->set(f->args[f->argcount - 1 - i].name, tuple->get(i));
+			}			
+		}
 	}
 	// insert self variable with the object_data
 	ehmember_p self_member;
@@ -953,13 +942,11 @@ EHLC_ENTRY(Exception, toString)
 END_EHLC()
 
 EH_METHOD(Exception, initialize) {
-	ASSERT_NARGS(1, "Exception.initialize");
-	ehretval_p msg = args[0];
-	ASSERT_TYPE(msg, string_e, "Exception.initialize");
-	return ehretval_t::make_resource(new Exception(msg->get_stringval()));
+	ASSERT_TYPE(args, string_e, "Exception.initialize");
+	return ehretval_t::make_resource(new Exception(args->get_stringval()));
 }
 EH_METHOD(Exception, toString) {
-	ASSERT_NARGS_AND_TYPE(0, resource_e, "Exception.toString");
+	ASSERT_NULL_AND_TYPE(resource_e, "Exception.toString");
 	Exception *exc = (Exception *)obj->get_resourceval();
 	return ehretval_t::make_string(strdup(exc->msg));
 }
@@ -968,22 +955,27 @@ START_EHLC(Tuple)
 EHLC_ENTRY(Tuple, initialize)
 EHLC_ENTRY(Tuple, operator_arrow)
 EHLC_ENTRY(Tuple, length)
+EHLC_ENTRY(Tuple, toTuple)
 END_EHLC()
 
 EH_METHOD(Tuple, initialize) {
-  return ehi->make_tuple(new ehtuple_t(nargs, args));
+	return ehi->to_tuple(args, context);
 }
 EH_METHOD(Tuple, operator_arrow) {
-  ASSERT_NARGS_AND_TYPE(1, tuple_e, "Tuple.operator->");
-  ASSERT_TYPE(args[0], int_e, "Tuple.operator->");
-  int index = args[0]->get_intval();
-  if(index < 0 || index > obj->get_tupleval()->size()) {
-    eh_error_invalid_argument("Tuple.operator->", 0);
-    return NULL;
-  }
-  return obj->get_tupleval()->get(index);
+	ASSERT_OBJ_TYPE(tuple_e, "Tuple.operator->");
+	ASSERT_TYPE(args, int_e, "Tuple.operator->");
+	int index = args->get_intval();
+	if(index < 0 || index > obj->get_tupleval()->size()) {
+    	eh_error_invalid_argument("Tuple.operator->", 0);
+    	return NULL;
+	}
+  	return obj->get_tupleval()->get(index);
 }
 EH_METHOD(Tuple, length) {
-  ASSERT_NARGS_AND_TYPE(0, tuple_e, "Tuple.length");
-  return ehretval_t::make_int(obj->get_tupleval()->size());
+  	ASSERT_NULL_AND_TYPE(tuple_e, "Tuple.length");
+  	return ehretval_t::make_int(obj->get_tupleval()->size());
+}
+EH_METHOD(Tuple, toTuple) {
+	ASSERT_OBJ_TYPE(tuple_e, "Tuple.toTuple");
+	return obj;
 }

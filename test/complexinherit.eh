@@ -37,11 +37,11 @@ class D {
 		inherit: C.CC
 		public dd: {
 			# Expect 1
-			this.aa:
+			this.aa: ()
 			# Expect 2
-			this.bb:
+			this.bb: ()
 			# Expect null, 3
-			this.cc:
+			this.cc: ()
 			# Expect 4
 			$echo d
 			
@@ -53,5 +53,5 @@ class D {
 		}
 	}
 }
-o = D.new:.DD
-o.dd:
+o = (D.new: ()).DD
+o.dd: ()

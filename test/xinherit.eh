@@ -5,4 +5,4 @@ end
 class B
   inherit: A
 end
-printvar: B.new:
+printvar: B.new: ()

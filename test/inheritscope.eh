@@ -14,8 +14,8 @@ class C {
 	class D {
 		inherit: A.B
 	}
-	o = D.new:
+	o = D.new: ()
 	
 	# Expect 3, because inherited methods retain their original parent scope
-	o.b:
+	o.b: ()
 }

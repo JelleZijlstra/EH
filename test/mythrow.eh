@@ -6,5 +6,5 @@ throw = (func: {
 		$echo 'Oh no, an exception!'
 		old_throw: exception
 	}
-}):
+}): ()
 throw: 42

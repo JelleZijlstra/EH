@@ -76,10 +76,10 @@ EHParser *yyget_extra(void *scanner);
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %left T_LOWPREC /* Used to prevent S/R conflicts */
+%right ':'
 %left ','
 %right '='
 %left T_AND T_OR T_XOR
-%left ':'
 %left '|' '^' '&'
 %left '+' '-'
 %left '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ T_COMPARE
@@ -93,7 +93,7 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_SHORTFUNCTION
 
-%type<ehNode> statement expression statement_list bareword arglist arg parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr global_list string shortfunc bareword_or_string
+%type<ehNode> statement expression statement_list bareword parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr global_list string shortfunc bareword_or_string
 %%
 program:
 	global_list				{ 	// Don't do anything. Destructors below take 
@@ -279,8 +279,8 @@ expression:
 							{ $$ = ADD_NODE2('.', $1, $3); }
 	| '@' T_TYPE expression %prec '@'
 							{ $$ = ADD_NODE2('@', $2, $3); }
-	| expression ':' arglist
-							{ $$ = ADD_NODE2(':', $1, $3); }
+	| expression ',' expression
+							{ $$ = ADD_NODE2(',', $1, $3); }
 	| expression T_EQ expression
 							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| expression '>' expression
@@ -298,7 +298,7 @@ expression:
 	| expression T_SNE expression
 							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
 	| expression T_COMPARE expression
-	            { $$ = ADD_NODE2(T_COMPARE, $1, $3); }
+	            			{ $$ = ADD_NODE2(T_COMPARE, $1, $3); }
 	| expression '+' expression
 							{ $$ = ADD_NODE2('+', $1, $3); }
 	| expression '-' expression
@@ -323,6 +323,8 @@ expression:
 							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
 	| expression T_RANGE expression
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
+	| expression ':' expression
+							{ $$ = ADD_NODE2(':', $1, $3); }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
 	| T_FUNC ':' parglist '{' statement_list '}'
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
@@ -363,8 +365,6 @@ simple_expr:
 							{ $$ = ADD_NODE2('.', $1, $3); }
 	| '@' T_TYPE expression %prec '@'	
 							{ $$ = ADD_NODE2('@', $2, $3); }
-	| simple_expr ':' arglist
-							{ $$ = ADD_NODE2(':', $1, $3); }
 	| simple_expr T_EQ simple_expr
 							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| simple_expr '<' simple_expr
@@ -380,7 +380,7 @@ simple_expr:
 	| simple_expr T_SNE simple_expr
 							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
 	| simple_expr T_COMPARE simple_expr
-	            { $$ = ADD_NODE2(T_COMPARE, $1, $3); }
+	            			{ $$ = ADD_NODE2(T_COMPARE, $1, $3); }
 	| simple_expr '+' simple_expr
 							{ $$ = ADD_NODE2('+', $1, $3); }
 	| simple_expr '*' simple_expr
@@ -403,6 +403,8 @@ simple_expr:
 							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
 	| simple_expr T_RANGE simple_expr
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
+	| simple_expr ':' simple_expr
+							{ $$ = ADD_NODE2(':', $1, $3); }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
@@ -476,9 +478,9 @@ arraylist_i:
 	;
 
 arraymember:
-	expression T_DOUBLEARROW expression
+	simple_expr T_DOUBLEARROW simple_expr
 							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
-	| expression			{ $$ = ADD_NODE1(T_ARRAYMEMBER, $1); }
+	| simple_expr			{ $$ = ADD_NODE1(T_ARRAYMEMBER, $1); }
 	;
 
 anonclasslist:
@@ -496,19 +498,8 @@ anonclasslist_i:
 	;
 
 anonclassmember:
-	expression T_DOUBLEARROW expression
+	simple_expr T_DOUBLEARROW simple_expr
 							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
-	;
-
-arglist:
-	arglist arg				{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
-	;
-
-arg:
-	expression %prec T_LOWPREC
-							{ $$ = $1; }
-	| expression ','		{ $$ = $1; }
 	;
 
 parglist:
@@ -554,6 +545,7 @@ attributelist_inner:
 							{ $$ = ADD_NODE2(T_ATTRIBUTE, $1, $2); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_ATTRIBUTE); }
 	;
+
 %%
 int eh_outer_exit(int exitval) {
 	//free_node: something. We should actually be adding stuff to the AST, I suppose.

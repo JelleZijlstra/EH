@@ -9,7 +9,7 @@ class Foo
 		ret baz
 	end
 end
-f = Foo.new:
-printvar: f.bar:
-printvar: f.useprivate:
+f = Foo.new: ()
+printvar: f.bar: ()
+printvar: f.useprivate: ()
 $echo baz

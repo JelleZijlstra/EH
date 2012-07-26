@@ -54,6 +54,7 @@ private:
 	ehretval_p eh_op_anonclass(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_declareclosure(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_declareclass(opnode_t *op, ehcontext_t context);
+	ehretval_p eh_op_tuple(ehretval_p node, ehcontext_t context);
 	void eh_op_classmember(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_switch(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_given(ehretval_p *paras, ehcontext_t context);
@@ -69,7 +70,7 @@ private:
 	ehcmd_t get_command(const char *name);
 	void insert_command(const char *name, const ehcmd_t cmd);
 	void redirect_command(const char *redirect, const char *target);
-	ehretval_p call_function(ehretval_p function, int nargs, ehretval_p *args, ehcontext_t context);
+	ehretval_p call_function(ehretval_p function, ehretval_p args, ehcontext_t context);
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
 	ehretval_p eh_rangetoarray(const ehrange_t *const range);
 	ehretval_p eh_xtoarray(ehretval_p in);
@@ -139,12 +140,12 @@ public:
 	}
 	ehretval_p promote(ehretval_p in, ehcontext_t context);
 	ehretval_p object_instantiate(ehobj_t *obj, ehcontext_t context);
-	ehretval_p call_method(ehretval_p in, const char *name, int nargs, ehretval_p *args, ehcontext_t context);
+	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
 
 	// conversion methods, guaranteed to return the type they're supposed to return
 #define CASTER(method_name, ehtype, fallback_value) ehretval_p to_ ## ehtype(ehretval_p in, ehcontext_t context) { \
 	static ehretval_p fallback = ehretval_t::make_ ## ehtype(fallback_value); \
-	ehretval_p out = call_method(in, #method_name, 0, NULL, context); \
+	ehretval_p out = call_method(in, #method_name, NULL, context); \
 	if(out->type() == ehtype ## _e) { \
 		return out; \
 	} else { \
@@ -158,7 +159,7 @@ public:
 	CASTER(toBool, bool, false)
 #undef CASTER
 	ehretval_p to_array(ehretval_p in, ehcontext_t context) {
-		ehretval_p out = call_method(in, "toArray", 0, NULL, context);
+		ehretval_p out = call_method(in, "toArray", NULL, context);
 		if(out->type() == array_e) {
 			return out;
 		} else {
@@ -169,13 +170,22 @@ public:
 		}
 	}
 	ehretval_p to_range(ehretval_p in, ehcontext_t context) {
-		ehretval_p out = call_method(in, "toRange", 0, NULL, context);
+		ehretval_p out = call_method(in, "toRange", NULL, context);
 		if(out->type() == range_e) {
 			return out;
 		} else {
 			eh_error("toRange does not return a range", enotice_e);
 			ehrange_t *range = new ehrange_t(in, in);
 			return this->make_range(range);
+		}
+	}
+	ehretval_p to_tuple(ehretval_p in, ehcontext_t context) {
+		ehretval_p out = call_method(in, "toTuple", NULL, context);
+		if(out->type() == tuple_e) {
+			return out;
+		} else {
+			eh_error("toTuple does not return a tuple", enotice_e);
+			return this->make_tuple(new ehtuple_t(0, NULL));
 		}
 	}
 

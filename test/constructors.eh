@@ -6,4 +6,4 @@ printvar: (Integer.new: 3)
 class Foo {
 	public toArray = func: -> []
 }
-printvar: (Array.new: Foo).length:
+printvar: (Array.new: Foo).length: ()

@@ -12,8 +12,8 @@ class Foo
 		ret baz
 	end
 end
-f = Foo.new:
-printvar: f.bar:
+f = Foo.new: ()
+printvar: f.bar: ()
 printvar: f
-printvar: f.useprivate:
+printvar: f.useprivate: ()
 $echo baz

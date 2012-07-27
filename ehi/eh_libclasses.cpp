@@ -415,6 +415,7 @@ EHLC_ENTRY(Array, length)
 EHLC_ENTRY(Array, operator_arrow)
 EHLC_ENTRY(Array, operator_arrow_equals)
 EHLC_ENTRY(Array, toArray)
+EHLC_ENTRY(Array, toTuple)
 END_EHLC()
 
 EH_METHOD(Array, initialize) {
@@ -450,8 +451,16 @@ EH_METHOD(Array, toTuple) {
   ASSERT_NULL_AND_TYPE(array_e, "Array.toTuple");
   eharray_t *arr = obj->get_arrayval();
   int length = arr->size();
-  //TODO
-  return NULL;
+  ehretval_a values(length);
+  // We'll say that output order is unspecified
+  int i = 0;
+  ARRAY_FOR_EACH_INT(arr, member) {
+  	values[i++] = member->second;
+  }
+  ARRAY_FOR_EACH_STRING(arr, member) {
+  	values[i++] = member->second;
+  }
+  return ehi->make_tuple(new ehtuple_t(length, values));
 }
 
 START_EHLC(Float)

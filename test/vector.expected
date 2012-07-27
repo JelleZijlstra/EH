@@ -10,6 +10,7 @@ operator_arrow <public,non-static,non-constant>: @function <user>: index
 operator_arrow_equals <public,non-static,non-constant>: @function <user>: value, index
 toArray <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
+toTuple <public,non-static,non-constant>: @function <library>: 
 xset <private,non-static,non-constant>: @function <library>: 
 ]
 @int 42

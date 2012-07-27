@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-hash = { 'foo' => 3, 'bar' => 'test' }
+hash = { 'foo': 3, 'bar': 'test' }
 printvar: hash
 printvar: hash.has: 'foo'
 printvar: hash->'foo'

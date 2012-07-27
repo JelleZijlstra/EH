@@ -498,7 +498,7 @@ anonclasslist_i:
 	;
 
 anonclassmember:
-	simple_expr T_DOUBLEARROW simple_expr
+	bareword_or_string ':' simple_expr
 							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
 	;
 

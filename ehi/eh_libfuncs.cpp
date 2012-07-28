@@ -78,14 +78,8 @@ void printvar_t::retval(ehretval_p in) {
 		    printf("(recursion)");
 		  }
 		  break;
-		case weak_object_e:
 		case object_e: {
-			ehobj_t *obj;
-			if(in->type() == object_e) {
-				obj = in->get_objectval();
-			} else {
-				obj = in->get_weak_objectval();
-			}
+			ehobj_t *obj = in->get_objectval();
 			if(obj->type_id != func_e) {
 				if(this->seen.count((void *)obj) == 0) {
 					this->seen[(void *)obj] = true;

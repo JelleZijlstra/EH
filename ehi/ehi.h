@@ -105,16 +105,13 @@ public:
 	virtual ~EHI();
 	
 	// stuff for GC'ed ehretval_ts
-#define EHRV_MAKE(ehtype, vtype) ehretval_p make_ ## ehtype(vtype in) { \
-	ehretval_p out; \
-	in->ehi = this; \
-	this->gc.allocate(out); \
-	ehretval_t::fill_ ## ehtype(out, in); \
-	return out; \
-}
-	EHRV_MAKE(object, ehobj_t *)
-	EHRV_MAKE(weak_object, ehobj_t *)
-#undef ERHV_MAKE
+	ehretval_p make_object(ehobj_t *in) {
+		ehretval_p out;
+		in->ehi = this;
+		this->gc.allocate(out);
+		ehretval_t::fill_object(out, in);
+		return out;
+	}
 	ehretval_p make_binding(ehbinding_t *in) {
 		ehretval_p out;
 		this->gc.allocate(out);

@@ -38,7 +38,6 @@ enum type_enum {
 	hash_e = 6,
 	func_e = 7, // methods
 	object_e = 8,
-	weak_object_e = 9,
 	op_e = 10,
 	attribute_e = 11,
 	attributestr_e = 12,

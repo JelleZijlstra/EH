@@ -50,9 +50,6 @@ std::list<ehretval_p> ehretval_t::children() {
 			}
 			break;
 		}
-		case weak_object_e:
-			// ignored for GC purposes
-			break;
 		case func_e:
 			break;
 		case array_e:
@@ -146,9 +143,6 @@ ehretval_t::~ehretval_t() {
 			break;
 		case array_e:
 			delete this->arrayval;
-			break;
-		case weak_object_e:
-			// we don't own the object
 			break;
 		case resource_e:
 			delete this->resourceval;

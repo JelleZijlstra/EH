@@ -50,7 +50,6 @@ zval *ehtozval(ehretval_p in) {
 				break;
 			case range_e:
 			case func_e:
-			case weak_object_e:
 			case binding_e:
 			case object_e:
 				// TODO

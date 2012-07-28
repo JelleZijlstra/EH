@@ -11,7 +11,6 @@ private:
 	static bool belongs_in_gc(type_enum type) {
 		switch(type) {
 			case object_e:
-			case weak_object_e:
 			case array_e:
 			case binding_e:
 			case hash_e:
@@ -34,7 +33,6 @@ public:
 		// complex types
 		struct eharray_t *arrayval;
 		struct ehobj_t *objectval;
-		struct ehobj_t *weak_objectval;
 		struct ehfunc_t *funcval;
 		struct ehrange_t *rangeval;
 		// pseudo-types for internal use
@@ -88,7 +86,6 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(struct opnode_t *, op)
 	EHRV_SET(attribute_enum, attribute)
 	EHRV_SET(attributes_t, attributestr)
-	EHRV_SET(struct ehobj_t *, weak_object)
 	EHRV_SET(struct ehfunc_t *, func)
 	EHRV_SET(type_enum, type)
 	EHRV_SET(class LibraryBaseClass *, resource)
@@ -102,7 +99,6 @@ vtype get_ ## ehtype ## val() const { \
 	in->ehtype ## val = val; \
 }
 	EHRV_GC(ehobj_t *, object)
-	EHRV_GC(ehobj_t *, weak_object)
 	EHRV_GC(eharray_t *, array)
 	EHRV_GC(ehbinding_t *, binding)
 	EHRV_GC(ehrange_t *, range)
@@ -120,7 +116,6 @@ vtype get_ ## ehtype ## val() const { \
 			COPY(bool);
 			COPY(float);
 			COPY(array);
-			case weak_object_e:
 			COPY(object);
 			COPY(func);
 			COPY(range);
@@ -153,7 +148,7 @@ vtype get_ ## ehtype ## val() const { \
 	
 	bool is_object() const {
 		switch(this->type()) {
-			case object_e: case weak_object_e:
+			case object_e:
 				return true;
 			default:
 				return false;

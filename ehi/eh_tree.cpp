@@ -106,7 +106,6 @@ const char *get_typestring(type_enum type) {
 		case type_e: return "type";
 		case array_e: return "array";
 		case func_e: return "function";
-		case weak_object_e:
 		case object_e: return "object";
 		case op_e: return "op";
 		case attribute_e: return "attribute";

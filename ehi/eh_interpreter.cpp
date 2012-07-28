@@ -127,7 +127,7 @@ static inline int count_nodes(const ehretval_p node);
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), buffer(NULL), gc(), returning(false), repo(), global_object() {
+EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), buffer(NULL), gc_flag(false), gc(), returning(false), repo(), global_object() {
 	eh_init();
 }
 void EHI::eh_init(void) {

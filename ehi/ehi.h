@@ -4,6 +4,7 @@
  */
 #include "eh.bison.hpp"
 #include "eh_error.h"
+#include "concurrency.h"
 
 /*
  * Flex and Bison
@@ -34,7 +35,9 @@ private:
 	
 	// buffer for interactive prompt
 	char *buffer;
-	
+
+	// flag checked by the GC thread: if true, it stops	
+	concurrent_object<bool> gc_flag;
 	// our GC
 	garbage_collector<ehretval_t> gc;
 	
@@ -78,7 +81,7 @@ private:
 	}
 
 	// disallowed operations
-	EHI(const EHI&) : eval_parser(), inloop(), breaking(), continuing(), cmdtable(), buffer(), gc(), returning(), repo(), global_object() {
+	EHI(const EHI&) : eval_parser(), inloop(), breaking(), continuing(), cmdtable(), buffer(), gc_flag(false), gc(), returning(), repo(), global_object() {
 		throw "Not allowed";
 	}
 	EHI operator=(const EHI&) {

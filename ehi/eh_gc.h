@@ -117,6 +117,13 @@ private:
 	};
 
 	class pool {
+	private:
+		pool(const pool&) : next(), first_free_block(), free_blocks(), blocks() {
+			throw "Not allowed";
+		}
+		pool operator=(const pool&) {
+			throw "Not allowed";
+		}
 	public:
 		// pointer to next pool in the list
 		pool *next;
@@ -200,7 +207,7 @@ private:
 		int value;
 	public:
 		int get() const {
-			assert(this->value >= 0 && this->value < sizeof(short));
+			assert(this->value >= 0 && ((unsigned) this->value) < sizeof(short));
 			return this->value;
 		}
 		void inc() {
@@ -223,6 +230,16 @@ private:
 		marking_bit() : value(0) {}
 	};
 
+	/*
+	 * forbidden operators
+	 */
+	garbage_collector(const garbage_collector &) {
+		throw "Not allowed";
+	}
+	garbage_collector operator=(const garbage_collector &) {
+		throw "Not allowed";
+	}
+
 public:
 	class pointer {
 	private:
@@ -237,13 +254,11 @@ public:
 		 * Constructors
 		 */
 		pointer() : content(NULL) {}
-		pointer(dummy_class *in) {
+		pointer(dummy_class *in) : content(NULL) {
 			// only for NULL initialization
 			assert(in == NULL);
-			this->content = NULL;
 		}
-		pointer(const pointer &rhs) {
-			this->content = ~rhs;
+		pointer(const pointer &rhs) : content(~rhs) {
 			if(this->content != NULL) {
 				this->content->inc_rc();
 			}

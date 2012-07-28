@@ -49,7 +49,7 @@ public:
 		class ehtuple_t *tupleval;
 	};
 	// constructors
-	ehretval_t() : _type(null_e) {}
+	ehretval_t() : _type(null_e), stringval(NULL) {}
 	ehretval_t(type_enum type) : _type(type), stringval(NULL) {}
 	// overloaded factory method; should only be used if necessary (e.g., in eh.y)
 #define EHRV_MAKE(vtype, ehtype) static ehretval_p make(vtype in) { \
@@ -206,11 +206,7 @@ typedef struct ehmember_t {
 	~ehmember_t() {
 	}
 	
-	ehmember_t() : value() {
-		attribute.visibility = public_e;
-		attribute.isstatic = nonstatic_e;
-		attribute.isconst = nonconst_e;
-	}
+	ehmember_t() : attribute(attributes_t::make()), value() {}
 	ehmember_t(attributes_t atts) : attribute(atts), value() {}
 	
 	// convenience methods
@@ -226,6 +222,8 @@ typedef refcount_ptr<ehmember_t> ehmember_p;
 // in future, add type for type checking
 typedef struct eharg_t {
 	std::string name;
+
+	eharg_t() : name() {}
 } eharg_t;
 
 // EH array
@@ -285,7 +283,7 @@ public:
 	EHI *ehi;
 
 	// constructors
-	ehobj_t() : members(), object_data(NULL), type_id(null_e), parent(), real_parent() {}
+	ehobj_t() : members(), object_data(NULL), type_id(null_e), parent(), real_parent(), ehi() {}
 
 	// method prototypes
 	ehmember_p insert_retval(const char *name, attributes_t attribute, ehretval_p value);
@@ -339,6 +337,14 @@ public:
 	~ehobj_t();
 private:
 	ehmember_p get_recursive_helper(const char *name, const ehcontext_t context);
+
+	// ehobj_t should never be handled directly
+	ehobj_t(const ehobj_t&) : members(), object_data(), type_id(), parent(), real_parent(), ehi() {
+		throw "Not allowed";
+	}
+	ehobj_t operator=(const ehobj_t&) {
+		throw "Not allowed";
+	}
 } ehobj_t;
 #define OBJECT_FOR_EACH(obj, varname) for(ehobj_t::obj_iterator varname = (obj)->members.begin(), end = (obj)->members.end(); varname != end; varname++)
 
@@ -360,6 +366,13 @@ typedef struct ehfunc_t {
 		if(args != NULL) {
 			delete[] args;
 		}
+	}
+private:
+	ehfunc_t(const ehfunc_t&) : type(), argcount(), args(), code(), libmethod_pointer() {
+		throw "Not allowed";
+	}
+	ehfunc_t operator=(const ehfunc_t&) {
+		throw "Not allowed";
 	}
 } ehfunc_t;
 

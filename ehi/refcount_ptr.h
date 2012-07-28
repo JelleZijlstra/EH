@@ -56,10 +56,9 @@ public:
 		}
 	}
 	
-	refcount_ptr(dummy_class *in) {
+	refcount_ptr(dummy_class *in) : pointer(NULL) {
 		// only for NULL initialization
 		assert(in == NULL);
-		this->pointer = NULL;
 	}
 
 	T &operator*() const {
@@ -86,8 +85,7 @@ public:
 		}
 		return *this;
 	}
-	refcount_ptr(const refcount_ptr<T> &rhs) {
-		this->pointer = ~rhs;
+	refcount_ptr(const refcount_ptr<T> &rhs) : pointer(~rhs) {
 		if(this->pointer != NULL) {
 			this->pointer->inc_rc();
 		}
@@ -117,12 +115,18 @@ template<class T>
 class array_ptr {
 private:
 	T *pointer;
+
+	// disallowed operations
+	array_ptr(const array_ptr&) : pointer() {
+		throw "Not allowed";
+	}
+	array_ptr operator=(const array_ptr&) {
+		throw "Not allowed";
+	}
 public:
 	// Only provide this constructor, since others would be risky
-	array_ptr(int n) {
-		if(n == 0) {
-			this->pointer = NULL;
-		} else {
+	array_ptr(int n) : pointer() {
+		if(n > 0) {
 			this->pointer = new T[n]();
 		}
 	}

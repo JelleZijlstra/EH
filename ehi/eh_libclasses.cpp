@@ -36,7 +36,7 @@ EHLC_ENTRY(Object, isA)
 END_EHLC()
 
 EH_METHOD(Object, new) {
-	ehretval_p ret = ehi->object_instantiate(context->get_objectval(), context);
+	ehretval_p ret = ehi->object_instantiate(context->get_objectval());
 	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", args, ret);
 	return ret;
 }
@@ -336,7 +336,7 @@ EH_METHOD(Integer, getBit) {
 	ASSERT_OBJ_TYPE(int_e, "Integer.getBit");
 	ASSERT_TYPE(args, int_e, "Integer.getBit");
 	int index = args->get_intval();
-	if(index < 0 || index >= sizeof(int) * 8) {
+	if(index < 0 || ((unsigned) index) >= sizeof(int) * 8) {
 		eh_error_invalid_argument("Integer.getBit", 0);
 		return NULL;
 	}
@@ -351,7 +351,7 @@ EH_METHOD(Integer, setBit) {
 	ehretval_p operand = args->get_tupleval()->get(0);
 	ASSERT_TYPE(operand, int_e, "Integer.setBit");
 	int index = operand->get_intval();
-	if(index < 0 || index >= sizeof(int) * 8) {
+	if(index < 0 || ((unsigned) index) >= sizeof(int) * 8) {
 		eh_error_invalid_argument("Integer.setBit", 0);
 		return NULL;
 	}
@@ -608,7 +608,7 @@ EH_METHOD(String, operator_arrow) {
 	if(index < 0) {
 		index += len;
 	}
-	if(index < 0 || index >= len) {
+	if(index < 0 || ((unsigned) index) >= len) {
 		eh_error_invalid_argument("String.operator->", 0);
 		return NULL;
 	}
@@ -626,7 +626,7 @@ EH_METHOD(String, operator_arrow_equals) {
 	if(index < 0) {
 		index += len;
 	}
-	if(index < 0 || index >= len) {
+	if(index < 0 || ((unsigned) index) >= len) {
 		eh_error_invalid_argument("String.operator->=", 0);
 		return NULL;
 	}
@@ -715,7 +715,7 @@ EH_METHOD(String, charAtPosition) {
 	ASSERT_TYPE(args, int_e, "String.charAtPosition");
 	int index = args->get_intval();
 	const char *string = obj->get_stringval();
-	if(index < 0 || index >= strlen(string)) {
+	if(index < 0 || ((unsigned) index) >= strlen(string)) {
 		eh_error_invalid_argument("String.charAtPosition", index);
 		return NULL;
 	} else {
@@ -909,7 +909,7 @@ EH_METHOD(Function, operator_colon) {
 	if(f->type == lib_e) {
 		return f->libmethod_pointer(object_data, args, parent, ehi);
 	}
-	ehretval_p newcontext = ehi->object_instantiate(function_object->get_objectval(), context);
+	ehretval_p newcontext = ehi->object_instantiate(function_object->get_objectval());
 	newcontext->get_objectval()->object_data = function_object->get_objectval()->object_data;
 
 	// check parameter count

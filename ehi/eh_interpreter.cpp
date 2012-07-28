@@ -127,7 +127,7 @@ static inline int count_nodes(const ehretval_p node);
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), is_strange_arrow(false), buffer(NULL), gc(), returning(false), repo(), global_object() {
+EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), buffer(NULL), gc(), returning(false), repo(), global_object() {
 	eh_init();
 }
 void EHI::eh_init(void) {
@@ -170,7 +170,7 @@ void EHI::eh_init(void) {
 		ehlm_listentry_t *members = libclasses[i].members;
 		// attributes for library methods
 		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
-		for(int i = 0; members[i].name != NULL; i++) {
+		for(int j = 0; members[j].name != NULL; j++) {
 			ehmember_p func;
 			func->attribute = attributes;
 			ehobj_t *function_object = new ehobj_t();
@@ -178,9 +178,9 @@ void EHI::eh_init(void) {
 			function_object->parent = new_value;
 			function_object->type_id = func_e;
 			ehfunc_t *f = new ehfunc_t(lib_e);
-			f->libmethod_pointer = members[i].func;
+			f->libmethod_pointer = members[j].func;
 			function_object->object_data = ehretval_t::make_func(f);
-			newclass->insert(members[i].name, func);
+			newclass->insert(members[j].name, func);
 		}
 		ehmember_p member;
 		// library classes themselves are constant; otherwise the engine might blow up
@@ -764,12 +764,12 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 	for( ; node->get_opval()->nparas != 0; node = node->get_opval()->paras[0]) {
 		ehretval_p *myparas = node->get_opval()->paras[1]->get_opval()->paras;
 		// nodes here will always have the name in para 0 and value in para 1
-		ehretval_p namev = eh_execute(myparas[0], ret);
+		ehretval_p namev = eh_execute(myparas[0], context);
 		if(namev->type() != string_e) {
 			eh_error_type("hash member label", namev->type(), eerror_e);
 			continue;
 		}
-		ehretval_p value = eh_execute(myparas[1], ret);
+		ehretval_p value = eh_execute(myparas[1], context);
 		ret->get_hashval()->set(namev->get_stringval(), value);
 	}
 	return ret;
@@ -1153,7 +1153,7 @@ ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t 
 /*
  * Classes
  */
-ehretval_p EHI::object_instantiate(ehobj_t *obj, ehcontext_t context) {
+ehretval_p EHI::object_instantiate(ehobj_t *obj) {
 	ehobj_t *new_obj = new ehobj_t();
 	ehretval_p ret = this->make_object(new_obj);
 	new_obj->type_id = obj->type_id;
@@ -1171,7 +1171,7 @@ ehretval_p EHI::promote(ehretval_p in, ehcontext_t context) {
 		eh_error_type("promotion", in->type(), enotice_e);
 		return NULL;
 	}
-	ehretval_p obj = this->object_instantiate(the_class, context);
+	ehretval_p obj = this->object_instantiate(the_class);
 	obj->get_objectval()->object_data = in;
 	return obj;
 }

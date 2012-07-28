@@ -52,6 +52,13 @@ public:
 	FILE *descriptor;
 	File() : descriptor(NULL) {}
 	~File() {}
+private:
+	File(const File&) : descriptor() {
+		throw "Not allowed";
+	}
+	File operator=(const File&) {
+		throw "Not allowed";
+	}
 };
 EH_METHOD(File, initialize);
 EH_METHOD(File, open);
@@ -199,6 +206,13 @@ public:
 	Exception(const char *_msg) : msg(strdup(_msg)) {}
 	virtual ~Exception() {
 		delete[] msg;
+	}
+private:
+	Exception(const Exception&) : msg() {
+		throw "Not allowed";
+	}
+	Exception operator=(const Exception&) {
+		throw "Not allowed";
 	}
 };
 EH_METHOD(Exception, toString);

@@ -1,6 +1,6 @@
 CC = clang++-mp-3.1
 CCBASICFLAGS = -ggdb -fPIC -c
-CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic
+CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic -Wextra -Wno-unused-parameter
 LDFLAGS = 
 SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp eh_types.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp

@@ -28,6 +28,12 @@ private:
 	void object(ehobj_t *in);
 	void tuple(ehtuple_t *in);
 
+	printvar_t(const printvar_t&) : seen(), ehi() {
+		throw "Not allowed";
+	}
+	printvar_t operator=(const printvar_t&) {
+		throw "Not allowed";
+	}
 public:
 	printvar_t(ehretval_p in, EHI *_ehi) : seen(), ehi(_ehi) {
 		this->retval(in);

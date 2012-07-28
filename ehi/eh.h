@@ -74,7 +74,7 @@ typedef struct attributes_t {
 	
 	// can't make a constructor because this thing appears in a union, but this
 	// is almost as good
-	static attributes_t make(visibility_enum v, static_enum s, const_enum c) {
+	static attributes_t make(visibility_enum v = public_e, static_enum s = nonstatic_e, const_enum c = nonconst_e) {
 		attributes_t out;
 		out.visibility = v;
 		out.isstatic = s;

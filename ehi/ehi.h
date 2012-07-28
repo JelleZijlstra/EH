@@ -32,9 +32,6 @@ private:
 	int continuing;
 	std::map<const std::string, ehcmd_t> cmdtable;
 	
-	// hack: used to implement several forms of inter-method communication
-	bool is_strange_arrow;
-	
 	// buffer for interactive prompt
 	char *buffer;
 	
@@ -80,6 +77,13 @@ private:
 		return this->repo.get_object(in)->get_objectval();
 	}
 
+	// disallowed operations
+	EHI(const EHI&) : eval_parser(), inloop(), breaking(), continuing(), cmdtable(), buffer(), gc(), returning(), repo(), global_object() {
+		throw "Not allowed";
+	}
+	EHI operator=(const EHI&) {
+		throw "Not allowed";
+	}
 public:
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
@@ -139,7 +143,7 @@ public:
 		return out;
 	}
 	ehretval_p promote(ehretval_p in, ehcontext_t context);
-	ehretval_p object_instantiate(ehobj_t *obj, ehcontext_t context);
+	ehretval_p object_instantiate(ehobj_t *obj);
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
 
 	// conversion methods, guaranteed to return the type they're supposed to return
@@ -214,7 +218,7 @@ public:
 	ehretval_p parse_file(FILE *infile);
 	ehretval_p parse_string(const char *cmd);
 
-	EHParser(interactivity_enum inter, EHI *parent) :	_parent(parent), _interactivity(inter) {
+	EHParser(interactivity_enum inter, EHI *parent) : _parent(parent), _scanner(), _interactivity(inter), buffer() {
 		yylex_init_extra(this, &_scanner);
 	}
 	~EHParser(void) {
@@ -222,6 +226,13 @@ public:
 	}
 	EHI *_parent;
 private:
+	EHParser(const EHParser&) : _parent(), _scanner(), _interactivity(), buffer() {
+		throw "Not allowed";
+	}
+	EHParser operator=(const EHParser&) {
+		throw "Not allowed";
+	}
+
 	void *_scanner;
 	interactivity_enum _interactivity;
 	struct yy_buffer_state *buffer;

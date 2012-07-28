@@ -4,7 +4,7 @@ class A {
 	class AA {
 		private ap = 10
 		public aa: {
-			$echo a
+			echo a
 		}
 	}
 }
@@ -13,7 +13,7 @@ class B {
 	class BB {
 		private bp = 20
 		public bb: {
-			$echo b
+			echo b
 		}
 	}
 }
@@ -21,10 +21,10 @@ class C {
 	private c = 3
 	class CC {
 		private cp = 30
-		inherit: A.AA
+		inherit A.AA
 		public cc: {
-			$echo a
-			$echo c
+			echo a
+			echo c
 		}
 	}
 }
@@ -33,25 +33,25 @@ class D {
 	private d = 4
 	class DD {
 		private dp = 40
-		inherit: B.BB
-		inherit: C.CC
+		inherit B.BB
+		inherit C.CC
 		public dd: {
 			# Expect 1
-			this.aa: ()
+			this.aa ()
 			# Expect 2
-			this.bb: ()
+			this.bb ()
 			# Expect null, 3
-			this.cc: ()
+			this.cc ()
 			# Expect 4
-			$echo d
+			echo d
 			
 			# Expect 10, 20, 30, 40
-			$echo ap
-			$echo bp
-			$echo cp
-			$echo dp
+			echo ap
+			echo bp
+			echo cp
+			echo dp
 		}
 	}
 }
-o = (D.new: ()).DD
-o.dd: ()
+o = (D.new ()).DD
+o.dd ()

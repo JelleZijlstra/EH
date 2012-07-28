@@ -33,11 +33,11 @@
 				return T_STRING;
 			}
 [\\]\n		/* Ignore escape */
-[0-9]*\.[0-9]+	{
+-?[0-9]*\.[0-9]+	{
 				yylval_param->fValue = strtof(yytext, NULL);
 				return T_FLOAT;
 			}
-[0-9]+		{
+-?[0-9]+		{
 				yylval_param->iValue = atoi(yytext);
 				return T_INTEGER;
 			}

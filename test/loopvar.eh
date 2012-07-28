@@ -4,4 +4,4 @@ arr = []
 for 2 count i {
 	arr->i = i
 }
-printvar: arr
+printvar arr

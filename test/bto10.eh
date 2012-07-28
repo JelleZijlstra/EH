@@ -4,7 +4,7 @@
 # gets the core of the job done.
 func bto10: in, base
 	getn = func: in, n
-		char = in.charAtPosition: n
+		char = in.charAtPosition n
 		if char >= 48 and char <= 57
 			ret char - 48
 		end
@@ -19,15 +19,15 @@ func bto10: in, base
 		ret false
 	end
 	out = 0
-	len = in.length: ()
+	len = in.length ()
 	for len count i
-		value = getn: in, i
-		out = out + value * (pow: base, (len - 1 - i))
+		value = getn in, i
+		out = out + value * (pow base, (len - 1 - i))
 	end
 	ret out
 end
 
 # 42
-$echo (bto10: "2a", 16)
+echo (bto10 "2a", 16)
 # 44
-$echo (bto10: "35", 13)
+echo (bto10 "35", 13)

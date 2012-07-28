@@ -5,7 +5,7 @@ rec = func: n
 		ret 0
 	else
 		tmp = n
-		ret rec: n - 1
+		ret rec n - 1
 	end
 end
-rec: 2
+rec 2

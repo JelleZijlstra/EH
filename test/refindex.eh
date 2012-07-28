@@ -4,7 +4,7 @@
 foo = 3
 bar = 'foo'
 bar->foo = 1
-printvar: bar
-printvar: foo
-$echo bar->foo
-$echo foo->bar
+printvar bar
+printvar foo
+echo bar->foo
+echo foo->bar

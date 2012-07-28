@@ -2,8 +2,8 @@
 class Foo {
 	const a = 3
 }
-printvar: Foo
+printvar Foo
 for Foo as key => value {
 	value = 4
 }
-printvar: Foo
+printvar Foo

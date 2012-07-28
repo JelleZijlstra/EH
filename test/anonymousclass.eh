@@ -7,11 +7,11 @@ foo = class {
 	}
 }
 
-o = foo.new: ()
-printvar: o
-printvar: o.b: ()
-printvar: o
+o = foo.new ()
+printvar o
+printvar o.b ()
+printvar o
 
-# We can also use to.new: clone objects
-p = o.new: ()
-printvar: p
+# We can also use to.new clone objects
+p = o.new ()
+printvar p

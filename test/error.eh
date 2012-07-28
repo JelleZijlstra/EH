@@ -3,5 +3,5 @@
 # because the file lacks a newline after the last statement. I'd like to be
 # able to accept such code, but haven't yet been able to coerce yacc to do so.
 a = 3
-$echo a
+echo a
 a = 2

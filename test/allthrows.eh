@@ -2,27 +2,27 @@
 # The different ways of throwing an exception
 try {
   try {
-    throw: 42
+    throw 42
   } catch {
-    printvar: exception
+    printvar exception
   }
   try
-    throw: 43
+    throw 43
   catch
-    printvar: exception
+    printvar exception
   end
   try
-    throw: 44
+    throw 44
   finally
-    $echo 'This is important'
+    echo 'This is important'
   end
 } catch {
-  $echo 'got it at the top level'
-  printvar: exception
+  echo 'got it at the top level'
+  printvar exception
 }
 
 try {
-  throw: 45
+  throw 45
 } finally {
-  $echo 'Not catching it!'
+  echo 'Not catching it!'
 }

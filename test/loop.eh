@@ -8,4 +8,4 @@ for in count i
 	total = total * in
 	set in--
 end
-$echo total
+echo total

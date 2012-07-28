@@ -10,9 +10,9 @@ end
 func bar: n
 	var2 = n
 end
-b = foo: 2
-printvar: b
-printvar: var
+b = foo 2
+printvar b
+printvar var
 
-bar: 2
-printvar: var2
+bar 2
+printvar var2

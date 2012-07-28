@@ -8,7 +8,7 @@ class Foo
 		this.quuz = 43
 	end
 end
-f = Foo.new: ()
-printvar: f
-f.foo: ()
-printvar: f
+f = Foo.new ()
+printvar f
+f.foo ()
+printvar f

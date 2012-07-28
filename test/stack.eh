@@ -10,9 +10,9 @@ class Stack
   end
   
   public pop = func:
-    printvar: self
+    printvar self
     if this.n == 0
-      throw: "Stack empty"
+      throw "Stack empty"
     end
     this.n = this.n - 1
     ret self->(this.n)
@@ -21,10 +21,10 @@ class Stack
   public size = func: -> this.n
 end
 
-s = Stack.new: ()
-printvar: s.size: ()
-s.push: 42
-printvar: s.size: ()
-printvar: s.pop: ()
+s = Stack.new ()
+printvar s.size ()
+s.push 42
+printvar s.size ()
+printvar s.pop ()
 
-printvar: s.pop: ()
+printvar s.pop ()

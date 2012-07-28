@@ -2,13 +2,13 @@
 # How to count arrays
 
 # 2
-$echo [1, 2].length: ()
+echo [1, 2].length ()
 
 # 0
-$echo [].length: ()
+echo [].length ()
 
 # 1
-$echo ["test"].length: ()
+echo ["test"].length ()
 
 # 3
-$echo [null, false, 0].length: ()
+echo [null, false, 0].length ()

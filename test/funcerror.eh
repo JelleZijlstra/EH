@@ -5,5 +5,5 @@ func test:
 		ret 42
 	end
 end
-test: ()
-test: ()
+test ()
+test ()

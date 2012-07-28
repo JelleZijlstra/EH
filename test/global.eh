@@ -3,19 +3,19 @@
 class Foo
 	public bar
 	public baz: n
-		$put @string n + ' '
-		$echo myvar
+		put @string n + ' '
+		echo myvar
 	end
 end
 myvar = 42
-Foo.baz: 'test'
+Foo.baz 'test'
 myvar = 'foo'
-Foo.baz: 'bah'
+Foo.baz 'bah'
 newvar = Foo.baz
-newvar: 19
-$put @string 19
-$echo @string 19
+newvar 19
+put @string 19
+echo @string 19
 func unknownglobal:
-	printvar: nosuchvar
+	printvar nosuchvar
 end
-unknownglobal: ()
+unknownglobal ()

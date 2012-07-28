@@ -1,13 +1,13 @@
 #!/usr/bin/ehi
-// CS50 Problem Set 1: greedy
+// CS50 Problem Set 1 greedy
 if argc == 2
 	money = @int argv->1
 else
 	money = 0
 endif
 while money <= 0
-	$echo 'How much change is owed?'
-	money = getinput: 10
+	echo 'How much change is owed?'
+	money = getinput 10
 endwhile
 
 // get number of pennies
@@ -35,4 +35,4 @@ endwhile
 // pennies
 coins = coins + money
 
-$echo coins
+echo coins

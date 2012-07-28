@@ -3,29 +3,29 @@
 foo = 3
 bar = foo
 # @int 3
-printvar: bar
+printvar bar
 # 6
-$echo foo + bar
+echo foo + bar
 foo = foo + 2
 # 5
-$echo foo
+echo foo
 # 3
-$echo bar
+echo bar
 bar = bar + 2
 # 5
-$echo foo
+echo foo
 # 5
-$echo bar
+echo bar
 func baz: n
 	n = n + 2
 end
-baz: foo
+baz foo
 # 5
-$echo foo
+echo foo
 func meh: n
 	# 1
-	$echo n
+	echo n
 	# 5
-	$echo foo
+	echo foo
 end
-meh: 1
+meh 1

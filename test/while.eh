@@ -3,5 +3,5 @@
 ctr = 0
 while ctr < 5
 	set ctr++
-	$echo ctr
+	echo ctr
 endwhile

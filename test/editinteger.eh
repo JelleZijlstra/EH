@@ -1,3 +1,3 @@
 #!/usr/bin/ehi
 Integer.toString = func: -> "Hello"
-printvar: @string 1
+printvar @string 1

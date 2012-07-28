@@ -2,7 +2,7 @@
 # A square root algorithm
 func abs: in
 	if in < 0
-		ret -in
+		ret -1 * in
 	else
 		ret in
 	end
@@ -11,7 +11,7 @@ func sqrt: in
 	epsilon = 0.01
 	in = @float in
 	out = @float 5
-	while (abs: (out * out - in)) > epsilon
+	while (abs (out * out - in)) > epsilon
 		out = (out + in/out) / 2.0
 	end
 	ret out
@@ -22,4 +22,4 @@ if argc == 2
 else
 	num = 27
 end
-$echo sqrt: num
+echo sqrt num

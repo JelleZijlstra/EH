@@ -2,25 +2,25 @@
 # Implementation of the McCarthy function in EH
 # This version uses more compact syntax that is allowed by ehi, but not by the 
 # PHP interpreter.
-func mccarthy: n
+func mccarthy n
 	if n > 100
 		ret n - 10
 	else
-		ret mccarthy: mccarthy: n + 11
+		ret mccarthy mccarthy n + 11
 	end
 end
 
 # Use argv[1] if available
 if argc > 2
-	$echo 'Usage: ./mccarthy.eh [n]'
+	echo 'Usage ./mccarthy.eh [n]'
 	ret 1
 end
 if argc = 2
 	input = @int argv->1
 else
-	input = getinput:
+	input = getinput
 end
 for input count i
-	$echo mccarthy: i
+	echo mccarthy i
 end
 ret 0

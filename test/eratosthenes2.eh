@@ -17,6 +17,6 @@ for 2..(max / 2) count i
 end
 for 1..max count i
 	if sieve->i == true
-		$echo i
+		echo i
 	end
 end

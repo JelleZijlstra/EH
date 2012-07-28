@@ -2,15 +2,15 @@
 class A {
 	public a = 3
 	public b: {
-		$echo 42
+		echo 42
 	}
 }
 class B {
-	inherit: A
+	inherit A
 	public c = 5
 	public d: {
-		$echo 4
+		echo 4
 	}
 }
-o = B.new: ()
-o.b: ()
+o = B.new ()
+o.b ()

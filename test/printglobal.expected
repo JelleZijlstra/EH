@@ -176,6 +176,7 @@ argc <public,non-static,non-constant>: @int 1
 argv <public,non-static,non-constant>: @array [
 0 => @string 'printglobal.eh'
 ]
+echo <public,non-static,non-constant>: @function <library>: 
 eval <public,non-static,non-constant>: @function <library>: 
 get_type <public,non-static,non-constant>: @function <library>: 
 getinput <public,non-static,non-constant>: @function <library>: 
@@ -192,5 +193,6 @@ is_string <public,non-static,non-constant>: @function <library>:
 log <public,non-static,non-constant>: @function <library>: 
 pow <public,non-static,non-constant>: @function <library>: 
 printvar <public,non-static,non-constant>: @function <library>: 
+put <public,non-static,non-constant>: @function <library>: 
 throw <public,non-static,non-constant>: @function <library>: 
 ]

@@ -2,7 +2,7 @@
 # Exceptions
 funky = func: in {
   if (in % 3) == 0 {
-    throw: "I don't like numbers that are divisible by three"
+    throw "I don't like numbers that are divisible by three"
   } else {
     ret in
   }
@@ -10,15 +10,15 @@ funky = func: in {
 
 trying = func: in {
   try {
-    ret funky: in
+    ret funky in
   } catch {
-    $echo 'Caught it'
-    printvar: exception
+    echo 'Caught it'
+    printvar exception
     ret 42
   } finally {
-    $echo 'I am getting called'
+    echo 'I am getting called'
   }
 }
 
-printvar: trying: 2
-printvar: trying: 3
+printvar trying 2
+printvar trying 3

@@ -1,2 +1,2 @@
 #!/usr/bin/ehi
-printvar: [1, 2]
+printvar [1, 2]

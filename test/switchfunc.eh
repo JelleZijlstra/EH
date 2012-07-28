@@ -1,8 +1,8 @@
 #!/usr/bin/ehi
 switcher = func: n
 	testfunc = func: n
-		if !(is_int: n)
-			$echo 'Error: input must be an integer'
+		if !(is_int n)
+			echo 'Error input must be an integer'
 			ret false
 		end
 		if n % 2
@@ -13,11 +13,11 @@ switcher = func: n
 	end
 	switch n
 		case testfunc
-			$echo 'This number is even'
+			echo 'This number is even'
 		default
-			$echo 'This number is odd'
+			echo 'This number is odd'
 	end
 end
 
-switcher: 2
-switcher: 3
+switcher 2
+switcher 3

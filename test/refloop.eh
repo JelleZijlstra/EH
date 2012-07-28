@@ -3,4 +3,4 @@
 foo = 3
 bar = foo
 bar = foo
-$echo foo
+echo foo

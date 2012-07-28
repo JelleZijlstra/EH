@@ -3,8 +3,8 @@
 throw = (func: {
 	old_throw = throw
 	ret func: exception {
-		$echo 'Oh no, an exception!'
-		old_throw: exception
+		echo 'Oh no, an exception!'
+		old_throw exception
 	}
-}): ()
-throw: 42
+}) ()
+throw 42

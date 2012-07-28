@@ -23,5 +23,7 @@ EHLIBFUNC(pow);
 EHLIBFUNC(log);
 EHLIBFUNC(eval);
 EHLIBFUNC(throw);
+EHLIBFUNC(echo);
+EHLIBFUNC(put);
 
 void printvar_retval(const ehretval_p in);

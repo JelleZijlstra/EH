@@ -4,5 +4,5 @@ class B {}
 class A {
 	public foo = B
 }
-B.o = A.new: ()
-printvar: B
+B.o = A.new ()
+printvar B

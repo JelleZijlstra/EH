@@ -341,3 +341,14 @@ EHLIBFUNC(getinput) {
 EHLIBFUNC(throw) {
 	throw eh_exception(args);
 }
+
+EHLIBFUNC(echo) {
+	args->print();
+	printf("\n");
+	return NULL;
+}
+
+EHLIBFUNC(put) {
+	args->print();
+	return NULL;
+}

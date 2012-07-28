@@ -4,11 +4,11 @@ foo = 4
 class A {
 	public foo = 3
 	public f: {
-		$echo foo
-		$echo global.foo
+		echo foo
+		echo global.foo
 	}
 }
-A.f: ()
-$echo foo
-$echo global.foo
-$echo A.foo
+A.f ()
+echo foo
+echo global.foo
+echo A.foo

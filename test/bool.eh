@@ -3,17 +3,17 @@
 foo = true
 bar = false
 # Math with bools
-$echo 2 * foo
-$echo 2 * bar
-$echo foo
-$echo bar
+echo 2 * foo
+echo 2 * bar
+echo foo
+echo bar
 # Dump a bool
-printvar: foo
-printvar: bar
+printvar foo
+printvar bar
 baz = 'test'
 meh = ''
 # Casting to bool
-$echo @bool baz
-$echo @bool meh
-$echo @bool 1
-$echo @bool 0
+echo @bool baz
+echo @bool meh
+echo @bool 1
+echo @bool 0

@@ -4,7 +4,7 @@ class A {
 	a = 3
 	class B {
 		public b: {
-			$echo a
+			echo a
 		}
 	}
 }
@@ -12,10 +12,10 @@ class A {
 class C {
 	a = 4
 	class D {
-		inherit: A.B
+		inherit A.B
 	}
-	o = D.new: ()
+	o = D.new ()
 	
 	# Expect 3, because inherited methods retain their original parent scope
-	o.b: ()
+	o.b ()
 }

@@ -33,6 +33,8 @@ ehlf_listentry_t libfuncs[] = {
 	LIBFUNCENTRY(log)
 	LIBFUNCENTRY(eval)
 	LIBFUNCENTRY(throw)
+	LIBFUNCENTRY(echo)
+	LIBFUNCENTRY(put)
 	{NULL, NULL}
 };
 

@@ -2,6 +2,6 @@
 try {
 	$print 3
 } catch {
-	printvar: exception
+	printvar exception
 } finally {
 }

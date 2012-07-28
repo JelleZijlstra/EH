@@ -5,7 +5,7 @@ factory = func: n {
 	public bar = func: -> foo
 	ret scope
 }
-o = factory: 42
-printvar: o
-printvar: o.bar: ()
-printvar: o.foo
+o = factory 42
+printvar o
+printvar o.bar ()
+printvar o.foo

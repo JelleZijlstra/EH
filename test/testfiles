@@ -169,3 +169,4 @@ vector.eh
 totuple.eh
 returnobject.eh
 implicitreturn2.eh
+arrayfill.eh

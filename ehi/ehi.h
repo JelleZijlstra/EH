@@ -20,8 +20,7 @@ typedef enum {
 	end_is_end_e
 } interactivity_enum;
 
-// symbol table for variables and functions
-#define VARTABLE_S 1024
+void *gc_thread(void *arg);
 
 class EHI {
 private:
@@ -35,11 +34,6 @@ private:
 	
 	// buffer for interactive prompt
 	char *buffer;
-
-	// flag checked by the GC thread: if true, it stops	
-	concurrent_object<bool> gc_flag;
-	// our GC
-	garbage_collector<ehretval_t> gc;
 	
 	void eh_init(void);
 	// helper functions
@@ -81,19 +75,21 @@ private:
 	}
 
 	// disallowed operations
-	EHI(const EHI&) : eval_parser(), inloop(), breaking(), continuing(), cmdtable(), buffer(), gc_flag(false), gc(), returning(), repo(), global_object() {
+	EHI(const EHI&) : eval_parser(), inloop(), breaking(), continuing(), cmdtable(), buffer(), gc(), returning(), repo(), global_object() {
 		throw "Not allowed";
 	}
 	EHI operator=(const EHI&) {
 		throw "Not allowed";
 	}
 public:
-	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
-	void eh_setarg(int argc, char **argv);
+	// our GC
+	garbage_collector<ehretval_t> gc;
 	bool returning;
 	type_repository repo;
 	ehretval_p global_object;
 
+	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
+	void eh_setarg(int argc, char **argv);
 	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
 	ehretval_p parse_string(const char *cmd);
 	ehretval_p parse_file(const char *name);

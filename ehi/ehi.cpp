@@ -1,5 +1,17 @@
 #include "eh.h"
 
+// Thread for the garbage collector. Before I actually start running this, I'll have to make sure the GC is thread-safe.
+void *gc_thread(void *arg) {
+	EHI *ehi = (EHI *)arg;
+	while(1) {
+		bool do_stop = ehi->gc.do_stop.get();
+		if(do_stop) {
+			pthread_exit(0);
+		}
+		ehi->gc.do_collect(ehi->global_object);
+	}
+}
+
 int EHI::eh_interactive(interactivity_enum interactivity) {
 	ehretval_p ret;
 

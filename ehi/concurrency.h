@@ -1,3 +1,6 @@
+#ifndef _CONCURRENCY_H
+#define _CONCURRENCY_H
+
 #include <pthread.h>
 
 template<class T>
@@ -26,3 +29,5 @@ public:
 		pthread_mutex_unlock(&mutex);
 	}
 };
+
+#endif /* _CONCURRENCY_H */

@@ -1,5 +1,5 @@
 /*
- * eh_gc.cpp
+ * eh_gc.h
  * Jelle Zijlstra, July 2012
  *
  * A tracing garbage collector for specific C++ types.
@@ -39,6 +39,7 @@
  * part of memory or within the normal heap.
  */
 #include <list>
+#include "concurrency.h"
 
 template<class T>
 class garbage_collector {
@@ -435,6 +436,9 @@ private:
 		}
 	}
 public:
+	// flag checked by the GC thread: if true, it stops	
+	concurrent_object<bool> do_stop;
+
 	// public methods
 	void allocate(pointer &p) {
 		~p = this->real_allocate();
@@ -447,7 +451,7 @@ public:
 	}
 
 	// constructors and destructors
-	garbage_collector() : first_pool(new pool), current_pool(first_pool), current_bit() {
+	garbage_collector() : first_pool(new pool), current_pool(first_pool), current_bit(), do_stop(false) {
 		// otherwise our strategy won't work
 		assert(sizeof(T) >= sizeof(void *));
 	}

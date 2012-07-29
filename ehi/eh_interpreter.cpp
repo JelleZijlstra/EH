@@ -756,13 +756,8 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 	for( ; node->get_opval()->nparas != 0; node = node->get_opval()->paras[0]) {
 		ehretval_p *myparas = node->get_opval()->paras[1]->get_opval()->paras;
 		// nodes here will always have the name in para 0 and value in para 1
-		ehretval_p namev = eh_execute(myparas[0], context);
-		if(namev->type() != string_e) {
-			eh_error_type("hash member label", namev->type(), eerror_e);
-			continue;
-		}
 		ehretval_p value = eh_execute(myparas[1], context);
-		ret->get_hashval()->set(namev->get_stringval(), value);
+		ret->get_hashval()->set(myparas[0]->get_stringval(), value);
 	}
 	return ret;
 }

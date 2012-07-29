@@ -569,7 +569,9 @@ anonclasslist_i:
 	;
 
 anonclassmember:
-	bareword_or_string ':' simple_expr
+	T_VARIABLE ':' simple_expr
+							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
+	| T_STRING ':' simple_expr
 							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
 	;
 

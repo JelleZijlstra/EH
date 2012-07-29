@@ -15,4 +15,4 @@ No such object member: operator_arrow: EH notice
 Unsupported type null for array index: EH notice
 Test 6
 Invalid value for argument 0 to String.operator->: EH notice
-Unsupported type null for for ... as operator: EH notice
+Uncaught exception of type TypeError: For-as loop: Null

@@ -54,4 +54,12 @@ EH_METHOD(TypeError, toString);
 
 EXTERN_EHLC(TypeError)
 
+// LoopError (when trying to break or continue an invalid number of levels)
+void throw_LoopError(const char *msg, int level, EHI *ehi);
+
+EH_METHOD(LoopError, initialize);
+EH_METHOD(LoopError, toString);
+
+EXTERN_EHLC(LoopError)
+
 #endif /* _EH_ERROR_H */

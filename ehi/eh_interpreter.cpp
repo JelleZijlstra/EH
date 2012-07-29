@@ -60,6 +60,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(Exception, -1)
 	LIBCLASSENTRY(UnknownCommandError, -1)
 	LIBCLASSENTRY(TypeError, -1)
+	LIBCLASSENTRY(LoopError, -1)
 	{NULL, NULL, 0}
 };
 
@@ -636,8 +637,7 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	// get the object to be looped through and check its type
 	ehretval_p object = eh_execute(op->paras[0], context);
 	if(object->type() != array_e && object->type() != object_e) {
-		eh_error_type("for ... as operator", object->type(), enotice_e);
-		return ret;
+		throw_TypeError("For-as loop", object->type(), this);
 	}
 	// increment loop count
 	inloop++;
@@ -707,17 +707,15 @@ void EHI::eh_op_break(opnode_t *op, ehcontext_t context) {
 	if(op->nparas == 0) {
 		level = 1;
 	} else {
-		ehretval_p level_v = this->to_int(eh_execute(op->paras[0], context), context);
+		ehretval_p level_v = eh_execute(op->paras[0], context);
 		if(level_v->type() != int_e) {
-			return;
-		} else {
-			level = level_v->get_intval();
+			throw_TypeError("break operator requires an Integer argument", level_v->type(), this);
 		}
+		level = level_v->get_intval();
 	}
 	// break as many levels as specified by the argument
 	if(level > inloop) {
-		eh_error_looplevels("Cannot break", level);
-		return;
+		throw_LoopError("break", level, this);
 	}
 	breaking = level;
 	return;
@@ -727,17 +725,15 @@ void EHI::eh_op_continue(opnode_t *op, ehcontext_t context) {
 	if(op->nparas == 0) {
 		level = 1;
 	} else {
-		ehretval_p level_v = this->to_int(eh_execute(op->paras[0], context), context);
+		ehretval_p level_v = eh_execute(op->paras[0], context);
 		if(level_v->type() != int_e) {
-			return;
-		} else {
-			level = level_v->get_intval();
+			throw_TypeError("continue operator requires an Integer argument", level_v->type(), this);
 		}
+		level = level_v->get_intval();
 	}
 	// break as many levels as specified by the argument
 	if(level > inloop) {
-		eh_error_looplevels("Cannot continue", level);
-		return;
+		throw_LoopError("continue", level, this);
 	}
 	continuing = level;
 	return;

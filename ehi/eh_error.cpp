@@ -68,3 +68,35 @@ void eh_error_invalid_argument(const char *function, int n) {
   fprintf(stderr, "Invalid value for argument %d to %s", n, function);
   eh_error(NULL, enotice_e);
 }
+
+/*
+ * Exception classes
+ */
+void throw_error(const char *class_name, ehretval_p args, EHI *ehi) {
+	ehmember_p class_member = ehi->global_object->get_objectval()->operator[](class_name);
+	if(class_member == NULL) {
+		throw eh_exception(ehretval_t::make_string(strdup("Attempt to throw exception of non-existent type")));
+	}
+	ehretval_p e = ehi->call_method(class_member->value, "new", args, ehi->global_object);
+	throw eh_exception(e);
+}
+
+void throw_UnknownCommandError(const char *msg, EHI *ehi) {
+	throw_error("UnknownCommandError", ehretval_t::make_string(strdup(msg)), ehi);
+}
+
+START_EHLC(UnknownCommandError)
+EHLC_ENTRY(UnknownCommandError, initialize)
+EHLC_ENTRY(UnknownCommandError, toString)
+END_EHLC()
+
+EH_METHOD(UnknownCommandError, initialize) {
+	ASSERT_TYPE(args, string_e, "UnknownCommandError.initialize");
+	context->get_objectval()->set("command", args);
+	std::string msg = (std::string("Unknown command: ") + args->get_stringval()).c_str();
+	return ehretval_t::make_resource(new Exception(strdup(msg.c_str())));
+}
+EH_METHOD(UnknownCommandError, toString) {
+	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
+	return ehretval_t::make_string(strdup(e->msg));
+}

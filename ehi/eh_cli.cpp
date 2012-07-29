@@ -42,8 +42,7 @@ int main(int argc, char **argv) {
 }
 
 ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
-	throw eh_exception(ehretval_t::make_string(strdup("Use of commands outside of EH-PHP context")));
-	eh_error("Use of commands outside of EH-PHP context", eerror_e);
+	throw_UnknownCommandError(name, this);
 	return NULL;
 }
 char *EHI::eh_getline(EHParser *parser) {

@@ -1,4 +1,7 @@
+#ifndef _EH_ERROR_H
+#define _EH_ERROR_H
 
+#include "eh_libclasses.h"
 /*
  * EH error system
  */
@@ -28,3 +31,21 @@ class quit_exception : public std::exception {
 };
 class unknown_value_exception : public std::exception {
 };
+
+/*
+ * Exceptions throwns by the interpreter.
+ */
+// throw a generic error
+void throw_error(const char *class_name, ehretval_p args, EHI *ehi);
+
+// UnknownCommandError
+void throw_UnknownCommandError(const char *msg, EHI *ehi);
+
+EH_METHOD(UnknownCommandError, initialize);
+EH_METHOD(UnknownCommandError, toString);
+
+EXTERN_EHLC(UnknownCommandError)
+
+// UnknownVariableError
+
+#endif /* _EH_ERROR_H */

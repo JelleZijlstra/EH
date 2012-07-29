@@ -7,25 +7,6 @@
 #include <stdio.h>
 #include <cmath>
 
-#define ASSERT_NARGS(count, method) if(args->type() != tuple_e || args->get_tupleval()->size() != count) { \
-	eh_error_argcount_lib(#method, count, args->get_tupleval()->size()); \
-	return NULL; \
-}
-#define ASSERT_TYPE(operand, ehtype, method) if(operand->type() != ehtype) { \
-	eh_error_type("argument to " #method, operand->type(), enotice_e); \
-	return NULL; \
-}
-#define ASSERT_OBJ_TYPE(ehtype, method) if(obj->type() != ehtype) { \
-	eh_error_type("base object of " #method, obj->type(), enotice_e); \
-	return NULL; \
-}
-#define ASSERT_NULL(method) if(args->type() != null_e) { \
-	eh_error_argcount_lib(#method, 0, 1); \
-	return NULL; \
-}
-#define ASSERT_NARGS_AND_TYPE(count, ehtype, method) ASSERT_NARGS(count, method); ASSERT_OBJ_TYPE(ehtype, method);
-#define ASSERT_NULL_AND_TYPE(ehtype, method) ASSERT_NULL(method); ASSERT_OBJ_TYPE(ehtype, method);
-
 START_EHLC(Object)
 EHLC_ENTRY(Object, new)
 EHLC_ENTRY(Object, inherit)

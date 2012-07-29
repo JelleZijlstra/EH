@@ -58,6 +58,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(Hash, hash_e)
 	LIBCLASSENTRY(Tuple, tuple_e)
 	LIBCLASSENTRY(Exception, -1)
+	LIBCLASSENTRY(UnknownCommandError, -1)
 	{NULL, NULL, 0}
 };
 

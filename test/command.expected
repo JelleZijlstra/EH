@@ -1,1 +1,1 @@
-Use of commands outside of EH-PHP context: EH runtime error
+Uncaught exception of type UnknownCommandError: Unknown command: bfind

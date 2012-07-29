@@ -1,0 +1,4 @@
+Uncaught exception of type TypeError: -- operator only applies to Integer objects: Array
+Uncaught exception of type TypeError: ++ operator only applies to Integer objects: Array
+Uncaught exception of type TypeError: For loop counter must be an Integer or a Range of Integers: Bool
+Uncaught exception of type TypeError: For loop counter must be an Integer or a Range of Integers: Float

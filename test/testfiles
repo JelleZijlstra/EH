@@ -172,3 +172,4 @@ implicitreturn2.eh
 arrayfill.eh
 throwing_handler.eh
 messexceptions.eh
+testerrors.eh

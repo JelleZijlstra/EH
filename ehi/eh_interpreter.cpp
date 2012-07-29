@@ -460,8 +460,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 							operand1->intval--;
 							break;
 						default:
-							eh_error_type("-- operator", operand1->type(), eerror_e);
-							break;
+							throw_TypeError("-- operator only applies to Integer objects", operand1->type(), this);
 					}
 					break;
 				case T_PLUSPLUS:
@@ -471,8 +470,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 							operand1->intval++;
 							break;
 						default:
-							eh_error_type("++ operator", operand1->type(), eerror_e);
-							break;
+							throw_TypeError("++ operator only applies to Integer objects", operand1->type(), this);
 					}
 					break;
 				case '$': // variable dereference
@@ -490,8 +488,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					);
 					break;
 				default:
-					eh_error_int("Unexpected opcode", node->get_opval()->op, efatal_e);
-					break;
+					std::cerr << "Unexpected opcode " << node->get_opval()->op;
+					assert(false);
 			}
 		} else {
 			ret = node;
@@ -589,14 +587,11 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 			range.first = rangeval->min->get_intval();
 			range.second = rangeval->max->get_intval();
 		} else {
-			eh_error_type("count", rangeval->min->type(), enotice_e);
-			return NULL;
+			throw_TypeError("For loop counter must be an Integer or a Range of Integers", rangeval->min->type(), this);
 		}
 	} else {
-		count_r = this->to_int(count_r, context);
 		if(count_r->type() != int_e) {
-			eh_error_type("count", count_r->type(), eerror_e);
-			return ret;
+			throw_TypeError("For loop counter must be an Integer or a Range of Integers", count_r->type(), this);
 		}
 		range.first = 0;
 		range.second = count_r->get_intval() - 1;

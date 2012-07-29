@@ -59,6 +59,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(Tuple, tuple_e)
 	LIBCLASSENTRY(Exception, -1)
 	LIBCLASSENTRY(UnknownCommandError, -1)
+	LIBCLASSENTRY(TypeError, -1)
 	{NULL, NULL, 0}
 };
 
@@ -445,8 +446,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					operand1 = eh_execute(node->get_opval()->paras[0], context);
 					operand2 = eh_execute(node->get_opval()->paras[1], context);
 					if(operand1->type() != operand2->type()) {
-						eh_error("Incompatible types for range", enotice_e);
-						return NULL;
+						throw_TypeError("Range members must have the same type", operand2->type(), this);
 					}
 					ret = this->make_range(new ehrange_t(operand1, operand2));
 					break;

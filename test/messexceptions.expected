@@ -1,0 +1,4 @@
+Attempt to write to constant variable: EH runtime error
+Uncaught exception of type UnknownCommandError: I don't care
+No such object member: operator_colon: EH notice
+Uncaught exception of type Null: 

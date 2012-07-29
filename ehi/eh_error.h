@@ -46,6 +46,12 @@ EH_METHOD(UnknownCommandError, toString);
 
 EXTERN_EHLC(UnknownCommandError)
 
-// UnknownVariableError
+// TypeError
+void throw_TypeError(const char *msg, int type, EHI *ehi);
+
+EH_METHOD(TypeError, initialize);
+EH_METHOD(TypeError, toString);
+
+EXTERN_EHLC(TypeError)
 
 #endif /* _EH_ERROR_H */

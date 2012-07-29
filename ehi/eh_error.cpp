@@ -93,10 +93,39 @@ END_EHLC()
 EH_METHOD(UnknownCommandError, initialize) {
 	ASSERT_TYPE(args, string_e, "UnknownCommandError.initialize");
 	context->get_objectval()->set("command", args);
-	std::string msg = (std::string("Unknown command: ") + args->get_stringval()).c_str();
+	std::string msg = std::string("Unknown command: ") + args->get_stringval();
 	return ehretval_t::make_resource(new Exception(strdup(msg.c_str())));
 }
 EH_METHOD(UnknownCommandError, toString) {
+	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
+	return ehretval_t::make_string(strdup(e->msg));
+}
+
+void throw_TypeError(const char *msg, int type, EHI *ehi) {
+	ehretval_p args[2];
+	args[0] = ehretval_t::make_string(strdup(msg));
+	args[1] = ehretval_t::make_int(type);
+	throw_error("TypeError", ehi->make_tuple(new ehtuple_t(2, args)), ehi);
+}
+
+START_EHLC(TypeError)
+EHLC_ENTRY(TypeError, initialize)
+EHLC_ENTRY(TypeError, toString)
+END_EHLC()
+
+EH_METHOD(TypeError, initialize) {
+	ASSERT_TYPE(args, tuple_e, "TypeError.initialize");
+	ehretval_p msg = args->get_tupleval()->get(0);
+	ASSERT_TYPE(msg, string_e, "TypeError.initialize");
+	ehretval_p id = args->get_tupleval()->get(1);
+	ASSERT_TYPE(id, int_e, "TypeError.initialize");
+	context->get_objectval()->set("message", msg);
+	std::string type_str = ehi->repo.get_name(id->get_intval());
+	context->get_objectval()->set("type", id);
+	std::string exception_msg = std::string(msg->get_stringval()) + ": " + type_str;
+	return ehretval_t::make_resource(new Exception(strdup(exception_msg.c_str())));
+}
+EH_METHOD(TypeError, toString) {
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }

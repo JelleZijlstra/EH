@@ -170,3 +170,4 @@ totuple.eh
 returnobject.eh
 implicitreturn2.eh
 arrayfill.eh
+throwing_handler.eh

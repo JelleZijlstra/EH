@@ -7,4 +7,4 @@
 @array [
 0 => @int 42
 ]
-Uncaught exception: Stack empty
+Uncaught exception of type String: Stack empty

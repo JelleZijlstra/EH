@@ -95,6 +95,7 @@ public:
 	ehretval_p parse_file(const char *name);
 	EHI();
 	void eh_exit(void);
+	void handle_uncaught(eh_exception &e);
 
 	virtual ehretval_p execute_cmd(const char *rawcmd, eharray_t *paras);
 	virtual char *eh_getline(class EHParser *parser = NULL);

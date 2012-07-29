@@ -110,7 +110,7 @@ global_list:
 								try {
 									ret = parser->_parent->eh_execute(statement, parser->_parent->global_object);
 								} catch(eh_exception &e) {
-									std::cerr << "Uncaught exception: " << parser->_parent->to_string(e.content, parser->_parent->global_object)->get_stringval() << std::endl;
+									parser->_parent->handle_uncaught(e);
 								}
 								// flush stdout after executing each statement
 								fflush(stdout);

@@ -145,6 +145,8 @@ vtype get_ ## ehtype ## val() const { \
 	bool belongs_in_gc() const {
 		return belongs_in_gc(this->type());
 	}
+
+	int get_full_type() const;
 	
 	bool is_object() const {
 		switch(this->type()) {
@@ -442,12 +444,12 @@ public:
 		return next_available - 1;
 	}
 	
-	std::string get_name(int id) {
+	const std::string &get_name(int id) {
 		if(id_to_string.count(id) == 1) {
 			return id_to_string[id];
 		} else {
 			assert(false);
-			return NULL;
+			throw std::exception();
 		}
 	}
 	ehretval_p get_object(int id) {

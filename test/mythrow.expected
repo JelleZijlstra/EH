@@ -1,2 +1,2 @@
 Oh no, an exception!
-Uncaught exception: 42
+Uncaught exception of type Integer: 42

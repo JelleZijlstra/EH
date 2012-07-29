@@ -113,6 +113,14 @@ bool ehretval_t::is_a(int in) {
 		return this->type() == object_e && this->get_objectval()->type_id == in;
 	}
 }
+int ehretval_t::get_full_type() const  {
+	int out = this->type();
+	if(out == object_e) {
+		return this->get_objectval()->type_id;
+	} else {
+		return out;
+	}
+}
 ehretval_t::~ehretval_t() {
 	switch(_type) {
 		// Simple types; nothing to do

@@ -147,6 +147,7 @@ vtype get_ ## ehtype ## val() const { \
 	}
 
 	int get_full_type() const;
+	const std::string &type_string(class EHI *ehi) const;
 	
 	bool is_object() const {
 		switch(this->type()) {
@@ -196,6 +197,8 @@ typedef ehretval_p (*ehlibmethod_t)(ehretval_p, ehretval_p, ehcontext_t, class E
 
 // Variables and object members (which are the same)
 typedef struct ehmember_t {
+	typedef refcount_ptr<ehmember_t> ehmember_p;
+
 	attributes_t attribute;
 	ehretval_p value;
 
@@ -213,8 +216,15 @@ typedef struct ehmember_t {
 	bool isconst() {
 		return this->attribute.isconst == const_e;
 	}
+
+	static ehmember_p make(attributes_t attribute, ehretval_p value) {
+		ehmember_p out;
+		out->attribute = attribute;
+		out->value = value;
+		return out;
+	}
 } ehmember_t;
-typedef refcount_ptr<ehmember_t> ehmember_p;
+typedef ehmember_t::ehmember_p ehmember_p;
 
 // in future, add type for type checking
 typedef struct eharg_t {
@@ -283,9 +293,7 @@ public:
 	ehobj_t() : members(), object_data(NULL), type_id(null_e), parent(), real_parent(), ehi() {}
 
 	// method prototypes
-	ehmember_p insert_retval(const char *name, attributes_t attribute, ehretval_p value);
-	ehmember_p get_recursive(const char *name, const ehcontext_t context, int token);
-	ehmember_p get(const char *name, const ehcontext_t context, int token);
+	ehmember_p get_recursive(const char *name, const ehcontext_t context);
 	void copy_member(obj_iterator &classmember, bool set_real_parent, ehretval_p ret, EHI *ehi);
 	bool context_compare(const ehcontext_t key) const;
 
@@ -294,10 +302,6 @@ public:
 		return members.size();
 	}
 	
-	// set with default attributes
-	void set(const char *name, ehretval_p value);
-	void set(std::string name, ehretval_p value);
-
 	void insert(const std::string &name, ehmember_p value) {
 		members[name] = value;
 	}
@@ -306,10 +310,11 @@ public:
 		this->insert(str, value);
 	}
 	
-	ehmember_p &operator[](std::string key) {
+	ehmember_p get_known(const std::string &key) {
+		assert(this->has(key));
 		return members[key];
 	}
-	
+
 	bool has(const std::string key) const {
 		return members.count(key);
 	}
@@ -333,8 +338,6 @@ public:
 	// destructor
 	~ehobj_t();
 private:
-	ehmember_p get_recursive_helper(const char *name, const ehcontext_t context);
-
 	// ehobj_t should never be handled directly
 	ehobj_t(const ehobj_t&) : members(), object_data(), type_id(), parent(), real_parent(), ehi() {
 		throw "Not allowed";

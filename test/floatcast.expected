@@ -1,7 +1,5 @@
 @float 3.000000
-No such object member: toFloat: EH notice
-toFloat does not return a float: EH notice
-@float 0.000000
+Uncaught exception of type NameError: Unknown member toFloat in object of type Bool: true
 @int 3
 @bool true
 @bool true

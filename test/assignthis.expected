@@ -1,4 +1,3 @@
-Attempt to write to constant variable: EH runtime error
 @object <Foo> [
 bar <public,non-static,non-constant>: @function <user>: 
 baz <private,non-static,non-constant>: @int 42
@@ -10,18 +9,7 @@ new <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 useprivate <public,non-static,non-constant>: @function <user>: 
 ]
-42
-@object <Foo> [
-bar <public,non-static,non-constant>: @function <user>: 
-baz <private,non-static,non-constant>: @int 42
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-useprivate <public,non-static,non-constant>: @function <user>: 
-]
+Uncaught exception of type ConstError: Cannot set constant member this in object of type Function: 0x10020f7c8
 @object <Foo> [
 bar <public,non-static,non-constant>: @function <user>: 
 baz <private,non-static,non-constant>: @int 42

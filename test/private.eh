@@ -11,7 +11,11 @@ class Bar
 		# 4
 		echo baz
 		# error
-		echo this.baz
+		try
+			echo this.baz
+		catch
+			echo exception.toString()
+		end
 		this.baz = 5
 		# 5
 		echo this.baz

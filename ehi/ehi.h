@@ -70,8 +70,8 @@ private:
 	ehretval_p eh_xtoarray(ehretval_p in);
 	ehretval_p eh_cast(const type_enum type, ehretval_p in, ehcontext_t context);
 
-	ehobj_t *get_primitive_class(type_enum in) {
-		return this->repo.get_object(in)->get_objectval();
+	ehretval_p get_primitive_class(type_enum in) {
+		return this->repo.get_object(in);
 	}
 
 	// disallowed operations
@@ -96,6 +96,9 @@ public:
 	EHI();
 	void eh_exit(void);
 	void handle_uncaught(eh_exception &e);
+	ehmember_p set_property(ehretval_p object, const char *name, ehretval_p value, ehcontext_t context);
+	ehmember_p set_property(ehretval_p object, const char *name, ehmember_p value, ehcontext_t context);
+	ehretval_p get_property(ehretval_p object, ehretval_p object_data, const char *name, ehcontext_t context);
 
 	virtual ehretval_p execute_cmd(const char *rawcmd, eharray_t *paras);
 	virtual char *eh_getline(class EHParser *parser = NULL);
@@ -144,30 +147,27 @@ public:
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
 
 	// conversion methods, guaranteed to return the type they're supposed to return
-#define CASTER(method_name, ehtype, fallback_value) ehretval_p to_ ## ehtype(ehretval_p in, ehcontext_t context) { \
-	static ehretval_p fallback = ehretval_t::make_ ## ehtype(fallback_value); \
+#define CASTER(method_name, ehtype) ehretval_p to_ ## ehtype(ehretval_p in, ehcontext_t context) { \
 	ehretval_p out = call_method(in, #method_name, NULL, context); \
 	if(out->type() == ehtype ## _e) { \
 		return out; \
 	} else { \
-		eh_error(#method_name " does not return a " #ehtype, enotice_e); \
-		return fallback; \
+		throw_TypeError(#method_name " must return a " #ehtype, out->type(), this); \
+		return NULL; \
 	} \
 }
-	CASTER(toString, string, strdup(""))
-	CASTER(toInt, int, 0)
-	CASTER(toFloat, float, 0.0)
-	CASTER(toBool, bool, false)
+	CASTER(toString, string)
+	CASTER(toInt, int)
+	CASTER(toFloat, float)
+	CASTER(toBool, bool)
 #undef CASTER
 	ehretval_p to_array(ehretval_p in, ehcontext_t context) {
 		ehretval_p out = call_method(in, "toArray", NULL, context);
 		if(out->type() == array_e) {
 			return out;
 		} else {
-			eh_error("toArray does not return an array", enotice_e);
-			eharray_t *arr = new eharray_t;
-			arr->int_indices[0] = in;
-			return this->make_array(arr);
+			throw_TypeError("toArray must return an array", out->type(), this);
+			return NULL;
 		}
 	}
 	ehretval_p to_range(ehretval_p in, ehcontext_t context) {
@@ -175,9 +175,8 @@ public:
 		if(out->type() == range_e) {
 			return out;
 		} else {
-			eh_error("toRange does not return a range", enotice_e);
-			ehrange_t *range = new ehrange_t(in, in);
-			return this->make_range(range);
+			throw_TypeError("toRange must return a range", out->type(), this);
+			return NULL;
 		}
 	}
 	ehretval_p to_tuple(ehretval_p in, ehcontext_t context) {
@@ -185,8 +184,8 @@ public:
 		if(out->type() == tuple_e) {
 			return out;
 		} else {
-			eh_error("toTuple does not return a tuple", enotice_e);
-			return this->make_tuple(new ehtuple_t(0, NULL));
+			throw_TypeError("toTuple must return a tuple", out->type(), this);
+			return NULL;
 		}
 	}
 

@@ -15,21 +15,18 @@
 
 #define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, ehretval_p args, ehcontext_t context, EHI *ehi)
 
-#define ASSERT_NARGS(count, method) if(args->type() != tuple_e || args->get_tupleval()->size() != count) { \
-	eh_error_argcount_lib(#method, count, args->get_tupleval()->size()); \
-	return NULL; \
-}
 #define ASSERT_TYPE(operand, ehtype, method) if(operand->type() != ehtype) { \
-	eh_error_type("argument to " #method, operand->type(), enotice_e); \
-	return NULL; \
+	throw_TypeError("Invalid type for argument to " #method, operand->type(), ehi); \
 }
+#define ASSERT_NARGS(count, method) ASSERT_TYPE(args, tuple_e, method); \
+	if(args->get_tupleval()->size() != count) { \
+		throw_ArgumentError("Argument must be a tuple of size " #count, method, args, ehi); \
+	}
 #define ASSERT_OBJ_TYPE(ehtype, method) if(obj->type() != ehtype) { \
-	eh_error_type("base object of " #method, obj->type(), enotice_e); \
-	return NULL; \
+	throw_TypeError("Invalid base object for " #method, obj->type(), ehi); \
 }
 #define ASSERT_NULL(method) if(args->type() != null_e) { \
-	eh_error_argcount_lib(#method, 0, 1); \
-	return NULL; \
+	throw_TypeError("Argument to " #method " must be null", args->type(), ehi); \
 }
 #define ASSERT_NARGS_AND_TYPE(count, ehtype, method) ASSERT_NARGS(count, method); ASSERT_OBJ_TYPE(ehtype, method);
 #define ASSERT_NULL_AND_TYPE(ehtype, method) ASSERT_NULL(method); ASSERT_OBJ_TYPE(ehtype, method);

@@ -1,4 +1,3 @@
 @function <user>: n
 @int 42
-No such object member: foo: EH notice
-null
+Uncaught exception of type NameError: Unknown member foo in object of type Function: 0x10020ea18

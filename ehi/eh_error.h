@@ -49,6 +49,11 @@ EXTERN_EHLC(UnknownCommandError)
 // TypeError
 void throw_TypeError(const char *msg, int type, EHI *ehi);
 
+// common variants
+static inline void throw_TypeError_Array_key(int type, EHI *ehi) {
+	throw_TypeError("Array key must be a String or Integer", type, ehi);
+}
+
 EH_METHOD(TypeError, initialize);
 EH_METHOD(TypeError, toString);
 
@@ -61,5 +66,39 @@ EH_METHOD(LoopError, initialize);
 EH_METHOD(LoopError, toString);
 
 EXTERN_EHLC(LoopError)
+
+// NameError (when trying to access a non-existent member)
+void throw_NameError(ehretval_p object, const char *name, EHI *ehi);
+
+EH_METHOD(NameError, initialize);
+EH_METHOD(NameError, toString);
+
+EXTERN_EHLC(NameError)
+
+// ConstError
+void throw_ConstError(ehretval_p object, const char *name, EHI *ehi);
+
+EH_METHOD(ConstError, initialize);
+EH_METHOD(ConstError, toString);
+
+EXTERN_EHLC(ConstError)
+
+void throw_ArgumentError(const char *message, const char *method, ehretval_p value, EHI *ehi);
+
+static inline void throw_ArgumentError_out_of_range(const char *method, ehretval_p value, EHI *ehi) {
+	throw_ArgumentError("Argument out of range", method, value, ehi);
+}
+
+EH_METHOD(ArgumentError, initialize);
+EH_METHOD(ArgumentError, toString);
+
+EXTERN_EHLC(ArgumentError)
+
+void throw_MiscellaneousError(const char *message, EHI *ehi);
+
+EH_METHOD(MiscellaneousError, initialize);
+EH_METHOD(MiscellaneousError, toString);
+
+EXTERN_EHLC(MiscellaneousError)
 
 #endif /* _EH_ERROR_H */

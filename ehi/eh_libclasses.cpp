@@ -6,6 +6,7 @@
 #include "eh_libclasses.h"
 #include <stdio.h>
 #include <cmath>
+#include <sstream>
 
 START_EHLC(Object)
 EHLC_ENTRY(Object, new)
@@ -202,13 +203,9 @@ EH_METHOD(Integer, operator_plus) {
 	if(args->type() == float_e) {
 		return ehretval_t::make_float((float) obj->get_intval() + args->get_floatval());
 	} else {
+		// always returns an int or throws
 		args = ehi->to_int(args, context);
-		if(args->type() == int_e) {
-			return ehretval_t::make_int(obj->get_intval() + args->get_intval());
-		} else {
-			eh_error_type("argument to Integer.operator+", args->type(), enotice_e);
-			return NULL;
-		}
+		return ehretval_t::make_int(obj->get_intval() + args->get_intval());
 	}
 }
 EH_METHOD(Integer, operator_minus) {
@@ -217,12 +214,7 @@ EH_METHOD(Integer, operator_minus) {
 		return ehretval_t::make_float((float) obj->get_intval() - args->get_floatval());
 	} else {
 		args = ehi->to_int(args, context);
-		if(args->type() == int_e) {
-			return ehretval_t::make_int(obj->get_intval() - args->get_intval());
-		} else {
-			eh_error_type("argument to Integer.operator-", args->type(), enotice_e);
-			return NULL;
-		}
+		return ehretval_t::make_int(obj->get_intval() - args->get_intval());
 	}
 }
 EH_METHOD(Integer, operator_times) {
@@ -231,12 +223,7 @@ EH_METHOD(Integer, operator_times) {
 		return ehretval_t::make_float((float) obj->get_intval() * args->get_floatval());
 	} else {
 		args = ehi->to_int(args, context);
-		if(args->type() == int_e) {
-			return ehretval_t::make_int(obj->get_intval() * args->get_intval());
-		} else {
-			eh_error_type("argument to Integer.operator*", args->type(), enotice_e);
-			return NULL;
-		}
+		return ehretval_t::make_int(obj->get_intval() * args->get_intval());
 	}
 }
 EH_METHOD(Integer, operator_divide) {
@@ -244,23 +231,16 @@ EH_METHOD(Integer, operator_divide) {
 	if(args->type() == float_e) {
 		float val = args->get_floatval();
 		if(val == 0.0) {
-			eh_error("Divide by zero", enotice_e);
-			return NULL;
+			throw_MiscellaneousError("Divide by zero in Integer.operator/", ehi);
 		}
 		return ehretval_t::make_float((float) obj->get_intval() / val);
 	} else {
 		args = ehi->to_int(args, context);
-		if(args->type() == int_e) {
-			int val = args->get_intval();
-			if(val == 0) {
-				eh_error("Divide by zero", enotice_e);
-				return NULL;
-			}
-			return ehretval_t::make_int(obj->get_intval() / args->get_intval());
-		} else {
-			eh_error_type("argument to Integer.operator/", args->type(), enotice_e);
-			return NULL;
+		int val = args->get_intval();
+		if(val == 0) {
+			throw_MiscellaneousError("Divide by zero in Integer.operator/", ehi);
 		}
+		return ehretval_t::make_int(obj->get_intval() / args->get_intval());
 	}
 }
 EH_METHOD(Integer, operator_modulo) {
@@ -268,8 +248,7 @@ EH_METHOD(Integer, operator_modulo) {
 	ehretval_p operand = ehi->to_int(args, context);
 	ASSERT_TYPE(operand, int_e, "Integer.operator%");
 	if(operand->get_intval() == 0) {
-		eh_error("Divide by zero", enotice_e);
-		return NULL;
+		throw_MiscellaneousError("Divide by zero in Integer.operator%", ehi);
 	}
 	return ehretval_t::make_int(obj->get_intval() % operand->get_intval());
 }
@@ -318,8 +297,7 @@ EH_METHOD(Integer, getBit) {
 	ASSERT_TYPE(args, int_e, "Integer.getBit");
 	int index = args->get_intval();
 	if(index < 0 || ((unsigned) index) >= sizeof(int) * 8) {
-		eh_error_invalid_argument("Integer.getBit", 0);
-		return NULL;
+		throw_ArgumentError_out_of_range("Integer.getBit", args, ehi);
 	}
 	// get mask
 	int mask = 1 << (sizeof(int) * 8 - 1);
@@ -333,23 +311,20 @@ EH_METHOD(Integer, setBit) {
 	ASSERT_TYPE(operand, int_e, "Integer.setBit");
 	int index = operand->get_intval();
 	if(index < 0 || ((unsigned) index) >= sizeof(int) * 8) {
-		eh_error_invalid_argument("Integer.setBit", 0);
-		return NULL;
+		throw_ArgumentError_out_of_range("Integer.setBit", operand, ehi);
 	}
 	int new_value;
 	ehretval_p value = args->get_tupleval()->get(1);
 	if(value->type() == int_e) {
 		int int_value = value->get_intval();
 		if(int_value != 0 && int_value != 1) {
-			eh_error_invalid_argument("Integer.setBit", 1);
-			return NULL;
+			throw_ArgumentError_out_of_range("Integer.setBit", value, ehi);
 		}
 		new_value = int_value;
 	} else if(value->type() == bool_e) {
 		new_value = value->get_boolval();
 	} else {
-		eh_error_type("argument to Integer.setBit", value->type(), enotice_e);
-		return NULL;
+		throw_TypeError("Second argument to Integer.setBit must be an Integer or Bool", value->type(), ehi);
 	}
 	int mask = (1 << (sizeof(int) * 8 - 1)) >> index;
 	int out = obj->get_intval();
@@ -466,46 +441,25 @@ EH_METHOD(Float, initialize) {
 EH_METHOD(Float, operator_plus) {
 	ASSERT_OBJ_TYPE(float_e, "Float.operator+");
 	ehretval_p operand = ehi->to_float(args, context);
-	if(operand->type() == float_e) {
-		return ehretval_t::make_float(obj->get_floatval() + operand->get_floatval());
-	} else {
-		eh_error_type("argument to Float.operator+", args->type(), enotice_e);
-		return NULL;
-	}
+	return ehretval_t::make_float(obj->get_floatval() + operand->get_floatval());
 }
 EH_METHOD(Float, operator_minus) {
 	ASSERT_OBJ_TYPE(float_e, "Float.operator-");
 	ehretval_p operand = ehi->to_float(args, context);
-	if(operand->type() == float_e) {
-		return ehretval_t::make_float(obj->get_floatval() - operand->get_floatval());
-	} else {
-		eh_error_type("argument to Float.operator-", args->type(), enotice_e);
-		return NULL;
-	}
+	return ehretval_t::make_float(obj->get_floatval() - operand->get_floatval());
 }
 EH_METHOD(Float, operator_times) {
 	ASSERT_OBJ_TYPE(float_e, "Float.operator*");
 	ehretval_p operand = ehi->to_float(args, context);
-	if(operand->type() == float_e) {
-		return ehretval_t::make_float(obj->get_floatval() * operand->get_floatval());
-	} else {
-		eh_error_type("argument to Float.operator*", args->type(), enotice_e);
-		return NULL;
-	}
+	return ehretval_t::make_float(obj->get_floatval() * operand->get_floatval());
 }
 EH_METHOD(Float, operator_divide) {
 	ASSERT_OBJ_TYPE(float_e, "Float.operator/");
 	ehretval_p operand = ehi->to_float(args, context);
-	if(operand->type() == float_e) {
-		if(operand->get_floatval() == 0.0) {
-			eh_error("Divide by zero", enotice_e);
-			return NULL;
-		}
-		return ehretval_t::make_float(obj->get_floatval() / operand->get_floatval());
-	} else {
-		eh_error_type("argument to Float.operator/", args->type(), enotice_e);
-		return NULL;
+	if(operand->get_floatval() == 0.0) {
+		throw_MiscellaneousError("Divide by zero in Float.operator/", ehi);
 	}
+	return ehretval_t::make_float(obj->get_floatval() / operand->get_floatval());
 }
 EH_METHOD(Float, operator_uminus) {
   ASSERT_NULL_AND_TYPE(float_e, "Float.operator-");
@@ -590,8 +544,7 @@ EH_METHOD(String, operator_arrow) {
 		index += len;
 	}
 	if(index < 0 || ((unsigned) index) >= len) {
-		eh_error_invalid_argument("String.operator->", 0);
-		return NULL;
+		throw_ArgumentError_out_of_range("String.operator->", args, ehi);
 	}
 	char *out = new char[2]();
 	out[0] = obj->get_stringval()[index];
@@ -608,13 +561,11 @@ EH_METHOD(String, operator_arrow_equals) {
 		index += len;
 	}
 	if(index < 0 || ((unsigned) index) >= len) {
-		eh_error_invalid_argument("String.operator->=", 0);
-		return NULL;
+		throw_ArgumentError_out_of_range("String.operator->=", operand1, ehi);
 	}
 	ehretval_p operand2 = ehi->to_string(args->get_tupleval()->get(1), context);
 	if(strlen(operand2->get_stringval()) == 0) {
-		eh_error_invalid_argument("String.operator->=", 1);
-		return NULL;
+		throw_ArgumentError("Argument cannot be a zero-length string", "String.operator->=", args->get_tupleval()->get(1), ehi);
 	}
 	obj->get_stringval()[index] = operand2->get_stringval()[0];
 	return operand2;
@@ -640,8 +591,7 @@ EH_METHOD(String, toInt) {
 	ehretval_p ret = ehretval_t::make_int(strtol(obj->get_stringval(), &endptr, 0));
 	// If in == endptr, strtol read no digits and there was no conversion.
 	if(obj->get_stringval() == endptr) {
-		eh_error("Cannot convert String to Integer", enotice_e);
-		return NULL;
+		throw_ArgumentError("Cannot convert String to Integer", "String.toInt", obj, ehi);
 	}
 	return ret;
 }
@@ -651,8 +601,7 @@ EH_METHOD(String, toFloat) {
 	ehretval_p ret = ehretval_t::make_float(strtof(obj->get_stringval(), &endptr));
 	// If in == endptr, strtof read no digits and there was no conversion.
 	if(obj->get_stringval() == endptr) {
-		eh_error("Cannot convert String to Float", enotice_e);
-		return NULL;
+		throw_ArgumentError("Cannot convert String to Float", "String.toFloat", obj, ehi);
 	}
 	return ret;
 }
@@ -669,8 +618,7 @@ EH_METHOD(String, toRange) {
 	// get lower part of range
 	for(int i = 0; ; i++) {
 		if(in[i] == '\0') {
-			eh_error("Could not convert string to range", enotice_e);
-			return NULL;
+			throw_ArgumentError("Cannot convert String to Range", "String.toRange", obj, ehi);
 		}
 		if(isdigit(in[i])) {
 			min = strtol(&in[i], &ptr, 0);
@@ -680,8 +628,7 @@ EH_METHOD(String, toRange) {
 	// get upper bound
 	for(int i = 0; ; i++) {
 		if(ptr[i] == '\0') {
-			eh_error("Could not convert string to range", enotice_e);
-			return NULL;
+			throw_ArgumentError("Cannot convert String to Range", "String.toRange", obj, ehi);
 		}
 		if(isdigit(ptr[i])) {
 			max = strtol(&ptr[i], NULL, 0);
@@ -697,11 +644,9 @@ EH_METHOD(String, charAtPosition) {
 	int index = args->get_intval();
 	const char *string = obj->get_stringval();
 	if(index < 0 || ((unsigned) index) >= strlen(string)) {
-		eh_error_invalid_argument("String.charAtPosition", index);
-		return NULL;
-	} else {
-		return ehretval_t::make_int(string[index]);
+		throw_ArgumentError_out_of_range("String.charAtPosition", args, ehi);
 	}
+	return ehretval_t::make_int(string[index]);
 }
 
 START_EHLC(Bool)
@@ -789,7 +734,7 @@ EH_METHOD(Range, operator_arrow) {
 	} else if(index == 1) {
 		return obj->get_rangeval()->max;
 	} else {
-		eh_error_invalid_argument("Range.operator->", 0);
+		throw_ArgumentError_out_of_range("Range.operator->", args, ehi);
 		return NULL;		
 	}
 }
@@ -882,8 +827,7 @@ EH_METHOD(Function, operator_colon) {
 		real_parent = binding->method->get_objectval()->real_parent;
 		object_data = binding->object_data;
 	} else {
-		eh_error_type("base object of Function.operator:", context->type(), enotice_e);
-		return NULL;
+		throw_TypeError("Invalid base object for Function.operator:", obj->type(), ehi);
 	}
 	ehfunc_t *f = function_object->get_objectval()->object_data->get_funcval();
 
@@ -896,23 +840,24 @@ EH_METHOD(Function, operator_colon) {
 	// check parameter count
 	if(f->argcount == 0) {
 		if(args->type() != null_e) {
-			eh_error_argcount(0, 1);
-			return NULL;
+			throw_TypeError("Unexpected non-null argument to closure", args->type(), ehi);
 		}
 	} else if(f->argcount == 1) {
-		newcontext->get_objectval()->set(f->args[0].name, args);
+		ehi->set_property(newcontext, f->args[0].name.c_str(), args, newcontext);
 	} else {
 		if(args->type() != tuple_e) {
-			eh_error_argcount(f->argcount, 1);
-			return NULL;
+			std::ostringstream msg;
+			msg << "Argument must be a tuple of size " << f->argcount;
+			throw_ArgumentError(msg.str().c_str(), "(closure)", args, ehi);
 		} else if(args->get_tupleval()->size() != f->argcount) {
-			eh_error_argcount(f->argcount, args->get_tupleval()->size());
-			return NULL;
+			std::ostringstream msg;
+			msg << "Argument must be a tuple of size " << f->argcount;
+			throw_ArgumentError(msg.str().c_str(), "(closure)", args, ehi);
 		} else {
 			// set parameters as necessary
 			ehtuple_t *tuple = args->get_tupleval();
 			for(int i = 0; i < f->argcount; i++) {
-				newcontext->get_objectval()->set(f->args[f->argcount - 1 - i].name, tuple->get(i));
+				ehi->set_property(newcontext, f->args[f->argcount - 1 - i].name.c_str(), tuple->get(i), newcontext);
 			}			
 		}
 	}
@@ -955,9 +900,8 @@ EH_METHOD(Tuple, operator_arrow) {
 	ASSERT_OBJ_TYPE(tuple_e, "Tuple.operator->");
 	ASSERT_TYPE(args, int_e, "Tuple.operator->");
 	int index = args->get_intval();
-	if(index < 0 || index > obj->get_tupleval()->size()) {
-    	eh_error_invalid_argument("Tuple.operator->", 0);
-    	return NULL;
+	if(index < 0 || index >= obj->get_tupleval()->size()) {
+    	throw_ArgumentError_out_of_range("Tuple.operator->", args, ehi);
 	}
   	return obj->get_tupleval()->get(index);
 }

@@ -13,6 +13,6 @@ toString <public,non-static,non-constant>: @function <library>:
 ]
 2
 3
-Attempt to write to constant variable: EH runtime error
-Attempt to write to constant variable: EH runtime error
+Uncaught exception of type ConstError: Cannot set constant member muh in object of type Foo: 0x100210798
+Uncaught exception of type ConstError: Cannot set constant member muh in object of type Foo: 0x100210e18
 2

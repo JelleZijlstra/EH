@@ -1,5 +1,2 @@
-Attempt to write to constant variable: EH runtime error
-Attempt to write to constant variable: EH runtime error
-Attempt to write to constant variable: EH runtime error
-Attempt to write to constant variable: EH runtime error
+Cannot set constant member foo in object of type Foo: 0x10020ff68
 10

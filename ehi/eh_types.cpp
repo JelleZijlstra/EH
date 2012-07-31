@@ -121,6 +121,10 @@ int ehretval_t::get_full_type() const  {
 		return out;
 	}
 }
+const std::string &ehretval_t::type_string(EHI *ehi) const {
+	int type = this->get_full_type();
+	return ehi->repo.get_name(type);
+}
 ehretval_t::~ehretval_t() {
 	switch(_type) {
 		// Simple types; nothing to do
@@ -162,8 +166,8 @@ ehretval_t::~ehretval_t() {
 			delete this->hashval;
 			break;
 		case tuple_e:
-		  delete this->tupleval;
-		  break;
+		 	delete this->tupleval;
+		 	break;
 	}
 }
 
@@ -177,7 +181,8 @@ ehretval_p &eharray_t::operator[](ehretval_p index) {
 		case string_e:
 			return string_indices[index->get_stringval()];
 		default:
-			eh_error_type("array index", index->type(), enotice_e);
+			// callers should make sure type is right
+			assert(false);
 			throw unknown_value_exception();
 	}
 }
@@ -191,85 +196,19 @@ void eharray_t::insert_retval(ehretval_p index, ehretval_p value) {
 			this->string_indices[index->get_stringval()] = value;
 			break;
 		default:
-			eh_error_type("array index", index->type(), enotice_e);
-			break;
+			// callers should make sure type is right
+			assert(false);
 	}
 }
 /*
  * ehobj_t
  */
-ehmember_p ehobj_t::insert_retval(const char *name, attributes_t attribute, ehretval_p value) {
-	if(this->has(name)) {
-		// We may want to re-enable this check once inheritance is revamped
-		//eh_error("object member already set", enotice_e);
-		//return NULL;
-		if(members[name]->isconst()) {
-			eh_error("Attempt to write to constant variable", eerror_e);
-			return NULL;
-		}
-	}
-	// insert a member into a class
-	ehmember_p member;
-	member->attribute = attribute;
-	member->value = value;
-
-	// insert into object
-	members[name] = member;
-	return member;
-}
-ehmember_p ehobj_t::get(const char *name, const ehcontext_t context, int token) {
-	if(this->has(name)) {
-		ehmember_p out = this->members[name];
-		if(out->attribute.visibility == private_e && !this->context_compare(context)) {
-			eh_error_unknown("object member", name, enotice_e);
-			return NULL;
-		} else if(token == T_LVALUE_SET && out->attribute.isconst == const_e) {
-			eh_error("Attempt to write to constant variable", eerror_e);
-			return NULL;
-		} else {
-			return out;
-		}
-	} else if(token == T_LVALUE_SET) {
-		ehmember_p member;
-		// force pointer target to be created
-		member->isstatic();
-		this->insert(name, member);
-		return this->members[name];
-	} else {
-		// HACK until all objects inherit from Object: ignore absent initializer
-		if(strcmp(name, "initialize") != 0) {
-			eh_error_unknown("object member", name, enotice_e);
-		}
-		return NULL;
-	}
-}
-ehmember_p ehobj_t::get_recursive(const char *name, ehcontext_t context, int token) {
-	ehmember_p currvar = this->get_recursive_helper(name, context);
-	if(token == T_LVALUE_SET) {
-		if(currvar == NULL) {
-			if(!this->has(name)) {
-				ehmember_p newvar;
-				// force pointer target to be created
-				newvar->isstatic();
-				this->insert(name, newvar);
-				return this->members[name];
-			} else {
-				throw unknown_value_exception();
-			}
-		} else if(currvar->attribute.isconst == const_e) {
-			eh_error("Attempt to write to constant variable", eerror_e);
-			throw unknown_value_exception();
-		}
-	}
-	return currvar;
-}
-ehmember_p ehobj_t::get_recursive_helper(const char *name, const ehcontext_t context) {
+ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) {
 	if(this->has(name)) {
 		return this->members[name];
-	}
-	if(this->real_parent == NULL) {
+	} else if(this->real_parent == NULL) {
 		if(this->parent != NULL) {
-			return this->get_parent()->get_recursive_helper(name, context);
+			return this->get_parent()->get_recursive(name, context);
 		} else {
 			return NULL;
 		}
@@ -277,7 +216,7 @@ ehmember_p ehobj_t::get_recursive_helper(const char *name, const ehcontext_t con
 		if(this->parent != NULL && this->get_parent()->has(name)) {
 			return this->get_parent()->members[name];
 		} else {
-			return this->get_real_parent()->get_recursive_helper(name, context);
+			return this->get_real_parent()->get_recursive(name, context);
 		}
 	}
 }
@@ -298,10 +237,11 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent, ehret
 		newmember->attribute = classmember->second->attribute;
 		if(classmember->second->value->is_a(func_e)) {
 			ehobj_t *oldobj = classmember->second->value->get_objectval();
-			ehobj_t *obj = new ehobj_t();
+			ehretval_p new_obj = ehi->object_instantiate(oldobj);
+			ehobj_t *obj = new_obj->get_objectval();
 			obj->type_id = func_e;
 			obj->object_data = oldobj->object_data;
-			newmember->value = ehi->make_object(obj);
+			newmember->value = new_obj;
 			obj->parent = ret;
 			if(set_real_parent && oldobj->real_parent == NULL) {
 				obj->real_parent = oldobj->get_parent()->parent;
@@ -329,23 +269,4 @@ bool ehobj_t::context_compare(const ehcontext_t key) const {
 ehobj_t::~ehobj_t() {
 	// Commenting out for now until I figure out how to get it working.
 	//ehi->call_method_obj(this, "finalize", 0, NULL, NULL);
-}
-// set with default attributes
-void ehobj_t::set(const char *name, ehretval_p value) {
-	this->set(std::string(name), value);
-}
-void ehobj_t::set(std::string name, ehretval_p value) {
-	if(this->has(name)) {
-		ehmember_p member = this->members[name];
-		if(member->attribute.isconst == const_e) {
-			eh_error("Attempt to write to constant variable", eerror_e);
-		} else {
-			this->members[name]->value = value;
-		}
-	} else {
-		ehmember_p newmember;
-		newmember->attribute = attributes_t::make(public_e, nonstatic_e, nonconst_e);
-		newmember->value = value;
-		this->members[name] = newmember;
-	}
 }

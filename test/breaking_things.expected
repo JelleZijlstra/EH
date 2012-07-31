@@ -1,2 +1,2 @@
-Unsupported type null for base object of "Hash.has": EH notice
-Unsupported type int for base object of "String.length": EH notice
+Uncaught exception of type TypeError: Invalid base object for "Hash.has": Null
+Uncaught exception of type TypeError: Invalid base object for "String.length": Integer

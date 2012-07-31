@@ -1,2 +1,2 @@
 @int 0
-null
+Uncaught exception of type TypeError: Method must be a function: Integer

@@ -1,7 +1,5 @@
-Invalid value for argument 0 to String.operator->=: EH notice
+Uncaught exception of type ArgumentError: Argument out of range (method String.operator->=): 3
 @string 'foo'
 @int 3
-Invalid value for argument 0 to String.operator->: EH notice
-(null)
-No such object member: operator_arrow: EH notice
-(null)
+Uncaught exception of type ArgumentError: Argument out of range (method String.operator->): 3
+Uncaught exception of type NameError: Unknown member operator_arrow in object of type Integer: 3

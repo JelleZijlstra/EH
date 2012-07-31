@@ -1,8 +1,5 @@
 4
 4
 3
-No such object member: operator_and: EH notice
-No such object member: operator_plus: EH notice
-(null)
-(null)
+Uncaught exception of type NameError: Unknown member operator_and in object of type Null: 
 3

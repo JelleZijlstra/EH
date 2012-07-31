@@ -50,6 +50,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(File, -1)
 	LIBCLASSENTRY(Integer, int_e)
 	LIBCLASSENTRY(String, string_e)
+	LIBCLASSENTRY(Function, func_e)
 	LIBCLASSENTRY(Array, array_e)
 	LIBCLASSENTRY(Float, float_e)
 	LIBCLASSENTRY(Bool, bool_e)
@@ -61,6 +62,9 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(UnknownCommandError, -1)
 	LIBCLASSENTRY(TypeError, -1)
 	LIBCLASSENTRY(LoopError, -1)
+	LIBCLASSENTRY(NameError, -1)
+	LIBCLASSENTRY(ConstError, -1)
+	LIBCLASSENTRY(ArgumentError, -1)
 	{NULL, NULL, 0}
 };
 
@@ -96,11 +100,7 @@ static inline int count_nodes(const ehretval_p node);
 	} else { \
 		operand1 = this->to_int(operand1, context); \
 		operand2 = this->to_int(operand2, context); \
-		if(operand1->type() == int_e && operand2->type() == int_e) { \
-			return ehretval_t::make_bool(operand1->get_intval() operator operand2->get_intval()); \
-		} else { \
-			eh_error_types(#operator, operand1->type(), operand2->type(), eerror_e); \
-		} \
+		return ehretval_t::make_bool(operand1->get_intval() operator operand2->get_intval()); \
 	} \
 	break;
 
@@ -176,6 +176,7 @@ void EHI::eh_init(void) {
 		for(int j = 0; members[j].name != NULL; j++) {
 			ehmember_p func;
 			func->attribute = attributes;
+			// could the fact that library methods are missing Object methods become problematic?
 			ehobj_t *function_object = new ehobj_t();
 			func->value = this->make_object(function_object);
 			function_object->parent = new_value;
@@ -197,6 +198,10 @@ void EHI::eh_init(void) {
 	}
 	for(int i = 0; libredirs[i][0] != NULL; i++) {
 		redirect_command(libredirs[i][0], libredirs[i][1]);
+	}
+	// inherit from Object in the global object
+	OBJECT_FOR_EACH(base_object, member) {
+		global_object->get_objectval()->copy_member(member, false, global_object, this);
 	}
 	// insert reference to global object
 	attributes_t attributes = attributes_t::make(public_e, nonstatic_e, const_e);
@@ -606,11 +611,7 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 	} else {
 		// "for 5 count i; do stuff; endfor" construct
 		char *name = eh_execute(op->paras[1], context)->get_stringval();
-		// this should perhaps create a new variable, or only overwrite variables in the current scope
-		ehmember_p var = context->get_objectval()->get_recursive(name, context, T_LVALUE_SET);
-		// if we do T_LVALUE_SET, get_recursive never returns NULL
-		// count variable always gets to be an int
-		var->value = ehretval_t::make_int(range.first);
+		ehmember_p var = this->set_property(context, name, ehretval_t::make_int(range.first), context);
 		for(int i = range.first; i <= range.second; i++) {
 			var->value = ehretval_t::make_int(i);
 			ret = eh_execute(op->paras[2], context);
@@ -659,9 +660,9 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 		code = op->paras[3];
 	}
 	// create variables
-	membervar = context->get_objectval()->get_recursive(membername, context, T_LVALUE_SET);
+	membervar = this->set_property(context, membername, ehretval_p(NULL), context);
 	if(indexname != NULL) {
-		indexvar = context->get_objectval()->get_recursive(indexname, context, T_LVALUE_SET);
+		indexvar = this->set_property(context, indexname, ehretval_p(NULL), context);
 	}
 	if(object->type() == object_e) {
 		// check whether we're allowed to access private things
@@ -764,16 +765,18 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehfunc_t *f = new ehfunc_t(user_e);
 	ehretval_p object_data = ehretval_t::make_func(f);
-	ehobj_t *function_object = new ehobj_t;
-	ehretval_p ret = this->make_object(function_object);
+	ehretval_p ret = this->object_instantiate(this->get_primitive_class(func_e)->get_objectval());
+	ehobj_t *function_object = ret->get_objectval();
 	function_object->parent = context;
 	function_object->type_id = func_e;
 	function_object->object_data = object_data;
 	f->code = paras[1];
 
 	// insert "scope" pointer
-	attributes_t thisattributes = attributes_t::make(private_e, nonstatic_e, const_e);
-	ret->get_objectval()->insert_retval("scope", thisattributes, ret);
+	ehmember_p this_member;
+	this_member->attribute = attributes_t::make(private_e, nonstatic_e, const_e);
+	this_member->value = ret;
+	this->set_property(ret, "scope", this_member, ret);
 
 	// determine argument count
 	f->argcount = count_nodes(paras[0]);
@@ -811,8 +814,10 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	ret->get_objectval()->parent = context;
 
 	// insert "this" pointer
-	attributes_t thisattributes = attributes_t::make(private_e, nonstatic_e, const_e);
-	ret->get_objectval()->insert_retval("this", thisattributes, ret);
+	ehmember_p this_member;
+	this_member->attribute = attributes_t::make(private_e, nonstatic_e, const_e);
+	this_member->value = ret;
+	this->set_property(ret, "this", this_member, ret);
 
 	// inherit from Object
 	ehobj_t *object_class = this->repo.get_object(base_object_e)->get_objectval();
@@ -855,21 +860,20 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 }
 void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	// rely on standard layout of the paras
-	ehretval_p attribute_v = eh_execute(op->paras[0], context);
-	attributes_t attribute = attribute_v->get_attributestrval();
+	ehmember_p new_member;
+	new_member->attribute = eh_execute(op->paras[0], context)->get_attributestrval();
 	char *name = eh_execute(op->paras[1], context)->get_stringval();
 
 	// decide what we got
-	ehretval_p value;
 	switch(op->nparas) {
 		case 2: // non-set property: null
-			value = NULL;
+			new_member->value = NULL;
 			break;
 		case 3: // set property
-			value = eh_execute(op->paras[2], context);
+			new_member->value = eh_execute(op->paras[2], context);
 			break;
 	}
-	context->get_objectval()->insert_retval(name, attribute, value);
+	this->set_property(context, name, new_member, context);
 }
 ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret;
@@ -890,8 +894,7 @@ ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 			if(casevar->is_a(func_e) || casevar->type() == binding_e) {
 				decider = call_function(casevar, switchvar, context);
 				if(decider->type() != bool_e) {
-					eh_error("Switch case method does not return bool", eerror_e);
-					return NULL;
+					throw_TypeError("Method in a switch case must return a Bool", decider->type(), this);
 				}
 			} else {
 				decider = ehretval_t::make_bool(switchvar->equals(casevar));
@@ -936,8 +939,7 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 		if(casevar->is_a(func_e) || casevar->type() == binding_e) {
 			decider = call_function(casevar, switchvar, context);
 			if(decider->type() != bool_e) {
-				eh_error("Given case method does not return bool", eerror_e);
-				return NULL;
+				throw_TypeError("Method in a switch case must return a Bool", decider->type(), this);
 			}
 		} else {
 			decider = ehretval_t::make_bool(switchvar->equals(casevar));
@@ -956,9 +958,7 @@ ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 	ehretval_p varname = eh_execute(node, context);
-	ehmember_p var = context->get_objectval()->get_recursive(
-		varname->get_stringval(), context, T_LVALUE_GET
-	);
+	ehmember_p var = context->get_objectval()->get_recursive(varname->get_stringval(), context);
 	if(var == NULL) {
 		return NULL;
 	} else {
@@ -979,18 +979,25 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 		case '.': {
 			// This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.
 			if(!base_var->is_object()) {
-				eh_error_type("Cannot use operator.= on primitive", base_var->type(), enotice_e);
-				return NULL;			
+				throw_TypeError("Cannot set member on primitive", base_var->type(), this);
 			}
-			ehobj_t *obj = base_var->get_object();
 			// accessor is guaranteed to be a string
 			char *accessor = eh_execute(internal_paras[1], context)->get_stringval();
-			obj->set(accessor, rvalue);
+			this->set_property(base_var, accessor, rvalue, context);
 			return rvalue;
 		}
 		case '$': {
-			ehmember_p var = context->get_objectval()->get_recursive(base_var->get_stringval(), context, T_LVALUE_SET);
-			var->value = rvalue;
+			const char *name = base_var->get_stringval();
+			ehmember_p member = context->get_objectval()->get_recursive(name, context);
+			if(member != NULL && member->isconst()) {
+				// bug: if the const member is actually in a higher scope, this error message will be wrong
+				throw_ConstError(context, name, this);
+			}
+			if(member == NULL) {
+				this->set_property(context, name, rvalue, context);
+			} else {
+				member->value = rvalue;
+			}
 			return rvalue;
 		}
 	}
@@ -1001,60 +1008,56 @@ ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p base_var = eh_execute(paras[0], context);
 	const char *accessor = eh_execute(paras[1], context)->get_stringval();
 	if(base_var->is_object()) {
-		return base_var->get_object()->get(accessor, context, T_LVALUE_GET)->value;
+		return this->get_property(base_var, NULL, accessor, context);
 	} else {
-		ehobj_t *class_obj = this->get_primitive_class(base_var->type());
-		if(class_obj == NULL) {
-			eh_error_type("operator.", base_var->type(), enotice_e);
-			return NULL;
-		}
-		if(class_obj->has(accessor)) {
-			ehretval_p member = class_obj->get(accessor, context, T_LVALUE_GET)->value;
+		ehretval_p class_obj = this->get_primitive_class(base_var->type());
+		if(class_obj->get_objectval()->has(accessor)) {
+			ehretval_p member = this->get_property(class_obj, base_var, accessor, context);
 			if(member->is_a(func_e)) {
 				return this->make_binding(new ehbinding_t(base_var, member));
 			} else {
 				return member;
 			}
 		} else {
-			eh_error_unknown("object member", accessor, eerror_e);
+			throw_NameError(base_var, accessor, this);
 			return NULL;
 		}
 	}
 }
 ehretval_p EHI::eh_op_try(ehretval_p *paras, ehcontext_t context) {
-  ehretval_p ret;
-  ehretval_p try_block = paras[0];
-  ehretval_p catch_block = paras[1];
-  ehretval_p finally_block = paras[2];
-  try {
-    try {
-      ret = eh_execute(try_block, context);
-    } catch(eh_exception& e) {
-      // inject the exception into the current scope
-      attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
-      context->get_objectval()->insert_retval("exception", attributes, e.content);
-      ret = eh_execute(catch_block, context);
-    }
-    eh_always_execute(finally_block, context);
-  } catch(eh_exception &e) {
-    eh_always_execute(finally_block, context);
-    throw;
-  }
-  return ret;
+	ehretval_p ret;
+	ehretval_p try_block = paras[0];
+	ehretval_p catch_block = paras[1];
+	ehretval_p finally_block = paras[2];
+	try {
+		try {
+			ret = eh_execute(try_block, context);
+		} catch(eh_exception& e) {
+			// inject the exception into the current scope
+			ehmember_p exception_member = ehmember_t::make(attributes_t::make(public_e, nonstatic_e, nonconst_e), e.content);
+			this->set_property(context, "exception", exception_member, context);
+			ret = eh_execute(catch_block, context);
+		}
+		eh_always_execute(finally_block, context);
+	} catch(eh_exception &e) {
+		eh_always_execute(finally_block, context);
+		throw;
+	}
+	return ret;
 }
 ehretval_p EHI::eh_op_catch(ehretval_p *paras, ehcontext_t context) {
-  ehretval_p ret;
-  ehretval_p try_block = paras[0];
-  ehretval_p catch_block = paras[1];
-  try {
-    ret = eh_execute(try_block, context);
-  } catch(eh_exception& e) {
-    // inject the exception into the current scope
-    attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
-    context->get_objectval()->insert_retval("exception", attributes, e.content);
-    ret = eh_execute(catch_block, context);
-  }
-  return ret;
+	ehretval_p ret;
+	ehretval_p try_block = paras[0];
+	ehretval_p catch_block = paras[1];
+	try {
+		ret = eh_execute(try_block, context);
+	} catch(eh_exception& e) {
+		// inject the exception into the current scope
+		ehmember_p exception_member = ehmember_t::make(attributes_t::make(public_e, nonstatic_e, nonconst_e), e.content);
+		this->set_property(context, "exception", exception_member, context);
+		ret = eh_execute(catch_block, context);
+	}
+	return ret;
 }
 ehretval_p EHI::eh_op_finally(ehretval_p *paras, ehcontext_t context) {
   ehretval_p ret;
@@ -1104,20 +1107,14 @@ ehretval_p EHI::perform_op(const char *name, const char *user_name, int nargs, e
 ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, ehcontext_t context) {
 	ehretval_p func = NULL;
 	if(obj->is_object()) {
-		func = obj->get_object()->get(name, context, T_LVALUE_GET)->value;
+		func = this->get_property(obj, NULL, name, context);
 	} else {
-		ehobj_t *class_obj = this->get_primitive_class(obj->type());
-		if(class_obj == NULL) {
-			eh_error_type(name, obj->type(), enotice_e);
-			return NULL;
+		ehretval_p class_obj = this->get_primitive_class(obj->type());
+		ehretval_p method = this->get_property(class_obj, obj, name, context);
+		if(!method->is_a(func_e)) {
+			throw_TypeError("Method must be a function", method->type(), this);
 		}
-		ehmember_p method = class_obj->get(name, context, T_LVALUE_GET);
-		if(method == NULL || !method->value->is_a(func_e)) {
-		  // Don't throw an error, as it's likely to cascade
-		  //eh_error_type("method", method->value->type(), enotice_e);
-		  return NULL;
-		}
-    func = this->make_binding(new ehbinding_t(obj, method->value));
+		func = this->make_binding(new ehbinding_t(obj, method));
 	}
 	if(func == NULL) {
 		return NULL;
@@ -1130,9 +1127,6 @@ ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t 
 	if(function->type() == binding_e || function->is_a(func_e)) {
 		// This one time, we call a library method directly. If you want to override Function.operator_colon, too bad.
 		return ehlm_Function_operator_colon(NULL, args, function, this);
-	} else if(function->type() == null_e) {
-		// Silently ignore NULL
-		return NULL;
 	} else {
 		return call_method(function, "operator_colon", args, context);
 	}
@@ -1153,14 +1147,61 @@ ehretval_p EHI::object_instantiate(ehobj_t *obj) {
 }
 // Promotes a pseudo-object of a builtin class to a real object
 ehretval_p EHI::promote(ehretval_p in, ehcontext_t context) {
-	ehobj_t *the_class = this->get_primitive_class(in->type());
-	if(the_class == NULL) {
-		eh_error_type("promotion", in->type(), enotice_e);
-		return NULL;
-	}
-	ehretval_p obj = this->object_instantiate(the_class);
+	ehretval_p the_class = this->get_primitive_class(in->type());
+	ehretval_p obj = this->object_instantiate(the_class->get_objectval());
 	obj->get_objectval()->object_data = in;
 	return obj;
+}
+ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p value, ehcontext_t context) {
+	// caller should ensure object is actually an object
+	ehobj_t *obj = object->get_objectval();
+	if(obj->has(name)) {
+		ehmember_p the_member = obj->get_known(name);
+		if(the_member->attribute.isconst == const_e) {
+			throw_ConstError(object, name, this);
+		}
+		if(the_member->attribute.visibility == private_e && !obj->context_compare(context)) {
+			// pretend private members don't exist
+			throw_NameError(object, name, this);
+		}
+		the_member->value = value;
+		return the_member;
+	} else {
+		ehmember_p new_member;
+		new_member->value = value;
+		obj->insert(name, new_member);
+		return new_member;
+	}
+}
+ehmember_p EHI::set_property(ehretval_p object, const char *name, ehmember_p value, ehcontext_t context) {
+	// caller should ensure object is actually an object
+	ehobj_t *obj = object->get_objectval();
+	if(obj->has(name)) {
+		ehmember_p the_member = obj->get_known(name);
+		if(the_member->attribute.isconst == const_e) {
+			throw_ConstError(object, name, this);
+		}
+		if(the_member->attribute.visibility == private_e && !obj->context_compare(context)) {
+			// pretend private members don't exist
+			throw_NameError(object, name, this);
+		}
+	}
+	obj->insert(name, value);
+	return value;
+}
+ehretval_p EHI::get_property(ehretval_p object, ehretval_p object_data, const char *name, ehcontext_t context) {
+	if(object_data == NULL) {
+		object_data = object;
+	}
+	ehobj_t *obj = object->get_objectval();
+	if(!obj->has(name)) {
+		throw_NameError(object_data, name, this);
+	}
+	ehmember_p member = obj->get_known(name);
+	if(member->attribute.visibility == private_e && !obj->context_compare(context)) {
+		throw_NameError(object, name, this);		
+	}
+	return member->value;
 }
 
 /*
@@ -1188,8 +1229,7 @@ void EHI::array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t c
 				array->string_indices[label->get_stringval()] = var;
 				break;
 			default:
-				eh_error_type("array member label", label->type(), enotice_e);
-				break;
+				throw_TypeError_Array_key(label->type(), this);
 		}
 	}
 	return;
@@ -1230,7 +1270,7 @@ void EHI::insert_command(const char *name, const ehcmd_t cmd) {
 void EHI::redirect_command(const char *redirect, const char *target) {
 	ehcmd_t targetcmd = get_command(target);
 	if(targetcmd == NULL) {
-		eh_error("Unknown redirect target", eerror_e);
+		throw_UnknownCommandError(target, this);
 	}
 	insert_command(redirect, targetcmd);
 }
@@ -1262,9 +1302,7 @@ ehretval_p EHI::eh_cast(const type_enum type, ehretval_p in, ehcontext_t context
 		case bool_e: return this->to_bool(in, context);
 		case array_e: return this->to_array(in, context);
 		case range_e: return this->to_range(in, context);
-		default:
-			eh_error_type("typecast", type, eerror_e);
-			break;
+		default: throw_TypeError("Cannot use this type with global cast operator", type, this);
 	}
 	return NULL;
 }

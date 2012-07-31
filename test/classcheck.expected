@@ -1,7 +1,5 @@
 (true)
 (false)
-Incorrect argument count for function pow: expected 2, got 1: EH runtime error
-(null)
-Incorrect argument count for function pow: expected 2, got 1: EH runtime error
-(null)
+Uncaught exception of type TypeError: Invalid type for argument to "pow": Integer
+Uncaught exception of type ArgumentError: Argument must be a tuple of size 2 (method pow): 0x100801b04
 (false)

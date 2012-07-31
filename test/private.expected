@@ -1,8 +1,7 @@
 2
-No such object member: baz: EH notice
 3
 3
 4
-(null)
+Unknown member baz in object of type Bar: 0x100211058
 5
 5

@@ -1,2 +1,2 @@
-Unable to open included file: EH notice
+Uncaught exception of type ArgumentError: Unable to open file (method include): thisfiledoesnotexist
 42

@@ -1,4 +1,12 @@
 @object <Null> [
+ArgumentError <public,non-static,constant>: @object <ArgumentError> [
+finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+isA <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
 Array <public,non-static,constant>: @object <Array> [
 finalize <public,non-static,non-constant>: @function <library>: 
 inherit <public,non-static,non-constant>: @function <library>: 
@@ -21,6 +29,14 @@ new <public,non-static,non-constant>: @function <library>:
 operator_bang <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toInt <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
+ConstError <public,non-static,constant>: @object <ConstError> [
+finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+isA <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 CountClass <public,non-static,constant>: @object <CountClass> [
@@ -74,6 +90,15 @@ toFloat <public,non-static,non-constant>: @function <library>:
 toInt <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
+Function <public,non-static,constant>: @object <Function> [
+finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+isA <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
+operator_colon <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
 Hash <public,non-static,constant>: @object <Hash> [
 finalize <public,non-static,non-constant>: @function <library>: 
 has <public,non-static,non-constant>: @function <library>: 
@@ -114,6 +139,14 @@ toInt <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 LoopError <public,non-static,constant>: @object <LoopError> [
+finalize <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+isA <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
+NameError <public,non-static,constant>: @object <NameError> [
 finalize <public,non-static,non-constant>: @function <library>: 
 inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
@@ -202,10 +235,14 @@ argv <public,non-static,non-constant>: @array [
 ]
 echo <public,non-static,non-constant>: @function <library>: 
 eval <public,non-static,non-constant>: @function <library>: 
+finalize <public,non-static,non-constant>: @function <library>: 
 get_type <public,non-static,non-constant>: @function <library>: 
 getinput <public,non-static,non-constant>: @function <library>: 
 global <public,non-static,constant>: (recursion)
 include <public,non-static,non-constant>: @function <library>: 
+inherit <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+isA <public,non-static,non-constant>: @function <library>: 
 is_array <public,non-static,non-constant>: @function <library>: 
 is_bool <public,non-static,non-constant>: @function <library>: 
 is_float <public,non-static,non-constant>: @function <library>: 
@@ -215,8 +252,10 @@ is_object <public,non-static,non-constant>: @function <library>:
 is_range <public,non-static,non-constant>: @function <library>: 
 is_string <public,non-static,non-constant>: @function <library>: 
 log <public,non-static,non-constant>: @function <library>: 
+new <public,non-static,non-constant>: @function <library>: 
 pow <public,non-static,non-constant>: @function <library>: 
 printvar <public,non-static,non-constant>: @function <library>: 
 put <public,non-static,non-constant>: @function <library>: 
 throw <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
 ]

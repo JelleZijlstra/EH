@@ -1,2 +1,2 @@
 2
-No such object member: operator_and: EH notice
+Uncaught exception of type NameError: Unknown member operator_and in object of type Null: 

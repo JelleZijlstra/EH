@@ -1,20 +1,11 @@
-2
-meh
-@object <Foo> [
-bar <public,non-static,non-constant>: @int 3
-baz <private,non-static,non-constant>: null
+@object <TypeError> [
 finalize <public,non-static,non-constant>: @function <library>: 
 inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 isA <public,non-static,non-constant>: @function <library>: 
-mah <private,non-static,non-constant>: @function <user>: n
-meh <public,non-static,non-constant>: @function <user>: n
+message <public,non-static,non-constant>: @string 'Range members must have the same type'
 new <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
+type <public,non-static,non-constant>: @int 1
 ]
-3
-@function <user>: n
-42
-Calling a private method
-Uncaught exception of type NameError: Unknown member mah in object of type Foo: 0x1002137e8
-2
+Uncaught exception of type TypeError: Range members must have the same type: Array

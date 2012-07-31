@@ -9,12 +9,14 @@ anonymousclass.eh
 args.eh
 argv.eh
 arraycount.eh
+arrayfill.eh
 arrayfunc.eh
 arrayref.eh
 arrays.eh
 assign.eh
 assignthis.eh
 associative.eh
+badrange.eh
 bareword.eh
 binary_operators.eh
 bitwise.eh
@@ -73,6 +75,7 @@ forasbreak.eh
 fun.eh
 funcerror.eh
 functions_are_objects.eh
+get_tuple.eh
 get_type.eh
 givenfunc.eh
 global.eh
@@ -82,6 +85,7 @@ globref.eh
 greedy.eh 45
 hash.eh
 implicitreturn.eh
+implicitreturn2.eh
 include.eh
 include2.eh
 inherit.eh
@@ -101,6 +105,7 @@ monkeypatch.eh
 more_colon.eh
 morecasts.eh
 mythrow.eh
+nameerror.eh
 negativeindex.eh
 newthis.eh
 noargfunc.eh
@@ -129,6 +134,7 @@ refindex.eh
 refloop.eh
 return.eh
 returnfunc.eh
+returnobject.eh
 root.eh
 scope.eh
 segfaults.eh
@@ -142,6 +148,7 @@ simpleclass.eh
 singleton.eh
 smalltest.eh
 sne.eh
+stack.eh
 static.eh
 stringvars.eh
 switch.eh
@@ -154,6 +161,7 @@ testfunc.eh
 this.eh
 throw.eh
 tostring.eh
+totuple.eh
 tuple.eh
 typecast.eh
 typecheck.eh
@@ -161,16 +169,7 @@ unary.eh
 uncaught.eh
 usearg.eh
 useargs.eh
+vector.eh
 while.eh
 xinherit.eh
 xnew.eh
-stack.eh
-vector.eh
-totuple.eh
-returnobject.eh
-implicitreturn2.eh
-arrayfill.eh
-throwing_handler.eh
-messexceptions.eh
-testerrors.eh
-breakweird.eh

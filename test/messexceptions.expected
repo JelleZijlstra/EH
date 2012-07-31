@@ -1,4 +1,3 @@
-Attempt to write to constant variable: EH runtime error
+Uncaught exception of type ConstError: Cannot set constant member UnknownCommandError in object of type Null: 0x10020eae8
 Uncaught exception of type UnknownCommandError: I don't care
-No such object member: operator_colon: EH notice
-Uncaught exception of type Null: 
+Uncaught exception of type NameError: Unknown member operator_colon in object of type Integer: 42

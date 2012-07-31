@@ -80,7 +80,7 @@ void printvar_t::retval(ehretval_p in) {
 		  break;
 		case object_e: {
 			ehobj_t *obj = in->get_objectval();
-			if(obj->type_id != func_e) {
+			if(obj->type_id != func_e || obj->object_data->type() != func_e) {
 				if(this->seen.count((void *)obj) == 0) {
 					this->seen[(void *)obj] = true;
 					//TODO: print the classname somehow
@@ -268,16 +268,14 @@ EHLIBFUNC(get_type) {
  */
 EHLIBFUNC(include) {
 	if(args->type() != string_e) {
-		eh_error_type("argument 0 to include", args->type(), enotice_e);
 		ehi->returning = false;
-		return NULL;
+		throw_TypeError("Invalid type for argument to include", args->type(), ehi);
 	}
 	// do the work
 	FILE *infile = fopen(args->get_stringval(), "r");
 	if(!infile) {
-		eh_error("Unable to open included file", enotice_e);
 		ehi->returning = false;
-		return NULL;
+		throw_ArgumentError("Unable to open file", "include", args, ehi);
 	}
 	EHParser parser(end_is_end_e, ehi);
 	ehretval_p parse_return = parser.parse_file(infile);
@@ -288,50 +286,43 @@ EHLIBFUNC(include) {
 
 // power
 EHLIBFUNC(pow) {
-	if(args->type() != tuple_e || args->get_tupleval()->size() != 2) {
-		eh_error_argcount_lib("pow", 2, 1);
-		return NULL;
-	}
+	ASSERT_NARGS(2, "pow");
 	ehretval_p rhs = args->get_tupleval()->get(0);
 	ehretval_p lhs = args->get_tupleval()->get(1);
-	if(lhs->type() == int_e && rhs->type() == int_e) {
-		return ehretval_t::make_int(pow((float) rhs->get_intval(), (float) lhs->get_intval()));
-	} else if(rhs->type() == int_e && lhs->type() == float_e) {
-		return ehretval_t::make_float(pow((float) rhs->get_intval(), lhs->get_floatval()));
-	} else if(rhs->type() == float_e && lhs->type() == int_e) {
-		return ehretval_t::make_float(pow(rhs->get_floatval(), (float) lhs->get_intval()));
-	} else if(rhs->type() == float_e && lhs->type() == float_e) {
-		return ehretval_t::make_float(pow(rhs->get_floatval(), lhs->get_floatval()));
+	if(rhs->type() == int_e) {
+		if(lhs->type() == int_e) {
+			return ehretval_t::make_int(pow((float) rhs->get_intval(), (float) lhs->get_intval()));
+		} else if(lhs->type() == float_e) {
+			return ehretval_t::make_float(pow((float) rhs->get_intval(), lhs->get_floatval()));
+		} else {
+			throw_TypeError("Invalid type for argument to pow", lhs->type(), ehi);
+		}
+	} else if(rhs->type() == float_e) {
+		if(lhs->type() == int_e) {
+			return ehretval_t::make_float(pow(rhs->get_floatval(), (float) lhs->get_intval()));
+		} else if(lhs->type() == float_e) {
+			return ehretval_t::make_float(pow(rhs->get_floatval(), lhs->get_floatval()));
+		} else {
+			throw_TypeError("Invalid type for argument to pow", lhs->type(), ehi);
+		}
 	} else {
-		eh_error_type("argument 0 to pow", rhs->type(), enotice_e);
-		eh_error_type("argument 1 to pow", lhs->type(), enotice_e);
-		return NULL;
+		throw_TypeError("Invalid type for argument to pow", rhs->type(), ehi);
 	}
+	return NULL;
 }
 
 EHLIBFUNC(log) {
 	ehretval_p arg = ehi->to_float(args, context);
-	if(arg->type() != float_e) {
-		eh_error_type("argument 0 to log", args->type(), enotice_e);
-		return NULL;
-	}
 	return ehretval_t::make_float(log(arg->get_floatval()));
 }
 
 EHLIBFUNC(eval) {
 	ehretval_p arg = ehi->to_string(args, context);
-	if(arg->type() != string_e) {
-		eh_error_type("argument 0 to eval", args->type(), enotice_e);
-		return NULL;	
-	}
 	return ehi->parse_string(arg->get_stringval());
 }
 
 EHLIBFUNC(getinput) {
-	if(args->type() != null_e) {
-		eh_error_argcount_lib("getinput", 0, 1);
-		return NULL;
-	}
+	ASSERT_NULL("getinput");
 	// more accurately, getint
 	ehretval_p ret = ehretval_t::make_typed(int_e);
 	fscanf(stdin, "%d", &(ret->intval));

@@ -148,6 +148,22 @@ vtype get_ ## ehtype ## val() const { \
 
 	int get_full_type() const;
 	const std::string &type_string(class EHI *ehi) const;
+
+	// Compare two ehretval_ps (guaranteed to be of the same type)
+	int naive_compare(ehretval_p rhs) {
+		if(this->type() == null_e) {
+			return 0;
+		}
+		void *lhs_val = reinterpret_cast<void *>(this->objectval);
+		void *rhs_val = reinterpret_cast<void *>(rhs->objectval);
+		if(lhs_val < rhs_val) {
+			return -1;
+		} else if(lhs_val == rhs_val) {
+			return 0;
+		} else {
+			return 1;
+		}
+	}
 	
 	bool is_object() const {
 		switch(this->type()) {

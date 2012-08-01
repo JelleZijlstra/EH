@@ -8,6 +8,17 @@
 #include <cmath>
 #include <sstream>
 
+// Helpers
+static int intcmp(int lhs, int rhs) {
+  if(lhs < rhs) {
+    return -1;
+  } else if(lhs == rhs) {
+    return 0;
+  } else {
+    return 1;
+  }	
+}
+
 START_EHLC(Object)
 EHLC_ENTRY(Object, new)
 EHLC_ENTRY(Object, inherit)
@@ -51,6 +62,27 @@ EH_METHOD(Object, isA) {
     type = args->get_objectval()->type_id;
   }
   return ehretval_t::make_bool(context->is_a(type));
+}
+
+ehretval_p get_data(ehretval_p in) {
+	if(in->is_object()) {
+		return in->get_objectval()->object_data;
+	} else {
+		return in;
+	}
+
+}
+EH_METHOD(Object, compare) {
+	int lhs_type = context->get_full_type();
+	int rhs_type = args->get_full_type();
+	int comparison = intcmp(lhs_type, rhs_type);
+	if(comparison != 0) {
+		return ehretval_t::make_int(comparison);
+	} else {
+		ehretval_p lhs = get_data(context);
+		ehretval_p rhs = get_data(args);
+		return ehretval_t::make_int(lhs->naive_compare(rhs));
+	}
 }
 
 START_EHLC(CountClass)
@@ -276,17 +308,9 @@ EH_METHOD(Integer, operator_uminus) {
   return ehretval_t::make_int(-obj->get_intval());
 }
 EH_METHOD(Integer, operator_compare) {
-  ASSERT_OBJ_TYPE(int_e, "Integer.operator<=>");
-  ASSERT_TYPE(args, int_e, "Integer.operator<=>");
-  int lhs = obj->get_intval();
-  int rhs = args->get_intval();
-  if(lhs < rhs) {
-    return ehretval_t::make_int(-1);
-  } else if(lhs == rhs) {
-    return ehretval_t::make_int(0);
-  } else {
-    return ehretval_t::make_int(1);
-  }
+	ASSERT_OBJ_TYPE(int_e, "Integer.operator<=>");
+	ASSERT_TYPE(args, int_e, "Integer.operator<=>");
+	return ehretval_t::make_int(intcmp(obj->get_intval(), args->get_intval()));
 }
 EH_METHOD(Integer, abs) {
 	ASSERT_NULL_AND_TYPE(int_e, "Integer.abs");

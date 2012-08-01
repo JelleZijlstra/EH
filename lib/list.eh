@@ -2,9 +2,9 @@
 class List
 	# This is hackish
 	const empty = func:
-		old_initialize = List.initialize
+		private old_initialize = List.initialize
 		List.initialize = func: -> null
-		out = List.new()
+		private out = List.new()
 		List.initialize = old_initialize
 		out
 	end
@@ -38,13 +38,7 @@ class List
 	
 	const length = func: -> (reduce (0, func: k, rest -> rest + 1))
 	
-	const toString = func:
-		if self == null
-			"[]"
-		else
-			((self->0).toString()) + "::" + ((self->1).toString())
-		end
-	end
+	const toString = func: -> (reduce "[]", func: k, rest -> (k.toString()) + "::" + rest)
 
 	filter = func: f -> (reduce Nil, func: elt, accum
 		if (f elt)

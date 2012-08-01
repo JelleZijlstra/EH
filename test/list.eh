@@ -10,3 +10,5 @@ echo l.length()
 echo (l.map 2.operator_times).toString()
 
 echo l.reduce 1, func: accum, val -> accum * val
+
+echo (l.reverse()).toString()

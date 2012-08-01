@@ -40,13 +40,23 @@ class List
 	
 	const toString = func: -> (reduce "[]", func: k, rest -> (k.toString()) + "::" + rest)
 
-	filter = func: f -> (reduce Nil, func: elt, accum
+	const filter = func: f -> (reduce Nil, func: elt, accum
 		if (f elt)
 			Cons elt, accum
 		else
 			accum
 		end
 	end)
+
+	const private reverse_append = func: accum
+		if self == null
+			accum
+		else
+			(self->1).reverse_append (Cons self->0, accum)
+		end
+	end
+
+	reverse = func: -> (reverse_append Nil)
 end
 
 # Constify it

@@ -46,6 +46,14 @@ EH_METHOD(Object, initialize);
 EH_METHOD(Object, toString);
 EH_METHOD(Object, finalize);
 EH_METHOD(Object, isA);
+EH_METHOD(Object, operator_compare);
+EH_METHOD(Object, compare);
+EH_METHOD(Object, operator_equals);
+EH_METHOD(Object, operator_ne);
+EH_METHOD(Object, operator_gt);
+EH_METHOD(Object, operator_gte);
+EH_METHOD(Object, operator_lt);
+EH_METHOD(Object, operator_lte);
 
 EXTERN_EHLC(Object)
 
@@ -105,7 +113,7 @@ EH_METHOD(Integer, operator_or);
 EH_METHOD(Integer, operator_xor);
 EH_METHOD(Integer, operator_tilde);
 EH_METHOD(Integer, operator_uminus);
-EH_METHOD(Integer, operator_compare);
+EH_METHOD(Integer, compare);
 EH_METHOD(Integer, abs);
 EH_METHOD(Integer, getBit);
 EH_METHOD(Integer, setBit);
@@ -139,7 +147,7 @@ EH_METHOD(Float, operator_minus);
 EH_METHOD(Float, operator_times);
 EH_METHOD(Float, operator_divide);
 EH_METHOD(Float, operator_uminus);
-EH_METHOD(Float, operator_compare);
+EH_METHOD(Float, compare);
 EH_METHOD(Float, abs);
 EH_METHOD(Float, toString);
 EH_METHOD(Float, toInt);
@@ -157,7 +165,8 @@ EH_METHOD(String, length);
 EH_METHOD(String, operator_arrow);
 EH_METHOD(String, operator_arrow_equals);
 EH_METHOD(String, operator_plus);
-EH_METHOD(String, operator_compare);
+EH_METHOD(String, compare);
+EH_METHOD(String, operator_equals);
 EH_METHOD(String, toString);
 EH_METHOD(String, toInt);
 EH_METHOD(String, toFloat);
@@ -197,6 +206,7 @@ EH_METHOD(Range, max);
 EH_METHOD(Range, toString);
 EH_METHOD(Range, toArray);
 EH_METHOD(Range, toRange);
+EH_METHOD(Range, compare);
 
 EXTERN_EHLC(Range)
 

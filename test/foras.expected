@@ -20,8 +20,18 @@ Unsupported type object for echo operator: EH notice
 Unsupported type object for echo operator: EH notice
 Unsupported type object for echo operator: EH notice
 Unsupported type object for echo operator: EH notice
+Unsupported type object for echo operator: EH notice
+Unsupported type object for echo operator: EH notice
+Unsupported type object for echo operator: EH notice
+Unsupported type object for echo operator: EH notice
+Unsupported type object for echo operator: EH notice
+Unsupported type object for echo operator: EH notice
+Unsupported type object for echo operator: EH notice
+Unsupported type object for echo operator: EH notice
 bar
 2
+compare
+
 finalize
 
 inherit
@@ -33,6 +43,20 @@ isA
 mah
 4
 new
+
+operator_compare
+
+operator_equals
+
+operator_gt
+
+operator_gte
+
+operator_lt
+
+operator_lte
+
+operator_ne
 
 toString
 

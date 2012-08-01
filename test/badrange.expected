@@ -1,10 +1,18 @@
 @object <TypeError> [
+compare <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
 inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 isA <public,non-static,non-constant>: @function <library>: 
 message <public,non-static,non-constant>: @string 'Range members must have the same type'
 new <public,non-static,non-constant>: @function <library>: 
+operator_compare <public,non-static,non-constant>: @function <library>: 
+operator_equals <public,non-static,non-constant>: @function <library>: 
+operator_gt <public,non-static,non-constant>: @function <library>: 
+operator_gte <public,non-static,non-constant>: @function <library>: 
+operator_lt <public,non-static,non-constant>: @function <library>: 
+operator_lte <public,non-static,non-constant>: @function <library>: 
+operator_ne <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 type <public,non-static,non-constant>: @int 1
 ]

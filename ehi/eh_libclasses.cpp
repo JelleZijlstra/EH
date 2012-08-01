@@ -26,6 +26,14 @@ EHLC_ENTRY(Object, initialize)
 EHLC_ENTRY(Object, toString)
 EHLC_ENTRY(Object, finalize)
 EHLC_ENTRY(Object, isA)
+EHLC_ENTRY(Object, operator_compare)
+EHLC_ENTRY(Object, compare)
+EHLC_ENTRY(Object, operator_equals)
+EHLC_ENTRY(Object, operator_ne)
+EHLC_ENTRY(Object, operator_gt)
+EHLC_ENTRY(Object, operator_gte)
+EHLC_ENTRY(Object, operator_lt)
+EHLC_ENTRY(Object, operator_lte)
 END_EHLC()
 
 EH_METHOD(Object, new) {
@@ -72,17 +80,59 @@ ehretval_p get_data(ehretval_p in) {
 	}
 
 }
-EH_METHOD(Object, compare) {
+EH_METHOD(Object, operator_compare) {
 	int lhs_type = context->get_full_type();
 	int rhs_type = args->get_full_type();
 	int comparison = intcmp(lhs_type, rhs_type);
 	if(comparison != 0) {
 		return ehretval_t::make_int(comparison);
 	} else {
-		ehretval_p lhs = get_data(context);
-		ehretval_p rhs = get_data(args);
-		return ehretval_t::make_int(lhs->naive_compare(rhs));
+		return ehi->call_method_from_method(obj, context, "compare", args);
 	}
+}
+EH_METHOD(Object, compare) {
+	int lhs_type = context->get_full_type();
+	int rhs_type = args->get_full_type();
+	if(lhs_type != rhs_type) {
+		throw_TypeError("Arguments to Object.compare must have the same type", rhs_type, ehi);
+	}
+	ehretval_p lhs = get_data(context);
+	if(lhs->type() == null_e) {
+		lhs = obj;
+	}
+	ehretval_p rhs = get_data(args);
+	return ehretval_t::make_int(lhs->naive_compare(rhs));	
+}
+#define CALL_COMPARE() \
+	ehretval_p comparison_p = ehi->call_method_from_method(obj, context, "operator_compare", args); \
+	if(comparison_p->type() != int_e) { \
+		throw_TypeError("operator<=> must return an Integer", comparison_p->type(), ehi); \
+	} \
+	int comparison = comparison_p->get_intval();
+
+EH_METHOD(Object, operator_equals) {
+	CALL_COMPARE();
+	return ehretval_t::make_bool(comparison == 0);
+}
+EH_METHOD(Object, operator_ne) {
+	CALL_COMPARE();
+	return ehretval_t::make_bool(comparison != 0);
+}
+EH_METHOD(Object, operator_gt) {
+	CALL_COMPARE();
+	return ehretval_t::make_bool(comparison == 1);
+}
+EH_METHOD(Object, operator_gte) {
+	CALL_COMPARE();
+	return ehretval_t::make_bool(comparison != -1);
+}
+EH_METHOD(Object, operator_lt) {
+	CALL_COMPARE();
+	return ehretval_t::make_bool(comparison == -1);
+}
+EH_METHOD(Object, operator_lte) {
+	CALL_COMPARE();
+	return ehretval_t::make_bool(comparison != 1);
 }
 
 START_EHLC(CountClass)
@@ -215,7 +265,7 @@ EHLC_ENTRY(Integer, operator_or)
 EHLC_ENTRY(Integer, operator_xor)
 EHLC_ENTRY(Integer, operator_tilde)
 EHLC_ENTRY(Integer, operator_uminus)
-EHLC_ENTRY(Integer, operator_compare)
+EHLC_ENTRY(Integer, compare)
 EHLC_ENTRY(Integer, abs)
 EHLC_ENTRY(Integer, getBit)
 EHLC_ENTRY(Integer, setBit)
@@ -307,9 +357,9 @@ EH_METHOD(Integer, operator_uminus) {
   ASSERT_NULL_AND_TYPE(int_e, "Integer.operator-");
   return ehretval_t::make_int(-obj->get_intval());
 }
-EH_METHOD(Integer, operator_compare) {
-	ASSERT_OBJ_TYPE(int_e, "Integer.operator<=>");
-	ASSERT_TYPE(args, int_e, "Integer.operator<=>");
+EH_METHOD(Integer, compare) {
+	ASSERT_OBJ_TYPE(int_e, "Integer.compare");
+	ASSERT_TYPE(args, int_e, "Integer.compare");
 	return ehretval_t::make_int(intcmp(obj->get_intval(), args->get_intval()));
 }
 EH_METHOD(Integer, abs) {
@@ -450,7 +500,7 @@ EHLC_ENTRY(Float, operator_minus)
 EHLC_ENTRY(Float, operator_times)
 EHLC_ENTRY(Float, operator_divide)
 EHLC_ENTRY(Float, operator_uminus)
-EHLC_ENTRY(Float, operator_compare)
+EHLC_ENTRY(Float, compare)
 EHLC_ENTRY(Float, abs)
 EHLC_ENTRY(Float, toString)
 EHLC_ENTRY(Float, toInt)
@@ -489,9 +539,9 @@ EH_METHOD(Float, operator_uminus) {
   ASSERT_NULL_AND_TYPE(float_e, "Float.operator-");
   return ehretval_t::make_float(-obj->get_floatval());
 }
-EH_METHOD(Float, operator_compare) {
-  ASSERT_OBJ_TYPE(float_e, "Float.operator<=>");
-  ASSERT_TYPE(args, float_e, "Float.operator<=>");
+EH_METHOD(Float, compare) {
+  ASSERT_OBJ_TYPE(float_e, "Float.compare");
+  ASSERT_TYPE(args, float_e, "Float.compare");
   float lhs = obj->get_floatval();
   float rhs = args->get_floatval();
   if(lhs < rhs) {
@@ -534,7 +584,7 @@ EHLC_ENTRY(String, initialize)
 EHLC_ENTRY(String, operator_plus)
 EHLC_ENTRY(String, operator_arrow)
 EHLC_ENTRY(String, operator_arrow_equals)
-EHLC_ENTRY(String, operator_compare)
+EHLC_ENTRY(String, compare)
 EHLC_ENTRY(String, length)
 EHLC_ENTRY(String, toString)
 EHLC_ENTRY(String, toInt)
@@ -594,9 +644,9 @@ EH_METHOD(String, operator_arrow_equals) {
 	obj->get_stringval()[index] = operand2->get_stringval()[0];
 	return operand2;
 }
-EH_METHOD(String, operator_compare) {
-  ASSERT_OBJ_TYPE(string_e, "String.operator<=>");
-  ASSERT_TYPE(args, string_e, "String.operator<=>");
+EH_METHOD(String, compare) {
+  ASSERT_OBJ_TYPE(string_e, "String.compare");
+  ASSERT_TYPE(args, string_e, "String.compare");
   const char *lhs = obj->get_stringval();
   const char *rhs = args->get_stringval();
   return ehretval_t::make_int(strcmp(lhs, rhs));
@@ -736,6 +786,7 @@ EHLC_ENTRY(Range, operator_arrow)
 EHLC_ENTRY(Range, toString)
 EHLC_ENTRY(Range, toArray)
 EHLC_ENTRY(Range, toRange)
+EHLC_ENTRY(Range, compare)
 END_EHLC()
 
 EH_METHOD(Range, initialize) {
@@ -787,6 +838,41 @@ EH_METHOD(Range, toArray) {
 EH_METHOD(Range, toRange) {
 	ASSERT_NULL_AND_TYPE(range_e, "Range.toRange");
 	return obj;
+}
+EH_METHOD(Range, compare) {
+	ASSERT_OBJ_TYPE(range_e, "Range.compare");
+	ASSERT_TYPE(args, range_e, "Range.compare");
+	ehretval_p lhs_min = obj->get_rangeval()->min;
+	ehretval_p rhs_min = args->get_rangeval()->min;
+	int lhs_type = lhs_min->get_full_type();
+	int rhs_type = rhs_min->get_full_type();
+	if(lhs_type != rhs_type) {
+		return ehretval_t::make_int(intcmp(lhs_type, rhs_type));
+	}
+	// returns -1 if lhs.min < rhs.min and lhs.max < rhs.max or lhs is fully inside rhs (lhs.min > rhs.min, lhs.max < rhs.max),
+	// 0 if lhs.min == rhs.min and lhs.max == rhs.max,
+	// 1 if lhs.max > rhs.max, lhs.min > rhs.min or lhs.min < rhs.min, lhs.max > rhs.max
+	ehretval_p lhs_max = obj->get_rangeval()->max;
+	ehretval_p rhs_max = args->get_rangeval()->max;
+	ehretval_p min_cmp_p = ehi->call_method(lhs_min, "compare", rhs_min, context);
+	if(min_cmp_p->type() != int_e) {
+		throw_TypeError("compare must return an Integer", min_cmp_p->type(), ehi);
+	}
+	int min_cmp = min_cmp_p->get_intval();
+	ehretval_p max_cmp_p = ehi->call_method(lhs_max, "compare", rhs_max, context);
+	if(max_cmp_p->type() != int_e) {
+		throw_TypeError("compare must return an Integer", max_cmp_p->type(), ehi);
+	}
+	int max_cmp = max_cmp_p->get_intval();
+	if(min_cmp == 0) {
+		return max_cmp_p;
+	} else if(max_cmp == 0) {
+		return min_cmp_p;
+	} else if((min_cmp < 0 && max_cmp < 0) || (min_cmp > 0 && max_cmp < 0)) {
+		return ehretval_t::make_int(-1);
+	} else {
+		return ehretval_t::make_int(1);
+	}
 }
 
 START_EHLC(Hash)

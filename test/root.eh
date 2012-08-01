@@ -1,7 +1,8 @@
 #!/usr/bin/ehi
 # A square root algorithm
 func abs: in
-	if in < 0
+	# Without the 0.0, this will instead compare the Float and Integer types. This should really be fixed in the C++ code.
+	if in < 0.0
 		ret -1 * in
 	else
 		ret in

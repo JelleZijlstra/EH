@@ -1,5 +1,5 @@
 It works!
-Uncaught exception of type ArgumentError: Cannot convert String to Integer (method String.toInt): test
+This is what is happening at the moment
 test
 test
 This should print "testtest":

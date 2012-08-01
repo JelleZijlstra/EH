@@ -7,9 +7,9 @@ if foo == bar
 else
 	echo 'This should not be happening'
 endif
-# >= currently does a cast to integer, which won't work for either foo or bar. Therefore, this will throw an exception.
+# >= never fails; if two operands are of different types, it does stuff that for the user at least is random, but consistent
 if foo >= bar
-	echo 'There should have been several error messages on the lines before this one'
+	echo 'This is what is happening at the moment'
 else
 	echo 'This is reasonable too'
 endif

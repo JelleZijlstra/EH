@@ -1,4 +1,5 @@
 @object <Tuple> [
+compare <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
 inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
@@ -6,6 +7,13 @@ isA <public,non-static,non-constant>: @function <library>:
 length <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
 operator_arrow <public,non-static,non-constant>: @function <library>: 
+operator_compare <public,non-static,non-constant>: @function <library>: 
+operator_equals <public,non-static,non-constant>: @function <library>: 
+operator_gt <public,non-static,non-constant>: @function <library>: 
+operator_gte <public,non-static,non-constant>: @function <library>: 
+operator_lt <public,non-static,non-constant>: @function <library>: 
+operator_lte <public,non-static,non-constant>: @function <library>: 
+operator_ne <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 toTuple <public,non-static,non-constant>: @function <library>: 
 ]

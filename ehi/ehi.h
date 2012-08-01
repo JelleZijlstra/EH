@@ -145,6 +145,7 @@ public:
 	ehretval_p promote(ehretval_p in, ehcontext_t context);
 	ehretval_p object_instantiate(ehobj_t *obj);
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
+	ehretval_p call_method_from_method(ehretval_p obj, ehretval_p context, const char *name, ehretval_p args);
 
 	// conversion methods, guaranteed to return the type they're supposed to return
 #define CASTER(method_name, ehtype) ehretval_p to_ ## ehtype(ehretval_p in, ehcontext_t context) { \

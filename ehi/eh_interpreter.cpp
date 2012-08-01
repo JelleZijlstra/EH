@@ -89,22 +89,6 @@ const char *libredirs[][2] = {
 static inline int count_nodes(const ehretval_p node);
 
 /*
- * macros for interpreter behavior
- */
-// take ints or floats, return a bool
-#define EH_INTBOOL_CASE(token, operator) case token: \
-	operand1 = eh_execute(node->get_opval()->paras[0], context); \
-	operand2 = eh_execute(node->get_opval()->paras[1], context); \
-	if(operand1->type() == float_e && operand2->type() == float_e) { \
-		return ehretval_t::make_bool(operand1->get_floatval() operator operand2->get_floatval()); \
-	} else { \
-		operand1 = this->to_int(operand1, context); \
-		operand2 = this->to_int(operand2, context); \
-		return ehretval_t::make_bool(operand1->get_intval() operator operand2->get_intval()); \
-	} \
-	break;
-
-/*
  * Stuff to be done in a loop
  */
 #define LOOPCHECKS { \
@@ -393,18 +377,18 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					return eh_op_dot(node->get_opval()->paras, context);
 				case T_ARROW:
 					return perform_op("operator_arrow", "operator->", 1, node->get_opval()->paras, context);
-				case T_EQ: // strict equality
-					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					operand2 = eh_execute(node->get_opval()->paras[1], context);
-					return ehretval_t::make_bool(operand1->equals(operand2));
-				case T_NE: // strict non-equality
-					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					operand2 = eh_execute(node->get_opval()->paras[1], context);
-					return ehretval_t::make_bool(!operand1->equals(operand2));
-				EH_INTBOOL_CASE('>', >) // greater-than
-				EH_INTBOOL_CASE('<', <) // lesser-than
-				EH_INTBOOL_CASE(T_GE, >=) // greater-than or equal
-				EH_INTBOOL_CASE(T_LE, <=) // lesser-than or equal
+				case T_EQ:
+					return perform_op("operator_equals", "operator==", 1, node->get_opval()->paras, context);
+				case T_NE:
+					return perform_op("operator_ne", "operator==", 1, node->get_opval()->paras, context);
+				case '>':
+					return perform_op("operator_gt", "operator>", 1, node->get_opval()->paras, context);
+				case T_GE:
+					return perform_op("operator_gte", "operator>=", 1, node->get_opval()->paras, context);
+				case '<':
+					return perform_op("operator_lt", "operator<", 1, node->get_opval()->paras, context);
+				case T_LE:
+					return perform_op("operator_lte", "operator<=", 1, node->get_opval()->paras, context);
 				case T_COMPARE:
 				  return perform_op("operator_compare", "operator<=>", 1, node->get_opval()->paras, context);
 				case '+': // string concatenation, addition
@@ -1120,6 +1104,15 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, e
 		return NULL;
 	} else {
 		return call_function(func, args, context);
+	}
+}
+// call a method from another method
+ehretval_p EHI::call_method_from_method(ehretval_p obj, ehretval_p context, const char *name, ehretval_p args) {
+	bool data_is_null = context->get_objectval()->object_data->type() == null_e;
+	if(data_is_null && obj->type() != null_e) {
+		return call_method(obj, name, args, context);
+	} else {
+		return call_method(context, name, args, context);
 	}
 }
 ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t context) {

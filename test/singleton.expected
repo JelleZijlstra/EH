@@ -1,9 +1,17 @@
 @object <Singleton> [
+compare <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
 inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 isA <public,non-static,non-constant>: @function <library>: 
 new <public,non-static,non-constant>: @function <library>: 
+operator_compare <public,non-static,non-constant>: @function <library>: 
+operator_equals <public,non-static,non-constant>: @function <library>: 
+operator_gt <public,non-static,non-constant>: @function <library>: 
+operator_gte <public,non-static,non-constant>: @function <library>: 
+operator_lt <public,non-static,non-constant>: @function <library>: 
+operator_lte <public,non-static,non-constant>: @function <library>: 
+operator_ne <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
-Uncaught exception of type NameError: Unknown member new in object of type Singleton: 0x1002109d8
+Uncaught exception of type NameError: Unknown member new in object of type Singleton: 0x100219f58

@@ -446,9 +446,9 @@ private:
 	std::map<int, ehretval_p> id_to_object;
 	int next_available;
 
+public:
 	// the size of type_enum
 	const static int first_user_type = 19;
-public:
 	
 	void register_known_class(int id, std::string name, ehretval_p object) {
 		assert(id < first_user_type);

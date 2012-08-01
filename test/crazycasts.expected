@@ -10,5 +10,5 @@ Uncaught exception of type NameError: Unknown member toArray in object of type B
 @int 42
 ]
 Uncaught exception of type NameError: Unknown member toRange in object of type Integer: 42
-Uncaught exception of type NameError: Unknown member toBool in object of type Array: 0x100801ccc
-Uncaught exception of type NameError: Unknown member toBool in object of type Array: 0x100801dbc
+Uncaught exception of type NameError: Unknown member toBool in object of type Array: 0x100802fa4
+Uncaught exception of type NameError: Unknown member toBool in object of type Array: 0x100809554

@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 
-include '../lib/library.eh'
+include '../lib/list.eh'
 
 l = Cons 1, (Cons 2, (Cons 3, Nil))
 echo l.toString()

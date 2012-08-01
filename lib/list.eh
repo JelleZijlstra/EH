@@ -1,5 +1,14 @@
 # List class
 class List
+	# This is hackish
+	const empty = func:
+		old_initialize = List.initialize
+		List.initialize = func: -> null
+		out = List.new()
+		List.initialize = old_initialize
+		out
+	end
+	
 	initialize = func: head, tail
 		if !(tail.isA List)
 			throw ArgumentError.new "List tail must be a List", "List.initialize", tail
@@ -8,19 +17,10 @@ class List
 		end
 	end
 	
-	# This is hackish
-	empty = func:
-		real_initialize = List.initialize
-		List.initialize = func: -> null
-		out = List.new()
-		List.initialize = real_initialize
-		out
-	end
+	const head = func: -> self->0
+	const tail = func: -> self->1
 	
-	head = func: -> self->0
-	tail = func: -> self->1
-	
-	map = func: f
+	const map = func: f
 		if self == null
 			Nil
 		else
@@ -28,7 +28,7 @@ class List
 		end
 	end
 	
-	reduce = func: base, f
+	const reduce = func: base, f
 		if self == null
 			base
 		else
@@ -36,16 +36,27 @@ class List
 		end
 	end
 	
-	length = func: -> (reduce (0, func: k, rest -> rest + 1))
+	const length = func: -> (reduce (0, func: k, rest -> rest + 1))
 	
-	toString = func:
+	const toString = func:
 		if self == null
 			"[]"
 		else
 			((self->0).toString()) + "::" + ((self->1).toString())
 		end
 	end
+
+	filter = func: f -> (reduce Nil, func: elt, accum
+		if (f elt)
+			Cons elt, accum
+		else
+			accum
+		end
+	end)
 end
+
+# Constify it
+const List = List
 
 const Nil = List.empty()
 const Cons = List.new

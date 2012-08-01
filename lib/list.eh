@@ -19,6 +19,20 @@ class List
 	
 	const head = func: -> self->0
 	const tail = func: -> self->1
+
+	const operator_arrow = func: n
+		if n == 0
+			ret head()
+		end
+		if n == 1
+			ret tail()
+		end
+		throw ArgumentError.new "Argument must be 0 or 1", "List.operator->", n
+	end
+
+	const isEmpty = func: -> (self == null)
+
+	const isSingleton = func: -> (self != null && (self->1).isEmpty())
 	
 	const map = func: f
 		if self == null
@@ -56,7 +70,57 @@ class List
 		end
 	end
 
-	reverse = func: -> (reverse_append Nil)
+	const reverse = func: -> (reverse_append Nil)
+
+	# Merge sort implementation
+	const private split = func: l, r
+		if self == null
+			l, r
+		else
+			(self->1).split r, (Cons self->0, l)
+		end
+	end
+
+	const private merge = func: r
+		if self == null
+			r
+		else
+			if (r.isEmpty())
+				this
+			else
+				if self->0 < r->0
+					Cons self->0, (self->1).merge r
+				else
+					Cons r->0, this.merge r->1
+				end
+			end
+		end
+	end
+
+	const sort = func:
+		if self == null
+			ret Nil
+		end
+		if (this.isSingleton())
+			this
+		else
+			private const splitList = this.split Nil, Nil
+			((splitList->0).sort()).merge ((splitList->1).sort())
+		end
+	end
+
+	const rev_append = func: rhs
+		if self == null
+			ret rhs
+		end
+		if (this.isSingleton())
+			Cons self->0, rhs
+		else
+			(self->1).rev_append (Cons self->0, rhs)
+		end
+	end
+
+	const append = func: rhs -> ((this.reverse()).rev_append rhs)
 end
 
 # Constify it

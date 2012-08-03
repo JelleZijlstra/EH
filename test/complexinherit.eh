@@ -23,7 +23,12 @@ class C {
 		private cp = 30
 		inherit A.AA
 		public cc: {
-			echo a
+			# If everything is working right, there is no a
+			try {
+				echo a
+			} catch {
+				echo()
+			}
 			echo c
 		}
 	}

@@ -1,6 +1,10 @@
 #!/usr/bin/ehi
 class A {
-	inherit A
+	try {
+		inherit A
+	} catch {
+		echo 'Too bad, that did not work'
+	}
 	
 	class A {
 		public b

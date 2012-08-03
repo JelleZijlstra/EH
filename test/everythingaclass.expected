@@ -1,5 +1,5 @@
 3
-Uncaught exception of type ConstError: Cannot set constant member foo in object of type Null: 0x100216568
+Uncaught exception of type ConstError: Cannot set constant member foo in object of type GlobalObject: (global execution context)
 3
 5
 @object <Bar> [

@@ -37,4 +37,4 @@ toString <public,non-static,non-constant>: @function <library>:
 useprivate <public,non-static,non-constant>: @function <user>: 
 ]
 @int 42
-
+Uncaught exception of type NameError: Unknown member baz in object of type GlobalObject: (global execution context)

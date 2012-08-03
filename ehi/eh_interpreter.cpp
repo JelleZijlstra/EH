@@ -65,6 +65,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(NameError, -1)
 	LIBCLASSENTRY(ConstError, -1)
 	LIBCLASSENTRY(ArgumentError, -1)
+	LIBCLASSENTRY(GlobalObject, -1)
 	{NULL, NULL, 0}
 };
 
@@ -132,6 +133,7 @@ void EHI::eh_init(void) {
 		global_object->get_objectval()->insert(libfuncs[i].name, func);
 	}
 	ehobj_t *base_object;
+	ehobj_t *global_object_class;
 	for(int i = 0; libclasses[i].name != NULL; i++) {
 		ehobj_t *newclass = new ehobj_t();
 		ehretval_p new_value = this->make_object(newclass);
@@ -152,6 +154,9 @@ void EHI::eh_init(void) {
 		} else {
 			OBJECT_FOR_EACH(base_object, member) {
 				newclass->copy_member(member, false, new_value, this);
+			}
+			if(strcmp(libclasses[i].name, "GlobalObject") == 0) {
+				global_object_class = newclass;
 			}
 		}
 		ehlm_listentry_t *members = libclasses[i].members;
@@ -183,8 +188,9 @@ void EHI::eh_init(void) {
 	for(int i = 0; libredirs[i][0] != NULL; i++) {
 		redirect_command(libredirs[i][0], libredirs[i][1]);
 	}
-	// inherit from Object in the global object
-	OBJECT_FOR_EACH(base_object, member) {
+	// "inherit" from Object in the global object
+	global_object->get_objectval()->type_id = global_object_class->type_id;
+	OBJECT_FOR_EACH(global_object_class, member) {
 		global_object->get_objectval()->copy_member(member, false, global_object, this);
 	}
 	// insert reference to global object
@@ -944,6 +950,7 @@ ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 	ehretval_p varname = eh_execute(node, context);
 	ehmember_p var = context->get_objectval()->get_recursive(varname->get_stringval(), context);
 	if(var == NULL) {
+		throw_NameError(context, varname->get_stringval(), this);
 		return NULL;
 	} else {
 		return var->value;

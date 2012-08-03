@@ -2,8 +2,8 @@
 
 
 Uncaught exception of type NameError: Unknown member toInt in object of type Null: 
-
-null
+Uncaught exception of type NameError: Unknown member ban in object of type GlobalObject: (global execution context)
+Uncaught exception of type NameError: Unknown member ban in object of type GlobalObject: (global execution context)
 @array [
 0 => @string 'foo'
 1 => null

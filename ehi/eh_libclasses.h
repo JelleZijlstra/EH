@@ -58,6 +58,13 @@ EH_METHOD(Object, operator_lte);
 EXTERN_EHLC(Object)
 
 /*
+ * GlobalObject
+ */
+EH_METHOD(GlobalObject, toString);
+
+EXTERN_EHLC(GlobalObject)
+
+/*
  * CountClass library class
  */
 class CountClass : public LibraryBaseClass {

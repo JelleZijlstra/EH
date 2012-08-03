@@ -135,6 +135,15 @@ EH_METHOD(Object, operator_lte) {
 	return ehretval_t::make_bool(comparison != 1);
 }
 
+// type for the global object (currently empty; ultimately library methods should go here)
+START_EHLC(GlobalObject)
+EHLC_ENTRY(GlobalObject, toString)
+END_EHLC()
+
+EH_METHOD(GlobalObject, toString) {
+	return ehretval_t::make_string(strdup("(global execution context)"));
+}
+
 START_EHLC(CountClass)
 EHLC_ENTRY(CountClass, initialize)
 EHLC_ENTRY(CountClass, docount)

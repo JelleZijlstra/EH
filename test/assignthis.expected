@@ -17,7 +17,7 @@ operator_ne <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 useprivate <public,non-static,non-constant>: @function <user>: 
 ]
-Uncaught exception of type ConstError: Cannot set constant member this in object of type Function: 0x1002171d8
+Uncaught exception of type ConstError: Cannot set constant member this in object of type Function: 0x100217d28
 @object <Foo> [
 bar <public,non-static,non-constant>: @function <user>: 
 baz <private,non-static,non-constant>: @int 42
@@ -57,4 +57,4 @@ toString <public,non-static,non-constant>: @function <library>:
 useprivate <public,non-static,non-constant>: @function <user>: 
 ]
 @int 42
-
+Uncaught exception of type NameError: Unknown member baz in object of type GlobalObject: (global execution context)

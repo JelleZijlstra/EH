@@ -24,5 +24,5 @@ toString <public,non-static,non-constant>: @function <library>:
 @function <user>: n
 42
 Calling a private method
-Uncaught exception of type NameError: Unknown member mah in object of type Foo: 0x10021ee78
+Uncaught exception of type NameError: Unknown member mah in object of type Foo: 0x10021f9c8
 2

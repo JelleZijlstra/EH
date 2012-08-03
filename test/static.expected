@@ -21,6 +21,6 @@ toString <public,non-static,non-constant>: @function <library>:
 ]
 2
 3
-Uncaught exception of type ConstError: Cannot set constant member muh in object of type Foo: 0x1002197a8
-Uncaught exception of type ConstError: Cannot set constant member muh in object of type Foo: 0x10021a3a8
+Uncaught exception of type ConstError: Cannot set constant member muh in object of type Foo: 0x10021a2f8
+Uncaught exception of type ConstError: Cannot set constant member muh in object of type Foo: 0x10021aef8
 2

@@ -1,8 +1,8 @@
-(null)
-(null)
+
+
 
 Uncaught exception of type NameError: Unknown member toInt in object of type Null: 
-(null)
+
 null
 @array [
 0 => @string 'foo'

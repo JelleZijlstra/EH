@@ -334,12 +334,13 @@ EHLIBFUNC(throw) {
 }
 
 EHLIBFUNC(echo) {
-	args->print();
-	printf("\n");
+	ehretval_p str = ehi->to_string(args, context);
+	std::cout << str->get_stringval() << std::endl;
 	return NULL;
 }
 
 EHLIBFUNC(put) {
-	args->print();
+	ehretval_p str = ehi->to_string(args, context);
+	std::cout << str->get_stringval();
 	return NULL;
 }

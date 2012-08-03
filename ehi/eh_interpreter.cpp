@@ -1188,7 +1188,14 @@ ehretval_p EHI::get_property(ehretval_p object, ehretval_p object_data, const ch
 	}
 	ehobj_t *obj = object->get_objectval();
 	if(!obj->has(name)) {
-		throw_NameError(object_data, name, this);
+		// it is hard to get all objects to actually inherit from Object (and, therefore, have a toString method)
+		// therefore, we use special logic to make that work
+		if(strcmp(name, "toString") == 0) {
+			ehretval_p the_object = this->get_primitive_class(base_object_e);
+			return the_object->get_objectval()->get_known("toString")->value;
+		} else {
+			throw_NameError(object_data, name, this);
+		}
 	}
 	ehmember_p member = obj->get_known(name);
 	if(member->attribute.visibility == private_e && !obj->context_compare(context)) {

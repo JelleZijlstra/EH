@@ -14,49 +14,35 @@ Array not previously declared
 2
 3
 Object
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
-Unsupported type object for echo operator: EH notice
 bar
 2
 compare
-
+0x100217788
 finalize
-
+0x100217748
 inherit
-
+0x100217738
 initialize
-
+0x100217748
 isA
-
+0x100217788
 mah
 4
 new
-
+0x100217768
 operator_compare
-
+0x100217738
 operator_equals
-
+0x100217788
 operator_gt
-
+0x1002177c8
 operator_gte
-
+0x100217788
 operator_lt
-
+0x1002177c8
 operator_lte
-
+0x100217788
 operator_ne
-
+0x1002177c8
 toString
-
+0x100217788

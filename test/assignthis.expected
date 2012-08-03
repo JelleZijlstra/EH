@@ -57,4 +57,4 @@ toString <public,non-static,non-constant>: @function <library>:
 useprivate <public,non-static,non-constant>: @function <user>: 
 ]
 @int 42
-(null)
+

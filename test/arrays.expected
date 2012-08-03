@@ -2,7 +2,7 @@
 4
 2
 foo
-(null)
+
 meh
 bar
 foo
@@ -10,8 +10,8 @@ test
 u
 u
 u
-(false)
-(true)
+false
+true
 4
 3
 4

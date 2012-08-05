@@ -34,7 +34,7 @@
 
 class LibraryBaseClass {
 public:
-  virtual ~LibraryBaseClass() {};
+  virtual ~LibraryBaseClass() {}
 };
 
 /*

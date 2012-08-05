@@ -396,7 +396,7 @@ EH_METHOD(Integer, setBit) {
 	if(index < 0 || ((unsigned) index) >= sizeof(int) * 8) {
 		throw_ArgumentError_out_of_range("Integer.setBit", operand, ehi);
 	}
-	int new_value;
+	int new_value = 0;
 	ehretval_p value = args->get_tupleval()->get(1);
 	if(value->type() == int_e) {
 		int int_value = value->get_intval();

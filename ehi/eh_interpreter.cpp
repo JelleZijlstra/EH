@@ -132,8 +132,8 @@ void EHI::eh_init(void) {
 		func->value = this->make_object(obj);
 		global_object->get_objectval()->insert(libfuncs[i].name, func);
 	}
-	ehobj_t *base_object;
-	ehobj_t *global_object_class;
+	ehobj_t *base_object = NULL;
+	ehobj_t *global_object_class = NULL;
 	for(int i = 0; libclasses[i].name != NULL; i++) {
 		ehobj_t *newclass = new ehobj_t();
 		ehretval_p new_value = this->make_object(newclass);
@@ -188,6 +188,9 @@ void EHI::eh_init(void) {
 	for(int i = 0; libredirs[i][0] != NULL; i++) {
 		redirect_command(libredirs[i][0], libredirs[i][1]);
 	}
+	// these must have been set by now
+	assert(base_object != NULL);
+	assert(global_object_class != NULL);
 	// "inherit" from Object in the global object
 	global_object->get_objectval()->type_id = global_object_class->type_id;
 	OBJECT_FOR_EACH(global_object_class, member) {

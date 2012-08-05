@@ -227,275 +227,267 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 	ehretval_p ret, operand1, operand2;
 	bool b1, b2;
 
-	// empty statements produce a null node
-	if(node == NULL) {
-		return ret;
-	}
-	try {
-		if(node->type() == op_e) {
-			//printf("Opcode %d: %d\n", node->opval->op, node->get_opval()->nparas);
-			switch(node->get_opval()->op) {
-				case T_LITERAL:
-					if(node->get_opval()->nparas == 0) {
-						return NULL;
-					} else {
-						return node->get_opval()->paras[0];
-					}
-			/*
-			 * Unary operators
-			 */
-				case '@': // type casting
-					ret = eh_cast(
-						eh_execute(node->get_opval()->paras[0], context)->get_typeval(),
-						eh_execute(node->get_opval()->paras[1], context),
-						context
-					);
-					break;
-				case '~': // bitwise negation
-				  return perform_op("operator_tilde", "operator~", 0, node->get_opval()->paras, context);
-				case T_NEGATIVE: // sign change
-				  return perform_op("operator_uminus", "operator-", 0, node->get_opval()->paras, context);
-				case '!': // Boolean not
-				  return perform_op("operator_bang", "operator!", 0, node->get_opval()->paras, context);
-			/*
-			 * Control flow
-			 */
-				case T_IF:
-					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					if(this->to_bool(operand1, context)->get_boolval()) {
-						ret = eh_execute(node->get_opval()->paras[1], context);
-					} else if(node->get_opval()->nparas == 3) {
-						ret = eh_execute(node->get_opval()->paras[2], context);
-					}
-					break;
-				case T_WHILE:
-					ret = eh_op_while(node->get_opval()->paras, context);
-					break;
-				case T_FOR:
-					ret = eh_op_for(node->get_opval(), context);
-					break;
-				case T_AS:
-					ret = eh_op_as(node->get_opval(), context);
-					break;
-				case T_SWITCH: // switch statements
-					ret = eh_op_switch(node->get_opval()->paras, context);
-					// incremented in the eh_op_switch function
-					inloop--;
-					break;
-				case T_GIVEN: // inline switch statements
-					ret = eh_op_given(node->get_opval()->paras, context);
-					break;
-			/*
-			 * Exceptions
-			 */
-				case T_TRY:
-				  ret = eh_op_try(node->get_opval()->paras, context);
-				  break;
-				case T_CATCH:
-				  ret = eh_op_catch(node->get_opval()->paras, context);
-				  break;
-				case T_FINALLY:
-				  ret = eh_op_catch(node->get_opval()->paras, context);
-				  break;
-			/*
-			 * Miscellaneous
-			 */
-				case T_SEPARATOR:
-					// if we're in an empty list
-					if(node->get_opval()->nparas == 0) {
+	if(node->type() == op_e) {
+		//printf("Opcode %d: %d\n", node->opval->op, node->get_opval()->nparas);
+		switch(node->get_opval()->op) {
+			case T_LITERAL:
+				if(node->get_opval()->nparas == 0) {
+					return NULL;
+				} else {
+					return node->get_opval()->paras[0];
+				}
+		/*
+		 * Unary operators
+		 */
+			case '@': // type casting
+				ret = eh_cast(
+					eh_execute(node->get_opval()->paras[0], context)->get_typeval(),
+					eh_execute(node->get_opval()->paras[1], context),
+					context
+				);
+				break;
+			case '~': // bitwise negation
+			  return perform_op("operator_tilde", "operator~", 0, node->get_opval()->paras, context);
+			case T_NEGATIVE: // sign change
+			  return perform_op("operator_uminus", "operator-", 0, node->get_opval()->paras, context);
+			case '!': // Boolean not
+			  return perform_op("operator_bang", "operator!", 0, node->get_opval()->paras, context);
+		/*
+		 * Control flow
+		 */
+			case T_IF:
+				operand1 = eh_execute(node->get_opval()->paras[0], context);
+				if(this->to_bool(operand1, context)->get_boolval()) {
+					ret = eh_execute(node->get_opval()->paras[1], context);
+				} else if(node->get_opval()->nparas == 3) {
+					ret = eh_execute(node->get_opval()->paras[2], context);
+				}
+				break;
+			case T_WHILE:
+				ret = eh_op_while(node->get_opval()->paras, context);
+				break;
+			case T_FOR:
+				ret = eh_op_for(node->get_opval(), context);
+				break;
+			case T_AS:
+				ret = eh_op_as(node->get_opval(), context);
+				break;
+			case T_SWITCH: // switch statements
+				ret = eh_op_switch(node->get_opval()->paras, context);
+				// incremented in the eh_op_switch function
+				inloop--;
+				break;
+			case T_GIVEN: // inline switch statements
+				ret = eh_op_given(node->get_opval()->paras, context);
+				break;
+		/*
+		 * Exceptions
+		 */
+			case T_TRY:
+			  ret = eh_op_try(node->get_opval()->paras, context);
+			  break;
+			case T_CATCH:
+			  ret = eh_op_catch(node->get_opval()->paras, context);
+			  break;
+			case T_FINALLY:
+			  ret = eh_op_catch(node->get_opval()->paras, context);
+			  break;
+		/*
+		 * Miscellaneous
+		 */
+			case T_SEPARATOR:
+				// if we're in an empty list
+				if(node->get_opval()->nparas == 0) {
+					return ret;
+				}
+				// else execute both commands
+				ret = eh_execute(node->get_opval()->paras[0], context);
+				if(returning || breaking || continuing) {
+					return ret;
+				} else {
+					// check for empty statement; this means that the last
+					// actual statement in a function is returned
+					ehretval_p new_node = node->get_opval()->paras[1];
+					if(new_node->type() == op_e && new_node->get_opval()->op == T_SEPARATOR && new_node->get_opval()->nparas == 0) {
 						return ret;
+					} else {
+						ret = eh_execute(new_node, context);
 					}
-					// else execute both commands
+				}
+				break;
+			case T_RET: // return from a function or the program
+				ret = eh_execute(node->get_opval()->paras[0], context);
+				returning = true;
+				break;
+			case T_BREAK: // break out of a loop
+				eh_op_break(node->get_opval(), context);
+				break;
+			case T_CONTINUE: // continue in a loop
+				eh_op_continue(node->get_opval(), context);
+				break;
+		/*
+		 * Object access
+		 */
+			case ':': // function call
+				ret = eh_op_colon(node->get_opval()->paras, context);
+				break;
+		/*
+		 * Object definitions
+		 */
+			case T_FUNC: // function definition
+				ret = eh_op_declareclosure(node->get_opval()->paras, context);
+				break;
+			case T_CLASS: // class declaration
+				ret = eh_op_declareclass(node->get_opval(), context);
+				break;
+			case T_CLASSMEMBER:
+				eh_op_classmember(node->get_opval(), context);
+				break;
+			case T_ATTRIBUTE: // class member attributes
+				if(node->get_opval()->nparas == 0) {
+					return ehretval_t::make_typed(attributestr_e);
+				} else {
+					// first execute first para
 					ret = eh_execute(node->get_opval()->paras[0], context);
-					if(returning || breaking || continuing) {
-						return ret;
-					} else {
-						// check for empty statement; this means that the last
-						// actual statement in a function is returned
-						ehretval_p new_node = node->get_opval()->paras[1];
-						if(new_node->type() == op_e && new_node->get_opval()->op == T_SEPARATOR && new_node->get_opval()->nparas == 0) {
-							return ret;
-						} else {
-							ret = eh_execute(new_node, context);
-						}
-					}
-					break;
-				case T_RET: // return from a function or the program
-					ret = eh_execute(node->get_opval()->paras[0], context);
-					returning = true;
-					break;
-				case T_BREAK: // break out of a loop
-					eh_op_break(node->get_opval(), context);
-					break;
-				case T_CONTINUE: // continue in a loop
-					eh_op_continue(node->get_opval(), context);
-					break;
-			/*
-			 * Object access
-			 */
-				case ':': // function call
-					ret = eh_op_colon(node->get_opval()->paras, context);
-					break;
-			/*
-			 * Object definitions
-			 */
-				case T_FUNC: // function definition
-					ret = eh_op_declareclosure(node->get_opval()->paras, context);
-					break;
-				case T_CLASS: // class declaration
-					ret = eh_op_declareclass(node->get_opval(), context);
-					break;
-				case T_CLASSMEMBER:
-					eh_op_classmember(node->get_opval(), context);
-					break;
-				case T_ATTRIBUTE: // class member attributes
-					if(node->get_opval()->nparas == 0) {
-						return ehretval_t::make_typed(attributestr_e);
-					} else {
-						// first execute first para
-						ret = eh_execute(node->get_opval()->paras[0], context);
-						// then overwrite with attribute from second para
-						switch(node->get_opval()->paras[1]->attributeval) {
-							case publica_e:
-								ret->attributestrval.visibility = public_e;
-								break;
-							case privatea_e:
-								ret->attributestrval.visibility = private_e;
-								break;
-							case statica_e:
-								ret->attributestrval.isstatic = static_e;
-								break;
-							case consta_e:
-								ret->attributestrval.isconst = const_e;
-								break;
-						}
-					}
-					break;
-				case '[': // array declaration
-					ret = eh_op_array(node->get_opval()->paras[0], context);
-					break;
-				case '{': // anonymous class
-					ret = eh_op_anonclass(node->get_opval()->paras[0], context);
-					break;
-				case ',': // tuple
-					ret = eh_op_tuple(node, context);
-					break;
-			/*
-			 * Binary operators
-			 */
-				case '.':
-					return eh_op_dot(node->get_opval()->paras, context);
-				case T_ARROW:
-					return perform_op("operator_arrow", "operator->", 1, node->get_opval()->paras, context);
-				case T_EQ:
-					return perform_op("operator_equals", "operator==", 1, node->get_opval()->paras, context);
-				case T_NE:
-					return perform_op("operator_ne", "operator==", 1, node->get_opval()->paras, context);
-				case '>':
-					return perform_op("operator_gt", "operator>", 1, node->get_opval()->paras, context);
-				case T_GE:
-					return perform_op("operator_gte", "operator>=", 1, node->get_opval()->paras, context);
-				case '<':
-					return perform_op("operator_lt", "operator<", 1, node->get_opval()->paras, context);
-				case T_LE:
-					return perform_op("operator_lte", "operator<=", 1, node->get_opval()->paras, context);
-				case T_COMPARE:
-				  return perform_op("operator_compare", "operator<=>", 1, node->get_opval()->paras, context);
-				case '+': // string concatenation, addition
-					return perform_op("operator_plus", "operator+", 1, node->get_opval()->paras, context);
-				case '-': // subtraction
-					return perform_op("operator_minus", "operator-", 1, node->get_opval()->paras, context);
-				case '*':
-					return perform_op("operator_times", "operator*", 1, node->get_opval()->paras, context);
-				case '/':
-					return perform_op("operator_divide", "operator/", 1, node->get_opval()->paras, context);
-				case '%':
-					return perform_op("operator_modulo", "operator%", 1, node->get_opval()->paras, context);
-				case '&':
-				  return perform_op("operator_and", "operator&", 1, node->get_opval()->paras, context);
-				case '^':
-				  return perform_op("operator_xor", "operator^", 1, node->get_opval()->paras, context);
-				case '|':
-				  return perform_op("operator_or", "operator|", 1, node->get_opval()->paras, context);
-				case T_AND: // AND; use short-circuit operation
-					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					if(!this->to_bool(operand1, context)->get_boolval()) {
-						return ehretval_t::make_bool(false);
-					} else {
-						operand2 = eh_execute(node->get_opval()->paras[1], context);
-						return this->to_bool(operand2, context);
-					}
-				case T_OR: // OR; use short-circuit operation
-					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					if(this->to_bool(operand1, context)->get_boolval()) {
-						return ehretval_t::make_bool(true);
-					} else {
-						operand2 = eh_execute(node->get_opval()->paras[1], context);
-						return this->to_bool(operand2, context);
-					}
-				case T_XOR:
-					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					operand2 = eh_execute(node->get_opval()->paras[1], context);
-					b1 = this->to_bool(operand1, context)->get_boolval();
-					b2 = this->to_bool(operand2, context)->get_boolval();
-					return ehretval_t::make_bool((b1 && !b2) || (!b1 && b2));
-			/*
-			 * Variable manipulation
-			 */
-				case T_RANGE:
-					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					operand2 = eh_execute(node->get_opval()->paras[1], context);
-					if(operand1->type() != operand2->type()) {
-						throw_TypeError("Range members must have the same type", operand2->type(), this);
-					}
-					ret = this->make_range(new ehrange_t(operand1, operand2));
-					break;
-				case T_SET:
-					eh_op_set(node->get_opval()->paras, context);
-					break;
-				case T_MINMIN:
-					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					switch(operand1->type()) {
-						case int_e:
-							operand1->intval--;
+					// then overwrite with attribute from second para
+					switch(node->get_opval()->paras[1]->attributeval) {
+						case publica_e:
+							ret->attributestrval.visibility = public_e;
 							break;
-						default:
-							throw_TypeError("-- operator only applies to Integer objects", operand1->type(), this);
-					}
-					break;
-				case T_PLUSPLUS:
-					operand1 = eh_execute(node->get_opval()->paras[0], context);
-					switch(operand1->type()) {
-						case int_e:
-							operand1->intval++;
+						case privatea_e:
+							ret->attributestrval.visibility = private_e;
 							break;
-						default:
-							throw_TypeError("++ operator only applies to Integer objects", operand1->type(), this);
+						case statica_e:
+							ret->attributestrval.isstatic = static_e;
+							break;
+						case consta_e:
+							ret->attributestrval.isconst = const_e;
+							break;
 					}
-					break;
-				case '$': // variable dereference
-					ret = eh_op_dollar(node->get_opval()->paras[0], context);
-					break;
-			/*
-			 * Commands
-			 */
-				case T_COMMAND:
-					// name of command to be executed
-					ret = eh_op_command(
-						eh_execute(node->get_opval()->paras[0], context)->get_stringval(),
-						node->get_opval()->paras[1],
-						context
-					);
-					break;
-				default:
-					std::cerr << "Unexpected opcode " << node->get_opval()->op;
-					assert(false);
-			}
-		} else {
-			ret = node;
+				}
+				break;
+			case '[': // array declaration
+				ret = eh_op_array(node->get_opval()->paras[0], context);
+				break;
+			case '{': // anonymous class
+				ret = eh_op_anonclass(node->get_opval()->paras[0], context);
+				break;
+			case ',': // tuple
+				ret = eh_op_tuple(node, context);
+				break;
+		/*
+		 * Binary operators
+		 */
+			case '.':
+				return eh_op_dot(node->get_opval()->paras, context);
+			case T_ARROW:
+				return perform_op("operator_arrow", "operator->", 1, node->get_opval()->paras, context);
+			case T_EQ:
+				return perform_op("operator_equals", "operator==", 1, node->get_opval()->paras, context);
+			case T_NE:
+				return perform_op("operator_ne", "operator==", 1, node->get_opval()->paras, context);
+			case '>':
+				return perform_op("operator_gt", "operator>", 1, node->get_opval()->paras, context);
+			case T_GE:
+				return perform_op("operator_gte", "operator>=", 1, node->get_opval()->paras, context);
+			case '<':
+				return perform_op("operator_lt", "operator<", 1, node->get_opval()->paras, context);
+			case T_LE:
+				return perform_op("operator_lte", "operator<=", 1, node->get_opval()->paras, context);
+			case T_COMPARE:
+			  return perform_op("operator_compare", "operator<=>", 1, node->get_opval()->paras, context);
+			case '+': // string concatenation, addition
+				return perform_op("operator_plus", "operator+", 1, node->get_opval()->paras, context);
+			case '-': // subtraction
+				return perform_op("operator_minus", "operator-", 1, node->get_opval()->paras, context);
+			case '*':
+				return perform_op("operator_times", "operator*", 1, node->get_opval()->paras, context);
+			case '/':
+				return perform_op("operator_divide", "operator/", 1, node->get_opval()->paras, context);
+			case '%':
+				return perform_op("operator_modulo", "operator%", 1, node->get_opval()->paras, context);
+			case '&':
+			  return perform_op("operator_and", "operator&", 1, node->get_opval()->paras, context);
+			case '^':
+			  return perform_op("operator_xor", "operator^", 1, node->get_opval()->paras, context);
+			case '|':
+			  return perform_op("operator_or", "operator|", 1, node->get_opval()->paras, context);
+			case T_AND: // AND; use short-circuit operation
+				operand1 = eh_execute(node->get_opval()->paras[0], context);
+				if(!this->to_bool(operand1, context)->get_boolval()) {
+					return ehretval_t::make_bool(false);
+				} else {
+					operand2 = eh_execute(node->get_opval()->paras[1], context);
+					return this->to_bool(operand2, context);
+				}
+			case T_OR: // OR; use short-circuit operation
+				operand1 = eh_execute(node->get_opval()->paras[0], context);
+				if(this->to_bool(operand1, context)->get_boolval()) {
+					return ehretval_t::make_bool(true);
+				} else {
+					operand2 = eh_execute(node->get_opval()->paras[1], context);
+					return this->to_bool(operand2, context);
+				}
+			case T_XOR:
+				operand1 = eh_execute(node->get_opval()->paras[0], context);
+				operand2 = eh_execute(node->get_opval()->paras[1], context);
+				b1 = this->to_bool(operand1, context)->get_boolval();
+				b2 = this->to_bool(operand2, context)->get_boolval();
+				return ehretval_t::make_bool((b1 && !b2) || (!b1 && b2));
+		/*
+		 * Variable manipulation
+		 */
+			case T_RANGE:
+				operand1 = eh_execute(node->get_opval()->paras[0], context);
+				operand2 = eh_execute(node->get_opval()->paras[1], context);
+				if(operand1->type() != operand2->type()) {
+					throw_TypeError("Range members must have the same type", operand2->type(), this);
+				}
+				ret = this->make_range(new ehrange_t(operand1, operand2));
+				break;
+			case T_SET:
+				eh_op_set(node->get_opval()->paras, context);
+				break;
+			case T_MINMIN:
+				operand1 = eh_execute(node->get_opval()->paras[0], context);
+				switch(operand1->type()) {
+					case int_e:
+						operand1->intval--;
+						break;
+					default:
+						throw_TypeError("-- operator only applies to Integer objects", operand1->type(), this);
+				}
+				break;
+			case T_PLUSPLUS:
+				operand1 = eh_execute(node->get_opval()->paras[0], context);
+				switch(operand1->type()) {
+					case int_e:
+						operand1->intval++;
+						break;
+					default:
+						throw_TypeError("++ operator only applies to Integer objects", operand1->type(), this);
+				}
+				break;
+			case '$': // variable dereference
+				ret = eh_op_dollar(node->get_opval()->paras[0], context);
+				break;
+		/*
+		 * Commands
+		 */
+			case T_COMMAND:
+				// name of command to be executed
+				ret = eh_op_command(
+					eh_execute(node->get_opval()->paras[0], context)->get_stringval(),
+					node->get_opval()->paras[1],
+					context
+				);
+				break;
+			default:
+				std::cerr << "Unexpected opcode " << node->get_opval()->op;
+				assert(false);
 		}
-	} catch(unknown_value_exception &e) {
-		// ignore all exceptions
+	} else {
+		ret = node;
 	}
 	return ret;
 }

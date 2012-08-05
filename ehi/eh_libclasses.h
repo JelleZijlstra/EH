@@ -16,7 +16,7 @@
 #define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, ehretval_p args, ehcontext_t context, EHI *ehi)
 
 #define ASSERT_TYPE(operand, ehtype, method) if(operand->type() != ehtype) { \
-	throw_TypeError("Invalid type for argument to " #method, operand->type(), ehi); \
+	throw_TypeError("Invalid type for argument to " method, operand->type(), ehi); \
 }
 #define ASSERT_NARGS(count, method) ASSERT_TYPE(args, tuple_e, method); \
 	if(args->get_tupleval()->size() != count) { \

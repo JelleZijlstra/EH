@@ -29,8 +29,6 @@ void eh_error_invalid_argument(const char *function, int n);
  */
 class quit_exception : public std::exception {
 };
-class unknown_value_exception : public std::exception {
-};
 
 /*
  * Exceptions throwns by the interpreter.

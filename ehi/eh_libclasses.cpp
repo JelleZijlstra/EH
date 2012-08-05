@@ -466,6 +466,9 @@ EH_METHOD(Array, length) {
 }
 EH_METHOD(Array, operator_arrow) {
 	ASSERT_OBJ_TYPE(array_e, "Array.operator->");
+	if(args->type() != int_e && args->type() != string_e) {
+		throw_TypeError("Invalid type for argument to Array.operator-> (expected String or Integer)", args->type(), ehi);
+	}
 	eharray_t *arr = obj->get_arrayval();
 	if(arr->has(args)) {
 		return arr->operator[](args);
@@ -475,12 +478,12 @@ EH_METHOD(Array, operator_arrow) {
 }
 EH_METHOD(Array, operator_arrow_equals) {
 	ASSERT_NARGS_AND_TYPE(2, array_e, "Array.operator->=");
-	try {
-		obj->get_arrayval()->operator[](args->get_tupleval()->get(0)) = args->get_tupleval()->get(1);
-		return args->get_tupleval()->get(1);
-	} catch(unknown_value_exception &e) {
-		return NULL;
+	ehretval_p index = args->get_tupleval()->get(0);
+	if(index->type() != int_e && index->type() != string_e) {
+		throw_TypeError("Invalid type for argument to Array.operator->= (expected String or Integer)", index->type(), ehi);
 	}
+	obj->get_arrayval()->operator[](index) = args->get_tupleval()->get(1);
+	return args->get_tupleval()->get(1);
 }
 EH_METHOD(Array, toArray) {
   ASSERT_NULL_AND_TYPE(array_e, "Array.toArray");

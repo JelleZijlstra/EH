@@ -1,5 +1,5 @@
 true
 false
-Uncaught exception of type TypeError: Invalid type for argument to "pow": Integer
+Uncaught exception of type TypeError: Invalid type for argument to pow: Integer
 Uncaught exception of type ArgumentError: Argument must be a tuple of size 2 (method pow): (3, 2, false)
 false

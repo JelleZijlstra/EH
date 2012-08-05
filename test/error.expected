@@ -1,2 +1,2 @@
 3
-syntax error, unexpected $end: EH parsing error
+Uncaught exception of type SyntaxError: syntax error, unexpected $end at line 7

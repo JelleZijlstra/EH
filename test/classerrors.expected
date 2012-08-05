@@ -1,2 +1,2 @@
-Cannot set constant member foo in object of type Foo: 0x100218a48
+Cannot set constant member foo in object of type Foo: @Foo
 10

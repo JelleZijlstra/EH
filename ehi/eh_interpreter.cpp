@@ -65,6 +65,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(NameError, -1)
 	LIBCLASSENTRY(ConstError, -1)
 	LIBCLASSENTRY(ArgumentError, -1)
+	LIBCLASSENTRY(SyntaxError, -1)
 	LIBCLASSENTRY(GlobalObject, -1)
 	{NULL, NULL, 0}
 };
@@ -834,7 +835,7 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 	for(ehretval_p tmp = node;
 		tmp->type() == op_e && tmp->get_opval()->op == ',' && tmp->get_opval()->nparas != 0;
 		tmp = tmp->get_opval()->paras[0], nargs++
-	);
+	) {}
 	ehretval_a new_args(nargs);
 	
 	ehretval_p arg_node = node;
@@ -1326,6 +1327,6 @@ static inline int count_nodes(const ehretval_p node) {
 	for(ehretval_p tmp = node;
 		tmp->get_opval()->nparas != 0;
 		tmp = tmp->get_opval()->paras[0], i++
-	);
+	) {}
 	return i;
 }

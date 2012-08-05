@@ -22,6 +22,8 @@ class Bar
 		# 5
 		echo baz
 	end
+
+	const toString = func: -> "@Bar " + foo
 end
 # 2
 echo foo

@@ -16,6 +16,9 @@ class Foo
 	private mah: n
 		echo n
 	endfunc
+	public toString:
+		'@Foo (' + bar + ', ' + baz + ')'
+	endfunc
 endclass
 bar = Foo.new ()
 printvar bar
@@ -23,7 +26,7 @@ echo bar.bar
 foo = bar.meh
 printvar foo
 bar.meh 42
-# Error method is private
+# Error: method is private
 (bar.mah) 'Calling a private method'
 bar.bar = 2
 echo bar.bar

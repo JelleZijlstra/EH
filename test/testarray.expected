@@ -8,4 +8,4 @@
 @array [
 0 => @int 1
 ]
-syntax error, unexpected T_INTEGER, expecting ']': EH parsing error
+Uncaught exception of type SyntaxError: syntax error, unexpected T_INTEGER, expecting ']' at line 7

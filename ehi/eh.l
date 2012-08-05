@@ -169,6 +169,10 @@ int yywrap(yyscan_t scanner) {
 
 void yyerror(void *scanner, const char *s) {
 	// give up on line numbers for now
+	//struct yyguts_t *yyg = (struct yyguts_t *)scanner->scanner;
+	EHI *ehi = yyget_extra(scanner)->_parent;
+	throw_SyntaxError(s, yyget_lineno((yyscan_t)scanner), ehi);
+	std::cout << yyget_lineno((yyscan_t)scanner) << std::endl;
 	eh_error(s, eparsing_e);
 }
 

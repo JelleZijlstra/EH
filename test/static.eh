@@ -8,6 +8,10 @@ class Foo
 	const meh: n
 		echo n
 	endfunc
+
+	const toString:
+		"@Foo " + bar + " " + baz + " " + mah + " " + muh
+	endfunc
 endclass
 foo = Foo.new ()
 printvar foo

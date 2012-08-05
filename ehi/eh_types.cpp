@@ -31,7 +31,7 @@ void ehretval_t::print() {
 			this->get_rangeval()->max->print();
 			break;
 		default:
-			eh_error_type("echo operator", this->type(), enotice_e);
+			printf("(cannot print value)");
 			break;
 	}
 	return;
@@ -183,7 +183,7 @@ ehretval_p &eharray_t::operator[](ehretval_p index) {
 		default:
 			// callers should make sure type is right
 			assert(false);
-			throw unknown_value_exception();
+			throw "impossible";
 	}
 }
 void eharray_t::insert_retval(ehretval_p index, ehretval_p value) {

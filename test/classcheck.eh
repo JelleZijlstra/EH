@@ -1,4 +1,5 @@
 #!/usr/bin/ehi
+include '../lib/tuple.eh'
 # Illustrate the isA method, as well as parameter checking for library functions.
 class Foo
 	public bar = 42

@@ -1,11 +1,13 @@
 #!/usr/bin/ehi
 # One way to implement Singleton
 class Singleton {
-	private instance = this.new ()
+	const instance = this.new ()
 
-	private new = func: -> null
+	private const new = new
 	
 	public getInstance = func: -> instance
+
+	const toString = func: -> "@Singleton"
 }
 printvar Singleton.getInstance ()
 # error

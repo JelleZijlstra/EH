@@ -925,6 +925,7 @@ EH_METHOD(Hash, has) {
 
 START_EHLC(Function)
 EHLC_ENTRY(Function, operator_colon)
+EHLC_ENTRY(Function, toString)
 END_EHLC()
 
 EH_METHOD(Function, operator_colon) {
@@ -988,6 +989,26 @@ EH_METHOD(Function, operator_colon) {
 	ehretval_p ret = ehi->eh_execute(f->code, newcontext);
 	ehi->returning = false;
 	return ret;
+}
+EH_METHOD(Function, toString) {
+	ASSERT_OBJ_TYPE(func_e, "Function.toString");
+	ehfunc_t *f = obj->get_funcval();
+	if(f->type == lib_e) {
+		return ehretval_t::make_string(strdup("func: -> <native code>"));
+	} else if(f->argcount == 0) {
+		return ehretval_t::make_string(strdup("func: -> <user code>"));
+	} else {
+		std::ostringstream out;
+		out << "func: ";
+		for(int i = 0; i < f->argcount; i++) {
+			out << f->args[i].name;
+			if(i != f->argcount - 1) {
+				out << ", ";
+			}
+		}
+		out << " -> <user code>";
+		return ehretval_t::make_string(strdup(out.str().c_str()));
+	}
 }
 
 START_EHLC(Exception)

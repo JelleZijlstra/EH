@@ -101,4 +101,11 @@ EH_METHOD(MiscellaneousError, toString);
 
 EXTERN_EHLC(MiscellaneousError)
 
+void throw_SyntaxError(const char *message, int line, EHI *ehi);
+
+EH_METHOD(SyntaxError, initialize);
+EH_METHOD(SyntaxError, toString);
+
+EXTERN_EHLC(SyntaxError)
+
 #endif /* _EH_ERROR_H */

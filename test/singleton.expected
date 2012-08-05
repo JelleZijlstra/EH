@@ -14,4 +14,4 @@ operator_lte <public,non-static,non-constant>: @function <library>:
 operator_ne <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
-Uncaught exception of type NameError: Unknown member new in object of type Singleton: 0x10021aaa8
+Uncaught exception of type NameError: Unknown member new in object of type Singleton: @Singleton

@@ -18,11 +18,11 @@ operator_gte <public,non-static,non-constant>: @function <library>:
 operator_lt <public,non-static,non-constant>: @function <library>: 
 operator_lte <public,non-static,non-constant>: @function <library>: 
 operator_ne <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <user>: 
 ]
 3
 @function <user>: n
 42
 Calling a private method
-Uncaught exception of type NameError: Unknown member mah in object of type Foo: 0x10021f9c8
+Uncaught exception of type NameError: Unknown member mah in object of type Foo: @Foo (@Foo (3, ), )
 2

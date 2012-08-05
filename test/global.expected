@@ -2,4 +2,4 @@ test 42
 bah foo
 19 foo
 1919
-Uncaught exception of type NameError: Unknown member nosuchvar in object of type Function: 0x10021a588
+Uncaught exception of type NameError: Unknown member nosuchvar in object of type Function: func: -> <user code>

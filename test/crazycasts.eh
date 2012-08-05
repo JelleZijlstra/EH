@@ -1,4 +1,6 @@
 #!/usr/bin/ehi
+include '../lib/array.eh'
+
 # Some crazy typecasts that EH supports
 # [ 0 => 1, 1 => 2, ..., 41 => 42]
 printvar @array 1..42

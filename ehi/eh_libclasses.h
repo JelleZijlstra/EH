@@ -88,12 +88,8 @@ public:
 	File() : descriptor(NULL) {}
 	~File() {}
 private:
-	File(const File&) : descriptor() {
-		throw "Not allowed";
-	}
-	File operator=(const File&) {
-		throw "Not allowed";
-	}
+	File(const File&);
+	File operator=(const File&);
 };
 EH_METHOD(File, initialize);
 EH_METHOD(File, open);
@@ -231,6 +227,7 @@ EXTERN_EHLC(Hash)
  * Function class
  */
 EH_METHOD(Function, operator_colon);
+EH_METHOD(Function, toString);
 
 EXTERN_EHLC(Function)
 
@@ -245,12 +242,8 @@ public:
 		delete[] msg;
 	}
 private:
-	Exception(const Exception&) : msg() {
-		throw "Not allowed";
-	}
-	Exception operator=(const Exception&) {
-		throw "Not allowed";
-	}
+	Exception(const Exception&);
+	Exception operator=(const Exception&);
 };
 EH_METHOD(Exception, toString);
 EH_METHOD(Exception, initialize);

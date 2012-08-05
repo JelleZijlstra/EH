@@ -16,15 +16,17 @@ int EHI::eh_interactive(interactivity_enum interactivity) {
 	ehretval_p ret;
 
 	EHParser parser(interactivity, this);
-	char *cmd = eh_getline(&parser);
-	if(!cmd) {
-		return eh_outer_exit(0);
-	}
-	// if a syntax error occurs, stop parsing and return -1
-	try {
-		ret = parser.parse_string(cmd);
-	} catch(...) {
-		// do nothing
+	while(1) {
+		char *cmd = eh_getline(&parser);
+		if(!cmd) {
+			return eh_outer_exit(0);
+		}
+		// if a syntax error occurs, stop parsing and return -1
+		try {
+			ret = parser.parse_string(cmd);
+		} catch(eh_exception &e) {
+			handle_uncaught(e);
+		}
 	}
 	return ret->intval;
 }
@@ -38,8 +40,8 @@ ehretval_p EHI::parse_file(const char *name) {
 	// if a syntax error occurs, stop parsing and return -1
 	try {
 		return parser.parse_file(infile);
-	} catch(...) {
-		// TODO: actually do something useful with exceptions
+	} catch(eh_exception &e) {
+		handle_uncaught(e);
 		return NULL;
 	}
 }

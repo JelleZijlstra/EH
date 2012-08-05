@@ -1,5 +1,9 @@
 #!/usr/bin/ehi
 class Foo {
+	const toString = func:
+		'@Foo'
+	end
+
 	try
 		for 5 count i
 			const foo = i

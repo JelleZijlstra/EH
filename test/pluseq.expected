@@ -1,0 +1,3 @@
+@int 0
+@int 1
+Uncaught exception of type NameError: Unknown member b in object of type GlobalObject: (global execution context)

@@ -178,3 +178,4 @@ privatescope.eh
 operator_arrow.eh
 lvalues.eh
 compound_assignment.eh
+pluseq.eh

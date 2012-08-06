@@ -21,6 +21,8 @@ EHParser *yyget_extra(void *scanner);
 #define ADD_NODE2(opcode, first, second) eh_addnode(opcode, ehretval_t::make(first), ehretval_t::make(second))
 #define ADD_NODE3(opcode, first, second, third) eh_addnode(opcode, ehretval_t::make(first), ehretval_t::make(second), ehretval_t::make(third))
 #define ADD_NODE4(opcode, first, second, third, fourth) eh_addnode(opcode, ehretval_t::make(first), ehretval_t::make(second), ehretval_t::make(third), ehretval_t::make(fourth))
+#define ADD_COMPOUND(opcode, lval, rval, result) ehretval_p lvalue = ehretval_t::make(lval); result = eh_addnode(T_SET, lvalue, ehretval_t::make(eh_addnode(opcode, lvalue, ehretval_t::make(rval))))
+
 %}
 %pure-parser
 %parse-param { void *scanner }
@@ -78,7 +80,7 @@ EHParser *yyget_extra(void *scanner);
 %left T_LOWPREC /* Used to prevent S/R conflicts */
 %right ':'
 %left ','
-%right '='
+%right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ
 %left T_AND T_OR T_XOR
 %nonassoc T_SHORTFUNCTION
 %left '|' '^' '&'
@@ -272,6 +274,28 @@ expression:
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
 	| expression '=' expression
 							{ $$ = ADD_NODE2(T_SET, $1, $3); }
+	| expression T_PLUSEQ expression
+							{ ADD_COMPOUND('+', $1, $3, $$); }
+	| expression T_MINEQ expression
+							{ ADD_COMPOUND('-', $1, $3, $$); }
+	| expression T_MULTIPLYEQ expression
+							{ ADD_COMPOUND('*', $1, $3, $$); }
+	| expression T_DIVIDEEQ expression
+							{ ADD_COMPOUND('/', $1, $3, $$); }
+	| expression T_MODULOEQ expression
+							{ ADD_COMPOUND('%', $1, $3, $$); }
+	| expression T_ANDEQ expression
+							{ ADD_COMPOUND(T_AND, $1, $3, $$); }
+	| expression T_OREQ expression
+							{ ADD_COMPOUND(T_OR, $1, $3, $$); }
+	| expression T_XOREQ expression
+							{ ADD_COMPOUND(T_XOR, $1, $3, $$); }
+	| expression T_BINANDEQ expression
+							{ ADD_COMPOUND('&', $1, $3, $$); }
+	| expression T_BINOREQ expression
+							{ ADD_COMPOUND('|', $1, $3, $$); }
+	| expression T_BINXOREQ expression
+							{ ADD_COMPOUND('^', $1, $3, $$); }
 	| expression T_ARROW expression
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| expression '.' bareword

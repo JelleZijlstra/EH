@@ -1,4 +1,4 @@
 Uncaught exception of type NameError: Unknown member foo in object of type GlobalObject: (global execution context)
 Uncaught exception of type NameError: Unknown member foo in object of type GlobalObject: (global execution context)
-Uncaught exception of type NameError: Unknown member foo in object of type GlobalObject: (global execution context)
+Uncaught exception of type NameError: Unknown member bar in object of type GlobalObject: (global execution context)
 Uncaught exception of type NameError: Unknown member foo in object of type GlobalObject: (global execution context)

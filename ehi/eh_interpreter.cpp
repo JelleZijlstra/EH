@@ -67,6 +67,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(ArgumentError, -1)
 	LIBCLASSENTRY(SyntaxError, -1)
 	LIBCLASSENTRY(GlobalObject, -1)
+	LIBCLASSENTRY(MiscellaneousError, -1)
 	{NULL, NULL, 0}
 };
 
@@ -446,8 +447,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				ret = this->make_range(new ehrange_t(operand1, operand2));
 				break;
 			case T_SET:
-				eh_op_set(node->get_opval()->paras, context);
-				break;
+				return eh_op_set(node->get_opval()->paras, context);
 			case T_MINMIN:
 				operand1 = eh_execute(node->get_opval()->paras[0], context);
 				switch(operand1->type()) {
@@ -954,16 +954,17 @@ ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p *internal_paras = paras[0]->get_opval()->paras;
-	ehretval_p base_var = eh_execute(internal_paras[0], context);
 	ehretval_p rvalue = eh_execute(paras[1], context);
 	switch(paras[0]->get_opval()->op) {
 		case T_ARROW: {
 			ehretval_p args[2];
 			args[0] = eh_execute(internal_paras[1], context);
 			args[1] = rvalue;
+			ehretval_p base_var = eh_execute(internal_paras[0], context);
 			return call_method(base_var, "operator_arrow_equals", this->make_tuple(new ehtuple_t(2, args)), context);
 		}
 		case '.': {
+			ehretval_p base_var = eh_execute(internal_paras[0], context);
 			// This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.
 			if(!base_var->is_object()) {
 				throw_TypeError("Cannot set member on primitive", base_var->type(), this);
@@ -974,6 +975,7 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 			return rvalue;
 		}
 		case '$': {
+			ehretval_p base_var = eh_execute(internal_paras[0], context);
 			const char *name = base_var->get_stringval();
 			ehmember_p member = context->get_objectval()->get_recursive(name, context);
 			if(member != NULL && member->isconst()) {
@@ -987,6 +989,9 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 			}
 			return rvalue;
 		}
+		default:
+			throw_MiscellaneousError("Invalid lvalue", this);
+			break;
 	}
 	assert(false);
 	return NULL;

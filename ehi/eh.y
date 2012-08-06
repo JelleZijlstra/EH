@@ -130,8 +130,6 @@ statement_list:
 statement:
 	T_SEPARATOR				{ $$ = ADD_NODE0(T_SEPARATOR); }
 	| expression T_SEPARATOR	{ $$ = $1; }
-	| lvalue_set '=' expression T_SEPARATOR
-							{ $$ = ADD_NODE2(T_SET, $1, $3); }
 	| T_SET lvalue_set T_PLUSPLUS T_SEPARATOR
 							{ $$ = ADD_NODE1(T_PLUSPLUS, $2); }
 	| T_SET lvalue_set T_MINMIN T_SEPARATOR
@@ -272,6 +270,8 @@ expression:
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
+	| expression '=' expression
+							{ $$ = ADD_NODE2(T_SET, $1, $3); }
 	| expression T_ARROW expression
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| expression '.' bareword

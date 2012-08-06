@@ -176,3 +176,4 @@ xnew.eh
 list.eh
 privatescope.eh
 operator_arrow.eh
+lvalues.eh

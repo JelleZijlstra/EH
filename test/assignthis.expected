@@ -17,7 +17,7 @@ operator_ne <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 useprivate <public,non-static,non-constant>: @function <user>: 
 ]
-Uncaught exception of type ConstError: Cannot set constant member this in object of type Function: func: -> <user code>
+Cannot set constant member this in object of type Function: func: -> <user code>
 @object <Foo> [
 bar <public,non-static,non-constant>: @function <user>: 
 baz <private,non-static,non-constant>: @int 42

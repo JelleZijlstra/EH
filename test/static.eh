@@ -1,4 +1,6 @@
 #!/usr/bin/ehi
+include '../lib/exception.eh'
+
 # Illustrate the static and const specifiers
 class Foo
 	static bar
@@ -22,6 +24,6 @@ echo foo.bar
 foo.bar = 3
 echo Foo.bar
 # Should both generate an error
-Foo.muh = 42
-foo.muh = 42
+rescue func: -> (Foo.muh = 42)
+rescue func: -> (foo.muh = 42)
 echo Foo.muh

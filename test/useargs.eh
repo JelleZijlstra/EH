@@ -7,5 +7,9 @@ end
 bar = 3
 echo foo bar
 echo bar
-echo foo () &bar
+try
+	echo foo () &bar
+catch
+	echo exception
+end
 echo bar

@@ -1,4 +1,6 @@
 #!/usr/bin/ehi
+include '../lib/exception.eh'
+
 # Illustrates the use of null variables and the printvar library function
 bar = null
 echo bar
@@ -8,7 +10,6 @@ echo foo -> 1
 baz = @string bar
 echo baz
 # Casting null to an int gives 0 and throws an error
-ban = @int bar
-echo ban
-printvar ban
+rescue func: -> (ban = @int bar)
+rescue func: -> (printvar ban)
 printvar foo

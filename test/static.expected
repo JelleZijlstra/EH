@@ -21,6 +21,6 @@ toString <public,non-static,constant>: @function <user>:
 ]
 2
 3
-Uncaught exception of type ConstError: Cannot set constant member muh in object of type Foo: @Foo 3   2
-Uncaught exception of type ConstError: Cannot set constant member muh in object of type Foo: @Foo 3   2
+Cannot set constant member muh in object of type Foo: @Foo 3   2
+Cannot set constant member muh in object of type Foo: @Foo 3   2
 2

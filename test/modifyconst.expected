@@ -17,7 +17,7 @@ operator_ne <public,non-static,non-constant>: @function <library>:
 quuz <private,non-static,constant>: @int 42
 toString <public,non-static,non-constant>: @function <library>: 
 ]
-Uncaught exception of type ConstError: Cannot set constant member baz in object of type Function: func: -> <user code>
+Cannot set constant member baz in object of type Function: func: -> <user code>
 @object <Foo> [
 baz <private,non-static,constant>: @int 42
 compare <public,non-static,non-constant>: @function <library>: 

@@ -1,4 +1,6 @@
 #!/usr/bin/ehi
+include '../lib/exception.eh'
+
 # Illustrate EH classes
 echo 2
 if 2
@@ -27,6 +29,6 @@ foo = bar.meh
 printvar foo
 bar.meh 42
 # Error: method is private
-(bar.mah) 'Calling a private method'
+rescue func: -> (bar.mah 'Calling a private method')
 bar.bar = 2
 echo bar.bar

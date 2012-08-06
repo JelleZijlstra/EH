@@ -1,5 +1,5 @@
 3
-Uncaught exception of type ConstError: Cannot set constant member foo in object of type GlobalObject: (global execution context)
+Cannot set constant member foo in object of type Function: func: -> <user code>
 3
 5
 @object <Bar> [

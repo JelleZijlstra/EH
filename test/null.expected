@@ -1,9 +1,8 @@
 
 
 
-Uncaught exception of type NameError: Unknown member toInt in object of type Null: 
-Uncaught exception of type NameError: Unknown member ban in object of type GlobalObject: (global execution context)
-Uncaught exception of type NameError: Unknown member ban in object of type GlobalObject: (global execution context)
+Unknown member toInt in object of type Null: 
+Unknown member ban in object of type Function: func: -> <user code>
 @array [
 0 => @string 'foo'
 1 => null

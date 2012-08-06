@@ -1,13 +1,13 @@
 Test 1
-Uncaught exception of type ArgumentError: Argument out of range (method String.operator->): 2010
+Argument out of range (method String.operator->): 2010
 Test 2
-Uncaught exception of type NameError: Unknown member data in object of type GlobalObject: (global execution context)
-Uncaught exception of type NameError: Unknown member data in object of type GlobalObject: (global execution context)
+Unknown member data in object of type Function: func: -> <user code>
+Unknown member data in object of type Function: func: -> <user code>
 Test 3
-Uncaught exception of type NameError: Unknown member data in object of type GlobalObject: (global execution context)
+Unknown member data in object of type Function: func: -> <user code>
 Test 4
-Uncaught exception of type NameError: Unknown member data in object of type GlobalObject: (global execution context)
+Unknown member data in object of type Function: func: -> <user code>
 Test 5
-Uncaught exception of type NameError: Unknown member data in object of type GlobalObject: (global execution context)
+Unknown member data in object of type Function: func: -> <user code>
 Test 6
-Uncaught exception of type ArgumentError: Argument out of range (method String.operator->): 2010
+Uncaught exception of type SyntaxError: syntax error, unexpected T_FOR at line 24

@@ -107,15 +107,15 @@ global_list:
 	/* NULL */				{ }
 	| statement				{
 								EHParser *parser = yyget_extra(scanner);
+								EHI *ehi = parser->_parent;
 								ehretval_p statement = ehretval_t::make($1);
-								ehretval_p ret;
-								try {
-									ret = parser->_parent->eh_execute(statement, parser->_parent->global_object);
-								} catch(eh_exception &e) {
-									parser->_parent->handle_uncaught(e);
+								ehretval_p ret = parser->_parent->eh_execute(statement, ehi->global_object);
+								if(parser->interactivity() != end_is_end_e) {
+									// TODO: make this use printvar instead
+									std::cout << "=> " << ehi->to_string(ret, ehi->global_object)->get_stringval() << std::endl;
 								}
 								// flush stdout after executing each statement
-								fflush(stdout);
+								//fflush(stdout);
 								if(parser->_parent->returning) {
 									return (ret->type() == int_e) ? ret->get_intval() : 0;
 								}

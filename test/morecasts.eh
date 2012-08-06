@@ -1,8 +1,10 @@
 #!/usr/bin/ehi
+include '../lib/exception.eh'
+
 # More crazy casts
 
 printvar @string 1..3
 printvar @bool (File.new ())
-printvar @bool func: n; ret n; end
-printvar @range 3.14
+rescue func: -> (printvar @bool func: n -> n)
+rescue func: -> (printvar @range 3.14)
 printvar @array null

@@ -2,13 +2,13 @@
 0 => @int 1
 1 => @int 42
 ]
-Uncaught exception of type NameError: Unknown member toArray in object of type String: string
-Uncaught exception of type NameError: Unknown member toArray in object of type Integer: 42
-Uncaught exception of type NameError: Unknown member toArray in object of type Bool: true
+Unknown member toArray in object of type String: string
+Unknown member toArray in object of type Integer: 42
+Unknown member toArray in object of type Bool: true
 @range [
 @int 1
 @int 42
 ]
-Uncaught exception of type NameError: Unknown member toRange in object of type Integer: 42
-Uncaught exception of type NameError: Unknown member toBool in object of type Array: [ 0 => 1, ]
-Uncaught exception of type NameError: Unknown member toBool in object of type Array: [ ]
+Unknown member toRange in object of type Integer: 42
+Unknown member toBool in object of type Array: [ 0 => 1, ]
+Unknown member toBool in object of type Array: [ ]

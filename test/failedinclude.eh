@@ -1,4 +1,6 @@
 #!/usr/bin/ehi
+include '../lib/exception.eh'
+
 # Does stuff after a failed include call get printed?
-include 'thisfiledoesnotexist'
+rescue func: -> (include 'thisfiledoesnotexist')
 echo 42

@@ -1,4 +1,6 @@
 #!/usr/bin/ehi
+include '../lib/exception.eh'
+
 # Test whether you can modify const properties.
 class Foo
 	private const baz = 42
@@ -10,5 +12,5 @@ class Foo
 end
 f = Foo.new ()
 printvar f
-f.foo ()
+rescue func: -> (f.foo())
 printvar f

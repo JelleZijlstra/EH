@@ -94,7 +94,7 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc '$' '~' '!' T_NEGATIVE T_COUNT
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
-%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS
+%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF
 
 %type<ehNode> statement expression statement_list bareword parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr global_list string shortfunc bareword_or_string para_expr
 %%
@@ -137,10 +137,6 @@ statement:
 	| T_SET lvalue_set T_MINMIN T_SEPARATOR
 							{ $$ = ADD_NODE1(T_MINMIN, $2); }
 		/* Using braces */
-	| T_IF simple_expr '{' statement_list '}' T_SEPARATOR
-							{ $$ = ADD_NODE2(T_IF, $2, $4); }
-	| T_IF simple_expr '{' statement_list '}' T_ELSE '{' statement_list '}' T_SEPARATOR
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $8); }
 	| T_WHILE simple_expr '{' statement_list '}' T_SEPARATOR
 							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR simple_expr '{' statement_list '}' T_SEPARATOR
@@ -160,10 +156,6 @@ statement:
 	| T_CLASS bareword '{' statement_list '}' T_SEPARATOR
 							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 		/* Using T_END */
-	| T_IF simple_expr T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE2(T_IF, $2, $4); }
-	| T_IF simple_expr T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $7); }
 	| T_WHILE simple_expr T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR simple_expr T_SEPARATOR statement_list T_END T_SEPARATOR
@@ -183,10 +175,6 @@ statement:
 	| T_CLASS bareword T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 		/* Endif and endfor */
-	| T_IF simple_expr T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
-							{ $$ = ADD_NODE2(T_IF, $2, $4); }
-	| T_IF simple_expr T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_ENDIF T_SEPARATOR
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $7); }
 	| T_WHILE simple_expr T_SEPARATOR statement_list T_ENDWHILE T_SEPARATOR
 							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR simple_expr T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
@@ -370,6 +358,18 @@ expression:
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
+	| T_IF simple_expr '{' statement_list '}'
+							{ $$ = ADD_NODE2(T_IF, $2, $4); }
+	| T_IF simple_expr '{' statement_list '}' T_ELSE '{' statement_list '}'
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $8); }
+	| T_IF simple_expr T_SEPARATOR statement_list T_ENDIF
+							{ $$ = ADD_NODE2(T_IF, $2, $4); }
+	| T_IF simple_expr T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_ENDIF
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $7); }
+	| T_IF simple_expr T_SEPARATOR statement_list T_END
+							{ $$ = ADD_NODE2(T_IF, $2, $4); }
+	| T_IF simple_expr T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_END
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $7); }
 	;
 
 simple_expr:

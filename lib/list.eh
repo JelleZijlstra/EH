@@ -121,6 +121,11 @@ class List
 	end
 
 	const append = func: rhs -> ((this.reverse()).rev_append rhs)
+
+	const countPredicate = func: f -> (this.reduce Nil, func: base, val -> given (f val)
+		case true; Cons val, base
+		case false; base
+	end)
 end
 
 # Constify it
@@ -128,3 +133,17 @@ const List = List
 
 const Nil = List.empty()
 const Cons = List.new
+
+# Conversion methods
+Array.toList = func:
+	self.reduce (func: out, val -> Cons val, out), Nil
+end
+
+Tuple.toList = func:
+	out = Nil
+	self.each (func: val
+		out = Cons val, out
+	end)
+	# It gets returned in reversed order...
+	out
+end

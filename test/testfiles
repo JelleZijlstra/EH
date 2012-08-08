@@ -179,3 +179,4 @@ operator_arrow.eh
 lvalues.eh
 compound_assignment.eh
 pluseq.eh
+lib_eval.eh

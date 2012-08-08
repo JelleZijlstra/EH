@@ -364,12 +364,12 @@ expression:
 							{ $$ = ADD_NODE3(T_IF, $2, $4, $8); }
 	| T_IF simple_expr T_SEPARATOR statement_list T_ENDIF
 							{ $$ = ADD_NODE2(T_IF, $2, $4); }
-	| T_IF simple_expr T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_ENDIF
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $7); }
+	| T_IF simple_expr T_SEPARATOR statement_list T_ELSE statement_list T_ENDIF
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $6); }
 	| T_IF simple_expr T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_IF, $2, $4); }
-	| T_IF simple_expr T_SEPARATOR statement_list T_ELSE T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $7); }
+	| T_IF simple_expr T_SEPARATOR statement_list T_ELSE statement_list T_END
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $6); }
 	;
 
 simple_expr:

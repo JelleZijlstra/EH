@@ -277,7 +277,7 @@ EHLIBFUNC(include) {
 		ehi->returning = false;
 		throw_ArgumentError("Unable to open file", "include", args, ehi);
 	}
-	EHParser parser(end_is_end_e, ehi);
+	EHParser parser(end_is_end_e, ehi, context);
 	ehretval_p parse_return = parser.parse_file(infile);
 	// we're no longer returning
 	ehi->returning = false;
@@ -318,7 +318,7 @@ EHLIBFUNC(log) {
 
 EHLIBFUNC(eval) {
 	ehretval_p arg = ehi->to_string(args, context);
-	return ehi->parse_string(arg->get_stringval());
+	return ehi->parse_string(arg->get_stringval(), context);
 }
 
 EHLIBFUNC(getinput) {

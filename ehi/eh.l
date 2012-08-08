@@ -181,19 +181,19 @@ int yywrap(yyscan_t scanner) {
 void yyerror(void *scanner, const char *s) {
 	// give up on line numbers for now
 	//struct yyguts_t *yyg = (struct yyguts_t *)scanner->scanner;
-	EHI *ehi = yyget_extra(scanner)->_parent;
+	EHI *ehi = yyget_extra(scanner)->parent;
 	throw_SyntaxError(s, yyget_lineno((yyscan_t)scanner), ehi);
 	std::cout << yyget_lineno((yyscan_t)scanner) << std::endl;
 	eh_error(s, eparsing_e);
 }
 
 ehretval_p EHParser::parse_file(FILE *infile) {
-	buffer = yy_create_buffer(infile, YY_BUF_SIZE, _scanner);
-	yy_switch_to_buffer(buffer, _scanner);
-	return ehretval_t::make_int(yyparse(_scanner));
+	buffer = yy_create_buffer(infile, YY_BUF_SIZE, scanner);
+	yy_switch_to_buffer(buffer, scanner);
+	return ehretval_t::make_int(yyparse(scanner));
 }
 
 ehretval_p EHParser::parse_string(const char *cmd) {
-	yy_scan_string(cmd, _scanner);
-	return ehretval_t::make_int(yyparse(_scanner));
+	yy_scan_string(cmd, scanner);
+	return ehretval_t::make_int(yyparse(scanner));
 }

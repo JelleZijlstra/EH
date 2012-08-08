@@ -25,7 +25,7 @@ void *gc_thread(void *arg);
 class EHI {
 private:
 	class EHParser *eval_parser;
-	void init_eval_parser();
+	void init_eval_parser(ehretval_p context);
 	// number of loops we're currently in
 	int inloop;
 	int breaking;
@@ -91,8 +91,8 @@ public:
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
 	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
-	ehretval_p parse_string(const char *cmd);
-	ehretval_p parse_file(const char *name);
+	ehretval_p parse_string(const char *cmd, ehretval_p context);
+	ehretval_p parse_file(const char *name, ehretval_p context);
 	EHI();
 	void eh_exit(void);
 	void handle_uncaught(eh_exception &e);
@@ -209,28 +209,25 @@ public:
 		return _interactivity;
 	}
 	char *getline() {
-		return _parent->eh_getline(this);
+		return parent->eh_getline(this);
 	}
 
 	ehretval_p parse_file(FILE *infile);
 	ehretval_p parse_string(const char *cmd);
 
-	EHParser(interactivity_enum inter, EHI *parent) : _parent(parent), _scanner(), _interactivity(inter), buffer() {
-		yylex_init_extra(this, &_scanner);
+	EHParser(interactivity_enum _inter, EHI *_parent, ehretval_p _context) : parent(_parent), context(_context), scanner(), _interactivity(_inter), buffer() {
+		yylex_init_extra(this, &scanner);
 	}
 	~EHParser(void) {
-		yylex_destroy(_scanner);
+		yylex_destroy(scanner);
 	}
-	EHI *_parent;
+	EHI *parent;
+	ehretval_p context;
 private:
-	EHParser(const EHParser&) : _parent(), _scanner(), _interactivity(), buffer() {
-		throw "Not allowed";
-	}
-	EHParser operator=(const EHParser&) {
-		throw "Not allowed";
-	}
+	EHParser(const EHParser&);
+	EHParser operator=(const EHParser&);
 
-	void *_scanner;
+	void *scanner;
 	interactivity_enum _interactivity;
 	struct yy_buffer_state *buffer;
 

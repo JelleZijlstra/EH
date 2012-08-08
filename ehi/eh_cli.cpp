@@ -28,10 +28,10 @@ int main(int argc, char **argv) {
 		} else if(!strcmp(argv[1], "-r")) {
 			if(argc != 3)
 				eh_usage(argv[0]);
-			ret = interpreter.parse_string(argv[2]);
+			ret = interpreter.parse_string(argv[2], interpreter.global_object);
 		} else {
 			interpreter.eh_setarg(argc, argv);
-			ret = interpreter.parse_file(argv[1]);
+			ret = interpreter.parse_file(argv[1], interpreter.global_object);
 		}
 		//TODO: let scripts determine exit status
 		return 0;

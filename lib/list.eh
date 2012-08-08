@@ -126,6 +126,11 @@ class List
 		case true; Cons val, base
 		case false; base
 	end)
+
+	const join = func: glue -> (this.reduce null, func: val, base -> given base
+		case null; val.toString()
+		default; (val.toString()) + glue + base
+	end)
 end
 
 # Constify it

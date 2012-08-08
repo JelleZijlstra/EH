@@ -181,3 +181,4 @@ compound_assignment.eh
 pluseq.eh
 lib_eval.eh
 ifexpr.eh
+tupleassign.eh

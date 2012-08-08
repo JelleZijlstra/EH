@@ -826,19 +826,19 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 	int nargs = 1;
 	for(ehretval_p tmp = node;
 		tmp->type() == op_e && tmp->get_opval()->op == ',' && tmp->get_opval()->nparas != 0;
-		tmp = tmp->get_opval()->paras[0], nargs++
+		tmp = tmp->get_opval()->paras[1], nargs++
 	) {}
 	ehretval_a new_args(nargs);
 	
 	ehretval_p arg_node = node;
-	for(int i = nargs - 1; i >= 0; i--) {
+	for(int i = 0; i < nargs; i++) {
 		opnode_t *op = arg_node->get_opval();
 		if(op->op == ',') {
-			new_args[i] = eh_execute(op->paras[1], context);
-			arg_node = arg_node->get_opval()->paras[0];
+			new_args[i] = eh_execute(op->paras[0], context);
+			arg_node = arg_node->get_opval()->paras[1];
 		} else {
 			new_args[i] = eh_execute(arg_node, context);
-			assert(i == 0);
+			assert(i == nargs - 1);
 			break;
 		}
 	}
@@ -953,9 +953,12 @@ ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 	}
 }
 ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
-	ehretval_p *internal_paras = paras[0]->get_opval()->paras;
 	ehretval_p rvalue = eh_execute(paras[1], context);
-	switch(paras[0]->get_opval()->op) {
+	return set(paras[0], rvalue, context);
+}
+ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
+	ehretval_p *internal_paras = lvalue->get_opval()->paras;
+	switch(lvalue->get_opval()->op) {
 		case T_ARROW: {
 			ehretval_p args[2];
 			args[0] = eh_execute(internal_paras[1], context);
@@ -986,6 +989,21 @@ ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 				this->set_property(context, name, rvalue, context);
 			} else {
 				member->value = rvalue;
+			}
+			return rvalue;
+		}
+		case ',': {
+			ehretval_p arg_node = lvalue;
+			for(int i = 0; true; i++) {
+				opnode_t *op = arg_node->get_opval();
+				ehretval_p internal_rvalue = call_method(rvalue, "operator_arrow", ehretval_t::make_int(i), context);
+				if(op->op == ',') {
+					set(op->paras[0], internal_rvalue, context);
+					arg_node = arg_node->get_opval()->paras[1];
+				} else {
+					set(arg_node, internal_rvalue, context);
+					break;
+				}
 			}
 			return rvalue;
 		}

@@ -55,6 +55,7 @@ private:
 	ehretval_p eh_op_colon(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_dollar(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_set(ehretval_p *paras, ehcontext_t context);
+	ehretval_p set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context);
 	ehretval_p eh_op_dot(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_try(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_catch(ehretval_p *paras, ehcontext_t context);

@@ -79,8 +79,8 @@ EHParser *yyget_extra(void *scanner);
 %token <sValue> T_STRING
 %left T_LOWPREC /* Used to prevent S/R conflicts */
 %right ':'
-%left ','
 %right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ
+%right ','
 %left T_AND T_OR T_XOR
 %nonassoc T_SHORTFUNCTION
 %left '|' '^' '&'

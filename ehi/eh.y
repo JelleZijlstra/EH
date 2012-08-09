@@ -92,7 +92,7 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF
 
-%type<ehNode> statement expression statement_list bareword parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr global_list string shortfunc bareword_or_string para_expr
+%type<ehNode> statement expression statement_list bareword parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i parg attributelist attributelist_inner caselist acase command paralist para simple_expr global_list string shortfunc bareword_or_string para_expr
 %%
 program:
 	global_list				{ 	// Don't do anything. Destructors below take 
@@ -333,9 +333,9 @@ expression:
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS '{' statement_list '}'
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_GIVEN simple_expr '{' exprcaselist '}'
+	| T_GIVEN simple_expr '{' caselist '}'
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_GIVEN simple_expr T_SEPARATOR exprcaselist T_END
+	| T_GIVEN simple_expr T_SEPARATOR caselist T_END
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
@@ -419,9 +419,9 @@ simple_expr:
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS '{' statement_list '}'
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_GIVEN simple_expr '{' exprcaselist '}'
+	| T_GIVEN simple_expr '{' caselist '}'
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_GIVEN simple_expr T_SEPARATOR exprcaselist T_END
+	| T_GIVEN simple_expr T_SEPARATOR caselist T_END
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
@@ -489,9 +489,9 @@ para_expr:
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS '{' statement_list '}'
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_GIVEN para_expr '{' exprcaselist '}'
+	| T_GIVEN para_expr '{' caselist '}'
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_GIVEN para_expr T_SEPARATOR exprcaselist T_END
+	| T_GIVEN para_expr T_SEPARATOR caselist T_END
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_DOLLARPAREN command ')'
 							{ $$ = $2; }
@@ -600,18 +600,6 @@ acase:
 	T_CASE expression T_SEPARATOR statement_list
 							{ $$ = ADD_NODE2(T_CASE, $2, $4); }
 	| T_DEFAULT T_SEPARATOR statement_list
-							{ $$ = ADD_NODE1(T_CASE, $3); }
-	;
-
-exprcaselist:
-	exprcase exprcaselist	{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
-	;
-
-exprcase:
-	T_CASE expression T_SEPARATOR expression T_SEPARATOR
-							{ $$ = ADD_NODE2(T_CASE, $2, $4); }
-	| T_DEFAULT T_SEPARATOR expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_CASE, $3); }
 	;
 

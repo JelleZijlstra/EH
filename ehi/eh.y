@@ -68,16 +68,13 @@ EHParser *yyget_extra(void *scanner);
 %token T_TRY
 %token T_CATCH
 %token T_FINALLY
-%token T_LVALUE_GET T_LVALUE_SET T_ARROW_SET T_DOT_SET
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
-%token T_EXPRESSION
 %token T_DOUBLEARROW
 %token T_COMMAND T_SHORTPARA T_LONGPARA T_REDIRECT
 %token T_SHORTFUNCTION
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
-%left T_LOWPREC /* Used to prevent S/R conflicts */
 %right ':'
 %right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ
 %right ','
@@ -226,10 +223,6 @@ statement:
 	| T_TRY T_SEPARATOR statement_list T_FINALLY T_SEPARATOR statement_list T_END T_SEPARATOR
 	            { $$ = ADD_NODE2(T_FINALLY, $3, $6); }
 	| command T_SEPARATOR	{ $$ = $1; }
-	| error T_SEPARATOR		{
-								yyerrok;
-								$$ = ADD_NODE0(T_SEPARATOR);
-							}
 	;
 
 expression:

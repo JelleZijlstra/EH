@@ -21,7 +21,7 @@ EHParser *yyget_extra(void *scanner);
 #define ADD_NODE2(opcode, first, second) eh_addnode(opcode, ehretval_t::make(first), ehretval_t::make(second))
 #define ADD_NODE3(opcode, first, second, third) eh_addnode(opcode, ehretval_t::make(first), ehretval_t::make(second), ehretval_t::make(third))
 #define ADD_NODE4(opcode, first, second, third, fourth) eh_addnode(opcode, ehretval_t::make(first), ehretval_t::make(second), ehretval_t::make(third), ehretval_t::make(fourth))
-#define ADD_COMPOUND(opcode, lval, rval, result) ehretval_p lvalue = ehretval_t::make(lval); result = eh_addnode(T_SET, lvalue, ehretval_t::make(eh_addnode(opcode, lvalue, ehretval_t::make(rval))))
+#define ADD_COMPOUND(opcode, lval, rval, result) ehretval_p lvalue = ehretval_t::make(lval); result = eh_addnode('=', lvalue, ehretval_t::make(eh_addnode(opcode, lvalue, ehretval_t::make(rval))))
 
 %}
 %pure-parser
@@ -59,7 +59,6 @@ EHParser *yyget_extra(void *scanner);
 %token T_ENDFUNC
 %token T_RET
 %token T_SEPARATOR
-%token T_SET
 %token T_NULL
 %token T_CLASS
 %token T_ENDCLASS
@@ -141,7 +140,7 @@ statement:
 	| T_FOR simple_expr T_AS bareword T_DOUBLEARROW bareword '{' statement_list '}' T_SEPARATOR
 							{ $$ = ADD_NODE4(T_AS, $2, $4, $6, $8); }
 	| T_FUNC bareword ':' parglist '{' statement_list '}' T_SEPARATOR
-							{ $$ = ADD_NODE2(T_SET,
+							{ $$ = ADD_NODE2('=',
 								ADD_NODE1('$', $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH simple_expr '{' caselist '}' T_SEPARATOR
@@ -160,7 +159,7 @@ statement:
 	| T_FOR simple_expr T_AS bareword T_DOUBLEARROW bareword T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE4(T_AS, $2, $4, $6, $8); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE2(T_SET, 
+							{ $$ = ADD_NODE2('=', 
 								ADD_NODE1('$', $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH simple_expr T_SEPARATOR caselist T_END T_SEPARATOR
@@ -175,11 +174,11 @@ statement:
 	| T_FOR simple_expr T_COUNT bareword T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
 							{ $$ = ADD_NODE3(T_FOR, $2, $4, $6); }
 	| T_FUNC bareword ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
-							{ $$ = ADD_NODE2(T_SET,
+							{ $$ = ADD_NODE2('=',
 								ADD_NODE1('$', $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_FUNC bareword ':' parglist T_ARROW expression T_SEPARATOR %prec T_SHORTFUNCTION
-							{ $$ = ADD_NODE2(T_SET,
+							{ $$ = ADD_NODE2('=',
 								ADD_NODE1('$', $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH simple_expr T_SEPARATOR caselist T_ENDSWITCH T_SEPARATOR
@@ -237,14 +236,14 @@ expression:
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
 	| expression T_PLUSPLUS	{ $$ = ADD_NODE1(T_PLUSPLUS, $1); 
 								ehretval_p lvalue = ehretval_t::make($1);
-								$$ = eh_addnode(T_SET, lvalue, ehretval_t::make(eh_addnode('+', lvalue, ehretval_t::make_int(1))));
+								$$ = eh_addnode('=', lvalue, ehretval_t::make(eh_addnode('+', lvalue, ehretval_t::make_int(1))));
 							}
 	| expression T_MINMIN	{ $$ = ADD_NODE1(T_PLUSPLUS, $1); 
 								ehretval_p lvalue = ehretval_t::make($1);
-								$$ = eh_addnode(T_SET, lvalue, ehretval_t::make(eh_addnode('-', lvalue, ehretval_t::make_int(1))));
+								$$ = eh_addnode('=', lvalue, ehretval_t::make(eh_addnode('-', lvalue, ehretval_t::make_int(1))));
 							}
 	| expression '=' expression
-							{ $$ = ADD_NODE2(T_SET, $1, $3); }
+							{ $$ = ADD_NODE2('=', $1, $3); }
 	| expression T_PLUSEQ expression
 							{ ADD_COMPOUND('+', $1, $3, $$); }
 	| expression T_MINEQ expression

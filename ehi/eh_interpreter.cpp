@@ -446,7 +446,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				}
 				ret = this->make_range(new ehrange_t(operand1, operand2));
 				break;
-			case T_SET:
+			case '=':
 				return eh_op_set(node->get_opval()->paras, context);
 			case '$': // variable dereference
 				ret = eh_op_dollar(node->get_opval()->paras[0], context);

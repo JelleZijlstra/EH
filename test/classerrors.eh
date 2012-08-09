@@ -13,7 +13,7 @@ class Foo {
 	end
 	public mah = 0
 	for 10 count i
-		set mah++
+		mah++
 	end
 	echo mah
 }

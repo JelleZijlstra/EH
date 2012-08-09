@@ -2,7 +2,7 @@
 foo = class {
 	private a = 3
 	public b: {
-		set a++
+		a++
 		ret a
 	}
 }

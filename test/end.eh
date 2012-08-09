@@ -18,7 +18,7 @@ n = given 2
 		42
 end
 while n
-	set n--
+	n--
 end
 for 2 count i
 	echo i

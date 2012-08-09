@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-// CS50 Problem Set 1 greedy
+// CS50 Problem Set 1: greedy
 if argc == 2
 	money = @int argv->1
 else
@@ -16,19 +16,19 @@ coins = 0
 
 // get quarters
 while money > 25
-	set coins++
+	coins++
 	money = money - 25
 endwhile
 
 // dimes
 while money > 10
-	set coins++
+	coins++
 	money = money - 10
 endwhile
 
 // nickels
 while money > 5
-	set coins++
+	coins++
 	money = money - 5
 endwhile
 

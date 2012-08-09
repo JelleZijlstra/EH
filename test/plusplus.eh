@@ -3,18 +3,18 @@
 foo = 2
 # Expect 2
 echo foo
-set foo++
+foo++
 # Expect 3
 echo foo
-set foo--
+foo--
 # Expect 2
 echo foo
 bar = [ 1, 2, 3 ]
 # Expect 2
 echo bar->1
-set bar->1--
+bar->1--
 # Expect 1
 echo bar->1
-set bar->1++
+bar->1++
 # Expect 2
 echo bar->1

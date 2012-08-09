@@ -96,7 +96,7 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF
 
-%type<ehNode> statement expression statement_list bareword parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i lvalue_set parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr global_list string shortfunc bareword_or_string para_expr
+%type<ehNode> statement expression statement_list bareword parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i parg attributelist attributelist_inner caselist acase exprcaselist exprcase command paralist para simple_expr global_list string shortfunc bareword_or_string para_expr
 %%
 program:
 	global_list				{ 	// Don't do anything. Destructors below take 
@@ -132,10 +132,6 @@ statement_list:
 statement:
 	T_SEPARATOR				{ $$ = ADD_NODE0(T_SEPARATOR); }
 	| expression T_SEPARATOR	{ $$ = $1; }
-	| T_SET lvalue_set T_PLUSPLUS T_SEPARATOR
-							{ $$ = ADD_NODE1(T_PLUSPLUS, $2); }
-	| T_SET lvalue_set T_MINMIN T_SEPARATOR
-							{ $$ = ADD_NODE1(T_MINMIN, $2); }
 		/* Using braces */
 	| T_WHILE simple_expr '{' statement_list '}' T_SEPARATOR
 							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
@@ -236,20 +232,6 @@ statement:
 							}
 	;
 
-lvalue_set:
-	bareword				{ $$ = ADD_NODE1('$', $1); }
-	| expression T_ARROW expression
-							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
-	| expression '.' bareword
-							{ $$ = ADD_NODE2('.', $1, $3); }
-/*	| lvalue_list bareword	{ $$ = ADD_NODE2(',', $1, $2); } */
-	;
-
-/* lvalue_list:
-//	lvalue_list bareword ','
-//							{ $$ = ADD_NODE2(',', $1, $2); }
-//	|						{ $$ = ADD_NODE0(','); } */
-
 expression:
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_NULL				{ $$ = ADD_NODE0(T_LITERAL); }
@@ -260,6 +242,14 @@ expression:
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
+	| expression T_PLUSPLUS	{ $$ = ADD_NODE1(T_PLUSPLUS, $1); 
+								ehretval_p lvalue = ehretval_t::make($1);
+								$$ = eh_addnode(T_SET, lvalue, ehretval_t::make(eh_addnode('+', lvalue, ehretval_t::make_int(1))));
+							}
+	| expression T_MINMIN	{ $$ = ADD_NODE1(T_PLUSPLUS, $1); 
+								ehretval_p lvalue = ehretval_t::make($1);
+								$$ = eh_addnode(T_SET, lvalue, ehretval_t::make(eh_addnode('-', lvalue, ehretval_t::make_int(1))));
+							}
 	| expression '=' expression
 							{ $$ = ADD_NODE2(T_SET, $1, $3); }
 	| expression T_PLUSEQ expression

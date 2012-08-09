@@ -448,26 +448,6 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				break;
 			case T_SET:
 				return eh_op_set(node->get_opval()->paras, context);
-			case T_MINMIN:
-				operand1 = eh_execute(node->get_opval()->paras[0], context);
-				switch(operand1->type()) {
-					case int_e:
-						operand1->intval--;
-						break;
-					default:
-						throw_TypeError("-- operator only applies to Integer objects", operand1->type(), this);
-				}
-				break;
-			case T_PLUSPLUS:
-				operand1 = eh_execute(node->get_opval()->paras[0], context);
-				switch(operand1->type()) {
-					case int_e:
-						operand1->intval++;
-						break;
-					default:
-						throw_TypeError("++ operator only applies to Integer objects", operand1->type(), this);
-				}
-				break;
 			case '$': // variable dereference
 				ret = eh_op_dollar(node->get_opval()->paras[0], context);
 				break;

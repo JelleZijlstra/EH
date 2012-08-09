@@ -6,6 +6,6 @@ in = 10
 total = 1
 for in count i
 	total = total * in
-	set in--
+	in--
 end
 echo total

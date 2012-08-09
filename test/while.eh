@@ -2,6 +2,6 @@
 # Basic while loop functionality
 ctr = 0
 while ctr < 5
-	set ctr++
+	ctr++
 	echo ctr
 endwhile

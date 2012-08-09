@@ -20,14 +20,10 @@ class List
 	const head = func: -> self->0
 	const tail = func: -> self->1
 
-	const operator_arrow = func: n
-		if n == 0
-			ret head()
-		end
-		if n == 1
-			ret tail()
-		end
-		throw ArgumentError.new "Argument must be 0 or 1", "List.operator->", n
+	const operator_arrow = func: n -> given n
+		case 0; head()
+		case 1; tail()
+		default; throw ArgumentError.new "Argument must be 0 or 1", "List.operator->", n
 	end
 
 	const isEmpty = func: -> (self == null)

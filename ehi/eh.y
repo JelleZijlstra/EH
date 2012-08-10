@@ -234,13 +234,13 @@ expression:
 	| '(' expression ')'	{ $$ = $2; }
 	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
-	| expression T_PLUSPLUS	{ $$ = ADD_NODE1(T_PLUSPLUS, $1); 
+	| expression T_PLUSPLUS	{
 								ehretval_p lvalue = ehretval_t::make($1);
-								$$ = eh_addnode('=', lvalue, ehretval_t::make(eh_addnode('+', lvalue, ehretval_t::make_int(1))));
+								$$ = eh_addnode('=', lvalue, ehretval_t::make(eh_addnode('+', lvalue, ehretval_t::make(1))));
 							}
-	| expression T_MINMIN	{ $$ = ADD_NODE1(T_PLUSPLUS, $1); 
+	| expression T_MINMIN	{
 								ehretval_p lvalue = ehretval_t::make($1);
-								$$ = eh_addnode('=', lvalue, ehretval_t::make(eh_addnode('-', lvalue, ehretval_t::make_int(1))));
+								$$ = eh_addnode('=', lvalue, ehretval_t::make(eh_addnode('-', lvalue, ehretval_t::make(1))));
 							}
 	| expression '=' expression
 							{ $$ = ADD_NODE2('=', $1, $3); }

@@ -237,7 +237,7 @@ EXTERN_EHLC(Function)
 class Exception : public LibraryBaseClass {
 public:
 	const char *msg;
-	Exception(const char *_msg) : msg(strdup(_msg)) {}
+	Exception(const char *_msg) : msg(_msg) {}
 	virtual ~Exception() {
 		delete[] msg;
 	}

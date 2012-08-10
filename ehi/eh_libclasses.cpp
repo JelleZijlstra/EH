@@ -1021,7 +1021,7 @@ END_EHLC()
 
 EH_METHOD(Exception, initialize) {
 	ASSERT_TYPE(args, string_e, "Exception.initialize");
-	return ehretval_t::make_resource(new Exception(args->get_stringval()));
+	return ehretval_t::make_resource(new Exception(strdup(args->get_stringval())));
 }
 EH_METHOD(Exception, toString) {
 	ASSERT_NULL_AND_TYPE(resource_e, "Exception.toString");

@@ -438,6 +438,7 @@ argc <public,non-static,non-constant>: @int 1
 argv <public,non-static,non-constant>: @array [
 0 => @string 'printglobal.eh'
 ]
+collectGarbage <public,non-static,non-constant>: @function <library>: 
 compare <public,non-static,non-constant>: @function <library>: 
 echo <public,non-static,non-constant>: @function <library>: 
 eval <public,non-static,non-constant>: @function <library>: 

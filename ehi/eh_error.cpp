@@ -292,7 +292,8 @@ EH_METHOD(SyntaxError, initialize) {
 	ehi->set_property(context, "line", line, ehi->global_object);
 
 	std::ostringstream exception_msg;
-	exception_msg << message->get_stringval() << " at line " << line->get_intval();
+	exception_msg << message->get_stringval() << " at line ";
+	exception_msg << line->get_intval();
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));	
 }
 EH_METHOD(SyntaxError, toString) {

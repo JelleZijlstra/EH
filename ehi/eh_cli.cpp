@@ -26,9 +26,15 @@ int main(int argc, char **argv) {
 			}
 			ret = ehretval_t::make_int(interpreter.eh_interactive());
 		} else if(!strcmp(argv[1], "-r")) {
-			if(argc != 3)
+			if(argc != 3) {
 				eh_usage(argv[0]);
-			ret = interpreter.parse_string(argv[2], interpreter.global_object);
+			}
+			try {
+				ret = interpreter.parse_string(argv[2], interpreter.global_object);
+			} catch(eh_exception &e) {
+				interpreter.handle_uncaught(e);
+				return -1;
+			}
 		} else {
 			interpreter.eh_setarg(argc, argv);
 			ret = interpreter.parse_file(argv[1], interpreter.global_object);

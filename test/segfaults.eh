@@ -21,4 +21,6 @@ arr = []
 rescue func: -> (arr->(data->5) = 5)
 
 echo 'Test 6'
-rescue func: -> (for 'data'->2010 as a => b {})
+rescue func:
+	for 'data'->2010 as a => b {}
+end

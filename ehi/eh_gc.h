@@ -395,7 +395,7 @@ private:
 	void do_mark(pointer root) {
 		int bit = this->current_bit.next();
 		// ignore already marked objects
-		if((~root)->get_gc_bit(bit)) {
+		if(root == NULL || (~root)->get_gc_bit(bit)) {
 			return;
 		}
 		(~root)->set_gc_bit(bit);

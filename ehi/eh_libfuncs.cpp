@@ -344,3 +344,7 @@ EHLIBFUNC(put) {
 	std::cout << str->get_stringval();
 	return NULL;
 }
+EHLIBFUNC(collectGarbage) {
+	ehi->gc.do_collect(ehi->global_object);
+	return NULL;
+}

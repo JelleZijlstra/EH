@@ -35,6 +35,7 @@ ehlf_listentry_t libfuncs[] = {
 	LIBFUNCENTRY(throw)
 	LIBFUNCENTRY(echo)
 	LIBFUNCENTRY(put)
+	LIBFUNCENTRY(collectGarbage)
 	{NULL, NULL}
 };
 

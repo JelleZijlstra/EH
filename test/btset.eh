@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-include 'map.eh'
+include '../lib/set.eh'
 
 s = BinaryTreeSet.new()
 echo s

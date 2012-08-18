@@ -464,6 +464,10 @@ public:
 	}
 	
 	const std::string &get_name(int id) {
+		// pretend bindings are just functions
+		if(id == binding_e) {
+			id = func_e;
+		}
 		if(id_to_string.count(id) == 1) {
 			return id_to_string[id];
 		} else {
@@ -472,6 +476,9 @@ public:
 		}
 	}
 	ehretval_p get_object(int id) {
+		if(id == binding_e) {
+			id = func_e;
+		}
 		if(id_to_object.count(id) == 1) {
 			return id_to_object[id];
 		} else {

@@ -69,6 +69,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(SyntaxError, -1)
 	LIBCLASSENTRY(GlobalObject, -1)
 	LIBCLASSENTRY(MiscellaneousError, -1)
+	LIBCLASSENTRY(GarbageCollector, -1)
 	{NULL, NULL, 0}
 };
 
@@ -205,6 +206,8 @@ void EHI::eh_init(void) {
 	global->attribute = attributes;
 	global->value = global_object;
 	global_object->get_objectval()->insert("global", global);
+
+	gc.do_collect(global_object);
 }
 void EHI::eh_exit(void) {
 	if(this->eval_parser != NULL) {

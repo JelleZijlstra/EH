@@ -49,7 +49,7 @@ EH_METHOD(Object, inherit) {
 			context->get_objectval()->copy_member(i, true, context, ehi);
 		}
 	}
-  return NULL;
+	return NULL;
 }
 EH_METHOD(Object, initialize) {
 	return NULL;
@@ -1055,4 +1055,19 @@ EH_METHOD(Tuple, length) {
 EH_METHOD(Tuple, toTuple) {
 	ASSERT_OBJ_TYPE(tuple_e, "Tuple.toTuple");
 	return obj;
+}
+
+
+START_EHLC(GarbageCollector)
+EHLC_ENTRY(GarbageCollector, run)
+EHLC_ENTRY(GarbageCollector, stats)
+END_EHLC()
+
+EH_METHOD(GarbageCollector, run) {
+	ehi->gc.do_collect(ehi->global_object);
+	return NULL;
+}
+EH_METHOD(GarbageCollector, stats) {
+	ehi->gc.print_stats();
+	return NULL;
 }

@@ -260,4 +260,12 @@ EH_METHOD(Tuple, toTuple);
 
 EXTERN_EHLC(Tuple)
 
+/*
+ * GarbageCollector class
+ */
+EH_METHOD(GarbageCollector, run);
+EH_METHOD(GarbageCollector, stats);
+
+EXTERN_EHLC(GarbageCollector)
+
 #endif /* _EH_LIBCLASSES_H */

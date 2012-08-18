@@ -119,12 +119,8 @@ private:
 
 	class pool {
 	private:
-		pool(const pool&) : next(), first_free_block(), free_blocks(), blocks() {
-			throw "Not allowed";
-		}
-		pool operator=(const pool&) {
-			throw "Not allowed";
-		}
+		pool(const pool&);
+		pool operator=(const pool&);
 	public:
 		// pointer to next pool in the list
 		pool *next;
@@ -169,6 +165,8 @@ private:
 		}
 		
 		void dealloc(block *b) {
+			//std::cout << "Freeing block at " << b << std::endl;
+			//std::cout << "Refcount: " << b->refcount << std::endl;
 			b->suicide();
 			b->set_next_pointer(this->first_free_block);
 			this->first_free_block = b;
@@ -176,6 +174,7 @@ private:
 		}
 		
 		void harvest_self_freed(block *b) {
+			//std::cout << "Harvesting block at " << b << std::endl;
 			assert(b->is_self_freed());
 			b->set_next_pointer(this->first_free_block);
 			this->first_free_block = b;
@@ -232,14 +231,10 @@ private:
 	};
 
 	/*
-	 * forbidden operators
+	 * forbidden operations
 	 */
-	garbage_collector(const garbage_collector &) {
-		throw "Not allowed";
-	}
-	garbage_collector operator=(const garbage_collector &) {
-		throw "Not allowed";
-	}
+	garbage_collector(const garbage_collector &);
+	garbage_collector operator=(const garbage_collector &);
 
 public:
 	class pointer {
@@ -410,7 +405,7 @@ private:
 	void do_sweep() {
 		int current_bit = this->current_bit.get();
 		int previous_bit = this->current_bit.prev();
-		for(pool *p = this->first_pool, *prev = NULL; p != NULL; prev = p, p = p->next) {
+		for(pool *p = this->first_pool; p != NULL; p = p->next) {
 			//std::cout << "Before " << p->free_blocks << std::endl;
 			p->sweep(previous_bit, current_bit);
 			//std::cout << "After " << p->free_blocks << std::endl;
@@ -445,9 +440,24 @@ public:
 	}
 	
 	void do_collect(pointer root) {
+		//std::cout << "Starting GC run..." << std::endl;
+		//print_stats();
 		this->do_mark(root);
 		this->current_bit.inc();
 		this->do_sweep();
+		//std::cout << "Done" << std::endl;
+		//print_stats();
+	}
+
+	void print_stats() {
+		int num_pools = 0;
+		int allocated_blocks = 0;
+		for(pool *p = this->first_pool; p != NULL; p = p->next) {
+			num_pools++;
+			allocated_blocks += (pool_size - p->free_blocks);
+		}
+		std::cout << "Number of pools: " << num_pools << std::endl;
+		std::cout << "Allocated blocks: " << allocated_blocks << std::endl;
 	}
 
 	// constructors and destructors

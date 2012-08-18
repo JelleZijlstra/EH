@@ -183,3 +183,5 @@ lib_eval.eh
 ifexpr.eh
 tupleassign.eh
 btset.eh
+crash.eh
+cc.eh

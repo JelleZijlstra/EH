@@ -5,6 +5,7 @@
  * ehretval_t
  */
 void ehretval_t::print() {
+	std::cout << get_typestring(this->type()) << std::endl;
 	switch(this->type()) {
 		case string_e:
 			printf("%s", this->get_stringval());
@@ -34,6 +35,7 @@ void ehretval_t::print() {
 			printf("(cannot print value)");
 			break;
 	}
+	std::cout << std::endl;
 	return;
 }
 std::list<ehretval_p> ehretval_t::children() {
@@ -50,8 +52,6 @@ std::list<ehretval_p> ehretval_t::children() {
 			}
 			break;
 		}
-		case func_e:
-			break;
 		case array_e:
 			ARRAY_FOR_EACH_INT(this->get_arrayval(), i) {
 				out.push_back(i->second);
@@ -74,8 +74,16 @@ std::list<ehretval_p> ehretval_t::children() {
 				out.push_back(i->second);
 			}
 		}
+		case tuple_e: {
+			ehtuple_t *t = this->get_tupleval();
+			int size = t->size();
+			for(int i = 0; i < size; i++) {
+				out.push_back(t->get(i));
+			}
+			break;
+		}
 		default:
-			// no components
+			// nothing to see here
 			break;
 	}
 	return out;

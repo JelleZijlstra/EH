@@ -74,7 +74,7 @@ private:
 			return this->get_next_pointer() == (block *)1;
 		}
 		bool is_allocated() const {
-			return this->refcount != 0;
+			return this->refcount > 0;
 		}
 		// set bits, numbered from 0 to 15
 		void set_gc_bit(int bit) {
@@ -165,8 +165,10 @@ private:
 		}
 		
 		void dealloc(block *b) {
-			//std::cout << "Freeing block at " << b << std::endl;
-			//std::cout << "Refcount: " << b->refcount << std::endl;
+#ifdef DEBUG_GC
+			std::cout << "Freeing block at " << b << std::endl;
+			std::cout << "Refcount: " << b->refcount << std::endl;
+#endif /* DEBUG_GC */
 			b->suicide();
 			b->set_next_pointer(this->first_free_block);
 			this->first_free_block = b;
@@ -174,7 +176,9 @@ private:
 		}
 		
 		void harvest_self_freed(block *b) {
-			//std::cout << "Harvesting block at " << b << std::endl;
+#ifdef DEBUG_GC
+			std::cout << "Harvesting block at " << b << std::endl;
+#endif /* DEBUG_GC */
 			assert(b->is_self_freed());
 			b->set_next_pointer(this->first_free_block);
 			this->first_free_block = b;
@@ -440,13 +444,17 @@ public:
 	}
 	
 	void do_collect(pointer root) {
-		//std::cout << "Starting GC run..." << std::endl;
-		//print_stats();
+#ifdef DEBUG_GC
+		std::cout << "Starting GC run..." << std::endl;
+		print_stats();
+#endif /* DEBUG_GC */
 		this->do_mark(root);
 		this->current_bit.inc();
 		this->do_sweep();
-		//std::cout << "Done" << std::endl;
-		//print_stats();
+#ifdef DEBUG_GC
+		std::cout << "Done" << std::endl;
+		print_stats();
+#endif /* DEBUG_GC */
 	}
 
 	void print_stats() {

@@ -34,6 +34,9 @@
  * between statements; even then, stuff like eh_op_declareclass may be in
  * trouble.
  *
+ * When I experimentally ran the GC after every statement (the T_SEPARATOR
+ * case in eh_execute), it crashed horribly, presumably because of this reason.
+ *
  * Types included in this GC should have a method belongs_in_gc that tells the
  * GC whether a particular object should be allocated within the GC-checked
  * part of memory or within the normal heap.

@@ -73,6 +73,7 @@ std::list<ehretval_p> ehretval_t::children() {
 			HASH_FOR_EACH(f, i) {
 				out.push_back(i->second);
 			}
+			break;
 		}
 		case tuple_e: {
 			ehtuple_t *t = this->get_tupleval();

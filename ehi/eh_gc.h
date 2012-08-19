@@ -74,7 +74,7 @@ private:
 			return this->get_next_pointer() == (block *)1;
 		}
 		bool is_allocated() const {
-			return this->refcount > 0;
+			return this->refcount != 0;
 		}
 		// set bits, numbered from 0 to 15
 		void set_gc_bit(int bit) {
@@ -92,6 +92,10 @@ private:
 		}
 		
 		void dec_rc() {
+			// this may happen if we free a still-referenced object as unreachable
+			if(this->refcount == 0) {
+				return;
+			}
 			this->refcount--;
 			if(this->refcount == 0) {
 				if(this->content.belongs_in_gc()) {

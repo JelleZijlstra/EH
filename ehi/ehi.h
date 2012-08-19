@@ -98,7 +98,7 @@ public:
 	void eh_exit(void);
 	void handle_uncaught(eh_exception &e);
 	ehmember_p set_property(ehretval_p object, const char *name, ehretval_p value, ehcontext_t context);
-	ehmember_p set_property(ehretval_p object, const char *name, ehmember_p value, ehcontext_t context);
+	ehmember_p set_member(ehretval_p object, const char *name, ehmember_p value, ehcontext_t context);
 	ehretval_p get_property(ehretval_p object, ehretval_p object_data, const char *name, ehcontext_t context);
 
 	virtual ehretval_p execute_cmd(const char *rawcmd, eharray_t *paras);

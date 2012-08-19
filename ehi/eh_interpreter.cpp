@@ -746,7 +746,7 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehmember_p this_member;
 	this_member->attribute = attributes_t::make(private_e, nonstatic_e, const_e);
 	this_member->value = ret;
-	this->set_property(ret, "scope", this_member, ret);
+	this->set_member(ret, "scope", this_member, ret);
 
 	// determine argument count
 	f->argcount = count_nodes(paras[0]);
@@ -787,7 +787,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	ehmember_p this_member;
 	this_member->attribute = attributes_t::make(private_e, nonstatic_e, const_e);
 	this_member->value = ret;
-	this->set_property(ret, "this", this_member, ret);
+	this->set_member(ret, "this", this_member, ret);
 
 	// inherit from Object
 	ehobj_t *object_class = this->repo.get_object(base_object_e)->get_objectval();
@@ -843,7 +843,7 @@ void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 			new_member->value = eh_execute(op->paras[2], context);
 			break;
 	}
-	this->set_property(context, name, new_member, context);
+	this->set_member(context, name, new_member, context);
 }
 ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret;
@@ -1029,7 +1029,7 @@ ehretval_p EHI::eh_op_try(ehretval_p *paras, ehcontext_t context) {
 		} catch(eh_exception& e) {
 			// inject the exception into the current scope
 			ehmember_p exception_member = ehmember_t::make(attributes_t::make(public_e, nonstatic_e, nonconst_e), e.content);
-			this->set_property(context, "exception", exception_member, context);
+			this->set_member(context, "exception", exception_member, context);
 			ret = eh_execute(catch_block, context);
 		}
 		eh_always_execute(finally_block, context);
@@ -1048,7 +1048,7 @@ ehretval_p EHI::eh_op_catch(ehretval_p *paras, ehcontext_t context) {
 	} catch(eh_exception& e) {
 		// inject the exception into the current scope
 		ehmember_p exception_member = ehmember_t::make(attributes_t::make(public_e, nonstatic_e, nonconst_e), e.content);
-		this->set_property(context, "exception", exception_member, context);
+		this->set_member(context, "exception", exception_member, context);
 		ret = eh_execute(catch_block, context);
 	}
 	return ret;
@@ -1176,7 +1176,8 @@ ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p val
 		return new_member;
 	}
 }
-ehmember_p EHI::set_property(ehretval_p object, const char *name, ehmember_p value, ehcontext_t context) {
+// insert an ehmember_p directly
+ehmember_p EHI::set_member(ehretval_p object, const char *name, ehmember_p value, ehcontext_t context) {
 	// caller should ensure object is actually an object
 	ehobj_t *obj = object->get_objectval();
 	if(obj->has(name)) {

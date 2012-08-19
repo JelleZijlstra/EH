@@ -124,7 +124,7 @@
 "$("		return T_DOLLARPAREN;
 "++"		return T_PLUSPLUS;
 "--"		return T_MINMIN;
-("//"|#).*[;\n]	; /* Ignore comment */
+("//"|#).*	; /* Ignore comment */
 [;\n]		return T_SEPARATOR;
 "operator"[<>\-\+*/%=!~&^:|]+	{
 				int len = strlen(yytext);

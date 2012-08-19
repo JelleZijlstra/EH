@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 class Foo {
-	operator_colon = func: n {
+	operator: = func: n {
 		echo n
 	}
 }

@@ -76,8 +76,8 @@ class BinaryTreeMap
 		default; base.get key
 	end
 
-	const operator_arrow = get
-	const operator_arrow_equals = add
+	const operator-> = get
+	const operator->= = add
 
 	const has = func: key -> (get key == null)
 

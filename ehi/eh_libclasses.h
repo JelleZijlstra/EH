@@ -10,6 +10,7 @@
 
 #define START_EHLC(name) ehlm_listentry_t ehlc_l_ ## name [] = {
 #define EHLC_ENTRY(classn, name) { #name, &ehlm_ ## classn ## _ ## name },
+#define EHLC_ENTRY_RENAME(classn, name, user_name) { user_name, &ehlm_ ## classn ## _ ## name },
 #define END_EHLC() {NULL, NULL} };
 #define EXTERN_EHLC(name) extern ehlm_listentry_t ehlc_l_ ## name [];
 

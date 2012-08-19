@@ -2,4 +2,4 @@ Argument out of range (method String.operator->=): 3
 @string 'foo'
 @int 3
 Argument out of range (method String.operator->): 3
-Uncaught exception of type NameError: Unknown member operator_arrow in object of type Integer: 3
+Uncaught exception of type NameError: Unknown member operator-> in object of type Integer: 3

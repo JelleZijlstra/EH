@@ -1,25 +1,25 @@
 #!/usr/bin/ehi
 class Foo {
-  operator_and = func: rhs {
+  operator& = func: rhs {
     echo 'Binary and with ' + rhs
   }
-  operator_or = func: rhs {
+  operator| = func: rhs {
     echo 'Binary or with ' + rhs
   }
-  operator_xor = func: rhs {
+  operator^ = func: rhs {
     echo 'Binary xor with ' + rhs
   }
-  operator_tilde = func: {
+  operator~ = func: {
     echo 'Binary negation'
   }
   operator_uminus = func: {
     echo 'Unary minus'
   }
-  operator_bang = func: {
+  operator! = func: {
     echo 'Negation'
   }
   # Not really
-  operator_times = func: rhs -> (echo 'Unary minus')
+  operator* = func: rhs -> (echo 'Unary minus')
 }
 f = Foo.new ()
 f & 2

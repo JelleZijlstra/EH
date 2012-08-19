@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-Integer.operator_colon = func: in {
+Integer.operator: = func: in {
 	if ((in.length ()) == self) {
 		echo 'Yes, that is the length of the input'
 	} else {

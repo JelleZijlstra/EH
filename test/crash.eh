@@ -20,4 +20,4 @@ GC.stats()
 GC.stats()
 printvar (c = CountClass.new())
 printvar c.docount()
-operator_arrow 0
+operator-> 0

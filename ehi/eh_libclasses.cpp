@@ -26,14 +26,14 @@ EHLC_ENTRY(Object, initialize)
 EHLC_ENTRY(Object, toString)
 EHLC_ENTRY(Object, finalize)
 EHLC_ENTRY(Object, isA)
-EHLC_ENTRY(Object, operator_compare)
+EHLC_ENTRY_RENAME(Object, operator_compare, "operator<=>")
 EHLC_ENTRY(Object, compare)
-EHLC_ENTRY(Object, operator_equals)
-EHLC_ENTRY(Object, operator_ne)
-EHLC_ENTRY(Object, operator_gt)
-EHLC_ENTRY(Object, operator_gte)
-EHLC_ENTRY(Object, operator_lt)
-EHLC_ENTRY(Object, operator_lte)
+EHLC_ENTRY_RENAME(Object, operator_equals, "operator==")
+EHLC_ENTRY_RENAME(Object, operator_ne, "operator!=")
+EHLC_ENTRY_RENAME(Object, operator_gt, "operator>")
+EHLC_ENTRY_RENAME(Object, operator_gte, "operator>=")
+EHLC_ENTRY_RENAME(Object, operator_lt, "operator<")
+EHLC_ENTRY_RENAME(Object, operator_lte, "operator<=")
 END_EHLC()
 
 EH_METHOD(Object, new) {
@@ -104,7 +104,7 @@ EH_METHOD(Object, compare) {
 	return ehretval_t::make_int(lhs->naive_compare(rhs));	
 }
 #define CALL_COMPARE() \
-	ehretval_p comparison_p = ehi->call_method_from_method(obj, context, "operator_compare", args); \
+	ehretval_p comparison_p = ehi->call_method_from_method(obj, context, "operator<=>", args); \
 	if(comparison_p->type() != int_e) { \
 		throw_TypeError("operator<=> must return an Integer", comparison_p->type(), ehi); \
 	} \
@@ -264,15 +264,15 @@ EH_METHOD(File, finalize) {
 }
 
 START_EHLC(Integer)
-EHLC_ENTRY(Integer, operator_plus)
-EHLC_ENTRY(Integer, operator_minus)
-EHLC_ENTRY(Integer, operator_times)
-EHLC_ENTRY(Integer, operator_divide)
-EHLC_ENTRY(Integer, operator_modulo)
-EHLC_ENTRY(Integer, operator_and)
-EHLC_ENTRY(Integer, operator_or)
-EHLC_ENTRY(Integer, operator_xor)
-EHLC_ENTRY(Integer, operator_tilde)
+EHLC_ENTRY_RENAME(Integer, operator_plus, "operator+")
+EHLC_ENTRY_RENAME(Integer, operator_minus, "operator-")
+EHLC_ENTRY_RENAME(Integer, operator_times, "operator*")
+EHLC_ENTRY_RENAME(Integer, operator_divide, "operator/")
+EHLC_ENTRY_RENAME(Integer, operator_modulo, "operator%")
+EHLC_ENTRY_RENAME(Integer, operator_and, "operator&")
+EHLC_ENTRY_RENAME(Integer, operator_or, "operator|")
+EHLC_ENTRY_RENAME(Integer, operator_xor, "operator^")
+EHLC_ENTRY_RENAME(Integer, operator_tilde, "operator~")
 EHLC_ENTRY(Integer, operator_uminus)
 EHLC_ENTRY(Integer, compare)
 EHLC_ENTRY(Integer, abs)
@@ -451,8 +451,8 @@ EH_METHOD(Integer, sqrt) {
 START_EHLC(Array)
 EHLC_ENTRY(Array, initialize)
 EHLC_ENTRY(Array, length)
-EHLC_ENTRY(Array, operator_arrow)
-EHLC_ENTRY(Array, operator_arrow_equals)
+EHLC_ENTRY_RENAME(Array, operator_arrow, "operator->")
+EHLC_ENTRY_RENAME(Array, operator_arrow_equals, "operator->=")
 EHLC_ENTRY(Array, toArray)
 EHLC_ENTRY(Array, toTuple)
 END_EHLC()
@@ -507,10 +507,10 @@ EH_METHOD(Array, toTuple) {
 
 START_EHLC(Float)
 EHLC_ENTRY(Float, initialize)
-EHLC_ENTRY(Float, operator_plus)
-EHLC_ENTRY(Float, operator_minus)
-EHLC_ENTRY(Float, operator_times)
-EHLC_ENTRY(Float, operator_divide)
+EHLC_ENTRY_RENAME(Float, operator_plus, "operator+")
+EHLC_ENTRY_RENAME(Float, operator_minus, "operator-")
+EHLC_ENTRY_RENAME(Float, operator_times, "operator*")
+EHLC_ENTRY_RENAME(Float, operator_divide, "operator/")
 EHLC_ENTRY(Float, operator_uminus)
 EHLC_ENTRY(Float, compare)
 EHLC_ENTRY(Float, abs)
@@ -593,9 +593,9 @@ EH_METHOD(Float, sqrt) {
 
 START_EHLC(String)
 EHLC_ENTRY(String, initialize)
-EHLC_ENTRY(String, operator_plus)
-EHLC_ENTRY(String, operator_arrow)
-EHLC_ENTRY(String, operator_arrow_equals)
+EHLC_ENTRY_RENAME(String, operator_plus, "operator+")
+EHLC_ENTRY_RENAME(String, operator_arrow, "operator->")
+EHLC_ENTRY_RENAME(String, operator_arrow_equals, "operator->=")
 EHLC_ENTRY(String, compare)
 EHLC_ENTRY(String, length)
 EHLC_ENTRY(String, toString)
@@ -740,7 +740,7 @@ EHLC_ENTRY(Bool, initialize)
 EHLC_ENTRY(Bool, toString)
 EHLC_ENTRY(Bool, toBool)
 EHLC_ENTRY(Bool, toInt)
-EHLC_ENTRY(Bool, operator_bang)
+EHLC_ENTRY_RENAME(Bool, operator_bang, "operator!")
 END_EHLC()
 
 EH_METHOD(Bool, initialize) {
@@ -794,7 +794,7 @@ EH_METHOD(Null, toBool) {
 START_EHLC(Range)
 EHLC_ENTRY(Range, min)
 EHLC_ENTRY(Range, max)
-EHLC_ENTRY(Range, operator_arrow)
+EHLC_ENTRY_RENAME(Range, operator_arrow, "operator->")
 EHLC_ENTRY(Range, toString)
 EHLC_ENTRY(Range, toArray)
 EHLC_ENTRY(Range, toRange)
@@ -889,8 +889,8 @@ EH_METHOD(Range, compare) {
 
 START_EHLC(Hash)
 EHLC_ENTRY(Hash, toArray)
-EHLC_ENTRY(Hash, operator_arrow)
-EHLC_ENTRY(Hash, operator_arrow_equals)
+EHLC_ENTRY_RENAME(Hash, operator_arrow, "operator->")
+EHLC_ENTRY_RENAME(Hash, operator_arrow_equals, "operator->=")
 EHLC_ENTRY(Hash, has)
 END_EHLC()
 
@@ -927,7 +927,7 @@ EH_METHOD(Hash, has) {
 }
 
 START_EHLC(Function)
-EHLC_ENTRY(Function, operator_colon)
+EHLC_ENTRY_RENAME(Function, operator_colon, "operator:")
 EHLC_ENTRY(Function, toString)
 END_EHLC()
 
@@ -1031,7 +1031,7 @@ EH_METHOD(Exception, toString) {
 
 START_EHLC(Tuple)
 EHLC_ENTRY(Tuple, initialize)
-EHLC_ENTRY(Tuple, operator_arrow)
+EHLC_ENTRY_RENAME(Tuple, operator_arrow, "operator->")
 EHLC_ENTRY(Tuple, length)
 EHLC_ENTRY(Tuple, toTuple)
 END_EHLC()

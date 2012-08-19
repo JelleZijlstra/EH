@@ -8,7 +8,7 @@ echo l.toString()
 
 echo l.length()
 
-echo (l.map 2.operator_times).toString()
+echo (l.map 2.operator*).toString()
 
 echo l.reduce 1, func: accum, val -> accum * val
 

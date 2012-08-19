@@ -126,6 +126,13 @@
 "--"		return T_MINMIN;
 ("//"|#).*[;\n]	; /* Ignore comment */
 [;\n]		return T_SEPARATOR;
+"operator"[<>\-\+*/%=!~&^:|]+	{
+				int len = strlen(yytext);
+				yylval_param->sValue = new char[len + 1];
+				strncpy(yylval_param->sValue, yytext, len);
+				yylval_param->sValue[len] = '\0';
+				return T_VARIABLE;
+			}
 [a-zA-Z][a-zA-Z0-9_]*	{
 				int len;
 				len = strlen(yytext);

@@ -61,7 +61,7 @@ private:
 	ehretval_p eh_op_catch(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_finally(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_always_execute(ehretval_p code, ehcontext_t context);
-	ehretval_p perform_op(const char *name, const char *user_name, int nargs, ehretval_p *paras, ehcontext_t context);
+	ehretval_p perform_op(const char *name, int nargs, ehretval_p *paras, ehcontext_t context);
 	ehcmd_t get_command(const char *name);
 	void insert_command(const char *name, const ehcmd_t cmd);
 	void redirect_command(const char *redirect, const char *target);

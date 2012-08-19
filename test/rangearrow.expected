@@ -1,7 +1,7 @@
 1
 42
-Unknown member operator_arrow_equals in object of type Range: 1 to 42
-Unknown member operator_arrow_equals in object of type Range: 1 to 42
+Unknown member operator->= in object of type Range: 1 to 42
+Unknown member operator->= in object of type Range: 1 to 42
 1
 42
-Uncaught exception of type NameError: Unknown member operator_arrow_equals in object of type Range: 1 to 42
+Uncaught exception of type NameError: Unknown member operator->= in object of type Range: 1 to 42

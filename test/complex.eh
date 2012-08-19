@@ -15,15 +15,15 @@ class Complex {
   
   abs = func -> (a*a + b*b).sqrt
   
-  operator_plus = func rhs {
+  operator+ = func rhs {
     Complex.new (this.a) + (rhs.a), (this.b:) + (rhs.b:)
   }
 
-  operator_minus = func rhs {
+  operator- = func rhs {
     Complex.new (this.a) - (rhs.a), (this.b:) - (rhs.b:)
   }
   
-  operator_times = func rhs {
+  operator* = func rhs {
     private a = (this.a) * (rhs.a) - (this.b) * (rhs.b:)
     private b = (this.a) * (rhs.b) + (this.b) * (rhs.a:)
     ret Complex.new a, b
@@ -37,4 +37,4 @@ class Complex {
 x = Complex.new 0, 1
 echo x.toString
 echo (x + x).toString
-echo (x.operator_times x).toString
+echo (x.operator* x).toString

@@ -252,11 +252,11 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				);
 				break;
 			case '~': // bitwise negation
-			  return perform_op("operator_tilde", "operator~", 0, node->get_opval()->paras, context);
+			  return perform_op("operator~", 0, node->get_opval()->paras, context);
 			case T_NEGATIVE: // sign change
-			  return perform_op("operator_uminus", "operator-", 0, node->get_opval()->paras, context);
+			  return perform_op("operator-", 0, node->get_opval()->paras, context);
 			case '!': // Boolean not
-			  return perform_op("operator_bang", "operator!", 0, node->get_opval()->paras, context);
+			  return perform_op("operator!", 0, node->get_opval()->paras, context);
 		/*
 		 * Control flow
 		 */
@@ -386,37 +386,37 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			case '.':
 				return eh_op_dot(node->get_opval()->paras, context);
 			case T_ARROW:
-				return perform_op("operator_arrow", "operator->", 1, node->get_opval()->paras, context);
+				return perform_op("operator->", 1, node->get_opval()->paras, context);
 			case T_EQ:
-				return perform_op("operator_equals", "operator==", 1, node->get_opval()->paras, context);
+				return perform_op("operator==", 1, node->get_opval()->paras, context);
 			case T_NE:
-				return perform_op("operator_ne", "operator==", 1, node->get_opval()->paras, context);
+				return perform_op("operator!=", 1, node->get_opval()->paras, context);
 			case '>':
-				return perform_op("operator_gt", "operator>", 1, node->get_opval()->paras, context);
+				return perform_op("operator>", 1, node->get_opval()->paras, context);
 			case T_GE:
-				return perform_op("operator_gte", "operator>=", 1, node->get_opval()->paras, context);
+				return perform_op("operator>=", 1, node->get_opval()->paras, context);
 			case '<':
-				return perform_op("operator_lt", "operator<", 1, node->get_opval()->paras, context);
+				return perform_op("operator<", 1, node->get_opval()->paras, context);
 			case T_LE:
-				return perform_op("operator_lte", "operator<=", 1, node->get_opval()->paras, context);
+				return perform_op("operator<=", 1, node->get_opval()->paras, context);
 			case T_COMPARE:
-			  return perform_op("operator_compare", "operator<=>", 1, node->get_opval()->paras, context);
+			  return perform_op("operator<=>", 1, node->get_opval()->paras, context);
 			case '+': // string concatenation, addition
-				return perform_op("operator_plus", "operator+", 1, node->get_opval()->paras, context);
+				return perform_op("operator+", 1, node->get_opval()->paras, context);
 			case '-': // subtraction
-				return perform_op("operator_minus", "operator-", 1, node->get_opval()->paras, context);
+				return perform_op("operator-", 1, node->get_opval()->paras, context);
 			case '*':
-				return perform_op("operator_times", "operator*", 1, node->get_opval()->paras, context);
+				return perform_op("operator*", 1, node->get_opval()->paras, context);
 			case '/':
-				return perform_op("operator_divide", "operator/", 1, node->get_opval()->paras, context);
+				return perform_op("operator/", 1, node->get_opval()->paras, context);
 			case '%':
-				return perform_op("operator_modulo", "operator%", 1, node->get_opval()->paras, context);
+				return perform_op("operator%", 1, node->get_opval()->paras, context);
 			case '&':
-			  return perform_op("operator_and", "operator&", 1, node->get_opval()->paras, context);
+			  return perform_op("operator&", 1, node->get_opval()->paras, context);
 			case '^':
-			  return perform_op("operator_xor", "operator^", 1, node->get_opval()->paras, context);
+			  return perform_op("operator^", 1, node->get_opval()->paras, context);
 			case '|':
-			  return perform_op("operator_or", "operator|", 1, node->get_opval()->paras, context);
+			  return perform_op("operator|", 1, node->get_opval()->paras, context);
 			case T_AND: // AND; use short-circuit operation
 				operand1 = eh_execute(node->get_opval()->paras[0], context);
 				if(!this->to_bool(operand1, context)->get_boolval()) {
@@ -948,7 +948,7 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 			args[0] = eh_execute(internal_paras[1], context);
 			args[1] = rvalue;
 			ehretval_p base_var = eh_execute(internal_paras[0], context);
-			return call_method(base_var, "operator_arrow_equals", this->make_tuple(new ehtuple_t(2, args)), context);
+			return call_method(base_var, "operator->=", this->make_tuple(new ehtuple_t(2, args)), context);
 		}
 		case '.': {
 			ehretval_p base_var = eh_execute(internal_paras[0], context);
@@ -980,7 +980,7 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 			ehretval_p arg_node = lvalue;
 			for(int i = 0; true; i++) {
 				opnode_t *op = arg_node->get_opval();
-				ehretval_p internal_rvalue = call_method(rvalue, "operator_arrow", ehretval_t::make_int(i), context);
+				ehretval_p internal_rvalue = call_method(rvalue, "operator->", ehretval_t::make_int(i), context);
 				if(op->op == ',') {
 					set(op->paras[0], internal_rvalue, context);
 					arg_node = arg_node->get_opval()->paras[1];
@@ -1081,7 +1081,7 @@ ehretval_p EHI::eh_always_execute(ehretval_p code, ehcontext_t context) {
   return ret;
 }
 // Perform an arbitrary operation defined as a method taking a single argument
-ehretval_p EHI::perform_op(const char *name, const char *user_name, int nargs, ehretval_p *paras, ehcontext_t context) {
+ehretval_p EHI::perform_op(const char *name, int nargs, ehretval_p *paras, ehcontext_t context) {
 	ehretval_p base_var = eh_execute(paras[0], context);
 	ehretval_p args = NULL;
 	if(nargs == 1) {
@@ -1131,7 +1131,7 @@ ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t 
 		// This one time, we call a library method directly. If you want to override Function.operator_colon, too bad.
 		return ehlm_Function_operator_colon(NULL, args, function, this);
 	} else {
-		return call_method(function, "operator_colon", args, context);
+		return call_method(function, "operator:", args, context);
 	}
 }
 /*

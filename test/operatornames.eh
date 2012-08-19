@@ -3,7 +3,7 @@
 class Foo
   public f = 3
 
-  public operator_plus = func: rhs {
+  public operator+ = func: rhs {
     out = Foo.new ()
     out.f = this.f + rhs.f
     ret out

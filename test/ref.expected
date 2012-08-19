@@ -1,2 +1,2 @@
 2
-Uncaught exception of type NameError: Unknown member operator_and in object of type Null: 
+Uncaught exception of type NameError: Unknown member operator& in object of type Null: 

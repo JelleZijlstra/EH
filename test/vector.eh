@@ -5,18 +5,18 @@ class Vector
   
   public initialize = func: -> []
   
-  private xset = operator_arrow_equals
+  private set = operator->=
   
-  public operator_arrow_equals = func: index, value
+  public operator->= = func: index, value
     if !(index.isA Integer)
       throw "Invalid type for argument 0 to Vector.operator->="
     end
-    xset index, value
+    set index, value
   end
   
-  private get = operator_arrow
+  private get = operator->
   
-  public operator_arrow = func: index
+  public operator-> = func: index
     if !(index.isA Integer)
       throw "Invalid type for argument 0 to Vector.operator->"
     end

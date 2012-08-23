@@ -75,12 +75,13 @@ EHParser *yyget_extra(void *scanner);
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %right ':'
-%right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ
+%right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ T_LEFTSHIFTEQ T_RIGHTSHIFTEQ
 %right ','
 %left T_AND T_OR T_XOR
 %nonassoc T_SHORTFUNCTION
 %left '|' '^' '&'
 %left '+' '-'
+%left T_LEFTSHIFT T_RIGHTSHIFT
 %left '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ T_COMPARE
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
@@ -106,6 +107,7 @@ global_list:
 								EHI *ehi = parser->parent;
 								ehretval_p statement = ehretval_t::make($1);
 								ehretval_p ret = ehi->eh_execute(statement, parser->context);
+								//ehi->gc.do_collect(ehi->global_object);
 								if(parser->interactivity() != end_is_end_e) {
 									// TODO: make this use printvar instead
 									std::cout << "=> " << ehi->to_string(ret, parser->context)->get_stringval() << std::endl;
@@ -266,6 +268,10 @@ expression:
 							{ ADD_COMPOUND('|', $1, $3, $$); }
 	| expression T_BINXOREQ expression
 							{ ADD_COMPOUND('^', $1, $3, $$); }
+	| expression T_LEFTSHIFTEQ expression
+							{ ADD_COMPOUND(T_LEFTSHIFT, $1, $3, $$); }
+	| expression T_RIGHTSHIFTEQ expression
+							{ ADD_COMPOUND(T_RIGHTSHIFT, $1, $3, $$); }
 	| expression T_ARROW expression
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| expression '.' T_VARIABLE
@@ -316,6 +322,10 @@ expression:
 							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
 	| expression T_RANGE expression
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
+	| expression T_LEFTSHIFT expression
+							{ $$ = ADD_NODE2(T_LEFTSHIFT, $1, $3); }
+	| expression T_RIGHTSHIFT expression
+							{ $$ = ADD_NODE2(T_RIGHTSHIFT, $1, $3); }
 	| expression %prec ':' expression
 							{ $$ = ADD_NODE2(':', $1, $2); }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }

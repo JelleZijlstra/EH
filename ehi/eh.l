@@ -150,6 +150,8 @@
 "->"		return T_ARROW;
 "<=>"   	return T_COMPARE;
 "()"		return T_NULL;
+">>"		return T_RIGHTSHIFT;
+"<<"		return T_LEFTSHIFT;
 "+="		return T_PLUSEQ;
 "-="		return T_MINEQ;
 "*="		return T_MULTIPLYEQ;
@@ -161,6 +163,8 @@
 "&="		return T_BINANDEQ;
 "|="		return T_BINOREQ;
 "^="		return T_BINXOREQ;
+">>="		return T_RIGHTSHIFTEQ;
+"<<="		return T_LEFTSHIFTEQ;
 [@=$+\-*/<>(),:\[\]&\|^%~!{}\.]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{

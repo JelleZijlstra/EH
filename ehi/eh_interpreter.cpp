@@ -400,7 +400,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			case T_LE:
 				return perform_op("operator<=", 1, node->get_opval()->paras, context);
 			case T_COMPARE:
-			  return perform_op("operator<=>", 1, node->get_opval()->paras, context);
+				return perform_op("operator<=>", 1, node->get_opval()->paras, context);
 			case '+': // string concatenation, addition
 				return perform_op("operator+", 1, node->get_opval()->paras, context);
 			case '-': // subtraction
@@ -412,11 +412,15 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			case '%':
 				return perform_op("operator%", 1, node->get_opval()->paras, context);
 			case '&':
-			  return perform_op("operator&", 1, node->get_opval()->paras, context);
+				return perform_op("operator&", 1, node->get_opval()->paras, context);
 			case '^':
-			  return perform_op("operator^", 1, node->get_opval()->paras, context);
+				return perform_op("operator^", 1, node->get_opval()->paras, context);
 			case '|':
-			  return perform_op("operator|", 1, node->get_opval()->paras, context);
+				return perform_op("operator|", 1, node->get_opval()->paras, context);
+			case T_LEFTSHIFT:
+				return perform_op("operator<<", 1, node->get_opval()->paras, context);
+			case T_RIGHTSHIFT:
+				return perform_op("operator>>", 1, node->get_opval()->paras, context);
 			case T_AND: // AND; use short-circuit operation
 				operand1 = eh_execute(node->get_opval()->paras[0], context);
 				if(!this->to_bool(operand1, context)->get_boolval()) {

@@ -421,6 +421,9 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				return perform_op("operator<<", 1, node->get_opval()->paras, context);
 			case T_RIGHTSHIFT:
 				return perform_op("operator>>", 1, node->get_opval()->paras, context);
+			case '(':
+				// this is to make nested tuples work
+				return eh_execute(node->get_opval()->paras[0], context);
 			case T_AND: // AND; use short-circuit operation
 				operand1 = eh_execute(node->get_opval()->paras[0], context);
 				if(!this->to_bool(operand1, context)->get_boolval()) {
@@ -995,6 +998,8 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 			}
 			return rvalue;
 		}
+		case '(':
+			return set(internal_paras[0], rvalue, context);
 		default:
 			throw_MiscellaneousError("Invalid lvalue", this);
 			break;

@@ -233,7 +233,7 @@ expression:
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_VARIABLE			{ $$ = ADD_NODE1('$', $1); }
 	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| '(' expression ')'	{ $$ = $2; }
+	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
 	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
 	| expression T_PLUSPLUS	{
@@ -371,7 +371,7 @@ simple_expr:
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_VARIABLE			{ $$ = ADD_NODE1('$', $1); }
 	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| '(' expression ')'	{ $$ = $2; }
+	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
 	| '~' simple_expr		{ $$ = ADD_NODE1('~', $2); }
 	| '!' simple_expr		{ $$ = ADD_NODE1('!', $2); }
 	| simple_expr T_ARROW simple_expr
@@ -445,9 +445,9 @@ para_expr:
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_VARIABLE			{ $$ = ADD_NODE1('$', $1); }
 	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| '(' expression ')'	{ $$ = $2; }
-	| '~' para_expr		{ $$ = ADD_NODE1('~', $2); }
-	| '!' para_expr		{ $$ = ADD_NODE1('!', $2); }
+	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
+	| '~' para_expr			{ $$ = ADD_NODE1('~', $2); }
+	| '!' para_expr			{ $$ = ADD_NODE1('!', $2); }
 	| para_expr T_ARROW para_expr
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| para_expr '.' T_VARIABLE

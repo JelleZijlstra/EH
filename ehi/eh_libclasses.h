@@ -117,6 +117,8 @@ EH_METHOD(Integer, operator_or);
 EH_METHOD(Integer, operator_xor);
 EH_METHOD(Integer, operator_tilde);
 EH_METHOD(Integer, operator_uminus);
+EH_METHOD(Integer, operator_leftshift);
+EH_METHOD(Integer, operator_rightshift);
 EH_METHOD(Integer, compare);
 EH_METHOD(Integer, abs);
 EH_METHOD(Integer, getBit);

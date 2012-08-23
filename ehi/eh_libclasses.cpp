@@ -273,6 +273,8 @@ EHLC_ENTRY_RENAME(Integer, operator_and, "operator&")
 EHLC_ENTRY_RENAME(Integer, operator_or, "operator|")
 EHLC_ENTRY_RENAME(Integer, operator_xor, "operator^")
 EHLC_ENTRY_RENAME(Integer, operator_tilde, "operator~")
+EHLC_ENTRY_RENAME(Integer, operator_leftshift, "operator<<")
+EHLC_ENTRY_RENAME(Integer, operator_rightshift, "operator>>")
 EHLC_ENTRY(Integer, operator_uminus)
 EHLC_ENTRY(Integer, compare)
 EHLC_ENTRY(Integer, abs)
@@ -349,12 +351,12 @@ EH_METHOD(Integer, operator_and) {
   return ehretval_t::make_int(obj->get_intval() & args->get_intval());
 }
 EH_METHOD(Integer, operator_or) {
-  ASSERT_OBJ_TYPE(int_e, "integer.operator|");
+  ASSERT_OBJ_TYPE(int_e, "Integer.operator|");
   ASSERT_TYPE(args, int_e, "Integer.operator|");
   return ehretval_t::make_int(obj->get_intval() | args->get_intval());
 }
 EH_METHOD(Integer, operator_xor) {
-  ASSERT_OBJ_TYPE(int_e, "integer.operator^");
+  ASSERT_OBJ_TYPE(int_e, "Integer.operator^");
   ASSERT_TYPE(args, int_e, "Integer.operator^");
   return ehretval_t::make_int(obj->get_intval() ^ args->get_intval());
 }
@@ -370,6 +372,16 @@ EH_METHOD(Integer, compare) {
 	ASSERT_OBJ_TYPE(int_e, "Integer.compare");
 	ASSERT_TYPE(args, int_e, "Integer.compare");
 	return ehretval_t::make_int(intcmp(obj->get_intval(), args->get_intval()));
+}
+EH_METHOD(Integer, operator_leftshift) {
+	ASSERT_OBJ_TYPE(int_e, "Integer.operator<<");
+	ASSERT_TYPE(args, int_e, "Integer.operator<<");
+	return ehretval_t::make_int(obj->get_intval() << args->get_intval());
+}
+EH_METHOD(Integer, operator_rightshift) {
+	ASSERT_OBJ_TYPE(int_e, "Integer.operator>>");
+	ASSERT_TYPE(args, int_e, "Integer.operator>>");
+	return ehretval_t::make_int(obj->get_intval() >> args->get_intval());
 }
 EH_METHOD(Integer, abs) {
 	ASSERT_NULL_AND_TYPE(int_e, "Integer.abs");

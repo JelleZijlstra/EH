@@ -16,11 +16,13 @@ operator+ <public,non-static,non-constant>: @function <library>:
 operator- <public,non-static,non-constant>: @function <library>: 
 operator/ <public,non-static,non-constant>: @function <library>: 
 operator< <public,non-static,non-constant>: @function <library>: 
+operator<< <public,non-static,non-constant>: @function <library>: 
 operator<= <public,non-static,non-constant>: @function <library>: 
 operator<=> <public,non-static,non-constant>: @function <library>: 
 operator== <public,non-static,non-constant>: @function <library>: 
 operator> <public,non-static,non-constant>: @function <library>: 
 operator>= <public,non-static,non-constant>: @function <library>: 
+operator>> <public,non-static,non-constant>: @function <library>: 
 operator^ <public,non-static,non-constant>: @function <library>: 
 operator_uminus <public,non-static,non-constant>: @function <library>: 
 operator| <public,non-static,non-constant>: @function <library>: 

@@ -1,11 +1,11 @@
 Number of pools: 1
-Allocated blocks: 487
+Allocated blocks: 489
 3
 3
 Number of pools: 1
-Allocated blocks: 490
+Allocated blocks: 492
 Number of pools: 1
-Allocated blocks: 490
+Allocated blocks: 492
 @object <CountClass> [
 compare <public,non-static,non-constant>: @function <library>: 
 docount <public,non-static,non-constant>: @function <library>: 

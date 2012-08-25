@@ -95,6 +95,7 @@ EH_METHOD(UnknownCommandError, initialize) {
 	return ehretval_t::make_resource(new Exception(strdup(msg.c_str())));
 }
 EH_METHOD(UnknownCommandError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "UnknownCommandError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -124,6 +125,7 @@ EH_METHOD(TypeError, initialize) {
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.c_str())));
 }
 EH_METHOD(TypeError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "TypeError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -153,6 +155,7 @@ EH_METHOD(LoopError, initialize) {
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
 }
 EH_METHOD(LoopError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "LoopError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -182,6 +185,7 @@ EH_METHOD(NameError, initialize) {
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
 }
 EH_METHOD(NameError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "NameError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -209,6 +213,7 @@ EH_METHOD(ConstError, initialize) {
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
 }
 EH_METHOD(ConstError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "ConstError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -246,6 +251,7 @@ EH_METHOD(ArgumentError, initialize) {
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));	
 }
 EH_METHOD(ArgumentError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "ArgumentError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -265,6 +271,7 @@ EH_METHOD(MiscellaneousError, initialize) {
 	return ehretval_t::make_resource(new Exception(strdup(args->get_stringval())));
 }
 EH_METHOD(MiscellaneousError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "MiscellaneousError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -297,6 +304,7 @@ EH_METHOD(SyntaxError, initialize) {
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));	
 }
 EH_METHOD(SyntaxError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "SyntaxError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));	
 }

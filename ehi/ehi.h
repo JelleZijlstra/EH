@@ -25,7 +25,7 @@ void *gc_thread(void *arg);
 class EHI {
 private:
 	class EHParser *eval_parser;
-	void init_eval_parser(ehretval_p context);
+	void init_eval_parser(ehcontext_t context);
 	// number of loops we're currently in
 	int inloop;
 	int breaking;
@@ -92,8 +92,8 @@ public:
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);
 	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
-	ehretval_p parse_string(const char *cmd, ehretval_p context);
-	ehretval_p parse_file(const char *name, ehretval_p context);
+	ehretval_p parse_string(const char *cmd, ehcontext_t context);
+	ehretval_p parse_file(const char *name, ehcontext_t context);
 	EHI();
 	void eh_exit(void);
 	void handle_uncaught(eh_exception &e);
@@ -146,7 +146,7 @@ public:
 	ehretval_p promote(ehretval_p in, ehcontext_t context);
 	ehretval_p object_instantiate(ehobj_t *obj);
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
-	ehretval_p call_method_from_method(ehretval_p obj, ehretval_p context, const char *name, ehretval_p args);
+	ehretval_p call_method_from_method(ehretval_p obj, ehcontext_t context, const char *name, ehretval_p args);
 
 	// conversion methods, guaranteed to return the type they're supposed to return
 #define CASTER(method_name, ehtype) ehretval_p to_ ## ehtype(ehretval_p in, ehcontext_t context) { \
@@ -216,14 +216,14 @@ public:
 	ehretval_p parse_file(FILE *infile);
 	ehretval_p parse_string(const char *cmd);
 
-	EHParser(interactivity_enum _inter, EHI *_parent, ehretval_p _context) : parent(_parent), context(_context), scanner(), _interactivity(_inter), buffer() {
+	EHParser(interactivity_enum _inter, EHI *_parent, ehcontext_t _context) : parent(_parent), context(_context), scanner(), _interactivity(_inter), buffer() {
 		yylex_init_extra(this, &scanner);
 	}
 	~EHParser(void) {
 		yylex_destroy(scanner);
 	}
 	EHI *parent;
-	ehretval_p context;
+	ehcontext_t context;
 private:
 	EHParser(const EHParser&);
 	EHParser operator=(const EHParser&);

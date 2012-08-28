@@ -179,8 +179,8 @@ eharray_t *zvaltoeh_array(HashTable *hash, EHI *ehi) {
 class EHI {
 public:
 	int eh_interactive(void);
-	ehretval_p parse_file(const char *name, ehretval_p context);
-	ehretval_p parse_string(const char *cmd, ehretval_p context);
+	ehretval_p parse_file(const char *name, ehcontext_t context);
+	ehretval_p parse_string(const char *cmd, ehcontext_t context);
 
 	virtual ehretval_p execute_cmd(const char *name, eharray_t *paras);
 	virtual char *eh_getline(EHParser *parser = NULL);

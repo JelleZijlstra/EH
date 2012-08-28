@@ -207,9 +207,18 @@ typedef ehretval_t::ehretval_p ehretval_p;
 typedef array_ptr<ehretval_p> ehretval_a;
 
 // context
-typedef ehretval_p /* with type object_e */ ehcontext_t;
+struct ehcontext_t {
+	ehretval_p object;
+	ehretval_p scope;
 
-typedef ehretval_p (*ehlibmethod_t)(ehretval_p, ehretval_p, ehcontext_t, class EHI *);
+	ehcontext_t(ehretval_p _object, ehretval_p _scope) : object(_object), scope(_scope) {}
+
+	ehcontext_t(ehretval_p in) : object(in), scope(in) {}
+
+	ehcontext_t() : object(), scope() {}
+};
+
+typedef ehretval_p (*ehlibmethod_t)(ehretval_p, ehretval_p, class EHI *);
 
 // Variables and object members (which are the same)
 typedef struct ehmember_t {
@@ -302,6 +311,8 @@ public:
 	// for scoping
 	ehretval_p parent;
 	ehretval_p real_parent;
+	// inheritance
+	std::list<ehretval_p> super;
 	// destructor needs it
 	EHI *ehi;
 

@@ -289,14 +289,14 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 * Exceptions
 		 */
 			case T_TRY:
-			  ret = eh_op_try(node->get_opval()->paras, context);
-			  break;
+				ret = eh_op_try(node->get_opval()->paras, context);
+				break;
 			case T_CATCH:
-			  ret = eh_op_catch(node->get_opval()->paras, context);
-			  break;
+				ret = eh_op_catch(node->get_opval()->paras, context);
+				break;
 			case T_FINALLY:
-			  ret = eh_op_catch(node->get_opval()->paras, context);
-			  break;
+				ret = eh_op_catch(node->get_opval()->paras, context);
+				break;
 		/*
 		 * Miscellaneous
 		 */
@@ -336,6 +336,10 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			case ':': // function call
 				ret = eh_op_colon(node->get_opval()->paras, context);
 				break;
+			case T_THIS: // direct access to the context object
+				return context.object;
+			case T_SCOPE:
+				return context.scope;
 		/*
 		 * Object definitions
 		 */
@@ -588,7 +592,7 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 	} else {
 		// "for 5 count i; do stuff; endfor" construct
 		char *name = eh_execute(op->paras[1], context)->get_stringval();
-		ehmember_p var = this->set_property(context, name, ehretval_t::make_int(range.first), context);
+		ehmember_p var = this->set_property(context.scope, name, ehretval_t::make_int(range.first), context);
 		for(int i = range.first; i <= range.second; i++) {
 			var->value = ehretval_t::make_int(i);
 			ret = eh_execute(op->paras[2], context);
@@ -637,9 +641,9 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 		code = op->paras[3];
 	}
 	// create variables
-	membervar = this->set_property(context, membername, ehretval_p(NULL), context);
+	membervar = this->set_property(context.scope, membername, ehretval_p(NULL), context);
 	if(indexname != NULL) {
-		indexvar = this->set_property(context, indexname, ehretval_p(NULL), context);
+		indexvar = this->set_property(context.scope, indexname, ehretval_p(NULL), context);
 	}
 	if(object->type() == object_e) {
 		// check whether we're allowed to access private things
@@ -744,16 +748,10 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p object_data = ehretval_t::make_func(f);
 	ehretval_p ret = this->object_instantiate(this->get_primitive_class(func_e)->get_objectval());
 	ehobj_t *function_object = ret->get_objectval();
-	function_object->parent = context;
+	function_object->parent = context.scope;
 	function_object->type_id = func_e;
 	function_object->object_data = object_data;
 	f->code = paras[1];
-
-	// insert "scope" pointer
-	ehmember_p this_member;
-	this_member->attribute = attributes_t::make(private_e, nonstatic_e, const_e);
-	this_member->value = ret;
-	this->set_member(ret, "scope", this_member, ret);
 
 	// determine argument count
 	f->argcount = count_nodes(paras[0]);
@@ -788,13 +786,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	}
 
 	ret->get_objectval()->type_id = type_id;
-	ret->get_objectval()->parent = context;
-
-	// insert "this" pointer
-	ehmember_p this_member;
-	this_member->attribute = attributes_t::make(private_e, nonstatic_e, const_e);
-	this_member->value = ret;
-	this->set_member(ret, "this", this_member, ret);
+	ret->get_objectval()->parent = context.scope;
 
 	// inherit from Object
 	ehobj_t *object_class = this->repo.get_object(base_object_e)->get_objectval();
@@ -802,13 +794,13 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 		ret->get_objectval()->copy_member(member, false, ret, this);
 	}
 
-	eh_execute(code, ret);
+	eh_execute(code, ehcontext_t(ret, ret));
 	
 	if(op->nparas == 2) {
 		// insert variable
 		ehmember_p member;
 		member->value = ret;
-		context->get_objectval()->insert(name, member);
+		context.scope->get_objectval()->insert(name, member);
 	}
 	return ret;
 }
@@ -850,7 +842,7 @@ void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 			new_member->value = eh_execute(op->paras[2], context);
 			break;
 	}
-	this->set_member(context, name, new_member, context);
+	this->set_member(context.scope, name, new_member, context);
 }
 ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret;
@@ -935,9 +927,9 @@ ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 	ehretval_p varname = eh_execute(node, context);
-	ehmember_p var = context->get_objectval()->get_recursive(varname->get_stringval(), context);
+	ehmember_p var = context.scope->get_objectval()->get_recursive(varname->get_stringval(), context);
 	if(var == NULL) {
-		throw_NameError(context, varname->get_stringval(), this);
+		throw_NameError(context.scope, varname->get_stringval(), this);
 		return NULL;
 	} else {
 		return var->value;
@@ -971,13 +963,13 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 		case '$': {
 			ehretval_p base_var = eh_execute(internal_paras[0], context);
 			const char *name = base_var->get_stringval();
-			ehmember_p member = context->get_objectval()->get_recursive(name, context);
+			ehmember_p member = context.scope->get_objectval()->get_recursive(name, context);
 			if(member != NULL && member->isconst()) {
 				// bug: if the const member is actually in a higher scope, this error message will be wrong
-				throw_ConstError(context, name, this);
+				throw_ConstError(context.scope, name, this);
 			}
 			if(member == NULL) {
-				this->set_property(context, name, rvalue, context);
+				this->set_property(context.scope, name, rvalue, context);
 			} else {
 				member->value = rvalue;
 			}
@@ -1038,7 +1030,7 @@ ehretval_p EHI::eh_op_try(ehretval_p *paras, ehcontext_t context) {
 		} catch(eh_exception& e) {
 			// inject the exception into the current scope
 			ehmember_p exception_member = ehmember_t::make(attributes_t::make(public_e, nonstatic_e, nonconst_e), e.content);
-			this->set_member(context, "exception", exception_member, context);
+			this->set_member(context.scope, "exception", exception_member, context);
 			ret = eh_execute(catch_block, context);
 		}
 		eh_always_execute(finally_block, context);
@@ -1057,7 +1049,7 @@ ehretval_p EHI::eh_op_catch(ehretval_p *paras, ehcontext_t context) {
 	} catch(eh_exception& e) {
 		// inject the exception into the current scope
 		ehmember_p exception_member = ehmember_t::make(attributes_t::make(public_e, nonstatic_e, nonconst_e), e.content);
-		this->set_member(context, "exception", exception_member, context);
+		this->set_member(context.scope, "exception", exception_member, context);
 		ret = eh_execute(catch_block, context);
 	}
 	return ret;
@@ -1126,19 +1118,19 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, e
 	}
 }
 // call a method from another method
-ehretval_p EHI::call_method_from_method(ehretval_p obj, ehretval_p context, const char *name, ehretval_p args) {
-	bool data_is_null = context->get_objectval()->object_data->type() == null_e;
+ehretval_p EHI::call_method_from_method(ehretval_p obj, ehcontext_t context, const char *name, ehretval_p args) {
+	bool data_is_null = context.scope->get_objectval()->object_data->type() == null_e;
 	if(data_is_null && obj->type() != null_e) {
 		return call_method(obj, name, args, context);
 	} else {
-		return call_method(context, name, args, context);
+		return call_method(context.scope, name, args, context);
 	}
 }
 ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t context) {
 	// We special-case function calls on func_e and binding_e types; otherwise we'd end up in an infinite loop
 	if(function->type() == binding_e || function->is_a(func_e)) {
 		// This one time, we call a library method directly. If you want to override Function.operator_colon, too bad.
-		return ehlm_Function_operator_colon(NULL, args, function, this);
+		return ehlm_Function_operator_colon(function, args, this);
 	} else {
 		return call_method(function, "operator:", args, context);
 	}
@@ -1303,7 +1295,7 @@ void EHI::handle_uncaught(eh_exception &e) {
 		int type = content->get_full_type();
 		const std::string &type_string = this->repo.get_name(type);
 		// we're in global context now. Remember this object, because otherwise the string may be freed before we're done with it.
-		ehretval_p stringval = this->to_string(content, this->global_object);
+		ehretval_p stringval = this->to_string(content, ehcontext_t(this->global_object, this->global_object));
 		const char *msg = stringval->get_stringval();
 		std::cerr << "Uncaught exception of type " << type_string << ": " << msg << std::endl;
 	} catch(...) {

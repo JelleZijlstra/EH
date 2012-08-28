@@ -14,7 +14,7 @@
 #define END_EHLC() {NULL, NULL} };
 #define EXTERN_EHLC(name) extern ehlm_listentry_t ehlc_l_ ## name [];
 
-#define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, ehretval_p args, ehcontext_t context, EHI *ehi)
+#define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, ehretval_p args, EHI *ehi)
 
 #define ASSERT_TYPE(operand, ehtype, method) if(operand->type() != ehtype) { \
 	throw_TypeError("Invalid type for argument to " method, operand->type(), ehi); \

@@ -265,13 +265,13 @@ void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent, ehret
 }
 bool ehobj_t::context_compare(const ehcontext_t key) const {
 	// in global context, we never have access to private stuff
-	if(ehretval_p::null(key) || key->get_objectval()->get_parent() == NULL) {
+	if(ehretval_p::null(key.object) || key.object->get_objectval()->get_parent() == NULL) {
 		return false;
 	} else {
-		if(this->type_id == key->get_objectval()->type_id) {
+		if(this->type_id == key.object->get_objectval()->type_id) {
 			return true;
 		} else {
-			return this->context_compare(key->get_objectval()->parent);
+			return this->context_compare(key.object->get_objectval()->parent);
 		}
 	}
 }

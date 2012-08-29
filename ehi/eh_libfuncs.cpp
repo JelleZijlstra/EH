@@ -176,8 +176,8 @@ void printvar_t::retval(ehretval_p in) {
 				this->retval(i->second);
 			}
 			printf("]\n");
-		case base_object_e:
-			// Well hidden
+		case super_class_e:
+			printf("@parent class\n");
 			break;
 	}
 	return;

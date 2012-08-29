@@ -51,11 +51,11 @@ zval *ehtozval(ehretval_p in) {
 			case range_e:
 			case func_e:
 			case binding_e:
+			case super_class_e:
 			case object_e:
 				// TODO
 				eh_error_type("conversion to PHP", in->type(), enotice_e);
 				break;
-			case base_object_e:
 			case type_e:
 			case op_e:
 			case attribute_e:

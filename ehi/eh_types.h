@@ -15,6 +15,7 @@ private:
 			case binding_e:
 			case hash_e:
 			case tuple_e:
+			case super_class_e:
 			case range_e:
 				return true;
 			default:
@@ -93,6 +94,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(ehbinding_t *, binding)
 	EHRV_SET(struct ehhash_t *, hash)
 	EHRV_SET(class ehtuple_t *, tuple)
+	EHRV_SET(class ehsuper_t *, super_class)
 #undef EHRV_SET
 	// special constructors for GC'ed types
 #define EHRV_GC(vtype, ehtype) static void fill_ ## ehtype(ehretval_p in, vtype val) { \
@@ -106,6 +108,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_GC(struct ehhash_t *, hash)
 	EHRV_GC(struct ehfunc_t *, func)
 	EHRV_GC(class ehtuple_t *, tuple)
+	EHRV_GC(class ehsuper_t *, super_class)
 #undef EHRV_GC
 
 	void overwrite(ehretval_t &in) {
@@ -127,8 +130,8 @@ vtype get_ ## ehtype ## val() const { \
 			COPY(resource);
 			COPY(binding);
 			COPY(hash);
-			COPY(base_object);
 			COPY(tuple);
+			COPY(super_class);
 			case null_e: break;
 #undef COPY
 		}
@@ -322,8 +325,10 @@ public:
 
 	// method prototypes
 	ehmember_p get_recursive(const char *name, const ehcontext_t context);
-	void copy_member(obj_iterator &classmember, bool set_real_parent, ehretval_p ret, EHI *ehi);
 	bool context_compare(const ehcontext_t key) const;
+
+	bool inherited_has(const std::string &key) const;
+	ehmember_p inherited_get(const std::string &key);
 
 	// inline methods
 	size_t size() const {
@@ -363,7 +368,9 @@ public:
 		}
 	}
 
-
+	void inherit(ehretval_p superclass) {
+		super.push_front(superclass);
+	}
 	
 	// destructor
 	~ehobj_t();
@@ -506,11 +513,11 @@ public:
 
 class eh_exception : public std::exception {
 public:
-  ehretval_p content;
+	ehretval_p content;
 
-  eh_exception(ehretval_p _content) : content(_content) {}
+	eh_exception(ehretval_p _content) : content(_content) {}
 
-  virtual ~eh_exception() throw() {}
+	virtual ~eh_exception() throw() {}
 };
 
 // EH tuples

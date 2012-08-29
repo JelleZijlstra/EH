@@ -143,8 +143,14 @@ public:
 		ehretval_t::fill_tuple(out, in);
 		return out;
 	}
+	ehretval_p make_super_class(ehsuper_t *in) {
+		ehretval_p out;
+		this->gc.allocate(out);
+		ehretval_t::fill_super_class(out, in);
+		return out;
+	}
 	ehretval_p promote(ehretval_p in, ehcontext_t context);
-	ehretval_p object_instantiate(ehobj_t *obj);
+	ehretval_p object_instantiate(ehretval_p obj);
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
 	ehretval_p call_method_from_method(ehretval_p obj, ehcontext_t context, const char *name, ehretval_p args);
 

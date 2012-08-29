@@ -37,19 +37,14 @@ EHLC_ENTRY_RENAME(Object, operator_lte, "operator<=")
 END_EHLC()
 
 EH_METHOD(Object, new) {
-	ehretval_p ret = ehi->object_instantiate(obj->get_objectval());
+	ehretval_p ret = ehi->object_instantiate(obj);
 	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", args, ret);
 	return ret;
 }
 EH_METHOD(Object, inherit) {
   	ASSERT_TYPE(args, object_e, "Object.inherit");
-	ehobj_t *classobj = args->get_objectval();
-	if(classobj != NULL) {
-		OBJECT_FOR_EACH(classobj, i) {
-			obj->get_objectval()->copy_member(i, true, obj, ehi);
-		}
-	}
-	return NULL;
+  	obj->get_objectval()->inherit(args);
+  	return ehi->make_super_class(new ehsuper_t(args));
 }
 EH_METHOD(Object, initialize) {
 	return NULL;
@@ -969,7 +964,7 @@ EH_METHOD(Function, operator_colon) {
 	if(f->type == lib_e) {
 		return f->libmethod_pointer(base_object, args, ehi);
 	}
-	ehretval_p newcontext = ehi->object_instantiate(function_object->get_objectval());
+	ehretval_p newcontext = ehi->object_instantiate(function_object);
 	newcontext->get_objectval()->object_data = function_object->get_objectval()->object_data;
 
 	// check parameter count

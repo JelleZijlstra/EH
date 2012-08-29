@@ -46,7 +46,7 @@ typedef struct ehlc_listentry_t {
 } ehlc_listentry_t;
 #define LIBCLASSENTRY(c, is_core) { #c, ehlc_l_ ## c, is_core},
 ehlc_listentry_t libclasses[] = {
-	LIBCLASSENTRY(Object, base_object_e)
+	LIBCLASSENTRY(Object, object_e)
 	LIBCLASSENTRY(CountClass, -1)
 	LIBCLASSENTRY(File, -1)
 	LIBCLASSENTRY(Integer, int_e)
@@ -153,7 +153,7 @@ void EHI::eh_init(void) {
 		newclass->parent = global_object;
 
 		// inherit from Object. This relies on Object always being the first library class loaded
-		if(libclasses[i].type_id == base_object_e) {
+		if(libclasses[i].type_id == object_e) {
 			base_object = newclass;
 		} else {
 			OBJECT_FOR_EACH(base_object, member) {
@@ -781,7 +781,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 		type_id = this->repo.register_class(name, ret);
 		code = op->paras[1];
 	} else {
-		type_id = base_object_e;
+		type_id = object_e;
 		code = op->paras[0];
 	}
 
@@ -789,7 +789,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	ret->get_objectval()->parent = context.scope;
 
 	// inherit from Object
-	ehobj_t *object_class = this->repo.get_object(base_object_e)->get_objectval();
+	ehobj_t *object_class = this->repo.get_object(object_e)->get_objectval();
 	OBJECT_FOR_EACH(object_class, member) {
 		ret->get_objectval()->copy_member(member, false, ret, this);
 	}
@@ -1203,7 +1203,7 @@ ehretval_p EHI::get_property(ehretval_p object, ehretval_p object_data, const ch
 		// it is hard to get all objects to actually inherit from Object (and, therefore, have a toString method)
 		// therefore, we use special logic to make that work
 		if(strcmp(name, "toString") == 0) {
-			ehretval_p the_object = this->get_primitive_class(base_object_e);
+			ehretval_p the_object = this->get_primitive_class(object_e);
 			return the_object->get_objectval()->get_known("toString")->value;
 		} else {
 			throw_NameError(object_data, name, this);
@@ -1213,7 +1213,12 @@ ehretval_p EHI::get_property(ehretval_p object, ehretval_p object_data, const ch
 	if(member->attribute.visibility == private_e && !obj->context_compare(context)) {
 		throw_NameError(object, name, this);		
 	}
-	return member->value;
+	ehretval_p out = member->value;
+	if(out->is_a(func_e)) {
+		return this->make_binding(new ehbinding_t(object, out));
+	} else {
+		return out;
+	}
 }
 
 /*

@@ -45,6 +45,7 @@ public:
 		struct ehhash_t *hashval;
 		void *base_objectval;
 		class ehtuple_t *tupleval;
+		class ehsuper_t *super_classval;
 	};
 	// constructors
 	ehretval_t() : _type(null_e), stringval(NULL) {}
@@ -361,6 +362,8 @@ public:
 			return this->real_parent->get_objectval();
 		}
 	}
+
+
 	
 	// destructor
 	~ehobj_t();
@@ -513,20 +516,32 @@ public:
 // EH tuples
 class ehtuple_t {
 private:
-  const int _size;
-  ehretval_a content;
+	const int _size;
+	ehretval_a content;
 public:
-  ehtuple_t(int size, ehretval_p *in) : _size(size), content(size) {
-    for(int i = 0; i < size; i++) {
-      content[i] = in[i];
-    }
-  }
-  
-  int size() const {
-    return this->_size;
-  }
-  ehretval_p get(int i) const {
-    assert(i >= 0 && i < _size);
-    return this->content[i];
-  }
+	ehtuple_t(int size, ehretval_p *in) : _size(size), content(size) {
+		for(int i = 0; i < size; i++) {
+			content[i] = in[i];
+		}
+	}
+
+	int size() const {
+		return this->_size;
+	}
+	ehretval_p get(int i) const {
+		assert(i >= 0 && i < _size);
+		return this->content[i];
+	}
+};
+
+// Superclasses (used for inheritance)
+class ehsuper_t {
+private:
+	ehretval_p super_class;
+public:
+	ehsuper_t(ehretval_p in) : super_class(in) {}
+
+	ehretval_p content() {
+		return this->super_class;
+	}
 };

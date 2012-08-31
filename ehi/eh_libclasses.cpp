@@ -996,6 +996,11 @@ EH_METHOD(Function, operator_colon) {
 	return ret;
 }
 EH_METHOD(Function, toString) {
+	ehretval_p hold_obj;
+	if(obj->type() == binding_e) {
+		hold_obj = obj;
+		obj = obj->get_bindingval()->method;
+	}
 	ASSERT_OBJ_TYPE(func_e, "Function.toString");
 	ehfunc_t *f = obj->get_funcval();
 	if(f->type == lib_e) {

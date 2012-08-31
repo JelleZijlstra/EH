@@ -16,14 +16,14 @@
 
 #define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, ehretval_p args, EHI *ehi)
 
-#define ASSERT_TYPE(operand, ehtype, method) if(operand->type() != ehtype) { \
+#define ASSERT_TYPE(operand, ehtype, method) if(!operand->is_a(ehtype)) { \
 	throw_TypeError("Invalid type for argument to " method, operand->type(), ehi); \
 }
 #define ASSERT_NARGS(count, method) ASSERT_TYPE(args, tuple_e, method); \
 	if(args->get_tupleval()->size() != count) { \
 		throw_ArgumentError("Argument must be a tuple of size " #count, method, args, ehi); \
 	}
-#define ASSERT_OBJ_TYPE(ehtype, method) if(obj->type() != ehtype) { \
+#define ASSERT_OBJ_TYPE(ehtype, method) if(!obj->is_a(ehtype)) { \
 	throw_TypeError("Invalid base object for " #method, obj->type(), ehi); \
 }
 #define ASSERT_NULL(method) if(args->type() != null_e) { \

@@ -152,7 +152,9 @@ void EHI::eh_init(void) {
 			this->repo.register_known_class(type_id, libclasses[i].name, new_value);
 		}
 		newclass->type_id = type_id;
-		newclass->parent = global_object;
+		if(strcmp(libclasses[i].name, "GlobalObject") != 0) {
+			newclass->parent = global_object;
+		}
 
 		// inherit from Object, except in Object itself
 		if(libclasses[i].type_id != object_e) {
@@ -1102,7 +1104,13 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, e
 		func = this->get_property(obj, NULL, name, context);
 	} else {
 		ehretval_p class_obj = this->get_primitive_class(obj->type());
-		ehretval_p method = this->get_property(class_obj, obj, name, context);
+		ehretval_p the_property = this->get_property(class_obj, obj, name, context);
+		ehretval_p method;
+		if(the_property->is_a(binding_e)) {
+			method = the_property->get_bindingval()->method;
+		} else {
+			method = the_property;
+		}
 		if(!method->is_a(func_e)) {
 			throw_TypeError("Method must be a function", method->type(), this);
 		}
@@ -1142,7 +1150,7 @@ ehretval_p EHI::object_instantiate(ehretval_p input) {
 	new_obj->type_id = obj->type_id;
 	new_obj->parent = obj->parent;
 	new_obj->real_parent = obj->real_parent;
-	new_obj->super.push_front(input);
+	new_obj->inherit(input);
 	return ret;
 }
 ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p value, ehcontext_t context) {

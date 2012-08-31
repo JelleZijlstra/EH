@@ -74,10 +74,7 @@ public:
 	out->ehtype ## val = in; \
 	return out; \
 } \
-vtype get_ ## ehtype ## val() const { \
-	assert(this->type() == ehtype ## _e); \
-	return this->ehtype ## val; \
-}
+vtype get_ ## ehtype ## val() const;
 	EHRV_SET(int, int)
 	EHRV_SET(char *, string)
 	EHRV_SET(bool, bool)
@@ -321,7 +318,7 @@ public:
 	EHI *ehi;
 
 	// constructors
-	ehobj_t() : members(), object_data(NULL), type_id(null_e), parent(), real_parent(), ehi() {}
+	ehobj_t() : members(), object_data(NULL), type_id(null_e), parent(), real_parent(), super(), ehi() {}
 
 	// method prototypes
 	ehmember_p get_recursive(const char *name, const ehcontext_t context);
@@ -348,7 +345,7 @@ public:
 		return members[key];
 	}
 
-	bool has(const std::string key) const {
+	bool has(const std::string &key) const {
 		return members.count(key);
 	}
 	
@@ -376,12 +373,8 @@ public:
 	~ehobj_t();
 private:
 	// ehobj_t should never be handled directly
-	ehobj_t(const ehobj_t&) : members(), object_data(), type_id(), parent(), real_parent(), ehi() {
-		throw "Not allowed";
-	}
-	ehobj_t operator=(const ehobj_t&) {
-		throw "Not allowed";
-	}
+	ehobj_t(const ehobj_t&);
+	ehobj_t operator=(const ehobj_t&);
 } ehobj_t;
 #define OBJECT_FOR_EACH(obj, varname) for(ehobj_t::obj_iterator varname = (obj)->members.begin(), end = (obj)->members.end(); varname != end; varname++)
 
@@ -552,3 +545,29 @@ public:
 		return this->super_class;
 	}
 };
+
+// define methods
+#define EHRV_SET(vtype, ehtype) inline vtype ehretval_t::get_ ## ehtype ## val() const { \
+	if(this->type() == object_e && ehtype ## _e != object_e) { \
+		return this->get_objectval()->object_data->get_ ## ehtype ## val(); \
+	} \
+	assert(this->type() == ehtype ## _e); \
+	return this->ehtype ## val; \
+}
+EHRV_SET(int, int)
+EHRV_SET(char *, string)
+EHRV_SET(bool, bool)
+EHRV_SET(float, float)
+EHRV_SET(struct eharray_t *, array)
+EHRV_SET(struct ehobj_t *, object)
+EHRV_SET(struct ehrange_t *, range)
+EHRV_SET(struct opnode_t *, op)
+EHRV_SET(attribute_enum, attribute)
+EHRV_SET(attributes_t, attributestr)
+EHRV_SET(struct ehfunc_t *, func)
+EHRV_SET(type_enum, type)
+EHRV_SET(class LibraryBaseClass *, resource)
+EHRV_SET(ehbinding_t *, binding)
+EHRV_SET(struct ehhash_t *, hash)
+EHRV_SET(class ehtuple_t *, tuple)
+EHRV_SET(class ehsuper_t *, super_class)

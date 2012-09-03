@@ -12,7 +12,7 @@ class A {
 class C {
 	a = 4
 	class D {
-		inherit A.B
+		this.inherit A.B
 	}
 	o = D.new ()
 	

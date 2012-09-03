@@ -1,5 +1,5 @@
 @string '1 to 3'
 @bool false
-Unknown member toBool in object of type Function: func: n -> <user code>
+Unknown member toBool in object of type Function: func: n -> (user code)
 Unknown member toRange in object of type Float: 3.140000
 Uncaught exception of type NameError: Unknown member toArray in object of type Null: 

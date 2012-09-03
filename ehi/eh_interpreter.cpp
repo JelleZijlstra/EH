@@ -166,7 +166,6 @@ void EHI::eh_init(void) {
 		for(int j = 0; members[j].name != NULL; j++) {
 			ehmember_p func;
 			func->attribute = attributes;
-			// could the fact that library methods are missing Object methods become problematic?
 			ehobj_t *function_obj = new ehobj_t();
 			func->value = this->make_object(function_obj);
 			function_obj->parent = new_value;
@@ -837,9 +836,18 @@ void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 		case 2: // non-set property: null
 			new_member->value = NULL;
 			break;
-		case 3: // set property
-			new_member->value = eh_execute(op->paras[2], context);
+		case 3: { // set property
+			ehretval_p value = eh_execute(op->paras[2], context);
+			if(value->type() == binding_e) {
+				ehretval_p obj_data = value->get_bindingval()->object_data;
+				if(obj_data->type() == object_e && obj_data->get_objectval() == context.scope->get_objectval()) {
+					ehretval_p reference_retainer = value;
+					value = value->get_bindingval()->method;
+				}
+			}
+			new_member->value = value;
 			break;
+		}
 	}
 	this->set_member(context.scope, name, new_member, context);
 }
@@ -1088,8 +1096,7 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, e
 	if(obj->is_object()) {
 		func = this->get_property(obj, name, context);
 	} else {
-		ehretval_p class_obj = this->get_primitive_class(obj->type());
-		ehretval_p the_property = this->get_property(class_obj, name, context);
+		ehretval_p the_property = this->get_property(obj, name, context);
 		ehretval_p method;
 		if(the_property->is_a(binding_e)) {
 			method = the_property->get_bindingval()->method;
@@ -1143,7 +1150,8 @@ ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p val
 	ehobj_t *obj = object->get_objectval();
 	// unbind bindings to myself
 	if(value->type() == binding_e) {
-		if(obj == value->get_bindingval()->object_data->get_objectval()) {
+		ehretval_p obj_data = value->get_bindingval()->object_data;
+		if(obj_data->type() == object_e && obj == obj_data->get_objectval()) {
 			ehretval_p reference_retainer = value;
 			value = value->get_bindingval()->method;
 		}

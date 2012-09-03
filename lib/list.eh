@@ -23,8 +23,8 @@ class List
 	const tail = func: -> this.l->1
 
 	const operator-> = func: n -> given n
-		case 0; head()
-		case 1; tail()
+		case 0; this.head()
+		case 1; this.tail()
 		default; throw ArgumentError.new "Argument must be 0 or 1", "List.operator->", n
 	end
 
@@ -68,7 +68,7 @@ class List
 		end
 	end
 
-	const reverse = func: -> (reverse_append Nil)
+	const reverse = func: -> (this.reverse_append Nil)
 
 	# Merge sort implementation
 	const private split = func: l, r

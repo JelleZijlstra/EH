@@ -1,151 +1,54 @@
 @object <GlobalObject> [
 ArgumentError <public,non-static,constant>: @object <ArgumentError> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Array <public,non-static,constant>: @object <Array> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
 operator-> <public,non-static,non-constant>: @function <library>: 
 operator->= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toArray <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 toTuple <public,non-static,non-constant>: @function <library>: 
 ]
 Bool <public,non-static,constant>: @object <Bool> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
 operator! <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toInt <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 ConstError <public,non-static,constant>: @object <ConstError> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 CountClass <public,non-static,constant>: @object <CountClass> [
-compare <public,non-static,non-constant>: @function <library>: 
 docount <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 setcount <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 Exception <public,non-static,constant>: @object <Exception> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 File <public,non-static,constant>: @object <File> [
 close <public,non-static,non-constant>: @function <library>: 
-compare <public,non-static,non-constant>: @function <library>: 
 finalize <public,non-static,non-constant>: @function <library>: 
 getc <public,non-static,non-constant>: @function <library>: 
 gets <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
 open <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 puts <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 Float <public,non-static,constant>: @object <Float> [
 abs <public,non-static,non-constant>: @function <library>: 
 compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
 operator* <public,non-static,non-constant>: @function <library>: 
 operator+ <public,non-static,non-constant>: @function <library>: 
 operator- <public,non-static,non-constant>: @function <library>: 
 operator/ <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 operator_uminus <public,non-static,non-constant>: @function <library>: 
 sqrt <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
@@ -154,100 +57,33 @@ toInt <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Function <public,non-static,constant>: @object <Function> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
 operator: <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 GarbageCollector <public,non-static,constant>: @object <GarbageCollector> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 run <public,non-static,non-constant>: @function <library>: 
 stats <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
-GlobalObject <public,non-static,constant>: @object <GlobalObject> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
+GlobalObject <public,non-static,constant>: (recursion)
 Hash <public,non-static,constant>: @object <Hash> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
 has <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
 operator-> <public,non-static,non-constant>: @function <library>: 
 operator->= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toArray <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 Integer <public,non-static,constant>: @object <Integer> [
 abs <public,non-static,non-constant>: @function <library>: 
 compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
 getBit <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
 operator% <public,non-static,non-constant>: @function <library>: 
 operator& <public,non-static,non-constant>: @function <library>: 
 operator* <public,non-static,non-constant>: @function <library>: 
 operator+ <public,non-static,non-constant>: @function <library>: 
 operator- <public,non-static,non-constant>: @function <library>: 
 operator/ <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
 operator<< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 operator>> <public,non-static,non-constant>: @function <library>: 
 operator^ <public,non-static,non-constant>: @function <library>: 
 operator_uminus <public,non-static,non-constant>: @function <library>: 
@@ -261,67 +97,19 @@ toInt <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 LoopError <public,non-static,constant>: @object <LoopError> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 MiscellaneousError <public,non-static,constant>: @object <MiscellaneousError> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 NameError <public,non-static,constant>: @object <NameError> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Null <public,non-static,constant>: @object <Null> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
@@ -343,21 +131,9 @@ toString <public,non-static,non-constant>: @function <library>:
 ]
 Range <public,non-static,constant>: @object <Range> [
 compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
 max <public,non-static,non-constant>: @function <library>: 
 min <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
 operator-> <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toArray <public,non-static,non-constant>: @function <library>: 
 toRange <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
@@ -365,22 +141,11 @@ toString <public,non-static,non-constant>: @function <library>:
 String <public,non-static,constant>: @object <String> [
 charAtPosition <public,non-static,non-constant>: @function <library>: 
 compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
 operator+ <public,non-static,non-constant>: @function <library>: 
 operator-> <public,non-static,non-constant>: @function <library>: 
 operator->= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toFloat <public,non-static,non-constant>: @function <library>: 
 toInt <public,non-static,non-constant>: @function <library>: 
@@ -388,70 +153,21 @@ toRange <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 SyntaxError <public,non-static,constant>: @object <SyntaxError> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Tuple <public,non-static,constant>: @object <Tuple> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
 operator-> <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 toTuple <public,non-static,non-constant>: @function <library>: 
 ]
 TypeError <public,non-static,constant>: @object <TypeError> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 UnknownCommandError <public,non-static,constant>: @object <UnknownCommandError> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 argc <public,non-static,non-constant>: @int 1
@@ -459,17 +175,12 @@ argv <public,non-static,non-constant>: @array [
 0 => @string 'printglobal.eh'
 ]
 collectGarbage <public,non-static,non-constant>: @function <library>: 
-compare <public,non-static,non-constant>: @function <library>: 
 echo <public,non-static,non-constant>: @function <library>: 
 eval <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
 get_type <public,non-static,non-constant>: @function <library>: 
 getinput <public,non-static,non-constant>: @function <library>: 
 global <public,non-static,constant>: (recursion)
 include <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
 is_array <public,non-static,non-constant>: @function <library>: 
 is_bool <public,non-static,non-constant>: @function <library>: 
 is_float <public,non-static,non-constant>: @function <library>: 
@@ -479,14 +190,6 @@ is_object <public,non-static,non-constant>: @function <library>:
 is_range <public,non-static,non-constant>: @function <library>: 
 is_string <public,non-static,non-constant>: @function <library>: 
 log <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
 pow <public,non-static,non-constant>: @function <library>: 
 printvar <public,non-static,non-constant>: @function <library>: 
 put <public,non-static,non-constant>: @function <library>: 

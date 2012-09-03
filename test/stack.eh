@@ -1,21 +1,22 @@
 #!/usr/bin/ehi
 class Stack
   private n = 0
+  private s
 
-  public initialize = func: -> []
+  public initialize = func: -> (this.s = [])
   
   public push = func: in
-    self->n = in
+    this.s->n = in
     this.n = this.n + 1
   end
   
   public pop = func:
-    printvar self
+    printvar this.s
     if this.n == 0
       throw "Stack empty"
     end
     this.n = this.n - 1
-    ret self->(this.n)
+    ret this.s->(this.n)
   end
   
   public size = func: -> this.n

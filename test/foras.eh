@@ -20,6 +20,8 @@ class Foo
 	const mah = 4
 end
 echo 'Object'
+# This now doesn't print anything, because all the properties are in the parent
+# object. Not sure that should be considered desired behavior.
 for (Foo.new ()) as key => value
 	echo key
 	echo value

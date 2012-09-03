@@ -10,7 +10,7 @@ class Foo
 	end
 	public useprop:
 		# Will use object property
-		echo bar
+		echo this.bar
 	end
 end
 o = Foo.new ()

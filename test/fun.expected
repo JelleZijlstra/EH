@@ -1,2 +1,2 @@
-@int 0
 Uncaught exception of type TypeError: Method must be a function: Integer
+@int 0

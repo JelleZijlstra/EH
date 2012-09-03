@@ -1,3 +1,4 @@
+Uncaught exception of type SyntaxError: syntax error, unexpected T_INTEGER, expecting ']' at line 7
 @array [
 0 => @int 1
 1 => @int 2
@@ -8,4 +9,3 @@
 @array [
 0 => @int 1
 ]
-Uncaught exception of type SyntaxError: syntax error, unexpected T_INTEGER, expecting ']' at line 7

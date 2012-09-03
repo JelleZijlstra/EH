@@ -45,7 +45,7 @@ enum type_enum {
 	float_e = 14,
 	resource_e = 15,
 	binding_e = 16,
-	base_object_e = 17,
+	super_class_e = 17,
 	tuple_e = 18
 };
 

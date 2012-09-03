@@ -1,2 +1,2 @@
 Invalid base object for "Hash.has": Null
-Uncaught exception of type TypeError: Invalid base object for "String.length": Integer
+Uncaught exception of type TypeError: Invalid base object for "String.length": Null

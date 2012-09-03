@@ -37,19 +37,14 @@ EHLC_ENTRY_RENAME(Object, operator_lte, "operator<=")
 END_EHLC()
 
 EH_METHOD(Object, new) {
-	ehretval_p ret = ehi->object_instantiate(context->get_objectval());
+	ehretval_p ret = ehi->object_instantiate(obj);
 	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", args, ret);
 	return ret;
 }
 EH_METHOD(Object, inherit) {
   	ASSERT_TYPE(args, object_e, "Object.inherit");
-	ehobj_t *classobj = args->get_objectval();
-	if(classobj != NULL) {
-		OBJECT_FOR_EACH(classobj, i) {
-			context->get_objectval()->copy_member(i, true, context, ehi);
-		}
-	}
-	return NULL;
+  	obj->get_objectval()->inherit(args);
+  	return ehi->make_super_class(new ehsuper_t(args));
 }
 EH_METHOD(Object, initialize) {
 	return NULL;
@@ -69,7 +64,7 @@ EH_METHOD(Object, isA) {
   if(type == object_e) {
     type = args->get_objectval()->type_id;
   }
-  return ehretval_t::make_bool(context->is_a(type));
+  return ehretval_t::make_bool(obj->is_a(type));
 }
 
 ehretval_p get_data(ehretval_p in) {
@@ -81,22 +76,22 @@ ehretval_p get_data(ehretval_p in) {
 
 }
 EH_METHOD(Object, operator_compare) {
-	int lhs_type = context->get_full_type();
+	int lhs_type = obj->get_full_type();
 	int rhs_type = args->get_full_type();
 	int comparison = intcmp(lhs_type, rhs_type);
 	if(comparison != 0) {
 		return ehretval_t::make_int(comparison);
 	} else {
-		return ehi->call_method_from_method(obj, context, "compare", args);
+		return ehi->call_method(obj, "compare", args, obj);
 	}
 }
 EH_METHOD(Object, compare) {
-	int lhs_type = context->get_full_type();
+	int lhs_type = obj->get_full_type();
 	int rhs_type = args->get_full_type();
 	if(lhs_type != rhs_type) {
 		throw_TypeError("Arguments to Object.compare must have the same type", rhs_type, ehi);
 	}
-	ehretval_p lhs = get_data(context);
+	ehretval_p lhs = get_data(obj);
 	if(lhs->type() == null_e) {
 		lhs = obj;
 	}
@@ -104,7 +99,7 @@ EH_METHOD(Object, compare) {
 	return ehretval_t::make_int(lhs->naive_compare(rhs));	
 }
 #define CALL_COMPARE() \
-	ehretval_p comparison_p = ehi->call_method_from_method(obj, context, "operator<=>", args); \
+	ehretval_p comparison_p = ehi->call_method(obj, "operator<=>", args, obj); \
 	if(comparison_p->type() != int_e) { \
 		throw_TypeError("operator<=> must return an Integer", comparison_p->type(), ehi); \
 	} \
@@ -182,7 +177,7 @@ EH_METHOD(File, initialize) {
 EH_METHOD(File, open) {
 	File *selfptr = (File *) obj->get_resourceval();
 
-	ehretval_p filename = ehi->to_string(args, context);
+	ehretval_p filename = ehi->to_string(args, obj);
 	ASSERT_TYPE(filename, string_e, "File.open");
 	FILE *mfile = fopen(filename->get_stringval(), "r+");
 	if(mfile == NULL) {
@@ -264,6 +259,7 @@ EH_METHOD(File, finalize) {
 }
 
 START_EHLC(Integer)
+EHLC_ENTRY(Integer, initialize)
 EHLC_ENTRY_RENAME(Integer, operator_plus, "operator+")
 EHLC_ENTRY_RENAME(Integer, operator_minus, "operator-")
 EHLC_ENTRY_RENAME(Integer, operator_times, "operator*")
@@ -289,7 +285,7 @@ EHLC_ENTRY(Integer, sqrt)
 END_EHLC()
 
 EH_METHOD(Integer, initialize) {
-	return ehi->to_int(args, context);
+	return ehi->to_int(args, obj);
 }
 EH_METHOD(Integer, operator_plus) {
 	ASSERT_OBJ_TYPE(int_e, "Integer.operator+");
@@ -297,7 +293,7 @@ EH_METHOD(Integer, operator_plus) {
 		return ehretval_t::make_float((float) obj->get_intval() + args->get_floatval());
 	} else {
 		// always returns an int or throws
-		args = ehi->to_int(args, context);
+		args = ehi->to_int(args, obj);
 		return ehretval_t::make_int(obj->get_intval() + args->get_intval());
 	}
 }
@@ -306,7 +302,7 @@ EH_METHOD(Integer, operator_minus) {
 	if(args->type() == float_e) {
 		return ehretval_t::make_float((float) obj->get_intval() - args->get_floatval());
 	} else {
-		args = ehi->to_int(args, context);
+		args = ehi->to_int(args, obj);
 		return ehretval_t::make_int(obj->get_intval() - args->get_intval());
 	}
 }
@@ -315,7 +311,7 @@ EH_METHOD(Integer, operator_times) {
 	if(args->type() == float_e) {
 		return ehretval_t::make_float((float) obj->get_intval() * args->get_floatval());
 	} else {
-		args = ehi->to_int(args, context);
+		args = ehi->to_int(args, obj);
 		return ehretval_t::make_int(obj->get_intval() * args->get_intval());
 	}
 }
@@ -328,7 +324,7 @@ EH_METHOD(Integer, operator_divide) {
 		}
 		return ehretval_t::make_float((float) obj->get_intval() / val);
 	} else {
-		args = ehi->to_int(args, context);
+		args = ehi->to_int(args, obj);
 		int val = args->get_intval();
 		if(val == 0) {
 			throw_MiscellaneousError("Divide by zero in Integer.operator/", ehi);
@@ -338,7 +334,7 @@ EH_METHOD(Integer, operator_divide) {
 }
 EH_METHOD(Integer, operator_modulo) {
 	ASSERT_OBJ_TYPE(int_e, "Integer.operator%");
-	ehretval_p operand = ehi->to_int(args, context);
+	ehretval_p operand = ehi->to_int(args, obj);
 	ASSERT_TYPE(operand, int_e, "Integer.operator%");
 	if(operand->get_intval() == 0) {
 		throw_MiscellaneousError("Divide by zero in Integer.operator%", ehi);
@@ -470,7 +466,7 @@ EHLC_ENTRY(Array, toTuple)
 END_EHLC()
 
 EH_METHOD(Array, initialize) {
-	return ehi->to_array(args, context);
+	return ehi->to_array(args, obj);
 }
 EH_METHOD(Array, length) {
 	ASSERT_NULL_AND_TYPE(array_e, "Array.length");
@@ -534,26 +530,26 @@ EHLC_ENTRY(Float, sqrt)
 END_EHLC()
 
 EH_METHOD(Float, initialize) {
-	return ehi->to_float(args, context);
+	return ehi->to_float(args, obj);
 }
 EH_METHOD(Float, operator_plus) {
 	ASSERT_OBJ_TYPE(float_e, "Float.operator+");
-	ehretval_p operand = ehi->to_float(args, context);
+	ehretval_p operand = ehi->to_float(args, obj);
 	return ehretval_t::make_float(obj->get_floatval() + operand->get_floatval());
 }
 EH_METHOD(Float, operator_minus) {
 	ASSERT_OBJ_TYPE(float_e, "Float.operator-");
-	ehretval_p operand = ehi->to_float(args, context);
+	ehretval_p operand = ehi->to_float(args, obj);
 	return ehretval_t::make_float(obj->get_floatval() - operand->get_floatval());
 }
 EH_METHOD(Float, operator_times) {
 	ASSERT_OBJ_TYPE(float_e, "Float.operator*");
-	ehretval_p operand = ehi->to_float(args, context);
+	ehretval_p operand = ehi->to_float(args, obj);
 	return ehretval_t::make_float(obj->get_floatval() * operand->get_floatval());
 }
 EH_METHOD(Float, operator_divide) {
 	ASSERT_OBJ_TYPE(float_e, "Float.operator/");
-	ehretval_p operand = ehi->to_float(args, context);
+	ehretval_p operand = ehi->to_float(args, obj);
 	if(operand->get_floatval() == 0.0) {
 		throw_MiscellaneousError("Divide by zero in Float.operator/", ehi);
 	}
@@ -619,11 +615,11 @@ EHLC_ENTRY(String, charAtPosition)
 END_EHLC()
 
 EH_METHOD(String, initialize) {
-	return ehi->to_string(args, context);
+	return ehi->to_string(args, obj);
 }
 EH_METHOD(String, operator_plus) {
 	ASSERT_OBJ_TYPE(string_e, "String.operator+");
-	ehretval_p operand = ehi->to_string(args, context);
+	ehretval_p operand = ehi->to_string(args, obj);
 	ASSERT_TYPE(operand, string_e, "String.operator+");
 	size_t len1 = strlen(obj->get_stringval());
 	size_t len2 = strlen(operand->get_stringval());
@@ -661,7 +657,7 @@ EH_METHOD(String, operator_arrow_equals) {
 	if(index < 0 || ((unsigned) index) >= len) {
 		throw_ArgumentError_out_of_range("String.operator->=", operand1, ehi);
 	}
-	ehretval_p operand2 = ehi->to_string(args->get_tupleval()->get(1), context);
+	ehretval_p operand2 = ehi->to_string(args->get_tupleval()->get(1), obj);
 	if(strlen(operand2->get_stringval()) == 0) {
 		throw_ArgumentError("Argument cannot be a zero-length string", "String.operator->=", args->get_tupleval()->get(1), ehi);
 	}
@@ -756,7 +752,7 @@ EHLC_ENTRY_RENAME(Bool, operator_bang, "operator!")
 END_EHLC()
 
 EH_METHOD(Bool, initialize) {
-	return ehi->to_bool(args, context);
+	return ehi->to_bool(args, obj);
 }
 EH_METHOD(Bool, toString) {
 	ASSERT_NULL_AND_TYPE(bool_e, "Bool.toString");
@@ -814,7 +810,7 @@ EHLC_ENTRY(Range, compare)
 END_EHLC()
 
 EH_METHOD(Range, initialize) {
-	return ehi->to_range(args, context);
+	return ehi->to_range(args, obj);
 }
 EH_METHOD(Range, min) {
 	ASSERT_NULL_AND_TYPE(range_e, "Range.min");
@@ -840,8 +836,8 @@ EH_METHOD(Range, operator_arrow) {
 EH_METHOD(Range, toString) {
 	ASSERT_NULL_AND_TYPE(range_e, "Range.toString");
 	ehrange_t *range = obj->get_rangeval();
-	ehretval_p str1 = ehi->to_string(range->min, context);
-	ehretval_p str2 = ehi->to_string(range->max, context);
+	ehretval_p str1 = ehi->to_string(range->min, obj);
+	ehretval_p str2 = ehi->to_string(range->max, obj);
 	size_t len1 = strlen(str1->get_stringval());
 	size_t len2 = strlen(str2->get_stringval());
 	size_t len = len1 + 4 + len2 + 1;
@@ -878,12 +874,12 @@ EH_METHOD(Range, compare) {
 	// 1 if lhs.max > rhs.max, lhs.min > rhs.min or lhs.min < rhs.min, lhs.max > rhs.max
 	ehretval_p lhs_max = obj->get_rangeval()->max;
 	ehretval_p rhs_max = args->get_rangeval()->max;
-	ehretval_p min_cmp_p = ehi->call_method(lhs_min, "compare", rhs_min, context);
+	ehretval_p min_cmp_p = ehi->call_method(lhs_min, "compare", rhs_min, obj);
 	if(min_cmp_p->type() != int_e) {
 		throw_TypeError("compare must return an Integer", min_cmp_p->type(), ehi);
 	}
 	int min_cmp = min_cmp_p->get_intval();
-	ehretval_p max_cmp_p = ehi->call_method(lhs_max, "compare", rhs_max, context);
+	ehretval_p max_cmp_p = ehi->call_method(lhs_max, "compare", rhs_max, obj);
 	if(max_cmp_p->type() != int_e) {
 		throw_TypeError("compare must return an Integer", max_cmp_p->type(), ehi);
 	}
@@ -946,30 +942,30 @@ END_EHLC()
 EH_METHOD(Function, operator_colon) {
 	// This is probably the most important library method in EH. It works
 	// on both Function and binding objects.
-	ehretval_p object_data;
+	ehretval_p base_object;
 	ehretval_p function_object;
 	ehretval_p parent;
 	ehretval_p real_parent;
-	if(context->is_a(func_e)) {
-		function_object = context;
-		parent = context->get_objectval()->parent;
-		real_parent = context->get_objectval()->real_parent;
-		object_data = context->get_objectval()->parent->get_objectval()->object_data;
-	} else if(context->type() == binding_e) {
-		ehbinding_t *binding = context->get_bindingval();
+	if(obj->is_a(func_e)) {
+		function_object = obj;
+		parent = obj->get_objectval()->parent;
+		real_parent = obj->get_objectval()->real_parent;
+		base_object = ehi->global_object;
+	} else if(obj->type() == binding_e) {
+		ehbinding_t *binding = obj->get_bindingval();
 		function_object = binding->method;
 		parent = binding->method->get_objectval()->parent;
 		real_parent = binding->method->get_objectval()->real_parent;
-		object_data = binding->object_data;
+		base_object = binding->object_data;
 	} else {
 		throw_TypeError("Invalid base object for Function.operator:", obj->type(), ehi);
 	}
 	ehfunc_t *f = function_object->get_objectval()->object_data->get_funcval();
 
 	if(f->type == lib_e) {
-		return f->libmethod_pointer(object_data, args, parent, ehi);
+		return f->libmethod_pointer(base_object, args, ehi);
 	}
-	ehretval_p newcontext = ehi->object_instantiate(function_object->get_objectval());
+	ehretval_p newcontext = ehi->object_instantiate(function_object);
 	newcontext->get_objectval()->object_data = function_object->get_objectval()->object_data;
 
 	// check parameter count
@@ -995,23 +991,23 @@ EH_METHOD(Function, operator_colon) {
 				ehi->set_property(newcontext, f->args[f->argcount - 1 - i].name.c_str(), tuple->get(i), newcontext);
 			}			
 		}
-	}
-	// insert self variable with the object_data
-	ehmember_p self_member;
-	self_member->value = object_data;
-	newcontext->get_objectval()->insert("self", self_member);
-	
-	ehretval_p ret = ehi->eh_execute(f->code, newcontext);
+	}	
+	ehretval_p ret = ehi->eh_execute(f->code, ehcontext_t(base_object, newcontext));
 	ehi->returning = false;
 	return ret;
 }
 EH_METHOD(Function, toString) {
+	ehretval_p hold_obj;
+	if(obj->type() == binding_e) {
+		hold_obj = obj;
+		obj = obj->get_bindingval()->method;
+	}
 	ASSERT_OBJ_TYPE(func_e, "Function.toString");
 	ehfunc_t *f = obj->get_funcval();
 	if(f->type == lib_e) {
-		return ehretval_t::make_string(strdup("func: -> <native code>"));
+		return ehretval_t::make_string(strdup("func: -> (native code)"));
 	} else if(f->argcount == 0) {
-		return ehretval_t::make_string(strdup("func: -> <user code>"));
+		return ehretval_t::make_string(strdup("func: -> (user code)"));
 	} else {
 		std::ostringstream out;
 		out << "func: ";
@@ -1021,7 +1017,7 @@ EH_METHOD(Function, toString) {
 				out << ", ";
 			}
 		}
-		out << " -> <user code>";
+		out << " -> (user code)";
 		return ehretval_t::make_string(strdup(out.str().c_str()));
 	}
 }
@@ -1049,7 +1045,7 @@ EHLC_ENTRY(Tuple, toTuple)
 END_EHLC()
 
 EH_METHOD(Tuple, initialize) {
-	return ehi->to_tuple(args, context);
+	return ehi->to_tuple(args, obj);
 }
 EH_METHOD(Tuple, operator_arrow) {
 	ASSERT_OBJ_TYPE(tuple_e, "Tuple.operator->");

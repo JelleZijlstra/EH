@@ -1,21 +1,22 @@
 # Stack class
 class Stack
 	private n = 0
+	private arr
 
-	public initialize = func: -> []
+	public initialize = func: -> (this.arr = [])
 	
 	public push = func: in
-		self->n = in
-		this.n = this.n + 1
+		this.arr->n = in
+		this.n++
+		null
 	end
 	
 	public pop = func:
-		printvar self
 		if this.n == 0
 			throw "Stack empty"
 		end
-		this.n = this.n - 1
-		ret self->(this.n)
+		this.n--
+		this.hash->(this.n)
 	end
 	
 	public size = func: -> this.n

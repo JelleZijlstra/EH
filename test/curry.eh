@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # Currying is possible, though not as elegantly as in OCaml
 Array.reduce = func: f {
-  arr = self
+  arr = this
   ret func: start {
     out = start
     for arr as val {

@@ -6,7 +6,7 @@ class Foo
 		ret this
 	end
 	public useprivate:
-		ret baz
+		ret this.baz
 	end
 end
 f = Foo.new ()

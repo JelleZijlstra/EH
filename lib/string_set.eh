@@ -1,28 +1,30 @@
 #!/usr/bin/ehi
 class StringSet
-	initialize = func: -> {}
+	private hash
+
+	initialize = func: -> (this.hash = {})
 
 	empty = func: -> new()
 
 	add = func: elt
-		self->elt = true
+		this.hash->elt = true
 	end
 
-	has = func: elt -> (self.has elt)
+	has = func: elt -> (this.hash.has elt)
 
 	each = func: f
-		for self as key => value
+		for this.hash as key => value
 			f key
 		end
 	end
 
 	union = func: other
-		other.each func: elt -> (add elt)
+		other.each this.add
 	end
 
 	intersection = func: other
 		out = empty()
-		each func: elt
+		this.each func: elt
 			if (other.has elt)
 				out.add elt
 			end

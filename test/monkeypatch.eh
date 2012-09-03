@@ -7,7 +7,7 @@ String.operator* = func: n {
 	}
 	out = ''
 	for n {
-		out = out + self
+		out = out + this
 	}
 	ret out
 }

@@ -83,6 +83,9 @@ std::list<ehretval_p> ehretval_t::children() {
 			}
 			break;
 		}
+		case super_class_e:
+			out.push_back(this->get_super_classval()->content());
+			break;
 		default:
 			// nothing to see here
 			break;
@@ -134,6 +137,13 @@ const std::string &ehretval_t::type_string(EHI *ehi) const {
 	int type = this->get_full_type();
 	return ehi->repo.get_name(type);
 }
+ehretval_p ehretval_t::self_or_data(const ehretval_p in) {
+	if(in->type() == object_e) {
+		return in->get_objectval()->object_data;
+	} else {
+		return in;
+	}
+}
 ehretval_t::~ehretval_t() {
 	switch(_type) {
 		// Simple types; nothing to do
@@ -144,7 +154,9 @@ ehretval_t::~ehretval_t() {
 		case null_e:
 		case attribute_e:
 		case attributestr_e:
-		case base_object_e:
+			break;
+		case super_class_e:
+			delete this->super_classval;
 			break;
 		case op_e:
 			delete this->opval;
@@ -229,49 +241,38 @@ ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) {
 		}
 	}
 }
-void ehobj_t::copy_member(obj_iterator &classmember, bool set_real_parent, ehretval_p ret, EHI *ehi) {
-	ehmember_p newmember;
-	if(classmember->first.compare("this") == 0) {
-		// handle $this pointer
-		newmember->attribute = classmember->second->attribute;
-		newmember->value = ret;
-	} else if(classmember->first.compare("scope") == 0) {
-		// handle $scope pointer
-		newmember->attribute = classmember->second->attribute;
-		newmember->value = ret;
-	} else if(classmember->second->isstatic() || (classmember->second->isconst() && !classmember->second->value->is_a(func_e))) {
-		// we can safely share static members, as well as const members that are not functions
-		newmember = classmember->second;
-	} else {
-		newmember->attribute = classmember->second->attribute;
-		if(classmember->second->value->is_a(func_e)) {
-			ehobj_t *oldobj = classmember->second->value->get_objectval();
-			ehretval_p new_obj = ehi->object_instantiate(oldobj);
-			ehobj_t *obj = new_obj->get_objectval();
-			obj->type_id = func_e;
-			obj->object_data = oldobj->object_data;
-			newmember->value = new_obj;
-			obj->parent = ret;
-			if(set_real_parent && oldobj->real_parent == NULL) {
-				obj->real_parent = oldobj->get_parent()->parent;
-			} else {
-				obj->real_parent = oldobj->real_parent;
-			}
-		} else {
-			newmember->value = classmember->second->value;
+bool ehobj_t::inherited_has(const std::string &key) const {
+	if(this->has(key)) {
+		return true;
+	}
+	for(std::list<ehretval_p>::const_iterator i = super.begin(), end = super.end(); i != end; i++) {
+		if((*i)->get_objectval()->inherited_has(key)) {
+			return true;
 		}
 	}
-	this->members[classmember->first] = newmember;
+	return false;
+}
+ehmember_p ehobj_t::inherited_get(const std::string &key) {
+	if(this->has(key)) {
+		return this->get_known(key);
+	}
+	for(std::list<ehretval_p>::const_iterator i = super.begin(), end = super.end(); i != end; i++) {
+		ehmember_p result = (*i)->get_objectval()->inherited_get(key);
+		if(!ehmember_p::null(result)) {
+			return result;
+		}
+	}
+	return NULL;
 }
 bool ehobj_t::context_compare(const ehcontext_t key) const {
 	// in global context, we never have access to private stuff
-	if(ehretval_p::null(key) || key->get_objectval()->get_parent() == NULL) {
+	if(ehretval_p::null(key.object) || key.object->get_objectval()->get_parent() == NULL) {
 		return false;
 	} else {
-		if(this->type_id == key->get_objectval()->type_id) {
+		if(this->type_id == key.object->get_objectval()->type_id) {
 			return true;
 		} else {
-			return this->context_compare(key->get_objectval()->parent);
+			return this->context_compare(key.object->get_objectval()->parent);
 		}
 	}
 }

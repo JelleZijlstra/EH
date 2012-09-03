@@ -1,7 +1,7 @@
 # Array functions
 Array.map = func: f {
 	out = []
-	for self as key => value {
+	for this as key => value {
 		out->key = f value
 	}
 	ret out
@@ -9,21 +9,21 @@ Array.map = func: f {
 
 Array.reduce = func: f, base {
 	out = base
-	for self as value {
+	for this as value {
 		out = f out, value
 	}
 	ret out
 }
 
 Array.each = func: f {
-	for self as key => value {
+	for this as key => value {
 		f key, value
 	}
 }
 
 Array.filter = func: f {
 	out = []
-	for self as key => value {
+	for this as key => value {
 		if (f key, value) {
 			out->key = value
 		}
@@ -33,7 +33,7 @@ Array.filter = func: f {
 
 Array.toString = func: {
 	out = "[ "
-	for self as key => value {
+	for this as key => value {
 		out = out + key + " => " + value + ", "
 	}
 	out + "]"

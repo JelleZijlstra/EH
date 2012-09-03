@@ -176,8 +176,9 @@ void printvar_t::retval(ehretval_p in) {
 				this->retval(i->second);
 			}
 			printf("]\n");
-		case base_object_e:
-			// Well hidden
+			break;
+		case super_class_e:
+			printf("@parent class\n");
 			break;
 	}
 	return;
@@ -277,7 +278,7 @@ EHLIBFUNC(include) {
 		ehi->returning = false;
 		throw_ArgumentError("Unable to open file", "include", args, ehi);
 	}
-	EHParser parser(end_is_end_e, ehi, context);
+	EHParser parser(end_is_end_e, ehi, obj);
 	ehretval_p parse_return = parser.parse_file(infile);
 	// we're no longer returning
 	ehi->returning = false;
@@ -312,13 +313,13 @@ EHLIBFUNC(pow) {
 }
 
 EHLIBFUNC(log) {
-	ehretval_p arg = ehi->to_float(args, context);
+	ehretval_p arg = ehi->to_float(args, obj);
 	return ehretval_t::make_float(log(arg->get_floatval()));
 }
 
 EHLIBFUNC(eval) {
-	ehretval_p arg = ehi->to_string(args, context);
-	return ehi->parse_string(arg->get_stringval(), context);
+	ehretval_p arg = ehi->to_string(args, obj);
+	return ehi->parse_string(arg->get_stringval(), obj);
 }
 
 EHLIBFUNC(getinput) {
@@ -334,13 +335,13 @@ EHLIBFUNC(throw) {
 }
 
 EHLIBFUNC(echo) {
-	ehretval_p str = ehi->to_string(args, context);
+	ehretval_p str = ehi->to_string(args, obj);
 	std::cout << str->get_stringval() << std::endl;
 	return NULL;
 }
 
 EHLIBFUNC(put) {
-	ehretval_p str = ehi->to_string(args, context);
+	ehretval_p str = ehi->to_string(args, obj);
 	std::cout << str->get_stringval();
 	return NULL;
 }

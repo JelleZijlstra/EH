@@ -1,9 +1,11 @@
 # List class
 class List
+	private l
+
 	# This is hackish
 	const empty = func:
 		private old_initialize = List.initialize
-		List.initialize = func: -> null
+		List.initialize = func: -> (this.l = null)
 		private out = List.new()
 		List.initialize = old_initialize
 		out
@@ -13,44 +15,44 @@ class List
 		if !(tail.isA List)
 			throw ArgumentError.new "List tail must be a List", "List.initialize", tail
 		else
-			(head, tail)
+			this.l = (head, tail)
 		end
 	end
 	
-	const head = func: -> self->0
-	const tail = func: -> self->1
+	const head = func: -> this.l->0
+	const tail = func: -> this.l->1
 
 	const operator-> = func: n -> given n
-		case 0; head()
-		case 1; tail()
+		case 0; this.head()
+		case 1; this.tail()
 		default; throw ArgumentError.new "Argument must be 0 or 1", "List.operator->", n
 	end
 
-	const isEmpty = func: -> (self == null)
+	const isEmpty = func: -> (this.l == null)
 
-	const isSingleton = func: -> (self != null && (self->1).isEmpty())
+	const isSingleton = func: -> (this.l != null && (this.l->1).isEmpty())
 	
 	const map = func: f
-		if self == null
+		if this.l == null
 			Nil
 		else
-			Cons (f self->0), (self->1).map f
+			Cons (f this.l->0), (this.l->1).map f
 		end
 	end
 	
 	const reduce = func: base, f
-		if self == null
+		if this.l == null
 			base
 		else
-			f self->0, (self->1.reduce base, f)			
+			f this.l->0, (this.l->1.reduce base, f)			
 		end
 	end
 	
-	const length = func: -> (reduce (0, func: k, rest -> rest + 1))
+	const length = func: -> (this.reduce (0, func: k, rest -> rest + 1))
 	
-	const toString = func: -> (reduce "[]", func: k, rest -> (k.toString()) + "::" + rest)
+	const toString = func: -> (this.reduce "[]", func: k, rest -> (k.toString()) + "::" + rest)
 
-	const filter = func: f -> (reduce Nil, func: elt, accum
+	const filter = func: f -> (this.reduce Nil, func: elt, accum
 		if (f elt)
 			Cons elt, accum
 		else
@@ -59,33 +61,33 @@ class List
 	end)
 
 	const private reverse_append = func: accum
-		if self == null
+		if this.l == null
 			accum
 		else
-			(self->1).reverse_append (Cons self->0, accum)
+			(this.l->1).reverse_append (Cons this.l->0, accum)
 		end
 	end
 
-	const reverse = func: -> (reverse_append Nil)
+	const reverse = func: -> (this.reverse_append Nil)
 
 	# Merge sort implementation
 	const private split = func: l, r
-		if self == null
+		if this.l == null
 			l, r
 		else
-			(self->1).split r, (Cons self->0, l)
+			(this.l->1).split r, (Cons this.l->0, l)
 		end
 	end
 
 	const private merge = func: r
-		if self == null
+		if this.l == null
 			r
 		else
 			if (r.isEmpty())
 				this
 			else
-				if self->0 < r->0
-					Cons self->0, (self->1).merge r
+				if this.l->0 < r->0
+					Cons this.l->0, (this.l->1).merge r
 				else
 					Cons r->0, this.merge r->1
 				end
@@ -94,7 +96,7 @@ class List
 	end
 
 	const sort = func:
-		if self == null
+		if this.l == null
 			ret Nil
 		end
 		if (this.isSingleton())
@@ -106,13 +108,13 @@ class List
 	end
 
 	const rev_append = func: rhs
-		if self == null
+		if this.l == null
 			ret rhs
 		end
 		if (this.isSingleton())
-			Cons self->0, rhs
+			Cons this.l->0, rhs
 		else
-			(self->1).rev_append (Cons self->0, rhs)
+			(this.l->1).rev_append (Cons this.l->0, rhs)
 		end
 	end
 
@@ -137,12 +139,12 @@ const Cons = List.new
 
 # Conversion methods
 Array.toList = func:
-	self.reduce (func: out, val -> Cons val, out), Nil
+	this.reduce (func: out, val -> Cons val, out), Nil
 end
 
 Tuple.toList = func:
 	out = Nil
-	self.each (func: val
+	this.each (func: val
 		out = Cons val, out
 	end)
 	# It gets returned in reversed order...

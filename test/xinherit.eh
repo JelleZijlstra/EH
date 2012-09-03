@@ -3,6 +3,6 @@ class A
   const a = 42
 end
 class B
-  inherit A
+  this.inherit A
 end
 printvar B.new ()

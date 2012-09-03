@@ -1,23 +1,3 @@
 @object <File> [
-close <public,non-static,non-constant>: @function <library>: 
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-foo <public,non-static,non-constant>: @string 'bar'
-getc <public,non-static,non-constant>: @function <library>: 
-gets <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-open <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
-puts <public,non-static,non-constant>: @function <library>: 
-toBool <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
+bar

@@ -51,11 +51,11 @@ zval *ehtozval(ehretval_p in) {
 			case range_e:
 			case func_e:
 			case binding_e:
+			case super_class_e:
 			case object_e:
 				// TODO
 				eh_error_type("conversion to PHP", in->type(), enotice_e);
 				break;
-			case base_object_e:
 			case type_e:
 			case op_e:
 			case attribute_e:
@@ -179,8 +179,8 @@ eharray_t *zvaltoeh_array(HashTable *hash, EHI *ehi) {
 class EHI {
 public:
 	int eh_interactive(void);
-	ehretval_p parse_file(const char *name, ehretval_p context);
-	ehretval_p parse_string(const char *cmd, ehretval_p context);
+	ehretval_p parse_file(const char *name, ehcontext_t context);
+	ehretval_p parse_string(const char *cmd, ehcontext_t context);
 
 	virtual ehretval_p execute_cmd(const char *name, eharray_t *paras);
 	virtual char *eh_getline(EHParser *parser = NULL);

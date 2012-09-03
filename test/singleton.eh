@@ -3,9 +3,9 @@
 class Singleton {
 	const instance = this.new ()
 
-	private const new = new
+	private const new = this.new
 	
-	public getInstance = func: -> instance
+	public getInstance = func: -> this.instance
 
 	const toString = func: -> "@Singleton"
 }

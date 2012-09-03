@@ -91,7 +91,7 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc '$' '~' '!' T_NEGATIVE T_COUNT
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
-%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF
+%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF T_THIS T_SCOPE
 
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i parg attributelist attributelist_inner caselist acase command paralist para simple_expr global_list shortfunc bareword_or_string para_expr
 %%
@@ -233,6 +233,8 @@ expression:
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_VARIABLE			{ $$ = ADD_NODE1('$', $1); }
 	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
+	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
 	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
 	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
@@ -371,6 +373,8 @@ simple_expr:
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_VARIABLE			{ $$ = ADD_NODE1('$', $1); }
 	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
+	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
 	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
 	| '~' simple_expr		{ $$ = ADD_NODE1('~', $2); }
 	| '!' simple_expr		{ $$ = ADD_NODE1('!', $2); }
@@ -445,6 +449,8 @@ para_expr:
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_VARIABLE			{ $$ = ADD_NODE1('$', $1); }
 	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
+	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
 	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
 	| '~' para_expr			{ $$ = ADD_NODE1('~', $2); }
 	| '!' para_expr			{ $$ = ADD_NODE1('!', $2); }

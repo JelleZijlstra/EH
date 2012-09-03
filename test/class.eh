@@ -12,14 +12,14 @@ class Foo
 	public meh: n
 		echo n
 		# Illustrate private method access from class context
-		bar = Foo.new ()
-		bar.mah 'Calling a private method'
+		this.bar = Foo.new ()
+		this.bar.mah 'Calling a private method'
 	endfunc
 	private mah: n
 		echo n
 	endfunc
 	public toString:
-		'@Foo (' + bar + ', ' + baz + ')'
+		'@Foo (' + this.bar + ', ' + this.baz + ')'
 	endfunc
 endclass
 bar = Foo.new ()

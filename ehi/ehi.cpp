@@ -15,7 +15,7 @@ void *gc_thread(void *arg) {
 int EHI::eh_interactive(interactivity_enum interactivity) {
 	ehretval_p ret;
 
-	EHParser parser(interactivity, this, this->global_object);
+	EHParser parser(interactivity, this, ehcontext_t(this->global_object, this->global_object));
 	while(1) {
 		char *cmd = eh_getline(&parser);
 		if(!cmd) {
@@ -30,7 +30,7 @@ int EHI::eh_interactive(interactivity_enum interactivity) {
 	}
 	return ret->intval;
 }
-ehretval_p EHI::parse_file(const char *name, ehretval_p context) {
+ehretval_p EHI::parse_file(const char *name, ehcontext_t context) {
 	FILE *infile = fopen(name, "r");
 	if(!infile) {
 		fprintf(stderr, "Could not open input file\n");
@@ -45,12 +45,12 @@ ehretval_p EHI::parse_file(const char *name, ehretval_p context) {
 		return NULL;
 	}
 }
-void EHI::init_eval_parser(ehretval_p context) {
+void EHI::init_eval_parser(ehcontext_t context) {
 	if(eval_parser == NULL) {
 		eval_parser = new EHParser(end_is_end_e, this, context);
 	}
 }
-ehretval_p EHI::parse_string(const char *cmd, ehretval_p context) {
+ehretval_p EHI::parse_string(const char *cmd, ehcontext_t context) {
 	init_eval_parser(context);
 	return eval_parser->parse_string(cmd);
 }

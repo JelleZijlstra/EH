@@ -15,6 +15,7 @@ private:
 			case binding_e:
 			case hash_e:
 			case tuple_e:
+			case super_class_e:
 			case range_e:
 				return true;
 			default:
@@ -45,6 +46,7 @@ public:
 		struct ehhash_t *hashval;
 		void *base_objectval;
 		class ehtuple_t *tupleval;
+		class ehsuper_t *super_classval;
 	};
 	// constructors
 	ehretval_t() : _type(null_e), stringval(NULL) {}
@@ -72,10 +74,7 @@ public:
 	out->ehtype ## val = in; \
 	return out; \
 } \
-vtype get_ ## ehtype ## val() const { \
-	assert(this->type() == ehtype ## _e); \
-	return this->ehtype ## val; \
-}
+vtype get_ ## ehtype ## val() const;
 	EHRV_SET(int, int)
 	EHRV_SET(char *, string)
 	EHRV_SET(bool, bool)
@@ -92,6 +91,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_SET(ehbinding_t *, binding)
 	EHRV_SET(struct ehhash_t *, hash)
 	EHRV_SET(class ehtuple_t *, tuple)
+	EHRV_SET(class ehsuper_t *, super_class)
 #undef EHRV_SET
 	// special constructors for GC'ed types
 #define EHRV_GC(vtype, ehtype) static void fill_ ## ehtype(ehretval_p in, vtype val) { \
@@ -105,6 +105,7 @@ vtype get_ ## ehtype ## val() const { \
 	EHRV_GC(struct ehhash_t *, hash)
 	EHRV_GC(struct ehfunc_t *, func)
 	EHRV_GC(class ehtuple_t *, tuple)
+	EHRV_GC(class ehsuper_t *, super_class)
 #undef EHRV_GC
 
 	void overwrite(ehretval_t &in) {
@@ -126,8 +127,8 @@ vtype get_ ## ehtype ## val() const { \
 			COPY(resource);
 			COPY(binding);
 			COPY(hash);
-			COPY(base_object);
 			COPY(tuple);
+			COPY(super_class);
 			case null_e: break;
 #undef COPY
 		}
@@ -166,18 +167,15 @@ vtype get_ ## ehtype ## val() const { \
 	}
 	
 	bool is_object() const {
-		switch(this->type()) {
-			case object_e:
-				return true;
-			default:
-				return false;
-		}
+		return this->type() == object_e;
 	}
 	
 	ehobj_t *get_object() const {
 		assert(this->is_object());
 		return this->objectval;
 	}
+	
+	static ehretval_p self_or_data(const ehretval_p in);
 	
 	bool is_a(int in);
 	
@@ -207,9 +205,18 @@ typedef ehretval_t::ehretval_p ehretval_p;
 typedef array_ptr<ehretval_p> ehretval_a;
 
 // context
-typedef ehretval_p /* with type object_e */ ehcontext_t;
+struct ehcontext_t {
+	ehretval_p object;
+	ehretval_p scope;
 
-typedef ehretval_p (*ehlibmethod_t)(ehretval_p, ehretval_p, ehcontext_t, class EHI *);
+	ehcontext_t(ehretval_p _object, ehretval_p _scope) : object(_object), scope(_scope) {}
+
+	ehcontext_t(ehretval_p in) : object(in), scope(in) {}
+
+	ehcontext_t() : object(), scope() {}
+};
+
+typedef ehretval_p (*ehlibmethod_t)(ehretval_p, ehretval_p, class EHI *);
 
 // Variables and object members (which are the same)
 typedef struct ehmember_t {
@@ -302,16 +309,20 @@ public:
 	// for scoping
 	ehretval_p parent;
 	ehretval_p real_parent;
+	// inheritance
+	std::list<ehretval_p> super;
 	// destructor needs it
 	EHI *ehi;
 
 	// constructors
-	ehobj_t() : members(), object_data(NULL), type_id(null_e), parent(), real_parent(), ehi() {}
+	ehobj_t() : members(), object_data(NULL), type_id(null_e), parent(), real_parent(), super(), ehi() {}
 
 	// method prototypes
 	ehmember_p get_recursive(const char *name, const ehcontext_t context);
-	void copy_member(obj_iterator &classmember, bool set_real_parent, ehretval_p ret, EHI *ehi);
 	bool context_compare(const ehcontext_t key) const;
+
+	bool inherited_has(const std::string &key) const;
+	ehmember_p inherited_get(const std::string &key);
 
 	// inline methods
 	size_t size() const {
@@ -331,8 +342,11 @@ public:
 		return members[key];
 	}
 
-	bool has(const std::string key) const {
+	bool has(const std::string &key) const {
 		return members.count(key);
+	}
+	bool has(const char *key) const {
+		return has(std::string(key));
 	}
 	
 	struct ehobj_t *get_parent() const {
@@ -350,17 +364,17 @@ public:
 			return this->real_parent->get_objectval();
 		}
 	}
+
+	void inherit(ehretval_p superclass) {
+		super.push_front(superclass);
+	}
 	
 	// destructor
 	~ehobj_t();
 private:
 	// ehobj_t should never be handled directly
-	ehobj_t(const ehobj_t&) : members(), object_data(), type_id(), parent(), real_parent(), ehi() {
-		throw "Not allowed";
-	}
-	ehobj_t operator=(const ehobj_t&) {
-		throw "Not allowed";
-	}
+	ehobj_t(const ehobj_t&);
+	ehobj_t operator=(const ehobj_t&);
 } ehobj_t;
 #define OBJECT_FOR_EACH(obj, varname) for(ehobj_t::obj_iterator varname = (obj)->members.begin(), end = (obj)->members.end(); varname != end; varname++)
 
@@ -492,30 +506,68 @@ public:
 
 class eh_exception : public std::exception {
 public:
-  ehretval_p content;
+	ehretval_p content;
 
-  eh_exception(ehretval_p _content) : content(_content) {}
+	eh_exception(ehretval_p _content) : content(_content) {}
 
-  virtual ~eh_exception() throw() {}
+	virtual ~eh_exception() throw() {}
 };
 
 // EH tuples
 class ehtuple_t {
 private:
-  const int _size;
-  ehretval_a content;
+	const int _size;
+	ehretval_a content;
 public:
-  ehtuple_t(int size, ehretval_p *in) : _size(size), content(size) {
-    for(int i = 0; i < size; i++) {
-      content[i] = in[i];
-    }
-  }
-  
-  int size() const {
-    return this->_size;
-  }
-  ehretval_p get(int i) const {
-    assert(i >= 0 && i < _size);
-    return this->content[i];
-  }
+	ehtuple_t(int size, ehretval_p *in) : _size(size), content(size) {
+		for(int i = 0; i < size; i++) {
+			content[i] = in[i];
+		}
+	}
+
+	int size() const {
+		return this->_size;
+	}
+	ehretval_p get(int i) const {
+		assert(i >= 0 && i < _size);
+		return this->content[i];
+	}
 };
+
+// Superclasses (used for inheritance)
+class ehsuper_t {
+private:
+	ehretval_p super_class;
+public:
+	ehsuper_t(ehretval_p in) : super_class(in) {}
+
+	ehretval_p content() {
+		return this->super_class;
+	}
+};
+
+// define methods
+#define EHRV_SET(vtype, ehtype) inline vtype ehretval_t::get_ ## ehtype ## val() const { \
+	if(this->type() == object_e && ehtype ## _e != object_e) { \
+		return this->get_objectval()->object_data->get_ ## ehtype ## val(); \
+	} \
+	assert(this->type() == ehtype ## _e); \
+	return this->ehtype ## val; \
+}
+EHRV_SET(int, int)
+EHRV_SET(char *, string)
+EHRV_SET(bool, bool)
+EHRV_SET(float, float)
+EHRV_SET(struct eharray_t *, array)
+EHRV_SET(struct ehobj_t *, object)
+EHRV_SET(struct ehrange_t *, range)
+EHRV_SET(struct opnode_t *, op)
+EHRV_SET(attribute_enum, attribute)
+EHRV_SET(attributes_t, attributestr)
+EHRV_SET(struct ehfunc_t *, func)
+EHRV_SET(type_enum, type)
+EHRV_SET(class LibraryBaseClass *, resource)
+EHRV_SET(ehbinding_t *, binding)
+EHRV_SET(struct ehhash_t *, hash)
+EHRV_SET(class ehtuple_t *, tuple)
+EHRV_SET(class ehsuper_t *, super_class)

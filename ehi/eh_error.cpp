@@ -74,8 +74,8 @@ void eh_error_invalid_argument(const char *function, int n) {
  * Exception classes
  */
 void throw_error(const char *class_name, ehretval_p args, EHI *ehi) {
-	ehretval_p class_member = ehi->get_property(ehi->global_object, NULL, class_name, ehi->global_object);
-	ehretval_p e = ehi->call_method(class_member, "new", args, ehi->global_object);
+	ehretval_p class_member = ehi->get_property(ehi->global_object, class_name, ehcontext_t(ehi->global_object, ehi->global_object));
+	ehretval_p e = ehi->call_method(class_member, "new", args, ehcontext_t(ehi->global_object, ehi->global_object));
 	throw eh_exception(e);
 }
 
@@ -90,11 +90,12 @@ END_EHLC()
 
 EH_METHOD(UnknownCommandError, initialize) {
 	ASSERT_TYPE(args, string_e, "UnknownCommandError.initialize");
-	ehi->set_property(context, "command", args, ehi->global_object);
+	ehi->set_property(obj, "command", args, ehi->global_object);
 	std::string msg = std::string("Unknown command: ") + args->get_stringval();
 	return ehretval_t::make_resource(new Exception(strdup(msg.c_str())));
 }
 EH_METHOD(UnknownCommandError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "UnknownCommandError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -117,13 +118,14 @@ EH_METHOD(TypeError, initialize) {
 	ASSERT_TYPE(msg, string_e, "TypeError.initialize");
 	ehretval_p id = args->get_tupleval()->get(1);
 	ASSERT_TYPE(id, int_e, "TypeError.initialize");
-	ehi->set_property(context, "message", msg, ehi->global_object);
+	ehi->set_property(obj, "message", msg, ehi->global_object);
 	std::string type_str = ehi->repo.get_name(id->get_intval());
-	ehi->set_property(context, "type", id, ehi->global_object);
+	ehi->set_property(obj, "type", id, ehi->global_object);
 	std::string exception_msg = std::string(msg->get_stringval()) + ": " + type_str;
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.c_str())));
 }
 EH_METHOD(TypeError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "TypeError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -146,13 +148,14 @@ EH_METHOD(LoopError, initialize) {
 	ASSERT_TYPE(msg, string_e, "LoopError.initialize");
 	ehretval_p level = args->get_tupleval()->get(1);
 	ASSERT_TYPE(level, int_e, "LoopError.initialize");
-	ehi->set_property(context, "message", msg, ehi->global_object);
-	ehi->set_property(context, "level", level, ehi->global_object);
+	ehi->set_property(obj, "message", msg, ehi->global_object);
+	ehi->set_property(obj, "level", level, ehi->global_object);
 	std::ostringstream exception_msg;
 	exception_msg << "Cannot " << msg->get_stringval() << " " << level->get_intval() << " levels";
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
 }
 EH_METHOD(LoopError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "LoopError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -174,14 +177,15 @@ EH_METHOD(NameError, initialize) {
 	ehretval_p object = args->get_tupleval()->get(0);
 	ehretval_p name = args->get_tupleval()->get(1);
 	ASSERT_TYPE(name, string_e, "NameError.initialize");
-	ehi->set_property(context, "object", object, ehi->global_object);
-	ehi->set_property(context, "name", name, ehi->global_object);
+	ehi->set_property(obj, "object", object, ehi->global_object);
+	ehi->set_property(obj, "name", name, ehi->global_object);
 	std::ostringstream exception_msg;
 	exception_msg << "Unknown member " << name->get_stringval() << " in object of type " << object->type_string(ehi);
 	exception_msg << ": " << ehi->to_string(object, ehi->global_object)->get_stringval();
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
 }
 EH_METHOD(NameError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "NameError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -201,14 +205,15 @@ EH_METHOD(ConstError, initialize) {
 	ehretval_p object = args->get_tupleval()->get(0);
 	ehretval_p name = args->get_tupleval()->get(1);
 	ASSERT_TYPE(name, string_e, "ConstError.initialize");
-	ehi->set_property(context, "object", object, ehi->global_object);
-	ehi->set_property(context, "name", name, ehi->global_object);
+	ehi->set_property(obj, "object", object, ehi->global_object);
+	ehi->set_property(obj, "name", name, ehi->global_object);
 	std::ostringstream exception_msg;
 	exception_msg << "Cannot set constant member " << name->get_stringval() << " in object of type " << object->type_string(ehi);
 	exception_msg << ": " << ehi->to_string(object, ehi->global_object)->get_stringval();
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
 }
 EH_METHOD(ConstError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "ConstError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -231,14 +236,14 @@ EH_METHOD(ArgumentError, initialize) {
 	ASSERT_NARGS(3, "ArgumentError.initialize");
 	ehretval_p message = args->get_tupleval()->get(0);
 	ASSERT_TYPE(message, string_e, "ArgumentError.initialize");
-	ehi->set_property(context, "message", message, ehi->global_object);
+	ehi->set_property(obj, "message", message, ehi->global_object);
 
 	ehretval_p method = args->get_tupleval()->get(1);
 	ASSERT_TYPE(method, string_e, "ArgumentError.initialize");
-	ehi->set_property(context, "method", method, ehi->global_object);
+	ehi->set_property(obj, "method", method, ehi->global_object);
 
 	ehretval_p value = args->get_tupleval()->get(2);
-	ehi->set_property(context, "value", value, ehi->global_object);
+	ehi->set_property(obj, "value", value, ehi->global_object);
 
 	std::ostringstream exception_msg;
 	exception_msg << message->get_stringval() << " (method " << method->get_stringval() << "): ";
@@ -246,6 +251,7 @@ EH_METHOD(ArgumentError, initialize) {
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));	
 }
 EH_METHOD(ArgumentError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "ArgumentError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -261,10 +267,11 @@ END_EHLC()
 
 EH_METHOD(MiscellaneousError, initialize) {
 	ASSERT_TYPE(args, string_e, "MiscellaneousError.initialize");
-	ehi->set_property(context, "message", args, ehi->global_object);
+	ehi->set_property(obj, "message", args, ehi->global_object);
 	return ehretval_t::make_resource(new Exception(strdup(args->get_stringval())));
 }
 EH_METHOD(MiscellaneousError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "MiscellaneousError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));
 }
@@ -285,11 +292,11 @@ EH_METHOD(SyntaxError, initialize) {
 	ASSERT_NARGS(2, "SyntaxError.initialize");
 	ehretval_p message = args->get_tupleval()->get(0);
 	ASSERT_TYPE(message, string_e, "SyntaxError.initialize");
-	ehi->set_property(context, "errorMessage", message, ehi->global_object);
+	ehi->set_property(obj, "errorMessage", message, ehi->global_object);
 
 	ehretval_p line = args->get_tupleval()->get(1);
 	ASSERT_TYPE(line, int_e, "SyntaxError.initialize");
-	ehi->set_property(context, "line", line, ehi->global_object);
+	ehi->set_property(obj, "line", line, ehi->global_object);
 
 	std::ostringstream exception_msg;
 	exception_msg << message->get_stringval() << " at line ";
@@ -297,6 +304,7 @@ EH_METHOD(SyntaxError, initialize) {
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));	
 }
 EH_METHOD(SyntaxError, toString) {
+	ASSERT_OBJ_TYPE(resource_e, "SyntaxError.toString");
 	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
 	return ehretval_t::make_string(strdup(e->msg));	
 }

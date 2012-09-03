@@ -113,7 +113,7 @@ const char *get_typestring(type_enum type) {
 		case range_e: return "range";
 		case binding_e: return "binding";
 		case hash_e: return "hash";
-		case base_object_e: return "object";
+		case super_class_e: return "parent class";
 		case tuple_e: return "tuple";
 	}
 	// to keep the compiler happy

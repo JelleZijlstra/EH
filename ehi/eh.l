@@ -97,6 +97,8 @@
 "try"		return T_TRY;
 "catch"		return T_CATCH;
 "finally"	return T_FINALLY;
+"this"		return T_THIS;
+"scope"		return T_SCOPE;
 "public"	{
 				yylval_param->vValue = publica_e;
 				return T_ATTRIBUTE;

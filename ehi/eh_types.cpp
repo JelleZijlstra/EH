@@ -137,6 +137,13 @@ const std::string &ehretval_t::type_string(EHI *ehi) const {
 	int type = this->get_full_type();
 	return ehi->repo.get_name(type);
 }
+ehretval_p ehretval_t::self_or_data(const ehretval_p in) {
+	if(in->type() == object_e) {
+		return in->get_objectval()->object_data;
+	} else {
+		return in;
+	}
+}
 ehretval_t::~ehretval_t() {
 	switch(_type) {
 		// Simple types; nothing to do

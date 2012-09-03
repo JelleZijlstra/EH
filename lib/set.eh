@@ -1,7 +1,9 @@
 class BinaryTreeSet
 	# A tree consists of Nodes with a value in the middle and either null or a Node at the left and right
 	class Node
-		const initialize = func: l, val, r -> [l, val, r]
+		const n
+
+		const initialize = func: l, val, r -> (this.n = [l, val, r])
 
 		const insert = func: val
 			private insertHelper = func: node, val
@@ -12,51 +14,53 @@ class BinaryTreeSet
 					node
 				end
 			end
-			private comparison = val <=> self->1
+			private comparison = val <=> this.n->1
 			if comparison < 0
-				self->0 = insertHelper self->0, val
+				this.n->0 = insertHelper this.n->0, val
 			else
 				if comparison == 0
 					# do nothing
 				else
-					self->2 = insertHelper self->2, val
+					this.n->2 = insertHelper this.n->2, val
 				end
 			end
 		end
 
 		const reduce = func: firstVal, f
-			private tmp = given self->0
+			private tmp = given this.n->0
 				case null; firstVal
-				default; self->0.reduce firstVal, f
+				default; this.n->0.reduce firstVal, f
 			end
-			tmp = f tmp, self->1
-			given self->2
+			tmp = f tmp, this.n->1
+			given this.n->2
 				case null; tmp
-				default; self->2.reduce tmp, f
+				default; this.n->2.reduce tmp, f
 			end
 		end
 
 		const has = func: elt
-			private helper = func: node, elt -> (if node == null; false; else node.has elt; end)
-			private comparison = elt <=> self->1
+			private helper = func: node, elt -> (if node == null
+				false
+			else
+				node.has elt
+			end)
+			private comparison = elt <=> this.n->1
 			if comparison < 0
-				helper self->0, elt
+				helper this.n->0, elt
 			else
 				if comparison == 0
 					true
 				else
-					helper self->2, elt
+					helper this.n->2, elt
 				end
 			end
 		end
 
-		const toString = func: -> '(' + (self->0) + ',' + (self->1) + ',' + (self->2) + ')'
+		const toString = func: -> '(' + (this.n->0) + ',' + (this.n->1) + ',' + (this.n->2) + ')'
 	end
 	private Node = Node
 
 	private base = null
-
-	const initialize = func: -> null
 
 	const add = func: elt -> given base
 		case null; base = Node.new null, elt, null; null

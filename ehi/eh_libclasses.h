@@ -23,7 +23,9 @@
 	if(args->get_tupleval()->size() != count) { \
 		throw_ArgumentError("Argument must be a tuple of size " #count, method, args, ehi); \
 	}
-#define ASSERT_OBJ_TYPE(ehtype, method) if(!obj->is_a(ehtype)) { \
+#define ASSERT_OBJ_TYPE(ehtype, method) ehretval_p _obj = obj; \
+obj = ehretval_t::self_or_data(obj); \
+if(!obj->is_a(ehtype)) { \
 	throw_TypeError("Invalid base object for " #method, obj->type(), ehi); \
 }
 #define ASSERT_NULL(method) if(args->type() != null_e) { \

@@ -259,6 +259,7 @@ EH_METHOD(File, finalize) {
 }
 
 START_EHLC(Integer)
+EHLC_ENTRY(Integer, initialize)
 EHLC_ENTRY_RENAME(Integer, operator_plus, "operator+")
 EHLC_ENTRY_RENAME(Integer, operator_minus, "operator-")
 EHLC_ENTRY_RENAME(Integer, operator_times, "operator*")
@@ -1004,9 +1005,9 @@ EH_METHOD(Function, toString) {
 	ASSERT_OBJ_TYPE(func_e, "Function.toString");
 	ehfunc_t *f = obj->get_funcval();
 	if(f->type == lib_e) {
-		return ehretval_t::make_string(strdup("func: -> <native code>"));
+		return ehretval_t::make_string(strdup("func: -> (native code)"));
 	} else if(f->argcount == 0) {
-		return ehretval_t::make_string(strdup("func: -> <user code>"));
+		return ehretval_t::make_string(strdup("func: -> (user code)"));
 	} else {
 		std::ostringstream out;
 		out << "func: ";
@@ -1016,7 +1017,7 @@ EH_METHOD(Function, toString) {
 				out << ", ";
 			}
 		}
-		out << " -> <user code>";
+		out << " -> (user code)";
 		return ehretval_t::make_string(strdup(out.str().c_str()));
 	}
 }

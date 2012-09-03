@@ -1001,22 +1001,7 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p base_var = eh_execute(paras[0], context);
 	const char *accessor = eh_execute(paras[1], context)->get_stringval();
-	if(base_var->is_object()) {
-		return this->get_property(base_var, NULL, accessor, context);
-	} else {
-		ehretval_p class_obj = this->get_primitive_class(base_var->type());
-		if(class_obj->get_objectval()->has(accessor)) {
-			ehretval_p member = this->get_property(class_obj, base_var, accessor, context);
-			if(member->is_a(func_e)) {
-				return this->make_binding(new ehbinding_t(base_var, member));
-			} else {
-				return member;
-			}
-		} else {
-			throw_NameError(base_var, accessor, this);
-			return NULL;
-		}
-	}
+	return get_property(base_var, accessor, context);
 }
 ehretval_p EHI::eh_op_try(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret;
@@ -1101,10 +1086,10 @@ ehretval_p EHI::perform_op(const char *name, int nargs, ehretval_p *paras, ehcon
 ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, ehcontext_t context) {
 	ehretval_p func = NULL;
 	if(obj->is_object()) {
-		func = this->get_property(obj, NULL, name, context);
+		func = this->get_property(obj, name, context);
 	} else {
 		ehretval_p class_obj = this->get_primitive_class(obj->type());
-		ehretval_p the_property = this->get_property(class_obj, obj, name, context);
+		ehretval_p the_property = this->get_property(class_obj, name, context);
 		ehretval_p method;
 		if(the_property->is_a(binding_e)) {
 			method = the_property->get_bindingval()->method;
@@ -1156,6 +1141,13 @@ ehretval_p EHI::object_instantiate(ehretval_p input) {
 ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p value, ehcontext_t context) {
 	// caller should ensure object is actually an object
 	ehobj_t *obj = object->get_objectval();
+	// unbind bindings to myself
+	if(value->type() == binding_e) {
+		if(obj == value->get_bindingval()->object_data->get_objectval()) {
+			ehretval_p reference_retainer = value;
+			value = value->get_bindingval()->method;
+		}
+	}
 	ehmember_p result = obj->inherited_get(name);
 	if(ehmember_p::null(result)) {
 		ehmember_p new_member;
@@ -1164,9 +1156,9 @@ ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p val
 		return new_member;		
 	} else if(result->attribute.isconst == const_e) {
 		throw_ConstError(object, name, this);
-//	} else if(result->attribute.visibility == private_e && !obj->context_compare(context)) {
+	} else if(result->attribute.visibility == private_e && !obj->context_compare(context)) {
 		// pretend private members don't exist
-//		throw_NameError(object, name, this);
+		throw_NameError(object, name, this);
 	} else if(result->attribute.isstatic == static_e) {
 		result->value = value;
 		return result;
@@ -1196,28 +1188,21 @@ ehmember_p EHI::set_member(ehretval_p object, const char *name, ehmember_p value
 	obj->insert(name, value);
 	return value;
 }
-ehretval_p EHI::get_property(ehretval_p object, ehretval_p object_data, const char *name, ehcontext_t context) {
-	if(object_data == NULL) {
-		object_data = object;
+ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t context) {
+	ehretval_p object;
+	if(base_var->is_object()) {
+		object = base_var;
+	} else {
+		object = this->get_primitive_class(base_var->type());
 	}
 	ehobj_t *obj = object->get_objectval();
-	/*if(!obj->has(name)) {
-		// it is hard to get all objects to actually inherit from Object (and, therefore, have a toString method)
-		// therefore, we use special logic to make that work
-		if(strcmp(name, "toString") == 0) {
-			ehretval_p the_object = this->get_primitive_class(object_e);
-			return the_object->get_objectval()->get_known("toString")->value;
-		} else {
-			throw_NameError(object_data, name, this);
-		}
-	}*/
 	ehmember_p member = obj->inherited_get(name);
 	if(ehmember_p::null(member) || (member->attribute.visibility == private_e && !obj->context_compare(context))) {
-		throw_NameError(object, name, this);		
+		throw_NameError(base_var, name, this);		
 	}
 	ehretval_p out = member->value;
 	if(out->is_a(func_e)) {
-		return this->make_binding(new ehbinding_t(object, out));
+		return this->make_binding(new ehbinding_t(base_var, out));
 	} else {
 		return out;
 	}

@@ -167,18 +167,15 @@ vtype get_ ## ehtype ## val() const;
 	}
 	
 	bool is_object() const {
-		switch(this->type()) {
-			case object_e:
-				return true;
-			default:
-				return false;
-		}
+		return this->type() == object_e;
 	}
 	
 	ehobj_t *get_object() const {
 		assert(this->is_object());
 		return this->objectval;
 	}
+	
+	static ehretval_p self_or_data(const ehretval_p in);
 	
 	bool is_a(int in);
 	
@@ -347,6 +344,9 @@ public:
 
 	bool has(const std::string &key) const {
 		return members.count(key);
+	}
+	bool has(const char *key) const {
+		return has(std::string(key));
 	}
 	
 	struct ehobj_t *get_parent() const {

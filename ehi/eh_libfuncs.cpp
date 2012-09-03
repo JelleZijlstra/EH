@@ -176,6 +176,7 @@ void printvar_t::retval(ehretval_p in) {
 				this->retval(i->second);
 			}
 			printf("]\n");
+			break;
 		case super_class_e:
 			printf("@parent class\n");
 			break;

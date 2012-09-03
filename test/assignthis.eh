@@ -7,11 +7,11 @@ class Foo
 		printvar this
 		this = 2
 		echo this.baz
-		ret this
+		this
 	end
 	public useprivate:
 		printvar this
-		ret baz
+		this.baz
 	end
 end
 f = Foo.new ()

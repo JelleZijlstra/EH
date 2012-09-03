@@ -74,7 +74,7 @@ void eh_error_invalid_argument(const char *function, int n) {
  * Exception classes
  */
 void throw_error(const char *class_name, ehretval_p args, EHI *ehi) {
-	ehretval_p class_member = ehi->get_property(ehi->global_object, NULL, class_name, ehcontext_t(ehi->global_object, ehi->global_object));
+	ehretval_p class_member = ehi->get_property(ehi->global_object, class_name, ehcontext_t(ehi->global_object, ehi->global_object));
 	ehretval_p e = ehi->call_method(class_member, "new", args, ehcontext_t(ehi->global_object, ehi->global_object));
 	throw eh_exception(e);
 }

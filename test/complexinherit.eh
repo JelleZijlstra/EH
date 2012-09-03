@@ -21,7 +21,7 @@ class C {
 	private c = 3
 	class CC {
 		private cp = 30
-		inherit A.AA
+		this.inherit A.AA
 		public cc: {
 			# If everything is working right, there is no a
 			try {
@@ -38,23 +38,23 @@ class D {
 	private d = 4
 	class DD {
 		private dp = 40
-		inherit B.BB
-		inherit C.CC
+		this.inherit B.BB
+		this.inherit C.CC
 		public dd: {
 			# Expect 1
-			this.aa ()
+			this.aa()
 			# Expect 2
-			this.bb ()
+			this.bb()
 			# Expect null, 3
-			this.cc ()
+			this.cc()
 			# Expect 4
 			echo d
 			
 			# Expect 10, 20, 30, 40
-			echo ap
-			echo bp
-			echo cp
-			echo dp
+			echo this.ap
+			echo this.bp
+			echo this.cp
+			echo this.dp
 		}
 	}
 }

@@ -17,5 +17,6 @@ EH_METHOD(Object, operator_gt);
 EH_METHOD(Object, operator_gte);
 EH_METHOD(Object, operator_lt);
 EH_METHOD(Object, operator_lte);
+EH_METHOD(Object, type);
 
 EXTERN_EHLC(Object)

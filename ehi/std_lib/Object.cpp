@@ -15,6 +15,7 @@ EHLC_ENTRY_RENAME(Object, operator_gt, "operator>")
 EHLC_ENTRY_RENAME(Object, operator_gte, "operator>=")
 EHLC_ENTRY_RENAME(Object, operator_lt, "operator<")
 EHLC_ENTRY_RENAME(Object, operator_lte, "operator<=")
+EHLC_ENTRY(Object, type)
 END_EHLC()
 
 EH_METHOD(Object, new) {
@@ -109,4 +110,9 @@ EH_METHOD(Object, operator_lt) {
 EH_METHOD(Object, operator_lte) {
 	CALL_COMPARE();
 	return ehretval_t::make_bool(comparison != 1);
+}
+EH_METHOD(Object, type) {
+	int type = obj->get_full_type();
+	std::string name = ehi->repo.get_name(type);
+	return ehretval_t::make_string(strdup(name.c_str()));
 }

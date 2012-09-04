@@ -14,17 +14,17 @@ char *EHI::eh_getline(EHParser *parser) {
 }
 
 eharray_t *zvaltoeh_array(HashTable *hash, EHI *ehi);
-zval *arrtozval(eharray_t *paras);
-zval *hashtozval(ehhash_t *hash);
-zval *tupletozval(ehtuple_t *tuple);
+zval *arrtozval(eharray_t *paras, EHI *ehi);
+zval *hashtozval(ehhash_t *hash, EHI *ehi);
+zval *tupletozval(ehtuple_t *tuple, EHI *ehi);
 
-zval *ehtozval(ehretval_p in) {
+zval *ehtozval(ehretval_p in, EHI *ehi) {
 	if(in->type() == array_e) {
-		return arrtozval(in->get_arrayval());
+		return arrtozval(in->get_arrayval(), ehi);
 	} else if(in->type() == hash_e) {
-		return hashtozval(in->get_hashval());
+		return hashtozval(in->get_hashval(), ehi);
 	} else if(in->type() == tuple_e) {
-		return tupletozval(in->get_tupleval());
+		return tupletozval(in->get_tupleval(), ehi);
 	} else {
 		zval *out;
 		MAKE_STD_ZVAL(out);
@@ -53,55 +53,53 @@ zval *ehtozval(ehretval_p in) {
 			case binding_e:
 			case super_class_e:
 			case object_e:
-				// TODO
-				eh_error_type("conversion to PHP", in->type(), enotice_e);
+				throw_TypeError("Unable to convert this type to PHP", in->type(), ehi);
 				break;
 			case type_e:
 			case op_e:
 			case attribute_e:
 			case resource_e:
 			case attributestr_e:
-				// these shouldn't even appear as user-visible types
-				eh_error_type("conversion to PHP", in->type(), efatal_e);
+				throw_TypeError("Unable to convert this type to PHP", in->type(), ehi);
 				break;
 		}
 		return out;
 	}
 }
 
-zval *hashtozval(ehhash_t *hash) {
+zval *hashtozval(ehhash_t *hash, EHI *ehi) {
 	zval *arr;
 	MAKE_STD_ZVAL(arr);
 	
 	array_init(arr);
 	HASH_FOR_EACH(hash, i) {
-		add_assoc_zval(arr, i->first.c_str(), ehtozval(i->second));
+		add_assoc_zval(arr, i->first.c_str(), ehtozval(i->second, ehi));
 	}
 	return arr;
 }
 
-zval *tupletozval(ehtuple_t *tuple) {
+zval *tupletozval(ehtuple_t *tuple, EHI *ehi) {
 	zval *arr;
 	MAKE_STD_ZVAL(arr);
 	
 	array_init(arr);
 	for(int i = 0, size = tuple->size(); i < size; i++) {
-		add_index_zval(arr, i, ehtozval(tuple->get(i)));
+		add_index_zval(arr, i, ehtozval(tuple->get(i), ehi));
 	}
 	return arr;
 }
 
-zval *arrtozval(eharray_t *paras) {
+zval *arrtozval(eharray_t *paras, EHI *ehi) {
 	zval *arr;
 	MAKE_STD_ZVAL(arr);
 
 	// initiate PHP array
 	array_init(arr);
 	ARRAY_FOR_EACH_INT(paras, i) {
-		add_index_zval(arr, i->first, ehtozval(i->second));
+		add_index_zval(arr, i->first, ehtozval(i->second, ehi));
 	}
 	ARRAY_FOR_EACH_STRING(paras, i) {
-		add_assoc_zval(arr, i->first.c_str(), ehtozval(i->second));
+		add_assoc_zval(arr, i->first.c_str(), ehtozval(i->second, ehi));
 	}
 	return arr;
 }
@@ -162,7 +160,7 @@ eharray_t *zvaltoeh_array(HashTable *hash, EHI *ehi) {
 }
 // Typemap from EH array to PHP array
 %typemap(directorin) eharray_t* {
-	*$input = *arrtozval($1);
+	*$input = *arrtozval($1, this);
 }
 %typemap(directorin) EHParser* {
 	ZVAL_NULL($input);
@@ -173,7 +171,7 @@ eharray_t *zvaltoeh_array(HashTable *hash, EHI *ehi) {
 	$result = zvaltoeh($1, this);
 }
 %typemap(out) ehretval_t {
-	$result = ehtozval(&$1);
+	$result = ehtozval(&$1, this);
 }
 
 class EHI {

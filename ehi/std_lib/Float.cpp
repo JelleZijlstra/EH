@@ -1,4 +1,5 @@
 #include "Float.h"
+#include "MiscellaneousError.h"
 
 START_EHLC(Float)
 EHLC_ENTRY(Float, initialize)

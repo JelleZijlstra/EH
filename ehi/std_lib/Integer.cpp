@@ -1,4 +1,5 @@
 #include "Integer.h"
+#include "MiscellaneousError.h"
 
 START_EHLC(Integer)
 EHLC_ENTRY(Integer, initialize)

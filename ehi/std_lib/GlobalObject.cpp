@@ -348,8 +348,9 @@ EH_METHOD(GlobalObject, eval) {
 EH_METHOD(GlobalObject, getinput) {
 	ASSERT_NULL("getinput");
 	// more accurately, getint
-	ehretval_p ret = ehretval_t::make_typed(int_e);
-	fscanf(stdin, "%d", &(ret->intval));
+	int i = 0;
+	fscanf(stdin, "%d", &i);
+	ehretval_p ret = ehretval_t::make_int(i);
 	return ret;
 }
 

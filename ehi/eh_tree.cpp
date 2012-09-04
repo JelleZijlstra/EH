@@ -52,7 +52,7 @@ static void printntabs(const int n) {
 // print the abstract syntax tree
 #define PRINT_TREE_TYPE(vtype, format) case vtype ## _e: \
 	printntabs(n); \
-	printf("Value: %" #format "\n", in-> vtype ## val); \
+	printf("Value: %" #format "\n", in->get_ ## vtype ## val()); \
 	break;
 
 void print_tree(const ehretval_p in, const int n) {
@@ -61,10 +61,10 @@ void print_tree(const ehretval_p in, const int n) {
 		PRINT_TREE_TYPE(string, s)
 		PRINT_TREE_TYPE(int, d)
 		case op_e:
-			printntabs(n); printf("Opcode: %d\n", in->opval->op);
-			printntabs(n); printf("Nparas: %d\n", in->opval->nparas);
-			for(int i = 0; i < in->opval->nparas; i++) {
-				print_tree(in->opval->paras[i], n + 1);
+			printntabs(n); printf("Opcode: %d\n", in->get_opval()->op);
+			printntabs(n); printf("Nparas: %d\n", in->get_opval()->nparas);
+			for(int i = 0; i < in->get_opval()->nparas; i++) {
+				print_tree(in->get_opval()->paras[i], n + 1);
 			}
 			break;
 		case null_e:
@@ -73,15 +73,15 @@ void print_tree(const ehretval_p in, const int n) {
 		PRINT_TREE_TYPE(attribute, d)
 		case attributestr_e:
 			printntabs(n);
-			if(in->attributestrval.visibility == private_e)
+			if(in->get_attributestrval().visibility == private_e)
 				printf("private");
 			else
 				printf("public");
-			if(in->attributestrval.isstatic == static_e)
+			if(in->get_attributestrval().isstatic == static_e)
 				printf(", static");
 			else
 				printf(", nonstatic");
-			if(in->attributestrval.isconst == const_e)
+			if(in->get_attributestrval().isconst == const_e)
 				printf(", const");
 			else
 				printf(", nonconst");

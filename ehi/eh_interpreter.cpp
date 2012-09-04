@@ -773,7 +773,7 @@ void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	ehmember_p new_member;
 	attributes_t attributes = attributes_t::make();
 	for(ehretval_p node = op->paras[0]; node->get_opval()->nparas != 0; node = node->get_opval()->paras[0]) {
-		switch(node->get_opval()->paras[1]->attributeval) {
+		switch(node->get_opval()->paras[1]->get_attributeval()) {
 			case publica_e:
 				attributes.visibility = public_e;
 				break;

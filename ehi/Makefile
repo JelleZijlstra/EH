@@ -47,4 +47,4 @@ eh_wrap.cpp: eh.i
 	if [ `uname` = 'Linux' ]; then sed -e "s/zend_error_noreturn/zend_error/" -i'.save' eh_wrap.cpp; sed -e "s/function __construct/protected function __construct/" -i'.save' ehphp.php; fi
 
 clean:
-	rm -f *.o ehphp.so ehphp.dylib ehi ehc eh.flex.cpp eh.bison.cpp eh.bison.hpp y.output eh_wrap.c ehphp.php ehphp.php.save eh_wrap.cpp php_ehphp.h eh_wrap.h
+	rm -f *.o ehphp.so ehphp.dylib ehi ehc eh.flex.cpp eh.bison.cpp eh.bison.hpp y.output eh_wrap.c ehphp.php ehphp.php.save eh_wrap.cpp php_ehphp.h eh_wrap.h std_lib/*.o

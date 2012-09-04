@@ -28,7 +28,8 @@ int EHI::eh_interactive(interactivity_enum interactivity) {
 			handle_uncaught(e);
 		}
 	}
-	return ret->intval;
+	// TODO: provide useful return type
+	return 0;
 }
 ehretval_p EHI::parse_file(const char *name, ehcontext_t context) {
 	FILE *infile = fopen(name, "r");

@@ -22,9 +22,6 @@ private:
 				return false;
 		}	
 	}
-public:
-	typedef garbage_collector<ehretval_t>::pointer ehretval_p;
-	//typedef refcount_ptr<ehretval_t> ehretval_p;
 	union {
 		// simple EH variable type
 		int intval;
@@ -48,6 +45,9 @@ public:
 		class ehtuple_t *tupleval;
 		class ehsuper_t *super_classval;
 	};
+public:
+	typedef garbage_collector<ehretval_t>::pointer ehretval_p;
+	//typedef refcount_ptr<ehretval_t> ehretval_p;
 	// constructors
 	ehretval_t() : _type(null_e), stringval(NULL) {}
 	ehretval_t(type_enum type) : _type(type), stringval(NULL) {}
@@ -58,12 +58,13 @@ public:
 	out->ehtype ## val = in; \
 	return out; \
 }
+	EHRV_MAKE(type_enum, type)
+	EHRV_MAKE(attribute_enum, attribute)
 	EHRV_MAKE(int, int)
 	EHRV_MAKE(char *, string)
 	EHRV_MAKE(bool, bool)
 	EHRV_MAKE(float, float)
 	EHRV_MAKE(struct opnode_t *, op)
-	EHRV_MAKE(type_enum, type)
 #undef EHRV_MAKE
 #define EHRV_SET(vtype, ehtype) static ehretval_p make_ ## ehtype(vtype in) { \
 	ehretval_p out; \

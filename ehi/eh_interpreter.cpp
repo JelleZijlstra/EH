@@ -252,34 +252,27 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				}
 				break;
 			case T_WHILE:
-				ret = eh_op_while(node->get_opval()->paras, context);
-				break;
+				return eh_op_while(node->get_opval()->paras, context);
 			case T_FOR:
-				ret = eh_op_for(node->get_opval(), context);
-				break;
+				return eh_op_for(node->get_opval(), context);
 			case T_AS:
-				ret = eh_op_as(node->get_opval(), context);
-				break;
+				return eh_op_as(node->get_opval(), context);
 			case T_SWITCH: // switch statements
 				ret = eh_op_switch(node->get_opval()->paras, context);
 				// incremented in the eh_op_switch function
 				inloop--;
 				break;
 			case T_GIVEN: // inline switch statements
-				ret = eh_op_given(node->get_opval()->paras, context);
-				break;
+				return eh_op_given(node->get_opval()->paras, context);
 		/*
 		 * Exceptions
 		 */
 			case T_TRY:
-				ret = eh_op_try(node->get_opval()->paras, context);
-				break;
+				return eh_op_try(node->get_opval()->paras, context);
 			case T_CATCH:
-				ret = eh_op_catch(node->get_opval()->paras, context);
-				break;
+				return eh_op_catch(node->get_opval()->paras, context);
 			case T_FINALLY:
-				ret = eh_op_catch(node->get_opval()->paras, context);
-				break;
+				return eh_op_catch(node->get_opval()->paras, context);
 		/*
 		 * Miscellaneous
 		 */
@@ -299,7 +292,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					if(new_node->type() == op_e && new_node->get_opval()->op == T_SEPARATOR && new_node->get_opval()->nparas == 0) {
 						return ret;
 					} else {
-						ret = eh_execute(new_node, context);
+						return eh_execute(new_node, context);
 					}
 				}
 				break;
@@ -317,8 +310,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 * Object access
 		 */
 			case ':': // function call
-				ret = eh_op_colon(node->get_opval()->paras, context);
-				break;
+				return eh_op_colon(node->get_opval()->paras, context);
 			case T_THIS: // direct access to the context object
 				return context.object;
 			case T_SCOPE:
@@ -327,46 +319,26 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 * Object definitions
 		 */
 			case T_FUNC: // function definition
-				ret = eh_op_declareclosure(node->get_opval()->paras, context);
-				break;
+				return eh_op_declareclosure(node->get_opval()->paras, context);
 			case T_CLASS: // class declaration
-				ret = eh_op_declareclass(node->get_opval(), context);
-				break;
+				return eh_op_declareclass(node->get_opval(), context);
 			case T_CLASSMEMBER:
 				eh_op_classmember(node->get_opval(), context);
 				break;
-			case T_ATTRIBUTE: // class member attributes
-				if(node->get_opval()->nparas == 0) {
-					return ehretval_t::make_typed(attributestr_e);
-				} else {
-					// first execute first para
-					ret = eh_execute(node->get_opval()->paras[0], context);
-					// then overwrite with attribute from second para
-					switch(node->get_opval()->paras[1]->attributeval) {
-						case publica_e:
-							ret->attributestrval.visibility = public_e;
-							break;
-						case privatea_e:
-							ret->attributestrval.visibility = private_e;
-							break;
-						case statica_e:
-							ret->attributestrval.isstatic = static_e;
-							break;
-						case consta_e:
-							ret->attributestrval.isconst = const_e;
-							break;
-					}
-				}
-				break;
 			case '[': // array declaration
-				ret = eh_op_array(node->get_opval()->paras[0], context);
-				break;
-			case '{': // anonymous class
-				ret = eh_op_anonclass(node->get_opval()->paras[0], context);
+				return eh_op_array(node->get_opval()->paras[0], context);
+			case '{': // hash
+				return eh_op_anonclass(node->get_opval()->paras[0], context);
 				break;
 			case ',': // tuple
-				ret = eh_op_tuple(node, context);
-				break;
+				return eh_op_tuple(node, context);
+			case T_RANGE:
+				operand1 = eh_execute(node->get_opval()->paras[0], context);
+				operand2 = eh_execute(node->get_opval()->paras[1], context);
+				if(operand1->type() != operand2->type()) {
+					throw_TypeError("Range members must have the same type", operand2->type(), this);
+				}
+				return this->make_range(new ehrange_t(operand1, operand2));
 		/*
 		 * Binary operators
 		 */
@@ -436,30 +408,20 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		/*
 		 * Variable manipulation
 		 */
-			case T_RANGE:
-				operand1 = eh_execute(node->get_opval()->paras[0], context);
-				operand2 = eh_execute(node->get_opval()->paras[1], context);
-				if(operand1->type() != operand2->type()) {
-					throw_TypeError("Range members must have the same type", operand2->type(), this);
-				}
-				ret = this->make_range(new ehrange_t(operand1, operand2));
-				break;
 			case '=':
 				return eh_op_set(node->get_opval()->paras, context);
 			case '$': // variable dereference
-				ret = eh_op_dollar(node->get_opval()->paras[0], context);
-				break;
+				return eh_op_dollar(node->get_opval()->paras[0], context);
 		/*
 		 * Commands
 		 */
 			case T_COMMAND:
 				// name of command to be executed
-				ret = eh_op_command(
+				return eh_op_command(
 					eh_execute(node->get_opval()->paras[0], context)->get_stringval(),
 					node->get_opval()->paras[1],
 					context
 				);
-				break;
 			default:
 				std::cerr << "Unexpected opcode " << node->get_opval()->op;
 				assert(false);
@@ -500,8 +462,7 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 						paras.string_indices[index] = value_r;
 					}
 					break;
-				case T_LONGPARA:
-				{
+				case T_LONGPARA: {
 					// long-form paras
 					char *index = eh_execute(node2->get_opval()->paras[0], context)->get_stringval();
 					if(node2->get_opval()->nparas == 1) {
@@ -559,12 +520,11 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 		} else {
 			throw_TypeError("For loop counter must be an Integer or a Range of Integers", rangeval->min->type(), this);
 		}
-	} else {
-		if(count_r->type() != int_e) {
-			throw_TypeError("For loop counter must be an Integer or a Range of Integers", count_r->type(), this);
-		}
+	} else if(count_r->type() == int_e) {
 		range.first = 0;
 		range.second = count_r->get_intval() - 1;
+	} else {
+		throw_TypeError("For loop counter must be an Integer or a Range of Integers", count_r->type(), this);
 	}
 	if(op->nparas == 2) {
 		// "for 5; do stuff; endfor" construct
@@ -717,12 +677,13 @@ ehretval_p EHI::eh_op_array(ehretval_p node, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
-	ehretval_p ret = this->make_hash(new ehhash_t());
+	ehhash_t *new_hash = new ehhash_t();
+	ehretval_p ret = this->make_hash(new_hash);
 	for( ; node->get_opval()->nparas != 0; node = node->get_opval()->paras[0]) {
 		ehretval_p *myparas = node->get_opval()->paras[1]->get_opval()->paras;
 		// nodes here will always have the name in para 0 and value in para 1
 		ehretval_p value = eh_execute(myparas[1], context);
-		ret->get_hashval()->set(myparas[0]->get_stringval(), value);
+		new_hash->set(myparas[0]->get_stringval(), value);
 	}
 	return ret;
 }
@@ -786,7 +747,6 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	return ret;
 }
 ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
-	// count a list like an argument list. Assumes correct layout.
 	int nargs = 1;
 	for(ehretval_p tmp = node;
 		tmp->type() == op_e && tmp->get_opval()->op == ',' && tmp->get_opval()->nparas != 0;
@@ -811,7 +771,24 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	// rely on standard layout of the paras
 	ehmember_p new_member;
-	new_member->attribute = eh_execute(op->paras[0], context)->get_attributestrval();
+	attributes_t attributes = attributes_t::make();
+	for(ehretval_p node = op->paras[0]; node->get_opval()->nparas != 0; node = node->get_opval()->paras[0]) {
+		switch(node->get_opval()->paras[1]->attributeval) {
+			case publica_e:
+				attributes.visibility = public_e;
+				break;
+			case privatea_e:
+				attributes.visibility = private_e;
+				break;
+			case statica_e:
+				attributes.isstatic = static_e;
+				break;
+			case consta_e:
+				attributes.isconst = const_e;
+				break;
+		}
+	}
+	new_member->attribute = attributes;
 	char *name = eh_execute(op->paras[1], context)->get_stringval();
 
 	// decide what we got
@@ -1095,15 +1072,6 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, e
 		return NULL;
 	} else {
 		return call_function(func, args, context);
-	}
-}
-// call a method from another method
-ehretval_p EHI::call_method_from_method(ehretval_p obj, ehcontext_t context, const char *name, ehretval_p args) {
-	bool data_is_null = context.scope->get_objectval()->object_data->type() == null_e;
-	if(data_is_null && obj->type() != null_e) {
-		return call_method(obj, name, args, context);
-	} else {
-		return call_method(context.scope, name, args, context);
 	}
 }
 ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t context) {

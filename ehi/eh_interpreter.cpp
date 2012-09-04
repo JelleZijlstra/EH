@@ -7,7 +7,6 @@
 #include <cctype>
 
 #include "eh.h"
-#include "eh_libfuncs.h"
 #include "eh_libclasses.h"
 #include "eh_libcmds.h"
 #include "std_lib/ArgumentError.h"
@@ -34,35 +33,6 @@
 #include "std_lib/Tuple.h"
 #include "std_lib/TypeError.h"
 #include "std_lib/UnknownCommandError.h"
-
-// library functions supported by ehi
-typedef struct ehlf_listentry_t {
-	const char *name;
-	ehlibmethod_t code;
-} ehlf_listentry_t;
-#define LIBFUNCENTRY(f) {#f, ehlf_ ## f},
-ehlf_listentry_t libfuncs[] = {
-	LIBFUNCENTRY(getinput)
-	LIBFUNCENTRY(printvar)
-	LIBFUNCENTRY(is_null)
-	LIBFUNCENTRY(is_string)
-	LIBFUNCENTRY(is_int)
-	LIBFUNCENTRY(is_bool)
-	LIBFUNCENTRY(is_array)
-	LIBFUNCENTRY(is_object)
-	LIBFUNCENTRY(is_range)
-	LIBFUNCENTRY(is_float)
-	LIBFUNCENTRY(get_type)
-	LIBFUNCENTRY(include)
-	LIBFUNCENTRY(pow)
-	LIBFUNCENTRY(log)
-	LIBFUNCENTRY(eval)
-	LIBFUNCENTRY(throw)
-	LIBFUNCENTRY(echo)
-	LIBFUNCENTRY(put)
-	LIBFUNCENTRY(collectGarbage)
-	{NULL, NULL}
-};
 
 typedef struct ehlc_listentry_t {
 	const char *name;
@@ -207,18 +177,6 @@ void EHI::eh_init(void) {
 		member->attribute = attributes;
 		member->value = new_value;
 		global_object->get_objectval()->insert(libclasses[i].name, member);
-	}
-	for(int i = 0; libfuncs[i].code != NULL; i++) {
-		ehmember_p func;
-		ehobj_t *obj = new ehobj_t();
-		obj->type_id = func_e;
-		obj->parent = global_object;
-		ehfunc_t *f = new ehfunc_t(lib_e);
-		f->libmethod_pointer = libfuncs[i].code;
-		obj->object_data = ehretval_t::make_func(f);
-		obj->inherit(function_object);
-		func->value = this->make_object(obj);
-		global_object->get_objectval()->insert(libfuncs[i].name, func);
 	}
 	for(int i = 0; libcmds[i].name != NULL; i++) {
 		insert_command(libcmds[i].name, libcmds[i].cmd);

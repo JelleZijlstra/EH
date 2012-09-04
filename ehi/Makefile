@@ -6,7 +6,7 @@ LIBCLASSES = ArgumentError Array Bool ConstError CountClass Exception File Float
 SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp eh_types.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
-INTERPRETER = $(SOURCES) eh_libfuncs.cpp eh_libcmds.cpp eh_interpreter.cpp $(patsubst %, std_lib/%.cpp, $(LIBCLASSES))
+INTERPRETER = $(SOURCES) eh_libcmds.cpp eh_interpreter.cpp $(patsubst %, std_lib/%.cpp, $(LIBCLASSES))
 EHI = $(INTERPRETER) eh_cli.cpp
 EHI_O = $(EHI:.cpp=.o)
 EHPHP = $(INTERPRETER) eh_wrap.cpp
@@ -19,10 +19,6 @@ eh_wrap.o: eh_wrap.cpp
 	$(CC) `php-config --includes` $(CCBASICFLAGS) $< -o $@
 
 eh.h: ehi.h eh.bison.hpp
-
-eh_interpreter.cpp: eh_libfuncs.h
-
-eh_libfuncs.cpp: eh_libfuncs.h
 
 %.o: %.cpp eh.h
 	$(CC) $(CCFLAGS) $< -o $@

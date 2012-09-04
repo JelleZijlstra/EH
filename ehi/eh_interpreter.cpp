@@ -4,11 +4,28 @@
  *
  * Implements a Lex- and Yacc-based interpreter for the EH scripting language.
  */
+#include <cctype>
+
 #include "eh.h"
 #include "eh_libfuncs.h"
 #include "eh_libclasses.h"
 #include "eh_libcmds.h"
-#include <cctype>
+#include "std_lib/Object.h"
+#include "std_lib/GlobalObject.h"
+#include "std_lib/CountClass.h"
+#include "std_lib/Exception.h"
+#include "std_lib/File.h"
+#include "std_lib/Function.h"
+#include "std_lib/Integer.h"
+#include "std_lib/Array.h"
+#include "std_lib/Float.h"
+#include "std_lib/String.h"
+#include "std_lib/Bool.h"
+#include "std_lib/Null.h"
+#include "std_lib/Range.h"
+#include "std_lib/Hash.h"
+#include "std_lib/Tuple.h"
+#include "std_lib/GarbageCollector.h"
 
 // library functions supported by ehi
 typedef struct ehlf_listentry_t {

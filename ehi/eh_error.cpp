@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+#include "std_lib/Exception.h"
 
 void eh_error(const char *message, errlevel_e level) {
 	if(message)

@@ -33,13 +33,11 @@ ehi: $(EHI_O)
 ehphp: $(EHPHP_O)
 	./make_ehphp.sh "$(CC)" "$(SYMBOLS)" "$(EHPHP_O)"
 
-# If I don't do "/usr/bin/bison", y.tab.c won't compile because of a const char*
-# -> char* conversion.
 eh.bison.cpp eh.bison.hpp: eh.y
-	/usr/bin/bison -v -y -d eh.y --output='eh.bison.cpp'
+	bison -v -y -d eh.y --output='eh.bison.cpp'
 
 eh.flex.cpp: eh.l eh.bison.hpp
-	/opt/local/bin/flex eh.l
+	flex eh.l
 
 eh_wrap.cpp: eh.i
 	swig -c++ -php5 eh.i

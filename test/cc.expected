@@ -1,5 +1,5 @@
-0x800bcc
+0x800bf0
 
-0x800c2c
+0x800c50
 
 Uncaught exception of type TypeError: Invalid base object for "String.length": Null

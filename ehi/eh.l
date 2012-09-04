@@ -203,6 +203,7 @@ ehretval_p EHParser::parse_file(FILE *infile) {
 }
 
 ehretval_p EHParser::parse_string(const char *cmd) {
-	yy_scan_string(cmd, scanner);
+	yy_switch_to_buffer(yy_scan_string(cmd, scanner), scanner);
+	yyset_lineno(1, scanner);
 	return ehretval_t::make_int(yyparse(scanner));
 }

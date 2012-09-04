@@ -1,3 +1,5 @@
+#include <set>
+
 #include "object.h"
 
 START_EHLC(Object)
@@ -17,6 +19,7 @@ EHLC_ENTRY_RENAME(Object, operator_lt, "operator<")
 EHLC_ENTRY_RENAME(Object, operator_lte, "operator<=")
 EHLC_ENTRY(Object, type)
 EHLC_ENTRY(Object, typeId)
+EHLC_ENTRY(Object, members)
 END_EHLC()
 
 EH_METHOD(Object, new) {
@@ -119,4 +122,18 @@ EH_METHOD(Object, type) {
 }
 EH_METHOD(Object, typeId) {
 	return ehretval_t::make_int(obj->get_full_type());
+}
+// return all members in the class
+EH_METHOD(Object, members) {
+	ehretval_p reference_retainer = obj;
+	if(obj->type() != object_e) {
+		obj = ehi->get_primitive_class(obj->type());
+	}
+	std::set<std::string> members = obj->get_objectval()->member_set();
+	eharray_t *out = new eharray_t();
+	int index = 0;
+	for(std::set<std::string>::iterator i = members.begin(), end = members.end(); i != end; i++, index++) {
+		out->int_indices[index] = ehretval_t::make_string(strdup((*i).c_str()));
+	}
+	return ehi->make_array(out);
 }

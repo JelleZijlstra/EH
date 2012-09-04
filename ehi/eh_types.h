@@ -324,6 +324,8 @@ public:
 
 	bool inherited_has(const std::string &key) const;
 	ehmember_p inherited_get(const std::string &key);
+	
+	std::set<std::string> member_set();
 
 	// inline methods
 	size_t size() const {

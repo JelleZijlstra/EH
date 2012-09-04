@@ -71,23 +71,19 @@ private:
 	ehretval_p eh_xtoarray(ehretval_p in);
 	ehretval_p eh_cast(const type_enum type, ehretval_p in, ehcontext_t context);
 
-	ehretval_p get_primitive_class(type_enum in) {
-		return this->repo.get_object(in);
-	}
-
 	// disallowed operations
-	EHI(const EHI&) : eval_parser(), inloop(), breaking(), continuing(), cmdtable(), buffer(), gc(), returning(), repo(), global_object() {
-		throw "Not allowed";
-	}
-	EHI operator=(const EHI&) {
-		throw "Not allowed";
-	}
+	EHI(const EHI&);
+	EHI operator=(const EHI&);
 public:
 	// our GC
 	garbage_collector<ehretval_t> gc;
 	bool returning;
 	type_repository repo;
 	ehretval_p global_object;
+
+	ehretval_p get_primitive_class(type_enum in) {
+		return this->repo.get_object(in);
+	}
 
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
 	void eh_setarg(int argc, char **argv);

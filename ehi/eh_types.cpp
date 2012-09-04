@@ -1,3 +1,5 @@
+#include <set>
+
 #include "eh.h"
 #include "eh_libclasses.h"
 
@@ -252,6 +254,21 @@ bool ehobj_t::inherited_has(const std::string &key) const {
 	}
 	return false;
 }
+
+std::set<std::string> ehobj_t::member_set() {
+	std::set<std::string> out;
+	OBJECT_FOR_EACH(this, i) {
+		out.insert(i->first);
+	}
+	for(std::list<ehretval_p>::const_iterator i = super.begin(), end = super.end(); i != end; i++) {
+		std::set<std::string> members = (*i)->get_objectval()->member_set();
+		for(std::set<std::string>::iterator i = members.begin(), end = members.end(); i != end; i++) {
+			out.insert(*i);
+		}
+	}
+	return out;
+}
+
 ehmember_p ehobj_t::inherited_get(const std::string &key) {
 	if(this->has(key)) {
 		return this->get_known(key);

@@ -3,5 +3,7 @@
 
 #include "../eh.h"
 #include "../eh_libclasses.h"
+#include "../eh_error.h"
+#include "Exception.h"
 
 #endif /* EH_STD_LIB_INCLUDES_ */

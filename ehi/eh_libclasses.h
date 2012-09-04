@@ -3,10 +3,10 @@
  *
  * Header file for EH library classes
  */
-#include "eh.h"
-
 #ifndef _EH_LIBCLASSES_H
 #define _EH_LIBCLASSES_H
+
+#include "eh.h"
 
 #define START_EHLC(name) ehlm_listentry_t ehlc_l_ ## name [] = {
 #define EHLC_ENTRY(classn, name) { #name, &ehlm_ ## classn ## _ ## name },
@@ -34,11 +34,15 @@ if(!obj->is_a(ehtype)) { \
 #define ASSERT_NARGS_AND_TYPE(count, ehtype, method) ASSERT_NARGS(count, method); ASSERT_OBJ_TYPE(ehtype, method);
 #define ASSERT_NULL_AND_TYPE(ehtype, method) ASSERT_NULL(method); ASSERT_OBJ_TYPE(ehtype, method);
 
-
 class LibraryBaseClass {
 public:
   virtual ~LibraryBaseClass() {}
 };
+
+// has to come after macro definitions for EH_METHOD and EXTERN_EHLC, as well
+// as definition of LibraryBaseClass
+#include "std_lib/TypeError.h"
+#include "std_lib/ArgumentError.h"
 
 // Helpers
 static inline int intcmp(int lhs, int rhs) {

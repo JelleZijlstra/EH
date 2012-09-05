@@ -51,8 +51,8 @@ if(extension_loaded("ehphp"))  {
 					'autocompleter' => $this->getAutocompleter(),
 				));
 			} catch(StopException $e) {
-				// make StopException here equivalent to typing 'quit'
-				return "quit\n";
+				// make StopException here equivalent to typing '$quit'
+				return "\$quit\n";
 			}
 			$history[] = $cmd;
 			return $cmd;

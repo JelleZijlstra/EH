@@ -26,6 +26,8 @@ int EHI::eh_interactive(interactivity_enum interactivity) {
 			ret = parser.parse_string(cmd);
 		} catch(eh_exception &e) {
 			handle_uncaught(e);
+		} catch(quit_exception &e) {
+			break;
 		}
 	}
 	// TODO: provide useful return type

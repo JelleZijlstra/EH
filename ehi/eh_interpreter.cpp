@@ -72,7 +72,7 @@ ehlc_listentry_t libclasses[] = {
 
 typedef struct ehcmd_listentry_t {
 	const char *name;
-	ehcmd_t cmd;
+	ehlibmethod_t cmd;
 } ehcmd_listentry_t;
 #define LIBCMDENTRY(c) { #c, ehlcmd_ ## c },
 ehcmd_listentry_t libcmds[] = {
@@ -161,17 +161,11 @@ void EHI::eh_init(void) {
 		// attributes for library methods
 		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
 		for(int j = 0; members[j].name != NULL; j++) {
-			ehmember_p func;
-			func->attribute = attributes;
-			ehobj_t *function_obj = new ehobj_t();
-			func->value = this->make_object(function_obj);
-			function_obj->parent = new_value;
-			function_obj->type_id = func_e;
-			ehfunc_t *f = new ehfunc_t(lib_e);
-			f->libmethod_pointer = members[j].func;
-			function_obj->object_data = ehretval_t::make_func(f);
-			function_obj->inherit(function_object);
-			newclass->insert(members[j].name, func);
+			ehretval_p func = make_method(members[j].func, function_object, new_value);
+			ehmember_p func_member;
+			func_member->attribute = attributes_t::make(public_e, nonstatic_e, nonconst_e);
+			func_member->value = func;
+			newclass->insert(members[j].name, func_member);
 		}
 		ehmember_p member;
 		// library classes themselves are constant; otherwise the engine might blow up
@@ -180,8 +174,18 @@ void EHI::eh_init(void) {
 		member->value = new_value;
 		global_object->get_objectval()->insert(libclasses[i].name, member);
 	}
+	// insert global command table
+	ehmember_p command_table;
+	command_table->attribute = attributes_t::make(public_e, nonstatic_e, const_e);
+	this->cmdtable = new ehhash_t();
+	command_table->value = this->make_hash(this->cmdtable);
+	// insert command table into global objects
+	global_object->get_objectval()->insert("commands", command_table);
+
+	// fill command table
 	for(int i = 0; libcmds[i].name != NULL; i++) {
-		insert_command(libcmds[i].name, libcmds[i].cmd);
+		ehretval_p cmd = make_method(libcmds[i].cmd, function_object, global_object);
+		insert_command(libcmds[i].name, cmd);
 	}
 	for(int i = 0; libredirs[i][0] != NULL; i++) {
 		redirect_command(libredirs[i][0], libredirs[i][1]);
@@ -441,7 +445,7 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 	// count for simple parameters
 	int count = 0;
 	// we're making an array of parameters
-	eharray_t paras;
+	eharray_t *paras = new eharray_t();
 	// loop through the paras given
 	for( ; node->get_opval()->nparas != 0; node = node->get_opval()->paras[1]) {
 		ehretval_p node2 = node->get_opval()->paras[0];
@@ -461,46 +465,47 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 						char index[2];
 						index[0] = node2->get_stringval()[i];
 						index[1] = '\0';
-						paras.string_indices[index] = value_r;
+						paras->string_indices[index] = value_r;
 					}
 					break;
 				case T_LONGPARA: {
 					// long-form paras
 					char *index = eh_execute(node2->get_opval()->paras[0], context)->get_stringval();
 					if(node2->get_opval()->nparas == 1) {
-						paras.string_indices[index] = ehretval_t::make_bool(true);
+						paras->string_indices[index] = ehretval_t::make_bool(true);
 					} else {
-						paras.string_indices[index] = eh_execute(node2->get_opval()->paras[1], context);
+						paras->string_indices[index] = eh_execute(node2->get_opval()->paras[1], context);
 					}
 					break;
 				}
 				case T_REDIRECT:
-					paras.string_indices[">"] = eh_execute(node2->get_opval()->paras[0], context);
+					paras->string_indices[">"] = eh_execute(node2->get_opval()->paras[0], context);
 					break;
 				case '}':
-					paras.string_indices["}"] = eh_execute(node2->get_opval()->paras[0], context);
+					paras->string_indices["}"] = eh_execute(node2->get_opval()->paras[0], context);
 					break;
 				default: // non-named parameters with an expression
-					// non-named parameters
-					paras.int_indices[count] = eh_execute(node2, context);
+					paras->int_indices[count] = eh_execute(node2, context);
 					count++;
 					break;
 			}
 		} else {
 			// non-named parameters
-			paras.int_indices[count] = node2;
+			paras->int_indices[count] = node2;
 			count++;
 		}
 	}
 	// insert indicator that this is an EH-PHP command
-	paras.string_indices["_ehphp"] = ehretval_t::make_bool(true);
+	paras->string_indices["_ehphp"] = ehretval_t::make_bool(true);
 	// get the command to execute
-	const ehcmd_t libcmd = get_command(name);
+	ehretval_p libcmd = get_command(name);
 	ehretval_p ret;
 	if(libcmd != NULL) {
-		ret = libcmd(&paras);
+		ehretval_p args = this->make_array(paras);
+		ret = this->call_function(libcmd, args, context);
 	} else {
-		ret = execute_cmd(name, &paras);
+		ret = execute_cmd(name, paras);
+		delete paras;
 	}
 	// we're not returning anymore
 	returning = false;
@@ -1219,18 +1224,18 @@ void EHI::eh_setarg(int argc, char **argv) {
 /*
  * Commands
  */
-ehcmd_t EHI::get_command(const char *name) {
-	if(this->cmdtable.count(name) == 1) {
-		return this->cmdtable[name];
+ehretval_p EHI::get_command(const char *name) {
+	if(this->cmdtable->has(name)) {
+		return this->cmdtable->get(name);
 	} else {
 		return NULL;
 	}
 }
-void EHI::insert_command(const char *name, const ehcmd_t cmd) {
-	this->cmdtable[name] = cmd;
+void EHI::insert_command(const char *name, ehretval_p cmd) {
+	this->cmdtable->set(name, cmd);
 }
 void EHI::redirect_command(const char *redirect, const char *target) {
-	ehcmd_t targetcmd = get_command(target);
+	ehretval_p targetcmd = get_command(target);
 	if(targetcmd == NULL) {
 		throw_UnknownCommandError(target, this);
 	}

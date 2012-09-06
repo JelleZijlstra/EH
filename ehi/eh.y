@@ -223,7 +223,7 @@ statement:
 	            { $$ = ADD_NODE2(T_CATCH, $3, $6); }
 	| T_TRY T_SEPARATOR statement_list T_FINALLY T_SEPARATOR statement_list T_END T_SEPARATOR
 	            { $$ = ADD_NODE2(T_FINALLY, $3, $6); }
-	| command T_SEPARATOR	{ $$ = $1; }
+	| '$' command T_SEPARATOR	{ $$ = $2; }
 	;
 
 expression:
@@ -349,8 +349,8 @@ expression:
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_GIVEN simple_expr T_SEPARATOR caselist T_END
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_DOLLARPAREN command ')'
-							{ $$ = $2; }
+	| '(' '$' command ')'
+							{ $$ = $3; }
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
 	| T_IF simple_expr '{' statement_list '}'
 							{ $$ = ADD_NODE2(T_IF, $2, $4); }
@@ -437,8 +437,8 @@ simple_expr:
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_GIVEN simple_expr T_SEPARATOR caselist T_END
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_DOLLARPAREN command ')'
-							{ $$ = $2; }
+	| '(' '$' command ')'
+							{ $$ = $3; }
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
 	;
 
@@ -509,8 +509,8 @@ para_expr:
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_GIVEN para_expr T_SEPARATOR caselist T_END
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_DOLLARPAREN command ')'
-							{ $$ = $2; }
+	| '(' '$' command ')'
+							{ $$ = $3; }
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
 	;
 
@@ -520,7 +520,7 @@ shortfunc:
 	;
 
 command:
-	'$' T_VARIABLE paralist		{ $$ = ADD_NODE2(T_COMMAND, $2, $3); }
+	T_VARIABLE paralist		{ $$ = ADD_NODE2(T_COMMAND, $1, $2); }
 	;
 
 paralist:

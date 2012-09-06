@@ -30,8 +30,10 @@ private:
 	int inloop;
 	int breaking;
 	int continuing;
-	std::map<const std::string, ehcmd_t> cmdtable;
-	
+public:
+	ehhash_t *cmdtable;
+
+private:
 	// buffer for interactive prompt
 	char *buffer;
 	
@@ -62,8 +64,8 @@ private:
 	ehretval_p eh_op_finally(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_always_execute(ehretval_p code, ehcontext_t context);
 	ehretval_p perform_op(const char *name, int nargs, ehretval_p *paras, ehcontext_t context);
-	ehcmd_t get_command(const char *name);
-	void insert_command(const char *name, const ehcmd_t cmd);
+	ehretval_p get_command(const char *name);
+	void insert_command(const char *name, ehretval_p cmd);
 	void redirect_command(const char *redirect, const char *target);
 	ehretval_p call_function(ehretval_p function, ehretval_p args, ehcontext_t context);
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
@@ -144,6 +146,17 @@ public:
 		this->gc.allocate(out);
 		ehretval_t::fill_super_class(out, in);
 		return out;
+	}
+	ehretval_p make_method(ehlibmethod_t in, ehretval_p function_object, ehretval_p the_class) {
+		ehobj_t *function_obj = new ehobj_t();
+		ehretval_p func = this->make_object(function_obj);
+		function_obj->parent = the_class;
+		function_obj->type_id = func_e;
+		ehfunc_t *f = new ehfunc_t(lib_e);
+		f->libmethod_pointer = in;
+		function_obj->object_data = ehretval_t::make_func(f);
+		function_obj->inherit(function_object);
+		return func;
 	}
 	ehretval_p promote(ehretval_p in, ehcontext_t context);
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);

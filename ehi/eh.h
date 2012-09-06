@@ -123,9 +123,6 @@ typedef struct ehlibclass_t {
 	ehlm_listentry_t *members;
 } ehlibclass_t;
 
-// function executing a command
-typedef ehretval_p (*ehcmd_t)(eharray_t *paras);
-
 /*
  * Other global functions
  */

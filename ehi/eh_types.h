@@ -448,6 +448,9 @@ public:
 	ehretval_p get(const char *key) {
 		return members[key];
 	}
+	void erase(const std::string &key) {
+		members.erase(key);
+	}
 	
 	hash_iterator begin_iterator() {
 		return members.begin();

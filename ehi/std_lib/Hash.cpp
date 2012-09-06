@@ -5,6 +5,8 @@ EHLC_ENTRY(Hash, toArray)
 EHLC_ENTRY_RENAME(Hash, operator_arrow, "operator->")
 EHLC_ENTRY_RENAME(Hash, operator_arrow_equals, "operator->=")
 EHLC_ENTRY(Hash, has)
+EHLC_ENTRY(Hash, delete)
+EHLC_ENTRY(Hash, keys)
 END_EHLC()
 
 EH_METHOD(Hash, toArray) {
@@ -17,12 +19,14 @@ EH_METHOD(Hash, toArray) {
 	}
 	return out;
 }
+
 EH_METHOD(Hash, operator_arrow) {
 	ASSERT_OBJ_TYPE(hash_e, "Hash.operator->");
 	ASSERT_TYPE(args, string_e, "Hash.operator->");
 	ehhash_t *hash = obj->get_hashval();
 	return hash->get(args->get_stringval());
 }
+
 EH_METHOD(Hash, operator_arrow_equals) {
 	ASSERT_NARGS_AND_TYPE(2, hash_e, "Hash.operator->=");
 	ehretval_p index = args->get_tupleval()->get(0);
@@ -32,9 +36,30 @@ EH_METHOD(Hash, operator_arrow_equals) {
 	hash->set(index->get_stringval(), value);
 	return value;
 }
+
 EH_METHOD(Hash, has) {
 	ASSERT_OBJ_TYPE(hash_e, "Hash.has");
 	ASSERT_TYPE(args, string_e, "Hash.has");
 	ehhash_t *hash = obj->get_hashval();
 	return ehretval_t::make_bool(hash->has(args->get_stringval()));
+}
+
+EH_METHOD(Hash, delete) {
+	ASSERT_OBJ_TYPE(hash_e, "Hash.has");
+	ASSERT_TYPE(args, string_e, "Hash.has");
+	ehhash_t *hash = obj->get_hashval();
+	hash->erase(args->get_stringval());
+	return obj;
+}
+
+EH_METHOD(Hash, keys) {
+	ASSERT_NULL_AND_TYPE(hash_e, "Hash.toArray");
+	eharray_t *arr = new eharray_t();
+	int index = 0;
+	HASH_FOR_EACH(obj->get_hashval(), i) {
+		std::string name = i->first;
+		arr->int_indices[index] = ehretval_t::make_string(strdup(name.c_str()));
+		index++;
+	}
+	return ehi->make_array(arr);	
 }

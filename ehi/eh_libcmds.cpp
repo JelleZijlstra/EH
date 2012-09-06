@@ -3,6 +3,8 @@
  */
 #include "eh.h"
 #include "eh_libcmds.h"
+#include "eh_libclasses.h"
+#include "std_lib/GlobalObject.h"
 
 EH_LIBCMD(quit) {
 	throw quit_exception();
@@ -10,12 +12,11 @@ EH_LIBCMD(quit) {
 }
 
 EH_LIBCMD(echo) {
-	paras->int_indices[0]->print();
-	printf("\n");
-	return NULL;
+	ASSERT_TYPE(paras, array_e, "echo");
+	return ehlm_GlobalObject_echo(obj, paras->get_arrayval()->int_indices[0], ehi);
 }
 
 EH_LIBCMD(put) {
-	paras->int_indices[0]->print();
-	return NULL;
+	ASSERT_TYPE(paras, array_e, "put");
+	return ehlm_GlobalObject_put(obj, paras->get_arrayval()->int_indices[0], ehi);
 }

@@ -29,6 +29,7 @@
 #include "std_lib/Object.h"
 #include "std_lib/Range.h"
 #include "std_lib/String.h"
+#include "std_lib/SuperClass.h"
 #include "std_lib/SyntaxError.h"
 #include "std_lib/Tuple.h"
 #include "std_lib/TypeError.h"
@@ -54,6 +55,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(Range, range_e)
 	LIBCLASSENTRY(Hash, hash_e)
 	LIBCLASSENTRY(Tuple, tuple_e)
+	LIBCLASSENTRY(SuperClass, super_class_e)
 	LIBCLASSENTRY(Exception, -1)
 	LIBCLASSENTRY(UnknownCommandError, -1)
 	LIBCLASSENTRY(TypeError, -1)
@@ -922,6 +924,9 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 			if(!base_var->is_object()) {
 				throw_TypeError("Cannot set member on primitive", base_var->type(), this);
 			}
+			if(base_var->type() == super_class_e) {
+				throw_TypeError("Cannot set member on parent class", super_class_e, this);
+			}
 			// accessor is guaranteed to be a string
 			char *accessor = eh_execute(internal_paras[1], context)->get_stringval();
 			this->set_property(base_var, accessor, rvalue, context);
@@ -969,7 +974,11 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p base_var = eh_execute(paras[0], context);
 	const char *accessor = eh_execute(paras[1], context)->get_stringval();
-	return get_property(base_var, accessor, context);
+	if(base_var->type() == super_class_e) {
+		return get_property(base_var->get_super_classval()->content(), accessor, context);
+	} else {
+		return get_property(base_var, accessor, context);
+	}
 }
 ehretval_p EHI::eh_op_try(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret;

@@ -146,6 +146,17 @@ ehretval_p ehretval_t::self_or_data(const ehretval_p in) {
 		return in;
 	}
 }
+ehretval_p ehretval_t::instantiate(EHI *ehi) {
+	ehobj_t *new_obj = new ehobj_t();
+	ehretval_p ret = ehi->make_object(new_obj);
+	// input must be an object
+	ehobj_t *obj = this->get_objectval();
+	new_obj->type_id = obj->type_id;
+	new_obj->parent = obj->parent;
+	new_obj->real_parent = obj->real_parent;
+	new_obj->inherit(ehretval_p(this));
+	return ret;
+}
 ehretval_t::~ehretval_t() {
 	switch(_type) {
 		// Simple types; nothing to do

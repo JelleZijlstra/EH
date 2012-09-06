@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "Integer.h"
 #include "MiscellaneousError.h"
 

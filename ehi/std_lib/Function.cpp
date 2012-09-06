@@ -33,7 +33,7 @@ EH_METHOD(Function, operator_colon) {
 	if(f->type == lib_e) {
 		return f->libmethod_pointer(base_object, args, ehi);
 	}
-	ehretval_p newcontext = ehi->object_instantiate(function_object);
+	ehretval_p newcontext = function_object->instantiate(ehi);
 	newcontext->get_objectval()->object_data = function_object->get_objectval()->object_data;
 
 	// check parameter count

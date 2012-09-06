@@ -692,7 +692,7 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehfunc_t *f = new ehfunc_t(user_e);
 	ehretval_p object_data = ehretval_t::make_func(f);
-	ehretval_p ret = this->object_instantiate(this->get_primitive_class(func_e));
+	ehretval_p ret = this->get_primitive_class(func_e)->instantiate(this);
 	ehobj_t *function_object = ret->get_objectval();
 	function_object->parent = context.scope;
 	function_object->type_id = func_e;
@@ -1095,16 +1095,6 @@ ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t 
 /*
  * Classes
  */
-ehretval_p EHI::object_instantiate(ehretval_p input) {
-	ehobj_t *new_obj = new ehobj_t();
-	ehretval_p ret = this->make_object(new_obj);
-	ehobj_t *obj = input->get_objectval();
-	new_obj->type_id = obj->type_id;
-	new_obj->parent = obj->parent;
-	new_obj->real_parent = obj->real_parent;
-	new_obj->inherit(input);
-	return ret;
-}
 ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p value, ehcontext_t context) {
 	// caller should ensure object is actually an object
 	ehobj_t *obj = object->get_objectval();

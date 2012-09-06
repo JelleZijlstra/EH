@@ -23,7 +23,7 @@ EHLC_ENTRY(Object, members)
 END_EHLC()
 
 EH_METHOD(Object, new) {
-	ehretval_p ret = ehi->object_instantiate(obj);
+	ehretval_p ret = obj->instantiate(ehi);
 	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", args, ret);
 	return ret;
 }

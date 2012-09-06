@@ -183,6 +183,7 @@ vtype get_ ## ehtype ## val() const;
 	void print();
 	bool equals(ehretval_p rhs);
 	std::list<ehretval_p> children();
+	ehretval_p instantiate(EHI *ehi);
 	
 	~ehretval_t();
 	

@@ -146,7 +146,6 @@ public:
 		return out;
 	}
 	ehretval_p promote(ehretval_p in, ehcontext_t context);
-	ehretval_p object_instantiate(ehretval_p obj);
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
 
 	// conversion methods, guaranteed to return the type they're supposed to return

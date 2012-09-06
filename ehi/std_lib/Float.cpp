@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "Float.h"
 #include "MiscellaneousError.h"
 

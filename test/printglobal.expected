@@ -155,6 +155,9 @@ toInt <public,non-static,non-constant>: @function <library>:
 toRange <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]
+SuperClass <public,non-static,constant>: @object <SuperClass> [
+toString <public,non-static,non-constant>: @function <library>: 
+]
 SyntaxError <public,non-static,constant>: @object <SyntaxError> [
 initialize <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 

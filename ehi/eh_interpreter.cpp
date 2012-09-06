@@ -920,12 +920,12 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 		}
 		case '.': {
 			ehretval_p base_var = eh_execute(internal_paras[0], context);
+			if(base_var->type() == super_class_e) {
+				throw_TypeError("Cannot set member on parent class", super_class_e, this);
+			}
 			// This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.
 			if(!base_var->is_object()) {
 				throw_TypeError("Cannot set member on primitive", base_var->type(), this);
-			}
-			if(base_var->type() == super_class_e) {
-				throw_TypeError("Cannot set member on parent class", super_class_e, this);
 			}
 			// accessor is guaranteed to be a string
 			char *accessor = eh_execute(internal_paras[1], context)->get_stringval();

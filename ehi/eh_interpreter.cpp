@@ -274,11 +274,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 * Exceptions
 		 */
 			case T_TRY:
-				return eh_op_try(node->get_opval()->paras, context);
-			case T_CATCH:
-				return eh_op_catch(node->get_opval()->paras, context);
-			case T_FINALLY:
-				return eh_op_catch(node->get_opval()->paras, context);
+				return eh_op_try(node->get_opval(), context);
 		/*
 		 * Miscellaneous
 		 */
@@ -985,53 +981,53 @@ ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
 		return get_property(base_var, accessor, context);
 	}
 }
-ehretval_p EHI::eh_op_try(ehretval_p *paras, ehcontext_t context) {
+ehretval_p EHI::eh_op_try(opnode_t *op, ehcontext_t context) {
 	ehretval_p ret;
-	ehretval_p try_block = paras[0];
-	ehretval_p catch_block = paras[1];
-	ehretval_p finally_block = paras[2];
-	try {
+	ehretval_p try_block = op->paras[0];
+	ehretval_p catch_blocks = op->paras[1];
+	if(op->nparas == 2) {
+		return eh_try_catch(try_block, catch_blocks, context);
+	} else {
+		ehretval_p finally_block = op->paras[2];
+		ehretval_p ret;
 		try {
-			ret = eh_execute(try_block, context);
-		} catch(eh_exception& e) {
-			// inject the exception into the current scope
-			ehmember_p exception_member = ehmember_t::make(attributes_t::make(public_e, nonstatic_e, nonconst_e), e.content);
-			this->set_member(context.scope, "exception", exception_member, context);
-			ret = eh_execute(catch_block, context);
+			ret = eh_try_catch(try_block, catch_blocks, context);
+		} catch(...) {
+			eh_always_execute(finally_block, context);
+			throw;
 		}
 		eh_always_execute(finally_block, context);
+		return ret;
+	}
+}
+ehretval_p EHI::eh_try_catch(ehretval_p try_block, ehretval_p catch_blocks, ehcontext_t context) {
+	opnode_t *catch_op = catch_blocks->get_opval();
+	// don't try/catch if there are no catch blocks
+	if(catch_op->nparas == 0) {
+		return eh_execute(try_block, context);
+	}
+	try {
+		return eh_execute(try_block, context);	
 	} catch(eh_exception &e) {
-		eh_always_execute(finally_block, context);
+		// insert exception into current scope
+		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
+		ehmember_p exception_member = ehmember_t::make(attributes, e.content);
+		this->set_member(context.scope, "exception", exception_member, context);
+		for(; catch_op->nparas != 0; catch_op = catch_op->paras[1]->get_opval()) {
+			opnode_t *catch_block = catch_op->paras[0]->get_opval();
+			if(catch_block->nparas == 1) {
+				return eh_execute(catch_block->paras[0], context);
+			} else {
+				// conditional catch
+				ehretval_p decider = eh_execute(catch_block->paras[0], context);
+				if(decider->get_boolval()) {
+					return eh_execute(catch_block->paras[1], context);
+				}
+			}
+		}
+		// re-throw if we couldn't catch it
 		throw;
 	}
-	return ret;
-}
-ehretval_p EHI::eh_op_catch(ehretval_p *paras, ehcontext_t context) {
-	ehretval_p ret;
-	ehretval_p try_block = paras[0];
-	ehretval_p catch_block = paras[1];
-	try {
-		ret = eh_execute(try_block, context);
-	} catch(eh_exception& e) {
-		// inject the exception into the current scope
-		ehmember_p exception_member = ehmember_t::make(attributes_t::make(public_e, nonstatic_e, nonconst_e), e.content);
-		this->set_member(context.scope, "exception", exception_member, context);
-		ret = eh_execute(catch_block, context);
-	}
-	return ret;
-}
-ehretval_p EHI::eh_op_finally(ehretval_p *paras, ehcontext_t context) {
-  ehretval_p ret;
-  ehretval_p try_block = paras[0];
-  ehretval_p finally_block = paras[1];
-  try {
-    ret = eh_execute(try_block, context);
-    eh_always_execute(finally_block, context);
-  } catch(eh_exception &e) {
-    eh_always_execute(finally_block, context);
-    throw;
-  }
-  return ret;
 }
 ehretval_p EHI::eh_always_execute(ehretval_p code, ehcontext_t context) {
   // Execute even if we're breaking or continuing or whatever

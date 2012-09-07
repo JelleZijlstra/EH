@@ -93,7 +93,7 @@ EHParser *yyget_extra(void *scanner);
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF T_THIS T_SCOPE
 
-%type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i parg attributelist attributelist_inner caselist acase command paralist para simple_expr global_list shortfunc bareword_or_string para_expr
+%type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i parg attributelist attributelist_inner caselist acase command paralist para simple_expr global_list shortfunc bareword_or_string para_expr catch_clauses catch_clause catch_clauses_braces catch_clause_braces
 %%
 program:
 	global_list				{ 	// Don't do anything. Destructors below take 
@@ -211,19 +211,41 @@ statement:
 	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
 							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, 
 									ADD_NODE2(T_FUNC, $4, $6)); }
-	| T_TRY '{' statement_list '}' T_CATCH '{' statement_list '}' T_FINALLY '{' statement_list '}' T_SEPARATOR
-	            { $$ = ADD_NODE3(T_TRY, $3, $7, $11); }
-	| T_TRY '{' statement_list '}' T_CATCH '{' statement_list '}' T_SEPARATOR
-	            { $$ = ADD_NODE2(T_CATCH, $3, $7); }
-	| T_TRY '{' statement_list '}' T_FINALLY '{' statement_list '}' T_SEPARATOR
-	            { $$ = ADD_NODE2(T_FINALLY, $3, $7); }
-	| T_TRY T_SEPARATOR statement_list T_CATCH T_SEPARATOR statement_list T_FINALLY T_SEPARATOR statement_list T_END T_SEPARATOR
-	            { $$ = ADD_NODE3(T_TRY, $3, $6, $9); }
-	| T_TRY T_SEPARATOR statement_list T_CATCH T_SEPARATOR statement_list T_END T_SEPARATOR
-	            { $$ = ADD_NODE2(T_CATCH, $3, $6); }
-	| T_TRY T_SEPARATOR statement_list T_FINALLY T_SEPARATOR statement_list T_END T_SEPARATOR
-	            { $$ = ADD_NODE2(T_FINALLY, $3, $6); }
+	| T_TRY '{' statement_list '}' catch_clauses_braces T_SEPARATOR
+				{ $$ = ADD_NODE2(T_TRY, $3, $5); }
+	| T_TRY '{' statement_list '}' catch_clauses_braces T_FINALLY '{' statement_list '}' T_SEPARATOR
+				{ $$ = ADD_NODE3(T_TRY, $3, $5, $8); }
+	| T_TRY T_SEPARATOR statement_list catch_clauses T_END T_SEPARATOR
+				{ $$ = ADD_NODE2(T_TRY, $3, $4); }
+	| T_TRY T_SEPARATOR statement_list catch_clauses T_FINALLY T_SEPARATOR statement_list T_END T_SEPARATOR
+				{ $$ = ADD_NODE3(T_TRY, $3, $4, $7); }
 	| '$' command T_SEPARATOR	{ $$ = $2; }
+	;
+	
+catch_clauses:
+	catch_clause catch_clauses
+							{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	;
+
+catch_clause:
+	T_CATCH T_SEPARATOR statement_list
+							{ $$ = ADD_NODE1(T_CATCH, $3); }
+	| T_CATCH T_IF expression T_SEPARATOR statement_list
+							{ $$ = ADD_NODE2(T_CATCH, $3, $5); }
+	;
+
+catch_clauses_braces:
+	catch_clause_braces catch_clauses_braces
+							{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	;
+
+catch_clause_braces:
+	T_CATCH '{' statement_list '}'
+							{ $$ = ADD_NODE1(T_CATCH, $3); }
+	| T_CATCH T_IF simple_expr '{' statement_list '}'
+							{ $$ = ADD_NODE2(T_CATCH, $3, $5); }
 	;
 
 expression:

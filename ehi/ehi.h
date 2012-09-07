@@ -59,9 +59,8 @@ private:
 	ehretval_p eh_op_set(ehretval_p *paras, ehcontext_t context);
 	ehretval_p set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context);
 	ehretval_p eh_op_dot(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_try(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_catch(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_finally(ehretval_p *paras, ehcontext_t context);
+	ehretval_p eh_op_try(opnode_t *op, ehcontext_t context);
+	ehretval_p eh_try_catch(ehretval_p try_block, ehretval_p catch_blocks, ehcontext_t context);
 	ehretval_p eh_always_execute(ehretval_p code, ehcontext_t context);
 	ehretval_p perform_op(const char *name, int nargs, ehretval_p *paras, ehcontext_t context);
 	ehretval_p get_command(const char *name);

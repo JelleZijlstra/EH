@@ -49,6 +49,9 @@ std::list<ehretval_p> ehretval_t::children() {
 				out.push_back(i->second->value);
 			}
 			out.push_back(o->parent);
+			if(o->object_data != NULL) {
+				out.push_back(o->object_data);
+			}
 			if(o->real_parent != NULL) {
 				out.push_back(o->real_parent);
 			}

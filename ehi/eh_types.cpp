@@ -55,6 +55,9 @@ std::list<ehretval_p> ehretval_t::children() {
 			if(o->real_parent != NULL) {
 				out.push_back(o->real_parent);
 			}
+			for(std::list<ehretval_p>::iterator i = o->super.begin(), end = o->super.end(); i != end; i++) {
+				out.push_back(*i);
+			}
 			break;
 		}
 		case array_e:

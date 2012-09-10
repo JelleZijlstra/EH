@@ -3,16 +3,20 @@ created EH mostly for my own education, but also use it as a command language in
 some of my other projects (e.g., the control system for my electronic library of
 biological articles).
 
-EH is an imperative, object-oriented, dynamic language. All values are objects,
-and many operations are done through method calls. Functions are first-class
-values. Virtually all symbols (including functions, classes, and other 
-variables) are in the same namespace, but classes provide an easy way to 
-namespace code.
+EH is an imperative, object-oriented, dynamic, interpreted language. All values 
+are objects, and many operations are done through method calls. Functions and 
+classes are first-class values. Virtually all symbols (including functions, 
+classes, and other variables) are in the same global namespace, but classes 
+provide an easy way to namespace user-defined symbols.
 
-The code was written and mostly run on a Mac OS X system, and some components
-are running on Linux systems. However, I can't guarantee that this code will do
-anything resembling what it is supposed to do on any systems other than my own;
-use it at your own risk.
+The EH interpreter can be built as a standalone executable (ehi) or as a PHP
+extension (ehphp); run 'make' in the ehi directory to build both. I have also
+done some work on creating a compiler to x86 assembly for Mac OS X, but this
+compiler is no longer functional.
+
+I wrote the interpreter on a Mac OS X system and have run it on Fedora and 
+Ubuntu Linux VMs. It should be possible to run it on other Unix systems, but I
+haven't tried it and things may break in subtle ways.
 
 Dependencies:
 - Flex

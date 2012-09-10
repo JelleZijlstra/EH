@@ -13,30 +13,18 @@ interpreter:
   are getting caught only with Apple's versions of g++ 4.0 and 4.2---did Apple
   introduce some specific patches there to enable exception handling on Mac OS X 
   10.5? In fact, it also works with Clang++ 3.1, though not with 2.9.
-- Make ehretval_t objects fully read-only.
-- Make inheritance more meaningful. I would like to be able to do something like
-	class MyClass {
-		super = inherit BaseClass
-		foo = func: {
-			if someCondition {
-				super.foo()
-			}
-		}
-	}
-  where inherit is an Object method. This would make the current class an
-  instance of BaseClass, and allow direct calls of non-overridden BaseClass
-  methods.
-  More broadly, we should be able to instantiate a class without literally
-  copying over all the functions. That could be done by including in an object
-  a reference to a "parent" (a non-instantiated class, or a superclass) that
-  is used to search for members. We would only set members in the object itself
-  if and when they are set to something different than the situation in the
-  parent object.
-  In order for this to work with functions, we'll need a more robust concept
-  of the "current object" (like the this pointer in JS) and of bindings.
+- Make ehretval_t objects fully read-only. Right now, the only code that changes 
+  an ehretval_t is in the constructor-like methods. In order to make the code
+  cleaner and fully eliminate post-constructor property access, I'll have to 
+  turn my smart pointer implementations into intrusive pointers, implemented
+  through inheritance.
 - Introduce enums.
 - Store some types of objects directly in ehretval_p objects, instead of
   requiring a pointer.
+- Fix a GC bug that leads to some objects being prematurely freed (to reproduce,
+  compile with -DDEBUG_GC and run test/mythrow.eh). This is apparently to do 
+  with references to parent scopes not being followed by the GC, for reasons I 
+  cannot discern.
 
 To compile the interpreter (ehi), write:
 $ make ehi

@@ -175,6 +175,7 @@ private:
 #ifdef DEBUG_GC
 			std::cout << "Freeing block at " << b << std::endl;
 			std::cout << "Refcount: " << b->refcount << std::endl;
+			b->content.print();
 #endif /* DEBUG_GC */
 			b->suicide();
 			b->set_next_pointer(this->first_free_block);
@@ -409,8 +410,8 @@ private:
 	 */
 	void do_mark(pointer root) {
 		int bit = this->current_bit.next();
-		// ignore already marked objects
-		if(root == NULL || (~root)->get_gc_bit(bit)) {
+		// ignore already marked objects and objects that are not in GC
+		if(root == NULL || !root->belongs_in_gc() || (~root)->get_gc_bit(bit)) {
 			return;
 		}
 		(~root)->set_gc_bit(bit);
@@ -426,9 +427,7 @@ private:
 		int current_bit = this->current_bit.get();
 		int previous_bit = this->current_bit.prev();
 		for(pool *p = this->first_pool; p != NULL; p = p->next) {
-			//std::cout << "Before " << p->free_blocks << std::endl;
 			p->sweep(previous_bit, current_bit);
-			//std::cout << "After " << p->free_blocks << std::endl;
 		}
 		// remove pools that are now empty
 		for(pool *p = this->first_pool, *prev = NULL; p != NULL; prev = p, p = p->next) {

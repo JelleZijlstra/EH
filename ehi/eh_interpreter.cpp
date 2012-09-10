@@ -692,12 +692,11 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehfunc_t *f = new ehfunc_t(user_e);
-	ehretval_p object_data = ehretval_t::make_func(f);
 	ehretval_p ret = this->get_primitive_class(func_e)->instantiate(this);
 	ehobj_t *function_object = ret->get_objectval();
 	function_object->parent = context.scope;
 	function_object->type_id = func_e;
-	function_object->object_data = object_data;
+	function_object->object_data = ehretval_t::make_func(f);
 	f->code = paras[1];
 
 	// determine argument count

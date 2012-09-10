@@ -33,6 +33,8 @@ void ehretval_t::print() {
 			printf(" to ");
 			this->get_rangeval()->max->print();
 			break;
+		case object_e:
+			std::cout << get_typestring((type_enum) (this->get_objectval()->type_id)) << std::endl;
 		default:
 			printf("(cannot print value)");
 			break;
@@ -49,12 +51,8 @@ std::list<ehretval_p> ehretval_t::children() {
 				out.push_back(i->second->value);
 			}
 			out.push_back(o->parent);
-			if(o->object_data != NULL) {
-				out.push_back(o->object_data);
-			}
-			if(o->real_parent != NULL) {
-				out.push_back(o->real_parent);
-			}
+			out.push_back(o->object_data);
+			out.push_back(o->real_parent);
 			for(std::list<ehretval_p>::iterator i = o->super.begin(), end = o->super.end(); i != end; i++) {
 				out.push_back(*i);
 			}

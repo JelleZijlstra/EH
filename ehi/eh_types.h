@@ -317,7 +317,7 @@ public:
 	EHI *ehi;
 
 	// constructors
-	ehobj_t() : members(), object_data(NULL), type_id(null_e), parent(), real_parent(), super(), ehi() {}
+	ehobj_t() : members(), object_data(), type_id(null_e), parent(), real_parent(), super(), ehi() {}
 
 	// method prototypes
 	ehmember_p get_recursive(const char *name, const ehcontext_t context);

@@ -107,11 +107,13 @@ global_list:
 								EHI *ehi = parser->parent;
 								ehretval_p statement = ehretval_t::make($1);
 								ehretval_p ret = ehi->eh_execute(statement, parser->context);
-								//ehi->gc.do_collect(ehi->global_object);
 								if(parser->interactivity() != end_is_end_e) {
 									// TODO: make this use printvar instead
 									std::cout << "=> " << ehi->to_string(ret, parser->context)->get_stringval() << std::endl;
 								}
+#if defined(DEBUG_GC) || defined(RUN_GC)
+								ehi->gc.do_collect(ehi->global_object);
+#endif
 								// flush stdout after executing each statement
 								//fflush(stdout);
 								if(ehi->returning) {

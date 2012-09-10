@@ -33,7 +33,7 @@ zval *ehtozval(ehretval_p in, EHI *ehi) {
 				ZVAL_LONG(out, in->get_intval());
 				break;
 			case string_e:
-				ZVAL_STRING(out, in->get_stringval(), 0);
+				ZVAL_STRING(out, strdup(in->get_stringval()), 0);
 				break;
 			case bool_e:
 				ZVAL_BOOL(out, in->get_boolval());

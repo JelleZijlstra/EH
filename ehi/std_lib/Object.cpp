@@ -20,6 +20,8 @@ EHLC_ENTRY_RENAME(Object, operator_lte, "operator<=")
 EHLC_ENTRY(Object, type)
 EHLC_ENTRY(Object, typeId)
 EHLC_ENTRY(Object, members)
+//EHLC_ENTRY(Object, data)
+//EHLC_ENTRY(Object, setData)
 END_EHLC()
 
 EH_METHOD(Object, new) {
@@ -136,4 +138,23 @@ EH_METHOD(Object, members) {
 		out->int_indices[index] = ehretval_t::make_string(strdup((*i).c_str()));
 	}
 	return ehi->make_array(out);
+}
+
+// TODO: make these private methods. I'm pretty sure you can crash ehi with these.
+EH_METHOD(Object, data) {
+	if(obj->type() == object_e) {
+		return obj->get_objectval()->object_data;
+	} else {
+		return obj;
+	}
+}
+
+EH_METHOD(Object, setData) {
+	// impossible to set object_data on primitive
+	if(!obj->type() == object_e) {
+		throw_TypeError("setData", obj->type(), ehi);
+	}
+	obj->get_objectval()->object_data = args;
+	// enable chaining
+	return obj;
 }

@@ -1123,6 +1123,7 @@ ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p val
 	} else {
 		// set in this object
 		ehmember_p new_member;
+		new_member->attribute = result->attribute;
 		new_member->value = value;
 		obj->insert(name, new_member);
 		return new_member;

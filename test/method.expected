@@ -4,7 +4,7 @@
 d <public,non-static,non-constant>: @int 42
 ]
 @object <Bar> [
-bar <public,non-static,non-constant>: @object <Bar> [
+bar <private,non-static,non-constant>: @object <Bar> [
 ]
 ]
 @object <Bar> [

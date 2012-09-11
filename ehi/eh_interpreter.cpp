@@ -1240,15 +1240,9 @@ void EHI::redirect_command(const char *redirect, const char *target) {
 /*
  * Exceptions
  */
-void EHI::handle_uncaught(eh_exception &e) {
+void EHI::handle_uncaught(eh_exception e) {
 	try {
-		ehretval_p content = e.content;
-		int type = content->get_full_type();
-		const std::string &type_string = this->repo.get_name(type);
-		// we're in global context now. Remember this object, because otherwise the string may be freed before we're done with it.
-		ehretval_p stringval = this->to_string(content, ehcontext_t(this->global_object, this->global_object));
-		const char *msg = stringval->get_stringval();
-		std::cerr << "Uncaught exception of type " << type_string << ": " << msg << std::endl;
+		call_method(global_object, "handleUncaught", e.content, global_object);
 	} catch(...) {
 		std::cerr << "Exception occurred while handling uncaught exception" << std::endl;
 	}

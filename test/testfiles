@@ -201,3 +201,4 @@ print_super.eh
 commands.eh
 conditional_catch.eh
 private_list.eh
+handle_uncaught.eh

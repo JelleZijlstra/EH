@@ -31,6 +31,7 @@ EHLC_ENTRY(GlobalObject, throw)
 EHLC_ENTRY(GlobalObject, echo)
 EHLC_ENTRY(GlobalObject, put)
 EHLC_ENTRY(GlobalObject, collectGarbage)
+EHLC_ENTRY(GlobalObject, handleUncaught)
 END_EHLC()
 
 EH_METHOD(GlobalObject, toString) {
@@ -372,5 +373,15 @@ EH_METHOD(GlobalObject, put) {
 
 EH_METHOD(GlobalObject, collectGarbage) {
 	ehi->gc.do_collect(ehi->global_object);
+	return NULL;
+}
+
+EH_METHOD(GlobalObject, handleUncaught) {
+	int type = args->get_full_type();
+	const std::string &type_string = ehi->repo.get_name(type);
+	// we're in global context now. Remember this object, because otherwise the string may be freed before we're done with it.
+	ehretval_p stringval = ehi->to_string(args, ehi->global_object);
+	const char *msg = stringval->get_stringval();
+	std::cerr << "Uncaught exception of type " << type_string << ": " << msg << std::endl;
 	return NULL;
 }

@@ -162,6 +162,9 @@ public:
 
 	// conversion methods, guaranteed to return the type they're supposed to return
 #define CASTER(method_name, ehtype) ehretval_p to_ ## ehtype(ehretval_p in, ehcontext_t context) { \
+	if(in->type() == ehtype ## _e) { \
+		return in; \
+	} \
 	ehretval_p out = call_method(in, #method_name, NULL, context); \
 	if(out->type() == ehtype ## _e) { \
 		return out; \

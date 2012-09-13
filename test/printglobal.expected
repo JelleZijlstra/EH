@@ -194,6 +194,7 @@ eval <public,non-static,non-constant>: @function <library>:
 get_type <public,non-static,non-constant>: @function <library>: 
 getinput <public,non-static,non-constant>: @function <library>: 
 global <public,non-static,constant>: (recursion)
+handleUncaught <public,non-static,non-constant>: @function <library>: 
 include <public,non-static,non-constant>: @function <library>: 
 is_array <public,non-static,non-constant>: @function <library>: 
 is_bool <public,non-static,non-constant>: @function <library>: 

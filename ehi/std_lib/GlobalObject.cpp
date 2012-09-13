@@ -256,10 +256,10 @@ void printvar_t::array(eharray_t *in) {
 	}
 }
 void printvar_t::tuple(ehtuple_t *in) {
-  int size = in->size();
-  for(int i = 0; i < size; i++) {
-    this->retval(in->get(i));
-  }
+	int size = in->size();
+	for(int i = 0; i < size; i++) {
+		this->retval(in->get(i));
+	}
 }
 
 EH_METHOD(GlobalObject, printvar) {

@@ -79,9 +79,9 @@ EH_METHOD(Function, toString) {
 	} else {
 		std::ostringstream out;
 		out << "func: ";
-		for(int i = 0; i < f->argcount; i++) {
+		for(int i = f->argcount - 1; i >= 0; i--) {
 			out << f->args[i].name;
-			if(i != f->argcount - 1) {
+			if(i != 0) {
 				out << ", ";
 			}
 		}

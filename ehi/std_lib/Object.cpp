@@ -1,6 +1,6 @@
 #include <set>
 
-#include "object.h"
+#include "Object.h"
 
 START_EHLC(Object)
 EHLC_ENTRY(Object, new)

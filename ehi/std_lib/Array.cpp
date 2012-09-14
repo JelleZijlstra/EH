@@ -2,6 +2,7 @@
 
 START_EHLC(Array)
 EHLC_ENTRY(Array, initialize)
+EHLC_ENTRY(Array, has)
 EHLC_ENTRY(Array, length)
 EHLC_ENTRY_RENAME(Array, operator_arrow, "operator->")
 EHLC_ENTRY_RENAME(Array, operator_arrow_equals, "operator->=")
@@ -15,6 +16,10 @@ EH_METHOD(Array, initialize) {
 EH_METHOD(Array, length) {
 	ASSERT_NULL_AND_TYPE(array_e, "Array.length");
 	return ehretval_t::make_int(obj->get_arrayval()->size());
+}
+EH_METHOD(Array, has) {
+	ASSERT_OBJ_TYPE(array_e, "Array.length");
+	return ehretval_t::make_bool(obj->get_arrayval()->has(args));
 }
 EH_METHOD(Array, operator_arrow) {
 	ASSERT_OBJ_TYPE(array_e, "Array.operator->");

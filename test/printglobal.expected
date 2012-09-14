@@ -4,6 +4,7 @@ initialize <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Array <public,non-static,constant>: @object <Array> [
+has <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
 operator-> <public,non-static,non-constant>: @function <library>: 

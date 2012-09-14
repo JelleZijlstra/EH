@@ -301,6 +301,7 @@ public:
 	// typedefs
 	typedef std::map<const std::string, ehmember_p> obj_map;
 	typedef obj_map::iterator obj_iterator;
+	typedef void (*initializer)(ehobj_t *obj, EHI *ehi);
 	
 	// properties
 	obj_map members;
@@ -372,6 +373,10 @@ public:
 	void inherit(ehretval_p superclass) {
 		super.push_front(superclass);
 	}
+	
+	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHI *ehi);
+	
+	void register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, EHI *ehi, ehretval_p the_class = NULL);
 	
 	// destructor
 	~ehobj_t();

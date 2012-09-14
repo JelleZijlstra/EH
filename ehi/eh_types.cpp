@@ -238,6 +238,7 @@ void eharray_t::insert_retval(ehretval_p index, ehretval_p value) {
 			assert(false);
 	}
 }
+
 /*
  * ehobj_t
  */
@@ -269,7 +270,6 @@ bool ehobj_t::inherited_has(const std::string &key) const {
 	}
 	return false;
 }
-
 std::set<std::string> ehobj_t::member_set() {
 	std::set<std::string> out;
 	OBJECT_FOR_EACH(this, i) {
@@ -283,7 +283,6 @@ std::set<std::string> ehobj_t::member_set() {
 	}
 	return out;
 }
-
 ehmember_p ehobj_t::inherited_get(const std::string &key) {
 	if(this->has(key)) {
 		return this->get_known(key);
@@ -308,6 +307,45 @@ bool ehobj_t::context_compare(const ehcontext_t key) const {
 		}
 	}
 }
+void ehobj_t::register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHI *ehi) {
+	ehretval_p func = ehi->make_method(method, ehi->function_object);
+	ehmember_p func_member;
+	func_member->attribute = attributes;
+	func_member->value = func;
+	this->insert(name, func_member);
+}
+void ehobj_t::register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, EHI *ehi, ehretval_p the_class) {
+	ehobj_t *newclass;
+	ehretval_p new_value;
+	if(the_class == NULL) {
+		newclass = new ehobj_t();
+		new_value = ehi->make_object(newclass);
+	} else {
+		newclass = the_class->get_objectval();
+		new_value = the_class;
+	}
+	// register class
+	if(type_id == -1) {
+		newclass->type_id = ehi->repo.register_class(name, new_value);
+	} else {
+		newclass->type_id = type_id;
+		ehi->repo.register_known_class(type_id, name, new_value);
+	}
+	if(name != "GlobalObject") {
+		newclass->parent = ehi->global_object;
+	}
+
+	// inherit from Object, except in Object itself
+	if(type_id != object_e) {
+		newclass->inherit(ehi->base_object);
+	}
+	init_func(newclass, ehi);
+	ehmember_p member;
+	member->attribute = attributes;
+	member->value = new_value;
+	this->insert(name, member);
+}
+
 ehobj_t::~ehobj_t() {
 	// Commenting out for now until I figure out how to get it working.
 	//ehi->call_method_obj(this, "finalize", 0, NULL, NULL);

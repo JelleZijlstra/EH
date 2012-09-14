@@ -81,6 +81,8 @@ public:
 	bool returning;
 	type_repository repo;
 	ehretval_p global_object;
+	ehretval_p function_object;
+	ehretval_p base_object;
 
 	ehretval_p get_primitive_class(type_enum in) {
 		return this->repo.get_object(in);
@@ -146,10 +148,10 @@ public:
 		ehretval_t::fill_super_class(out, in);
 		return out;
 	}
-	ehretval_p make_method(ehlibmethod_t in, ehretval_p function_object, ehretval_p the_class) {
+	ehretval_p make_method(ehlibmethod_t in, ehretval_p function_object) {
 		ehobj_t *function_obj = new ehobj_t();
 		ehretval_p func = this->make_object(function_obj);
-		function_obj->parent = the_class;
+		function_obj->parent = NULL;
 		function_obj->type_id = func_e;
 		ehfunc_t *f = new ehfunc_t(lib_e);
 		f->libmethod_pointer = in;

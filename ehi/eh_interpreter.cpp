@@ -37,10 +37,10 @@
 
 typedef struct ehlc_listentry_t {
 	const char *name;
-	ehlm_listentry_t *members;
+	ehobj_t::initializer initializer;
 	int type_id;
 } ehlc_listentry_t;
-#define LIBCLASSENTRY(c, is_core) { #c, ehlc_l_ ## c, is_core},
+#define LIBCLASSENTRY(c, type_id) { #c, ehinit_ ## c, type_id},
 ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(Object, object_e)
 	LIBCLASSENTRY(CountClass, -1)
@@ -120,59 +120,22 @@ EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(
 	eh_init();
 }
 void EHI::eh_init(void) {
-	global_object = this->make_object(new ehobj_t());
-	ehretval_p base_object = this->make_object(new ehobj_t());
-	ehretval_p function_object = this->make_object(new ehobj_t());
+	ehobj_t *global_ehobj = new ehobj_t();
+	global_object = this->make_object(global_ehobj);
+	base_object = this->make_object(new ehobj_t());
+	function_object = this->make_object(new ehobj_t());
 	
 	for(int i = 0; libclasses[i].name != NULL; i++) {
-		ehobj_t *newclass;
-		ehretval_p new_value;
+		ehretval_p new_value = NULL;
 		if(libclasses[i].type_id == object_e) {
-			newclass = base_object->get_objectval();
 			new_value = base_object;
 		} else if(libclasses[i].type_id == func_e) {
-			newclass = function_object->get_objectval();
 			new_value = function_object;
 		} else if(strcmp(libclasses[i].name, "GlobalObject") == 0) {
-			newclass = global_object->get_objectval();
 			new_value = global_object;
-		} else {
-			newclass = new ehobj_t();
-			new_value = this->make_object(newclass);
 		}
-		// register class
-		int type_id;
-		if(libclasses[i].type_id == -1) {
-			type_id = this->repo.register_class(libclasses[i].name, new_value);
-		} else {
-			type_id = libclasses[i].type_id;
-			this->repo.register_known_class(type_id, libclasses[i].name, new_value);
-		}
-		newclass->type_id = type_id;
-		if(strcmp(libclasses[i].name, "GlobalObject") != 0) {
-			newclass->parent = global_object;
-		}
-
-		// inherit from Object, except in Object itself
-		if(libclasses[i].type_id != object_e) {
-			newclass->inherit(base_object);
-		}
-		ehlm_listentry_t *members = libclasses[i].members;
-		// attributes for library methods
-		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
-		for(int j = 0; members[j].name != NULL; j++) {
-			ehretval_p func = make_method(members[j].func, function_object, new_value);
-			ehmember_p func_member;
-			func_member->attribute = attributes_t::make(public_e, nonstatic_e, nonconst_e);
-			func_member->value = func;
-			newclass->insert(members[j].name, func_member);
-		}
-		ehmember_p member;
-		// library classes themselves are constant; otherwise the engine might blow up
-		attributes.isconst = const_e;
-		member->attribute = attributes;
-		member->value = new_value;
-		global_object->get_objectval()->insert(libclasses[i].name, member);
+		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, const_e);
+		global_ehobj->register_member_class(libclasses[i].name, libclasses[i].type_id, libclasses[i].initializer, attributes, this, new_value);
 	}
 	// insert global command table
 	ehmember_p command_table;
@@ -184,7 +147,7 @@ void EHI::eh_init(void) {
 
 	// fill command table
 	for(int i = 0; libcmds[i].name != NULL; i++) {
-		ehretval_p cmd = make_method(libcmds[i].cmd, function_object, global_object);
+		ehretval_p cmd = make_method(libcmds[i].cmd, function_object);
 		insert_command(libcmds[i].name, cmd);
 	}
 	for(int i = 0; libredirs[i][0] != NULL; i++) {

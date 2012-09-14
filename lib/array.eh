@@ -38,3 +38,9 @@ Array.toString = func: {
 	}
 	out + "]"
 }
+
+Array.append = func: item {
+	length = this.length()
+	this->length = item
+	this
+}

@@ -1,18 +1,20 @@
 #include "String.h"
 
 START_EHLC(String)
-EHLC_ENTRY(String, initialize)
-EHLC_ENTRY_RENAME(String, operator_plus, "operator+")
-EHLC_ENTRY_RENAME(String, operator_arrow, "operator->")
-EHLC_ENTRY_RENAME(String, operator_arrow_equals, "operator->=")
-EHLC_ENTRY(String, compare)
-EHLC_ENTRY(String, length)
-EHLC_ENTRY(String, toString)
-EHLC_ENTRY(String, toInt)
-EHLC_ENTRY(String, toFloat)
-EHLC_ENTRY(String, toBool)
-EHLC_ENTRY(String, toRange)
-EHLC_ENTRY(String, charAtPosition)
+	EHLC_ENTRY(String, initialize)
+	EHLC_ENTRY_RENAME(String, operator_plus, "operator+")
+	EHLC_ENTRY_RENAME(String, operator_arrow, "operator->")
+	EHLC_ENTRY_RENAME(String, operator_arrow_equals, "operator->=")
+	EHLC_ENTRY(String, compare)
+	EHLC_ENTRY(String, length)
+	EHLC_ENTRY(String, toString)
+	EHLC_ENTRY(String, toInt)
+	EHLC_ENTRY(String, toFloat)
+	EHLC_ENTRY(String, toBool)
+	EHLC_ENTRY(String, toRange)
+	EHLC_ENTRY(String, charAtPosition)
+	EHLC_ENTRY(String, getIterator)
+	obj->register_member_class("Iterator", -1, ehinit_String_Iterator, attributes_t::make(), ehi);
 END_EHLC()
 
 EH_METHOD(String, initialize) {
@@ -142,4 +144,47 @@ EH_METHOD(String, charAtPosition) {
 		throw_ArgumentError_out_of_range("String.charAtPosition", args, ehi);
 	}
 	return ehretval_t::make_int(string[index]);
+}
+EH_METHOD(String, getIterator) {
+	ASSERT_NULL_AND_TYPE(string_e, "String.getIterator");
+	ehretval_p class_member = ehi->get_property(obj, "Iterator", obj);
+	return ehi->call_method(class_member, "new", obj, obj);
+}
+
+START_EHLC(String_Iterator)
+EHLC_ENTRY(String_Iterator, initialize)
+EHLC_ENTRY(String_Iterator, hasNext)
+EHLC_ENTRY(String_Iterator, next)
+END_EHLC()
+
+bool String_Iterator::has_next() {
+	const char *string = this->string->get_stringval();
+	return this->position < strlen(string);
+}
+char String_Iterator::next() {
+	assert(this->has_next());
+	const char *string = this->string->get_stringval();
+	return string[this->position++];	
+}
+
+EH_METHOD(String_Iterator, initialize) {
+	ASSERT_TYPE(args, string_e, "String.Iterator.initialize");
+	String_Iterator *data = new String_Iterator(args);
+	return ehretval_t::make_resource(data);
+}
+EH_METHOD(String_Iterator, hasNext) {
+	ASSERT_TYPE(args, null_e, "String.Iterator.hasNext");
+	String_Iterator *data = (String_Iterator *)obj->get_resourceval();
+	return ehretval_t::make_bool(data->has_next());
+}
+EH_METHOD(String_Iterator, next) {
+	ASSERT_TYPE(args, null_e, "String.Iterator.next");
+	String_Iterator *data = (String_Iterator *)obj->get_resourceval();
+	if(!data->has_next()) {
+		throw_EmptyIterator(ehi);
+	}
+	char *out = new char[2]();
+	out[0] = data->next();
+	out[1] = '\0';
+	return ehretval_t::make_string(out);
 }

@@ -12,7 +12,7 @@
 #define EHLC_ENTRY(classn, name) obj->register_method(#name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), ehi);
 #define EHLC_ENTRY_RENAME(classn, name, user_name) obj->register_method(user_name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), ehi);
 #define END_EHLC() }
-#define EXTERN_EHLC(name) extern void ehinit_ ## name (ehobj_t *obj, EHI *ehi);
+#define EXTERN_EHLC(name) void ehinit_ ## name (ehobj_t *obj, EHI *ehi);
 
 #define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, ehretval_p args, EHI *ehi)
 
@@ -43,6 +43,7 @@ public:
 // as definition of LibraryBaseClass
 #include "std_lib/TypeError.h"
 #include "std_lib/ArgumentError.h"
+#include "std_lib/EmptyIterator.h"
 
 // Helpers
 static inline int intcmp(int lhs, int rhs) {

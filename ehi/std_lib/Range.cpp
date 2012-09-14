@@ -1,13 +1,15 @@
 #include "Range.h"
 
 START_EHLC(Range)
-EHLC_ENTRY(Range, min)
-EHLC_ENTRY(Range, max)
-EHLC_ENTRY_RENAME(Range, operator_arrow, "operator->")
-EHLC_ENTRY(Range, toString)
-EHLC_ENTRY(Range, toArray)
-EHLC_ENTRY(Range, toRange)
-EHLC_ENTRY(Range, compare)
+	EHLC_ENTRY(Range, min)
+	EHLC_ENTRY(Range, max)
+	EHLC_ENTRY_RENAME(Range, operator_arrow, "operator->")
+	EHLC_ENTRY(Range, toString)
+	EHLC_ENTRY(Range, toArray)
+	EHLC_ENTRY(Range, toRange)
+	EHLC_ENTRY(Range, compare)
+	EHLC_ENTRY(Range, getIterator)
+	obj->register_member_class("Iterator", -1, ehinit_Range_Iterator, attributes_t::make(), ehi);
 END_EHLC()
 
 EH_METHOD(Range, initialize) {
@@ -94,4 +96,50 @@ EH_METHOD(Range, compare) {
 	} else {
 		return ehretval_t::make_int(1);
 	}
+}
+
+EH_METHOD(Range, getIterator) {
+	ASSERT_NULL_AND_TYPE(range_e, "Range.getIterator");
+	ehretval_p class_member = ehi->get_property(obj, "Iterator", obj);
+	return ehi->call_method(class_member, "new", obj, obj);
+}
+
+START_EHLC(Range_Iterator)
+EHLC_ENTRY(Range_Iterator, initialize)
+EHLC_ENTRY(Range_Iterator, hasNext)
+EHLC_ENTRY(Range_Iterator, next)
+END_EHLC()
+
+bool Range_Iterator::has_next(EHI *ehi) {
+	ehretval_p max = this->range->get_rangeval()->max;
+	ehretval_p result = ehi->call_method(this->current, "operator<=", max, ehi->global_object);
+	if(result->type() != bool_e) {
+		throw_TypeError("operator<= does not return a bool", result->type(), ehi);
+	}
+	return result->get_boolval();
+}
+ehretval_p Range_Iterator::next(EHI *ehi) {
+	assert(this->has_next(ehi));
+	ehretval_p out = this->current;
+	this->current = ehi->call_method(out, "operator+", ehretval_t::make_int(1), ehi->global_object);
+	return out;
+}
+
+EH_METHOD(Range_Iterator, initialize) {
+	ASSERT_TYPE(args, range_e, "Range.Iterator.initialize");
+	Range_Iterator *data = new Range_Iterator(args);
+	return ehretval_t::make_resource(data);
+}
+EH_METHOD(Range_Iterator, hasNext) {
+	ASSERT_TYPE(args, null_e, "Range.Iterator.hasNext");
+	Range_Iterator *data = (Range_Iterator *)obj->get_resourceval();
+	return ehretval_t::make_bool(data->has_next(ehi));
+}
+EH_METHOD(Range_Iterator, next) {
+	ASSERT_TYPE(args, null_e, "Range.Iterator.next");
+	Range_Iterator *data = (Range_Iterator *)obj->get_resourceval();
+	if(!data->has_next(ehi)) {
+		throw_EmptyIterator(ehi);
+	}
+	return data->next(ehi);
 }

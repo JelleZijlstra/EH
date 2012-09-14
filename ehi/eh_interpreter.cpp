@@ -34,6 +34,7 @@
 #include "std_lib/Tuple.h"
 #include "std_lib/TypeError.h"
 #include "std_lib/UnknownCommandError.h"
+#include "std_lib/EmptyIterator.h"
 
 typedef struct ehlc_listentry_t {
 	const char *name;
@@ -67,6 +68,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(GlobalObject, -1)
 	LIBCLASSENTRY(MiscellaneousError, -1)
 	LIBCLASSENTRY(GarbageCollector, -1)
+	LIBCLASSENTRY(EmptyIterator, -1)
 	{NULL, NULL, 0}
 };
 

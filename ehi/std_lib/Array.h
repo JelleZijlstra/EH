@@ -1,7 +1,51 @@
 /*
  * Array class
  */
+#ifndef EH_ARRAY_H_
+#define EH_ARRAY_H_
+
 #include "std_lib_includes.h"
+
+// EH array
+class eharray_t {
+public:
+	// typedefs
+	typedef std::map<const int, ehretval_p> int_map;
+	typedef std::map<const std::string, ehretval_p> string_map;
+	typedef std::pair<const int, ehretval_p>& int_pair;
+	typedef std::pair<const std::string, ehretval_p>& string_pair;
+	typedef int_map::iterator int_iterator;
+	typedef string_map::iterator string_iterator;
+
+	// properties
+	int_map int_indices;
+	string_map string_indices;
+	
+	// constructor
+	eharray_t() : int_indices(), string_indices() {}
+	
+	// inline methods
+	size_t size() const {
+		return this->int_indices.size() + this->string_indices.size();
+	}
+	
+	bool has(ehretval_p index) const {
+		switch(index->type()) {
+			case int_e:
+				return this->int_indices.count(index->get_intval());
+			case string_e:
+				return this->string_indices.count(index->get_stringval());
+			default:
+				return false;
+		}
+	}
+	
+	// methods
+	ehretval_p &operator[](ehretval_p index);
+	void insert_retval(ehretval_p index, ehretval_p value);
+};
+#define ARRAY_FOR_EACH_STRING(array, varname) for(eharray_t::string_iterator varname = (array)->string_indices.begin(), end = (array)->string_indices.end(); varname != end; varname++)
+#define ARRAY_FOR_EACH_INT(array, varname) for(eharray_t::int_iterator varname = (array)->int_indices.begin(), end = (array)->int_indices.end(); varname != end; varname++)
 
 EH_METHOD(Array, initialize);
 EH_METHOD(Array, length);
@@ -18,7 +62,7 @@ class Array_Iterator : public LibraryBaseClass {
 public:
 	Array_Iterator(ehretval_p array);
 	~Array_Iterator() {}
-	bool has_next();
+	bool has_next() const;
 	ehretval_p next(EHI *ehi);
 private:
 	type_enum current_type;
@@ -34,3 +78,5 @@ EH_METHOD(Array_Iterator, hasNext);
 EH_METHOD(Array_Iterator, next);
 
 EXTERN_EHLC(Array_Iterator)
+
+#endif /* EH_ARRAY_H_ */

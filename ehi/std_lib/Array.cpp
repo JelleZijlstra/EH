@@ -1,16 +1,43 @@
 #include "Array.h"
 
-START_EHLC(Array)
-	EHLC_ENTRY(Array, initialize)
-	EHLC_ENTRY(Array, has)
-	EHLC_ENTRY(Array, length)
+EH_INITIALIZER(Array) {
+	REGISTER_METHOD(Array, initialize);
+	REGISTER_METHOD(Array, has);
+	REGISTER_METHOD(Array, length);
 	EHLC_ENTRY_RENAME(Array, operator_arrow, "operator->")
 	EHLC_ENTRY_RENAME(Array, operator_arrow_equals, "operator->=")
-	EHLC_ENTRY(Array, toArray)
-	EHLC_ENTRY(Array, toTuple)
-	EHLC_ENTRY(Array, getIterator)
-	obj->register_member_class("Iterator", -1, ehinit_Array_Iterator, attributes_t::make(), ehi);
-END_EHLC()
+	REGISTER_METHOD(Array, toArray);
+	REGISTER_METHOD(Array, toTuple);
+	REGISTER_METHOD(Array, getIterator);
+	REGISTER_CLASS(Array, Iterator);
+}
+
+ehretval_p &eharray_t::operator[](ehretval_p index) {
+	switch(index->type()) {
+		case int_e:
+			return int_indices[index->get_intval()];
+		case string_e:
+			return string_indices[index->get_stringval()];
+		default:
+			// callers should make sure type is right
+			assert(false);
+			throw "impossible";
+	}
+}
+void eharray_t::insert_retval(ehretval_p index, ehretval_p value) {
+	// Inserts a member into an array.
+	switch(index->type()) {
+		case int_e:
+			this->int_indices[index->get_intval()] = value;
+			break;
+		case string_e:
+			this->string_indices[index->get_stringval()] = value;
+			break;
+		default:
+			// callers should make sure type is right
+			assert(false);
+	}
+}
 
 EH_METHOD(Array, initialize) {
 	return ehi->to_array(args, obj);
@@ -83,7 +110,7 @@ Array_Iterator::Array_Iterator(ehretval_p array) {
 	this->string_begin = arr->string_indices.begin();
 	this->string_end = arr->string_indices.end();
 }
-bool Array_Iterator::has_next() {
+bool Array_Iterator::has_next() const {
 	return !((this->current_type == string_e || (this->int_begin == this->int_end)) && (this->string_begin == this->string_end));
 }
 ehretval_p Array_Iterator::next(EHI *ehi) {

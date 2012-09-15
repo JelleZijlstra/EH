@@ -1,7 +1,31 @@
 /*
  * Tuple class
  */
+#ifndef EH_TUPLE_H_
+#define EH_TUPLE_H_
 #include "std_lib_includes.h"
+
+// EH tuples
+class ehtuple_t {
+private:
+	const int _size;
+	ehretval_a content;
+public:
+	ehtuple_t(int size, ehretval_p *in) : _size(size), content(size) {
+		for(int i = 0; i < size; i++) {
+			content[i] = in[i];
+		}
+	}
+
+	int size() const {
+		return this->_size;
+	}
+	ehretval_p get(int i) const {
+		assert(i >= 0 && i < _size);
+		return this->content[i];
+	}
+};
+
 
 EH_METHOD(Tuple, initialize);
 EH_METHOD(Tuple, operator_arrow);
@@ -29,3 +53,5 @@ EH_METHOD(Tuple_Iterator, hasNext);
 EH_METHOD(Tuple_Iterator, next);
 
 EXTERN_EHLC(Tuple_Iterator)
+
+#endif /* EH_TUPLE_H_ */

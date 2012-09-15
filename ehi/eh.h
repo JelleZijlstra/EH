@@ -80,6 +80,13 @@ typedef struct attributes_t {
 		out.isconst = c;
 		return out;
 	}
+	// convenience methods
+	static attributes_t make_const() {
+		return make(public_e, nonstatic_e, const_e);
+	}
+	static attributes_t make_static() {
+		return make(public_e, static_e, nonconst_e);
+	}
 } attributes_t;
 
 // and accompanying enum used by the parser

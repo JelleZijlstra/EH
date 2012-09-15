@@ -2,6 +2,12 @@
 
 #include "eh.h"
 #include "eh_libclasses.h"
+#include "std_lib/Array.h"
+#include "std_lib/Function.h"
+#include "std_lib/Hash.h"
+#include "std_lib/Range.h"
+#include "std_lib/Tuple.h"
+#include "std_lib/SuperClass.h"
 
 /*
  * ehretval_t
@@ -223,36 +229,6 @@ ehretval_t::~ehretval_t() {
 		case tuple_e:
 		 	delete this->tupleval;
 		 	break;
-	}
-}
-
-/*
- * eharray_t
- */
-ehretval_p &eharray_t::operator[](ehretval_p index) {
-	switch(index->type()) {
-		case int_e:
-			return int_indices[index->get_intval()];
-		case string_e:
-			return string_indices[index->get_stringval()];
-		default:
-			// callers should make sure type is right
-			assert(false);
-			throw "impossible";
-	}
-}
-void eharray_t::insert_retval(ehretval_p index, ehretval_p value) {
-	// Inserts a member into an array.
-	switch(index->type()) {
-		case int_e:
-			this->int_indices[index->get_intval()] = value;
-			break;
-		case string_e:
-			this->string_indices[index->get_stringval()] = value;
-			break;
-		default:
-			// callers should make sure type is right
-			assert(false);
 	}
 }
 

@@ -5,6 +5,7 @@
 #include "eh_libcmds.h"
 #include "eh_libclasses.h"
 #include "std_lib/GlobalObject.h"
+#include "std_lib/Array.h"
 
 EH_LIBCMD(quit) {
 	throw quit_exception();

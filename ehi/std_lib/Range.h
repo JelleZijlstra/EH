@@ -1,7 +1,22 @@
 /*
  * Range class
  */
+#ifndef EH_RANGE_H_
+#define EH_RANGE_H_
+
 #include "std_lib_includes.h"
+
+// range
+class ehrange_t {
+public:
+	ehretval_p min;
+	ehretval_p max;
+	
+	ehrange_t(ehretval_p _min, ehretval_p _max) : min(_min), max(_max) {
+		assert(min->type() == max->type());
+	}
+	ehrange_t() : min(ehretval_t::make_int(0)), max(ehretval_t::make_int(0)) {}
+};
 
 EH_METHOD(Range, initialize);
 EH_METHOD(Range, operator_arrow);
@@ -32,3 +47,5 @@ EH_METHOD(Range_Iterator, hasNext);
 EH_METHOD(Range_Iterator, next);
 
 EXTERN_EHLC(Range_Iterator)
+
+#endif /* EH_RANGE_H_ */

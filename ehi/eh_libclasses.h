@@ -50,6 +50,10 @@ public:
 #include "std_lib/TypeError.h"
 #include "std_lib/ArgumentError.h"
 #include "std_lib/EmptyIterator.h"
+#include "std_lib/Tuple.h"
+#include "std_lib/Range.h"
+#include "std_lib/Hash.h"
+#include "std_lib/Array.h"
 
 // Helpers
 static inline int intcmp(int lhs, int rhs) {

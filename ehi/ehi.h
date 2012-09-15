@@ -5,6 +5,7 @@
 #include "eh.bison.hpp"
 #include "eh_error.h"
 #include "concurrency.h"
+#include "std_lib/Function.h"
 
 /*
  * Flex and Bison
@@ -148,17 +149,7 @@ public:
 		ehretval_t::fill_super_class(out, in);
 		return out;
 	}
-	ehretval_p make_method(ehlibmethod_t in, ehretval_p function_object) {
-		ehobj_t *function_obj = new ehobj_t();
-		ehretval_p func = this->make_object(function_obj);
-		function_obj->parent = NULL;
-		function_obj->type_id = func_e;
-		ehfunc_t *f = new ehfunc_t(lib_e);
-		f->libmethod_pointer = in;
-		function_obj->object_data = ehretval_t::make_func(f);
-		function_obj->inherit(function_object);
-		return func;
-	}
+	ehretval_p make_method(ehlibmethod_t in, ehretval_p function_object);
 	ehretval_p promote(ehretval_p in, ehcontext_t context);
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
 

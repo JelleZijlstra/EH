@@ -4,6 +4,12 @@ initialize <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Array <public,non-static,constant>: @object <Array> [
+Iterator <public,non-static,non-constant>: @object <Iterator> [
+hasNext <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+next <public,non-static,non-constant>: @function <library>: 
+]
+getIterator <public,non-static,non-constant>: @function <library>: 
 has <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
@@ -70,7 +76,13 @@ stats <public,non-static,non-constant>: @function <library>:
 ]
 GlobalObject <public,non-static,constant>: (recursion)
 Hash <public,non-static,constant>: @object <Hash> [
+Iterator <public,non-static,non-constant>: @object <Iterator> [
+hasNext <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+next <public,non-static,non-constant>: @function <library>: 
+]
 delete <public,non-static,non-constant>: @function <library>: 
+getIterator <public,non-static,non-constant>: @function <library>: 
 has <public,non-static,non-constant>: @function <library>: 
 keys <public,non-static,non-constant>: @function <library>: 
 operator-> <public,non-static,non-constant>: @function <library>: 
@@ -181,6 +193,12 @@ initialize <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Tuple <public,non-static,constant>: @object <Tuple> [
+Iterator <public,non-static,non-constant>: @object <Iterator> [
+hasNext <public,non-static,non-constant>: @function <library>: 
+initialize <public,non-static,non-constant>: @function <library>: 
+next <public,non-static,non-constant>: @function <library>: 
+]
+getIterator <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
 length <public,non-static,non-constant>: @function <library>: 
 operator-> <public,non-static,non-constant>: @function <library>: 

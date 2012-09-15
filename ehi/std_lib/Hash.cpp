@@ -1,12 +1,14 @@
 #include "Hash.h"
 
 START_EHLC(Hash)
-EHLC_ENTRY(Hash, toArray)
-EHLC_ENTRY_RENAME(Hash, operator_arrow, "operator->")
-EHLC_ENTRY_RENAME(Hash, operator_arrow_equals, "operator->=")
-EHLC_ENTRY(Hash, has)
-EHLC_ENTRY(Hash, delete)
-EHLC_ENTRY(Hash, keys)
+	EHLC_ENTRY(Hash, toArray)
+	EHLC_ENTRY_RENAME(Hash, operator_arrow, "operator->")
+	EHLC_ENTRY_RENAME(Hash, operator_arrow_equals, "operator->=")
+	EHLC_ENTRY(Hash, has)
+	EHLC_ENTRY(Hash, delete)
+	EHLC_ENTRY(Hash, keys)
+	EHLC_ENTRY(Hash, getIterator)
+	obj->register_member_class("Iterator", -1, ehinit_Hash_Iterator, attributes_t::make(), ehi);
 END_EHLC()
 
 EH_METHOD(Hash, toArray) {
@@ -63,3 +65,47 @@ EH_METHOD(Hash, keys) {
 	}
 	return ehi->make_array(arr);	
 }
+
+EH_METHOD(Hash, getIterator) {
+	ASSERT_NULL_AND_TYPE(hash_e, "Hash.getIterator");
+	ehretval_p class_member = ehi->get_property(obj, "Iterator", obj);
+	return ehi->call_method(class_member, "new", obj, obj);
+}
+
+START_EHLC(Hash_Iterator)
+EHLC_ENTRY(Hash_Iterator, initialize)
+EHLC_ENTRY(Hash_Iterator, hasNext)
+EHLC_ENTRY(Hash_Iterator, next)
+END_EHLC()
+
+bool Hash_Iterator::has_next() {
+	return this->current != this->end;
+}
+ehretval_p Hash_Iterator::next(EHI *ehi) {
+	assert(this->has_next());
+	ehretval_p tuple[2];
+	tuple[0] = ehretval_t::make_string(strdup(this->current->first.c_str()));
+	tuple[1] = this->current->second;
+	this->current++;
+	return ehi->make_tuple(new ehtuple_t(2, tuple));
+}
+
+EH_METHOD(Hash_Iterator, initialize) {
+	ASSERT_TYPE(args, hash_e, "Hash.Iterator.initialize");
+	Hash_Iterator *data = new Hash_Iterator(args);
+	return ehretval_t::make_resource(data);
+}
+EH_METHOD(Hash_Iterator, hasNext) {
+	ASSERT_TYPE(args, null_e, "Hash.Iterator.hasNext");
+	Hash_Iterator *data = (Hash_Iterator *)obj->get_resourceval();
+	return ehretval_t::make_bool(data->has_next());
+}
+EH_METHOD(Hash_Iterator, next) {
+	ASSERT_TYPE(args, null_e, "Hash.Iterator.next");
+	Hash_Iterator *data = (Hash_Iterator *)obj->get_resourceval();
+	if(!data->has_next()) {
+		throw_EmptyIterator(ehi);
+	}
+	return data->next(ehi);
+}
+

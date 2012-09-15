@@ -15,3 +15,17 @@ String.inherit Iterable
 
 Range.inherit Iterable
 1..3.each printvar
+
+Hash.inherit Iterable
+{foo: 'bar'}.each printvar
+
+Array.inherit Iterable
+[1, 2, 3].each printvar
+
+['foo' => 'bar', 'baz' => 'mah'].each func: k, v
+	echo 'Key is ' + k
+	echo 'Value is ' + v
+end
+
+Tuple.inherit Iterable
+(1, 2, 3).each printvar

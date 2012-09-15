@@ -7,10 +7,10 @@ void throw_TypeError(const char *msg, int type, EHI *ehi) {
 	throw_error("TypeError", ehi->make_tuple(new ehtuple_t(2, args)), ehi);
 }
 
-START_EHLC(TypeError)
-EHLC_ENTRY(TypeError, initialize)
-EHLC_ENTRY(TypeError, toString)
-END_EHLC()
+EH_INITIALIZER(TypeError) {
+	REGISTER_METHOD(TypeError, initialize);
+	INHERIT_LIBRARY(Exception);
+}
 
 EH_METHOD(TypeError, initialize) {
 	ASSERT_TYPE(args, tuple_e, "TypeError.initialize");
@@ -24,9 +24,3 @@ EH_METHOD(TypeError, initialize) {
 	std::string exception_msg = std::string(msg->get_stringval()) + ": " + type_str;
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.c_str())));
 }
-EH_METHOD(TypeError, toString) {
-	ASSERT_OBJ_TYPE(resource_e, "TypeError.toString");
-	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
-	return ehretval_t::make_string(strdup(e->msg));
-}
-

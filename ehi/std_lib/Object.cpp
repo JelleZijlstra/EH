@@ -52,7 +52,7 @@ EH_METHOD(Object, isA) {
   if(type == object_e) {
     type = args->get_objectval()->type_id;
   }
-  return ehretval_t::make_bool(obj->is_a(type));
+  return ehretval_t::make_bool(obj->inherited_is_a(type));
 }
 
 ehretval_p get_data(ehretval_p in) {

@@ -8,7 +8,7 @@ void throw_EmptyIterator(EHI *ehi) {
 
 START_EHLC(EmptyIterator)
 	EHLC_ENTRY(EmptyIterator, initialize)
-	obj->inherit(ehi->global_object->get_objectval()->get_known("Exception")->value);
+	INHERIT_LIBRARY(Exception);
 END_EHLC()
 
 EH_METHOD(EmptyIterator, initialize) {

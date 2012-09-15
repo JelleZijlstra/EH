@@ -4,6 +4,5 @@
 void throw_NameError(ehretval_p object, const char *name, EHI *ehi);
 
 EH_METHOD(NameError, initialize);
-EH_METHOD(NameError, toString);
 
 EXTERN_EHLC(NameError)

@@ -7,10 +7,10 @@ void throw_ConstError(ehretval_p object, const char *name, EHI *ehi) {
 	throw_error("ConstError", ehi->make_tuple(new ehtuple_t(2, args)), ehi);
 }
 
-START_EHLC(ConstError)
-EHLC_ENTRY(ConstError, initialize)
-EHLC_ENTRY(ConstError, toString)
-END_EHLC()
+EH_INITIALIZER(ConstError) {
+	REGISTER_METHOD(ConstError, initialize);
+	INHERIT_LIBRARY(Exception);
+}
 
 EH_METHOD(ConstError, initialize) {
 	ASSERT_NARGS(2, "ConstError.initialize");
@@ -23,9 +23,4 @@ EH_METHOD(ConstError, initialize) {
 	exception_msg << "Cannot set constant member " << name->get_stringval() << " in object of type " << object->type_string(ehi);
 	exception_msg << ": " << ehi->to_string(object, ehi->global_object)->get_stringval();
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
-}
-EH_METHOD(ConstError, toString) {
-	ASSERT_OBJ_TYPE(resource_e, "ConstError.toString");
-	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
-	return ehretval_t::make_string(strdup(e->msg));
 }

@@ -20,6 +20,6 @@ private:
 EH_METHOD(Exception, toString);
 EH_METHOD(Exception, initialize);
 
-EXTERN_EHLC(Exception)
+EH_INITIALIZER(Exception);
 
 #endif /* EH_EXCEPTION_H_ */

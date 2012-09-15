@@ -9,10 +9,10 @@ void throw_SyntaxError(const char *message, int line, EHI *ehi) {
 	throw_error("SyntaxError", ehi->make_tuple(new ehtuple_t(2, args)), ehi);
 }
 
-START_EHLC(SyntaxError)
-EHLC_ENTRY(SyntaxError, initialize)
-EHLC_ENTRY(SyntaxError, toString)
-END_EHLC()
+EH_INITIALIZER(SyntaxError) {
+	REGISTER_METHOD(SyntaxError, initialize);
+	INHERIT_LIBRARY(Exception);
+}
 
 EH_METHOD(SyntaxError, initialize) {
 	ASSERT_NARGS(2, "SyntaxError.initialize");
@@ -28,9 +28,4 @@ EH_METHOD(SyntaxError, initialize) {
 	exception_msg << message->get_stringval() << " at line ";
 	exception_msg << line->get_intval();
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));	
-}
-EH_METHOD(SyntaxError, toString) {
-	ASSERT_OBJ_TYPE(resource_e, "SyntaxError.toString");
-	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
-	return ehretval_t::make_string(strdup(e->msg));	
 }

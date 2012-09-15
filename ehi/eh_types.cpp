@@ -131,6 +131,23 @@ bool ehretval_t::is_a(int in) {
 		return this->type() == object_e && this->get_objectval()->type_id == in;
 	}
 }
+bool ehretval_t::inherited_is_a(int in) {
+	if(this->type() == in) {
+		return true;
+	} else if(this->type() == object_e) {
+		ehobj_t *obj = this->get_objectval();
+		if(obj->type_id == in) {
+			return true;
+		} else {
+			for(std::list<ehretval_p>::const_iterator i = obj->super.begin(), end = obj->super.end(); i != end; i++) {
+				if((*i)->inherited_is_a(in)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
 int ehretval_t::get_full_type() const  {
 	int out = this->type();
 	if(out == object_e) {

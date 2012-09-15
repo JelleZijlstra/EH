@@ -9,10 +9,10 @@ void throw_LoopError(const char *msg, int level, EHI *ehi) {
 	throw_error("LoopError", ehi->make_tuple(new ehtuple_t(2, args)), ehi);	
 }
 
-START_EHLC(LoopError)
-EHLC_ENTRY(LoopError, initialize)
-EHLC_ENTRY(LoopError, toString)
-END_EHLC()
+EH_INITIALIZER(LoopError) {
+	REGISTER_METHOD(LoopError, initialize);
+	INHERIT_LIBRARY(Exception);
+}
 
 EH_METHOD(LoopError, initialize) {
 	ASSERT_TYPE(args, tuple_e, "LoopError.initialize");
@@ -25,9 +25,4 @@ EH_METHOD(LoopError, initialize) {
 	std::ostringstream exception_msg;
 	exception_msg << "Cannot " << msg->get_stringval() << " " << level->get_intval() << " levels";
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
-}
-EH_METHOD(LoopError, toString) {
-	ASSERT_OBJ_TYPE(resource_e, "LoopError.toString");
-	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
-	return ehretval_t::make_string(strdup(e->msg));
 }

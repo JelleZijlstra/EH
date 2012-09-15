@@ -4,6 +4,5 @@
 void throw_LoopError(const char *msg, int level, EHI *ehi);
 
 EH_METHOD(LoopError, initialize);
-EH_METHOD(LoopError, toString);
 
 EXTERN_EHLC(LoopError)

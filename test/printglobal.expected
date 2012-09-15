@@ -1,7 +1,6 @@
 @object <GlobalObject> [
 ArgumentError <public,non-static,constant>: @object <ArgumentError> [
 initialize <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 Array <public,non-static,constant>: @object <Array> [
 Iterator <public,non-static,non-constant>: @object <Iterator> [
@@ -27,7 +26,6 @@ toString <public,non-static,non-constant>: @function <library>:
 ]
 ConstError <public,non-static,constant>: @object <ConstError> [
 initialize <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 CountClass <public,non-static,constant>: @object <CountClass> [
 docount <public,non-static,non-constant>: @function <library>: 
@@ -116,15 +114,12 @@ toString <public,non-static,non-constant>: @function <library>:
 ]
 LoopError <public,non-static,constant>: @object <LoopError> [
 initialize <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 MiscellaneousError <public,non-static,constant>: @object <MiscellaneousError> [
 initialize <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 NameError <public,non-static,constant>: @object <NameError> [
 initialize <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 Null <public,non-static,constant>: @object <Null> [
 initialize <public,non-static,non-constant>: @function <library>: 
@@ -190,7 +185,6 @@ toString <public,non-static,non-constant>: @function <library>:
 ]
 SyntaxError <public,non-static,constant>: @object <SyntaxError> [
 initialize <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 Tuple <public,non-static,constant>: @object <Tuple> [
 Iterator <public,non-static,non-constant>: @object <Iterator> [
@@ -206,11 +200,9 @@ toTuple <public,non-static,non-constant>: @function <library>:
 ]
 TypeError <public,non-static,constant>: @object <TypeError> [
 initialize <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 UnknownCommandError <public,non-static,constant>: @object <UnknownCommandError> [
 initialize <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
 ]
 argc <public,non-static,non-constant>: @int 1
 argv <public,non-static,non-constant>: @array [

@@ -179,6 +179,7 @@ vtype get_ ## ehtype ## val() const;
 	static ehretval_p self_or_data(const ehretval_p in);
 	
 	bool is_a(int in);
+	bool inherited_is_a(int in);
 	
 	void print();
 	bool equals(ehretval_p rhs);

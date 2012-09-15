@@ -9,10 +9,10 @@ void throw_NameError(ehretval_p object, const char *name, EHI *ehi) {
 	throw_error("NameError", ehi->make_tuple(new ehtuple_t(2, args)), ehi);
 }
 
-START_EHLC(NameError)
-EHLC_ENTRY(NameError, initialize)
-EHLC_ENTRY(NameError, toString)
-END_EHLC()
+EH_INITIALIZER(NameError) {
+	REGISTER_METHOD(NameError, initialize);
+	INHERIT_LIBRARY(Exception);
+}
 
 EH_METHOD(NameError, initialize) {
 	ASSERT_NARGS(2, "NameError.initialize");
@@ -25,9 +25,4 @@ EH_METHOD(NameError, initialize) {
 	exception_msg << "Unknown member " << name->get_stringval() << " in object of type " << object->type_string(ehi);
 	exception_msg << ": " << ehi->to_string(object, ehi->global_object)->get_stringval();
 	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
-}
-EH_METHOD(NameError, toString) {
-	ASSERT_OBJ_TYPE(resource_e, "NameError.toString");
-	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
-	return ehretval_t::make_string(strdup(e->msg));
 }

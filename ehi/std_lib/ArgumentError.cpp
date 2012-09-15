@@ -11,10 +11,10 @@ void throw_ArgumentError(const char *message, const char *method, ehretval_p val
 	throw_error("ArgumentError", the_tuple, ehi);
 }
 
-START_EHLC(ArgumentError)
-EHLC_ENTRY(ArgumentError, initialize)
-EHLC_ENTRY(ArgumentError, toString)
-END_EHLC()
+EH_INITIALIZER(ArgumentError) {
+	REGISTER_METHOD(ArgumentError, initialize);
+	INHERIT_LIBRARY(Exception);
+}
 
 EH_METHOD(ArgumentError, initialize) {
 	ASSERT_NARGS(3, "ArgumentError.initialize");
@@ -30,12 +30,9 @@ EH_METHOD(ArgumentError, initialize) {
 	ehi->set_property(obj, "value", value, ehi->global_object);
 
 	std::ostringstream exception_msg;
-	exception_msg << message->get_stringval() << " (method " << method->get_stringval() << "): ";
+	exception_msg << message->get_stringval() << " (method ";
+	exception_msg << method->get_stringval() << "): ";
 	exception_msg << ehi->to_string(value, ehi->global_object)->get_stringval();
-	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));	
-}
-EH_METHOD(ArgumentError, toString) {
-	ASSERT_OBJ_TYPE(resource_e, "ArgumentError.toString");
-	Exception *e = reinterpret_cast<Exception *>(obj->get_resourceval());
-	return ehretval_t::make_string(strdup(e->msg));
+	Exception *e = new Exception(strdup(exception_msg.str().c_str()));
+	return ehretval_t::make_resource(e);
 }

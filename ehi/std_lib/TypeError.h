@@ -11,7 +11,6 @@ static inline void throw_TypeError_Array_key(int type, EHI *ehi) {
 }
 
 EH_METHOD(TypeError, initialize);
-EH_METHOD(TypeError, toString);
 
 EXTERN_EHLC(TypeError)
 

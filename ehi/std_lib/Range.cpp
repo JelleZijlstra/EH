@@ -1,16 +1,16 @@
 #include "Range.h"
 
-START_EHLC(Range)
-	EHLC_ENTRY(Range, min)
-	EHLC_ENTRY(Range, max)
+EH_INITIALIZER(Range) {
+	REGISTER_METHOD(Range, min);
+	REGISTER_METHOD(Range, max);
 	EHLC_ENTRY_RENAME(Range, operator_arrow, "operator->")
-	EHLC_ENTRY(Range, toString)
-	EHLC_ENTRY(Range, toArray)
-	EHLC_ENTRY(Range, toRange)
-	EHLC_ENTRY(Range, compare)
-	EHLC_ENTRY(Range, getIterator)
-	obj->register_member_class("Iterator", -1, ehinit_Range_Iterator, attributes_t::make(), ehi);
-END_EHLC()
+	REGISTER_METHOD(Range, toString);
+	REGISTER_METHOD(Range, toArray);
+	REGISTER_METHOD(Range, toRange);
+	REGISTER_METHOD(Range, compare);
+	REGISTER_METHOD(Range, getIterator);
+	REGISTER_CLASS(Range, Iterator);
+}
 
 EH_METHOD(Range, initialize) {
 	return ehi->to_range(args, obj);
@@ -72,9 +72,14 @@ EH_METHOD(Range, compare) {
 	if(lhs_type != rhs_type) {
 		return ehretval_t::make_int(intcmp(lhs_type, rhs_type));
 	}
-	// returns -1 if lhs.min < rhs.min and lhs.max < rhs.max or lhs is fully inside rhs (lhs.min > rhs.min, lhs.max < rhs.max),
-	// 0 if lhs.min == rhs.min and lhs.max == rhs.max,
-	// 1 if lhs.max > rhs.max, lhs.min > rhs.min or lhs.min < rhs.min, lhs.max > rhs.max
+	/*
+	 * This method returns:
+	 * -1 if lhs.min < rhs.min and lhs.max < rhs.max or lhs is fully inside rhs 
+	 *    (lhs.min > rhs.min, lhs.max < rhs.max),
+	 * 0 if lhs.min == rhs.min and lhs.max == rhs.max,
+	 * 1 if lhs.max > rhs.max, lhs.min > rhs.min or lhs.min < rhs.min, 
+	 *    lhs.max > rhs.max
+	 */
 	ehretval_p lhs_max = obj->get_rangeval()->max;
 	ehretval_p rhs_max = args->get_rangeval()->max;
 	ehretval_p min_cmp_p = ehi->call_method(lhs_min, "compare", rhs_min, obj);

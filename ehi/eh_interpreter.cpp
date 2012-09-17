@@ -193,11 +193,9 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		ehretval_p *paras = node->get_opval()->paras;
 		switch(node->get_opval()->op) {
 			case T_LITERAL:
-				if(node->get_opval()->nparas == 0) {
-					return NULL;
-				} else {
-					return paras[0];
-				}
+				return paras[0];
+			case T_NULL:
+				return NULL;
 		/*
 		 * Unary operators
 		 */
@@ -950,6 +948,8 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 		}
 		case '(':
 			return set(internal_paras[0], rvalue, context);
+		case T_NULL: // allow NULL to enable ignoring values
+			return rvalue;
 		default:
 			throw_MiscellaneousError("Invalid lvalue", this);
 			break;

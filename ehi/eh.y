@@ -255,7 +255,7 @@ catch_clause_braces:
 
 expression:
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_NULL				{ $$ = ADD_NODE0(T_LITERAL); }
+	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
 	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_VARIABLE			{ $$ = ADD_NODE1('$', $1); }
@@ -395,7 +395,7 @@ expression:
 
 simple_expr:
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_NULL				{ $$ = ADD_NODE0(T_LITERAL); }
+	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
 	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_VARIABLE			{ $$ = ADD_NODE1('$', $1); }
@@ -471,7 +471,7 @@ simple_expr:
 
 para_expr:
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_NULL				{ $$ = ADD_NODE0(T_LITERAL); }
+	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
 	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_VARIABLE			{ $$ = ADD_NODE1('$', $1); }

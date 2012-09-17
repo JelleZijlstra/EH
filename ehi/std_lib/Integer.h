@@ -26,5 +26,27 @@ EH_METHOD(Integer, toBool);
 EH_METHOD(Integer, toFloat);
 EH_METHOD(Integer, toInt);
 EH_METHOD(Integer, sqrt);
+EH_METHOD(Integer, getIterator);
 
 EXTERN_EHLC(Integer)
+
+class Integer_Iterator : public LibraryBaseClass {
+public:
+	Integer_Iterator(int n) : current(0), max(n) {}
+	~Integer_Iterator() {}
+
+	bool has_next();
+	int next();
+private:
+	int current;
+	int max;
+	Integer_Iterator(const Integer_Iterator&);
+	Integer_Iterator operator=(const Integer_Iterator&);
+};
+
+EH_METHOD(Integer_Iterator, initialize);
+EH_METHOD(Integer_Iterator, hasNext);
+EH_METHOD(Integer_Iterator, next);
+
+EH_INITIALIZER(Integer_Iterator);
+

@@ -27,6 +27,8 @@ EHLC_ENTRY(Integer, toBool)
 EHLC_ENTRY(Integer, toFloat)
 EHLC_ENTRY(Integer, toInt)
 EHLC_ENTRY(Integer, sqrt)
+	REGISTER_METHOD(Integer, getIterator);
+	REGISTER_CLASS(Integer, Iterator);
 END_EHLC()
 
 EH_METHOD(Integer, initialize) {
@@ -199,4 +201,40 @@ EH_METHOD(Integer, toInt) {
 EH_METHOD(Integer, sqrt) {
   ASSERT_NULL_AND_TYPE(int_e, "Integer.sqrt");
   return ehretval_t::make_int((int) sqrt((double) obj->get_intval()));
+}
+EH_METHOD(Integer, getIterator) {
+	ASSERT_NULL_AND_TYPE(int_e, "Integer.getIterator");
+	ehretval_p iterator = ehi->get_property(obj, "Iterator", obj);
+	return ehi->call_method(iterator, "new", obj, obj);
+}
+
+bool Integer_Iterator::has_next() {
+	return this->current < this->max;
+}
+int Integer_Iterator::next() {
+	assert(has_next());
+	return this->current++;
+}
+EH_METHOD(Integer_Iterator, initialize) {
+	ASSERT_TYPE(args, int_e, "Integer.Iterator.initialize");
+	Integer_Iterator *data = new Integer_Iterator(args->get_intval());
+	return ehretval_t::make_resource(data);
+}
+EH_METHOD(Integer_Iterator, hasNext) {
+	ASSERT_TYPE(args, null_e, "Integer.Iterator.hasNext");
+	Integer_Iterator *data = (Integer_Iterator *)obj->get_resourceval();
+	return ehretval_t::make_bool(data->has_next());
+}
+EH_METHOD(Integer_Iterator, next) {
+	ASSERT_TYPE(args, null_e, "Integer.Iterator.next");
+	Integer_Iterator *data = (Integer_Iterator *)obj->get_resourceval();
+	if(!data->has_next()) {
+		throw_EmptyIterator(ehi);
+	}
+	return ehretval_t::make_int(data->next());
+}
+EH_INITIALIZER(Integer_Iterator) {
+	REGISTER_METHOD(Integer_Iterator, initialize);
+	REGISTER_METHOD(Integer_Iterator, hasNext);
+	REGISTER_METHOD(Integer_Iterator, next);
 }

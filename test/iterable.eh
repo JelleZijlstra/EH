@@ -29,3 +29,6 @@ end
 
 Tuple.inherit Iterable
 (1, 2, 3).each printvar
+
+Integer.inherit Iterable
+5.each printvar

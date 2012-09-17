@@ -3,15 +3,17 @@
 include 'arrayfunc_lib.eh'
 
 arr = [1, (-1), 0, 2, (-2)]
-arr = arrayfunc arr, func: in
-	if in > 0
+arr2 = arrayfunc arr, func: input
+	if input > 0
 		ret 1
 	else 
-		if in < 0
+		if input < 0
 			ret -1
 		else
 			ret 0
 		end
 	end
 end
-printvar arr
+printvar arr2
+arr3 = arrayfunc arr, 0.operator<=>
+printvar arr3

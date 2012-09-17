@@ -5,8 +5,8 @@ class Stack
 
   public initialize = func: -> (this.s = [])
   
-  public push = func: in
-    this.s->n = in
+  public push = func: input
+    this.s->n = input
     this.n = this.n + 1
   end
   

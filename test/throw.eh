@@ -1,16 +1,16 @@
 #!/usr/bin/ehi
 # Exceptions
-funky = func: in {
-  if (in % 3) == 0 {
+funky = func: input {
+  if (input % 3) == 0 {
     throw "I don't like numbers that are divisible by three"
   } else {
-    ret in
+    ret input
   }
 }
 
-trying = func: in {
+trying = func: input {
   try {
-    ret funky in
+    ret funky input
   } catch {
     echo 'Caught it'
     printvar exception

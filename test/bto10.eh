@@ -2,9 +2,9 @@
 # Convert numeric strings in a given base to integers
 # Doesn't take into account many greater and lesser subtleties, but it
 # gets the core of the job done.
-func bto10: in, base
-	getn = func: in, n
-		char = in.charAtPosition n
+func bto10: input, base
+	getn = func: input, n
+		char = input.charAtPosition n
 		if char >= 48 and char <= 57
 			ret char - 48
 		end
@@ -19,9 +19,9 @@ func bto10: in, base
 		ret false
 	end
 	out = 0
-	len = in.length ()
+	len = input.length()
 	for len count i
-		value = getn in, i
+		value = getn input, i
 		out = out + value * (pow base, (len - 1 - i))
 	end
 	ret out

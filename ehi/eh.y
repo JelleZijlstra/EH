@@ -47,6 +47,7 @@ EHParser *yyget_extra(void *scanner);
 %token T_FOR
 %token T_ENDFOR
 %token T_AS
+%token T_IN
 %token T_GIVEN
 %token T_END
 %token T_SWITCH
@@ -162,6 +163,8 @@ statement:
 							{ $$ = ADD_NODE3(T_AS, $2, $4, $6); }
 	| T_FOR simple_expr T_AS T_VARIABLE T_DOUBLEARROW T_VARIABLE T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE4(T_AS, $2, $4, $6, $8); }
+	| T_FOR simple_expr T_IN simple_expr T_SEPARATOR statement_list T_END T_SEPARATOR
+							{ $$ = ADD_NODE3(T_IN, $2, $4, $6); }
 	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE2('=', 
 								ADD_NODE1('$', $2),

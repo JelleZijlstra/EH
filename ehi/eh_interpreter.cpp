@@ -229,6 +229,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				return eh_op_while(paras, context);
 			case T_FOR:
 				return eh_op_for(node->get_opval(), context);
+			case T_IN:
+				return eh_op_in(paras, context);
 			case T_AS:
 				return eh_op_as(node->get_opval(), context);
 			case T_SWITCH: // switch statements
@@ -596,6 +598,23 @@ ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
 	}
 	inloop--;
 	return ret;
+}
+ehretval_p EHI::eh_op_in(ehretval_p *paras, ehcontext_t context) {
+	ehretval_p iteree = eh_execute(paras[1], context);
+	ehretval_p iterator = call_method(iteree, "getIterator", NULL, context);
+	while(true) {
+		ehretval_p has_next = call_method(iterator, "hasNext", NULL, context);
+		if(has_next->type() != bool_e) {
+			throw_TypeError("hasNext does not return a bool", has_next->type(), this);
+		}
+		if(!has_next->get_boolval()) {
+			break;
+		}
+		ehretval_p next = call_method(iterator, "next", NULL, context);
+		set(paras[0], next, context);
+		eh_execute(paras[2], context);
+	}
+	return iteree;
 }
 void EHI::eh_op_break(opnode_t *op, ehcontext_t context) {
 	int level;

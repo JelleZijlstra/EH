@@ -8,5 +8,5 @@ Array.fill = func: n, f {
   out
 }
 
-printvar Array.fill 5, func: in -> in
-printvar Array.fill 10, func: in -> in * in
+printvar Array.fill 5, func: input -> input
+printvar Array.fill 10, func: input -> input * input

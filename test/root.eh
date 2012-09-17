@@ -1,19 +1,19 @@
 #!/usr/bin/ehi
 # A square root algorithm
-func abs: in
+func abs: input
 	# Without the 0.0, this will instead compare the Float and Integer types. This should really be fixed in the C++ code.
-	if in < 0.0
-		ret -1 * in
+	if input < 0.0
+		ret -1 * input
 	else
-		ret in
+		ret input
 	end
 end
-func sqrt: in
-	epsilon = 0.01
-	in = @float in
+func sqrt: input
+	const epsilon = 0.01
+	input = @float input
 	out = @float 5
-	while (abs (out * out - in)) > epsilon
-		out = (out + in/out) / 2.0
+	while (abs (out * out - input)) > epsilon
+		out = (out + input/out) / 2.0
 	end
 	ret out
 end

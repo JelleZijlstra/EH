@@ -129,6 +129,26 @@ class List
 		case null; val.toString()
 		default; (val.toString()) + glue + base
 	end)
+	
+	class Iterator
+		private l
+
+		public initialize = func: l
+			this.l = l
+		end
+		
+		public hasNext = func:
+			!(this.l.isEmpty())
+		end
+		
+		public next = func:
+			out, this.l = this.l
+			out
+		end
+	end
+	private const Iterator = Iterator
+	
+	const getIterator = func: -> (this.Iterator.new this)
 end
 
 # Constify it

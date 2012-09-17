@@ -2,7 +2,7 @@
 Tuple.toString = func: {
 	out = '('
 	len = this.length()
-	for len count i {
+	for i in len {
 		out = out + this->i
 		if i != (len - 1) {
 			out = out + ', '
@@ -12,7 +12,7 @@ Tuple.toString = func: {
 }
 
 Tuple.each = func: f {
-	for (this.length()) count i {
+	for i in (this.length()) {
 		f this->i
 	}
 }

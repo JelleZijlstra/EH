@@ -2,7 +2,7 @@
 echo "Map"
 Array.map = func: f {
 	out = []
-	for this as key => value {
+	for (key, value) in this {
 		out->key = f value
 	}
 	ret out
@@ -15,7 +15,7 @@ printvar (arr.map f)
 echo "Reduce"
 Array.reduce = func: f, base {
 	out = base
-	for this as value {
+	for ((), value) in this {
 		out = f out, value
 	}
 	ret out
@@ -26,7 +26,7 @@ printvar (arr.reduce f, 0)
 
 echo "Iterate"
 Array.each = func: f {
-	for this as key => value {
+	for (key, value) in this {
 		f key, value
 	}
 }
@@ -36,7 +36,7 @@ arr.each (func: key, value { echo value; })
 echo "Filter"
 Array.filter = func: f {
 	out = []
-	for this as key => value {
+	for (key, value) in this {
 		if (f key, value) {
 			out->key = value
 		}

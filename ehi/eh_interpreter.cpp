@@ -229,8 +229,6 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				return eh_op_for(node->get_opval(), context);
 			case T_IN:
 				return eh_op_in(paras, context);
-			case T_AS:
-				return eh_op_as(node->get_opval(), context);
 			case T_SWITCH: // switch statements
 				ret = eh_op_switch(paras, context);
 				// incremented in the eh_op_switch function
@@ -526,80 +524,10 @@ ehretval_p EHI::eh_op_while(ehretval_p *paras, ehcontext_t context) {
 	inloop--;
 	return ret;
 }
-ehretval_p EHI::eh_op_as(opnode_t *op, ehcontext_t context) {
-	ehretval_p ret = NULL;
-
-	// get the object to be looped through and check its type
-	ehretval_p object = eh_execute(op->paras[0], context);
-	if(object->type() != array_e && object->type() != object_e) {
-		throw_TypeError("For-as loop", object->type(), this);
-	}
-	// increment loop count
-	inloop++;
-	// establish variables
-	char *membername;
-	ehmember_p membervar;
-	char *indexname;
-	ehmember_p indexvar;
-	ehretval_p code;
-	if(op->nparas == 3) {
-		// no index
-		membername = eh_execute(op->paras[1], context)->get_stringval();
-		indexname = NULL;
-		code = op->paras[2];
-	} else {
-		// with index
-		indexname = eh_execute(op->paras[1], context)->get_stringval();
-		membername = eh_execute(op->paras[2], context)->get_stringval();
-		code = op->paras[3];
-	}
-	// create variables
-	membervar = this->set_property(context.scope, membername, ehretval_p(NULL), context);
-	if(indexname != NULL) {
-		indexvar = this->set_property(context.scope, indexname, ehretval_p(NULL), context);
-	}
-	if(object->type() == object_e) {
-		// check whether we're allowed to access private things
-		const bool doprivate = object->get_objectval()->context_compare(context);
-		OBJECT_FOR_EACH(object->get_objectval(), curr) {
-			// ignore private
-			if(!doprivate && curr->second->attribute.visibility == private_e) {
-				continue;
-			}
-			membervar->value = curr->second->value;
-			if(indexname) {
-				indexvar->value = ehretval_t::make_string(strdup(curr->first.c_str()));
-			}
-			ret = eh_execute(code, context);
-			LOOPCHECKS;
-		
-		}
-	} else {
-		// arrays
-		eharray_t *array = object->get_arrayval();
-		ARRAY_FOR_EACH_INT(array, i) {
-			if(indexname) {
-				indexvar->value = ehretval_t::make_int(i->first);
-			}
-			membervar->value = i->second;
-			ret = eh_execute(code, context);
-			LOOPCHECKS;
-		}
-		ARRAY_FOR_EACH_STRING(array, i) {
-			if(indexname) {
-				indexvar->value = ehretval_t::make_string(strdup(i->first.c_str()));
-			}
-			membervar->value = i->second;
-			ret = eh_execute(code, context);
-			LOOPCHECKS;		
-		}
-	}
-	inloop--;
-	return ret;
-}
 ehretval_p EHI::eh_op_in(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p iteree = eh_execute(paras[1], context);
 	ehretval_p iterator = call_method(iteree, "getIterator", NULL, context);
+	inloop++;
 	while(true) {
 		ehretval_p has_next = call_method(iterator, "hasNext", NULL, context);
 		if(has_next->type() != bool_e) {
@@ -610,8 +538,10 @@ ehretval_p EHI::eh_op_in(ehretval_p *paras, ehcontext_t context) {
 		}
 		ehretval_p next = call_method(iterator, "next", NULL, context);
 		set(paras[0], next, context);
-		eh_execute(paras[2], context);
+		ehretval_p ret = eh_execute(paras[2], context);
+		LOOPCHECKS;
 	}
+	inloop--;
 	return iteree;
 }
 void EHI::eh_op_break(opnode_t *op, ehcontext_t context) {

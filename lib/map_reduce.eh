@@ -12,11 +12,11 @@ class MapReduceJob
 			throw "Reducer is null"
 		end
 		this.intermediates = []
-		for input as key => value
+		for (key, value) in input
 			this.mapper key, value
 		end
 		this.outputArray = []
-		for this.intermediates as key => values
+		for (key, values) in this.intermediates
 			this.reducer key, values
 		end
 		this.outputArray

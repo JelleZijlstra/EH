@@ -43,7 +43,6 @@ private:
 	ehretval_p eh_op_command(const char *name, ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_for(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_while(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_as(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_in(ehretval_p *paras, ehcontext_t context);
 	void eh_op_inherit(ehretval_p *paras, ehcontext_t context);
 	void eh_op_continue(opnode_t *op, ehcontext_t context);

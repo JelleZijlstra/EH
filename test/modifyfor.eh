@@ -2,7 +2,7 @@
 a = 3
 b = a
 c = ['foo' => 1]
-for c as a => d
+for (a, d) in c
 	# foo
 	printvar a
 	# 1

@@ -4,7 +4,7 @@ Array.reduce = func: f {
   arr = this
   ret func: start {
     out = start
-    for arr as val {
+    for val in arr {
       out = f out, val
       echo out
     }

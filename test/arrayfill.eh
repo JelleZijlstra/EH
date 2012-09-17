@@ -2,7 +2,7 @@
 # Probably a useful library routine
 Array.fill = func: n, f {
   out = []
-  for n count i {
+  for i in n {
     out->i = f i
   }
   out

@@ -4,7 +4,7 @@
 input = 10
 # counter variable
 total = 1
-for input count i
+for i in input
 	total = total * input
 	input--
 end

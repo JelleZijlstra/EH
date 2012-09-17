@@ -7,7 +7,7 @@ class WordCounter
 	this.inherit MapReduceJob
 	
 	mapper = func: key, value
-		for value as word
+		for ((), word) in value
 			this.emit word, 1
 		end
 	end

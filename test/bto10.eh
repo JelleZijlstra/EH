@@ -20,7 +20,7 @@ func bto10: input, base
 	end
 	out = 0
 	len = input.length()
-	for len count i
+	for i in len
 		value = getn input, i
 		out = out + value * (pow base, (len - 1 - i))
 	end

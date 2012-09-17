@@ -3,7 +3,7 @@ class Foo {
 	const a = 3
 }
 printvar Foo
-for Foo as key => value {
-	value = 4
+for i in 1 {
+	Foo.a = 4
 }
 printvar Foo

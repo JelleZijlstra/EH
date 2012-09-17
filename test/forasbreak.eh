@@ -1,8 +1,8 @@
 #!/usr/bin/ehi
 # As much looping as possible
-for [1, 2, 3, 4, 5] as value
+for ((), value) in [1, 2, 3, 4, 5]
 	echo 'before ' + value
-	for value count i
+	for i in value
 		echo i
 		if i == 2 && value < 4
 			continue 2

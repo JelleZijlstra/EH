@@ -149,6 +149,8 @@ class List
 	private const Iterator = Iterator
 	
 	const getIterator = func: -> (this.Iterator.new this)
+	
+	const add = func: v -> (Cons v, this)
 end
 
 # Constify it

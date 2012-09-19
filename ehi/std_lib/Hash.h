@@ -27,6 +27,9 @@ public:
 	void erase(const std::string &key) {
 		members.erase(key);
 	}
+	int size() const {
+		return members.size();
+	}
 	
 	iterator begin_iterator() const {
 		return members.begin();
@@ -43,9 +46,10 @@ EH_METHOD(Hash, operator_arrow_equals);
 EH_METHOD(Hash, has);
 EH_METHOD(Hash, delete);
 EH_METHOD(Hash, keys);
+EH_METHOD(Hash, length);
 EH_METHOD(Hash, getIterator);
 
-EXTERN_EHLC(Hash)
+EH_INITIALIZER(Hash);
 
 class Hash_Iterator : public LibraryBaseClass {
 public:
@@ -64,6 +68,6 @@ EH_METHOD(Hash_Iterator, initialize);
 EH_METHOD(Hash_Iterator, hasNext);
 EH_METHOD(Hash_Iterator, next);
 
-EXTERN_EHLC(Hash_Iterator)
+EH_INITIALIZER(Hash_Iterator);
 
 #endif /* EH_HASH_H_ */

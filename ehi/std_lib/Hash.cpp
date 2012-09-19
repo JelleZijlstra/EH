@@ -1,15 +1,16 @@
 #include "Hash.h"
 
-START_EHLC(Hash)
-	EHLC_ENTRY(Hash, toArray)
+EH_INITIALIZER(Hash) {
+	REGISTER_METHOD(Hash, toArray);
 	EHLC_ENTRY_RENAME(Hash, operator_arrow, "operator->")
 	EHLC_ENTRY_RENAME(Hash, operator_arrow_equals, "operator->=")
-	EHLC_ENTRY(Hash, has)
-	EHLC_ENTRY(Hash, delete)
-	EHLC_ENTRY(Hash, keys)
-	EHLC_ENTRY(Hash, getIterator)
-	obj->register_member_class("Iterator", -1, ehinit_Hash_Iterator, attributes_t::make(), ehi);
-END_EHLC()
+	REGISTER_METHOD(Hash, has);
+	REGISTER_METHOD(Hash, delete);
+	REGISTER_METHOD(Hash, keys);
+	REGISTER_METHOD(Hash, length);
+	REGISTER_METHOD(Hash, getIterator);
+	REGISTER_CLASS(Hash, Iterator);
+}
 
 EH_METHOD(Hash, toArray) {
 	ASSERT_NULL_AND_TYPE(hash_e, "Hash.toArray");
@@ -66,17 +67,22 @@ EH_METHOD(Hash, keys) {
 	return ehi->make_array(arr);	
 }
 
+EH_METHOD(Hash, length) {
+	ASSERT_NULL_AND_TYPE(hash_e, "Hash.length");
+	return ehretval_t::make_int(obj->get_hashval()->size());
+}
+
 EH_METHOD(Hash, getIterator) {
 	ASSERT_NULL_AND_TYPE(hash_e, "Hash.getIterator");
 	ehretval_p class_member = ehi->get_property(obj, "Iterator", obj);
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 
-START_EHLC(Hash_Iterator)
-EHLC_ENTRY(Hash_Iterator, initialize)
-EHLC_ENTRY(Hash_Iterator, hasNext)
-EHLC_ENTRY(Hash_Iterator, next)
-END_EHLC()
+EH_INITIALIZER(Hash_Iterator) {
+	REGISTER_METHOD(Hash_Iterator, initialize);
+	REGISTER_METHOD(Hash_Iterator, hasNext);
+	REGISTER_METHOD(Hash_Iterator, next);
+}
 
 bool Hash_Iterator::has_next() {
 	return this->current != this->end;

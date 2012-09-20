@@ -9,7 +9,8 @@
 ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
 	return NULL;
 }
-char *EHI::eh_getline(EHParser *parser) {
+char *EHI::eh_getline() {
+	execute_cmd("man", new eharray_t());
 	return NULL;
 }
 
@@ -116,9 +117,11 @@ ehretval_p zvaltoeh(zval *in, EHI *ehi) {
 		case IS_STRING:
 			// would be nice to use strndup with in->value.str.len, can't get it though
 			return ehretval_t::make_string(strdup(in->value.str.val));
-		case IS_ARRAY:
+		case IS_ARRAY: {
 			// initialize array
-			return ehi->make_array(zvaltoeh_array(in->value.ht, ehi));
+			eharray_t *arr = zvaltoeh_array(in->value.ht, ehi);
+			return ehi->get_parent()->make_array(arr);
+		}
 		case IS_LONG:
 			return ehretval_t::make_int(in->value.lval);
 		case IS_RESOURCE:
@@ -162,7 +165,7 @@ eharray_t *zvaltoeh_array(HashTable *hash, EHI *ehi) {
 %typemap(directorin) eharray_t* {
 	*$input = *arrtozval($1, this);
 }
-%typemap(directorin) EHParser* {
+%typemap(directorin) EHI* {
 	ZVAL_NULL($input);
 }
 
@@ -176,11 +179,11 @@ eharray_t *zvaltoeh_array(HashTable *hash, EHI *ehi) {
 
 class EHI {
 public:
-	int eh_interactive(void);
+	int eh_interactive();
 	ehretval_p global_parse_file(const char *name);
 	ehretval_p global_parse_string(const char *cmd);
 
 	virtual ehretval_p execute_cmd(const char *name, eharray_t *paras);
-	virtual char *eh_getline(EHParser *parser = NULL);
+	virtual char *eh_getline();
 	virtual ~EHI();
 };

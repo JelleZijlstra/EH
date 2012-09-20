@@ -40,7 +40,7 @@ if(extension_loaded("ehphp"))  {
 			echo "Goodbye." . PHP_EOL;
 			return $ret;
 		}
-		public function eh_getline($parser = NULL) {
+		public function eh_getline() {
 			$cmd = '';
 			static $history = array();
 			try {

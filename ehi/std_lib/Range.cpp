@@ -53,7 +53,7 @@ EH_METHOD(Range, toString) {
 }
 EH_METHOD(Range, toArray) {
 	ASSERT_NULL_AND_TYPE(range_e, "Range.toArray");
-	ehretval_p array = ehi->make_array(new eharray_t);
+	ehretval_p array = ehi->get_parent()->make_array(new eharray_t);
 	array->get_arrayval()->int_indices[0] = obj->get_rangeval()->min;
 	array->get_arrayval()->int_indices[1] = obj->get_rangeval()->max;
 	return array;
@@ -117,7 +117,7 @@ END_EHLC()
 
 bool Range_Iterator::has_next(EHI *ehi) {
 	ehretval_p max = this->range->get_rangeval()->max;
-	ehretval_p result = ehi->call_method(this->current, "operator<=", max, ehi->global_object);
+	ehretval_p result = ehi->call_method(this->current, "operator<=", max, ehi->global());
 	if(result->type() != bool_e) {
 		throw_TypeError("operator<= does not return a bool", result->type(), ehi);
 	}
@@ -126,7 +126,7 @@ bool Range_Iterator::has_next(EHI *ehi) {
 ehretval_p Range_Iterator::next(EHI *ehi) {
 	assert(this->has_next(ehi));
 	ehretval_p out = this->current;
-	this->current = ehi->call_method(out, "operator+", ehretval_t::make_int(1), ehi->global_object);
+	this->current = ehi->call_method(out, "operator+", ehretval_t::make_int(1), ehi->global());
 	return out;
 }
 

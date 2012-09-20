@@ -83,6 +83,7 @@ delete <public,non-static,non-constant>: @function <library>:
 getIterator <public,non-static,non-constant>: @function <library>: 
 has <public,non-static,non-constant>: @function <library>: 
 keys <public,non-static,non-constant>: @function <library>: 
+length <public,non-static,non-constant>: @function <library>: 
 operator-> <public,non-static,non-constant>: @function <library>: 
 operator->= <public,non-static,non-constant>: @function <library>: 
 toArray <public,non-static,non-constant>: @function <library>: 

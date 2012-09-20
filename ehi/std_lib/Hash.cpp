@@ -16,7 +16,7 @@ EH_METHOD(Hash, toArray) {
 	ASSERT_NULL_AND_TYPE(hash_e, "Hash.toArray");
 	ehhash_t *hash = obj->get_hashval();
 	eharray_t *arr = new eharray_t();
-	ehretval_p out = ehi->make_array(arr);
+	ehretval_p out = ehi->get_parent()->make_array(arr);
 	HASH_FOR_EACH(hash, i) {
 		arr->string_indices[i->first.c_str()] = i->second;
 	}
@@ -64,7 +64,7 @@ EH_METHOD(Hash, keys) {
 		arr->int_indices[index] = ehretval_t::make_string(strdup(name.c_str()));
 		index++;
 	}
-	return ehi->make_array(arr);	
+	return ehi->get_parent()->make_array(arr);	
 }
 
 EH_METHOD(Hash, length) {
@@ -93,7 +93,7 @@ ehretval_p Hash_Iterator::next(EHI *ehi) {
 	tuple[0] = ehretval_t::make_string(strdup(this->current->first.c_str()));
 	tuple[1] = this->current->second;
 	this->current++;
-	return ehi->make_tuple(new ehtuple_t(2, tuple));
+	return ehi->get_parent()->make_tuple(new ehtuple_t(2, tuple));
 }
 
 EH_METHOD(Hash_Iterator, initialize) {

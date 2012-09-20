@@ -4,8 +4,8 @@ EH_INITIALIZER(Array) {
 	REGISTER_METHOD(Array, initialize);
 	REGISTER_METHOD(Array, has);
 	REGISTER_METHOD(Array, length);
-	EHLC_ENTRY_RENAME(Array, operator_arrow, "operator->")
-	EHLC_ENTRY_RENAME(Array, operator_arrow_equals, "operator->=")
+	REGISTER_METHOD_RENAME(Array, operator_arrow, "operator->");
+	REGISTER_METHOD_RENAME(Array, operator_arrow_equals, "operator->=");
 	REGISTER_METHOD(Array, toArray);
 	REGISTER_METHOD(Array, toTuple);
 	REGISTER_METHOD(Array, getIterator);
@@ -88,7 +88,7 @@ EH_METHOD(Array, toTuple) {
   ARRAY_FOR_EACH_STRING(arr, member) {
   	values[i++] = member->second;
   }
-  return ehi->make_tuple(new ehtuple_t(length, values));
+  return ehi->get_parent()->make_tuple(new ehtuple_t(length, values));
 }
 EH_METHOD(Array, getIterator) {
 	ASSERT_NULL_AND_TYPE(array_e, "Array.getIterator");
@@ -129,7 +129,7 @@ ehretval_p Array_Iterator::next(EHI *ehi) {
 		tuple[1] = this->string_begin->second;
 		this->string_begin++;	
 	}
-	return ehi->make_tuple(new ehtuple_t(2, tuple));
+	return ehi->get_parent()->make_tuple(new ehtuple_t(2, tuple));
 }
 
 EH_METHOD(Array_Iterator, initialize) {

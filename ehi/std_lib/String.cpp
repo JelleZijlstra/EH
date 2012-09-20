@@ -14,7 +14,7 @@ START_EHLC(String)
 	EHLC_ENTRY(String, toRange)
 	EHLC_ENTRY(String, charAtPosition)
 	EHLC_ENTRY(String, getIterator)
-	obj->register_member_class("Iterator", -1, ehinit_String_Iterator, attributes_t::make(), ehi);
+	REGISTER_CLASS(String, Iterator);
 END_EHLC()
 
 EH_METHOD(String, initialize) {
@@ -133,7 +133,7 @@ EH_METHOD(String, toRange) {
 		}
 	}
 	ehrange_t *range = new ehrange_t(ehretval_t::make_int(min), ehretval_t::make_int(max));
-	return ehi->make_range(range);
+	return ehi->get_parent()->make_range(range);
 }
 EH_METHOD(String, charAtPosition) {
 	ASSERT_OBJ_TYPE(string_e, "String.charAtPosition");

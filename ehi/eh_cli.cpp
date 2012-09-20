@@ -16,34 +16,37 @@ void eh_usage(char *name) {
 int main(int argc, char **argv) {
 	ehretval_p ret;
 
-	EHI interpreter;
+	EHInterpreter interpreter;
 
 	try {
 		if(argc == 1) {
-			ret = ehretval_t::make_int(interpreter.eh_interactive(cli_no_prompt_e));
+			EHI ehi(cli_no_prompt_e, &interpreter, interpreter.global_object);
+			ret = ehi.parse_interactive();
 		} else if(!strcmp(argv[1], "-i")) {
 			if(argc != 2) {
 				eh_usage(argv[0]);
 			}
-			ret = ehretval_t::make_int(interpreter.eh_interactive());
+			EHI ehi(cli_prompt_e, &interpreter, interpreter.global_object);
+			ret = ehi.parse_interactive();
 		} else if(!strcmp(argv[1], "-r")) {
 			if(argc != 3) {
 				eh_usage(argv[0]);
 			}
+			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object);
 			try {
-				ret = interpreter.parse_string(argv[2], interpreter.global_object);
+				ret = ehi.parse_string(argv[2], interpreter.global_object);
 			} catch(eh_exception &e) {
-				interpreter.handle_uncaught(e);
+				ehi.handle_uncaught(e);
 				return -1;
 			}
 		} else {
 			interpreter.eh_setarg(argc, argv);
-			ret = interpreter.parse_file(argv[1], interpreter.global_object);
+			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object);
+			ret = ehi.parse_file(argv[1], interpreter.global_object);
 		}
 		//TODO: let scripts determine exit status
 		return 0;
-	}
-	catch(...) {
+	} catch(...) {
 		return -1;
 	}
 }
@@ -52,11 +55,11 @@ ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
 	throw_UnknownCommandError(name, this);
 	return NULL;
 }
-char *EHI::eh_getline(EHParser *parser) {
+char *EHI::eh_getline() {
 	if(this->buffer == NULL) {
 		this->buffer = new char[512];	
 	}
-	if(parser->interactivity() == cli_prompt_e) {
+	if(get_interactivity() == cli_prompt_e) {
 		printf("> ");
 	}
 	return fgets(buffer, 511, stdin);

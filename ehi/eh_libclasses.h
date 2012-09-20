@@ -8,16 +8,18 @@
 
 #include "eh.h"
 
-#define START_EHLC(name) void ehinit_ ## name (ehobj_t *obj, EHI *ehi) {
-#define EHLC_ENTRY(classn, name) obj->register_method(#name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), ehi);
-#define EHLC_ENTRY_RENAME(classn, name, user_name) obj->register_method(user_name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), ehi);
-#define END_EHLC() }
-#define EXTERN_EHLC(name) void ehinit_ ## name (ehobj_t *obj, EHI *ehi);
 
-#define EH_INITIALIZER(name) void ehinit_ ## name (ehobj_t *obj, EHI *ehi)
-#define REGISTER_METHOD(classn, name) obj->register_method(#name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), ehi)
-#define REGISTER_CLASS(classn, name) obj->register_member_class(#name, -1, ehinit_ ## classn ##_ ## name, attributes_t::make(), ehi)
-#define INHERIT_LIBRARY(classname) 	obj->inherit(ehi->global_object->get_objectval()->get_known(#classname)->value);
+#define EH_INITIALIZER(name) void ehinit_ ## name (ehobj_t *obj, EHInterpreter *parent)
+#define REGISTER_METHOD(classn, name) obj->register_method(#name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), parent)
+#define REGISTER_METHOD_RENAME(classn, name, user_name) obj->register_method(user_name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), parent)
+#define REGISTER_CLASS(classn, name) obj->register_member_class(#name, -1, ehinit_ ## classn ##_ ## name, attributes_t::make(), parent)
+#define INHERIT_LIBRARY(classname) 	obj->inherit(parent->global_object->get_objectval()->get_known(#classname)->value);
+
+#define START_EHLC(name) EH_INITIALIZER(name) {
+#define EHLC_ENTRY(classn, name) REGISTER_METHOD(classn, name);
+#define EHLC_ENTRY_RENAME(classn, name, user_name) REGISTER_METHOD_RENAME(classn, name, user_name);
+#define END_EHLC() }
+#define EXTERN_EHLC(name) EH_INITIALIZER(name);
 
 
 #define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, ehretval_p args, EHI *ehi)

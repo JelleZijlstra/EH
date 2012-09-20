@@ -164,7 +164,7 @@ int ehretval_t::get_full_type() const  {
 }
 const std::string &ehretval_t::type_string(EHI *ehi) const {
 	int type = this->get_full_type();
-	return ehi->repo.get_name(type);
+	return ehi->get_parent()->repo.get_name(type);
 }
 ehretval_p ehretval_t::self_or_data(const ehretval_p in) {
 	if(in->type() == object_e) {
@@ -175,7 +175,7 @@ ehretval_p ehretval_t::self_or_data(const ehretval_p in) {
 }
 ehretval_p ehretval_t::instantiate(EHI *ehi) {
 	ehobj_t *new_obj = new ehobj_t();
-	ehretval_p ret = ehi->make_object(new_obj);
+	ehretval_p ret = ehi->get_parent()->make_object(new_obj);
 	// input must be an object
 	ehobj_t *obj = this->get_objectval();
 	new_obj->type_id = obj->type_id;
@@ -300,39 +300,39 @@ bool ehobj_t::context_compare(const ehcontext_t key) const {
 		}
 	}
 }
-void ehobj_t::register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHI *ehi) {
-	ehretval_p func = ehi->make_method(method, ehi->function_object);
+void ehobj_t::register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *parent) {
+	ehretval_p func = parent->make_method(method, parent->function_object);
 	ehmember_p func_member;
 	func_member->attribute = attributes;
 	func_member->value = func;
 	this->insert(name, func_member);
 }
-void ehobj_t::register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, EHI *ehi, ehretval_p the_class) {
+void ehobj_t::register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *parent, ehretval_p the_class) {
 	ehobj_t *newclass;
 	ehretval_p new_value;
 	if(the_class == NULL) {
 		newclass = new ehobj_t();
-		new_value = ehi->make_object(newclass);
+		new_value = parent->make_object(newclass);
 	} else {
 		newclass = the_class->get_objectval();
 		new_value = the_class;
 	}
 	// register class
 	if(type_id == -1) {
-		newclass->type_id = ehi->repo.register_class(name, new_value);
+		newclass->type_id = parent->repo.register_class(name, new_value);
 	} else {
 		newclass->type_id = type_id;
-		ehi->repo.register_known_class(type_id, name, new_value);
+		parent->repo.register_known_class(type_id, name, new_value);
 	}
 	if(name != "GlobalObject") {
-		newclass->parent = ehi->global_object;
+		newclass->parent = parent->global_object;
 	}
 
 	// inherit from Object, except in Object itself
 	if(type_id != object_e) {
-		newclass->inherit(ehi->base_object);
+		newclass->inherit(parent->base_object);
 	}
-	init_func(newclass, ehi);
+	init_func(newclass, parent);
 	ehmember_p member;
 	member->attribute = attributes;
 	member->value = new_value;

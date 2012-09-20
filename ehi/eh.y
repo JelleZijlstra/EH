@@ -11,7 +11,7 @@
 #include "eh.bison.hpp"
 #include "eh_tree.h"
 extern FILE *yyin;
-EHParser *yyget_extra(void *scanner);
+EHI *yyget_extra(void *scanner);
 #define YYERROR_VERBOSE
 #define YYLEX_PARAM scanner
 
@@ -104,20 +104,20 @@ program:
 global_list:
 	/* NULL */				{ }
 	| statement				{
-								EHParser *parser = yyget_extra(scanner);
-								EHI *ehi = parser->parent;
+								EHI *ehi = yyget_extra(scanner);
 								ehretval_p statement = ehretval_t::make($1);
-								ehretval_p ret = ehi->eh_execute(statement, parser->context);
-								if(parser->interactivity() != end_is_end_e) {
+								ehretval_p ret = ehi->eh_execute(statement, ehi->get_context());
+								if(ehi->get_interactivity() != end_is_end_e) {
 									// TODO: make this use printvar instead
-									std::cout << "=> " << ehi->to_string(ret, parser->context)->get_stringval() << std::endl;
+									std::cout << "=> " << ehi->to_string(ret, ehi->get_context())->get_stringval() << std::endl;
 								}
 #if defined(DEBUG_GC) || defined(RUN_GC)
-								ehi->gc.do_collect(ehi->global_object);
+								EHInterpreter *interpreter = ehi->get_parent();
+								interpreter->gc.do_collect(interpreter->global_object);
 #endif
 								// flush stdout after executing each statement
 								//fflush(stdout);
-								if(ehi->returning) {
+								if(ehi->get_returning()) {
 									return (ret->type() == int_e) ? ret->get_intval() : 0;
 								}
 							} global_list {

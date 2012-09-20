@@ -33,7 +33,7 @@ EH_METHOD(Object, new) {
 EH_METHOD(Object, inherit) {
   	ASSERT_TYPE(args, object_e, "Object.inherit");
   	obj->get_objectval()->inherit(args);
-  	return ehi->make_super_class(new ehsuper_t(args));
+  	return ehi->get_parent()->make_super_class(new ehsuper_t(args));
 }
 EH_METHOD(Object, initialize) {
 	return NULL;
@@ -120,7 +120,7 @@ EH_METHOD(Object, operator_lte) {
 }
 EH_METHOD(Object, type) {
 	int type = obj->get_full_type();
-	std::string name = ehi->repo.get_name(type);
+	std::string name = ehi->get_parent()->repo.get_name(type);
 	return ehretval_t::make_string(strdup(name.c_str()));
 }
 EH_METHOD(Object, typeId) {
@@ -130,7 +130,7 @@ EH_METHOD(Object, typeId) {
 EH_METHOD(Object, members) {
 	ehretval_p reference_retainer = obj;
 	if(obj->type() != object_e) {
-		obj = ehi->get_primitive_class(obj->type());
+		obj = ehi->get_parent()->get_primitive_class(obj->type());
 	}
 	std::set<std::string> members = obj->get_objectval()->member_set();
 	eharray_t *out = new eharray_t();
@@ -138,7 +138,7 @@ EH_METHOD(Object, members) {
 	for(std::set<std::string>::iterator i = members.begin(), end = members.end(); i != end; i++, index++) {
 		out->int_indices[index] = ehretval_t::make_string(strdup((*i).c_str()));
 	}
-	return ehi->make_array(out);
+	return ehi->get_parent()->make_array(out);
 }
 
 // TODO: make these private methods. I'm pretty sure you can crash ehi with these.

@@ -118,10 +118,10 @@ static inline int count_nodes(const ehretval_p node);
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHI::EHI() : eval_parser(NULL), inloop(0), breaking(0), continuing(0), cmdtable(), buffer(NULL), gc(), returning(false), repo(), global_object() {
+EHInterpreter::EHInterpreter() : gc(), repo(), global_object(), function_object(), base_object() {
 	eh_init();
 }
-void EHI::eh_init(void) {
+void EHInterpreter::eh_init(void) {
 	ehobj_t *global_ehobj = new ehobj_t();
 	global_object = this->make_object(global_ehobj);
 	base_object = this->make_object(new ehobj_t());
@@ -165,18 +165,12 @@ void EHI::eh_init(void) {
 
 	gc.do_collect(global_object);
 }
-void EHI::eh_exit(void) {
-	if(this->eval_parser != NULL) {
-		delete this->eval_parser;
-	}
-	if(this->buffer != NULL) {
-		delete[] this->buffer;
-	}
+void EHInterpreter::eh_exit(void) {
 	this->global_object->get_objectval()->members.erase("global");
 	this->gc.do_collect(this->global_object);
 	return;
 }
-EHI::~EHI() {
+EHInterpreter::~EHInterpreter() {
 	eh_exit();
 }
 
@@ -306,7 +300,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				if(operand1->type() != operand2->type()) {
 					throw_TypeError("Range members must have the same type", operand2->type(), this);
 				}
-				return this->make_range(new ehrange_t(operand1, operand2));
+				return parent->make_range(new ehrange_t(operand1, operand2));
 		/*
 		 * Binary operators
 		 */
@@ -459,13 +453,18 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 	// insert indicator that this is an EH-PHP command
 	paras->string_indices["_ehphp"] = ehretval_t::make_bool(true);
 	// get the command to execute
-	ehretval_p libcmd = get_command(name);
+	ehretval_p libcmd = parent->get_command(name);
 	ehretval_p ret;
 	if(libcmd != NULL) {
-		ehretval_p args = this->make_array(paras);
+		ehretval_p args = parent->make_array(paras);
 		ret = this->call_function(libcmd, args, context);
 	} else {
-		ret = execute_cmd(name, paras);
+		try {
+			ret = this->execute_cmd(name, paras);
+		} catch(...) {
+			delete paras;
+			throw;
+		}
 		delete paras;
 	}
 	// we're not returning anymore
@@ -581,7 +580,7 @@ void EHI::eh_op_continue(opnode_t *op, ehcontext_t context) {
 	return;
 }
 ehretval_p EHI::eh_op_array(ehretval_p node, ehcontext_t context) {
-	ehretval_p ret = this->make_array(new eharray_t);
+	ehretval_p ret = parent->make_array(new eharray_t);
 	// need to count array members first, because they are reversed in our node.
 	// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
 	int count = 0;
@@ -595,7 +594,7 @@ ehretval_p EHI::eh_op_array(ehretval_p node, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 	ehhash_t *new_hash = new ehhash_t();
-	ehretval_p ret = this->make_hash(new_hash);
+	ehretval_p ret = parent->make_hash(new_hash);
 	for( ; node->get_opval()->nparas != 0; node = node->get_opval()->paras[0]) {
 		ehretval_p *myparas = node->get_opval()->paras[1]->get_opval()->paras;
 		// nodes here will always have the name in para 0 and value in para 1
@@ -606,7 +605,7 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehfunc_t *f = new ehfunc_t(user_e);
-	ehretval_p ret = this->get_primitive_class(func_e)->instantiate(this);
+	ehretval_p ret = parent->get_primitive_class(func_e)->instantiate(this);
 	ehobj_t *function_object = ret->get_objectval();
 	function_object->parent = context.scope;
 	function_object->type_id = func_e;
@@ -630,7 +629,7 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	// create the ehretval_t
-	ehretval_p ret = this->make_object(new ehobj_t());
+	ehretval_p ret = parent->make_object(new ehobj_t());
 
 	// process parameters
 	ehretval_p code;
@@ -638,7 +637,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	const char *name;
 	if(op->nparas == 2) {
 		name = eh_execute(op->paras[0], context)->get_stringval();
-		type_id = this->repo.register_class(name, ret);
+		type_id = parent->repo.register_class(name, ret);
 		code = op->paras[1];
 	} else {
 		type_id = object_e;
@@ -649,7 +648,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	ret->get_objectval()->parent = context.scope;
 
 	// inherit from Object
-	ehretval_p object_class = this->repo.get_object(object_e);
+	ehretval_p object_class = parent->repo.get_object(object_e);
 	ret->get_objectval()->inherit(object_class);
 
 	eh_execute(code, ehcontext_t(ret, ret));
@@ -682,7 +681,7 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 			break;
 		}
 	}
-	return this->make_tuple(new ehtuple_t(nargs, new_args));
+	return parent->make_tuple(new ehtuple_t(nargs, new_args));
 }
 void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	// rely on standard layout of the paras
@@ -830,7 +829,7 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 			args[0] = eh_execute(internal_paras[1], context);
 			args[1] = rvalue;
 			ehretval_p base_var = eh_execute(internal_paras[0], context);
-			return call_method(base_var, "operator->=", this->make_tuple(new ehtuple_t(2, args)), context);
+			return call_method(base_var, "operator->=", parent->make_tuple(new ehtuple_t(2, args)), context);
 		}
 		case '.': {
 			ehretval_p base_var = eh_execute(internal_paras[0], context);
@@ -969,7 +968,7 @@ ehretval_p EHI::perform_op(const char *name, int nargs, ehretval_p *paras, ehcon
 		for(int i = 0; i < nargs; i++) {
 			args_array[i] = eh_execute(paras[i + 1], context);
 		}
-		args = this->make_tuple(new ehtuple_t(nargs, args_array));
+		args = parent->make_tuple(new ehtuple_t(nargs, args_array));
 	}
 	return call_method(base_var, name, args, context);
 }
@@ -991,7 +990,7 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, e
 		if(!method->is_a(func_e)) {
 			throw_TypeError("Method must be a function", method->type(), this);
 		}
-		func = this->make_binding(new ehbinding_t(obj, method));
+		func = parent->make_binding(new ehbinding_t(obj, method));
 	}
 	if(func == NULL) {
 		return NULL;
@@ -1008,7 +1007,7 @@ ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t 
 		return call_method(function, "operator:", args, context);
 	}
 }
-ehretval_p EHI::make_method(ehlibmethod_t in, ehretval_p function_object) {
+ehretval_p EHInterpreter::make_method(ehlibmethod_t in, ehretval_p function_object) {
 	ehobj_t *function_obj = new ehobj_t();
 	ehretval_p func = this->make_object(function_obj);
 	function_obj->parent = NULL;
@@ -1079,7 +1078,7 @@ ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t 
 	if(base_var->is_object()) {
 		object = base_var;
 	} else {
-		object = this->get_primitive_class(base_var->type());
+		object = parent->get_primitive_class(base_var->type());
 	}
 	ehobj_t *obj = object->get_objectval();
 	ehmember_p member = obj->inherited_get(name);
@@ -1088,7 +1087,7 @@ ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t 
 	}
 	ehretval_p out = member->value;
 	if(out->is_a(func_e)) {
-		return this->make_binding(new ehbinding_t(base_var, out));
+		return parent->make_binding(new ehbinding_t(base_var, out));
 	} else {
 		return out;
 	}
@@ -1127,7 +1126,7 @@ void EHI::array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t c
 /*
  * Command line arguments
  */
-void EHI::eh_setarg(int argc, char **argv) {
+void EHInterpreter::eh_setarg(int argc, char **argv) {
 	// insert argc
 	ehmember_p argc_v;
 	// argc - 1, because argv[0] is ehi itself
@@ -1147,21 +1146,19 @@ void EHI::eh_setarg(int argc, char **argv) {
 /*
  * Commands
  */
-ehretval_p EHI::get_command(const char *name) {
+ehretval_p EHInterpreter::get_command(const char *name) {
 	if(this->cmdtable->has(name)) {
 		return this->cmdtable->get(name);
 	} else {
 		return NULL;
 	}
 }
-void EHI::insert_command(const char *name, ehretval_p cmd) {
+void EHInterpreter::insert_command(const char *name, ehretval_p cmd) {
 	this->cmdtable->set(name, cmd);
 }
-void EHI::redirect_command(const char *redirect, const char *target) {
+void EHInterpreter::redirect_command(const char *redirect, const char *target) {
 	ehretval_p targetcmd = get_command(target);
-	if(targetcmd == NULL) {
-		throw_UnknownCommandError(target, this);
-	}
+	assert(targetcmd != NULL);
 	insert_command(redirect, targetcmd);
 }
 /*
@@ -1169,7 +1166,7 @@ void EHI::redirect_command(const char *redirect, const char *target) {
  */
 void EHI::handle_uncaught(eh_exception e) {
 	try {
-		call_method(global_object, "handleUncaught", e.content, global_object);
+		call_method(parent->global_object, "handleUncaught", e.content, parent->global_object);
 	} catch(...) {
 		std::cerr << "Exception occurred while handling uncaught exception" << std::endl;
 	}

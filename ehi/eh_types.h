@@ -232,7 +232,7 @@ public:
 	// typedefs
 	typedef std::map<const std::string, ehmember_p> obj_map;
 	typedef obj_map::iterator obj_iterator;
-	typedef void (*initializer)(ehobj_t *obj, EHI *ehi);
+	typedef void (*initializer)(ehobj_t *obj, class EHInterpreter *parent);
 	
 	// properties
 	obj_map members;
@@ -245,11 +245,9 @@ public:
 	ehretval_p real_parent;
 	// inheritance
 	std::list<ehretval_p> super;
-	// destructor needs it
-	EHI *ehi;
 
 	// constructors
-	ehobj_t() : members(), object_data(), type_id(null_e), parent(), real_parent(), super(), ehi() {}
+	ehobj_t() : members(), object_data(), type_id(null_e), parent(), real_parent(), super() {}
 
 	// method prototypes
 	ehmember_p get_recursive(const char *name, const ehcontext_t context);
@@ -305,9 +303,9 @@ public:
 		super.push_front(superclass);
 	}
 	
-	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHI *ehi);
+	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *parent);
 	
-	void register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, EHI *ehi, ehretval_p the_class = NULL);
+	void register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *parent, ehretval_p the_class = NULL);
 	
 	// destructor
 	~ehobj_t();

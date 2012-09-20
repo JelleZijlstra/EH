@@ -6,10 +6,10 @@ EHLC_ENTRY(GarbageCollector, stats)
 END_EHLC()
 
 EH_METHOD(GarbageCollector, run) {
-	ehi->gc.do_collect(ehi->global_object);
+	ehi->get_parent()->gc.do_collect(ehi->global());
 	return NULL;
 }
 EH_METHOD(GarbageCollector, stats) {
-	ehi->gc.print_stats();
+	ehi->get_parent()->gc.print_stats();
 	return NULL;
 }

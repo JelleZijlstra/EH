@@ -6,7 +6,7 @@ START_EHLC(Tuple)
 	EHLC_ENTRY(Tuple, length)
 	EHLC_ENTRY(Tuple, toTuple)
 	EHLC_ENTRY(Tuple, getIterator)
-	obj->register_member_class("Iterator", -1, ehinit_Tuple_Iterator, attributes_t::make(), ehi);
+	REGISTER_CLASS(Tuple, Iterator);
 END_EHLC()
 
 EH_METHOD(Tuple, initialize) {

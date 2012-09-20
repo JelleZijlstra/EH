@@ -103,12 +103,12 @@ void printvar_t::retval(ehretval_p in) {
 		  }
 		  break;
 		case object_e: {
+			EHInterpreter *parent = ehi->get_parent();
 			ehobj_t *obj = in->get_objectval();
 			if(obj->type_id != func_e || obj->object_data->type() != func_e) {
 				if(this->seen.count((void *)obj) == 0) {
 					this->seen[(void *)obj] = true;
-					//TODO: print the classname somehow
-					const char *name = ehi->repo.get_name(obj->type_id).c_str();
+					const char *name = parent->repo.get_name(obj->type_id).c_str();
 					printf("@object <%s> [\n", name);
 					this->object(obj);
 					printf("]\n");
@@ -293,20 +293,15 @@ EH_METHOD(GlobalObject, get_type) {
  */
 EH_METHOD(GlobalObject, include) {
 	if(args->type() != string_e) {
-		ehi->returning = false;
 		throw_TypeError("Invalid type for argument to include", args->type(), ehi);
 	}
 	// do the work
 	FILE *infile = fopen(args->get_stringval(), "r");
 	if(!infile) {
-		ehi->returning = false;
 		throw_ArgumentError("Unable to open file", "include", args, ehi);
 	}
-	EHParser parser(end_is_end_e, ehi, obj);
-	ehretval_p parse_return = parser.parse_file(infile);
-	// we're no longer returning
-	ehi->returning = false;
-	return parse_return;
+	EHI parser(end_is_end_e, ehi->get_parent(), obj);
+	return parser.parse_file(infile);
 }
 
 // power
@@ -372,15 +367,15 @@ EH_METHOD(GlobalObject, put) {
 }
 
 EH_METHOD(GlobalObject, collectGarbage) {
-	ehi->gc.do_collect(ehi->global_object);
+	ehi->get_parent()->gc.do_collect(ehi->global());
 	return NULL;
 }
 
 EH_METHOD(GlobalObject, handleUncaught) {
 	int type = args->get_full_type();
-	const std::string &type_string = ehi->repo.get_name(type);
+	const std::string &type_string = ehi->get_parent()->repo.get_name(type);
 	// we're in global context now. Remember this object, because otherwise the string may be freed before we're done with it.
-	ehretval_p stringval = ehi->to_string(args, ehi->global_object);
+	ehretval_p stringval = ehi->to_string(args, ehi->global());
 	const char *msg = stringval->get_stringval();
 	std::cerr << "Uncaught exception of type " << type_string << ": " << msg << std::endl;
 	return NULL;

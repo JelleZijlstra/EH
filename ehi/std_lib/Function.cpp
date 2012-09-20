@@ -18,7 +18,7 @@ EH_METHOD(Function, operator_colon) {
 		function_object = obj;
 		parent = obj->get_objectval()->parent;
 		real_parent = obj->get_objectval()->real_parent;
-		base_object = ehi->global_object;
+		base_object = ehi->global();
 	} else if(obj->type() == binding_e) {
 		ehbinding_t *binding = obj->get_bindingval();
 		function_object = binding->method;
@@ -61,7 +61,7 @@ EH_METHOD(Function, operator_colon) {
 		}
 	}	
 	ehretval_p ret = ehi->eh_execute(f->code, ehcontext_t(base_object, newcontext));
-	ehi->returning = false;
+	ehi->not_returning();
 	return ret;
 }
 EH_METHOD(Function, toString) {

@@ -15,7 +15,7 @@
 %option reentrant
 %option bison-bridge
 %option outfile="eh.flex.cpp"
-%option extra-type="class EHParser *"
+%option extra-type="class EHI *"
 %%
 ['][^']*[']	{
 				int len;
@@ -180,9 +180,9 @@
 int yyparse(void *);
 
 int yywrap(yyscan_t scanner) {
-	EHParser *parser = yyget_extra(scanner);
-	if(parser->interactivity() != end_is_end_e) {
-		char *buf = parser->getline();
+	EHI *parser = yyget_extra(scanner);
+	if(parser->get_interactivity() != end_is_end_e) {
+		char *buf = parser->eh_getline();
 		if(!buf) {
 			return 1;
 		}
@@ -193,17 +193,17 @@ int yywrap(yyscan_t scanner) {
 }
 
 void yyerror(void *scanner, const char *s) {
-	EHI *ehi = yyget_extra(scanner)->parent;
+	EHI *ehi = yyget_extra(scanner);
 	throw_SyntaxError(s, yyget_lineno((yyscan_t)scanner), ehi);
 }
 
-ehretval_p EHParser::parse_file(FILE *infile) {
-	buffer = yy_create_buffer(infile, YY_BUF_SIZE, scanner);
-	yy_switch_to_buffer(buffer, scanner);
+ehretval_p EHI::parse_file(FILE *infile) {
+	yy_buffer = yy_create_buffer(infile, YY_BUF_SIZE, scanner);
+	yy_switch_to_buffer(yy_buffer, scanner);
 	return ehretval_t::make_int(yyparse(scanner));
 }
 
-ehretval_p EHParser::parse_string(const char *cmd) {
+ehretval_p EHI::parse_string(const char *cmd) {
 	yy_switch_to_buffer(yy_scan_string(cmd, scanner), scanner);
 	yyset_lineno(1, scanner);
 	return ehretval_t::make_int(yyparse(scanner));

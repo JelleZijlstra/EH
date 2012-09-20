@@ -1,11 +1,11 @@
 Number of pools: 1
-Allocated blocks: 209
+Allocated blocks: 210
 3
 3
-Number of pools: 1
-Allocated blocks: 212
 Number of pools: 1
 Allocated blocks: 213
+Number of pools: 1
+Allocated blocks: 214
 Uncaught exception of type NameError: Unknown member operator-> in object of type GlobalObject: (global execution context)
 @object <CountClass> [
 ]

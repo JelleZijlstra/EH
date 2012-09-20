@@ -24,5 +24,7 @@ EH_METHOD(GlobalObject, echo);
 EH_METHOD(GlobalObject, put);
 EH_METHOD(GlobalObject, collectGarbage);
 EH_METHOD(GlobalObject, handleUncaught);
+EH_METHOD(GlobalObject, contextName);
+EH_METHOD(GlobalObject, workingDir);
 
 EXTERN_EHLC(GlobalObject)

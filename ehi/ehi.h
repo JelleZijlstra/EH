@@ -5,6 +5,7 @@
 #include "eh.bison.hpp"
 #include "eh_error.h"
 #include "concurrency.h"
+#include "eh_files.h"
 #include "std_lib/Function.h"
 
 /*
@@ -153,14 +154,20 @@ public:
 	ehretval_p global() const {
 		return parent->global_object;
 	}
+	const std::string &get_context_name() const {
+		return context_name;
+	}
+	const std::string &get_working_dir() const {
+		return working_dir;
+	}
 
 	/*
 	 * Constructors and destructors.
 	 */
-	EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), context(_context), inloop(0), breaking(0), continuing(0), returning(false) {
+	EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), context(_context), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
 		yylex_init_extra(this, &scanner);
 	}
-	EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(NULL), inloop(0), breaking(0), continuing(0), returning(false) {
+	EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(NULL), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
 		yylex_init_extra(this, &scanner);
 		parent = new EHInterpreter();
 		context = parent->global_object;
@@ -187,6 +194,10 @@ private:
 	int breaking;
 	int continuing;
 	bool returning;
+	
+	// execution context
+	std::string working_dir;
+	const std::string context_name;
 	
 	/*
 	 * Disallowed operations

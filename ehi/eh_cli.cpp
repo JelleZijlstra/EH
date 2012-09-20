@@ -20,19 +20,19 @@ int main(int argc, char **argv) {
 
 	try {
 		if(argc == 1) {
-			EHI ehi(cli_no_prompt_e, &interpreter, interpreter.global_object);
+			EHI ehi(cli_no_prompt_e, &interpreter, interpreter.global_object, eh_getcwd(), "(none)");
 			ret = ehi.parse_interactive();
 		} else if(!strcmp(argv[1], "-i")) {
 			if(argc != 2) {
 				eh_usage(argv[0]);
 			}
-			EHI ehi(cli_prompt_e, &interpreter, interpreter.global_object);
+			EHI ehi(cli_prompt_e, &interpreter, interpreter.global_object, eh_getcwd(), "ehi -i");
 			ret = ehi.parse_interactive();
 		} else if(!strcmp(argv[1], "-r")) {
 			if(argc != 3) {
 				eh_usage(argv[0]);
 			}
-			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object);
+			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object, eh_getcwd(), "ehi -r");
 			try {
 				ret = ehi.parse_string(argv[2], interpreter.global_object);
 			} catch(eh_exception &e) {
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 			}
 		} else {
 			interpreter.eh_setarg(argc, argv);
-			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object);
+			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object, eh_full_path(argv[1]), argv[1]);
 			ret = ehi.parse_file(argv[1], interpreter.global_object);
 		}
 		//TODO: let scripts determine exit status

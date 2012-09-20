@@ -32,6 +32,8 @@ EHLC_ENTRY(GlobalObject, echo)
 EHLC_ENTRY(GlobalObject, put)
 EHLC_ENTRY(GlobalObject, collectGarbage)
 EHLC_ENTRY(GlobalObject, handleUncaught)
+	REGISTER_METHOD(GlobalObject, workingDir);
+	REGISTER_METHOD(GlobalObject, contextName);
 END_EHLC()
 
 EH_METHOD(GlobalObject, toString) {
@@ -296,11 +298,12 @@ EH_METHOD(GlobalObject, include) {
 		throw_TypeError("Invalid type for argument to include", args->type(), ehi);
 	}
 	// do the work
+	const char *filename = args->get_stringval();
 	FILE *infile = fopen(args->get_stringval(), "r");
 	if(!infile) {
 		throw_ArgumentError("Unable to open file", "include", args, ehi);
 	}
-	EHI parser(end_is_end_e, ehi->get_parent(), obj);
+	EHI parser(end_is_end_e, ehi->get_parent(), obj, eh_full_path(filename), filename);
 	return parser.parse_file(infile);
 }
 
@@ -379,4 +382,14 @@ EH_METHOD(GlobalObject, handleUncaught) {
 	const char *msg = stringval->get_stringval();
 	std::cerr << "Uncaught exception of type " << type_string << ": " << msg << std::endl;
 	return NULL;
+}
+
+EH_METHOD(GlobalObject, contextName) {
+	ASSERT_NULL("contextName");
+	return ehretval_t::make_string(strdup(ehi->get_context_name().c_str()));
+}
+
+EH_METHOD(GlobalObject, workingDir) {
+	ASSERT_NULL("workingDir");
+	return ehretval_t::make_string(strdup(ehi->get_working_dir().c_str()));
 }

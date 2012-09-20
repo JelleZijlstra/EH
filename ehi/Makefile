@@ -3,7 +3,7 @@ CCBASICFLAGS = -ggdb -fPIC -c
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic -Wextra -Wno-unused-parameter
 LDFLAGS = 
 LIBCLASSES = ArgumentError Array Bool ConstError CountClass Exception File Float Function GarbageCollector GlobalObject Hash Integer LoopError MiscellaneousError NameError Null Object Range String SuperClass SyntaxError Tuple TypeError UnknownCommandError EmptyIterator
-SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp eh_types.cpp
+SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp eh_types.cpp eh_files.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
 INTERPRETER = $(SOURCES) eh_libcmds.cpp eh_interpreter.cpp $(patsubst %, std_lib/%.cpp, $(LIBCLASSES))

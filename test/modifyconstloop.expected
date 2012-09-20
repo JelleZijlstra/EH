@@ -1,4 +1,4 @@
-Uncaught exception of type ConstError: Cannot set constant member a in object of type Foo: 0x800dc4
+Uncaught exception of type ConstError: Cannot set constant member a in object of type Foo: 0x800ddc
 @object <Foo> [
 a <public,non-static,constant>: @int 3
 ]

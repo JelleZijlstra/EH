@@ -294,16 +294,16 @@ EH_METHOD(GlobalObject, get_type) {
  * Including files
  */
 EH_METHOD(GlobalObject, include) {
-	if(args->type() != string_e) {
-		throw_TypeError("Invalid type for argument to include", args->type(), ehi);
-	}
+	ASSERT_TYPE(args, string_e, "include");
 	// do the work
 	const char *filename = args->get_stringval();
-	FILE *infile = fopen(args->get_stringval(), "r");
+	std::string full_path = ehi->get_working_dir() + "/" + filename;
+	FILE *infile = fopen(full_path.c_str(), "r");
 	if(!infile) {
 		throw_ArgumentError("Unable to open file", "include", args, ehi);
 	}
-	EHI parser(end_is_end_e, ehi->get_parent(), obj, eh_full_path(filename), filename);
+	const std::string dirname = eh_dirname(full_path);
+	EHI parser(end_is_end_e, ehi->get_parent(), obj, dirname, filename);
 	return parser.parse_file(infile);
 }
 

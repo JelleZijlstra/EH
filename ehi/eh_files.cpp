@@ -22,3 +22,10 @@ const std::string eh_full_path(const std::string &filename) {
 	delete[] my_fullpath;
 	return out;
 }
+
+const std::string eh_dirname(const std::string &name) {
+	char *tmp = strdup(name.c_str());
+	std::string out(dirname(tmp));
+	free((void *)tmp);
+	return out;
+}

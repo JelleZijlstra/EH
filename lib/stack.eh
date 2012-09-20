@@ -5,8 +5,8 @@ class Stack
 
 	public initialize = func: -> (this.arr = [])
 	
-	public push = func: in
-		this.arr->n = in
+	public push = func: input
+		this.arr->n = input
 		this.n++
 		null
 	end
@@ -16,7 +16,7 @@ class Stack
 			throw "Stack empty"
 		end
 		this.n--
-		this.hash->(this.n)
+		this.arr->(this.n)
 	end
 	
 	public size = func: -> this.n

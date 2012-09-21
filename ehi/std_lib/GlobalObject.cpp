@@ -309,7 +309,14 @@ EH_METHOD(GlobalObject, include) {
 	}
 	const std::string dirname = eh_dirname(full_path);
 	EHI parser(end_is_end_e, ehi->get_parent(), obj, dirname, filename);
-	return parser.parse_file(infile);
+	try {
+		ehretval_p ret = parser.parse_file(infile);
+		fclose(infile);
+		return ret;
+	} catch(...) {
+		fclose(infile);
+		throw;
+	}
 }
 
 // power

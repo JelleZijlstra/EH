@@ -30,6 +30,7 @@ if(extension_loaded("ehphp"))  {
 		public function setup_commandline($name, array $paras = array()) {
 			// set up if necessary
 			$this->fillThisPointer();
+			$this->global_parse_string("include '/Users/jellezijlstra/Dropbox/EH/lib/library.eh';");
 			$this->prompt = $name . '> ';
 			try {
 				$ret = $this->eh_interactive();

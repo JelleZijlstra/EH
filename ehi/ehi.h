@@ -119,10 +119,18 @@ public:
 
 	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
 	ehretval_p global_parse_file(const char *name) {
-		return parse_file(name, parent->global_object);
+		try {
+			return parse_file(name, parent->global_object);
+		} catch(eh_exception &e) {
+			return NULL;
+		}
 	}
 	ehretval_p global_parse_string(const char *cmd) {
-		return parse_string(cmd, parent->global_object);
+		try {
+			return parse_string(cmd, parent->global_object);
+		} catch(eh_exception &e) {
+			return NULL;
+		}
 	}
 	ehretval_p parse_string(const char *cmd, ehcontext_t context);
 	ehretval_p parse_file(const char *name, ehcontext_t context);

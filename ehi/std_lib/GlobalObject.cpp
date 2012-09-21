@@ -297,7 +297,12 @@ EH_METHOD(GlobalObject, include) {
 	ASSERT_TYPE(args, string_e, "include");
 	// do the work
 	const char *filename = args->get_stringval();
-	std::string full_path = ehi->get_working_dir() + "/" + filename;
+	std::string full_path;
+	if(filename[0] == '/') {
+		full_path = filename;
+	} else {
+		full_path = ehi->get_working_dir() + "/" + filename;
+	}
 	FILE *infile = fopen(full_path.c_str(), "r");
 	if(!infile) {
 		throw_ArgumentError("Unable to open file", "include", args, ehi);

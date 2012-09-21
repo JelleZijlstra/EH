@@ -104,19 +104,19 @@ EH_METHOD(Object, operator_ne) {
 }
 EH_METHOD(Object, operator_gt) {
 	CALL_COMPARE();
-	return ehretval_t::make_bool(comparison == 1);
+	return ehretval_t::make_bool(comparison > 0);
 }
 EH_METHOD(Object, operator_gte) {
 	CALL_COMPARE();
-	return ehretval_t::make_bool(comparison != -1);
+	return ehretval_t::make_bool(comparison >= 0);
 }
 EH_METHOD(Object, operator_lt) {
 	CALL_COMPARE();
-	return ehretval_t::make_bool(comparison == -1);
+	return ehretval_t::make_bool(comparison < 0);
 }
 EH_METHOD(Object, operator_lte) {
 	CALL_COMPARE();
-	return ehretval_t::make_bool(comparison != 1);
+	return ehretval_t::make_bool(comparison <= 0);
 }
 EH_METHOD(Object, type) {
 	int type = obj->get_full_type();

@@ -1,8 +1,18 @@
+/*
+ * EH wrappers for file system functions.
+ *
+ * These implementations are inherently system-specific. Perhaps I should
+ * use a library like Boost instead of trying to achieve portability myself.
+ */
 #include <libgen.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string>
 #include <string.h>
+
+#ifdef __linux__
+#include <linux/limits.h>
+#endif
 
 #include "eh_files.h"
 

@@ -155,9 +155,10 @@ START_EHLC(String_Iterator)
 EHLC_ENTRY(String_Iterator, initialize)
 EHLC_ENTRY(String_Iterator, hasNext)
 EHLC_ENTRY(String_Iterator, next)
+	REGISTER_METHOD(String_Iterator, peek);
 END_EHLC()
 
-bool String_Iterator::has_next() {
+bool String_Iterator::has_next() const {
 	const char *string = this->string->get_stringval();
 	return this->position < strlen(string);
 }
@@ -165,6 +166,11 @@ char String_Iterator::next() {
 	assert(this->has_next());
 	const char *string = this->string->get_stringval();
 	return string[this->position++];	
+}
+char String_Iterator::peek() const {
+	assert(this->has_next());
+	const char *string = this->string->get_stringval();
+	return string[this->position];
 }
 
 EH_METHOD(String_Iterator, initialize) {
@@ -185,6 +191,17 @@ EH_METHOD(String_Iterator, next) {
 	}
 	char *out = new char[2]();
 	out[0] = data->next();
+	out[1] = '\0';
+	return ehretval_t::make_string(out);
+}
+EH_METHOD(String_Iterator, peek) {
+	ASSERT_TYPE(args, null_e, "String.Iterator.next");
+	String_Iterator *data = (String_Iterator *)obj->get_resourceval();
+	if(!data->has_next()) {
+		throw_EmptyIterator(ehi);
+	}
+	char *out = new char[2]();
+	out[0] = data->peek();
 	out[1] = '\0';
 	return ehretval_t::make_string(out);
 }

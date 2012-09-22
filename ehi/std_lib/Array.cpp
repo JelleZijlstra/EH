@@ -107,6 +107,9 @@ Array_Iterator::Array_Iterator(ehretval_p array) {
 	eharray_t *arr = array->get_arrayval();
 	this->int_begin = arr->int_indices.begin();
 	this->int_end = arr->int_indices.end();
+	if(this->int_begin == this->int_end) {
+		this->current_type = string_e;
+	}
 	this->string_begin = arr->string_indices.begin();
 	this->string_end = arr->string_indices.end();
 }
@@ -115,14 +118,14 @@ bool Array_Iterator::has_next() const {
 }
 ehretval_p Array_Iterator::next(EHI *ehi) {
 	assert(this->has_next());
-	if(this->current_type == int_e && this->int_begin == this->int_end) {
-		this->current_type = string_e;
-	}
 	ehretval_p tuple[2];
 	if(this->current_type == int_e) {
 		tuple[0] = ehretval_t::make_int(this->int_begin->first);
 		tuple[1] = this->int_begin->second;
 		this->int_begin++;
+		if(this->int_begin == this->int_end) {
+			this->current_type = string_e;
+		}
 	} else {
 		const char *key = this->string_begin->first.c_str();
 		tuple[0] = ehretval_t::make_string(strdup(key));
@@ -130,6 +133,19 @@ ehretval_p Array_Iterator::next(EHI *ehi) {
 		this->string_begin++;	
 	}
 	return ehi->get_parent()->make_tuple(new ehtuple_t(2, tuple));
+}
+ehretval_p Array_Iterator::peek(EHI *ehi) const {
+	assert(this->has_next());
+	ehretval_p tuple[2];
+	if(this->current_type == int_e) {
+		tuple[0] = ehretval_t::make_int(this->int_begin->first);
+		tuple[1] = this->int_begin->second;
+	} else {
+		const char *key = this->string_begin->first.c_str();
+		tuple[0] = ehretval_t::make_string(strdup(key));
+		tuple[1] = this->string_begin->second;
+	}
+	return ehi->get_parent()->make_tuple(new ehtuple_t(2, tuple));	
 }
 
 EH_METHOD(Array_Iterator, initialize) {
@@ -150,5 +166,12 @@ EH_METHOD(Array_Iterator, next) {
 	}
 	return data->next(ehi);
 }
-
+EH_METHOD(Array_Iterator, peek) {
+	ASSERT_TYPE(args, null_e, "Array.Iterator.peek");
+	Array_Iterator *data = (Array_Iterator *)obj->get_resourceval();
+	if(!data->has_next()) {
+		throw_EmptyIterator(ehi);
+	}
+	return data->peek(ehi);
+}
 

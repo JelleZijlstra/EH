@@ -64,6 +64,7 @@ public:
 	~Array_Iterator() {}
 	bool has_next() const;
 	ehretval_p next(EHI *ehi);
+	ehretval_p peek(EHI *ehi) const;
 private:
 	type_enum current_type;
 	eharray_t::string_iterator string_begin;
@@ -76,6 +77,7 @@ private:
 EH_METHOD(Array_Iterator, initialize);
 EH_METHOD(Array_Iterator, hasNext);
 EH_METHOD(Array_Iterator, next);
+EH_METHOD(Array_Iterator, peek);
 
 EXTERN_EHLC(Array_Iterator)
 

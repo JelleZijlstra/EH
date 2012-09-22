@@ -32,6 +32,7 @@ EH_METHOD(Tuple, operator_arrow);
 EH_METHOD(Tuple, length);
 EH_METHOD(Tuple, toTuple);
 EH_METHOD(Tuple, getIterator);
+EH_METHOD(Tuple, compare);
 
 EXTERN_EHLC(Tuple)
 

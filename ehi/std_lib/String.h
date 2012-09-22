@@ -24,8 +24,9 @@ class String_Iterator : public LibraryBaseClass {
 public:
 	String_Iterator(ehretval_p _string) : string(_string), position(0) {}
 	~String_Iterator() {}
-	bool has_next();
+	bool has_next() const;
 	char next();
+	char peek() const;
 private:
 	ehretval_p string;
 	size_t position;
@@ -35,5 +36,6 @@ private:
 EH_METHOD(String_Iterator, initialize);
 EH_METHOD(String_Iterator, hasNext);
 EH_METHOD(String_Iterator, next);
+EH_METHOD(String_Iterator, peek);
 
 EXTERN_EHLC(String_Iterator)

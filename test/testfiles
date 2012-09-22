@@ -212,3 +212,6 @@ forgetit.eh
 dir.eh
 include_relative.eh
 stringsort.eh
+fold_left.eh
+tuplecomp.eh
+itersort.eh

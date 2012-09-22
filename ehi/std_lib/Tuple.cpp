@@ -7,6 +7,7 @@ START_EHLC(Tuple)
 	EHLC_ENTRY(Tuple, toTuple)
 	EHLC_ENTRY(Tuple, getIterator)
 	REGISTER_CLASS(Tuple, Iterator);
+	REGISTER_METHOD(Tuple, compare);
 END_EHLC()
 
 EH_METHOD(Tuple, initialize) {
@@ -28,6 +29,30 @@ EH_METHOD(Tuple, length) {
 EH_METHOD(Tuple, toTuple) {
 	ASSERT_OBJ_TYPE(tuple_e, "Tuple.toTuple");
 	return obj;
+}
+EH_METHOD(Tuple, compare) {
+	ASSERT_OBJ_TYPE(tuple_e, "Tuple.compare");
+	ASSERT_TYPE(args, tuple_e, "Tuple.compare");
+	ehtuple_t *lhs = obj->get_tupleval();
+	ehtuple_t *rhs = args->get_tupleval();
+	int size_cmp = intcmp(lhs->size(), rhs->size());
+	if(size_cmp != 0) {
+		return ehretval_t::make_int(size_cmp);
+	}
+	int size = lhs->size();
+	ehretval_p lhs_val, rhs_val;
+	for(int i = 0; i < size; i++) {
+		lhs_val = lhs->get(i);
+		rhs_val = rhs->get(i);
+		ehretval_p comparison = ehi->call_method(lhs_val, "operator<=>", rhs_val, obj);
+		if(comparison->type() != int_e) {
+			throw_TypeError("operator<=> does not return an Integer", comparison->type(), ehi);
+		}
+		if(comparison->get_intval() != 0) {
+			return comparison;
+		}
+	}
+	return ehretval_t::make_int(0);
 }
 EH_METHOD(Tuple, getIterator) {
 	ASSERT_NULL_AND_TYPE(tuple_e, "Tuple.getIterator");

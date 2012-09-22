@@ -1,2 +1,2 @@
 #!/bin/bash
-. replacetest.sh printglobal cc crash tostring
+. replacetest.sh printglobal cc crash tostring modifyconstloop

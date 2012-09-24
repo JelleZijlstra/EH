@@ -16,3 +16,6 @@ Tuple.each = func: f {
 		f this->i
 	}
 }
+
+# For use in iterable: map tuple to a mutable array
+Tuple.empty = func: -> []

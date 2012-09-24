@@ -793,12 +793,16 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 				throw_TypeError("Method in a switch case must return a Bool", decider->type(), this);
 			}
 		} else {
-			decider = ehretval_t::make_bool(switchvar->equals(casevar));
+			decider = call_method(switchvar, "operator==", casevar, context);
+			if(decider->type() != bool_e) {
+				throw_TypeError("operator== does not return a bool", decider->type(), this);
+			}
 		}
 		if(decider->get_boolval()) {
 			return eh_execute(op->paras[1], context);
 		}
 	}
+	throw_MiscellaneousError("No matching case in given statement", this);
 	return NULL;
 }
 ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {

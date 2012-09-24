@@ -176,12 +176,17 @@ ehretval_p ehretval_t::self_or_data(const ehretval_p in) {
 ehretval_p ehretval_t::instantiate(EHI *ehi) {
 	ehobj_t *new_obj = new ehobj_t();
 	ehretval_p ret = ehi->get_parent()->make_object(new_obj);
-	// input must be an object
-	ehobj_t *obj = this->get_objectval();
+	ehretval_p to_instantiate;
+	if(this->type() == object_e) {
+		to_instantiate = ehretval_p(this);
+	} else {
+		to_instantiate = ehi->get_parent()->get_primitive_class(this->type());
+	}
+	ehobj_t *obj = to_instantiate->get_objectval();
 	new_obj->type_id = obj->type_id;
 	new_obj->parent = obj->parent;
 	new_obj->real_parent = obj->real_parent;
-	new_obj->inherit(ehretval_p(this));
+	new_obj->inherit(to_instantiate);
 	return ret;
 }
 ehretval_t::~ehretval_t() {

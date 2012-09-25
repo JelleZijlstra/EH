@@ -297,14 +297,14 @@ bool ehobj_t::context_compare(const ehcontext_t key) const {
 	// in global context, we never have access to private stuff
 	if(ehretval_p::null(key.object)) {
 		return false;
+	} else if(key.scope->get_objectval() == this) {
+		return true;
+	} else if(this->type_id == key.object->get_full_type()) {
+		return true;
+	} else if(key.object->type() == object_e) {
+		return this->context_compare(key.object->get_objectval()->parent);
 	} else {
-		if(this->type_id == key.object->get_full_type()) {
-			return true;
-		} else if(key.object->type() == object_e) {
-			return this->context_compare(key.object->get_objectval()->parent);
-		} else {
-			return false;
-		}
+		return false;
 	}
 }
 void ehobj_t::register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *parent) {

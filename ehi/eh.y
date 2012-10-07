@@ -83,7 +83,7 @@ EHI *yyget_extra(void *scanner);
 %nonassoc T_SHORTFUNCTION
 %left '|' '^' '&'
 %left '+' '-'
-%left T_CUSTOMOP
+%right T_CUSTOMOP
 %left T_LEFTSHIFT T_RIGHTSHIFT
 %left '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ T_COMPARE
 %left '*' '/' '%'

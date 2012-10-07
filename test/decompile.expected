@@ -20,7 +20,7 @@ func: f
 	end
 end
 func: f
-	(this.reduce Nil, func: base, val
+	this.reduce Nil, (func: base, val
 		given (f val)
 			case true
 				Cons val, base
@@ -28,5 +28,15 @@ func: f
 				base
 		end
 	end)
+end
+func: n
+	given n
+		case 0
+			this.head ()
+		case 1
+			this.tail ()
+		default
+			throw ArgumentError.new "Argument must be 0 or 1", "List.operator->", n
+	end
 end
 %%stderr%%

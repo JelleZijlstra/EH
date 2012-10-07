@@ -204,7 +204,7 @@ std::string ehretval_t::decompile(int level) {
 			out << "()";
 			break;
 		case string_e:
-			out << this->get_stringval();
+			out << '"' << this->get_stringval() << '"';
 			break;
 		case func_e: {
 			ehfunc_t *f = this->get_funcval();
@@ -261,7 +261,7 @@ std::string ehretval_t::decompile(int level) {
 					out << op->paras[0]->decompile(level) << ", " << op->paras[1]->decompile(level);
 					break;
 				case '.':
-					out << op->paras[0]->decompile(level) << "." << op->paras[1]->decompile(level);
+					out << op->paras[0]->decompile(level) << "." << op->paras[1]->get_stringval();
 					break;
 				case ':':
 					out << op->paras[0]->decompile(level) << " " << op->paras[1]->decompile(level);
@@ -272,7 +272,7 @@ std::string ehretval_t::decompile(int level) {
 					out << op->op << op->paras[0]->decompile(level);
 					break;
 				case '$':
-					out << op->paras[0]->decompile(level);
+					out << op->paras[0]->get_stringval();
 					break;
 				case '(':
 					out << '(' << op->paras[0]->decompile(level) << ')';
@@ -374,7 +374,7 @@ std::string ehretval_t::decompile(int level) {
 					out << "ret " << op->paras[0]->decompile(level);
 					break;
 				case T_CLASSMEMBER:
-					out << op->paras[0]->decompile(level) << op->paras[1]->decompile(level);
+					out << op->paras[0]->decompile(level) << op->paras[1]->get_stringval();
 					out << " = " << op->paras[2]->decompile(level);
 					break;
 				case T_ATTRIBUTE:

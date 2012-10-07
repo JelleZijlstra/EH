@@ -10,7 +10,7 @@ end
 
 try
 	# That is merely funny
-	UnknownCommandError.toString = func: -> "I don't care"
+	UnknownCommandError.toString = () => "I don't care"
 	$print 3
 catch
 	echo exception

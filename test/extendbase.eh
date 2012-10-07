@@ -9,7 +9,7 @@ Array.map = func: f {
 }
 
 arr = ["foo", "bar", "quux"]
-f = func: x -> (x.length ())
+f = x => (x.length ())
 printvar (arr.map f)
 
 echo "Reduce"
@@ -21,7 +21,7 @@ Array.reduce = func: f, base {
 	ret out
 }
 
-f = func: counter, value -> counter + 1
+f = counter, value => counter + 1
 printvar (arr.reduce f, 0)
 
 echo "Iterate"
@@ -44,5 +44,5 @@ Array.filter = func: f {
 	ret out
 }
 
-f = func: key, value -> (value.length ()) > 3
+f = key, value => (value.length ()) > 3
 printvar arr.filter f

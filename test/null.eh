@@ -10,6 +10,6 @@ echo foo -> 1
 baz = @string bar
 echo baz
 # Casting null to an int gives 0 and throws an error
-rescue func: -> (ban = @int bar)
-rescue func: -> (printvar ban)
+rescue () => (ban = @int bar)
+rescue () => (printvar ban)
 printvar foo

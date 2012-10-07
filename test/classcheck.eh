@@ -12,9 +12,9 @@ echo bar.isA Foo
 # error
 echo bar.isA ()
 # error
-rescue func: -> (echo pow 3)
+rescue () => (echo pow 3)
 # error
-rescue func: -> (echo pow (3, 2, false))
+rescue () => (echo pow (3, 2, false))
 # false
 class Bar{}
 echo bar.isA Bar

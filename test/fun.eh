@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-Integer.operator+ = func: rhs -> (this - rhs)
+Integer.operator+ = rhs => (this - rhs)
 printvar 1 + 1
 
 # I came across this while implementing this test - this crashed the interpreter before I fixed the bug

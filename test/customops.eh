@@ -7,6 +7,6 @@ end
 3 !!! 4
 printvar (3 !!! 4 !!! 5)
 
-Integer.operator** = func: rhs -> (pow this, rhs)
+Integer.operator** = rhs => (pow this, rhs)
 
 echo 2 ** 3

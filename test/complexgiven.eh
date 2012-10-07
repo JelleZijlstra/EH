@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 include '../lib/library.eh'
 
-f = func: x -> given x
+f = x => given x
 	case false, false; echo x
 	case true, false; echo x
 	case false, true; echo x

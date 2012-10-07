@@ -1,19 +1,19 @@
 #!/usr/bin/ehi
 
-Iterable.numericSum = func: -> (this.reduce 0, (func: x, y -> x + y))
+Iterable.numericSum = () => (this.reduce 0, (x, y => x + y))
 
 class Statistics
 	const public static sd = func: list
 		const private n = list.length()
 		const private sum = list.numericSum()
 		const private mean = sum / n
-		const private diffs = list.map (func: x -> (x - mean) * (x - mean))
+		const private diffs = list.map (x => (x - mean) * (x - mean))
 		((diffs.numericSum()) / (n - 1)).sqrt()
 	end
 
 	const public static reverseMean = func: list
 		const private n = list.length()
-		const private sum = (list.map func: x -> 1.0 / x).numericSum()
+		const private sum = (list.map (x => 1.0 / x)).numericSum()
 		sum / n
 	end
 	

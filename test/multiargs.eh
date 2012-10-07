@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 
-f1 = func: args -> (printvar args)
+f1 = args => (printvar args)
 f2 = func: a, b
 	printvar a
 	printvar b

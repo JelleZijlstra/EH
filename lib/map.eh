@@ -3,7 +3,7 @@ class BinaryTreeMap
 	class Node
 		private n
 
-		const initialize = func: l, key, val, r -> (this.n = [l, key, val, r])
+		const initialize = l, key, val, r => (this.n = [l, key, val, r])
 
 		const insert = func: key, val
 			insertHelper = func: node, key, val
@@ -39,7 +39,7 @@ class BinaryTreeMap
 		end
 
 		const get = func: key
-			helper = func: node, key -> given node
+			helper = node, key => given node
 				case null; null
 				default; node.get key
 			end
@@ -55,23 +55,23 @@ class BinaryTreeMap
 			end
 		end
 
-		const toString = func: -> '(' + (this.n->0) + ',' + (this.n->1) + " => " + (this.n->2) + ',' + (this.n->3) + ')'
+		const toString = () => '(' + (this.n->0) + ',' + (this.n->1) + " => " + (this.n->2) + ',' + (this.n->3) + ')'
 	end
 	private Node = Node
 
 	private base = null
 
-	const add = func: key, val -> given base
+	const add = key, val => given base
 		case null; base = Node.new null, key, val, null; null
 		default; base.insert key, val; null
 	end
 
-	const reduce = func: firstVal, f -> given base
+	const reduce = firstVal, f => given base
 		case null; firstVal
 		default; base.reduce firstVal, f
 	end
 
-	const get = func: key -> given base
+	const get = key => given base
 		case null; null
 		default; base.get key
 	end
@@ -79,9 +79,11 @@ class BinaryTreeMap
 	const operator-> = get
 	const operator->= = add
 
-	const has = func: key -> (get key == null)
+	const has = key => (this.get key == null)
 
-	const toString = func: -> ('{' + (reduce "", func: accum, key, val -> ((key.toString()) + ' => ' + (val.toString()) + ', ' + accum)) + '}')
+	const toString = () => '{' + (reduce "", func: accum, key, val
+		(key.toString()) + ' => ' + (val.toString()) + ', ' + accum
+	end) + '}'
 
-	const debug = func: -> (base.toString())
+	const debug = () => (base.toString())
 end

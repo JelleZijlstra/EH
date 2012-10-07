@@ -64,10 +64,10 @@ EH_METHOD(Function, toString) {
 	ASSERT_OBJ_TYPE(func_e, "Function.toString");
 	ehfunc_t *f = obj->get_funcval();
 	if(f->type == lib_e) {
-		return ehretval_t::make_string(strdup("func: -> (native code)"));
+		return ehretval_t::make_string(strdup("(args) => (native code)"));
 	} else {
 		std::ostringstream out;
-		out << "func: " << f->args->decompile(0) << " -> (user code)";
+		out << f->args->decompile(0) << " => (user code)";
 		return ehretval_t::make_string(strdup(out.str().c_str()));
 	}
 }

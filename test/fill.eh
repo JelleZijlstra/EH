@@ -8,6 +8,6 @@ Array.fill = func: n, f
 	out
 end
 
-printvar Array.fill 1, func: x -> x
-printvar Array.fill 25, func: x -> x * x
+printvar Array.fill 1, (x => x)
+printvar Array.fill 25, (x => x * x)
 

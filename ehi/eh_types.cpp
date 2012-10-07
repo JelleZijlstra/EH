@@ -209,7 +209,7 @@ std::string ehretval_t::decompile(int level) {
 		case func_e: {
 			ehfunc_t *f = this->get_funcval();
 			if(f->type == lib_e) {
-				out << "func: -> (native code)";
+				out << "(args) => (native code)";
 			} else {
 				out << "func: " << f->args->decompile(level) << "\n";
 				add_tabs(out, level + 1);

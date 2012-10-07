@@ -9,7 +9,7 @@ echo l.length()
 
 echo (l.map 2.operator*).toString()
 
-echo l.reduce 1, func: accum, val -> accum * val
+echo l.reduce 1, (accum, val => accum * val)
 
 echo (l.reverse()).toString()
 

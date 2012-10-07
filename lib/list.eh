@@ -19,18 +19,18 @@ class List
 		end
 	end
 	
-	const head = func: -> this.l->0
-	const tail = func: -> this.l->1
+	const head = () => this.l->0
+	const tail = () => this.l->1
 
-	const operator-> = func: n -> given n
+	const operator-> = n => given n
 		case 0; this.head()
 		case 1; this.tail()
 		default; throw ArgumentError.new "Argument must be 0 or 1", "List.operator->", n
 	end
 
-	const isEmpty = func: -> (this.l == null)
+	const isEmpty = () => (this.l == null)
 
-	const isSingleton = func: -> (this.l != null && (this.l->1).isEmpty())
+	const isSingleton = () => (this.l != null && (this.l->1).isEmpty())
 	
 	const map = func: f
 		if this.l == null

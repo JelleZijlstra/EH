@@ -11,7 +11,7 @@ class Bar
 		echo super
 	end
 	public assignIt = func:
-		super.toString = func: -> "Nana"
+		super.toString = () => "Nana"
 	end
 	public cloneIt = func:
 		printvar super.new()

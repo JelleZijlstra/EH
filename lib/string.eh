@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 
 # Functions used by Iterable
-String.empty = func: -> ''
+String.empty = () => ''
 
 String.add = String.operator+

@@ -2,14 +2,14 @@
 Test 1
 Argument out of range (method String.operator->): 2010
 Test 2
-Unknown member data in object of type Function: func: () -> (user code)
-Unknown member data in object of type Function: func: () -> (user code)
+Unknown member data in object of type Function: () => (user code)
+Unknown member data in object of type Function: () => (user code)
 Test 3
-Unknown member data in object of type Function: func: () -> (user code)
+Unknown member data in object of type Function: () => (user code)
 Test 4
-Unknown member data in object of type Function: func: () -> (user code)
+Unknown member data in object of type Function: () => (user code)
 Test 5
-Unknown member data in object of type Function: func: () -> (user code)
+Unknown member data in object of type Function: () => (user code)
 Test 6
 Argument out of range (method String.operator->): 2010
 %%stderr%%

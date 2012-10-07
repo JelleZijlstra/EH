@@ -1,12 +1,12 @@
 #!/usr/bin/ehi
 # What's in self?
-printSelf = func: -> (printvar this)
+printSelf = () => (printvar this)
 
 Bool.printSelf = printSelf
 true.printSelf()
 
 class Foo {
-  new_ = func: -> (this.new())
+  new_ = () => (this.new())
   initialize = printSelf
 }
 printvar Foo.new()

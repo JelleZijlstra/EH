@@ -9,11 +9,11 @@ class Complex {
 		this.b_ = b
 	}
 	
-	public a = func: -> this.a_
+	public a = () => this.a_
 	
-	public b = func: -> this.b_
+	public b = () => this.b_
 	
-	public abs = func: -> (this.a_ * this.a_ + this.b_ * this.b_).sqrt
+	public abs = () => (this.a_ * this.a_ + this.b_ * this.b_).sqrt
 	
 	public operator+ = func: rhs {
 		Complex.new (this.a()) + (rhs.a()), (this.b()) + (rhs.b())

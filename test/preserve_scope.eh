@@ -2,7 +2,7 @@
 # It's almost like JavaScript
 factory = func: n {
 	private foo = n
-	public bar = func: -> foo
+	public bar = () => foo
 	ret scope
 }
 o = factory 42

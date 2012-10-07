@@ -7,7 +7,7 @@ class Foo
 		this.c()
 	end
 	
-	c = func: -> (printvar this)
+	c = () => (printvar this)
 end
 f = Foo.new()
 f.a()

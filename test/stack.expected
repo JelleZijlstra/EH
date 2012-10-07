@@ -1,4 +1,3 @@
-Uncaught exception of type String: Stack empty
 @int 0
 @int 1
 @array [
@@ -8,3 +7,4 @@ Uncaught exception of type String: Stack empty
 @array [
 0 => @int 42
 ]
+Uncaught exception of type String: Stack empty

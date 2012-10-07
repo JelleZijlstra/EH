@@ -1,5 +1,5 @@
 @parent class
 (inherited class)
-Uncaught exception of type TypeError: Cannot set member on parent class: SuperClass
 @object <Foo> [
 ]
+Uncaught exception of type TypeError: Cannot set member on parent class: SuperClass

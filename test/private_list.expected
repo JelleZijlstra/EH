@@ -1,4 +1,3 @@
-Uncaught exception of type NameError: Unknown member l in object of type List: 1::[]
 @object <List> [
 l <private,non-static,non-constant>: @tuple <2> [
 @int 1
@@ -7,3 +6,4 @@ l <private,non-static,non-constant>: null
 ]
 ]
 ]
+Uncaught exception of type NameError: Unknown member l in object of type List: 1::[]

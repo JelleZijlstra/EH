@@ -1,5 +1,5 @@
-Uncaught exception of type TypeError: Range members must have the same type: Array
 @object <TypeError> [
 message <public,non-static,non-constant>: @string 'Range members must have the same type'
 type <public,non-static,non-constant>: @int 1
 ]
+Uncaught exception of type TypeError: Range members must have the same type: Array

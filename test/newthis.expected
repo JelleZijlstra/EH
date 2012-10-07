@@ -1,6 +1,6 @@
-Uncaught exception of type NameError: Unknown member baz in object of type GlobalObject: (global execution context)
 @object <Foo> [
 ]
 @object <Foo> [
 ]
 @int 42
+Uncaught exception of type NameError: Unknown member baz in object of type GlobalObject: (global execution context)

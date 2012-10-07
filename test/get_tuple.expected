@@ -1,2 +1,2 @@
-Uncaught exception of type ArgumentError: Argument out of range (method Tuple.operator->): 3
 @int 3
+Uncaught exception of type ArgumentError: Argument out of range (method Tuple.operator->): 3

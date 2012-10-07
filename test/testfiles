@@ -193,6 +193,7 @@ simpleclass.eh
 singleton.eh
 smalltest.eh
 sne.eh
+sqrt.eh
 stack.eh
 static.eh
 stringsort.eh
@@ -200,7 +201,6 @@ stringtolist.eh
 stringvars.eh
 super.eh
 switch.eh
-switchcont.eh
 switchcont.eh
 switchfunc.eh
 test.eh
@@ -226,5 +226,3 @@ vector.eh
 while.eh
 xinherit.eh
 xnew.eh
-sqrt.eh
-switchcont.eh

@@ -30,7 +30,7 @@ class Iterable
 
 	public map = func: f
 		out = this.empty()
-		this.foldLeft (out, v, collection => collection.add (f v))
+		this.foldLeft out, (v, collection => collection.add (f v))
 	end
 	
 	public filter = func: f
@@ -38,6 +38,10 @@ class Iterable
 			case true; collection.add v
 			case false; collection
 		end)
+	end
+
+	public reverse = func:
+		this.foldLeft (this.empty()), (b, f => b.add f)
 	end
 	
 	# sorting implementation

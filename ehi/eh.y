@@ -389,6 +389,14 @@ expression:
 	;
 
 block_expression:
+	/*
+	 * Expression as used in block headers, e.g.
+	 * if block_expression {
+	 *		statement_list
+	 * }
+	 *
+	 * Because of ambiguities with braces, this does not allow hash literals; otherwise identical to expression.
+	 */
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
 	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
@@ -530,6 +538,9 @@ block_expression:
 	;
 
 para_expr:
+	/*
+	 * Expression used in command arguments and array and hash literal members. Disallows tuples and function calls.
+	 */
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
 	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }

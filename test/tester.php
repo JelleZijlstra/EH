@@ -69,8 +69,6 @@ class TestCase {
 			}
 		} else if(isset($this->expected[$stream])) {
 			if($this->expected[$stream] !== $output) {
-				var_dump($output);
-				var_dump($this->expected[$stream]);
 				$this->failTest($stream, $outputFile, $this->expected[$stream]);
 			}
 		} else {

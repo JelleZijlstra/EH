@@ -78,6 +78,7 @@ EHI *yyget_extra(void *scanner);
 %token <sValue> T_CUSTOMOP
 %right ':'
 %right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ T_LEFTSHIFTEQ T_RIGHTSHIFTEQ
+%right T_DOUBLEARROW
 %right ','
 %left T_AND T_OR T_XOR
 %nonassoc T_SHORTFUNCTION
@@ -301,6 +302,8 @@ expression:
 							{ ADD_COMPOUND(T_RIGHTSHIFT, $1, $3, $$); }
 	| expression T_ARROW expression
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
+	| expression T_DOUBLEARROW expression
+							{ $$ = ADD_NODE2(T_FUNC, $1, $3); }
 	| expression '.' T_VARIABLE
 							{ $$ = ADD_NODE2('.', $1, $3); }
 	| '@' T_TYPE expression %prec '@'

@@ -1,3 +1,9 @@
 %%stdout%%
+0 + 1i
+@object <Complex> [
+a_ <private,non-static,non-constant>: @int 0
+b_ <private,non-static,non-constant>: @int 1
+]
+0 + 2i
+-1 + 0i
 %%stderr%%
-Uncaught exception of type SyntaxError: syntax error, unexpected T_VARIABLE, expecting ':' at line 7

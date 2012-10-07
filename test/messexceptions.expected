@@ -1,3 +1,5 @@
 %%stdout%%
+Cannot set constant member UnknownCommandError in object of type GlobalObject: (global execution context)
+I don't care
 %%stderr%%
-Uncaught exception of type ConstError: Cannot set constant member UnknownCommandError in object of type GlobalObject: (global execution context)
+Uncaught exception of type NameError: Unknown member operator: in object of type Integer: 42

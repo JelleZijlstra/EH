@@ -224,3 +224,5 @@ stringtolist.eh
 pow.eh
 mccarthyloop.eh
 
+breakweird.eh
+complex.eh

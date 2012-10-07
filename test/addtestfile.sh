@@ -25,7 +25,7 @@ for infile in $@; do
 	echo '%%stderr%%' >> $exp
 	cat $stderr >> $exp
 
-	if [[ ! $replacing ]]; then
+	if ! $replacing ; then
 		echo "$infile" >> testfiles
 		git add $infile
 		git add $exp

@@ -96,7 +96,7 @@ EHI *yyget_extra(void *scanner);
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF T_THIS T_SCOPE
 
-%type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i parg attributelist attributelist_inner caselist acase command paralist para simple_expr global_list shortfunc bareword_or_string para_expr catch_clauses catch_clause catch_clauses_braces catch_clause_braces
+%type<ehNode> statement expression statement_list parglist parglist_i arraylist arraymember arraylist_i anonclasslist anonclassmember anonclasslist_i parg attributelist attributelist_inner caselist acase command paralist para simple_expr global_list shortfunc bareword_or_string para_expr catch_clauses catch_clause catch_clauses_braces catch_clause_braces
 %%
 program:
 	global_list				{ 	// Don't do anything. Destructors below take 
@@ -615,13 +615,17 @@ anonclassmember:
 	;
 
 parglist:
-	parglist parg			{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	parglist_i				{ $$ = $1; }
+	| /* NULL */			{ $$ = ADD_NODE0(T_NULL); }
+	;
+
+parglist_i:
+	parg					{ $$ = $1; }
+	| parg ',' parglist_i	{ $$ = ADD_NODE2(',', $1, $3); }
 	;
 
 parg:
-	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_VARIABLE ','		{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	T_VARIABLE				{ $$ = ADD_NODE1('$', $1); }
 	;
 
 caselist:

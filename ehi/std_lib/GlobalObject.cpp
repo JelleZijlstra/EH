@@ -118,24 +118,7 @@ void printvar_t::retval(ehretval_p in) {
 					printf("(recursion)\n");
 				}
 			} else {
-				ehfunc_t *f = obj->object_data->get_funcval();
-				printf("@function <");
-				switch(f->type) {
-					case user_e:
-						printf("user");
-						break;
-					case lib_e:
-						printf("library");
-						break;
-				}
-				printf(">: ");
-				for(int i = 0; i < f->argcount; i++) {
-					printf("%s", f->args[i].name.c_str());
-					if(i + 1 < f->argcount) {
-						printf(", ");
-					}
-				}
-				printf("\n");
+				this->retval(obj->object_data);
 			}
 			break;
 		}
@@ -145,17 +128,13 @@ void printvar_t::retval(ehretval_p in) {
 			switch(f->type) {
 				case user_e:
 					printf("user");
+					printf(">: ");
+					printf("%s", f->args->decompile(0).c_str());
 					break;
 				case lib_e:
 					printf("library");
+					printf(">: ");
 					break;
-			}
-			printf(">: ");
-			for(int i = 0; i < f->argcount; i++) {
-				printf("%s", f->args[i].name.c_str());
-				if(i + 1 < f->argcount) {
-					printf(", ");
-				}
 			}
 			printf("\n");
 			break;

@@ -61,6 +61,7 @@ crash.eh
 crazycasts.eh
 curry.eh
 customops.eh
+decompile.eh
 default.eh
 derefclass.eh
 dir.eh
@@ -124,6 +125,7 @@ libinherit.eh
 list.eh
 list_iter.eh
 loop.eh
+loops.eh
 loopvar.eh
 lvalues.eh
 mccarthy.eh
@@ -140,6 +142,7 @@ more_colon.eh
 morecasts.eh
 mr_job.eh
 multi_eval.eh
+multiargs.eh
 mythrow.eh
 nameerror.eh
 negativeindex.eh

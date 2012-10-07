@@ -4,4 +4,4 @@ bah foo
 19 foo
 1919
 %%stderr%%
-Uncaught exception of type NameError: Unknown member nosuchvar in object of type Function: func: -> (user code)
+Uncaught exception of type NameError: Unknown member nosuchvar in object of type Function: func: () -> (user code)

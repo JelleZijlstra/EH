@@ -66,6 +66,7 @@ toInt <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Function <public,non-static,constant>: @object <Function> [
+decompile <public,non-static,non-constant>: @function <library>: 
 operator: <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 ]

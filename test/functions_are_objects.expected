@@ -1,5 +1,5 @@
 %%stdout%%
-Unknown member x in object of type Function: func: -> (user code)
+Unknown member x in object of type Function: func: () -> (user code)
 @int 3
 @int 3
 %%stderr%%

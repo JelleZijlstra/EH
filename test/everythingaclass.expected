@@ -1,6 +1,6 @@
 %%stdout%%
 3
-Cannot set constant member foo in object of type Function: func: -> (user code)
+Cannot set constant member foo in object of type Function: func: () -> (user code)
 3
 5
 @object <Bar> [

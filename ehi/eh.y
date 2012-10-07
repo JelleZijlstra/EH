@@ -96,7 +96,7 @@ EHI *yyget_extra(void *scanner);
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF T_THIS T_SCOPE
 
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember 
-%type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para simple_expr global_list 
+%type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list 
 %type<ehNode> bareword_or_string para_expr catch_clauses catch_clause catch_clauses_braces catch_clause_braces block_expression
 %%
 program:
@@ -529,81 +529,6 @@ block_expression:
 							{ $$ = ADD_NODE3(T_IF, $2, $4, $6); }
 	;
 
-simple_expr:
-	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
-	| T_BOOL				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_FLOAT				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_VARIABLE			{ $$ = ADD_NODE1('$', $1); }
-	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
-	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
-	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
-	| '~' simple_expr		{ $$ = ADD_NODE1('~', $2); }
-	| '!' simple_expr		{ $$ = ADD_NODE1('!', $2); }
-	| simple_expr T_ARROW simple_expr
-							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
-	| simple_expr '.' T_VARIABLE
-							{ $$ = ADD_NODE2('.', $1, $3); }
-	| '@' T_TYPE simple_expr %prec '@'	
-							{ $$ = ADD_NODE2('@', $2, $3); }
-	| simple_expr T_EQ simple_expr
-							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
-	| simple_expr '>' simple_expr
-							{ $$ = ADD_NODE2('>', $1, $3); }
-	| simple_expr '<' simple_expr
-							{ $$ = ADD_NODE2('<', $1, $3); }
-	| simple_expr T_SE simple_expr
-							{ $$ = ADD_NODE2(T_SE, $1, $3); }
-	| simple_expr T_GE simple_expr
-							{ $$ = ADD_NODE2(T_GE, $1, $3); }
-	| simple_expr T_LE simple_expr
-							{ $$ = ADD_NODE2(T_LE, $1, $3); }
-	| simple_expr T_NE simple_expr
-							{ $$ = ADD_NODE2(T_NE, $1, $3); }
-	| simple_expr T_SNE simple_expr
-							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
-	| simple_expr T_COMPARE simple_expr
-	            			{ $$ = ADD_NODE2(T_COMPARE, $1, $3); }
-	| simple_expr '+' simple_expr
-							{ $$ = ADD_NODE2('+', $1, $3); }
-	| simple_expr '-' simple_expr
-							{ $$ = ADD_NODE2('-', $1, $3); }
-	| simple_expr '*' simple_expr
-							{ $$ = ADD_NODE2('*', $1, $3); }
-	| simple_expr '/' simple_expr
-							{ $$ = ADD_NODE2('/', $1, $3); }
-	| simple_expr '%' simple_expr
-							{ $$ = ADD_NODE2('%', $1, $3); }
-	| simple_expr '^' simple_expr
-							{ $$ = ADD_NODE2('^', $1, $3); }
-	| simple_expr '|' simple_expr
-							{ $$ = ADD_NODE2('|', $1, $3); }
-	| simple_expr '&' simple_expr
-							{ $$ = ADD_NODE2('&', $1, $3); }
-	| simple_expr T_AND simple_expr
-							{ $$ = ADD_NODE2(T_AND, $1, $3); }
-	| simple_expr T_OR simple_expr
-							{ $$ = ADD_NODE2(T_OR, $1, $3); }
-	| simple_expr T_XOR simple_expr
-							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
-	| simple_expr T_RANGE simple_expr
-							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
-	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
-	| T_CLASS T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_CLASS T_SEPARATOR statement_list T_ENDCLASS
-							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_CLASS '{' statement_list '}'
-							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_GIVEN block_expression '{' caselist '}'
-							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_GIVEN block_expression T_SEPARATOR caselist T_END
-							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| '(' '$' command ')'
-							{ $$ = $3; }
-	;
-
 para_expr:
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
@@ -720,9 +645,9 @@ arraylist_i:
 	;
 
 arraymember:
-	simple_expr T_DOUBLEARROW simple_expr
+	para_expr T_DOUBLEARROW para_expr
 							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
-	| simple_expr			{ $$ = ADD_NODE1(T_ARRAYMEMBER, $1); }
+	| para_expr				{ $$ = ADD_NODE1(T_ARRAYMEMBER, $1); }
 	;
 
 anonclasslist:
@@ -740,9 +665,9 @@ anonclasslist_i:
 	;
 
 anonclassmember:
-	T_VARIABLE ':' simple_expr
+	T_VARIABLE ':' para_expr
 							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
-	| T_STRING ':' simple_expr
+	| T_STRING ':' para_expr
 							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
 	;
 

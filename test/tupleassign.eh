@@ -1,7 +1,5 @@
 #!/usr/bin/ehi
-include '../lib/tuple.eh'
-include '../lib/array.eh'
-include '../lib/list.eh'
+include '../lib/library.eh'
 
 a, b = 1, 2
 printvar a

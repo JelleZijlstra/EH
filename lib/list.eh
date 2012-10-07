@@ -161,9 +161,7 @@ const Cons = List.new
 Object.operator:: = func: rhs -> (List.new this, rhs)
 
 # Conversion methods
-Array.toList = func:
-	this.reduce (func: out, val -> val::out), Nil
-end
+Iterable.toList = func: -> (this.reduce Nil, (func: val, out -> (val::out)))
 
 Tuple.toList = func:
 	out = Nil

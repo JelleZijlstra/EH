@@ -1,7 +1,6 @@
 #!/usr/bin/ehi
 
-include '../lib/list.eh'
-include '../lib/tuple.eh'
+include '../lib/library.eh'
 
 l = Cons 1, (Cons 2, (Cons 3, Nil))
 echo l.toString()

@@ -1,2 +1,4 @@
+%%stdout%%
 3
+%%stderr%%
 Uncaught exception of type SyntaxError: syntax error, unexpected '+', expecting $end at line 4

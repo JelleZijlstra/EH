@@ -1,5 +1,7 @@
+%%stdout%%
 1
 This is a library function
 42
 This is a method belonging to a library class
+%%stderr%%
 Uncaught exception of type ArgumentError: Unable to open file (method include): nosuchthing

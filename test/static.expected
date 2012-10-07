@@ -1,3 +1,4 @@
+%%stdout%%
 @object <Foo> [
 ]
 2
@@ -5,3 +6,4 @@
 Cannot set constant member muh in object of type Foo: @Foo 3   2
 Cannot set constant member muh in object of type Foo: @Foo 3   2
 2
+%%stderr%%

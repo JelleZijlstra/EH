@@ -1,3 +1,5 @@
+%%stdout%%
 @string 's'
 @string 't'
 @string 'tost'
+%%stderr%%

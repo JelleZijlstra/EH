@@ -1,3 +1,4 @@
+%%stdout%%
 @array [
 0 => @int 2
 1 => @int 4
@@ -17,3 +18,4 @@
 0 => @bool true
 1 => @bool false
 ]
+%%stderr%%

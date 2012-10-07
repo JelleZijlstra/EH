@@ -1,5 +1,7 @@
+%%stdout%%
 @parent class
 (inherited class)
 @object <Foo> [
 ]
+%%stderr%%
 Uncaught exception of type TypeError: Cannot set member on parent class: SuperClass

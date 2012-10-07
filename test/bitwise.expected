@@ -1,5 +1,7 @@
+%%stdout%%
 @int -2
 @int -4
 @int -4
 @int -43
 @int -20
+%%stderr%%

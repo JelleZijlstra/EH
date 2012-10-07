@@ -1,3 +1,4 @@
+%%stdout%%
 @float 4.820000
 @float 5.275200
 @float 1.869048
@@ -7,3 +8,4 @@
 @float 131.880005
 @float 45.139999
 @float 131.880005
+%%stderr%%

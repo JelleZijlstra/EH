@@ -1,3 +1,4 @@
+%%stdout%%
 @int 1
 @int 2
 @int 3
@@ -11,3 +12,4 @@
 @string 'e'
 @string 's'
 @string 't'
+%%stderr%%

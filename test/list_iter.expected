@@ -1,2 +1,4 @@
+%%stdout%%
 @int 4
 @int 5
+%%stderr%%

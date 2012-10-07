@@ -1,3 +1,4 @@
+%%stdout%%
 @hash [
 'bar': @string 'test'
 'foo': @int 3
@@ -5,3 +6,4 @@
 @bool true
 @int 3
 @float 42.000000
+%%stderr%%

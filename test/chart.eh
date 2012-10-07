@@ -2,13 +2,13 @@
 # Not yet compatible with ehi because of use of the put operator
 // CS50 Problem Set 1 chart
 echo 'M spotting M'
-mm = getinput
+mm = getinput()
 echo 'M spotting F'
-mf = getinput
+mf = getinput()
 echo 'F spotting M'
-fm = getinput
+fm = getinput()
 echo 'F spotting F'
-ff = getinput
+ff = getinput()
 
 echo
 echo 'Who is spotting Whom'
@@ -17,23 +17,23 @@ echo
 echo 'M spotting M'
 for mm
 	put '#'
-endfor
+end
 echo
 
 echo 'M spotting F'
 for mf
 	put '#'
-endfor
+end
 echo
 
 echo 'F spotting M'
 for fm
 	put '#'
-endfor
+end
 echo
 
 echo 'F spotting F'
 for ff
 	put '#'
-endfor
+end
 echo

@@ -1,4 +1,6 @@
+%%stdout%%
 Unknown member foo in object of type Function: func: -> (user code)
 Unknown member foo in object of type Function: func: -> (user code)
 Unknown member bar in object of type Function: func: -> (user code)
 Unknown member foo in object of type Function: func: -> (user code)
+%%stderr%%

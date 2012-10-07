@@ -1,3 +1,4 @@
+%%stdout%%
 @int 0
 @int 1
 @array [
@@ -7,4 +8,5 @@
 @array [
 0 => @int 42
 ]
+%%stderr%%
 Uncaught exception of type String: Stack empty

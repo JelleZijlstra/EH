@@ -1,3 +1,5 @@
+%%stdout%%
 (true, false)
 (false, true)
+%%stderr%%
 Uncaught exception of type MiscellaneousError: No matching case in given statement

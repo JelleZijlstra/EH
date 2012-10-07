@@ -7,7 +7,7 @@ else
 endif
 while money <= 0
 	echo 'How much change is owed?'
-	money = getinput 10
+	money = getinput()
 endwhile
 
 // get number of pennies

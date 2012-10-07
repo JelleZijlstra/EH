@@ -1,2 +1,4 @@
+%%stdout%%
 Unable to open file (method include): thisfiledoesnotexist
 42
+%%stderr%%

@@ -1,2 +1,4 @@
+%%stdout%%
 Cannot set constant member foo in object of type Foo: @Foo
 10
+%%stderr%%

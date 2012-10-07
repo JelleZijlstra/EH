@@ -1,4 +1,6 @@
+%%stdout%%
 @object <Vector> [
 ]
 @int 42
 @int 1
+%%stderr%%

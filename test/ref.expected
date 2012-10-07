@@ -1,2 +1,4 @@
+%%stdout%%
 2
+%%stderr%%
 Uncaught exception of type NameError: Unknown member operator& in object of type Null: 

@@ -1,3 +1,4 @@
+%%stdout%%
 3
 3
 If typecasting works, the following line should print 33:
@@ -5,3 +6,4 @@ If typecasting works, the following line should print 33:
 foobar and more are the same
 Type juggling works!
 Strict comparison works too!
+%%stderr%%

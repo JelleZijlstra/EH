@@ -1,3 +1,5 @@
+%%stdout%%
 @object <Integer> [
 ]
 @int 0
+%%stderr%%

@@ -1,3 +1,4 @@
+%%stdout%%
 Too bad, that did not work
 @object <A> [
 ]
@@ -12,3 +13,4 @@ name <public,non-static,non-constant>: @string 'A'
 object <public,non-static,non-constant>: (recursion)
 ]
 ]
+%%stderr%%

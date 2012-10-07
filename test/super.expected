@@ -1,3 +1,5 @@
-the address of this object is 0x7fce59003834
+%%stdout-regex%%
+the address of this object is 0x[a-f\d]{6,12}
 this is a Bar method
 this is a Foo method
+%%stderr%%

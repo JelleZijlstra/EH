@@ -1,3 +1,5 @@
+%%stdout%%
 @function <user>: n
 @int 42
+%%stderr%%
 Uncaught exception of type NameError: Unknown member foo in object of type Function: func: n -> (user code)

@@ -1,3 +1,4 @@
+%%stdout%%
 @array [
 0 => @int 1
 1 => @int 42
@@ -12,3 +13,4 @@ Unknown member toArray in object of type Bool: true
 Unknown member toRange in object of type Integer: 42
 Unknown member toBool in object of type Array: [ 0 => 1, ]
 Unknown member toBool in object of type Array: [ ]
+%%stderr%%

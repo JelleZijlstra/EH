@@ -1,3 +1,4 @@
+%%stdout%%
 Test 1
 Argument out of range (method String.operator->): 2010
 Test 2
@@ -11,3 +12,4 @@ Test 5
 Unknown member data in object of type Function: func: -> (user code)
 Test 6
 Argument out of range (method String.operator->): 2010
+%%stderr%%

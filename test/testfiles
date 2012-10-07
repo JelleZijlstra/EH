@@ -82,7 +82,7 @@ global.eh
 globalrecursion.eh
 globalref.eh
 globref.eh
-greedy.eh 45
+greedy.eh
 hash.eh
 implicitreturn.eh
 implicitreturn2.eh
@@ -96,8 +96,8 @@ libclass.eh
 libcmds.eh
 loop.eh
 loopvar.eh
-mccarthy.eh 45
-mccarthy2.eh 45
+mccarthy.eh
+mccarthy2.eh
 modifyconst.eh
 modifyconstloop.eh
 modifyfor.eh
@@ -153,7 +153,7 @@ static.eh
 stringvars.eh
 switch.eh
 switchcont.eh
-switchcont.eh 1
+switchcont.eh
 switchfunc.eh
 test.eh
 testarray.eh
@@ -221,3 +221,6 @@ fill.eh
 customops.eh
 array_error.eh
 stringtolist.eh
+pow.eh
+mccarthyloop.eh
+

@@ -1,3 +1,4 @@
+%%stdout%%
 @object <Foo> [
 ]
 @object <Foo> [
@@ -5,3 +6,4 @@
 @object <Foo> [
 meh <public,non-static,non-constant>: @int 4
 ]
+%%stderr%%

@@ -1,3 +1,4 @@
+%%stdout%%
 @bool true
 @object <Foo> [
 ]
@@ -7,3 +8,4 @@
 ]
 @object <Foo> [
 ]
+%%stderr%%

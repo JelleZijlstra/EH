@@ -1,3 +1,5 @@
+%%stdout%%
 @float 3.140000
 true
 false
+%%stderr%%

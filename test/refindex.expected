@@ -1,5 +1,7 @@
+%%stdout%%
 Argument out of range (method String.operator->=): 3
 @string 'foo'
 @int 3
 Argument out of range (method String.operator->): 3
+%%stderr%%
 Uncaught exception of type NameError: Unknown member operator-> in object of type Integer: 3

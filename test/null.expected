@@ -1,3 +1,4 @@
+%%stdout%%
 
 
 
@@ -8,3 +9,4 @@ Unknown member ban in object of type Function: func: -> (user code)
 1 => null
 2 => @string 'test'
 ]
+%%stderr%%

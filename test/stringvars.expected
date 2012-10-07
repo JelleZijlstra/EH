@@ -1,6 +1,8 @@
+%%stdout%%
 It works!
 This is what is happening at the moment
 test
 test
 This should print "testtest":
 testtest
+%%stderr%%

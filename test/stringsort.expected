@@ -1,3 +1,5 @@
+%%stdout%%
 false
 true
 bar::baz::foo::[]
+%%stderr%%

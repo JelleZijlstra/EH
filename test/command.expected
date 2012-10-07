@@ -1,1 +1,3 @@
+%%stdout%%
+%%stderr%%
 Uncaught exception of type UnknownCommandError: Unknown command: bfind

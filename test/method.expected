@@ -1,3 +1,4 @@
+%%stdout%%
 @object <Foo> [
 ]
 @object <Foo> [
@@ -9,3 +10,4 @@ bar <private,non-static,non-constant>: @object <Bar> [
 ]
 @object <Bar> [
 ]
+%%stderr%%

@@ -1,3 +1,5 @@
+%%stdout%%
 @int -1
 @int 14
 @int 1
+%%stderr%%

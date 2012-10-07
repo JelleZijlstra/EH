@@ -1,3 +1,5 @@
+%%stdout%%
 @int 3
 @int 3
+%%stderr%%
 Uncaught exception of type MiscellaneousError: Invalid lvalue

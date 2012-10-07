@@ -5,7 +5,7 @@ class List
 	# This is hackish
 	const empty = func:
 		private old_initialize = List.initialize
-		List.initialize = func: -> (this.l = null)
+		List.initialize = () => (this.l = null)
 		private out = List.new()
 		List.initialize = old_initialize
 		out
@@ -48,17 +48,17 @@ class List
 		end
 	end
 	
-	const length = func: -> (this.reduce (0, func: k, rest -> rest + 1))
+	const length = () => this.reduce (0, (k, rest => rest + 1))
 	
-	const toString = func: -> (this.reduce "[]", func: k, rest -> (k.toString()) + "::" + rest)
+	const toString = () => this.reduce "[]", (k, rest => (k.toString()) + "::" + rest)
 
-	const filter = func: f -> (this.reduce Nil, func: elt, accum
+	const filter = f => this.reduce Nil, func: elt, accum
 		if (f elt)
 			Cons elt, accum
 		else
 			accum
 		end
-	end)
+	end
 
 	const private reverse_append = func: accum
 		if this.l == null
@@ -68,7 +68,7 @@ class List
 		end
 	end
 
-	const reverse = func: -> (this.reverse_append Nil)
+	const reverse = () => this.reverse_append Nil
 
 	# Merge sort implementation
 	const private split = func: l, r
@@ -118,14 +118,14 @@ class List
 		end
 	end
 
-	const append = func: rhs -> ((this.reverse()).rev_append rhs)
+	const append = rhs => ((this.reverse()).rev_append rhs)
 
-	const countPredicate = func: f -> (this.reduce Nil, func: base, val -> given (f val)
+	const countPredicate = f => this.reduce Nil, (base, val => given (f val)
 		case true; Cons val, base
 		case false; base
 	end)
 
-	const join = func: glue -> (this.reduce null, func: val, base -> given base
+	const join = glue => this.reduce null, (val, base => given base
 		case null; val.toString()
 		default; (val.toString()) + glue + base
 	end)
@@ -148,9 +148,9 @@ class List
 	end
 	private const Iterator = Iterator
 	
-	const getIterator = func: -> (this.Iterator.new this)
+	const getIterator = () => this.Iterator.new this
 	
-	const add = func: v -> (Cons v, this)
+	const add = v => Cons v, this
 end
 
 # Constify it
@@ -158,10 +158,10 @@ const List = List
 
 const Nil = List.empty()
 const Cons = List.new
-Object.operator:: = func: rhs -> (List.new this, rhs)
+Object.operator:: = rhs => List.new this, rhs
 
 # Conversion methods
-Iterable.toList = func: -> (this.reduce Nil, (func: val, out -> (val::out)))
+Iterable.toList = () => this.reduce Nil, (val, out => val::out)
 
 Tuple.toList = func:
 	out = Nil

@@ -89,6 +89,21 @@ class Iterable
 			r = r.sort()
 			(this.empty()).merge (l.getIterator()), (r.getIterator())
 	end
+	
+	const nth = func: n
+		if n < 0
+			throw ArgumentError.new "Argument must be nonnegative", "Iterable.nth", n
+		end
+		const private it = this.getIterator()
+		private i = 0
+		while true
+			elt = it.next()
+			if i == n
+				ret elt
+			end
+			i++
+		end
+	end
 end
 
 # Dynamic inheritance in iterable library classes

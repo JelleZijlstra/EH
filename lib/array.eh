@@ -7,7 +7,7 @@ Array.map = func: f {
 	ret out
 }
 
-Array.reduce = func: f, base {
+Array.reduce = func: base, f {
 	out = base
 	for ((), value) in this {
 		out = f out, value
@@ -44,3 +44,8 @@ Array.append = func: item {
 	this->length = item
 	this
 }
+
+Array.add = Array.append
+
+Array.empty = func: -> []
+

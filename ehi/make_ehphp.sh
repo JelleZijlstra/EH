@@ -7,7 +7,7 @@ case $OS in
 		$1 -dynamiclib $2 -o ehphp.dylib $3
 		if [ -e /opt/local/lib/php54/extensions/no-debug-non-zts-20100525 ]; then
 			sudo cp ehphp.dylib /opt/local/lib/php54/extensions/no-debug-non-zts-20100525/ehphp.dylib
-			sudo cp ehphp.dylib /opt/local/lib/php54/extensions/debug-non-zts-20100525/ehphp.dylib
+			#sudo cp ehphp.dylib /opt/local/lib/php54/extensions/debug-non-zts-20100525/ehphp.dylib
 		fi
 		;;
 	'Linux')

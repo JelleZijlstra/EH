@@ -58,6 +58,7 @@ public:
 	void redirect_command(const char *redirect, const char *target);	
 	ehretval_p make_method(ehlibmethod_t in, ehretval_p function_object);
 
+	ehretval_p instantiate(ehretval_p obj);
 	// stuff for GC'ed ehretval_ts
 	ehretval_p make_object(ehobj_t *in) {
 		ehretval_p out;

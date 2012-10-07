@@ -605,7 +605,7 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehfunc_t *f = new ehfunc_t(user_e);
-	ehretval_p ret = parent->get_primitive_class(func_e)->instantiate(this);
+	ehretval_p ret = parent->instantiate(parent->get_primitive_class(func_e));
 	ehobj_t *function_object = ret->get_objectval();
 	function_object->parent = context.scope;
 	function_object->type_id = func_e;
@@ -1096,6 +1096,23 @@ ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t 
 		return out;
 	}
 }
+ehretval_p EHInterpreter::instantiate(ehretval_p obj) {
+	ehobj_t *new_obj = new ehobj_t();
+	ehretval_p ret = make_object(new_obj);
+	ehretval_p to_instantiate;
+	if(obj->type() == object_e) {
+		to_instantiate = ehretval_p(obj);
+	} else {
+		to_instantiate = get_primitive_class(obj->type());
+	}
+	ehobj_t *old_obj = to_instantiate->get_objectval();
+	new_obj->type_id = old_obj->type_id;
+	new_obj->parent = old_obj->parent;
+	new_obj->real_parent = old_obj->real_parent;
+	new_obj->inherit(to_instantiate);
+	return ret;
+}
+
 
 /*
  * Arrays

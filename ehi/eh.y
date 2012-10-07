@@ -75,6 +75,7 @@ EHI *yyget_extra(void *scanner);
 %token T_SHORTFUNCTION
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
+%token <sValue> T_CUSTOMOP
 %right ':'
 %right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ T_LEFTSHIFTEQ T_RIGHTSHIFTEQ
 %right ','

@@ -271,15 +271,6 @@ public:
 				this->content->inc_rc();
 			}
 		}
-		explicit pointer(const T *ptr) : content(NULL) {
-			assert(ptr->belongs_in_gc());
-			if(ptr != NULL) {
-				// some bad pointer math here
-				// TODO: fix by making this an intrusive smart pointer implementation
-				this->content = (block *)((char *)ptr - 2 * sizeof(short));
-				this->content->inc_rc();
-			}			
-		}
 		/*
 		 * Overloading
 		 */

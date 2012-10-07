@@ -1,0 +1,106 @@
+%%stdout%%
+func: ()
+	
+	out = "("
+	len = this.length ()
+	for i in len
+		
+		out = out + this->i
+		if i != (len - 1)
+			
+			out = out + ", "
+		end
+	end
+	out + ")"
+end
+func: n
+	if n < 0
+		throw ArgumentError.new "Argument must be nonnegative", "Iterable.nth", n
+	end
+	const private it = this.getIterator ()
+	private i = 0
+	while true
+		elt = it.next ()
+		if i == n
+			ret elt
+		end
+		i = i + 1
+	end
+end
+func: f
+	
+	out = []
+	for (key, value) in this
+		
+		if (f key, value)
+			
+			out->key = value
+		end
+	end
+	ret out
+end
+func: ()
+	[3, 2, 1], {"foo": "bar"}
+end
+func: ()
+	private it = this.hash.getIterator ()
+	out = "{"
+	while (it.hasNext ())
+		elt, () = it.next ()
+		out = out + elt
+		if (it.hasNext ())
+			out = out + ", "
+		end
+	end
+	out + "}"
+end
+func: list
+	const private n = list.length ()
+	const private sum = list.numericSum ()
+	const private mean = sum / n
+	const private diffs = list.map (func: x
+		(x - mean) * (x - mean)
+	end)
+	((diffs.numericSum ()) / (n - 1)).sqrt ()
+end
+func: list
+	const private length = list.length ()
+	const private half = length / 2
+	const private sorted = list.sort ()
+	if length % 2 == 0
+		mean (list.nth (half - 1), list.nth half)
+	else
+		
+		list.nth half
+	end
+end
+func: ()
+	class Foo
+		public foo = func: ()
+			42
+		end
+	end
+end
+func: ()
+	$test --"foo"=3 --"bar" -"adf" -"kjkl"={"foo": "baz"}
+
+end
+func: f
+	try
+		f ()
+	catch
+		echo exception
+	end
+end
+func: ()
+	try
+		echo 42
+	catch if "the world" == "coming to an end"
+		echo "Oh no!"
+	catch
+		echo "Need to put something here"
+	finally
+		echo "Even this won't happen"
+	end
+end
+%%stderr%%

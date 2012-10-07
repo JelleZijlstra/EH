@@ -396,10 +396,49 @@ std::string ehretval_t::decompile(int level) {
 					add_end(out, level);
 					break;
 				case T_WHILE:
-					out << "if " << op->paras[0]->decompile(level) << "\n";
+					out << "while " << op->paras[0]->decompile(level) << "\n";
 					add_tabs(out, level + 1);
 					out << op->paras[1]->decompile(level + 1);
 					add_end(out, level);
+					break;
+				case T_TRY: {
+					out << "try\n";
+					add_tabs(out, level + 1);
+					out << op->paras[0]->decompile(level + 1);
+
+					opnode_t *catch_op = op->paras[1]->get_opval();
+					for(; catch_op->nparas != 0; catch_op = catch_op->paras[1]->get_opval()) {
+						opnode_t *catch_block = catch_op->paras[0]->get_opval();
+						out << "\n";
+						add_tabs(out, level);
+						if(catch_block->nparas == 1) {
+							out << "catch\n";
+							add_tabs(out, level + 1);
+							out << catch_block->paras[0]->decompile(level + 1);
+						} else {
+							// conditional catch
+							out << "catch if " << catch_block->paras[0]->decompile(level) << "\n";
+							add_tabs(out, level + 1);
+							out << catch_block->paras[1]->decompile(level + 1);
+						}
+					}
+
+					if(op->nparas == 3) {
+						out << "\n";
+						add_tabs(out, level);
+						out << "finally\n";
+						add_tabs(out, level + 1);
+						out << op->paras[2]->decompile(level + 1);
+					}
+					add_end(out, level);
+					break;
+				}
+				case T_CLASS:
+					out << "class " << op->paras[0]->get_stringval() << "\n";
+					add_tabs(out, level + 1);
+					out << op->paras[1]->decompile(level + 1);
+					add_end(out, level);
+					break;
 				case T_FUNC:
 					out << "func: " << op->paras[0]->decompile(level) << "\n";
 					add_tabs(out, level + 1);
@@ -423,6 +462,70 @@ std::string ehretval_t::decompile(int level) {
 						}
 					}
 					add_end(out, level);
+					break;
+				case T_IN:
+					out << "for " << op->paras[0]->decompile(level) << " in " << op->paras[1]->decompile(level) << "\n";
+					add_tabs(out, level + 1);
+					out << op->paras[2]->decompile(level + 1);
+					add_end(out, level);
+					break;
+				case '[':
+					out << "[";
+					for(ehretval_p n = op->paras[0]; n->get_opval()->nparas != 0; n = n->get_opval()->paras[0]) {
+						opnode_t *member_op = n->get_opval()->paras[1]->get_opval();
+						out << member_op->paras[0]->decompile(level);
+						if(member_op->nparas != 1) {
+							out << " => " << member_op->paras[1]->decompile(level);
+						}
+						if(n->get_opval()->paras[0]->get_opval()->nparas != 0) {
+							out << ", ";
+						}
+					}
+					out << "]";
+					break;
+				case '{':
+					out << "{";
+					for(ehretval_p n = op->paras[0]; n->get_opval()->nparas != 0; n = n->get_opval()->paras[0]) {
+						opnode_t *member_op = n->get_opval()->paras[1]->get_opval();
+						out << member_op->paras[0]->decompile(level);
+						if(member_op->nparas != 1) {
+							out << ": " << member_op->paras[1]->decompile(level);
+						}
+						if(n->get_opval()->paras[0]->get_opval()->nparas != 0) {
+							out << ", ";
+						}
+					}
+					out << "}";
+					break;
+				case T_COMMAND:
+					out << "$" << op->paras[0]->get_stringval();
+					for(ehretval_p node = op->paras[1]; node->get_opval()->nparas != 0; node = node->get_opval()->paras[1]) {
+						opnode_t *node2 = node->get_opval()->paras[0]->get_opval();
+						switch(node2->op) {
+							case T_SHORTPARA:
+								out << " -" << node2->paras[0]->decompile(level);
+								if(node2->nparas == 2) {
+									out << "=" << node2->paras[1]->decompile(level);
+								}
+								break;
+							case T_LONGPARA:
+								out << " --" << node2->paras[0]->decompile(level);
+								if(node2->nparas == 2) {
+									out << "=" << node2->paras[1]->decompile(level);
+								}
+								break;
+							case T_REDIRECT:
+								out << " > " << node2->paras[0]->decompile(level);
+								break;
+							case '}':
+								out << " } " << node2->paras[0]->decompile(level);
+								break;
+							default:
+								out << " " << node->get_opval()->paras[0]->decompile(level);
+								break;
+						}
+					}
+					out << "\n";
 					break;
 				default:
 					out << "(cannot decode value: " << op->op << ")";

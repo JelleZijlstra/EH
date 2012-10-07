@@ -22,7 +22,8 @@ class Statistics
 	end
 	
 	const public static median = func: list
-		const private half = (list.length()) / 2
+		const private length = list.length()
+		const private half = length / 2
 		const private sorted = list.sort()
 		if length % 2 == 0
 			mean (list.nth (half - 1), list.nth half)

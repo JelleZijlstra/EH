@@ -47,7 +47,7 @@ EH_METHOD(Array, length) {
 	return ehretval_t::make_int(obj->get_arrayval()->size());
 }
 EH_METHOD(Array, has) {
-	ASSERT_OBJ_TYPE(array_e, "Array.length");
+	ASSERT_OBJ_TYPE(array_e, "Array.has");
 	return ehretval_t::make_bool(obj->get_arrayval()->has(args));
 }
 EH_METHOD(Array, operator_arrow) {
@@ -57,7 +57,7 @@ EH_METHOD(Array, operator_arrow) {
 	}
 	eharray_t *arr = obj->get_arrayval();
 	if(arr->has(args)) {
-		return arr->operator[](args);
+		return (*arr)[args];
 	} else {
 		return NULL;
 	}

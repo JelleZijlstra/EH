@@ -1,6 +1,6 @@
-Uncaught exception of type SyntaxError: syntax error, unexpected '-' at line 1
 @array [
 ]
 @hash [
 ]
 @int 42
+Uncaught exception of type SyntaxError: syntax error, unexpected '-' at line 1

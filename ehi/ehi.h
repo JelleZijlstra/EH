@@ -58,6 +58,7 @@ public:
 	void redirect_command(const char *redirect, const char *target);	
 	ehretval_p make_method(ehlibmethod_t in, ehretval_p function_object);
 
+	ehretval_p instantiate(ehretval_p obj);
 	// stuff for GC'ed ehretval_ts
 	ehretval_p make_object(ehobj_t *in) {
 		ehretval_p out;
@@ -223,6 +224,7 @@ private:
 	ehretval_p eh_op_anonclass(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_array(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_colon(ehretval_p *paras, ehcontext_t context);
+	ehretval_p eh_op_customop(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_command(const char *name, ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_declareclass(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_declareclosure(ehretval_p *paras, ehcontext_t context);

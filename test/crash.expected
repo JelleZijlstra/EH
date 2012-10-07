@@ -6,7 +6,7 @@ Number of pools: 1
 Allocated blocks: 217
 Number of pools: 1
 Allocated blocks: 218
-Uncaught exception of type NameError: Unknown member operator-> in object of type GlobalObject: (global execution context)
 @object <CountClass> [
 ]
 @int 1
+Uncaught exception of type NameError: Unknown member operator-> in object of type GlobalObject: (global execution context)

@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 # Test that a list's l property is indeed private
-include '../lib/list.eh'
+include '../lib/library.eh'
 
 l = Cons 1, Nil
 printvar l

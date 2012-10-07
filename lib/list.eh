@@ -158,16 +158,15 @@ const List = List
 
 const Nil = List.empty()
 const Cons = List.new
+Object.operator:: = func: rhs -> (List.new this, rhs)
 
 # Conversion methods
-Array.toList = func:
-	this.reduce (func: out, val -> Cons val, out), Nil
-end
+Iterable.toList = func: -> (this.reduce Nil, (func: val, out -> (val::out)))
 
 Tuple.toList = func:
 	out = Nil
 	this.each (func: val
-		out = Cons val, out
+		out = val::out
 	end)
 	# It gets returned in reversed order...
 	out

@@ -75,6 +75,7 @@ EHI *yyget_extra(void *scanner);
 %token T_SHORTFUNCTION
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
+%token <sValue> T_CUSTOMOP
 %right ':'
 %right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ T_LEFTSHIFTEQ T_RIGHTSHIFTEQ
 %right ','
@@ -82,6 +83,7 @@ EHI *yyget_extra(void *scanner);
 %nonassoc T_SHORTFUNCTION
 %left '|' '^' '&'
 %left '+' '-'
+%right T_CUSTOMOP
 %left T_LEFTSHIFT T_RIGHTSHIFT
 %left '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ T_COMPARE
 %left '*' '/' '%'
@@ -267,6 +269,8 @@ expression:
 								ehretval_p lvalue = ehretval_t::make($1);
 								$$ = eh_addnode('=', lvalue, ehretval_t::make(eh_addnode('-', lvalue, ehretval_t::make(1))));
 							}
+	| expression T_CUSTOMOP expression
+							{ $$ = ADD_NODE3(T_CUSTOMOP, $1, $2, $3); }
 	| expression '=' expression
 							{ $$ = ADD_NODE2('=', $1, $3); }
 	| expression T_PLUSEQ expression

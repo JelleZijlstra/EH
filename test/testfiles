@@ -217,3 +217,7 @@ tuplecomp.eh
 itersort.eh
 complexgiven.eh
 repeatprivate.eh
+fill.eh
+customops.eh
+array_error.eh
+stringtolist.eh

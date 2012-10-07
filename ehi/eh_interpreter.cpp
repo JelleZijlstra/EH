@@ -367,6 +367,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				b1 = this->to_bool(operand1, context)->get_boolval();
 				b2 = this->to_bool(operand2, context)->get_boolval();
 				return ehretval_t::make_bool((b1 && !b2) || (!b1 && b2));
+			case T_CUSTOMOP:
+				return eh_op_customop(paras, context);
 		/*
 		 * Variable manipulation
 		 */
@@ -605,7 +607,7 @@ ehretval_p EHI::eh_op_anonclass(ehretval_p node, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	ehfunc_t *f = new ehfunc_t(user_e);
-	ehretval_p ret = parent->get_primitive_class(func_e)->instantiate(this);
+	ehretval_p ret = parent->instantiate(parent->get_primitive_class(func_e));
 	ehobj_t *function_object = ret->get_objectval();
 	function_object->parent = context.scope;
 	function_object->type_id = func_e;
@@ -804,6 +806,12 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 	}
 	throw_MiscellaneousError("No matching case in given statement", this);
 	return NULL;
+}
+ehretval_p EHI::eh_op_customop(ehretval_p *paras, ehcontext_t context) {
+	ehretval_p lhs = eh_execute(paras[0], context);
+	ehretval_p rhs = eh_execute(paras[2], context);
+	std::string op = paras[1]->get_stringval();
+	return call_method(lhs, ("operator" + op).c_str(), rhs, context);
 }
 ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 	// parse arguments
@@ -1096,6 +1104,23 @@ ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t 
 		return out;
 	}
 }
+ehretval_p EHInterpreter::instantiate(ehretval_p obj) {
+	ehobj_t *new_obj = new ehobj_t();
+	ehretval_p ret = make_object(new_obj);
+	ehretval_p to_instantiate;
+	if(obj->type() == object_e) {
+		to_instantiate = ehretval_p(obj);
+	} else {
+		to_instantiate = get_primitive_class(obj->type());
+	}
+	ehobj_t *old_obj = to_instantiate->get_objectval();
+	new_obj->type_id = old_obj->type_id;
+	new_obj->parent = old_obj->parent;
+	new_obj->real_parent = old_obj->real_parent;
+	new_obj->inherit(to_instantiate);
+	return ret;
+}
+
 
 /*
  * Arrays

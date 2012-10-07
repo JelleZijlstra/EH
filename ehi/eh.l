@@ -138,7 +138,8 @@
 				return T_VARIABLE;
 			}
 [a-zA-Z][a-zA-Z0-9_]*	{
-				int len = strlen(yytext);
+				int len;
+				len = strlen(yytext);
 				yylval_param->sValue = new char[len + 1];
 				strncpy(yylval_param->sValue, yytext, len);
 				yylval_param->sValue[len] = '\0';
@@ -168,13 +169,6 @@
 "^="		return T_BINXOREQ;
 ">>="		return T_RIGHTSHIFTEQ;
 "<<="		return T_LEFTSHIFTEQ;
-[@=$+\-*/<>,:&\|^%~!\.][@=$+\-*/<>,:&\|^%~!\.]+ {
-				int len = strlen(yytext);
-				yylval_param->sValue = new char[len + 1];
-				strncpy(yylval_param->sValue, yytext, len);
-				yylval_param->sValue[len] = '\0';
-				return T_CUSTOMOP;
-			}
 [@=$+\-*/<>(),:\[\]&\|^%~!{}\.]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{

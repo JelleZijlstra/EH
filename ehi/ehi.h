@@ -224,6 +224,7 @@ private:
 	ehretval_p eh_op_anonclass(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_array(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_colon(ehretval_p *paras, ehcontext_t context);
+	ehretval_p eh_op_customop(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_command(const char *name, ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_declareclass(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_declareclosure(ehretval_p *paras, ehcontext_t context);

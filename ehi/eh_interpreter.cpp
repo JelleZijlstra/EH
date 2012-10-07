@@ -367,6 +367,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				b1 = this->to_bool(operand1, context)->get_boolval();
 				b2 = this->to_bool(operand2, context)->get_boolval();
 				return ehretval_t::make_bool((b1 && !b2) || (!b1 && b2));
+			case T_CUSTOMOP:
+				return eh_op_customop(paras, context);
 		/*
 		 * Variable manipulation
 		 */
@@ -804,6 +806,12 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 	}
 	throw_MiscellaneousError("No matching case in given statement", this);
 	return NULL;
+}
+ehretval_p EHI::eh_op_customop(ehretval_p *paras, ehcontext_t context) {
+	ehretval_p lhs = eh_execute(paras[0], context);
+	ehretval_p rhs = eh_execute(paras[2], context);
+	std::string op = paras[1]->get_stringval();
+	return call_method(lhs, ("operator" + op).c_str(), rhs, context);
 }
 ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 	// parse arguments

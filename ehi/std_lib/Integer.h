@@ -28,7 +28,7 @@ EH_METHOD(Integer, toInt);
 EH_METHOD(Integer, sqrt);
 EH_METHOD(Integer, getIterator);
 
-EXTERN_EHLC(Integer)
+EH_INITIALIZER(Integer);
 
 class Integer_Iterator : public LibraryBaseClass {
 public:

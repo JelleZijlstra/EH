@@ -47,6 +47,6 @@ EH_METHOD(Function, operator_colon);
 EH_METHOD(Function, toString);
 EH_METHOD(Function, decompile);
 
-EXTERN_EHLC(Function)
+EH_INITIALIZER(Function);
 
 #endif /* EH_FUNCTION_H_ */

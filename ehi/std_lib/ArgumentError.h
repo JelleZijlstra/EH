@@ -12,6 +12,6 @@ static inline void throw_ArgumentError_out_of_range(const char *method, ehretval
 EH_METHOD(ArgumentError, initialize);
 EH_METHOD(ArgumentError, toString);
 
-EXTERN_EHLC(ArgumentError)
+EH_INITIALIZER(ArgumentError);
 
 #endif /* EH_ARGUMENT_ERROR_H_ */

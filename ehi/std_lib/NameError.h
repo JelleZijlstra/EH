@@ -5,4 +5,4 @@ void throw_NameError(ehretval_p object, const char *name, EHI *ehi);
 
 EH_METHOD(NameError, initialize);
 
-EXTERN_EHLC(NameError)
+EH_INITIALIZER(NameError);

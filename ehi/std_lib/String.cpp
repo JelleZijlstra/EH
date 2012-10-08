@@ -152,9 +152,9 @@ EH_METHOD(String, getIterator) {
 }
 
 EH_INITIALIZER(String_Iterator) {
-EHLC_ENTRY(String_Iterator, initialize)
-EHLC_ENTRY(String_Iterator, hasNext)
-EHLC_ENTRY(String_Iterator, next)
+	REGISTER_METHOD(String_Iterator, initialize);
+	REGISTER_METHOD(String_Iterator, hasNext);
+	REGISTER_METHOD(String_Iterator, next);
 	REGISTER_METHOD(String_Iterator, peek);
 }
 

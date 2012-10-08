@@ -97,9 +97,9 @@ EH_METHOD(Array, getIterator) {
 }
 
 EH_INITIALIZER(Array_Iterator) {
-EHLC_ENTRY(Array_Iterator, initialize)
-EHLC_ENTRY(Array_Iterator, hasNext)
-EHLC_ENTRY(Array_Iterator, next)
+	REGISTER_METHOD(Array_Iterator, initialize);
+	REGISTER_METHOD(Array_Iterator, hasNext);
+	REGISTER_METHOD(Array_Iterator, next);
 }
 
 Array_Iterator::Array_Iterator(ehretval_p array) {

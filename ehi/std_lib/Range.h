@@ -28,7 +28,7 @@ EH_METHOD(Range, toRange);
 EH_METHOD(Range, compare);
 EH_METHOD(Range, getIterator);
 
-EXTERN_EHLC(Range)
+EH_INITIALIZER(Range);
 
 class Range_Iterator : public LibraryBaseClass {
 public:
@@ -46,6 +46,6 @@ EH_METHOD(Range_Iterator, initialize);
 EH_METHOD(Range_Iterator, hasNext);
 EH_METHOD(Range_Iterator, next);
 
-EXTERN_EHLC(Range_Iterator)
+EH_INITIALIZER(Range_Iterator);
 
 #endif /* EH_RANGE_H_ */

@@ -70,9 +70,9 @@ ehretval_p Tuple_Iterator::next() {
 }
 
 EH_INITIALIZER(Tuple_Iterator) {
-	EHLC_ENTRY(Tuple_Iterator, initialize)
-	EHLC_ENTRY(Tuple_Iterator, hasNext)
-	EHLC_ENTRY(Tuple_Iterator, next)
+	REGISTER_METHOD(Tuple_Iterator, initialize);
+	REGISTER_METHOD(Tuple_Iterator, hasNext);
+	REGISTER_METHOD(Tuple_Iterator, next);
 }
 
 EH_METHOD(Tuple_Iterator, initialize) {

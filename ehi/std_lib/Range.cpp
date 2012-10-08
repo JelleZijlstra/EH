@@ -110,9 +110,9 @@ EH_METHOD(Range, getIterator) {
 }
 
 EH_INITIALIZER(Range_Iterator) {
-EHLC_ENTRY(Range_Iterator, initialize)
-EHLC_ENTRY(Range_Iterator, hasNext)
-EHLC_ENTRY(Range_Iterator, next)
+	REGISTER_METHOD(Range_Iterator, initialize);
+	REGISTER_METHOD(Range_Iterator, hasNext);
+	REGISTER_METHOD(Range_Iterator, next);
 }
 
 bool Range_Iterator::has_next(EHI *ehi) {

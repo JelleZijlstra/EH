@@ -16,6 +16,7 @@
 #include "std_lib/CountClass.h"
 #include "std_lib/Exception.h"
 #include "std_lib/File.h"
+#include "std_lib/FixedArray.h"
 #include "std_lib/Float.h"
 #include "std_lib/Function.h"
 #include "std_lib/GarbageCollector.h"
@@ -69,6 +70,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(MiscellaneousError, -1)
 	LIBCLASSENTRY(GarbageCollector, -1)
 	LIBCLASSENTRY(EmptyIterator, -1)
+	LIBCLASSENTRY(FixedArray, -1)
 	{NULL, NULL, 0}
 };
 

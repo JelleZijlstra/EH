@@ -81,10 +81,10 @@ EHI *yyget_extra(void *scanner);
 %right ','
 %left T_AND T_OR T_XOR
 %left '|' '^' '&'
-%left '+' '-'
 %right T_CUSTOMOP
-%left T_LEFTSHIFT T_RIGHTSHIFT
 %left '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ T_COMPARE
+%left T_LEFTSHIFT T_RIGHTSHIFT
+%left '+' '-'
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
 %right '@'

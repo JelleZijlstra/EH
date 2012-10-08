@@ -235,3 +235,4 @@ reverse.eh
 decompile_more.eh
 setters.eh
 retnull.eh
+assert.eh

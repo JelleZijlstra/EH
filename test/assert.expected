@@ -1,0 +1,5 @@
+%%stdout%%
+This isn't true
+assert expression must be a Bool
+%%stderr%%
+Uncaught exception of type AssertionFailure: (no description)

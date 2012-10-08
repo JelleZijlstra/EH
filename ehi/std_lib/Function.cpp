@@ -50,7 +50,7 @@ EH_METHOD(Function, decompile) {
 		hold_obj = obj;
 		obj = obj->get_bindingval()->method;
 	}
-	ASSERT_OBJ_TYPE(func_e, "Function.toString");
+	ASSERT_OBJ_TYPE(func_e, "Function.decompile");
 	std::string reduction = obj->decompile(0);
 	return ehretval_t::make_string(strdup(reduction.c_str()));
 }

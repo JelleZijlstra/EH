@@ -353,6 +353,11 @@ std::string ehretval_t::decompile(int level) {
 				case T_XOR:
 					out << op->paras[0]->decompile(level) << " ^^ " << op->paras[1]->decompile(level);
 					break;
+				case T_CUSTOMOP:
+					out << op->paras[0]->decompile(level) << " " << 
+						op->paras[1]->get_stringval() << " " << 
+						op->paras[2]->decompile(level);
+					break;
 				case T_SEPARATOR:
 					if(op->nparas != 0) {
 						out << op->paras[0]->decompile(level);

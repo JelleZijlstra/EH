@@ -259,7 +259,11 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				}
 				break;
 			case T_RET: // return from a function or the program
-				ret = eh_execute(paras[0], context);
+				if(node->get_opval()->nparas == 0) {
+					ret = NULL;
+				} else {
+					ret = eh_execute(paras[0], context);
+				}
 				returning = true;
 				break;
 			case T_BREAK: // break out of a loop

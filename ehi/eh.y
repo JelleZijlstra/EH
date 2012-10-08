@@ -188,6 +188,7 @@ statement:
 		/* Other statements */
 	| T_RET expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_RET, $2); }
+	| T_RET T_SEPARATOR		{ $$ = ADD_NODE0(T_RET); }
 	| T_CONTINUE T_SEPARATOR
 							{ $$ = ADD_NODE0(T_CONTINUE); }
 	| T_CONTINUE expression T_SEPARATOR

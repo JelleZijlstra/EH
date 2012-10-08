@@ -1,3 +1,4 @@
+%%stdout%%
 @tuple <2> [
 @int 0
 @int 1
@@ -17,3 +18,4 @@
 @int 43
 @int 44
 @int 45
+%%stderr%%

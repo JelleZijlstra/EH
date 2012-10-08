@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 # The get_type function
-printvar get_type "test"
-printvar get_type 2
-printvar get_type true
-printvar get_type 1..2
+printvar "test".type()
+printvar 2.type()
+printvar true.type()
+printvar 1..2.type()

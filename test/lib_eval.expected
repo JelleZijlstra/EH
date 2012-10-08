@@ -1,6 +1,8 @@
+%%stdout%%
 @array [
 ]
 @hash [
 ]
 @int 42
+%%stderr%%
 Uncaught exception of type SyntaxError: syntax error, unexpected '-' at line 1

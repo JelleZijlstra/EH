@@ -18,4 +18,4 @@ Tuple.each = func: f {
 }
 
 # For use in iterable: map tuple to a mutable array
-Tuple.empty = func: -> []
+Tuple.empty = () => []

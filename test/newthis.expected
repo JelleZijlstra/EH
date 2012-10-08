@@ -1,6 +1,8 @@
+%%stdout%%
 @object <Foo> [
 ]
 @object <Foo> [
 ]
 @int 42
+%%stderr%%
 Uncaught exception of type NameError: Unknown member baz in object of type GlobalObject: (global execution context)

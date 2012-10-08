@@ -1,2 +1,4 @@
+%%stdout%%
 Invalid base object for "Hash.has": Null
+%%stderr%%
 Uncaught exception of type TypeError: Invalid base object for "String.length": Null

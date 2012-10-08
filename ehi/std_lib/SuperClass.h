@@ -14,4 +14,4 @@ public:
 
 EH_METHOD(SuperClass, toString);
 
-EXTERN_EHLC(SuperClass)
+EH_INITIALIZER(SuperClass);

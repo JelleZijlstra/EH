@@ -3,7 +3,7 @@ class BinaryTreeSet
 	class Node
 		private n
 
-		const initialize = func: l, val, r -> (this.n = [l, val, r])
+		const initialize = l, val, r => (this.n = [l, val, r])
 
 		const insert = func: val
 			private insertHelper = func: node, val
@@ -39,11 +39,13 @@ class BinaryTreeSet
 		end
 
 		const has = func: elt
-			private helper = func: node, elt -> (if node == null
-				false
-			else
-				node.has elt
-			end)
+			private helper = func: node, elt
+				if node == null
+					false
+				else
+					node.has elt
+				end
+			end
 			private comparison = elt <=> this.n->1
 			if comparison < 0
 				helper this.n->0, elt
@@ -56,28 +58,30 @@ class BinaryTreeSet
 			end
 		end
 
-		const toString = func: -> '(' + (this.n->0) + ',' + (this.n->1) + ',' + (this.n->2) + ')'
+		const toString = () => '(' + (this.n->0) + ',' + (this.n->1) + ',' + (this.n->2) + ')'
 	end
 	private Node = Node
 
 	private base = null
 
-	const add = func: elt -> given this.base
+	const add = elt => given this.base
 		case null; this.base = Node.new null, elt, null; null
 		default; this.base.insert elt; null
 	end
 
-	const has = func: elt -> given this.base
+	const has = elt => given this.base
 		case null; false
 		default; this.base.has elt
 	end
 
-	const reduce = func: firstVal, f -> given this.base
+	const reduce = firstVal, f => given this.base
 		case null; firstVal
 		default; this.base.reduce firstVal, f
 	end
 
-	const toString = func: -> ('{' + (this.reduce "", func: accum, val -> ((val.toString()) + ', ' + accum)) + '}')
+	const toString = () => '{' + (this.reduce "", func: accum, val 
+		(val.toString()) + ', ' + accum
+	end) + '}'
 
-	const debug = func: -> (this.base.toString())
+	const debug = () => this.base.toString()
 end

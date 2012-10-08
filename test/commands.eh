@@ -6,7 +6,7 @@ $echo 42
 $put 3
 $echo
 
-commands->'say_hello' = func: paras -> (echo 'hello')
+commands->'say_hello' = paras => (echo 'hello')
 $say_hello
 
 commands->'echo' = null
@@ -18,7 +18,7 @@ end
 
 printvar commands.keys()
 
-commands->'give_me_the_answer' = func: paras -> 42
+commands->'give_me_the_answer' = paras => 42
 
 echo ($give_me_the_answer)
 

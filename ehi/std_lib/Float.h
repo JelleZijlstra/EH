@@ -17,4 +17,4 @@ EH_METHOD(Float, toBool);
 EH_METHOD(Float, toFloat);
 EH_METHOD(Float, sqrt);
 
-EXTERN_EHLC(Float)
+EH_INITIALIZER(Float);

@@ -1,3 +1,4 @@
+%%stdout%%
 Int access:
 0: false
 1: false
@@ -40,3 +41,4 @@ String access:
 3: t
 String modification:
 uuuu
+%%stderr%%

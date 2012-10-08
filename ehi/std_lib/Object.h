@@ -23,4 +23,4 @@ EH_METHOD(Object, members);
 EH_METHOD(Object, data);
 EH_METHOD(Object, setData);
 
-EXTERN_EHLC(Object)
+EH_INITIALIZER(Object);

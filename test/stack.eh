@@ -3,7 +3,7 @@ class Stack
   private n = 0
   private s
 
-  public initialize = func: -> (this.s = [])
+  public initialize = () => (this.s = [])
   
   public push = func: input
     this.s->n = input
@@ -19,7 +19,7 @@ class Stack
     ret this.s->(this.n)
   end
   
-  public size = func: -> this.n
+  public size = () => this.n
 end
 
 s = Stack.new ()

@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 foo = class {
 	private a = 3
-	public b = func: -> (this.a++) 
+	public b = () => this.a++
 }
 
 o = foo.new ()

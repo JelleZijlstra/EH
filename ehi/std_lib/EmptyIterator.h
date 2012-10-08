@@ -7,6 +7,6 @@ void throw_EmptyIterator(EHI *ehi);
 
 EH_METHOD(EmptyIterator, initialize);
 
-EXTERN_EHLC(EmptyIterator)
+EH_INITIALIZER(EmptyIterator);
 
 #endif /* EH_EMPTY_ITERATOR_H_ */

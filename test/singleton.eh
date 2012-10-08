@@ -5,9 +5,9 @@ class Singleton {
 
 	private const new = this.new
 	
-	public getInstance = func: -> this.instance
+	public getInstance = () => this.instance
 
-	const toString = func: -> "@Singleton"
+	const toString = () => "@Singleton"
 }
 printvar Singleton.getInstance ()
 # error

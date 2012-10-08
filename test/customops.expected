@@ -1,5 +1,7 @@
+%%stdout%%
 Calling operator!!! on 3 and 4
 Calling operator!!! on 4 and 5
 Calling operator!!! on 3 and 9
 @int 12
 8
+%%stderr%%

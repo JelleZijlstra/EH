@@ -6,4 +6,4 @@ printvar a
 printvar b
 
 # Error
-(func: -> null) = 42
+(() => null) = 42

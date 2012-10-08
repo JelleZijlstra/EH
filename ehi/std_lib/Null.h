@@ -7,4 +7,4 @@ EH_METHOD(Null, initialize);
 EH_METHOD(Null, toString);
 EH_METHOD(Null, toBool);
 
-EXTERN_EHLC(Null)
+EH_INITIALIZER(Null);

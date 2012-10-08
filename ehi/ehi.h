@@ -140,6 +140,7 @@ public:
 	ehretval_p get_property(ehretval_p object, const char *name, ehcontext_t context);
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
 	ehmember_p set_property(ehretval_p object, const char *name, ehretval_p value, ehcontext_t context);
+	ehretval_p set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attributes, ehcontext_t context);
 	void handle_uncaught(eh_exception e);
 
 	/*
@@ -242,7 +243,6 @@ private:
 	ehretval_p eh_try_catch(ehretval_p try_block, ehretval_p catch_blocks, ehcontext_t context);
 	ehretval_p eh_xtoarray(ehretval_p in);
 	ehretval_p perform_op(const char *name, int nargs, ehretval_p *paras, ehcontext_t context);
-	ehretval_p set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context);
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
 	void eh_op_break(opnode_t *op, ehcontext_t context);
 	void eh_op_classmember(opnode_t *op, ehcontext_t context);

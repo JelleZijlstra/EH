@@ -34,7 +34,7 @@ EH_METHOD(Tuple, toTuple);
 EH_METHOD(Tuple, getIterator);
 EH_METHOD(Tuple, compare);
 
-EXTERN_EHLC(Tuple)
+EH_INITIALIZER(Tuple);
 
 class Tuple_Iterator : public LibraryBaseClass {
 public:
@@ -53,6 +53,6 @@ EH_METHOD(Tuple_Iterator, initialize);
 EH_METHOD(Tuple_Iterator, hasNext);
 EH_METHOD(Tuple_Iterator, next);
 
-EXTERN_EHLC(Tuple_Iterator)
+EH_INITIALIZER(Tuple_Iterator);
 
 #endif /* EH_TUPLE_H_ */

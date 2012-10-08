@@ -19,7 +19,7 @@ class Foo {
     echo 'Negation'
   }
   # Not really
-  operator* = func: rhs -> (echo 'Unary minus')
+  operator* = rhs => (echo 'Unary minus')
 }
 f = Foo.new ()
 f & 2

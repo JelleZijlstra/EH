@@ -2,8 +2,8 @@
 # The shift operators
 
 class Foo
-	operator<< = func: x -> (echo 'Left shift' + x)
-	operator>> = func: x -> (echo 'Right shift' + x)
+	operator<< = x => (echo 'Left shift' + x)
+	operator>> = x => (echo 'Right shift' + x)
 end
 
 f = Foo.new()

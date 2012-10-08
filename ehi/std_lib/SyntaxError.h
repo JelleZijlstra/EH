@@ -4,4 +4,4 @@ void throw_SyntaxError(const char *message, int line, EHI *ehi);
 
 EH_METHOD(SyntaxError, initialize);
 
-EXTERN_EHLC(SyntaxError)
+EH_INITIALIZER(SyntaxError);

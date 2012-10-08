@@ -1,3 +1,5 @@
+%%stdout%%
 @object <File> [
 ]
 bar
+%%stderr%%

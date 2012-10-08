@@ -24,6 +24,6 @@ echo foo.bar
 foo.bar = 3
 echo Foo.bar
 # Should both generate an error
-rescue func: -> (Foo.muh = 42)
-rescue func: -> (foo.muh = 42)
+rescue () => (Foo.muh = 42)
+rescue () => (foo.muh = 42)
 echo Foo.muh

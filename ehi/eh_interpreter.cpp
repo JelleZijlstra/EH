@@ -538,7 +538,8 @@ ehretval_p EHI::eh_op_in(ehretval_p *paras, ehcontext_t context) {
 			break;
 		}
 		ehretval_p next = call_method(iterator, "next", NULL, context);
-		set(paras[0], next, context);
+		attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
+		set(paras[0], next, &attributes, context);
 		ehretval_p ret = eh_execute(paras[2], context);
 		LOOPCHECKS;
 	}
@@ -613,20 +614,7 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	function_object->type_id = func_e;
 	function_object->object_data = ehretval_t::make_func(f);
 	f->code = paras[1];
-
-	// determine argument count
-	f->argcount = count_nodes(paras[0]);
-	// if there are no arguments, the arglist can be NULL
-	if(f->argcount != 0) {
-		f->args = new eharg_t[f->argcount]();
-	}
-	// add arguments to arglist
-	int i = 0;
-	for(ehretval_p tmp = paras[0]; tmp->get_opval()->nparas != 0;
-		tmp = tmp->get_opval()->paras[0]) {
-		f->args[i].name = eh_execute(tmp->get_opval()->paras[1], context)->get_stringval();
-		i++;
-	}
+	f->args = paras[0];
 	return ret;
 }
 ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
@@ -831,9 +819,9 @@ ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_set(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p rvalue = eh_execute(paras[1], context);
-	return set(paras[0], rvalue, context);
+	return set(paras[0], rvalue, NULL, context);
 }
-ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
+ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attributes, ehcontext_t context) {
 	ehretval_p *internal_paras = lvalue->get_opval()->paras;
 	switch(lvalue->get_opval()->op) {
 		case T_ARROW: {
@@ -860,15 +848,22 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 		case '$': {
 			ehretval_p base_var = eh_execute(internal_paras[0], context);
 			const char *name = base_var->get_stringval();
-			ehmember_p member = context.scope->get_objectval()->get_recursive(name, context);
-			if(member != NULL && member->isconst()) {
-				// bug: if the const member is actually in a higher scope, this error message will be wrong
-				throw_ConstError(context.scope, name, this);
-			}
-			if(member == NULL) {
-				this->set_property(context.scope, name, rvalue, context);
+			if(attributes == NULL) {
+				ehmember_p member = context.scope->get_objectval()->get_recursive(name, context);
+				if(member != NULL && member->isconst()) {
+					// bug: if the const member is actually in a higher scope, this error message will be wrong
+					throw_ConstError(context.scope, name, this);
+				}
+				if(member == NULL) {
+					this->set_property(context.scope, name, rvalue, context);
+				} else {
+					member->value = rvalue;
+				}
 			} else {
-				member->value = rvalue;
+				ehmember_p new_member;
+				new_member->value = rvalue;
+				new_member->attribute = *attributes;
+				this->set_member(context.scope, name, new_member, context);
 			}
 			return rvalue;
 		}
@@ -878,17 +873,17 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, ehcontext_t context) {
 				opnode_t *op = arg_node->get_opval();
 				ehretval_p internal_rvalue = call_method(rvalue, "operator->", ehretval_t::make_int(i), context);
 				if(op->op == ',') {
-					set(op->paras[0], internal_rvalue, context);
-					arg_node = arg_node->get_opval()->paras[1];
+					set(op->paras[0], internal_rvalue, attributes, context);
+					arg_node = op->paras[1];
 				} else {
-					set(arg_node, internal_rvalue, context);
+					set(arg_node, internal_rvalue, attributes, context);
 					break;
 				}
 			}
 			return rvalue;
 		}
 		case '(':
-			return set(internal_paras[0], rvalue, context);
+			return set(internal_paras[0], rvalue, attributes, context);
 		case T_NULL: // allow NULL to enable ignoring values
 			return rvalue;
 		default:

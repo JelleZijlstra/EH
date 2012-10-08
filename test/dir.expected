@@ -1,2 +1,4 @@
-/Users/jellezijlstra/code/EH/test
-dir.eh
+%%stdout-regex%%
+\/[A-Za-z\/]+\/EH\/test
+dir\.eh
+%%stderr%%

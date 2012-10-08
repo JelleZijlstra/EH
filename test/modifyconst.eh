@@ -12,5 +12,5 @@ class Foo
 end
 f = Foo.new ()
 printvar f
-rescue func: -> (f.foo())
+rescue () => (f.foo())
 printvar f

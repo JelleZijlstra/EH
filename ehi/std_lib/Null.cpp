@@ -1,10 +1,10 @@
 #include "Null.h"
 
-START_EHLC(Null)
-EHLC_ENTRY(Null, initialize)
-EHLC_ENTRY(Null, toString)
-EHLC_ENTRY(Null, toBool)
-END_EHLC()
+EH_INITIALIZER(Null) {
+	REGISTER_METHOD(Null, initialize);
+	REGISTER_METHOD(Null, toString);
+	REGISTER_METHOD(Null, toBool);
+}
 
 EH_METHOD(Null, initialize) {
 	return NULL;

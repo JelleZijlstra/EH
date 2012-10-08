@@ -1,5 +1,7 @@
+%%stdout%%
 @object <Foo> [
 ]
-Cannot set constant member baz in object of type Function: func: -> (user code)
+Cannot set constant member baz in object of type Function: () => (user code)
 @object <Foo> [
 ]
+%%stderr%%

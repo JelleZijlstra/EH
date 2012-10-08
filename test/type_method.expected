@@ -1,4 +1,6 @@
+%%stdout%%
 @string 'Integer'
 @string 'Array'
 @string 'String'
 @string 'Foo'
+%%stderr%%

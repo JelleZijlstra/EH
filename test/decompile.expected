@@ -1,0 +1,42 @@
+%%stdout%%
+func: ()
+	if this.l == ()
+		ret Nil
+	end
+	if (this.isSingleton ())
+		this
+	else
+		
+		private const splitList = this.split Nil, Nil
+		((splitList->0).sort ()).merge ((splitList->1).sort ())
+	end
+end
+func: f
+	if this.l == ()
+		Nil
+	else
+		
+		Cons (f this.l->0), (this.l->1).map f
+	end
+end
+func: f
+	this.reduce Nil, (func: base, val
+		given (f val)
+			case true
+				Cons val, base
+			case false
+				base
+		end
+	end)
+end
+func: n
+	given n
+		case 0
+			this.head ()
+		case 1
+			this.tail ()
+		default
+			throw ArgumentError.new "Argument must be 0 or 1", "List.operator->", n
+	end
+end
+%%stderr%%

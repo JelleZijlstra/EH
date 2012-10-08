@@ -2,15 +2,15 @@
 class StringSet
 	private hash
 
-	public initialize = func: -> (this.hash = {})
+	public initialize = () => (this.hash = {})
 
-	public empty = func: -> (this.new())
+	public empty = () => (this.new())
 
 	public add = func: elt
 		this.hash->elt = true
 	end
 
-	public has = func: elt -> (this.hash.has elt)
+	public has = elt => (this.hash.has elt)
 
 	public each = func: f
 		for (key, value) in this.hash
@@ -18,7 +18,7 @@ class StringSet
 		end
 	end
 	
-	public remove = func: elt -> (this.hash.delete elt)
+	public remove = elt => (this.hash.delete elt)
 
 	public union = func: other
 		other.each this.add

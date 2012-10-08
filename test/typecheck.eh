@@ -1,17 +1,17 @@
 #!/usr/bin/ehi
 # Illustrate type-checking functions
 # true
-echo is_int 2
+echo 2.isA Integer
 # false
-echo is_int false
+echo false.isA Integer
 # true
-echo is_string 'foo'
+echo 'foo'.isA String
 # false
-echo is_string 2
+echo 2.isA String
 class Foo
 	public bar
 endclass
 # true
-echo is_object Foo.new ()
+echo (Foo.new()).isA Object
 # false
-echo is_object 'hello'
+echo 'hello'.isA Object

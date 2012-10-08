@@ -22,17 +22,13 @@ public:
 class ehfunc_t {
 public:
 	functype_enum type;
-	int argcount;
-	eharg_t *args;
+	ehretval_p args;
 	ehretval_p code;
 	ehlibmethod_t libmethod_pointer;
-	
-	ehfunc_t(functype_enum _type = user_e) : type(_type), argcount(0), args(NULL), code(), libmethod_pointer(NULL) {}
-	
-	~ehfunc_t() {
-		// the ehfunc_t owns the args structure
-		delete[] args;
-	}
+
+	ehfunc_t(functype_enum _type = user_e) : type(_type), args(), code(), libmethod_pointer(NULL) {}
+
+	~ehfunc_t() {}
 private:
 	ehfunc_t(const ehfunc_t&);
 	ehfunc_t operator=(const ehfunc_t&);
@@ -49,7 +45,8 @@ public:
 
 EH_METHOD(Function, operator_colon);
 EH_METHOD(Function, toString);
+EH_METHOD(Function, decompile);
 
-EXTERN_EHLC(Function)
+EH_INITIALIZER(Function);
 
 #endif /* EH_FUNCTION_H_ */

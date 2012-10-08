@@ -21,4 +21,4 @@ EH_METHOD(File, close);
 EH_METHOD(File, toBool);
 EH_METHOD(File, finalize);
 
-EXTERN_EHLC(File)
+EH_INITIALIZER(File);

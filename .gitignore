@@ -21,3 +21,5 @@ ehi/ehphp.php
 ehi/php_ehphp.h
 # Editor stuff
 *.sublime-*
+# Used for temporary files in tester
+tmp/

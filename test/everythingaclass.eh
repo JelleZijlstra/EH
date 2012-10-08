@@ -4,7 +4,7 @@ include '../lib/exception.eh'
 const foo = 3
 echo foo
 # should generate an error
-rescue func: -> (foo = 4)
+rescue () => (foo = 4)
 echo foo
 class Bar {
 	echo 5

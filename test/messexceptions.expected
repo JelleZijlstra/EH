@@ -1,3 +1,5 @@
-Uncaught exception of type ConstError: Cannot set constant member UnknownCommandError in object of type Null: 0x10020eae8
-Uncaught exception of type UnknownCommandError: I don't care
-Uncaught exception of type NameError: Unknown member operator_colon in object of type Integer: 42
+%%stdout%%
+Cannot set constant member UnknownCommandError in object of type GlobalObject: (global execution context)
+I don't care
+%%stderr%%
+Uncaught exception of type NameError: Unknown member operator: in object of type Integer: 42

@@ -56,7 +56,7 @@ EH_METHOD(Array, toArray);
 EH_METHOD(Array, toTuple);
 EH_METHOD(Array, getIterator);
 
-EXTERN_EHLC(Array)
+EH_INITIALIZER(Array);
 
 class Array_Iterator : public LibraryBaseClass {
 public:
@@ -79,6 +79,6 @@ EH_METHOD(Array_Iterator, hasNext);
 EH_METHOD(Array_Iterator, next);
 EH_METHOD(Array_Iterator, peek);
 
-EXTERN_EHLC(Array_Iterator)
+EH_INITIALIZER(Array_Iterator);
 
 #endif /* EH_ARRAY_H_ */

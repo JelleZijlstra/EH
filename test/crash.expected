@@ -1,12 +1,14 @@
+%%stdout%%
 Number of pools: 1
-Allocated blocks: 214
+Allocated blocks: 206
 3
 3
 Number of pools: 1
-Allocated blocks: 217
+Allocated blocks: 209
 Number of pools: 1
-Allocated blocks: 218
+Allocated blocks: 210
 @object <CountClass> [
 ]
 @int 1
+%%stderr%%
 Uncaught exception of type NameError: Unknown member operator-> in object of type GlobalObject: (global execution context)

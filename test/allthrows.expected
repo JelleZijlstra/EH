@@ -1,7 +1,9 @@
+%%stdout%%
 @int 42
 @int 43
 This is important
 got it at the top level
 @int 44
 Not catching it!
+%%stderr%%
 Uncaught exception of type Integer: 45

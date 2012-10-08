@@ -1,3 +1,4 @@
+%%stdout%%
 @string 'foo'
 @int 1
 @string 'foo'
@@ -6,3 +7,4 @@
 'foo' => @int 1
 ]
 @int 1
+%%stderr%%

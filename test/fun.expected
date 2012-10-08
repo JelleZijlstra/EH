@@ -1,2 +1,4 @@
+%%stdout%%
 @int 0
+%%stderr%%
 Uncaught exception of type TypeError: Method must be a function: Integer

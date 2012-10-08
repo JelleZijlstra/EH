@@ -47,5 +47,5 @@ Array.append = func: item {
 
 Array.add = Array.append
 
-Array.empty = func: -> []
+Array.empty = () => []
 

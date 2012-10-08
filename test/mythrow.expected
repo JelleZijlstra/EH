@@ -1,2 +1,4 @@
+%%stdout%%
 Oh no, an exception!
+%%stderr%%
 Uncaught exception of type Integer: 42

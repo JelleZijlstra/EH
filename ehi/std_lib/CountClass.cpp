@@ -1,10 +1,10 @@
 #include "CountClass.h"
 
-START_EHLC(CountClass)
-EHLC_ENTRY(CountClass, initialize)
-EHLC_ENTRY(CountClass, docount)
-EHLC_ENTRY(CountClass, setcount)
-END_EHLC()
+EH_INITIALIZER(CountClass) {
+	REGISTER_METHOD(CountClass, initialize);
+	REGISTER_METHOD(CountClass, docount);
+	REGISTER_METHOD(CountClass, setcount);
+}
 
 EH_METHOD(CountClass, initialize) {
 	return ehretval_t::make_resource((LibraryBaseClass *)new CountClass());

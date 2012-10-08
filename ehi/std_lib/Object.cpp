@@ -3,27 +3,27 @@
 #include "Object.h"
 #include "SuperClass.h"
 
-START_EHLC(Object)
-EHLC_ENTRY(Object, new)
-EHLC_ENTRY(Object, inherit)
-EHLC_ENTRY(Object, initialize)
-EHLC_ENTRY(Object, toString)
-EHLC_ENTRY(Object, finalize)
-EHLC_ENTRY(Object, isA)
-EHLC_ENTRY_RENAME(Object, operator_compare, "operator<=>")
-EHLC_ENTRY(Object, compare)
-EHLC_ENTRY_RENAME(Object, operator_equals, "operator==")
-EHLC_ENTRY_RENAME(Object, operator_ne, "operator!=")
-EHLC_ENTRY_RENAME(Object, operator_gt, "operator>")
-EHLC_ENTRY_RENAME(Object, operator_gte, "operator>=")
-EHLC_ENTRY_RENAME(Object, operator_lt, "operator<")
-EHLC_ENTRY_RENAME(Object, operator_lte, "operator<=")
-EHLC_ENTRY(Object, type)
-EHLC_ENTRY(Object, typeId)
-EHLC_ENTRY(Object, members)
-//EHLC_ENTRY(Object, data)
-//EHLC_ENTRY(Object, setData)
-END_EHLC()
+EH_INITIALIZER(Object) {
+	REGISTER_METHOD(Object, new);
+	REGISTER_METHOD(Object, inherit);
+	REGISTER_METHOD(Object, initialize);
+	REGISTER_METHOD(Object, toString);
+	REGISTER_METHOD(Object, finalize);
+	REGISTER_METHOD(Object, isA);
+	REGISTER_METHOD_RENAME(Object, operator_compare, "operator<=>");
+	REGISTER_METHOD(Object, compare);
+	REGISTER_METHOD_RENAME(Object, operator_equals, "operator==");
+	REGISTER_METHOD_RENAME(Object, operator_ne, "operator!=");
+	REGISTER_METHOD_RENAME(Object, operator_gt, "operator>");
+	REGISTER_METHOD_RENAME(Object, operator_gte, "operator>=");
+	REGISTER_METHOD_RENAME(Object, operator_lt, "operator<");
+	REGISTER_METHOD_RENAME(Object, operator_lte, "operator<=");
+	REGISTER_METHOD(Object, type);
+	REGISTER_METHOD(Object, typeId);
+	REGISTER_METHOD(Object, members);
+//	REGISTER_METHOD(Object, data);
+//	REGISTER_METHOD(Object, setData);
+}
 
 EH_METHOD(Object, new) {
 	ehretval_p ret = ehi->get_parent()->instantiate(obj);

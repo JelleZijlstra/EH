@@ -1,5 +1,7 @@
+%%stdout%%
 Variant 1
 @int 3
 Variant 2
 @int 3
 @int 3
+%%stderr%%

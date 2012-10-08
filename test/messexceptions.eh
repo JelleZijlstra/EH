@@ -1,12 +1,20 @@
 #!/usr/bin/ehi
 # Trying to break the exception mechanism
 
-# Unfortunately, library classes are constant variables
-UnknownCommandError = 42
+try
+	# Unfortunately, library classes are constant variables
+	UnknownCommandError = 42
+catch
+	echo exception
+end
 
-# That is merely funny
-UnknownCommandError.toString = func: -> "I don't care"
-$print 3
+try
+	# That is merely funny
+	UnknownCommandError.toString = () => "I don't care"
+	$print 3
+catch
+	echo exception
+end
 
 UnknownCommandError.new = 42
 $print 3

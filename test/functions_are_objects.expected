@@ -1,3 +1,5 @@
-Unknown member x in object of type Function: func: -> (user code)
+%%stdout%%
+Unknown member x in object of type Function: () => (user code)
 @int 3
 @int 3
+%%stderr%%

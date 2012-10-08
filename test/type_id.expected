@@ -1,3 +1,5 @@
+%%stdout%%
 @int 2
 @int 0
 @bool true
+%%stderr%%

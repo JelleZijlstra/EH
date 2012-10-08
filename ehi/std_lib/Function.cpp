@@ -2,10 +2,11 @@
 
 #include "Function.h"
 
-START_EHLC(Function)
-EHLC_ENTRY_RENAME(Function, operator_colon, "operator:")
-EHLC_ENTRY(Function, toString)
-END_EHLC()
+EH_INITIALIZER(Function) {
+	REGISTER_METHOD_RENAME(Function, operator_colon, "operator:");
+	REGISTER_METHOD(Function, toString);
+	REGISTER_METHOD(Function, decompile);
+}
 
 EH_METHOD(Function, operator_colon) {
 	// This is probably the most important library method in EH. It works
@@ -36,34 +37,24 @@ EH_METHOD(Function, operator_colon) {
 	ehretval_p newcontext = ehi->get_parent()->instantiate(function_object);
 	newcontext->get_objectval()->object_data = function_object->get_objectval()->object_data;
 
-	// check parameter count
-	if(f->argcount == 0) {
-		if(args->type() != null_e) {
-			throw_TypeError("Unexpected non-null argument to closure", args->type(), ehi);
-		}
-	} else if(f->argcount == 1) {
-		ehi->set_property(newcontext, f->args[0].name.c_str(), args, newcontext);
-	} else {
-		if(args->type() != tuple_e) {
-			std::ostringstream msg;
-			msg << "Argument must be a tuple of size " << f->argcount;
-			throw_ArgumentError(msg.str().c_str(), "(closure)", args, ehi);
-		} else if(args->get_tupleval()->size() != f->argcount) {
-			std::ostringstream msg;
-			msg << "Argument must be a tuple of size " << f->argcount;
-			throw_ArgumentError(msg.str().c_str(), "(closure)", args, ehi);
-		} else {
-			// set parameters as necessary
-			ehtuple_t *tuple = args->get_tupleval();
-			for(int i = 0; i < f->argcount; i++) {
-				ehi->set_property(newcontext, f->args[f->argcount - 1 - i].name.c_str(), tuple->get(i), newcontext);
-			}			
-		}
-	}	
+	// set arguments
+	attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
+	ehi->set(f->args, args, &attributes, ehcontext_t(base_object, newcontext));
 	ehretval_p ret = ehi->eh_execute(f->code, ehcontext_t(base_object, newcontext));
 	ehi->not_returning();
 	return ret;
 }
+EH_METHOD(Function, decompile) {
+	ehretval_p hold_obj;
+	if(obj->type() == binding_e) {
+		hold_obj = obj;
+		obj = obj->get_bindingval()->method;
+	}
+	ASSERT_OBJ_TYPE(func_e, "Function.decompile");
+	std::string reduction = obj->decompile(0);
+	return ehretval_t::make_string(strdup(reduction.c_str()));
+}
+
 EH_METHOD(Function, toString) {
 	ehretval_p hold_obj;
 	if(obj->type() == binding_e) {
@@ -73,19 +64,10 @@ EH_METHOD(Function, toString) {
 	ASSERT_OBJ_TYPE(func_e, "Function.toString");
 	ehfunc_t *f = obj->get_funcval();
 	if(f->type == lib_e) {
-		return ehretval_t::make_string(strdup("func: -> (native code)"));
-	} else if(f->argcount == 0) {
-		return ehretval_t::make_string(strdup("func: -> (user code)"));
+		return ehretval_t::make_string(strdup("(args) => (native code)"));
 	} else {
 		std::ostringstream out;
-		out << "func: ";
-		for(int i = f->argcount - 1; i >= 0; i--) {
-			out << f->args[i].name;
-			if(i != 0) {
-				out << ", ";
-			}
-		}
-		out << " -> (user code)";
+		out << f->args->decompile(0) << " => (user code)";
 		return ehretval_t::make_string(strdup(out.str().c_str()));
 	}
 }

@@ -18,7 +18,7 @@ EH_METHOD(String, toRange);
 EH_METHOD(String, charAtPosition);
 EH_METHOD(String, getIterator);
 
-EXTERN_EHLC(String)
+EH_INITIALIZER(String);
 
 class String_Iterator : public LibraryBaseClass {
 public:
@@ -38,4 +38,4 @@ EH_METHOD(String_Iterator, hasNext);
 EH_METHOD(String_Iterator, next);
 EH_METHOD(String_Iterator, peek);
 
-EXTERN_EHLC(String_Iterator)
+EH_INITIALIZER(String_Iterator);

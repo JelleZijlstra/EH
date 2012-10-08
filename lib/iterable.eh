@@ -9,16 +9,16 @@ class Iterable
 		end
 	end
 	
-	private reduceHelper = func: it, b, f -> given (it.hasNext())
+	private reduceHelper = it, b, f => given (it.hasNext())
 		case true; f (it.next()), (reduceHelper it, b, f)
 		case false; b
 	end
 	
-	public reduce = func: b, f -> (reduceHelper (this.getIterator()), b, f)
+	public reduce = b, f => (reduceHelper (this.getIterator()), b, f)
 	
-	public iterableLength = func: -> (this.reduce 0, func: v, b -> b + 1)
+	public iterableLength = () => this.reduce 0, (v, b => b + 1)
 	
-	private foldLeftHelper = func: it, b, f -> given (it.hasNext())
+	private foldLeftHelper = it, b, f => given (it.hasNext())
 		case true
 			b = f (it.next()), b
 			foldLeftHelper it, b, f
@@ -26,22 +26,26 @@ class Iterable
 			b
 	end
 	
-	public foldLeft = func: b, f -> (foldLeftHelper (this.getIterator()), b, f)
+	public foldLeft = b, f => (foldLeftHelper (this.getIterator()), b, f)
 
 	public map = func: f
 		out = this.empty()
-		this.foldLeft out, func: v, collection -> (collection.add (f v))
+		this.foldLeft out, (v, collection => collection.add (f v))
 	end
 	
 	public filter = func: f
-		this.foldLeft (this.empty()), func: v, collection -> given (f v)
+		this.foldLeft (this.empty()), (v, collection => given (f v)
 			case true; collection.add v
 			case false; collection
-		end
+		end)
+	end
+
+	public reverse = func:
+		this.foldLeft (this.empty()), (b, f => b.add f)
 	end
 	
 	# sorting implementation
-	const private split = func: it, l, r -> given (it.hasNext())
+	const private split = it, l, r => given (it.hasNext())
 		case true
 			val = it.next()
 			split it, r, (l.add val)
@@ -78,7 +82,7 @@ class Iterable
 		end
 	end
 
-	const sort = func: -> given (this.iterableLength())
+	const sort = () => given (this.iterableLength())
 		case 0; this
 		case 1; this
 		default

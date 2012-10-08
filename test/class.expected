@@ -1,3 +1,4 @@
+%%stdout%%
 2
 meh
 @object <Foo> [
@@ -8,3 +9,4 @@ meh
 Calling a private method
 Unknown member mah in object of type Foo: @Foo (@Foo (3, ), )
 2
+%%stderr%%

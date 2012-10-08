@@ -1,3 +1,5 @@
+%%stdout%%
 NameError
 true
 true
+%%stderr%%

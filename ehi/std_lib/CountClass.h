@@ -14,4 +14,4 @@ EH_METHOD(CountClass, initialize);
 EH_METHOD(CountClass, docount);
 EH_METHOD(CountClass, setcount);
 
-EXTERN_EHLC(CountClass)
+EH_INITIALIZER(CountClass);

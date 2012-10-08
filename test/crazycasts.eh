@@ -6,16 +6,16 @@ include '../lib/exception.eh'
 # [ 0 => 1, 1 => 2, ..., 41 => 42]
 printvar @array 1..42
 # [ 0 => 'string']
-rescue func: -> (printvar @array 'string')
+rescue () => (printvar @array 'string')
 # [ 0 => 42]
-rescue func: -> (printvar @array 42)
+rescue () => (printvar @array 42)
 # [ 0 => true]
-rescue func: -> (printvar @array true)
+rescue () => (printvar @array true)
 # 1..42
 printvar @range '1 to 42'
 # error
-rescue func: -> (printvar @range 42)
+rescue () => (printvar @range 42)
 # error
-rescue func: -> (printvar @bool [1])
+rescue () => (printvar @bool [1])
 # error
-rescue func: -> (printvar @bool [])
+rescue () => (printvar @bool [])

@@ -1,3 +1,4 @@
+%%stdout%%
 Calculating the Fibonacci sequence
 1
 1
@@ -45,3 +46,4 @@ Calculating the Fibonacci sequence
 701408733
 1134903170
 1836311903
+%%stderr%%

@@ -1,3 +1,4 @@
+%%stdout%%
 before 1
 0
 inner after 0
@@ -34,3 +35,4 @@ inner after 2
 3
 inner after 3
 4
+%%stderr%%

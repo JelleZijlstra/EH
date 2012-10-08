@@ -1,1 +1,3 @@
+%%stdout%%
 Uncaught top-level exception: Unknown member a in object of type GlobalObject: (global execution context)
+%%stderr%%

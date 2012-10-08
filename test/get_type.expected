@@ -1,4 +1,6 @@
-@string 'string'
-@string 'int'
-@string 'bool'
-@string 'range'
+%%stdout%%
+@string 'String'
+@string 'Integer'
+@string 'Bool'
+@string 'Range'
+%%stderr%%

@@ -1,0 +1,7 @@
+%%stdout%%
+3
+func: x
+	x
+end
+3
+%%stderr%%

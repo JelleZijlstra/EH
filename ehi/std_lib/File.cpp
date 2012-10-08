@@ -1,15 +1,15 @@
 #include "File.h"
 
-START_EHLC(File)
-EHLC_ENTRY(File, initialize)
-EHLC_ENTRY(File, open)
-EHLC_ENTRY(File, getc)
-EHLC_ENTRY(File, gets)
-EHLC_ENTRY(File, puts)
-EHLC_ENTRY(File, close)
-EHLC_ENTRY(File, toBool)
-EHLC_ENTRY(File, finalize)
-END_EHLC()
+EH_INITIALIZER(File) {
+	REGISTER_METHOD(File, initialize);
+	REGISTER_METHOD(File, open);
+	REGISTER_METHOD(File, getc);
+	REGISTER_METHOD(File, gets);
+	REGISTER_METHOD(File, puts);
+	REGISTER_METHOD(File, close);
+	REGISTER_METHOD(File, toBool);
+	REGISTER_METHOD(File, finalize);
+}
 
 EH_METHOD(File, initialize) {
 	return ehretval_t::make_resource((LibraryBaseClass *)new File());

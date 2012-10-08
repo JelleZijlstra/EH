@@ -1,3 +1,5 @@
+%%stdout%%
 a
 b
-Uncaught exception of type ArgumentError: Argument must be a tuple of size 2 (method (closure)): 
+%%stderr%%
+Uncaught exception of type NameError: Unknown member operator-> in object of type Null: 

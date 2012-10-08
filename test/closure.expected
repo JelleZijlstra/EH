@@ -1,5 +1,7 @@
+%%stdout%%
 @object <Foo> [
 ]
 @function <user>: n
 4
 @function <user>: n
+%%stderr%%

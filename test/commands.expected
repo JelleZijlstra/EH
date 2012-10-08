@@ -1,3 +1,4 @@
+%%stdout%%
 42
 3
 hello
@@ -12,3 +13,4 @@ command <public,non-static,non-constant>: @string 'echo'
 4 => @string 'say_hello'
 ]
 42
+%%stderr%%

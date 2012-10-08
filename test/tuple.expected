@@ -1,3 +1,4 @@
+%%stdout%%
 @object <Tuple> [
 ]
 @int 3
@@ -7,3 +8,4 @@
 @bool false
 @object <Tuple> [
 ]
+%%stderr%%

@@ -1,3 +1,5 @@
+%%stdout%%
 @int 0
 @int 1
+%%stderr%%
 Uncaught exception of type NameError: Unknown member b in object of type GlobalObject: (global execution context)

@@ -1,14 +1,14 @@
 #include "Tuple.h"
 
-START_EHLC(Tuple)
-	EHLC_ENTRY(Tuple, initialize)
-	EHLC_ENTRY_RENAME(Tuple, operator_arrow, "operator->")
-	EHLC_ENTRY(Tuple, length)
-	EHLC_ENTRY(Tuple, toTuple)
-	EHLC_ENTRY(Tuple, getIterator)
+EH_INITIALIZER(Tuple) {
+	REGISTER_METHOD(Tuple, initialize);
+	REGISTER_METHOD_RENAME(Tuple, operator_arrow, "operator->");
+	REGISTER_METHOD(Tuple, length);
+	REGISTER_METHOD(Tuple, toTuple);
+	REGISTER_METHOD(Tuple, getIterator);
 	REGISTER_CLASS(Tuple, Iterator);
 	REGISTER_METHOD(Tuple, compare);
-END_EHLC()
+}
 
 EH_METHOD(Tuple, initialize) {
 	return ehi->to_tuple(args, obj);
@@ -69,11 +69,11 @@ ehretval_p Tuple_Iterator::next() {
 	return the_tuple->get(this->position++);	
 }
 
-START_EHLC(Tuple_Iterator)
-	EHLC_ENTRY(Tuple_Iterator, initialize)
-	EHLC_ENTRY(Tuple_Iterator, hasNext)
-	EHLC_ENTRY(Tuple_Iterator, next)
-END_EHLC()
+EH_INITIALIZER(Tuple_Iterator) {
+	REGISTER_METHOD(Tuple_Iterator, initialize);
+	REGISTER_METHOD(Tuple_Iterator, hasNext);
+	REGISTER_METHOD(Tuple_Iterator, next);
+}
 
 EH_METHOD(Tuple_Iterator, initialize) {
 	ASSERT_TYPE(args, tuple_e, "Tuple.Iterator.initialize");

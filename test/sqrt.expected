@@ -1,2 +1,4 @@
+%%stdout%%
 @int 2
 @float 2.500000
+%%stderr%%

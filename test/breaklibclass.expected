@@ -1,5 +1,7 @@
+%%stdout%%
 @int 1
 
 @function <library>: 
 @int 2
 @int 3
+%%stderr%%

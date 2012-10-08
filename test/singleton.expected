@@ -1,3 +1,5 @@
+%%stdout%%
 @object <Singleton> [
 ]
+%%stderr%%
 Uncaught exception of type NameError: Unknown member new in object of type Singleton: @Singleton

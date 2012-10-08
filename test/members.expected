@@ -1,3 +1,4 @@
+%%stdout%%
 @array [
 0 => @string 'compare'
 1 => @string 'finalize'
@@ -17,3 +18,4 @@
 15 => @string 'type'
 16 => @string 'typeId'
 ]
+%%stderr%%

@@ -6,4 +6,4 @@
 EH_METHOD(GarbageCollector, run);
 EH_METHOD(GarbageCollector, stats);
 
-EXTERN_EHLC(GarbageCollector)
+EH_INITIALIZER(GarbageCollector);

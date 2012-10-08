@@ -14,7 +14,7 @@ Hash.toString = func:
 	out + '}'
 end
 
-Hash.empty = func: -> {}
+Hash.empty = () => {}
 
 Hash.add = func: pair
 	this.operator->= pair

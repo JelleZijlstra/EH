@@ -1,3 +1,4 @@
+%%stdout%%
 @object <Object> [
 ]
 @int 4
@@ -6,3 +7,4 @@ a <private,non-static,non-constant>: @int 4
 ]
 @object <Object> [
 ]
+%%stderr%%

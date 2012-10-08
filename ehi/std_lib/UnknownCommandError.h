@@ -4,4 +4,4 @@ void throw_UnknownCommandError(const char *msg, EHI *ehi);
 
 EH_METHOD(UnknownCommandError, initialize);
 
-EXTERN_EHLC(UnknownCommandError)
+EH_INITIALIZER(UnknownCommandError);

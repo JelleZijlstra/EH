@@ -269,7 +269,7 @@ std::string ehretval_t::decompile(int level) {
 				case '!':
 				case '~':
 					// unary ops
-					out << op->op << op->paras[0]->decompile(level);
+					out << char(op->op) << op->paras[0]->decompile(level);
 					break;
 				case '$':
 					out << op->paras[0]->get_stringval();

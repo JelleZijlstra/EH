@@ -68,11 +68,18 @@ EH_METHOD(String, operator_arrow_equals) {
 	return operand2;
 }
 EH_METHOD(String, compare) {
-  ASSERT_OBJ_TYPE(string_e, "String.compare");
-  ASSERT_TYPE(args, string_e, "String.compare");
-  const char *lhs = obj->get_stringval();
-  const char *rhs = args->get_stringval();
-  return ehretval_t::make_int(strcmp(lhs, rhs));
+	ASSERT_OBJ_TYPE(string_e, "String.compare");
+	ASSERT_TYPE(args, string_e, "String.compare");
+	const char *lhs = obj->get_stringval();
+	const char *rhs = args->get_stringval();
+	int comparison = strcmp(lhs, rhs);
+	// strcmp may return any negative or positive integer; standardize on -1 and 1 for EH
+	if(comparison < 0) {
+		comparison = -1;
+	} else if(comparison > 0) {
+		comparison = 1;
+	}
+	return ehretval_t::make_int(comparison);
 }
 EH_METHOD(String, length) {
 	ASSERT_NULL_AND_TYPE(string_e, "String.length");

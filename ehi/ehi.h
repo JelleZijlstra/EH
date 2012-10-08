@@ -42,6 +42,10 @@ public:
 	ehretval_p function_object;
 	ehretval_p base_object;
 
+	// for some reason I haven't been able to figure out, I get a compiler error 
+	// inside glibc when I declare this as std::set<const std::string>.
+	std::set<std::string> included_files;
+
 	ehretval_p get_primitive_class(type_enum in) {
 		return this->repo.get_object(in);
 	}

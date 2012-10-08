@@ -253,6 +253,12 @@ EH_METHOD(GlobalObject, include) {
 	} else {
 		full_path = ehi->get_working_dir() + "/" + filename;
 	}
+	// prevent including the same file more than once
+	std::set<std::string> &included = ehi->get_parent()->included_files;
+	if(included.count(full_path) > 0) {
+		return NULL;
+	}
+	included.insert(full_path);
 	FILE *infile = fopen(full_path.c_str(), "r");
 	if(!infile) {
 		throw_ArgumentError("Unable to open file", "include", args, ehi);

@@ -118,7 +118,7 @@ static inline int count_nodes(const ehretval_p node);
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHInterpreter::EHInterpreter() : gc(), repo(), global_object(), function_object(), base_object() {
+EHInterpreter::EHInterpreter() : gc(), repo(), global_object(), function_object(), base_object(), included_files() {
 	eh_init();
 }
 void EHInterpreter::eh_init(void) {

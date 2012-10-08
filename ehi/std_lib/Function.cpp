@@ -39,7 +39,7 @@ EH_METHOD(Function, operator_colon) {
 
 	// set arguments
 	attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
-	ehi->set(f->args, args, &attributes, newcontext);
+	ehi->set(f->args, args, &attributes, ehcontext_t(base_object, newcontext));
 	ehretval_p ret = ehi->eh_execute(f->code, ehcontext_t(base_object, newcontext));
 	ehi->not_returning();
 	return ret;

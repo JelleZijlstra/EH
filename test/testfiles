@@ -233,3 +233,4 @@ shorterfuncs.eh
 funcdecomp.eh
 reverse.eh
 decompile_more.eh
+setters.eh

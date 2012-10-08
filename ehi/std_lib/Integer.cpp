@@ -3,33 +3,33 @@
 #include "Integer.h"
 #include "MiscellaneousError.h"
 
-START_EHLC(Integer)
-EHLC_ENTRY(Integer, initialize)
-EHLC_ENTRY_RENAME(Integer, operator_plus, "operator+")
-EHLC_ENTRY_RENAME(Integer, operator_minus, "operator-")
-EHLC_ENTRY_RENAME(Integer, operator_times, "operator*")
-EHLC_ENTRY_RENAME(Integer, operator_divide, "operator/")
-EHLC_ENTRY_RENAME(Integer, operator_modulo, "operator%")
-EHLC_ENTRY_RENAME(Integer, operator_and, "operator&")
-EHLC_ENTRY_RENAME(Integer, operator_or, "operator|")
-EHLC_ENTRY_RENAME(Integer, operator_xor, "operator^")
-EHLC_ENTRY_RENAME(Integer, operator_tilde, "operator~")
-EHLC_ENTRY_RENAME(Integer, operator_leftshift, "operator<<")
-EHLC_ENTRY_RENAME(Integer, operator_rightshift, "operator>>")
-EHLC_ENTRY(Integer, operator_uminus)
-EHLC_ENTRY(Integer, compare)
-EHLC_ENTRY(Integer, abs)
-EHLC_ENTRY(Integer, getBit)
-EHLC_ENTRY(Integer, setBit)
-EHLC_ENTRY(Integer, length)
-EHLC_ENTRY(Integer, toString)
-EHLC_ENTRY(Integer, toBool)
-EHLC_ENTRY(Integer, toFloat)
-EHLC_ENTRY(Integer, toInt)
-EHLC_ENTRY(Integer, sqrt)
+EH_INITIALIZER(Integer) {
+	REGISTER_METHOD(Integer, initialize);
+	REGISTER_METHOD_RENAME(Integer, operator_plus, "operator+");
+	REGISTER_METHOD_RENAME(Integer, operator_minus, "operator-");
+	REGISTER_METHOD_RENAME(Integer, operator_times, "operator*");
+	REGISTER_METHOD_RENAME(Integer, operator_divide, "operator/");
+	REGISTER_METHOD_RENAME(Integer, operator_modulo, "operator%");
+	REGISTER_METHOD_RENAME(Integer, operator_and, "operator&");
+	REGISTER_METHOD_RENAME(Integer, operator_or, "operator|");
+	REGISTER_METHOD_RENAME(Integer, operator_xor, "operator^");
+	REGISTER_METHOD_RENAME(Integer, operator_tilde, "operator~");
+	REGISTER_METHOD_RENAME(Integer, operator_leftshift, "operator<<");
+	REGISTER_METHOD_RENAME(Integer, operator_rightshift, "operator>>");
+	REGISTER_METHOD(Integer, operator_uminus);
+	REGISTER_METHOD(Integer, compare);
+	REGISTER_METHOD(Integer, abs);
+	REGISTER_METHOD(Integer, getBit);
+	REGISTER_METHOD(Integer, setBit);
+	REGISTER_METHOD(Integer, length);
+	REGISTER_METHOD(Integer, toString);
+	REGISTER_METHOD(Integer, toBool);
+	REGISTER_METHOD(Integer, toFloat);
+	REGISTER_METHOD(Integer, toInt);
+	REGISTER_METHOD(Integer, sqrt);
 	REGISTER_METHOD(Integer, getIterator);
 	REGISTER_CLASS(Integer, Iterator);
-END_EHLC()
+}
 
 EH_METHOD(Integer, initialize) {
 	return ehi->to_int(args, obj);

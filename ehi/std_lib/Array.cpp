@@ -96,11 +96,11 @@ EH_METHOD(Array, getIterator) {
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 
-START_EHLC(Array_Iterator)
+EH_INITIALIZER(Array_Iterator) {
 EHLC_ENTRY(Array_Iterator, initialize)
 EHLC_ENTRY(Array_Iterator, hasNext)
 EHLC_ENTRY(Array_Iterator, next)
-END_EHLC()
+}
 
 Array_Iterator::Array_Iterator(ehretval_p array) {
 	this->current_type = int_e;

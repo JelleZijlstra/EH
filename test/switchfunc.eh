@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 switcher = func: n
 	testfunc = func: n
-		if !(is_int n)
+		if !(n.isA Integer)
 			echo 'Error input must be an integer'
 			ret false
 		end

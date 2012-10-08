@@ -10,31 +10,22 @@
 #include "GlobalObject.h"
 #include "../eh.bison.hpp"
 
-START_EHLC(GlobalObject)
-EHLC_ENTRY(GlobalObject, toString)
-EHLC_ENTRY(GlobalObject, getinput)
-EHLC_ENTRY(GlobalObject, printvar)
-EHLC_ENTRY(GlobalObject, is_null)
-EHLC_ENTRY(GlobalObject, is_string)
-EHLC_ENTRY(GlobalObject, is_int)
-EHLC_ENTRY(GlobalObject, is_bool)
-EHLC_ENTRY(GlobalObject, is_array)
-EHLC_ENTRY(GlobalObject, is_object)
-EHLC_ENTRY(GlobalObject, is_range)
-EHLC_ENTRY(GlobalObject, is_float)
-EHLC_ENTRY(GlobalObject, get_type)
-EHLC_ENTRY(GlobalObject, include)
-EHLC_ENTRY(GlobalObject, pow)
-EHLC_ENTRY(GlobalObject, log)
-EHLC_ENTRY(GlobalObject, eval)
-EHLC_ENTRY(GlobalObject, throw)
-EHLC_ENTRY(GlobalObject, echo)
-EHLC_ENTRY(GlobalObject, put)
-EHLC_ENTRY(GlobalObject, collectGarbage)
-EHLC_ENTRY(GlobalObject, handleUncaught)
+EH_INITIALIZER(GlobalObject) {
+	REGISTER_METHOD(GlobalObject, toString);
+	REGISTER_METHOD(GlobalObject, getinput);
+	REGISTER_METHOD(GlobalObject, printvar);
+	REGISTER_METHOD(GlobalObject, include);
+	REGISTER_METHOD(GlobalObject, pow);
+	REGISTER_METHOD(GlobalObject, log);
+	REGISTER_METHOD(GlobalObject, eval);
+	REGISTER_METHOD(GlobalObject, throw);
+	REGISTER_METHOD(GlobalObject, echo);
+	REGISTER_METHOD(GlobalObject, put);
+	REGISTER_METHOD(GlobalObject, collectGarbage);
+	REGISTER_METHOD(GlobalObject, handleUncaught);
 	REGISTER_METHOD(GlobalObject, workingDir);
 	REGISTER_METHOD(GlobalObject, contextName);
-END_EHLC()
+}
 
 EH_METHOD(GlobalObject, toString) {
 	return ehretval_t::make_string(strdup("(global execution context)"));
@@ -247,26 +238,6 @@ EH_METHOD(GlobalObject, printvar) {
 	printvar_t printer(args, ehi);
 	// this function always returns NULL
 	return NULL;
-}
-
-/*
- * Type checking functions
- */
-#define TYPEFUNC(typev) EH_METHOD(GlobalObject, is_ ## typev) { \
-	return ehretval_t::make_bool(args->type() == typev ## _e); \
-}
-
-TYPEFUNC(null)
-TYPEFUNC(int)
-TYPEFUNC(string)
-TYPEFUNC(bool)
-TYPEFUNC(float)
-TYPEFUNC(array)
-TYPEFUNC(object)
-TYPEFUNC(range)
-// get the type of a variable
-EH_METHOD(GlobalObject, get_type) {
-	return ehretval_t::make_string(strdup(get_typestring(args->type())));
 }
 
 /*

@@ -6,7 +6,7 @@ switch argc
 		continue
 	case 2
 		echo 'I got two'
-	case is_int
+	case x => x.isA Integer
 		echo 'Will this get executed?'
 	case "2"
 		echo 'And this?'

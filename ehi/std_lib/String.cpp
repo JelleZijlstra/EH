@@ -1,21 +1,21 @@
 #include "String.h"
 
-START_EHLC(String)
-	EHLC_ENTRY(String, initialize)
-	EHLC_ENTRY_RENAME(String, operator_plus, "operator+")
-	EHLC_ENTRY_RENAME(String, operator_arrow, "operator->")
-	EHLC_ENTRY_RENAME(String, operator_arrow_equals, "operator->=")
-	EHLC_ENTRY(String, compare)
-	EHLC_ENTRY(String, length)
-	EHLC_ENTRY(String, toString)
-	EHLC_ENTRY(String, toInt)
-	EHLC_ENTRY(String, toFloat)
-	EHLC_ENTRY(String, toBool)
-	EHLC_ENTRY(String, toRange)
-	EHLC_ENTRY(String, charAtPosition)
-	EHLC_ENTRY(String, getIterator)
+EH_INITIALIZER(String) {
+	REGISTER_METHOD(String, initialize);
+	REGISTER_METHOD_RENAME(String, operator_plus, "operator+");
+	REGISTER_METHOD_RENAME(String, operator_arrow, "operator->");
+	REGISTER_METHOD_RENAME(String, operator_arrow_equals, "operator->=");
+	REGISTER_METHOD(String, compare);
+	REGISTER_METHOD(String, length);
+	REGISTER_METHOD(String, toString);
+	REGISTER_METHOD(String, toInt);
+	REGISTER_METHOD(String, toFloat);
+	REGISTER_METHOD(String, toBool);
+	REGISTER_METHOD(String, toRange);
+	REGISTER_METHOD(String, charAtPosition);
+	REGISTER_METHOD(String, getIterator);
 	REGISTER_CLASS(String, Iterator);
-END_EHLC()
+}
 
 EH_METHOD(String, initialize) {
 	return ehi->to_string(args, obj);
@@ -151,12 +151,12 @@ EH_METHOD(String, getIterator) {
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 
-START_EHLC(String_Iterator)
+EH_INITIALIZER(String_Iterator) {
 EHLC_ENTRY(String_Iterator, initialize)
 EHLC_ENTRY(String_Iterator, hasNext)
 EHLC_ENTRY(String_Iterator, next)
 	REGISTER_METHOD(String_Iterator, peek);
-END_EHLC()
+}
 
 bool String_Iterator::has_next() const {
 	const char *string = this->string->get_stringval();

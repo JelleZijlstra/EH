@@ -229,19 +229,10 @@ commands <public,non-static,constant>: @hash [
 contextName <public,non-static,non-constant>: @function <library>: 
 echo <public,non-static,non-constant>: @function <library>: 
 eval <public,non-static,non-constant>: @function <library>: 
-get_type <public,non-static,non-constant>: @function <library>: 
 getinput <public,non-static,non-constant>: @function <library>: 
 global <public,non-static,constant>: (recursion)
 handleUncaught <public,non-static,non-constant>: @function <library>: 
 include <public,non-static,non-constant>: @function <library>: 
-is_array <public,non-static,non-constant>: @function <library>: 
-is_bool <public,non-static,non-constant>: @function <library>: 
-is_float <public,non-static,non-constant>: @function <library>: 
-is_int <public,non-static,non-constant>: @function <library>: 
-is_null <public,non-static,non-constant>: @function <library>: 
-is_object <public,non-static,non-constant>: @function <library>: 
-is_range <public,non-static,non-constant>: @function <library>: 
-is_string <public,non-static,non-constant>: @function <library>: 
 log <public,non-static,non-constant>: @function <library>: 
 pow <public,non-static,non-constant>: @function <library>: 
 printvar <public,non-static,non-constant>: @function <library>: 

@@ -2,8 +2,8 @@
 
 EH_INITIALIZER(Hash) {
 	REGISTER_METHOD(Hash, toArray);
-	EHLC_ENTRY_RENAME(Hash, operator_arrow, "operator->")
-	EHLC_ENTRY_RENAME(Hash, operator_arrow_equals, "operator->=")
+	REGISTER_METHOD_RENAME(Hash, operator_arrow, "operator->");
+	REGISTER_METHOD_RENAME(Hash, operator_arrow_equals, "operator->=");
 	REGISTER_METHOD(Hash, has);
 	REGISTER_METHOD(Hash, delete);
 	REGISTER_METHOD(Hash, keys);

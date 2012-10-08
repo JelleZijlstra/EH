@@ -1,12 +1,12 @@
 #include "Bool.h"
 
-START_EHLC(Bool)
-EHLC_ENTRY(Bool, initialize)
-EHLC_ENTRY(Bool, toString)
-EHLC_ENTRY(Bool, toBool)
-EHLC_ENTRY(Bool, toInt)
-EHLC_ENTRY_RENAME(Bool, operator_bang, "operator!")
-END_EHLC()
+EH_INITIALIZER(Bool) {
+	REGISTER_METHOD(Bool, initialize);
+	REGISTER_METHOD(Bool, toString);
+	REGISTER_METHOD(Bool, toBool);
+	REGISTER_METHOD(Bool, toInt);
+	REGISTER_METHOD_RENAME(Bool, operator_bang, "operator!");
+}
 
 EH_METHOD(Bool, initialize) {
 	return ehi->to_bool(args, obj);

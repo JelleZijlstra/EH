@@ -3,21 +3,21 @@
 #include "Float.h"
 #include "MiscellaneousError.h"
 
-START_EHLC(Float)
-EHLC_ENTRY(Float, initialize)
-EHLC_ENTRY_RENAME(Float, operator_plus, "operator+")
-EHLC_ENTRY_RENAME(Float, operator_minus, "operator-")
-EHLC_ENTRY_RENAME(Float, operator_times, "operator*")
-EHLC_ENTRY_RENAME(Float, operator_divide, "operator/")
-EHLC_ENTRY(Float, operator_uminus)
-EHLC_ENTRY(Float, compare)
-EHLC_ENTRY(Float, abs)
-EHLC_ENTRY(Float, toString)
-EHLC_ENTRY(Float, toInt)
-EHLC_ENTRY(Float, toBool)
-EHLC_ENTRY(Float, toFloat)
-EHLC_ENTRY(Float, sqrt)
-END_EHLC()
+EH_INITIALIZER(Float) {
+	REGISTER_METHOD(Float, initialize);
+	REGISTER_METHOD_RENAME(Float, operator_plus, "operator+");
+	REGISTER_METHOD_RENAME(Float, operator_minus, "operator-");
+	REGISTER_METHOD_RENAME(Float, operator_times, "operator*");
+	REGISTER_METHOD_RENAME(Float, operator_divide, "operator/");
+	REGISTER_METHOD(Float, operator_uminus);
+	REGISTER_METHOD(Float, compare);
+	REGISTER_METHOD(Float, abs);
+	REGISTER_METHOD(Float, toString);
+	REGISTER_METHOD(Float, toInt);
+	REGISTER_METHOD(Float, toBool);
+	REGISTER_METHOD(Float, toFloat);
+	REGISTER_METHOD(Float, sqrt);
+}
 
 EH_METHOD(Float, initialize) {
 	return ehi->to_float(args, obj);

@@ -3,7 +3,7 @@
 EH_INITIALIZER(Range) {
 	REGISTER_METHOD(Range, min);
 	REGISTER_METHOD(Range, max);
-	EHLC_ENTRY_RENAME(Range, operator_arrow, "operator->")
+	REGISTER_METHOD_RENAME(Range, operator_arrow, "operator->");
 	REGISTER_METHOD(Range, toString);
 	REGISTER_METHOD(Range, toArray);
 	REGISTER_METHOD(Range, toRange);
@@ -109,11 +109,11 @@ EH_METHOD(Range, getIterator) {
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 
-START_EHLC(Range_Iterator)
+EH_INITIALIZER(Range_Iterator) {
 EHLC_ENTRY(Range_Iterator, initialize)
 EHLC_ENTRY(Range_Iterator, hasNext)
 EHLC_ENTRY(Range_Iterator, next)
-END_EHLC()
+}
 
 bool Range_Iterator::has_next(EHI *ehi) {
 	ehretval_p max = this->range->get_rangeval()->max;

@@ -5,6 +5,7 @@
 EH_INITIALIZER(Random) {
 	REGISTER_METHOD(Random, srand);
 	REGISTER_METHOD(Random, rand);
+	REGISTER_CONSTANT(Random, max, ehretval_t::make_int(RAND_MAX));
 }
 
 EH_METHOD(Random, srand) {

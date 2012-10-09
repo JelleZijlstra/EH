@@ -666,10 +666,13 @@ bool ehobj_t::context_compare(const ehcontext_t key) const {
 }
 void ehobj_t::register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *parent) {
 	ehretval_p func = parent->make_method(method, parent->function_object);
-	ehmember_p func_member;
-	func_member->attribute = attributes;
-	func_member->value = func;
-	this->insert(name, func_member);
+	this->register_value(name, func, attributes);
+}
+void ehobj_t::register_value(const std::string &name, ehretval_p value, const attributes_t attributes) {
+	ehmember_p member;
+	member->attribute = attributes;
+	member->value = value;
+	this->insert(name, member);
 }
 void ehobj_t::register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *parent, ehretval_p the_class) {
 	ehobj_t *newclass;

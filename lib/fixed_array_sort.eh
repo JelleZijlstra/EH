@@ -162,7 +162,7 @@ FixedArray.inherit class
 		end
 
 		private nodeIndex = 0
-		private const conversionFactor = (2147483647.toFloat()) / arraySize + 1
+		private const conversionFactor = (Random.max.toFloat()) / arraySize + 1
 		for i in size
 			private n = this->i
 			private index = (n / conversionFactor).toInt()

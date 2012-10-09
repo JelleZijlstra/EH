@@ -161,6 +161,7 @@ type <public,non-static,non-constant>: @function <library>:
 typeId <public,non-static,non-constant>: @function <library>: 
 ]
 Random <public,non-static,constant>: @object <Random> [
+max <public,static,constant>: @int 2147483647
 rand <public,non-static,non-constant>: @function <library>: 
 srand <public,non-static,non-constant>: @function <library>: 
 ]

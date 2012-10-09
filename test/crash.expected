@@ -1,12 +1,12 @@
 %%stdout%%
 Number of pools: 1
-Allocated blocks: 211
-3
-3
-Number of pools: 1
 Allocated blocks: 214
+3
+3
 Number of pools: 1
-Allocated blocks: 215
+Allocated blocks: 217
+Number of pools: 1
+Allocated blocks: 218
 @object <CountClass> [
 ]
 @int 1

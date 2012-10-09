@@ -160,6 +160,10 @@ toString <public,non-static,non-constant>: @function <library>:
 type <public,non-static,non-constant>: @function <library>: 
 typeId <public,non-static,non-constant>: @function <library>: 
 ]
+Random <public,non-static,constant>: @object <Random> [
+rand <public,non-static,non-constant>: @function <library>: 
+srand <public,non-static,non-constant>: @function <library>: 
+]
 Range <public,non-static,constant>: @object <Range> [
 Iterator <public,non-static,non-constant>: @object <Iterator> [
 hasNext <public,non-static,non-constant>: @function <library>: 

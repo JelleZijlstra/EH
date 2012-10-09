@@ -50,6 +50,12 @@ open <public,non-static,non-constant>: @function <library>:
 puts <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 ]
+FixedArray <public,non-static,constant>: @object <FixedArray> [
+initialize <public,non-static,non-constant>: @function <library>: 
+operator-> <public,non-static,non-constant>: @function <library>: 
+operator->= <public,non-static,non-constant>: @function <library>: 
+size <public,non-static,non-constant>: @function <library>: 
+]
 Float <public,non-static,constant>: @object <Float> [
 abs <public,non-static,non-constant>: @function <library>: 
 compare <public,non-static,non-constant>: @function <library>: 

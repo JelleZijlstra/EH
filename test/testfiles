@@ -237,4 +237,4 @@ setters.eh
 retnull.eh
 assert.eh
 include_twice.eh
-fixed_aray.eh
+fixed_array.eh

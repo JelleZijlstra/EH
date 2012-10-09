@@ -13,3 +13,5 @@ for i in fa.size()
 	assert fa->i == i, "test whether I can set all members of a FixedArray"
 end
 fa.each i => echo i
+
+echo FixedArray.with [1, 2, 3]

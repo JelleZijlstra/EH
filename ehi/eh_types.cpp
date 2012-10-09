@@ -99,6 +99,8 @@ std::list<ehretval_p> ehretval_t::children() {
 		case super_class_e:
 			out.push_back(this->get_super_classval()->content());
 			break;
+		case resource_e:
+			break;
 		default:
 			// nothing to see here
 			break;

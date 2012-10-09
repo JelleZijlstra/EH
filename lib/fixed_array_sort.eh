@@ -162,18 +162,16 @@ FixedArray.inherit class
 		end
 
 		private nodeIndex = 0
-		private const conversionFactor = 4 / arraySize + 1;
+		private const conversionFactor = (2147483647.toFloat()) / arraySize + 1
 		for i in size
 			private n = this->i
-			private index = n / conversionFactor
-			echo index
-			sorter->index = n::(sorter->i)
+			private index = (n / conversionFactor).toInt()
+			sorter->index = n::(sorter->index)
 		end
-		echo sorter
 
 		private index = 0
 		for i in arraySize + 1
-			for n in sorter->i
+			for n in ((sorter->i).sort())
 				this->index = n
 				index++
 			end

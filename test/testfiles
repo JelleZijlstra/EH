@@ -238,3 +238,5 @@ retnull.eh
 assert.eh
 include_twice.eh
 fixed_array.eh
+rand.eh
+fixed_array_sorting.eh

@@ -53,3 +53,12 @@ FixedArray.with = func: input
 	end
 	out
 end
+
+FixedArray.fill = func: size, f
+	out = FixedArray.new size
+	for i in size
+		out->i = f i
+	end
+	out
+end
+

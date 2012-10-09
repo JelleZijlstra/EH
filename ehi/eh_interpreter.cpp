@@ -28,6 +28,7 @@
 #include "std_lib/NameError.h"
 #include "std_lib/Null.h"
 #include "std_lib/Object.h"
+#include "std_lib/Random.h"
 #include "std_lib/Range.h"
 #include "std_lib/String.h"
 #include "std_lib/SuperClass.h"
@@ -71,6 +72,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(GarbageCollector, -1)
 	LIBCLASSENTRY(EmptyIterator, -1)
 	LIBCLASSENTRY(FixedArray, -1)
+	LIBCLASSENTRY(Random, -1)
 	{NULL, NULL, 0}
 };
 

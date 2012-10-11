@@ -241,3 +241,4 @@ fixed_array.eh
 rand.eh
 fixed_array_sorting.eh
 privatecomp.eh
+largesort.eh

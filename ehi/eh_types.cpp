@@ -441,9 +441,15 @@ std::string ehretval_t::decompile(int level) {
 					break;
 				}
 				case T_CLASS:
-					out << "class " << op->paras[0]->get_stringval() << "\n";
-					add_tabs(out, level + 1);
-					out << op->paras[1]->decompile(level + 1);
+					if(op->nparas == 2) {
+						out << "class " << op->paras[0]->get_stringval() << "\n";
+						add_tabs(out, level + 1);
+						out << op->paras[1]->decompile(level + 1);
+					} else {
+						out << "class\n";
+						add_tabs(out, level + 1);
+						out << op->paras[0]->decompile(level + 1);						
+					}
 					add_end(out, level);
 					break;
 				case T_FUNC:

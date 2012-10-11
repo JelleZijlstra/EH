@@ -72,6 +72,7 @@ toInt <public,non-static,non-constant>: @function <library>:
 toString <public,non-static,non-constant>: @function <library>: 
 ]
 Function <public,non-static,constant>: @object <Function> [
+bindTo <public,non-static,non-constant>: @function <library>: 
 decompile <public,non-static,non-constant>: @function <library>: 
 operator: <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
@@ -123,6 +124,7 @@ operator~ <public,non-static,non-constant>: @function <library>:
 setBit <public,non-static,non-constant>: @function <library>: 
 sqrt <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
+toChar <public,non-static,non-constant>: @function <library>: 
 toFloat <public,non-static,non-constant>: @function <library>: 
 toInt <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 

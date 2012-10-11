@@ -6,6 +6,7 @@ EH_INITIALIZER(Function) {
 	REGISTER_METHOD_RENAME(Function, operator_colon, "operator:");
 	REGISTER_METHOD(Function, toString);
 	REGISTER_METHOD(Function, decompile);
+	REGISTER_METHOD(Function, bindTo);
 }
 
 EH_METHOD(Function, operator_colon) {
@@ -69,5 +70,17 @@ EH_METHOD(Function, toString) {
 		std::ostringstream out;
 		out << f->args->decompile(0) << " => (user code)";
 		return ehretval_t::make_string(strdup(out.str().c_str()));
+	}
+}
+
+EH_METHOD(Function, bindTo) {
+	if(obj->type() == binding_e) {
+		ehbinding_t *b = obj->get_bindingval();
+		return ehi->get_parent()->make_binding(new ehbinding_t(args, b->method));
+	} else if(obj->type() == func_e) {
+		return ehi->get_parent()->make_binding(new ehbinding_t(args, obj));
+	} else {
+		throw_TypeError("Invalid base object for Function.bindTo", obj->type(), ehi);
+		return NULL;
 	}
 }

@@ -26,6 +26,7 @@ EH_INITIALIZER(Integer) {
 	REGISTER_METHOD(Integer, toBool);
 	REGISTER_METHOD(Integer, toFloat);
 	REGISTER_METHOD(Integer, toInt);
+	REGISTER_METHOD(Integer, toChar);
 	REGISTER_METHOD(Integer, sqrt);
 	REGISTER_METHOD(Integer, getIterator);
 	REGISTER_CLASS(Integer, Iterator);
@@ -198,9 +199,19 @@ EH_METHOD(Integer, toInt) {
 	ASSERT_NULL_AND_TYPE(int_e, "Integer.toInt");
 	return obj;
 }
+EH_METHOD(Integer, toChar) {
+	ASSERT_NULL_AND_TYPE(int_e, "Integer.toChar");
+	if(obj->get_intval() < 0 || obj->get_intval() > SCHAR_MAX) {
+		throw_ArgumentError_out_of_range("Integer.toChar", obj, ehi);
+	}
+	char *out = new char[2];
+	out[0] = obj->get_intval();
+	out[1] = '\0';
+	return ehretval_t::make_string(out);
+}
 EH_METHOD(Integer, sqrt) {
-  ASSERT_NULL_AND_TYPE(int_e, "Integer.sqrt");
-  return ehretval_t::make_int((int) sqrt((double) obj->get_intval()));
+	ASSERT_NULL_AND_TYPE(int_e, "Integer.sqrt");
+	return ehretval_t::make_int((int) sqrt((double) obj->get_intval()));
 }
 EH_METHOD(Integer, getIterator) {
 	ASSERT_NULL_AND_TYPE(int_e, "Integer.getIterator");

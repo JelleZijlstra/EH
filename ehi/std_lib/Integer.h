@@ -24,6 +24,7 @@ EH_METHOD(Integer, length);
 EH_METHOD(Integer, toString);
 EH_METHOD(Integer, toBool);
 EH_METHOD(Integer, toFloat);
+EH_METHOD(Integer, toChar);
 EH_METHOD(Integer, toInt);
 EH_METHOD(Integer, sqrt);
 EH_METHOD(Integer, getIterator);

@@ -827,7 +827,14 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 			}
 			// accessor is guaranteed to be a string
 			char *accessor = eh_execute(internal_paras[1], context)->get_stringval();
-			this->set_property(base_var, accessor, rvalue, context);
+			if(attributes == NULL) {
+				this->set_property(base_var, accessor, rvalue, context);
+			} else {
+				ehmember_p new_member;
+				new_member->value = rvalue;
+				new_member->attribute = *attributes;
+				this->set_member(base_var, accessor, new_member, context);
+			}
 			return rvalue;
 		}
 		case '$': {

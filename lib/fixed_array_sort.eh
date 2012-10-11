@@ -100,8 +100,8 @@ FixedArray.inherit class
 			ret
 		end
 		const half = size / 2
-		this.mergeSortIndexed 0, half
-		this.mergeSortIndexed half, size - half
+		this.mergeSortIndexed min, half
+		this.mergeSortIndexed min + half, size - half
 
 		private merged = FixedArray.new size
 		private first_index = 0
@@ -140,16 +140,17 @@ FixedArray.inherit class
 
 		private storageIndex = min
 		this.swap half, min + size - 1
-		for i in min..(size - 2)
+		for i in min..(min + size - 2)
 			if this->i < pivot
 				this.swap i, storageIndex
 				storageIndex++
 			end
 		end
+
 		this.swap storageIndex, min + size - 1
 
 		this.quickSortIndexed min, storageIndex - min
-		this.quickSortIndexed min + storageIndex + 1, size - storageIndex - 1
+		this.quickSortIndexed storageIndex + 1, min + size - storageIndex - 1
 		this
 	end
 

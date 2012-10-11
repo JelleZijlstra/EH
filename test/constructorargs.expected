@@ -1,5 +1,6 @@
 %%stdout%%
 a
 b
+
+
 %%stderr%%
-Uncaught exception of type NameError: Unknown member operator-> in object of type Null: 

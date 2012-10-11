@@ -299,7 +299,6 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				return eh_op_array(paras[0], context);
 			case '{': // hash
 				return eh_op_anonclass(paras[0], context);
-				break;
 			case ',': // tuple
 				return eh_op_tuple(node, context);
 			case T_RANGE:
@@ -683,7 +682,6 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 }
 void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	// rely on standard layout of the paras
-	ehmember_p new_member;
 	attributes_t attributes = attributes_t::make();
 	for(ehretval_p node = op->paras[0]; node->get_opval()->nparas != 0; node = node->get_opval()->paras[0]) {
 		switch(node->get_opval()->paras[1]->get_attributeval()) {
@@ -701,28 +699,7 @@ void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 				break;
 		}
 	}
-	new_member->attribute = attributes;
-	char *name = eh_execute(op->paras[1], context)->get_stringval();
-
-	// decide what we got
-	switch(op->nparas) {
-		case 2: // non-set property: null
-			new_member->value = NULL;
-			break;
-		case 3: { // set property
-			ehretval_p value = eh_execute(op->paras[2], context);
-			if(value->type() == binding_e) {
-				ehretval_p obj_data = value->get_bindingval()->object_data;
-				if(obj_data->type() == object_e && obj_data->get_objectval() == context.scope->get_objectval()) {
-					ehretval_p reference_retainer = value;
-					value = value->get_bindingval()->method;
-				}
-			}
-			new_member->value = value;
-			break;
-		}
-	}
-	this->set_member(context.scope, name, new_member, context);
+	set(op->paras[1], eh_execute(op->paras[2], context), &attributes, context);
 }
 ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret;
@@ -879,7 +856,12 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 			ehretval_p arg_node = lvalue;
 			for(int i = 0; true; i++) {
 				opnode_t *op = arg_node->get_opval();
-				ehretval_p internal_rvalue = call_method(rvalue, "operator->", ehretval_t::make_int(i), context);
+				ehretval_p internal_rvalue;
+				if(rvalue->type() != null_e) {
+					internal_rvalue = call_method(rvalue, "operator->", ehretval_t::make_int(i), context);
+				} else {
+					internal_rvalue = NULL;
+				}
 				if(op->op == ',') {
 					set(op->paras[0], internal_rvalue, attributes, context);
 					arg_node = op->paras[1];
@@ -1072,9 +1054,17 @@ ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p val
 	return result;
 }
 // insert an ehmember_p directly on this object, without worrying about inheritance
-ehmember_p EHI::set_member(ehretval_p object, const char *name, ehmember_p value, ehcontext_t context) {
+ehmember_p EHI::set_member(ehretval_p object, const char *name, ehmember_p member, ehcontext_t context) {
 	// caller should ensure object is actually an object
 	ehobj_t *obj = object->get_objectval();
+	// unbind bindings to myself
+	ehretval_p value = member->value;
+	if(value->type() == binding_e) {
+		ehretval_p obj_data = value->get_bindingval()->object_data;
+		if(obj_data->type() == object_e && obj == obj_data->get_objectval()) {
+			member->value = value->get_bindingval()->method;
+		}
+	}
 	if(obj->has(name)) {
 		ehmember_p the_member = obj->get_known(name);
 		if(the_member->attribute.isconst == const_e) {
@@ -1085,8 +1075,8 @@ ehmember_p EHI::set_member(ehretval_p object, const char *name, ehmember_p value
 			throw_NameError(object, name, this);
 		}
 	}
-	obj->insert(name, value);
-	return value;
+	obj->insert(name, member);
+	return member;
 }
 ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t context) {
 	ehretval_p object;

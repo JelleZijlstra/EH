@@ -198,17 +198,17 @@ statement:
 							{ $$ = ADD_NODE1(T_BREAK, $2); }
 							/* property declaration */
 	| attributelist T_VARIABLE T_SEPARATOR
-							{ $$ = ADD_NODE2(T_CLASSMEMBER, $1, $2); }
-	| attributelist T_VARIABLE '=' expression T_SEPARATOR
+							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2), ADD_NODE0(T_NULL)); }
+	| attributelist expression '=' expression T_SEPARATOR
 							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, $4); }
 	| attributelist T_VARIABLE ':' parglist '{' statement_list '}' T_SEPARATOR
-							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, 
+							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2),
 									ADD_NODE2(T_FUNC, $4, $6)); }
 	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, 
+							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2),
 									ADD_NODE2(T_FUNC, $4, $6)); }
 	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
-							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, 
+							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2),
 									ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_TRY '{' statement_list '}' catch_clauses_braces T_SEPARATOR
 				{ $$ = ADD_NODE2(T_TRY, $3, $5); }

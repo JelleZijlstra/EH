@@ -16,6 +16,17 @@ FixedArray.inherit class
 		true
 	end
 
+	public bogoSort = func:
+		private size = this.size()
+		while !(this.isSorted())
+			for i in 0..(size - 1)
+				private swap_with = (Random.rand()) % size
+				this.swap i, swap_with
+			end
+		end
+		this
+	end
+
 	public bubbleSort = func:
 		private comparisons
 		while true
@@ -27,7 +38,7 @@ FixedArray.inherit class
 				end
 			end
 			if comparisons == 0
-				ret
+				break
 			end
 		end
 		this

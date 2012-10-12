@@ -378,7 +378,11 @@ std::string ehretval_t::decompile(int level) {
 					out << "scope";
 					break;
 				case T_RET:
-					out << "ret " << op->paras[0]->decompile(level);
+					if(op->nparas == 0) {
+						out << "ret";
+					} else {
+						out << "ret " << op->paras[0]->decompile(level);
+					}
 					break;
 				case T_CLASSMEMBER:
 					out << op->paras[0]->decompile(level) << op->paras[1]->decompile(level);

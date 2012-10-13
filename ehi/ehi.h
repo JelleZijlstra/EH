@@ -237,6 +237,7 @@ private:
 	ehretval_p eh_op_dot(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_for(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_given(ehretval_p *paras, ehcontext_t context);
+	ehretval_p eh_op_if(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_in(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_set(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_switch(ehretval_p *paras, ehcontext_t context);

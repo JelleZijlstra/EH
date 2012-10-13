@@ -397,12 +397,22 @@ std::string ehretval_t::decompile(int level) {
 					out << "if " << op->paras[0]->decompile(level) << "\n";
 					add_tabs(out, level + 1);
 					out << op->paras[1]->decompile(level + 1);
-					if(op->nparas == 3) {
-						out << "\n";
-						add_tabs(out, level);
-						out << "else\n";
-						add_tabs(out, level + 1);
-						out << op->paras[2]->decompile(level + 1);
+					if(op->nparas > 2) {
+						for(opnode_t *iop = op->paras[2]->get_opval(); iop->nparas != 0; iop = iop->paras[1]->get_opval()) {
+							ehretval_p *current_block = iop->paras[0]->get_opval()->paras;
+							out << "\n";
+							add_tabs(out, level);
+							out << "elsif " << current_block[0]->decompile(level) << "\n";
+							add_tabs(out, level + 1);
+							out << current_block[1]->decompile(level);
+						}
+						if(op->nparas == 4) {
+							out << "\n";
+							add_tabs(out, level);
+							out << "else\n";
+							add_tabs(out, level + 1);
+							out << op->paras[3]->decompile(level + 1);
+						}
 					}
 					add_end(out, level);
 					break;

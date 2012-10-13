@@ -68,6 +68,7 @@
 			}
 "if"		return T_IF;
 "else"		return T_ELSE;
+"elsif"		return T_ELSIF;
 "endif"		return T_ENDIF;
 "for"		return T_FOR;
 "endfor"	return T_ENDFOR;

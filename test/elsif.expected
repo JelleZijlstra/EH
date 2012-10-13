@@ -1,0 +1,5 @@
+%%stdout%%
+Too few arguments!
+Too many arguments!
+Exactly the right number of arguments!
+%%stderr%%

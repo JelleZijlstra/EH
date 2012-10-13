@@ -41,6 +41,7 @@ EHI *yyget_extra(void *scanner);
 %token <bValue> T_BOOL
 %token T_IF
 %token T_ELSE
+%token T_ELSIF
 %token T_ENDIF
 %token T_WHILE
 %token T_ENDWHILE
@@ -98,6 +99,7 @@ EHI *yyget_extra(void *scanner);
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember 
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list 
 %type<ehNode> bareword_or_string para_expr catch_clauses catch_clause catch_clauses_braces catch_clause_braces block_expression
+%type<ehNode> elseif_clauses elseif_clause
 %%
 program:
 	global_list				{ 	// Don't do anything. Destructors below take 
@@ -375,19 +377,32 @@ expression:
 	| '(' '$' command ')'
 							{ $$ = $3; }
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
+
 	| T_IF block_expression '{' statement_list '}'
 							{ $$ = ADD_NODE2(T_IF, $2, $4); }
 	| T_IF block_expression '{' statement_list '}' T_ELSE '{' statement_list '}'
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $8); }
-	| T_IF block_expression T_SEPARATOR statement_list T_ENDIF
-							{ $$ = ADD_NODE2(T_IF, $2, $4); }
-	| T_IF block_expression T_SEPARATOR statement_list T_ELSE statement_list T_ENDIF
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $6); }
-	| T_IF block_expression T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE2(T_IF, $2, $4); }
-	| T_IF block_expression T_SEPARATOR statement_list T_ELSE statement_list T_END
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $6); }
+							{ $$ = ADD_NODE4(T_IF, $2, $4, ADD_NODE0(','), $8); }
+	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ENDIF
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $5); }
+	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ELSE statement_list T_ENDIF
+							{ $$ = ADD_NODE4(T_IF, $2, $4, $5, $7); }
+	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_END
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $5); }
+	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ELSE statement_list T_END
+							{ $$ = ADD_NODE4(T_IF, $2, $4, $5, $7); }
 	;
+
+elseif_clauses:
+	elseif_clause elseif_clauses
+							{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	;
+
+elseif_clause:
+	T_ELSIF block_expression T_SEPARATOR statement_list
+							{ $$ = ADD_NODE2(T_ELSE, $2, $4); }
+	;
+
 
 block_expression:
 	/*
@@ -527,15 +542,15 @@ block_expression:
 	| T_IF block_expression '{' statement_list '}'
 							{ $$ = ADD_NODE2(T_IF, $2, $4); }
 	| T_IF block_expression '{' statement_list '}' T_ELSE '{' statement_list '}'
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $8); }
-	| T_IF block_expression T_SEPARATOR statement_list T_ENDIF
-							{ $$ = ADD_NODE2(T_IF, $2, $4); }
-	| T_IF block_expression T_SEPARATOR statement_list T_ELSE statement_list T_ENDIF
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $6); }
-	| T_IF block_expression T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE2(T_IF, $2, $4); }
-	| T_IF block_expression T_SEPARATOR statement_list T_ELSE statement_list T_END
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $6); }
+							{ $$ = ADD_NODE4(T_IF, $2, $4, ADD_NODE0(','), $8); }
+	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ENDIF
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $5); }
+	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ELSE statement_list T_ENDIF
+							{ $$ = ADD_NODE4(T_IF, $2, $4, $5, $7); }
+	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_END
+							{ $$ = ADD_NODE3(T_IF, $2, $4, $5); }
+	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ELSE statement_list T_END
+							{ $$ = ADD_NODE4(T_IF, $2, $4, $5, $7); }
 	;
 
 para_expr:

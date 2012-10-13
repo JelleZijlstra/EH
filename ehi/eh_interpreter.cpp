@@ -214,13 +214,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 * Control flow
 		 */
 			case T_IF:
-				operand1 = eh_execute(paras[0], context);
-				if(this->to_bool(operand1, context)->get_boolval()) {
-					ret = eh_execute(paras[1], context);
-				} else if(node->get_opval()->nparas == 3) {
-					ret = eh_execute(paras[2], context);
-				}
-				break;
+				return eh_op_if(node->get_opval(), context);
 			case T_WHILE:
 				return eh_op_while(paras, context);
 			case T_FOR:
@@ -520,6 +514,28 @@ ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
 	}
 	inloop--;
 	return ret;
+}
+ehretval_p EHI::eh_op_if(opnode_t *op, ehcontext_t context) {
+	if(this->to_bool(eh_execute(op->paras[0], context), context)->get_boolval()) {
+		return eh_execute(op->paras[1], context);
+	} else if(op->nparas == 2) {
+		// if something { do_something() }
+		return NULL;
+	} else {
+		// loop through elsifs
+		for(opnode_t *iop = op->paras[2]->get_opval(); iop->nparas != 0; iop = iop->paras[1]->get_opval()) {
+			ehretval_p *current_block = iop->paras[0]->get_opval()->paras;
+			if(this->to_bool(eh_execute(current_block[0], context), context)->get_boolval()) {
+				return eh_execute(current_block[1], context);
+			}
+		}
+		// if there is a final else
+		if(op->nparas == 4) {
+			return eh_execute(op->paras[3], context);			
+		} else {
+			return NULL;
+		}
+	}
 }
 ehretval_p EHI::eh_op_while(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret = NULL;

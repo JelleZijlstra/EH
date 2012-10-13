@@ -121,14 +121,12 @@ FixedArray.inherit class
 			if first_index == half
 				merged->i = this->(min + second_index)
 				second_index++
+			elsif (second_index == size) || (this->(min + first_index) < this->(min + second_index))
+				merged->i = this->(min + first_index)
+				first_index++
 			else
-				if (second_index == size) || (this->(min + first_index) < this->(min + second_index))
-					merged->i = this->(min + first_index)
-					first_index++
-				else
-					merged->i = this->(min + second_index)
-					second_index++
-				end
+				merged->i = this->(min + second_index)
+				second_index++
 			end
 		end
 		for i in size

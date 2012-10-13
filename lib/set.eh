@@ -17,12 +17,10 @@ class BinaryTreeSet
 			private comparison = val <=> this.n->1
 			if comparison < 0
 				this.n->0 = insertHelper this.n->0, val
+			elsif comparison == 0
+				# do nothing
 			else
-				if comparison == 0
-					# do nothing
-				else
-					this.n->2 = insertHelper this.n->2, val
-				end
+				this.n->2 = insertHelper this.n->2, val
 			end
 		end
 
@@ -49,12 +47,10 @@ class BinaryTreeSet
 			private comparison = elt <=> this.n->1
 			if comparison < 0
 				helper this.n->0, elt
+			elsif comparison == 0
+				true
 			else
-				if comparison == 0
-					true
-				else
-					helper this.n->2, elt
-				end
+				helper this.n->2, elt
 			end
 		end
 

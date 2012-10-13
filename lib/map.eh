@@ -17,12 +17,10 @@ class BinaryTreeMap
 			private comparison = key <=> this.n->1
 			if comparison < 0
 				this.n->0 = insertHelper this.n->0, key, val
+			elsif comparison == 0
+				this.n->2 = val
 			else
-				if comparison == 0
-					this.n->2 = val
-				else
-					this.n->3 = insertHelper this.n->3, key, val
-				end
+				this.n->3 = insertHelper this.n->3, key, val
 			end
 		end
 
@@ -46,12 +44,10 @@ class BinaryTreeMap
 			private comparison = key <=> this.n->1
 			if comparison < 0
 				helper this.n->0, key
+			elsif comparison == 0
+				this.n->2
 			else
-				if comparison == 0
-					this.n->2
-				else
-					helper this.n->3, key
-				end
+				helper this.n->3, key
 			end
 		end
 

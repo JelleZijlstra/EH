@@ -82,16 +82,12 @@ class List
 	const private merge = func: r
 		if this.l == null
 			r
+		elsif (r.isEmpty())
+			this
+		elsif this.l->0 < r->0
+			Cons this.l->0, (this.l->1).merge r
 		else
-			if (r.isEmpty())
-				this
-			else
-				if this.l->0 < r->0
-					Cons this.l->0, (this.l->1).merge r
-				else
-					Cons r->0, this.merge r->1
-				end
-			end
+			Cons r->0, this.merge r->1
 		end
 	end
 

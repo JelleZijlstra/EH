@@ -68,15 +68,13 @@ class Iterable
 					if comparison < 0
 						l.next()
 						(this.add l_head).merge l, r
+					elsif comparison == 0
+						l.next()
+						r.next()
+						((this.add l_head).add r_head).merge l, r
 					else
-						if comparison == 0
-							l.next()
-							r.next()
-							((this.add l_head).add r_head).merge l, r
-						else
-							r.next()
-							(this.add r_head).merge l, r
-						end
+						r.next()
+						(this.add r_head).merge l, r
 					end
 			end
 		end

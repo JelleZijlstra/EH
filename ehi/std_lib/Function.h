@@ -6,15 +6,6 @@
 
 #include "std_lib_includes.h"
 
-// structure for function arguments
-class eharg_t {
-public:
-	// in future, add type for type checking
-	std::string name;
-
-	eharg_t() : name() {}
-};
-
 /*
  * EH functions. Unlike other primitive types, functions must always be wrapped
  * in objects in order to preserve scope.

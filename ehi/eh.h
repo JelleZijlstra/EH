@@ -121,15 +121,6 @@ typedef struct opnode_t {
 	}
 } opnode_t;
 
-typedef struct ehlm_listentry_t {
-	const char *name;
-	ehlibmethod_t func;
-} ehlm_listentry_t;
-
-typedef struct ehlibclass_t {
-	ehlm_listentry_t *members;
-} ehlibclass_t;
-
 /*
  * Other global functions
  */

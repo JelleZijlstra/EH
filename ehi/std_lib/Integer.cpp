@@ -1,4 +1,5 @@
 #include <cmath>
+#include <limits.h>
 
 #include "Integer.h"
 #include "MiscellaneousError.h"

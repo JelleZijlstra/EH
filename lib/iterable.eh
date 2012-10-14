@@ -84,9 +84,7 @@ class Iterable
 		case 0; this
 		case 1; this
 		default
-			private l
-			private r
-			l, r = split (this.getIterator()), (this.empty()), (this.empty())
+			private l, r = split (this.getIterator()), (this.empty()), (this.empty())
 			l = l.sort()
 			r = r.sort()
 			(this.empty()).merge (l.getIterator()), (r.getIterator())

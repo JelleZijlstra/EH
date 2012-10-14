@@ -1,22 +1,21 @@
 %%stdout%%
 func: ()
 	if this.l == ()
-		ret Nil
-	end
-	if (this.isSingleton ())
+		Nil
+	elsif (this.isSingleton ())
 		this
 	else
 		
-		private const splitList = this.split Nil, Nil
-		((splitList->0).sort ()).merge ((splitList->1).sort ())
+		private const l, r = this.split Nil, Nil
+		(l.sort ()).merge r.sort ()
 	end
 end
 func: f
-	if this.l == ()
-		Nil
-	else
-		
-		Cons (f this.l->0), (this.l->1).map f
+	given this.l
+		case ()
+			Nil
+		default
+			Cons (f this.l->0), (this.l->1).map f
 	end
 end
 func: f

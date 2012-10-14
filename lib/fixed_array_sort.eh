@@ -64,8 +64,8 @@ FixedArray.inherit class
 	public selectionSort = func:
 		const size = this.size()
 		for i in size - 1
-			smallest = i
-			smallest_value = this->i
+			private smallest = i
+			private smallest_value = this->i
 			for j in (i + 1)..(size - 1)
 				if this->j < smallest_value
 					smallest = j

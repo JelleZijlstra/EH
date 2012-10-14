@@ -32,20 +32,18 @@ class List
 
 	const isSingleton = () => (this.l != null && (this.l->1).isEmpty())
 	
-	const map = func: f
-		if this.l == null
+	const map = f => given this.l
+		case null
 			Nil
-		else
+		default
 			Cons (f this.l->0), (this.l->1).map f
-		end
 	end
 	
-	const reduce = func: base, f
-		if this.l == null
+	const reduce = base, f => given this.l
+		case null
 			base
-		else
+		default
 			f this.l->0, (this.l->1.reduce base, f)			
-		end
 	end
 	
 	const length = () => this.reduce (0, (k, rest => rest + 1))
@@ -60,23 +58,21 @@ class List
 		end
 	end
 
-	const private reverse_append = func: accum
-		if this.l == null
+	const private reverse_append = accum => given this.l
+		case null
 			accum
-		else
+		default
 			(this.l->1).reverse_append (Cons this.l->0, accum)
-		end
 	end
 
 	const reverse = () => this.reverse_append Nil
 
 	# Merge sort implementation
-	const private split = func: l, r
-		if this.l == null
+	const private split = l, r => given this.l
+		case null
 			l, r
-		else
+		default
 			(this.l->1).split r, (Cons this.l->0, l)
-		end
 	end
 
 	const private merge = func: r
@@ -93,21 +89,19 @@ class List
 
 	const sort = func:
 		if this.l == null
-			ret Nil
-		end
-		if (this.isSingleton())
+			Nil
+		elsif (this.isSingleton())
 			this
 		else
-			private const splitList = this.split Nil, Nil
-			((splitList->0).sort()).merge ((splitList->1).sort())
+			private const l, r = this.split Nil, Nil
+			(l.sort()).merge r.sort()
 		end
 	end
 
 	const rev_append = func: rhs
 		if this.l == null
-			ret rhs
-		end
-		if (this.isSingleton())
+			rhs
+		elsif (this.isSingleton())
 			Cons this.l->0, rhs
 		else
 			(this.l->1).rev_append (Cons this.l->0, rhs)
@@ -129,13 +123,9 @@ class List
 	class Iterator
 		private l
 
-		public initialize = func: l
-			this.l = l
-		end
+		public initialize = l => (this.l = l)
 		
-		public hasNext = func:
-			!(this.l.isEmpty())
-		end
+		public hasNext = () => !(this.l.isEmpty())
 		
 		public next = func:
 			out, this.l = this.l

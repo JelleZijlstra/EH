@@ -62,3 +62,11 @@ FixedArray.fill = func: size, f
 	out
 end
 
+FixedArray.reverse = func:
+	private size = this.size()
+	private out = FixedArray.new size
+	for i in size
+		out->(size - 1 - i) = this->i
+	end
+	out
+end

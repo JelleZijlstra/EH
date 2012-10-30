@@ -12,10 +12,17 @@ EH_INITIALIZER(File) {
 }
 
 EH_METHOD(File, initialize) {
-	return ehretval_t::make_resource((LibraryBaseClass *)new File());
+	ehretval_p new_obj = ehretval_t::make_resource((LibraryBaseClass *)new File());
+	if(args->type() != null_e) {
+		ehlm_File_open(new_obj, args, ehi);
+	}
+	return new_obj;
 }
 EH_METHOD(File, open) {
 	File *selfptr = (File *) obj->get_resourceval();
+	if(selfptr->descriptor != NULL) {
+		fclose(selfptr->descriptor);
+	}
 
 	ehretval_p filename = ehi->to_string(args, obj);
 	ASSERT_TYPE(filename, string_e, "File.open");

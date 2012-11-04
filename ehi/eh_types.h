@@ -374,7 +374,7 @@ public:
 
 	eh_exception(ehretval_p _content) : content(_content) {}
 
-	virtual ~eh_exception() throw() {}
+	virtual ~eh_exception() throw();
 };
 
 // define methods

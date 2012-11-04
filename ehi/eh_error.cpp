@@ -4,11 +4,8 @@
  *
  * Code file for the EH error handling system.
  */
+
 #include "eh.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <sstream>
-#include "std_lib/Exception.h"
 
 /*
  * Exception classes

@@ -8,7 +8,7 @@
 #include "eh.bison.hpp"
 #include "std_lib/UnknownCommandError.h"
 
-void eh_usage(char *name) {
+static void eh_usage(char *name) {
 	fprintf(stderr, "Usage: %s\n\t%s file [arguments]\n\t%s -i\n\t%s -r code\n", name, name, name, name);
 	exit(-1);
 }

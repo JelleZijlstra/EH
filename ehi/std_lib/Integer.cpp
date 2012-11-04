@@ -140,8 +140,7 @@ EH_METHOD(Integer, getBit) {
 		throw_ArgumentError_out_of_range("Integer.getBit", args, ehi);
 	}
 	// get mask
-	int mask = 1 << (sizeof(int) * 8 - 1);
-	mask >>= index;
+	const unsigned int mask = (1 << (sizeof(int) * 8 - 1)) >> index;
 	// apply mask
 	return ehretval_t::make_bool((obj->get_intval() & mask) >> (sizeof(int) * 8 - 1 - mask));
 }
@@ -150,7 +149,7 @@ EH_METHOD(Integer, setBit) {
 	ehretval_p operand = args->get_tupleval()->get(0);
 	ASSERT_TYPE(operand, int_e, "Integer.setBit");
 	int index = operand->get_intval();
-	if(index < 0 || ((unsigned) index) >= sizeof(int) * 8) {
+	if(index < 0 || ((unsigned int) index) >= sizeof(int) * 8) {
 		throw_ArgumentError_out_of_range("Integer.setBit", operand, ehi);
 	}
 	int new_value = 0;
@@ -166,13 +165,12 @@ EH_METHOD(Integer, setBit) {
 	} else {
 		throw_TypeError("Second argument to Integer.setBit must be an Integer or Bool", value->type(), ehi);
 	}
-	int mask = (1 << (sizeof(int) * 8 - 1)) >> index;
+	const unsigned int mask = (1 << (sizeof(int) * 8 - 1)) >> index;
 	int out = obj->get_intval();
 	if(new_value) {
 		out |= mask;
 	} else {
-		mask = ~mask;
-		out &= mask;
+		out &= ~mask;
 	}
 	return ehretval_t::make_int(out);
 }

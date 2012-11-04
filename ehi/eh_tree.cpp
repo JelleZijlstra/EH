@@ -5,8 +5,9 @@
  * Functionality to create and show the EH abstract syntax tree.
  */
 #include "eh.h"
+#include "eh_tree.h"
 
-opnode_t *eh_addnode_base(int opcode, int nparas, ehretval_p *paras) {
+static opnode_t *eh_addnode_base(int opcode, int nparas, ehretval_p *paras) {
 	opnode_t *ret = new opnode_t;
 	ret->op = opcode;
 	ret->nparas = nparas;
@@ -116,6 +117,4 @@ const char *get_typestring(type_enum type) {
 		case super_class_e: return "parent class";
 		case tuple_e: return "tuple";
 	}
-	// to keep the compiler happy
-	return "null";
 }

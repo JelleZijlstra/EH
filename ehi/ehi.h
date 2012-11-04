@@ -60,7 +60,7 @@ public:
 	ehretval_p get_command(const char *name);
 	void insert_command(const char *name, ehretval_p cmd);
 	void redirect_command(const char *redirect, const char *target);	
-	ehretval_p make_method(ehlibmethod_t in, ehretval_p function_object);
+	ehretval_p make_method(ehlibmethod_t in);
 
 	ehretval_p instantiate(ehretval_p obj);
 	// stuff for GC'ed ehretval_ts
@@ -126,14 +126,14 @@ public:
 	ehretval_p global_parse_file(const char *name) {
 		try {
 			return parse_file(name, parent->global_object);
-		} catch(eh_exception &e) {
+		} catch(eh_exception &) {
 			return NULL;
 		}
 	}
 	ehretval_p global_parse_string(const char *cmd) {
 		try {
 			return parse_string(cmd, parent->global_object);
-		} catch(eh_exception &e) {
+		} catch(eh_exception &) {
 			return NULL;
 		}
 	}
@@ -163,7 +163,7 @@ public:
 		return parent;
 	}
 	ehcontext_t get_context() const {
-		return context;
+		return interpreter_context;
 	}
 	ehretval_p global() const {
 		return parent->global_object;
@@ -178,15 +178,15 @@ public:
 	/*
 	 * Constructors and destructors.
 	 */
-	EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), context(_context), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
+	EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), interpreter_context(_context), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
 		yylex_init_extra(this, &scanner);
 	}
 	EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(NULL), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
 		yylex_init_extra(this, &scanner);
 		parent = new EHInterpreter();
-		context = parent->global_object;
+		interpreter_context = parent->global_object;
 	}
-	~EHI(void) {
+	virtual ~EHI(void) {
 		yylex_destroy(scanner);
 		delete[] this->buffer;
 	}
@@ -201,7 +201,7 @@ private:
 	// buffer for interactive prompt
 	char *buffer;
 	EHInterpreter *parent;
-	ehcontext_t context;
+	ehcontext_t interpreter_context;
 
 	// number of loops we're currently in
 	int inloop;
@@ -256,11 +256,11 @@ private:
 	ehretval_p promote(ehretval_p in, ehcontext_t context);
 	bool eh_floatequals(float infloat, ehretval_p operand2, ehcontext_t context) {
 		ehretval_p operand = this->to_int(operand2, context);
-		// checks whether a float equals an int. C handles this correctly.
+		// checks whether a float equals an int. C++ handles this correctly.
 		if(operand->type() != int_e) {
 			return false;
 		}
-		return (infloat == operand->get_intval());
+		return (infloat == static_cast<float>(operand->get_intval()));
 	}
 
 public:

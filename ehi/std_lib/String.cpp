@@ -166,18 +166,18 @@ EH_INITIALIZER(String_Iterator) {
 }
 
 bool String_Iterator::has_next() const {
-	const char *string = this->string->get_stringval();
-	return this->position < strlen(string);
+	const char *content = this->string->get_stringval();
+	return this->position < strlen(content);
 }
 char String_Iterator::next() {
 	assert(this->has_next());
-	const char *string = this->string->get_stringval();
-	return string[this->position++];	
+	const char *content = this->string->get_stringval();
+	return content[this->position++];	
 }
 char String_Iterator::peek() const {
 	assert(this->has_next());
-	const char *string = this->string->get_stringval();
-	return string[this->position];
+	const char *content = this->string->get_stringval();
+	return content[this->position];
 }
 
 EH_METHOD(String_Iterator, initialize) {

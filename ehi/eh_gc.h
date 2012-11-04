@@ -137,9 +137,11 @@ private:
 		// number of free blocks left
 		int free_blocks;
 
-		char blocks[pool_size * sizeof(block)];
+		uint8_t blocks[pool_size * sizeof(block)];
 		
-		pool(pool *_next = NULL) : next(_next), first_free_block((block *)&blocks[0]), free_blocks(pool_size), blocks() {}
+		pool(pool *_next = NULL) : next(_next), first_free_block(NULL), free_blocks(pool_size), blocks() {
+			first_free_block = reinterpret_cast<block *>(&blocks[0]);
+		}
 		
 		~pool() {
 			assert(free_blocks == pool_size);
@@ -193,10 +195,10 @@ private:
 			free_blocks++;
 		}
 		
-		void sweep(int previous_bit, int current_bit) {
+		void sweep(int previous_bit, int new_bit) {
 			for(int i = 0; i < pool_size; i++) {
-				block *b = (block *)&this->blocks[i * sizeof(block)];
-				if(b->is_allocated() && !b->get_gc_bit(current_bit)) {
+				block *b = reinterpret_cast<block *>(&this->blocks[i * sizeof(block)]);
+				if(b->is_allocated() && !b->get_gc_bit(new_bit)) {
 					this->dealloc(b);
 				} else {
 					// unset old GC bits
@@ -415,10 +417,10 @@ private:
 	
 	// Remove all blocks with no references to them found by do_mark().
 	void do_sweep() {
-		int current_bit = this->current_bit.get();
+		int new_bit = this->current_bit.get();
 		int previous_bit = this->current_bit.prev();
 		for(pool *p = this->first_pool; p != NULL; p = p->next) {
-			p->sweep(previous_bit, current_bit);
+			p->sweep(previous_bit, new_bit);
 		}
 		// remove pools that are now empty
 		for(pool *p = this->first_pool, *prev = NULL; p != NULL; prev = p, p = p->next) {

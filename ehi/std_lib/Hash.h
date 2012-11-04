@@ -27,7 +27,7 @@ public:
 	void erase(const std::string &key) {
 		members.erase(key);
 	}
-	int size() const {
+	size_t size() const {
 		return members.size();
 	}
 	

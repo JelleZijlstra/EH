@@ -5,8 +5,6 @@
  *
  * Lex input specification for the EH grammar.
  */
-#include <stdlib.h>
-#include <stdio.h>
 #include "eh.h"
 #include "eh.bison.hpp"
 #include "std_lib/SyntaxError.h"

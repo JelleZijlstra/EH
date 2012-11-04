@@ -13,31 +13,30 @@ void *gc_thread(void *arg) {
 	}
 }
 
-int EHI::eh_interactive(interactivity_enum interactivity) {
-	this->interactivity = interactivity;
+int EHI::eh_interactive(interactivity_enum new_interactivity) {
+	this->interactivity = new_interactivity;
 	ehretval_p ret = parse_interactive();
 	return (ret->type() == int_e) ? ret->get_intval() : 0;
 }
 ehretval_p EHI::parse_interactive() {
 	while(1) {
 		char *cmd = eh_getline();
-		if(!cmd) {
+		if(cmd == NULL) {
 			return eh_outer_exit(0);
 		}
 		try {
 			parse_string(cmd);
 		} catch(eh_exception &e) {
 			handle_uncaught(e);
-		} catch(quit_exception &e) {
+		} catch(quit_exception &) {
 			return ehretval_t::make_int(0);
 		}
 	}
-	return ehretval_t::make_int(0);
 }
 
 ehretval_p EHI::parse_file(const char *name, ehcontext_t context) {
 	FILE *infile = fopen(name, "r");
-	if(!infile) {
+	if(infile == NULL) {
 		fprintf(stderr, "Could not open input file\n");
 		return NULL;
 	}

@@ -155,7 +155,7 @@ void EHInterpreter::eh_init(void) {
 
 	// fill command table
 	for(int i = 0; libcmds[i].name != NULL; i++) {
-		ehretval_p cmd = make_method(libcmds[i].cmd, function_object);
+		ehretval_p cmd = make_method(libcmds[i].cmd);
 		insert_command(libcmds[i].name, cmd);
 	}
 	for(int i = 0; libredirs[i][0] != NULL; i++) {
@@ -255,7 +255,6 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 						return eh_execute(new_node, context);
 					}
 				}
-				break;
 			case T_RET: // return from a function or the program
 				if(node->get_opval()->nparas == 0) {
 					ret = NULL;
@@ -642,12 +641,13 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	// create the ehretval_t
-	ehretval_p ret = parent->make_object(new ehobj_t());
+	ehobj_t *new_obj = new ehobj_t();
+	ehretval_p ret = parent->make_object(new_obj);
 
 	// process parameters
 	ehretval_p code;
 	int type_id;
-	const char *name;
+	const char *name = NULL;
 	if(op->nparas == 2) {
 		name = eh_execute(op->paras[0], context)->get_stringval();
 		type_id = parent->repo.register_class(name, ret);
@@ -657,12 +657,12 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 		code = op->paras[0];
 	}
 
-	ret->get_objectval()->type_id = type_id;
-	ret->get_objectval()->parent = context.scope;
+	new_obj->type_id = type_id;
+	new_obj->parent = context.scope;
 
 	// inherit from Object
 	ehretval_p object_class = parent->repo.get_object(object_e);
-	ret->get_objectval()->inherit(object_class);
+	new_obj->inherit(object_class);
 
 	eh_execute(code, ehcontext_t(ret, ret));
 	
@@ -916,7 +916,6 @@ ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
 	}
 }
 ehretval_p EHI::eh_op_try(opnode_t *op, ehcontext_t context) {
-	ehretval_p ret;
 	ehretval_p try_block = op->paras[0];
 	ehretval_p catch_blocks = op->paras[1];
 	if(op->nparas == 2) {
@@ -1027,7 +1026,7 @@ ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t 
 		return call_method(function, "operator:", args, context);
 	}
 }
-ehretval_p EHInterpreter::make_method(ehlibmethod_t in, ehretval_p function_object) {
+ehretval_p EHInterpreter::make_method(ehlibmethod_t in) {
 	ehobj_t *function_obj = new ehobj_t();
 	ehretval_p func = this->make_object(function_obj);
 	function_obj->parent = NULL;
@@ -1035,7 +1034,7 @@ ehretval_p EHInterpreter::make_method(ehlibmethod_t in, ehretval_p function_obje
 	ehfunc_t *f = new ehfunc_t(lib_e);
 	f->libmethod_pointer = in;
 	function_obj->object_data = ehretval_t::make_func(f);
-	function_obj->inherit(function_object);
+	function_obj->inherit(this->function_object);
 	return func;
 }
 /*

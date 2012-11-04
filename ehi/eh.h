@@ -8,13 +8,8 @@
 #define EH_H_
 
 #include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
-#include <errno.h>
+
 #include <exception>
 #include <iostream>
 #include <map>

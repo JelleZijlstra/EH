@@ -670,7 +670,7 @@ ehmember_p ehobj_t::inherited_get(const std::string &key) {
 	}
 	return NULL;
 }
-bool ehobj_t::context_compare(const ehcontext_t key) const {
+bool ehobj_t::context_compare(const ehcontext_t &key) const {
 	// in global context, we never have access to private stuff
 	if(ehretval_p::null(key.object)) {
 		return false;

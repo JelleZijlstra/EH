@@ -125,8 +125,12 @@ vtype get_ ## ehtype ## val() const;
 	int get_full_type() const;
 	const std::string &type_string(class EHI *ehi) const;
 
+	bool operator<(const ehretval_p &rhs) const {
+		return naive_compare(rhs) == -1;
+	}
+
 	// Compare two ehretval_ps (guaranteed to be of the same type)
-	int naive_compare(ehretval_p rhs) {
+	int naive_compare(const ehretval_p &rhs) const {
 		if(this->type() == null_e) {
 			return 0;
 		}
@@ -251,7 +255,7 @@ public:
 
 	// method prototypes
 	ehmember_p get_recursive(const char *name, const ehcontext_t context);
-	bool context_compare(const ehcontext_t key) const;
+	bool context_compare(const ehcontext_t &key) const;
 
 	bool inherited_has(const std::string &key) const;
 	ehmember_p inherited_get(const std::string &key);

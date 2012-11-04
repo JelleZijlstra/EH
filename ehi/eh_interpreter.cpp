@@ -37,6 +37,7 @@
 #include "std_lib/TypeError.h"
 #include "std_lib/UnknownCommandError.h"
 #include "std_lib/EmptyIterator.h"
+#include "std_lib/Map.h"
 
 typedef struct ehlc_listentry_t {
 	const char *name;
@@ -73,6 +74,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(EmptyIterator, -1)
 	LIBCLASSENTRY(FixedArray, -1)
 	LIBCLASSENTRY(Random, -1)
+	LIBCLASSENTRY(Map, -1)
 	{NULL, NULL, 0}
 };
 

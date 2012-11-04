@@ -113,3 +113,4 @@ Hash.inherit Iterable
 Array.inherit Iterable
 Tuple.inherit Iterable
 Integer.inherit Iterable
+Map.inherit Iterable

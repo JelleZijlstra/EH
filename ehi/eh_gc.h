@@ -321,6 +321,19 @@ public:
 		bool operator!=(void *rhs) {
 			return (void *)this->content != rhs;
 		}
+
+		/*
+		 * So that it can be used in a map
+		 */
+		bool operator<(const pointer &rhs) const {
+			if(null(*this)) {
+				return true;
+			} else if(null(rhs)) {
+				return false;
+			} else {
+				return this->content < ~rhs;
+			}
+		}
 		
 		/*
 		 * Destructor

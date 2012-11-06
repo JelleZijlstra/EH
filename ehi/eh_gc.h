@@ -333,7 +333,7 @@ public:
 			} else if(null(rhs)) {
 				return 1;
 			} else {
-				return this->content->content.naive_compare(rhs);
+				return this->content->content.compare(rhs);
 			}			
 		}
 		bool operator<(const pointer &rhs) const {

@@ -136,6 +136,18 @@ vtype get_ ## ehtype ## val() const;
 		return naive_compare(rhs) == 0;
 	}
 
+	int compare(const ehretval_p &rhs) const {
+		unsigned int my_type = this->extended_type();
+		unsigned int rhs_type = rhs->extended_type();
+		if(my_type < rhs_type) {
+			return -1;
+		} else if(my_type == rhs_type) {
+			return naive_compare(rhs);
+		} else {
+			return 1;
+		}
+	}
+
 	// Compare two ehretval_ps (guaranteed to be of the same type)
 	int naive_compare(const ehretval_p &rhs) const {
 		if(this->type() == null_e) {

@@ -183,16 +183,16 @@ char String_Iterator::peek() const {
 EH_METHOD(String_Iterator, initialize) {
 	ASSERT_TYPE(args, string_e, "String.Iterator.initialize");
 	String_Iterator *data = new String_Iterator(args);
-	return ehretval_t::make_resource(data);
+	return ehretval_t::make_resource(obj->get_full_type(), data);
 }
 EH_METHOD(String_Iterator, hasNext) {
 	ASSERT_TYPE(args, null_e, "String.Iterator.hasNext");
-	String_Iterator *data = (String_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(String_Iterator, "String.Iterator.hasNext");
 	return ehretval_t::make_bool(data->has_next());
 }
 EH_METHOD(String_Iterator, next) {
 	ASSERT_TYPE(args, null_e, "String.Iterator.next");
-	String_Iterator *data = (String_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(String_Iterator, "String.Iterator.next");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
 	}
@@ -203,7 +203,7 @@ EH_METHOD(String_Iterator, next) {
 }
 EH_METHOD(String_Iterator, peek) {
 	ASSERT_TYPE(args, null_e, "String.Iterator.next");
-	String_Iterator *data = (String_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(String_Iterator, "String.Iterator.peek");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
 	}

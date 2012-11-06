@@ -22,5 +22,5 @@ EH_METHOD(ConstError, initialize) {
 	std::ostringstream exception_msg;
 	exception_msg << "Cannot set constant member " << name->get_stringval() << " in object of type " << object->type_string(ehi);
 	exception_msg << ": " << ehi->to_string(object, ehi->global())->get_stringval();
-	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
+	return ehretval_t::make_resource(obj->get_full_type(), new Exception(strdup(exception_msg.str().c_str())));
 }

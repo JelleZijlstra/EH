@@ -78,16 +78,16 @@ EH_INITIALIZER(Tuple_Iterator) {
 EH_METHOD(Tuple_Iterator, initialize) {
 	ASSERT_TYPE(args, tuple_e, "Tuple.Iterator.initialize");
 	Tuple_Iterator *it = new Tuple_Iterator(args);
-	return ehretval_t::make_resource(static_cast<LibraryBaseClass *>(it));
+	return ehretval_t::make_resource(obj->get_full_type(), static_cast<LibraryBaseClass *>(it));
 }
 EH_METHOD(Tuple_Iterator, hasNext) {
 	ASSERT_TYPE(args, null_e, "Tuple.Iterator.hasNext");
-	Tuple_Iterator *data = static_cast<Tuple_Iterator *>(obj->get_resourceval());
+	ASSERT_RESOURCE(Tuple_Iterator, "Tuple.Iterator.hasNext");
 	return ehretval_t::make_bool(data->has_next());
 }
 EH_METHOD(Tuple_Iterator, next) {
 	ASSERT_TYPE(args, null_e, "Tuple.Iterator.next");
-	Tuple_Iterator *data = static_cast<Tuple_Iterator *>(obj->get_resourceval());
+	ASSERT_RESOURCE(Tuple_Iterator, "Tuple.Iterator.next");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
 	}

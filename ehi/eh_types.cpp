@@ -133,14 +133,15 @@ bool ehretval_t::equals(ehretval_p rhs) {
 			return false;
 	}
 }
-bool ehretval_t::is_a(int in) {
-	if(this->type() == in) {
+bool ehretval_t::is_a(unsigned int in) {
+	unsigned int type = this->extended_type();
+	if(type == in || ((in == resource_e && type >= type_repository::first_user_type))) {
 		return true;
 	} else {
-		return this->type() == object_e && this->get_objectval()->type_id == in;
+		return type == object_e && this->get_objectval()->type_id == in;
 	}
 }
-bool ehretval_t::inherited_is_a(int in) {
+bool ehretval_t::inherited_is_a(unsigned int in) {
 	if(this->type() == in) {
 		return true;
 	} else if(this->type() == object_e) {
@@ -157,8 +158,8 @@ bool ehretval_t::inherited_is_a(int in) {
 	}
 	return false;
 }
-int ehretval_t::get_full_type() const  {
-	int out = this->type();
+unsigned int ehretval_t::get_full_type() const  {
+	unsigned int out = this->extended_type();
 	if(out == object_e) {
 		return this->get_objectval()->type_id;
 	} else {
@@ -166,7 +167,7 @@ int ehretval_t::get_full_type() const  {
 	}
 }
 const std::string &ehretval_t::type_string(EHI *ehi) const {
-	int type = this->get_full_type();
+	unsigned int type = this->get_full_type();
 	return ehi->get_parent()->repo.get_name(type);
 }
 ehretval_p ehretval_t::self_or_data(const ehretval_p in) {

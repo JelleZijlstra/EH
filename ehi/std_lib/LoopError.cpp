@@ -24,5 +24,5 @@ EH_METHOD(LoopError, initialize) {
 	ehi->set_property(obj, "level", level, ehi->global());
 	std::ostringstream exception_msg;
 	exception_msg << "Cannot " << msg->get_stringval() << " " << level->get_intval() << " levels";
-	return ehretval_t::make_resource(new Exception(strdup(exception_msg.str().c_str())));
+	return ehretval_t::make_resource(obj->get_full_type(), new Exception(strdup(exception_msg.str().c_str())));
 }

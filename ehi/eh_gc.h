@@ -325,14 +325,31 @@ public:
 		/*
 		 * So that it can be used in a map
 		 */
-		bool operator<(const pointer &rhs) const {
-			if(null(*this)) {
-				return true;
+		int compare(const pointer &rhs) const {
+			if(this->content == ~rhs) {
+				return 0;
+			} else if(null(*this)) {
+				return -1;
 			} else if(null(rhs)) {
-				return false;
+				return 1;
 			} else {
-				return this->content < ~rhs;
-			}
+				return this->content->content.naive_compare(rhs);
+			}			
+		}
+		bool operator<(const pointer &rhs) const {
+			return this->compare(rhs) == -1;
+		}
+
+		bool operator==(const pointer &rhs) const {
+			return this->compare(rhs) == 0;
+		}
+
+		bool operator!=(const pointer &rhs) const {
+			return this->compare(rhs) != 0;
+		}
+
+		bool operator>(const pointer &rhs) const {
+			return this->compare(rhs) == 1;
 		}
 		
 		/*

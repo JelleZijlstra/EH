@@ -28,7 +28,7 @@
 
 #define ASSERT_OBJ_TYPE(ehtype, method) ehretval_p _obj = obj; \
 obj = ehretval_t::self_or_data(obj); \
-if(!obj->is_a(ehtype)) { \
+if(obj->type() != ehtype && !obj->is_a(ehtype)) { \
 	throw_TypeError("Invalid base object for " #method, obj->type(), ehi); \
 }
 
@@ -38,6 +38,10 @@ if(!obj->is_a(ehtype)) { \
 
 #define ASSERT_NARGS_AND_TYPE(count, ehtype, method) ASSERT_NARGS(count, method); ASSERT_OBJ_TYPE(ehtype, method);
 #define ASSERT_NULL_AND_TYPE(ehtype, method) ASSERT_NULL(method); ASSERT_OBJ_TYPE(ehtype, method);
+
+#define ASSERT_RESOURCE(type, method) ASSERT_OBJ_TYPE(resource_e, method); \
+	type *data = static_cast<type *>(obj->get_resourceval());
+
 
 class LibraryBaseClass {
 public:

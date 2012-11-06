@@ -99,16 +99,16 @@ ehretval_p Hash_Iterator::next(EHI *ehi) {
 EH_METHOD(Hash_Iterator, initialize) {
 	ASSERT_TYPE(args, hash_e, "Hash.Iterator.initialize");
 	Hash_Iterator *data = new Hash_Iterator(args);
-	return ehretval_t::make_resource(data);
+	return ehretval_t::make_resource(obj->get_full_type(), data);
 }
 EH_METHOD(Hash_Iterator, hasNext) {
 	ASSERT_TYPE(args, null_e, "Hash.Iterator.hasNext");
-	Hash_Iterator *data = (Hash_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Hash_Iterator, "Hash.Iterator.hasNext");
 	return ehretval_t::make_bool(data->has_next());
 }
 EH_METHOD(Hash_Iterator, next) {
 	ASSERT_TYPE(args, null_e, "Hash.Iterator.next");
-	Hash_Iterator *data = (Hash_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Hash_Iterator, "Hash.Iterator.next");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
 	}

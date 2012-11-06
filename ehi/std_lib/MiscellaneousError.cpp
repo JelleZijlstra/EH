@@ -12,5 +12,5 @@ EH_INITIALIZER(MiscellaneousError) {
 EH_METHOD(MiscellaneousError, initialize) {
 	ASSERT_TYPE(args, string_e, "MiscellaneousError.initialize");
 	ehi->set_property(obj, "message", args, ehi->global());
-	return ehretval_t::make_resource(new Exception(strdup(args->get_stringval())));
+	return ehretval_t::make_resource(obj->get_full_type(), new Exception(strdup(args->get_stringval())));
 }

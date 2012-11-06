@@ -27,7 +27,7 @@ EH_INITIALIZER(Object) {
 
 EH_METHOD(Object, new) {
 	ehretval_p ret = ehi->get_parent()->instantiate(obj);
-	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", args, ret);
+	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", args, obj);
 	return ret;
 }
 EH_METHOD(Object, inherit) {

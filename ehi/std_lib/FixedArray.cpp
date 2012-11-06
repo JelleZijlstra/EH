@@ -10,38 +10,37 @@ EH_INITIALIZER(FixedArray) {
 EH_METHOD(FixedArray, initialize) {
 	ASSERT_TYPE(args, int_e, "FixedArray.initialize");
 	FixedArray *fa = new FixedArray(args->get_intval());
-	return ehretval_t::make_resource(static_cast<LibraryBaseClass *>(fa));
+	return ehretval_t::make_resource(obj->get_full_type(), static_cast<LibraryBaseClass *>(fa));
 }
 
 EH_METHOD(FixedArray, operator_arrow) {
-	ASSERT_OBJ_TYPE(resource_e, "FixedArray.operator->");
 	ASSERT_TYPE(args, int_e, "FixedArray.operator->");
-	const FixedArray *fa = static_cast<FixedArray *>(obj->get_resourceval());
+	ASSERT_RESOURCE(FixedArray, "FixedArray.operator->");
 	const int index = args->get_intval();
-	if(index < 0 || index >= (int) fa->size()) {
+	if(index < 0 || index >= (int) data->size()) {
 		throw_ArgumentError("index out of range", "FixedArray.operator->", args, ehi);
 	}
-	return fa->get(index);
+	return data->get(index);
 }
 
 EH_METHOD(FixedArray, operator_arrow_equals) {
-	ASSERT_NARGS_AND_TYPE(2, resource_e, "FixedArray.operator->=");
+	ASSERT_NARGS(2, "FixedArray.operator->=");
 	const ehtuple_t *tuple = args->get_tupleval();
 	ehretval_p index_val = tuple->get(0);
 	ASSERT_TYPE(index_val, int_e, "FixedArray.operator->=");
 	ehretval_p value = tuple->get(1);
+	ASSERT_RESOURCE(FixedArray, "FixedArray.operator->=");
 
-	FixedArray *fa = static_cast<FixedArray *>(obj->get_resourceval());
 	const int index = index_val->get_intval();
-	if(index < 0 || index >= (int) fa->size()) {
+	if(index < 0 || index >= (int) data->size()) {
 		throw_ArgumentError("index out of range", "FixedArray.operator->", args, ehi);
 	}
-	fa->set(index, value);
+	data->set(index, value);
 	return value;
 }
 
 EH_METHOD(FixedArray, size) {
-	ASSERT_NULL_AND_TYPE(resource_e, "FixedArray.size");
-	const FixedArray *fa = static_cast<FixedArray *>(obj->get_resourceval());
-	return ehretval_t::make_int(fa->size());	
+	ASSERT_NULL("FixedArray.size");
+	ASSERT_RESOURCE(FixedArray, "FixedArray.size");
+	return ehretval_t::make_int(data->size());	
 }

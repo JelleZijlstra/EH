@@ -228,16 +228,16 @@ int Integer_Iterator::next() {
 EH_METHOD(Integer_Iterator, initialize) {
 	ASSERT_TYPE(args, int_e, "Integer.Iterator.initialize");
 	Integer_Iterator *data = new Integer_Iterator(args->get_intval());
-	return ehretval_t::make_resource(data);
+	return ehretval_t::make_resource(obj->get_full_type(), data);
 }
 EH_METHOD(Integer_Iterator, hasNext) {
 	ASSERT_TYPE(args, null_e, "Integer.Iterator.hasNext");
-	Integer_Iterator *data = (Integer_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Integer_Iterator, "Integer.Iterator.hasNext");
 	return ehretval_t::make_bool(data->has_next());
 }
 EH_METHOD(Integer_Iterator, next) {
 	ASSERT_TYPE(args, null_e, "Integer.Iterator.next");
-	Integer_Iterator *data = (Integer_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Integer_Iterator, "Integer.Iterator.next");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
 	}

@@ -23,5 +23,5 @@ EH_METHOD(TypeError, initialize) {
 	std::string type_str = ehi->get_parent()->repo.get_name(id->get_intval());
 	ehi->set_property(obj, "type", id, ehi->global());
 	std::string exception_msg = std::string(msg->get_stringval()) + ": " + type_str;
-	return ehretval_t::make_resource(new Exception(strdup(exception_msg.c_str())));
+	return ehretval_t::make_resource(obj->get_full_type(), new Exception(strdup(exception_msg.c_str())));
 }

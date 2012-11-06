@@ -12,36 +12,37 @@ EH_INITIALIZER(File) {
 }
 
 EH_METHOD(File, initialize) {
-	ehretval_p new_obj = ehretval_t::make_resource((LibraryBaseClass *)new File());
+	ehretval_p new_obj = ehretval_t::make_resource(obj->get_full_type(), static_cast<LibraryBaseClass *>(new File()));
 	if(args->type() != null_e) {
 		ehlm_File_open(new_obj, args, ehi);
 	}
 	return new_obj;
 }
 EH_METHOD(File, open) {
-	File *selfptr = (File *) obj->get_resourceval();
-	if(selfptr->descriptor != NULL) {
-		fclose(selfptr->descriptor);
+	ASSERT_TYPE(args, string_e, "File.open");
+	ASSERT_RESOURCE(File, "File.open");
+	// close any open file
+	if(data->descriptor != NULL) {
+		fclose(data->descriptor);
 	}
 
-	ehretval_p filename = ehi->to_string(args, obj);
-	ASSERT_TYPE(filename, string_e, "File.open");
-	FILE *mfile = fopen(filename->get_stringval(), "r+");
+	// and open the new one
+	FILE *mfile = fopen(args->get_stringval(), "r+");
 	if(mfile == NULL) {
-		return NULL;
+		return ehretval_t::make_bool(false);
 	}
-	selfptr->descriptor = mfile;
+	data->descriptor = mfile;
 	return ehretval_t::make_bool(true);
 }
 EH_METHOD(File, getc) {
 	ASSERT_TYPE(args, null_e, "File.getc");
-	File *selfptr = (File *) obj->get_resourceval();
+	ASSERT_RESOURCE(File, "File.getc");
 
-	if(selfptr->descriptor == NULL) {
+	if(data->descriptor == NULL) {
 		return NULL;
 	}
-	int c = fgetc(selfptr->descriptor);
-	if(c == -1) {
+	int c = fgetc(data->descriptor);
+	if(c == EOF) {
 		return NULL;
 	}
 	char *out = new char[2];
@@ -51,14 +52,14 @@ EH_METHOD(File, getc) {
 }
 EH_METHOD(File, gets) {
 	ASSERT_TYPE(args, null_e, "File.gets");
-	File *selfptr = (File *) obj->get_resourceval();
-	if(selfptr->descriptor == NULL) {
+	ASSERT_RESOURCE(File, "File.gets");
+	if(data->descriptor == NULL) {
 		return NULL;
 	}
 	
 	char *out = new char[512];
 
-	char *ptr = fgets(out, 511, selfptr->descriptor);
+	char *ptr = fgets(out, 511, data->descriptor);
 	if(ptr == NULL) {
 		delete[] out;
 		return NULL;
@@ -66,41 +67,31 @@ EH_METHOD(File, gets) {
 	return ehretval_t::make_string(out);
 }
 EH_METHOD(File, puts) {
-	File *selfptr = (File *) obj->get_resourceval();
-	if(selfptr->descriptor == NULL) {
+	ASSERT_TYPE(args, string_e, "File.puts");
+	ASSERT_RESOURCE(File, "File.puts");
+	if(data->descriptor == NULL) {
 		return NULL;
 	}
 	
-	ASSERT_TYPE(args, string_e, "File.puts");
-
-	int count = fputs(args->get_stringval(), selfptr->descriptor);
-	
-	if(count == EOF) {
-		return ehretval_t::make_bool(false);
-	} else {
-		return ehretval_t::make_bool(true);
-	}
+	int count = fputs(args->get_stringval(), data->descriptor);	
+	return ehretval_t::make_bool(count != EOF);
 }
 EH_METHOD(File, close) {
 	ASSERT_TYPE(args, null_e, "File.close");
-	File *selfptr = (File *) obj->get_resourceval();
-	if(selfptr->descriptor == NULL) {
+	ASSERT_RESOURCE(File, "File.close");
+	if(data->descriptor == NULL) {
 		return NULL;
 	}
-	fclose(selfptr->descriptor);
-	selfptr->descriptor = NULL;
+	fclose(data->descriptor);
+	data->descriptor = NULL;
 	return NULL;
 }
 EH_METHOD(File, toBool) {
 	ASSERT_TYPE(args, null_e, "File.toBool");
-	File *selfptr = (File *)obj->get_resourceval();
-	return ehretval_t::make_bool(selfptr->descriptor != NULL);
+	ASSERT_RESOURCE(File, "File.toBool");
+	return ehretval_t::make_bool(data->descriptor != NULL);
 }
 EH_METHOD(File, finalize) {
-	File *selfptr = (File *)obj->get_resourceval();
-	if(selfptr->descriptor != NULL) {
-		fclose(selfptr->descriptor);
-		selfptr->descriptor = NULL;
-	}
+	ehi->call_method(obj, "close", NULL, obj);
 	return NULL;
 }

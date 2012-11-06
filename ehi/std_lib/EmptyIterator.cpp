@@ -12,5 +12,5 @@ EH_INITIALIZER(EmptyIterator) {
 }
 
 EH_METHOD(EmptyIterator, initialize) {
-	return ehretval_t::make_resource(new Exception(strdup("Empty iterator")));	
+	return ehretval_t::make_resource(obj->get_full_type(), new Exception(strdup("Empty iterator")));	
 }

@@ -133,16 +133,16 @@ ehretval_p Range_Iterator::next(EHI *ehi) {
 EH_METHOD(Range_Iterator, initialize) {
 	ASSERT_TYPE(args, range_e, "Range.Iterator.initialize");
 	Range_Iterator *data = new Range_Iterator(args);
-	return ehretval_t::make_resource(data);
+	return ehretval_t::make_resource(obj->get_full_type(), data);
 }
 EH_METHOD(Range_Iterator, hasNext) {
 	ASSERT_TYPE(args, null_e, "Range.Iterator.hasNext");
-	Range_Iterator *data = (Range_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Range_Iterator, "Range.Iterator.hasNext");
 	return ehretval_t::make_bool(data->has_next(ehi));
 }
 EH_METHOD(Range_Iterator, next) {
 	ASSERT_TYPE(args, null_e, "Range.Iterator.next");
-	Range_Iterator *data = (Range_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Range_Iterator, "Range.Iterator.next");
 	if(!data->has_next(ehi)) {
 		throw_EmptyIterator(ehi);
 	}

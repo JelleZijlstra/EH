@@ -7,16 +7,16 @@ EH_INITIALIZER(CountClass) {
 }
 
 EH_METHOD(CountClass, initialize) {
-	return ehretval_t::make_resource((LibraryBaseClass *)new CountClass());
+	return ehretval_t::make_resource(obj->get_full_type(), static_cast<LibraryBaseClass *>(new CountClass()));
 }
 EH_METHOD(CountClass, docount) {
 	ASSERT_TYPE(args, null_e, "CountClass.docount");
-	CountClass *selfptr = (CountClass *)obj->get_resourceval();
-	return ehretval_t::make_int(++selfptr->count);
+	ASSERT_RESOURCE(CountClass, "CountClass.docount");
+	return ehretval_t::make_int(++data->count);
 }
 EH_METHOD(CountClass, setcount) {
-	CountClass *selfptr = (CountClass *)obj->get_resourceval();
 	ASSERT_TYPE(args, int_e, "CountClass.setcount");
-	selfptr->count = args->get_intval();
+	ASSERT_RESOURCE(CountClass, "CountClass.setcount");
+	data->count = args->get_intval();
 	return ehretval_t::make_bool(true);
 }

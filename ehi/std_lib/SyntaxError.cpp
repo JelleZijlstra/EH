@@ -29,5 +29,5 @@ EH_METHOD(SyntaxError, initialize) {
 	exception_msg << message->get_stringval() << " at line ";
 	exception_msg << line->get_intval();
 	Exception *e = new Exception(strdup(exception_msg.str().c_str()));
-	return ehretval_t::make_resource(e);
+	return ehretval_t::make_resource(obj->get_full_type(), e);
 }

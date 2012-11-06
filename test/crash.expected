@@ -1,14 +1,14 @@
-%%stdout%%
-Number of pools: 1
-Allocated blocks: 216
+%%stdout-regex%%
+Number of pools: \d+
+Allocated blocks: \d+
 3
 3
-Number of pools: 1
-Allocated blocks: 219
-Number of pools: 1
-Allocated blocks: 220
-@object <CountClass> [
-]
+Number of pools: \d+
+Allocated blocks: \d+
+Number of pools: \d+
+Allocated blocks: \d+
+@object <CountClass> \[
+\]
 @int 1
 %%stderr%%
 Uncaught exception of type NameError: Unknown member operator-> in object of type GlobalObject: (global execution context)

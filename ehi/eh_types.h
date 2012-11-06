@@ -3,7 +3,7 @@
 // EH value, and generic node
 typedef struct ehretval_t {
 private:
-	type_enum _type;
+	unsigned int _type;
 	void type(type_enum type) {
 		this->_type = type;
 	}
@@ -88,12 +88,19 @@ vtype get_ ## ehtype ## val() const;
 	EHRV_SET(attributes_t, attributestr)
 	EHRV_SET(class ehfunc_t *, func)
 	EHRV_SET(type_enum, type)
-	EHRV_SET(class LibraryBaseClass *, resource)
 	EHRV_SET(ehbinding_t *, binding)
 	EHRV_SET(class ehhash_t *, hash)
 	EHRV_SET(class ehtuple_t *, tuple)
 	EHRV_SET(class ehsuper_t *, super_class)
 #undef EHRV_SET
+	static ehretval_p make_resource(int type_id, class LibraryBaseClass *obj) {
+		ehretval_p out;
+		out->_type = type_id;
+		out->resourceval = obj;
+		return out;
+	}
+	class LibraryBaseClass *get_resourceval() const;
+
 	// special constructors for GC'ed types
 #define EHRV_GC(vtype, ehtype) static void fill_ ## ehtype(ehretval_p in, vtype val) { \
 	in->type(ehtype ## _e); \
@@ -110,23 +117,23 @@ vtype get_ ## ehtype ## val() const;
 #undef EHRV_GC
 
 	// other methods
-	type_enum type() const {
-		if(this == NULL) {
-			return null_e;
-		} else {
-			return this->_type;
-		}
-	}
+	type_enum type() const;
+
+	unsigned int extended_type() const;
 	
 	bool belongs_in_gc() const {
 		return belongs_in_gc(this->type());
 	}
 
-	int get_full_type() const;
+	unsigned int get_full_type() const;
 	const std::string &type_string(class EHI *ehi) const;
 
 	bool operator<(const ehretval_p &rhs) const {
 		return naive_compare(rhs) == -1;
+	}
+
+	bool operator==(const ehretval_p &rhs) const {
+		return naive_compare(rhs) == 0;
 	}
 
 	// Compare two ehretval_ps (guaranteed to be of the same type)
@@ -156,8 +163,8 @@ vtype get_ ## ehtype ## val() const;
 	
 	static ehretval_p self_or_data(const ehretval_p in);
 	
-	bool is_a(int in);
-	bool inherited_is_a(int in);
+	bool is_a(unsigned int in);
+	bool inherited_is_a(unsigned int in);
 	
 	void print();
 	bool equals(ehretval_p rhs);
@@ -243,7 +250,7 @@ public:
 	// the object's state data
 	ehretval_p object_data;
 	// the type
-	int type_id;
+	unsigned int type_id;
 	// for scoping
 	ehretval_p parent;
 	ehretval_p real_parent;
@@ -382,6 +389,26 @@ public:
 };
 
 // define methods
+inline type_enum ehretval_t::type() const {
+	if(this == NULL) {
+		return null_e;
+	} else if(this->_type >= type_repository::first_user_type) {
+		return resource_e;
+	} else {
+		return static_cast<type_enum>(this->_type);
+	}
+}
+inline unsigned int ehretval_t::extended_type() const {
+	if(this == NULL) {
+		return null_e;
+	} else {
+		return this->_type;
+	}
+}
+inline class LibraryBaseClass *ehretval_t::get_resourceval() const {
+	assert(this->type() == resource_e || this->type() >= type_repository::first_user_type);
+	return this->resourceval;
+}
 #define EHRV_SET(vtype, ehtype) inline vtype ehretval_t::get_ ## ehtype ## val() const { \
 	if(this->type() == object_e && ehtype ## _e != object_e) { \
 		return this->get_objectval()->object_data->get_ ## ehtype ## val(); \
@@ -401,7 +428,6 @@ EHRV_SET(attribute_enum, attribute)
 EHRV_SET(attributes_t, attributestr)
 EHRV_SET(class ehfunc_t *, func)
 EHRV_SET(type_enum, type)
-EHRV_SET(class LibraryBaseClass *, resource)
 EHRV_SET(ehbinding_t *, binding)
 EHRV_SET(class ehhash_t *, hash)
 EHRV_SET(class ehtuple_t *, tuple)

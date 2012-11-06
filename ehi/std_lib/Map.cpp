@@ -7,17 +7,21 @@ EH_INITIALIZER(Map) {
 	REGISTER_METHOD(Map, has);
 	REGISTER_METHOD(Map, size);
 	REGISTER_METHOD(Map, getIterator);
+	REGISTER_CLASS(Map, Iterator);
 }
 
 EH_METHOD(Map, initialize) {
-	Map *m = new Map();
-	return ehretval_t::make_resource(static_cast<LibraryBaseClass *>(m));
+	LibraryBaseClass *m = static_cast<LibraryBaseClass *>(new Map());
+	return ehretval_t::make_resource(obj->get_full_type(), m);
 }
 
 EH_METHOD(Map, operator_arrow) {
-	ASSERT_OBJ_TYPE(resource_e, "Map.operator->");
-	Map *m = static_cast<Map *>(obj->get_resourceval());
-	return m->get(args);
+	ASSERT_RESOURCE(Map, "Map.operator->");
+	if(data->has(args)) {
+		return data->get(args);
+	} else {
+		return NULL;
+	}
 }
 
 EH_METHOD(Map, operator_arrow_equals) {
@@ -45,7 +49,9 @@ EH_METHOD(Map, has) {
 
 EH_METHOD(Map, getIterator) {
 	ASSERT_OBJ_TYPE(resource_e, "Map.getIterator");
-	ehretval_p class_member = ehi->get_property(obj, "Iterator", obj);
+	unsigned int map_type = obj->get_full_type();
+	ehretval_p map_class = ehi->get_parent()->repo.get_object(map_type);
+	ehretval_p class_member = ehi->get_property(map_class, "Iterator", obj);
 	return ehi->call_method(class_member, "new", obj, obj);	
 }
 
@@ -79,16 +85,16 @@ EH_METHOD(Map_Iterator, initialize) {
 	ASSERT_TYPE(args, resource_e, "Map.Iterator.initialize");
 	Map *m = static_cast<Map *>(args->get_resourceval());
 	Map_Iterator *data = new Map_Iterator(m);
-	return ehretval_t::make_resource(data);
+	return ehretval_t::make_resource(obj->get_full_type(), data);
 }
 EH_METHOD(Map_Iterator, hasNext) {
 	ASSERT_TYPE(args, null_e, "Map.Iterator.hasNext");
-	Map_Iterator *data = (Map_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Map_Iterator, "Map.Iterator.hasNext");
 	return ehretval_t::make_bool(data->has_next());
 }
 EH_METHOD(Map_Iterator, next) {
 	ASSERT_TYPE(args, null_e, "Map.Iterator.next");
-	Map_Iterator *data = (Map_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Map_Iterator, "Map.Iterator.hasNext");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
 	}
@@ -96,7 +102,7 @@ EH_METHOD(Map_Iterator, next) {
 }
 EH_METHOD(Map_Iterator, peek) {
 	ASSERT_TYPE(args, null_e, "Map.Iterator.peek");
-	Map_Iterator *data = (Map_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Map_Iterator, "Map.Iterator.peek");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
 	}

@@ -34,5 +34,5 @@ EH_METHOD(ArgumentError, initialize) {
 	exception_msg << method->get_stringval() << "): ";
 	exception_msg << ehi->to_string(value, ehi->global())->get_stringval();
 	Exception *e = new Exception(strdup(exception_msg.str().c_str()));
-	return ehretval_t::make_resource(e);
+	return ehretval_t::make_resource(obj->get_full_type(), e);
 }

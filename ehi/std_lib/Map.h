@@ -1,5 +1,14 @@
 /*
- * Map library class
+ * Map library class.
+ *
+ * This class provides a mapping from unique keys of any type to values. The
+ * mapping uses ehretval_t::naive_compare, however, which only compares
+ * primitive types by value while others are compared by reference. As a
+ * consequence, code like:
+ *	m = Map.new()
+ *	m->[] = 42
+ *	echo m->[]
+ * will not print 42.
  */
 #include "std_lib_includes.h"
 

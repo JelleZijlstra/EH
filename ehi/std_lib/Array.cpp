@@ -151,16 +151,16 @@ ehretval_p Array_Iterator::peek(EHI *ehi) const {
 EH_METHOD(Array_Iterator, initialize) {
 	ASSERT_TYPE(args, array_e, "Array.Iterator.initialize");
 	Array_Iterator *data = new Array_Iterator(args);
-	return ehretval_t::make_resource(data);
+	return ehretval_t::make_resource(obj->get_full_type(), data);
 }
 EH_METHOD(Array_Iterator, hasNext) {
 	ASSERT_TYPE(args, null_e, "Array.Iterator.hasNext");
-	Array_Iterator *data = (Array_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Array_Iterator, "Array.Iterator.hasNext");
 	return ehretval_t::make_bool(data->has_next());
 }
 EH_METHOD(Array_Iterator, next) {
 	ASSERT_TYPE(args, null_e, "Array.Iterator.next");
-	Array_Iterator *data = (Array_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Array_Iterator, "Array.Iterator.next");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
 	}
@@ -168,7 +168,7 @@ EH_METHOD(Array_Iterator, next) {
 }
 EH_METHOD(Array_Iterator, peek) {
 	ASSERT_TYPE(args, null_e, "Array.Iterator.peek");
-	Array_Iterator *data = (Array_Iterator *)obj->get_resourceval();
+	ASSERT_RESOURCE(Array_Iterator, "Array.Iterator.peek");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
 	}

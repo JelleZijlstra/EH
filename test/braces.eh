@@ -14,6 +14,6 @@ if (4 > 3) {
 }
 i = 3
 while (i > 0) { echo i; i--; }
-for 1..5 count i {
+for i in 1..5 {
 	echo i
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # Test that loop variable is not changed in place
 arr = []
-for 2 count i {
+for i in 2 {
 	arr->i = i
 }
 printvar arr

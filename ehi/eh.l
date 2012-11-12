@@ -72,7 +72,6 @@
 "endfor"	return T_ENDFOR;
 "as"		return T_AS;
 "in"		return T_IN;
-"count"		return T_COUNT;
 "while"		return T_WHILE;
 "endwhile"	return T_ENDWHILE;
 "break"		return T_BREAK;

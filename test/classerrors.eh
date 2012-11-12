@@ -5,14 +5,14 @@ class Foo {
 	end
 
 	try
-		for 5 count i
+		for i in 5
 			const foo = i
 		end
 	catch
 		echo exception.toString()
 	end
 	public mah = 0
-	for 10 count i
+	for i in 10
 		mah++
 	end
 	echo mah

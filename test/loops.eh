@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
-for 0..2 count m
-	for 0..(3 - m) count n
+for m in 0..2
+	for n in 0..(3 - m)
 		echo '' + m + ', ' + n
 	end
 end

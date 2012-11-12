@@ -6,15 +6,15 @@ else
 	max = 128
 end
 sieve = []
-for max count i
+for i in max
 	sieve->(i + 1) = true
 end
-for (max / 2) - 1 count i
-	for (max / (i + 2)) - 1 count j
+for i in (max / 2) - 1
+	for j in (max / (i + 2)) - 1
 		sieve->((i + 2) * (j + 2)) = false
 	end
 end
-for max count i
+for i in max
 	if sieve->(i + 1) == true
 		echo i + 1
 	end

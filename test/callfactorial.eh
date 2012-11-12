@@ -6,6 +6,6 @@ if argc == 2
 else
 	n = 13
 end
-for n count i
+for i in n
 	echo factorial i
 end

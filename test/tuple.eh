@@ -3,7 +3,7 @@ t = Tuple.new 1, "true", false
 printvar t
 printvar t.length ()
 printvar t.isA Tuple
-for (t.length()) count i
+for i in t.length()
   printvar t->i
 end
 

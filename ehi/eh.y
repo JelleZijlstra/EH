@@ -91,7 +91,7 @@ EHI *yyget_extra(void *scanner);
 %right '@'
 %left T_ARROW '.'
 %nonassoc T_RANGE
-%nonassoc '$' '~' '!' T_NEGATIVE T_COUNT
+%nonassoc '$' '~' '!' T_NEGATIVE
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF T_THIS T_SCOPE
@@ -142,9 +142,7 @@ statement:
 	| T_WHILE block_expression '{' statement_list '}' T_SEPARATOR
 							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR block_expression '{' statement_list '}' T_SEPARATOR
-							{ $$ = ADD_NODE2(T_FOR, $2, $4); }
-	| T_FOR block_expression T_COUNT T_VARIABLE '{' statement_list '}' T_SEPARATOR
-							{ $$ = ADD_NODE3(T_FOR, $2, $4, $6); }
+							{ $$ = ADD_NODE2(T_IN, $2, $4); }
 	| T_FOR block_expression T_IN block_expression '{' statement_list '}' T_SEPARATOR
 							{ $$ = ADD_NODE3(T_IN, $2, $4, $6); }
 	| T_FUNC T_VARIABLE ':' parglist '{' statement_list '}' T_SEPARATOR
@@ -159,9 +157,7 @@ statement:
 	| T_WHILE block_expression T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR block_expression T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE2(T_FOR, $2, $4); }
-	| T_FOR block_expression T_COUNT T_VARIABLE T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE3(T_FOR, $2, $4, $6); }
+							{ $$ = ADD_NODE2(T_IN, $2, $4); }
 	| T_FOR block_expression T_IN block_expression T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE3(T_IN, $2, $4, $6); }
 	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
@@ -176,9 +172,7 @@ statement:
 	| T_WHILE block_expression T_SEPARATOR statement_list T_ENDWHILE T_SEPARATOR
 							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR block_expression T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
-							{ $$ = ADD_NODE2(T_FOR, $2, $4); }
-	| T_FOR block_expression T_COUNT T_VARIABLE T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
-							{ $$ = ADD_NODE3(T_FOR, $2, $4, $6); }
+							{ $$ = ADD_NODE2(T_IN, $2, $4); }
 	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
 							{ $$ = ADD_NODE2('=',
 								ADD_NODE1('$', $2),

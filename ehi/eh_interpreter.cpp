@@ -219,10 +219,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				return eh_op_if(node->get_opval(), context);
 			case T_WHILE:
 				return eh_op_while(paras, context);
-			case T_FOR:
-				return eh_op_for(node->get_opval(), context);
 			case T_IN:
-				return eh_op_in(paras, context);
+				return eh_op_in(node->get_opval(), context);
 			case T_SWITCH: // switch statements
 				ret = eh_op_switch(paras, context);
 				// incremented in the eh_op_switch function
@@ -475,47 +473,6 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 	returning = false;
 	return ret;
 }
-ehretval_p EHI::eh_op_for(opnode_t *op, ehcontext_t context) {
-	ehretval_p ret = NULL;
-	inloop++;
-	breaking = 0;
-	std::pair<int, int> range;
-
-	// get the count
-	ehretval_p count_r = eh_execute(op->paras[0], context);
-	if(count_r->type() == range_e) {
-		ehrange_t *rangeval = count_r->get_rangeval();
-		if(rangeval->min->type() == int_e) {
-			range.first = rangeval->min->get_intval();
-			range.second = rangeval->max->get_intval();
-		} else {
-			throw_TypeError("For loop counter must be an Integer or a Range of Integers", rangeval->min->type(), this);
-		}
-	} else if(count_r->type() == int_e) {
-		range.first = 0;
-		range.second = count_r->get_intval() - 1;
-	} else {
-		throw_TypeError("For loop counter must be an Integer or a Range of Integers", count_r->type(), this);
-	}
-	if(op->nparas == 2) {
-		// "for 5; do stuff; endfor" construct
-		for(int i = range.first; i <= range.second; i++) {
-			ret = eh_execute(op->paras[1], context);
-			LOOPCHECKS;
-		}
-	} else {
-		// "for 5 count i; do stuff; endfor" construct
-		char *name = eh_execute(op->paras[1], context)->get_stringval();
-		ehmember_p var = this->set_property(context.scope, name, ehretval_t::make_int(range.first), context);
-		for(int i = range.first; i <= range.second; i++) {
-			var->value = ehretval_t::make_int(i);
-			ret = eh_execute(op->paras[2], context);
-			LOOPCHECKS;
-		}
-	}
-	inloop--;
-	return ret;
-}
 ehretval_p EHI::eh_op_if(opnode_t *op, ehcontext_t context) {
 	if(this->to_bool(eh_execute(op->paras[0], context), context)->get_boolval()) {
 		return eh_execute(op->paras[1], context);
@@ -549,8 +506,16 @@ ehretval_p EHI::eh_op_while(ehretval_p *paras, ehcontext_t context) {
 	inloop--;
 	return ret;
 }
-ehretval_p EHI::eh_op_in(ehretval_p *paras, ehcontext_t context) {
-	ehretval_p iteree = eh_execute(paras[1], context);
+ehretval_p EHI::eh_op_in(opnode_t *op, ehcontext_t context) {
+	ehretval_p iteree_block, body_block;
+	if(op->nparas == 3) {
+		iteree_block = op->paras[1];
+		body_block = op->paras[2];
+	} else {
+		iteree_block = op->paras[0];
+		body_block = op->paras[1];
+	}
+	ehretval_p iteree = eh_execute(iteree_block, context);
 	ehretval_p iterator = call_method(iteree, "getIterator", NULL, context);
 	inloop++;
 	while(true) {
@@ -562,9 +527,11 @@ ehretval_p EHI::eh_op_in(ehretval_p *paras, ehcontext_t context) {
 			break;
 		}
 		ehretval_p next = call_method(iterator, "next", NULL, context);
-		attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
-		set(paras[0], next, &attributes, context);
-		ehretval_p ret = eh_execute(paras[2], context);
+		if(op->nparas == 3) {
+			attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
+			set(op->paras[0], next, &attributes, context);
+		}
+		ehretval_p ret = eh_execute(body_block, context);
 		LOOPCHECKS;
 	}
 	inloop--;
@@ -1144,7 +1111,7 @@ ehretval_p EHInterpreter::instantiate(ehretval_p obj) {
  */
 void EHI::array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context) {
 	/*
-	 * We'll assume we're always getting a correct ehretval_p , referring to a
+	 * We'll assume we're always getting a correct ehretval_p, referring to a
 	 * T_ARRAYMEMBER token. If there is 1 parameter, that means it's a
 	 * non-labeled array member, which we'll give an integer array index; if
 	 * there are 2, we'll either use the integer array index or a hash of the

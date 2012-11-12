@@ -6,8 +6,8 @@ while 1
 	echo n
 	if (n > 2)
 		break
-	endif
-endwhile
+	end
+end
 echo 'We got out of the infinite loop'
 
 while 1
@@ -19,18 +19,18 @@ while 1
 		if (n > 8)
 			echo 'Breaking 2'
 			break 2
-		endif
+		end
 		if (n > 5)
 			echo 'Breaking 1'
 			break 1
-		endif
-	endwhile
-endwhile
+		end
+	end
+end
 
 echo 'Will this ever get executed?'
-for n count i
+for i in n
 	if (i == 3) or (i == 5)
 		continue
-	endif
+	end
 	echo i
-endfor
+end

@@ -2,7 +2,7 @@
 # This should now also be possible
 f = func: {
   foo = []
-  for 5 count i {
+  for i in 5 {
     foo->i = i
   }
   foo

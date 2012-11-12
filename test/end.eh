@@ -20,7 +20,7 @@ end
 while n
 	n--
 end
-for 2 count i
+for i in 2
 	echo i
 end
 if 4 > 2

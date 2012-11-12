@@ -233,10 +233,10 @@ typedef struct ehmember_t {
 	ehmember_t(attributes_t atts) : attribute(atts), value() {}
 	
 	// convenience methods
-	bool isstatic() {
+	bool isstatic() const {
 		return this->attribute.isstatic == static_e;
 	}
-	bool isconst() {
+	bool isconst() const {
 		return this->attribute.isconst == const_e;
 	}
 

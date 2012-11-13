@@ -618,10 +618,12 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	int type_id;
 	const char *name = NULL;
 	if(op->nparas == 2) {
+		// named class
 		name = eh_execute(op->paras[0], context)->get_stringval();
 		type_id = parent->repo.register_class(name, ret);
 		code = op->paras[1];
 	} else {
+		// nameless class
 		type_id = object_e;
 		code = op->paras[0];
 	}
@@ -630,13 +632,13 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	new_obj->parent = context.scope;
 
 	// inherit from Object
-	ehretval_p object_class = parent->repo.get_object(object_e);
-	new_obj->inherit(object_class);
+	new_obj->inherit(parent->base_object);
 
+	// execute the code within the class
 	eh_execute(code, ehcontext_t(ret, ret));
 	
 	if(op->nparas == 2) {
-		// insert variable
+		// insert variable if it is a named class
 		ehmember_p member;
 		member->value = ret;
 		context.scope->get_objectval()->insert(name, member);
@@ -645,6 +647,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 	int nargs = 1;
+	// first determine the size of the tuple
 	for(ehretval_p tmp = node;
 		tmp->type() == op_e && tmp->get_opval()->op == ',' && tmp->get_opval()->nparas != 0;
 		tmp = tmp->get_opval()->paras[1], nargs++
@@ -652,6 +655,7 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 	ehretval_a new_args(nargs);
 	
 	ehretval_p arg_node = node;
+	// now, fill the output tuple
 	for(int i = 0; i < nargs; i++) {
 		opnode_t *op = arg_node->get_opval();
 		if(op->op == ',') {
@@ -666,7 +670,7 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 	return parent->make_tuple(new ehtuple_t(nargs, new_args));
 }
 void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
-	// rely on standard layout of the paras
+	// parse the attributes into an attributes_t
 	attributes_t attributes = attributes_t::make();
 	for(ehretval_p node = op->paras[0]; node->get_opval()->nparas != 0; node = node->get_opval()->paras[0]) {
 		switch(node->get_opval()->paras[1]->get_attributeval()) {
@@ -684,6 +688,7 @@ void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 				break;
 		}
 	}
+	// set the member
 	set(op->paras[1], eh_execute(op->paras[2], context), &attributes, context);
 }
 ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
@@ -1078,7 +1083,7 @@ ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t 
 	}
 	ehobj_t *obj = object->get_objectval();
 	ehmember_p member = obj->inherited_get(name);
-	if(ehmember_p::null(member) || (member->attribute.visibility == private_e && !obj->context_compare(context))) {
+	if(member.null() || (member->attribute.visibility == private_e && !obj->context_compare(context))) {
 		throw_NameError(base_var, name, this);		
 	}
 	ehretval_p out = member->value;
@@ -1104,7 +1109,6 @@ ehretval_p EHInterpreter::instantiate(ehretval_p obj) {
 	new_obj->inherit(to_instantiate);
 	return ret;
 }
-
 
 /*
  * Arrays

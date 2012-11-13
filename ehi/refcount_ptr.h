@@ -44,6 +44,9 @@ public:
 	static bool null(refcount_ptr<T> in) {
 		return ~in == NULL;
 	}
+	bool null() const {
+		return this->pointer == NULL;
+	}
 	
 	// constructor
 	refcount_ptr() : pointer(NULL) {}

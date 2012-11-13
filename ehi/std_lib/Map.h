@@ -20,8 +20,8 @@ public:
 	size_t size() const {
 		return map.size();
 	}
-	ehretval_p get(ehretval_p index) {
-		return map[index];
+	ehretval_p get(ehretval_p index) const {
+		return map.at(index);
 	}
 	void set(ehretval_p index, ehretval_p value) {
 		map[index] = value;		

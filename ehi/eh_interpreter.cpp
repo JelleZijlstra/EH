@@ -615,27 +615,24 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 
 	// process parameters
 	ehretval_p code;
-	int type_id;
-	const char *name = NULL;
+	const char *name = "(anonymous class)";
 	if(op->nparas == 2) {
 		// named class
 		name = eh_execute(op->paras[0], context)->get_stringval();
-		type_id = parent->repo.register_class(name, ret);
 		code = op->paras[1];
 	} else {
 		// nameless class
-		type_id = object_e;
 		code = op->paras[0];
 	}
 
-	new_obj->type_id = type_id;
+	new_obj->type_id = parent->repo.register_class(name, ret);
 	new_obj->parent = context.scope;
 
 	// inherit from Object
 	new_obj->inherit(parent->base_object);
 
 	// execute the code within the class
-	eh_execute(code, ehcontext_t(ret, ret));
+	eh_execute(code, ret);
 	
 	if(op->nparas == 2) {
 		// insert variable if it is a named class

@@ -1,5 +1,7 @@
 # List class
 class List
+	this.inherit Iterable
+
 	private l
 
 	# This is hackish

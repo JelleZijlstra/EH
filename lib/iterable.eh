@@ -104,6 +104,25 @@ class Iterable
 			i++
 		end
 	end
+
+	const public reduceSingle = func: f
+		const private it = this.getIterator()
+		if !(it.hasNext())
+			ret null
+		end
+		private out = it.next()
+		while it.hasNext()
+			private val = it.next()
+			if f(out, val)
+				out = val
+			end
+		end
+		out
+	end	
+
+	const public max = () => this.reduceSingle (largest, val => largest < val)
+
+	const public min = () => this.reduceSingle (smallest, val => smallest > val)
 end
 
 # Dynamic inheritance in iterable library classes

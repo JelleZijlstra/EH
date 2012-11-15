@@ -91,7 +91,7 @@ EHI *yyget_extra(void *scanner);
 %right '@'
 %left T_ARROW '.'
 %nonassoc T_RANGE
-%nonassoc '$' '~' '!' T_NEGATIVE
+%nonassoc '~' '!' T_NEGATIVE
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF T_THIS T_SCOPE

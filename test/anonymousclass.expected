@@ -1,10 +1,10 @@
 %%stdout%%
-@object <Object> [
+@object <(anonymous class)> [
 ]
 @int 4
-@object <Object> [
+@object <(anonymous class)> [
 a <private,non-static,non-constant>: @int 4
 ]
-@object <Object> [
+@object <(anonymous class)> [
 ]
 %%stderr%%

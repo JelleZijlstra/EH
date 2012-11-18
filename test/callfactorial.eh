@@ -7,5 +7,9 @@ else
 	n = 13
 end
 for i in n
-	echo factorial i
+	try
+		echo(factorial i)
+	catch
+		echo exception
+	end
 end

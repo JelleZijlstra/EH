@@ -1,16 +1,16 @@
 #!/usr/bin/ehi
-class A {
+class A
 	public a = 3
-	public b: {
+	public b:
 		echo 42
-	}
-}
-class B {
+	end
+end
+class B
 	this.inherit A
 	public c = 5
-	public d: {
+	public d:
 		echo 4
-	}
-}
+	end
+end
 o = B.new ()
 o.b ()

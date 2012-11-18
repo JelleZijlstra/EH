@@ -2,6 +2,6 @@
 # Test that a list's l property is indeed private
 include '../lib/library.eh'
 
-l = Cons 1, Nil
+l = Cons(1, Nil)
 printvar l
-echo l.l
+echo(l.l)

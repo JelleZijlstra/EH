@@ -4,3 +4,5 @@
 String.empty = () => ''
 
 String.add = String.operator+
+
+String.toString = () => this

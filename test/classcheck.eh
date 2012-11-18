@@ -8,13 +8,13 @@ class Foo
 end
 bar = Foo.new ()
 # true
-echo bar.isA Foo
+echo(bar.isA Foo)
 # error
-echo bar.isA ()
+echo(bar.isA ())
 # error
-rescue () => (echo pow 3)
+rescue(() => echo pow 3)
 # error
-rescue () => (echo pow (3, 2, false))
+rescue(() => echo pow(3, 2, false))
 # false
-class Bar{}
-echo bar.isA Bar
+class Bar; end
+echo(bar.isA Bar)

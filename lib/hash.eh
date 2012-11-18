@@ -4,10 +4,10 @@
 Hash.toString = func:
 	private it = this.getIterator()
 	out = '{'
-	while (it.hasNext())
+	while it.hasNext()
 		item = it.next()
 		out += item->0 + ': ' + item->1
-		if (it.hasNext())
+		if it.hasNext()
 			out += ', '
 		end
 	end

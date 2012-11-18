@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 class Foo
 	public bar = 3
-endclass
+end
 baz = Foo.new ()
-echo baz.bar
+echo(baz.bar)

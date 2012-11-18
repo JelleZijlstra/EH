@@ -11,7 +11,7 @@ class Vector
 		if !(index.isA Integer)
 			throw "Invalid type for argument 0 to Vector.operator->="
 		end
-		this.set index, value
+		this.set(index, value)
 	end
 	
 	private get = this.operator->
@@ -27,5 +27,5 @@ end
 v = Vector.new ()
 printvar v
 v->0 = 42
-printvar v->0
-printvar v.length ()
+printvar(v->0)
+printvar(v.length ())

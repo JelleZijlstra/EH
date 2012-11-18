@@ -2,7 +2,7 @@
 include '../lib/assert.eh'
 
 try
-	assert false, "This isn't true"
+	assert(false, "This isn't true")
 catch if exception.isA AssertionFailure
 	echo exception
 end

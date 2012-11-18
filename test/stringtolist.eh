@@ -3,6 +3,6 @@
 
 include '../lib/library.eh'
 
-echo "Foo".toList()
+echo("Foo".toList())
 
-echo (1..3).toList()
+echo((1..3).toList())

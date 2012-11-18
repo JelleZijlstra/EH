@@ -7,18 +7,18 @@ class Bar
 		# 3
 		echo foo
 		# 3
-		echo this.foo
+		echo(this.foo)
 		# 4
 		echo baz
 		# error
 		try
-			echo this.baz
+			echo(this.baz)
 		catch
-			echo exception.toString()
+			echo(exception.toString())
 		end
 		this.baz = 5
 		# 5
-		echo this.baz
+		echo(this.baz)
 		# 5
 		echo baz
 	end

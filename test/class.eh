@@ -5,7 +5,7 @@ include '../lib/exception.eh'
 echo 2
 if 2
 	echo 'meh'
-endif
+end
 class Foo
 	public bar = 3
 	private baz
@@ -14,21 +14,21 @@ class Foo
 		# Illustrate private method access from class context
 		this.bar = Foo.new ()
 		this.bar.mah 'Calling a private method'
-	endfunc
+	end
 	private mah: n
 		echo n
-	endfunc
+	end
 	public toString:
 		'@Foo (' + this.bar + ', ' + this.baz + ')'
-	endfunc
-endclass
+	end
+end
 bar = Foo.new ()
 printvar bar
-echo bar.bar
+echo(bar.bar)
 foo = bar.meh
 printvar foo
 bar.meh 42
 # Error: method is private
-rescue () => (bar.mah 'Calling a private method')
+rescue(() => bar.mah 'Calling a private method')
 bar.bar = 2
-echo bar.bar
+echo(bar.bar)

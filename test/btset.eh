@@ -8,4 +8,4 @@ s.add 4
 s.add 2
 s.add 2
 echo s
-echo s.debug()
+echo(s.debug())

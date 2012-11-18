@@ -3,7 +3,7 @@
 try
 	hello
 catch
-	echo exception.type()
-	echo exception.isA NameError
-	echo exception.isA Exception
+	echo(exception.type())
+	echo(exception.isA NameError)
+	echo(exception.isA Exception)
 end

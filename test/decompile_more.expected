@@ -1,13 +1,10 @@
 %%stdout%%
 func: ()
-	
 	out = "("
 	len = this.length ()
 	for i in len
-		
 		out = out + this->i
-		if i != (len - 1)
-			
+		if i != len - 1
 			out = out + ", "
 		end
 	end
@@ -15,7 +12,7 @@ func: ()
 end
 func: n
 	if n < 0
-		throw ArgumentError.new "Argument must be nonnegative", "Iterable.nth", n
+		throw ArgumentError.new ("Argument must be nonnegative", "Iterable.nth", n)
 	end
 	const private it = this.getIterator ()
 	private i = 0
@@ -28,16 +25,13 @@ func: n
 	end
 end
 func: f
-	
 	out = []
 	for (key, value) in this
-		
-		if (f key, value)
-			
+		if f (key, value)
 			out->key = value
 		end
 	end
-	ret out
+	out
 end
 func: ()
 	[3, 2, 1], {"foo": "bar"}
@@ -61,7 +55,7 @@ func: list
 	const private diffs = list.map (func: x
 		(x - mean) * (x - mean)
 	end)
-	((diffs.numericSum ()) / (n - 1)).sqrt ()
+	(diffs.numericSum () / (n - 1)).sqrt ()
 end
 func: list
 	const private length = list.length ()

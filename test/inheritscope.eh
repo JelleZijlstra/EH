@@ -1,21 +1,21 @@
 #!/usr/bin/ehi
 
-class A {
+class A
 	a = 3
-	class B {
-		public b: {
+	class B
+		public b:
 			echo a
-		}
-	}
-}
+		end
+	end
+end
 
-class C {
+class C
 	a = 4
-	class D {
-		this.inherit A.B
-	}
+	class D
+		this.inherit(A.B)
+	end
 	o = D.new ()
 	
 	# Expect 3, because inherited methods retain their original parent scope
 	o.b ()
-}
+end

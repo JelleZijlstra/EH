@@ -4,11 +4,11 @@ if argc == 2
 	money = @int argv->1
 else
 	money = 0
-endif
+end
 while money <= 0
 	echo 'How much change is owed?'
 	money = getinput()
-endwhile
+end
 
 // get number of pennies
 money = money * 100
@@ -18,19 +18,19 @@ coins = 0
 while money > 25
 	coins++
 	money = money - 25
-endwhile
+end
 
 // dimes
 while money > 10
 	coins++
 	money = money - 10
-endwhile
+end
 
 // nickels
 while money > 5
 	coins++
 	money = money - 5
-endwhile
+end
 
 // pennies
 coins = coins + money

@@ -1,14 +1,14 @@
 #!/usr/bin/ehi
 # Demonstrate the global variable, a reference to the global scope.
 foo = 4
-class A {
+class A
 	public foo = 3
-	public f: {
+	public f:
 		echo foo
-		echo global.foo
-	}
-}
+		echo(global.foo)
+	end
+end
 A.f ()
 echo foo
-echo global.foo
-echo A.foo
+echo(global.foo)
+echo(A.foo)

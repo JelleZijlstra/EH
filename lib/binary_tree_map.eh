@@ -6,7 +6,7 @@ class BinaryTreeMap
 		const initialize = l, key, val, r => (this.n = [l, key, val, r])
 
 		const insert = func: key, val
-			insertHelper = func: node, key, val
+			private const insertHelper = func: node, key, val
 				if node == null
 					Node.new null, key, val, null
 				else
@@ -14,57 +14,57 @@ class BinaryTreeMap
 					node
 				end
 			end
-			private comparison = key <=> this.n->1
+			private const comparison = key <=> this.n->1
 			if comparison < 0
-				this.n->0 = insertHelper this.n->0, key, val
+				this.n->0 = insertHelper(this.n->0, key, val)
 			elsif comparison == 0
 				this.n->2 = val
 			else
-				this.n->3 = insertHelper this.n->3, key, val
+				this.n->3 = insertHelper(this.n->3, key, val)
 			end
 		end
 
 		const reduce = func: firstVal, f
-			tmp = given this.n->0
+			private tmp = given this.n->0
 				case null; firstVal
-				default; this.n->0.reduce firstVal, f
+				default; this.n->0.reduce(firstVal, f)
 			end
-			tmp = f tmp, this.n->1, this.n->2
+			tmp = f(tmp, this.n->1, this.n->2)
 			given this.n->3
 				case null; tmp
-				default; this.n->3.reduce tmp, f
+				default; this.n->3.reduce(tmp, f)
 			end
 		end
 
 		const get = func: key
-			helper = node, key => given node
+			private const helper = node, key => given node
 				case null; null
 				default; node.get key
 			end
-			private comparison = key <=> this.n->1
+			private const comparison = key <=> this.n->1
 			if comparison < 0
-				helper this.n->0, key
+				helper(this.n->0, key)
 			elsif comparison == 0
 				this.n->2
 			else
-				helper this.n->3, key
+				helper(this.n->3, key)
 			end
 		end
 
-		const toString = () => '(' + (this.n->0) + ',' + (this.n->1) + " => " + (this.n->2) + ',' + (this.n->3) + ')'
+		const toString = () => '(' + this.n->0 + ',' + this.n->1 + " => " + this.n->2 + ',' + this.n->3 + ')'
 	end
 	private Node = Node
 
 	private base = null
 
 	const add = key, val => given base
-		case null; base = Node.new null, key, val, null; null
-		default; base.insert key, val; null
+		case null; base = Node.new(null, key, val, null); null
+		default; base.insert(key, val); null
 	end
 
 	const reduce = firstVal, f => given base
 		case null; firstVal
-		default; base.reduce firstVal, f
+		default; base.reduce(firstVal, f)
 	end
 
 	const get = key => given base
@@ -77,9 +77,9 @@ class BinaryTreeMap
 
 	const has = key => (this.get key == null)
 
-	const toString = () => '{' + (reduce "", func: accum, key, val
-		(key.toString()) + ' => ' + (val.toString()) + ', ' + accum
+	const toString = () => '{' + reduce("", func: accum, key, val
+		key.toString() + ' => ' + val.toString() + ', ' + accum
 	end) + '}'
 
-	const debug = () => (base.toString())
+	const debug = () => base.toString()
 end

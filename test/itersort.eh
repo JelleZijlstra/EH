@@ -1,4 +1,4 @@
 #!/usr/bin/ehi
 include '../lib/library.eh'
 
-echo "bar".sort()
+echo("bar".sort())

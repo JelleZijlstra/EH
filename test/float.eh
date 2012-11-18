@@ -3,5 +3,5 @@
 foo = 3.14
 e = 1.68
 printvar foo
-echo foo.isA Float
-echo false.isA Float
+echo(foo.isA Float)
+echo(false.isA Float)

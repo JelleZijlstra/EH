@@ -15,7 +15,7 @@ class Foo
 	end
 end
 f = Foo.new ()
-rescue () => (printvar f.bar ())
+rescue(() => printvar (f.bar ()))
 printvar f
-printvar f.useprivate ()
+printvar(f.useprivate())
 echo baz

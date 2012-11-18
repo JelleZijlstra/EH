@@ -1,13 +1,13 @@
 #!/usr/bin/ehi
 func test: n
-	echo foo n
-	printvar foo n
+	echo (foo n)
+	printvar (foo n)
 	ret (foo n)
-endfunc
+end
 func foo: n
 	echo n
 	ret n
-endfunc
+end
 echo (test 2)
-printvar test 2
+printvar (test 2)
 ret 42

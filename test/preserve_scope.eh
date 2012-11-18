@@ -1,11 +1,11 @@
 #!/usr/bin/ehi
 # It's almost like JavaScript
-factory = func: n {
+factory = func: n
 	private foo = n
 	public bar = () => foo
-	ret scope
-}
+	scope
+end
 o = factory 42
 printvar o
-printvar o.bar ()
-printvar o.foo
+printvar(o.bar ())
+printvar(o.foo)

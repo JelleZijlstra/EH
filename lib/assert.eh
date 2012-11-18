@@ -17,9 +17,9 @@ public assert = func: expr
 		desc = "(no description)"
 	end
 	if !(expr.isA Bool)
-		throw AssertionFailure.new "assert expression must be a Bool"
+		throw(AssertionFailure.new "assert expression must be a Bool")
 	end
 	if !expr
-		throw AssertionFailure.new desc
+		throw(AssertionFailure.new desc)
 	end
 end

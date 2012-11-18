@@ -5,4 +5,4 @@ end
 class B
   this.inherit A
 end
-printvar B.new ()
+printvar(B.new ())

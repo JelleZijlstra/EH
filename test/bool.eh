@@ -3,8 +3,8 @@
 foo = true
 bar = false
 # Math with bools
-echo 2 * foo
-echo 2 * bar
+echo(2 * foo)
+echo(2 * bar)
 echo foo
 echo bar
 # Dump a bool

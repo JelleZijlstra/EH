@@ -4,13 +4,13 @@ class StringSet
 
 	public initialize = () => (this.hash = {})
 
-	public empty = () => (this.new())
+	public empty = this.new
 
 	public add = func: elt
 		this.hash->elt = true
 	end
 
-	public has = elt => (this.hash.has elt)
+	public has = elt => this.hash.has elt
 
 	public each = func: f
 		for (key, value) in this.hash
@@ -27,7 +27,7 @@ class StringSet
 	public intersection = func: other
 		out = empty()
 		this.each func: elt
-			if (other.has elt)
+			if other.has elt
 				out.add elt
 			end
 		end

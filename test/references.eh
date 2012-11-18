@@ -5,7 +5,7 @@ bar = foo
 # @int 3
 printvar bar
 # 6
-echo foo + bar
+echo(foo + bar)
 foo = foo + 2
 # 5
 echo foo

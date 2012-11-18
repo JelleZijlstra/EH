@@ -16,7 +16,7 @@ catch
 	printvar exception
 end
 
-printvar commands.keys()
+printvar(commands.keys())
 
 commands->'give_me_the_answer' = paras => 42
 

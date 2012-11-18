@@ -1,2 +1,2 @@
 #!/usr/bin/ehi
-printvar Object.members()
+printvar(Object.members())

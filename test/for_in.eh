@@ -2,7 +2,7 @@
 # For-in loops
 arr = [1, 2]
 for (k, v) in arr
-	printvar k, v
+	printvar(k, v)
 end
 
 arr2 = []

@@ -5,13 +5,15 @@ GC = GarbageCollector
 
 this.inherit String
 GC.stats()
-try {
-  length 0
-} catch {}
+try
+	length 0
+catch
+end
 collectGarbage()
-try {
-  length 0
-} catch {}
+try
+	length 0
+catch
+end
 collectGarbage()
 echo 3
 #printvar global
@@ -19,5 +21,5 @@ echo 3
 GC.stats()
 GC.stats()
 printvar (c = CountClass.new())
-printvar c.docount()
+printvar(c.docount())
 operator-> 0

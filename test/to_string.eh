@@ -5,4 +5,4 @@ class Foo
 end
 echo (Foo.toString())
 f = Foo.new()
-echo f.toString()
+echo (f.toString())

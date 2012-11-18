@@ -7,8 +7,8 @@ class Foo
 	public bar
 end
 f = Foo.new ()
-echo f.bar
+echo(f.bar)
 
 printvar funcv
-printvar funcv ()
-printvar var.docount ()
+printvar(funcv ())
+printvar(var.docount())

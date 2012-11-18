@@ -4,51 +4,51 @@
 class Iterable
 	public each = func: f
 		i = this.getIterator()
-		while (i.hasNext())
-			f i.next()
+		while i.hasNext()
+			f(i.next())
 		end
 	end
 	
-	private reduceHelper = it, b, f => given (it.hasNext())
-		case true; f (it.next()), (reduceHelper it, b, f)
+	private reduceHelper = it, b, f => given it.hasNext()
+		case true; f(it.next(), reduceHelper(it, b, f))
 		case false; b
 	end
 	
-	public reduce = b, f => (reduceHelper (this.getIterator()), b, f)
+	public reduce = b, f => reduceHelper(this.getIterator(), b, f)
 	
-	public iterableLength = () => this.reduce 0, (v, b => b + 1)
+	public iterableLength = () => this.reduce(0, (v, b => b + 1))
 	
 	private foldLeftHelper = it, b, f => given (it.hasNext())
 		case true
-			b = f (it.next()), b
-			foldLeftHelper it, b, f
+			b = f(it.next(), b)
+			foldLeftHelper(it, b, f)
 		case false
 			b
 	end
 	
-	public foldLeft = b, f => (foldLeftHelper (this.getIterator()), b, f)
+	public foldLeft = b, f => foldLeftHelper(this.getIterator(), b, f)
 
 	public map = func: f
 		out = this.empty()
-		this.foldLeft out, (v, collection => collection.add (f v))
+		this.foldLeft(out, (v, collection => collection.add(f v)))
 	end
 	
 	public filter = func: f
-		this.foldLeft (this.empty()), (v, collection => given (f v)
+		this.foldLeft (this.empty(), (v, collection => given f v
 			case true; collection.add v
 			case false; collection
-		end)
+		end))
 	end
 
 	public reverse = func:
-		this.foldLeft (this.empty()), (b, f => b.add f)
+		this.foldLeft(this.empty(), (b, f => b.add f))
 	end
 	
 	# sorting implementation
-	const private split = it, l, r => given (it.hasNext())
+	const private split = it, l, r => given it.hasNext()
 		case true
 			val = it.next()
-			split it, r, (l.add val)
+			split(it, r, l.add val)
 		case false; l, r
 	end
 
@@ -56,25 +56,25 @@ class Iterable
 		if !(l.hasNext())
 			given (r.hasNext())
 				case false; this
-				case true; (this.add r.next()).merge l, r
+				case true; this.add(r.next()).merge(l, r)
 			end
 		else
 			given (r.hasNext())
-				case false; (this.add l.next()).merge l, r
+				case false; (this.add l.next()).merge(l, r)
 				case true
 					const private l_head = l.peek()
 					const private r_head = r.peek()
-					comparison = l_head <=> r_head
+					const private comparison = l_head <=> r_head
 					if comparison < 0
 						l.next()
-						(this.add l_head).merge l, r
+						(this.add l_head).merge(l, r)
 					elsif comparison == 0
 						l.next()
 						r.next()
-						((this.add l_head).add r_head).merge l, r
+						((this.add l_head).add r_head).merge(l, r)
 					else
 						r.next()
-						(this.add r_head).merge l, r
+						(this.add r_head).merge(l, r)
 					end
 			end
 		end
@@ -84,15 +84,15 @@ class Iterable
 		case 0; this
 		case 1; this
 		default
-			private l, r = split (this.getIterator()), (this.empty()), (this.empty())
+			private l, r = split(this.getIterator(), this.empty(), this.empty())
 			l = l.sort()
 			r = r.sort()
-			(this.empty()).merge (l.getIterator()), (r.getIterator())
+			this.empty().merge(l.getIterator(), r.getIterator())
 	end
 	
 	const nth = func: n
 		if n < 0
-			throw ArgumentError.new "Argument must be nonnegative", "Iterable.nth", n
+			throw ArgumentError.new("Argument must be nonnegative", "Iterable.nth", n)
 		end
 		const private it = this.getIterator()
 		private i = 0
@@ -107,7 +107,7 @@ class Iterable
 
 	const public reduceSingle = func: f
 		const private it = this.getIterator()
-		if !(it.hasNext())
+		if !it.hasNext()
 			ret null
 		end
 		private out = it.next()

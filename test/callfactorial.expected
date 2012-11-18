@@ -1,5 +1,5 @@
 %%stdout%%
-false
+Invalid argument (method factorial): 0
 1
 2
 6

@@ -1,12 +1,12 @@
 #!/usr/bin/ehi
 # Probably a useful library routine
-Array.fill = func: n, f {
+static Array.fill = func: n, f
 	out = []
-	for i in n {
+	for i in n
 		out->i = f i
-	}
+	end
 	out
-}
+end
 
-printvar Array.fill 5, (input => input)
-printvar Array.fill 10, (input => input * input)
+printvar(Array.fill(5, (input => input)))
+printvar(Array.fill(10, (input => input * input)))

@@ -14,7 +14,7 @@ class List
 	end
 	
 	initialize = func: head, tail
-		if !(tail.isA List)
+		if !tail.isA List
 			throw ArgumentError.new "List tail must be a List", "List.initialize", tail
 		else
 			this.l = (head, tail)
@@ -38,33 +38,33 @@ class List
 		case null
 			Nil
 		default
-			Cons (f this.l->0), (this.l->1).map f
+			Cons(f(this.l->0), this.l->1.map f)
 	end
 	
 	const reduce = base, f => given this.l
 		case null
 			base
 		default
-			f this.l->0, (this.l->1.reduce base, f)			
+			f(this.l->0, this.l->1.reduce(base, f))
 	end
 	
 	const length = () => this.reduce (0, (k, rest => rest + 1))
 	
-	const toString = () => this.reduce "[]", (k, rest => (k.toString()) + "::" + rest)
+	const toString = () => this.reduce("[]", (k, rest => k.toString() + "::" + rest))
 
-	const filter = f => this.reduce Nil, func: elt, accum
+	const filter = f => this.reduce(Nil, func: elt, accum
 		if (f elt)
-			Cons elt, accum
+			Cons(elt, accum)
 		else
 			accum
 		end
-	end
+	end)
 
 	const private reverse_append = accum => given this.l
 		case null
 			accum
 		default
-			(this.l->1).reverse_append (Cons this.l->0, accum)
+			this.l->1.reverse_append Cons(this.l->0, accum)
 	end
 
 	const reverse = () => this.reverse_append Nil
@@ -74,60 +74,60 @@ class List
 		case null
 			l, r
 		default
-			(this.l->1).split r, (Cons this.l->0, l)
+			this.l->1.split(r, Cons(this.l->0, l))
 	end
 
 	const private merge = func: r
 		if this.l == null
 			r
-		elsif (r.isEmpty())
+		elsif r.isEmpty()
 			this
 		elsif this.l->0 < r->0
-			Cons this.l->0, (this.l->1).merge r
+			Cons(this.l->0, this.l->1.merge r)
 		else
-			Cons r->0, this.merge r->1
+			Cons(r->0, this.merge(r->1))
 		end
 	end
 
 	const sort = func:
 		if this.l == null
 			Nil
-		elsif (this.isSingleton())
+		elsif this.isSingleton()
 			this
 		else
-			private const l, r = this.split Nil, Nil
-			(l.sort()).merge r.sort()
+			private const l, r = this.split(Nil, Nil)
+			l.sort().merge(r.sort())
 		end
 	end
 
 	const rev_append = func: rhs
 		if this.l == null
 			rhs
-		elsif (this.isSingleton())
-			Cons this.l->0, rhs
+		elsif this.isSingleton()
+			Cons(this.l->0, rhs)
 		else
-			(this.l->1).rev_append (Cons this.l->0, rhs)
+			this.l->1.rev_append Cons(this.l->0, rhs)
 		end
 	end
 
-	const append = rhs => ((this.reverse()).rev_append rhs)
+	const append = rhs => this.reverse().rev_append rhs
 
-	const countPredicate = f => this.reduce Nil, (base, val => given (f val)
-		case true; Cons val, base
+	const countPredicate = f => this.reduce(Nil, (base, val => given (f val)
+		case true; Cons(val, base)
 		case false; base
-	end)
+	end))
 
-	const join = glue => this.reduce null, (val, base => given base
+	const join = glue => this.reduce(null, (val, base => given base
 		case null; val.toString()
-		default; (val.toString()) + glue + base
-	end)
+		default; val.toString() + glue + base
+	end))
 	
 	class Iterator
 		private l
 
 		public initialize = l => (this.l = l)
 		
-		public hasNext = () => !(this.l.isEmpty())
+		public hasNext = () => !this.l.isEmpty()
 		
 		public next = func:
 			out, this.l = this.l
@@ -138,7 +138,7 @@ class List
 	
 	const getIterator = () => this.Iterator.new this
 	
-	const add = v => Cons v, this
+	const add = v => Cons(v, this)
 end
 
 # Constify it
@@ -146,10 +146,10 @@ const List = List
 
 const Nil = List.empty()
 const Cons = List.new
-Object.operator:: = rhs => List.new this, rhs
+Object.operator:: = rhs => List.new(this, rhs)
 
 # Conversion methods
-Iterable.toList = () => this.reduce Nil, (val, out => val::out)
+Iterable.toList = () => this.reduce(Nil, (val, out => val::out))
 
 Tuple.toList = func:
 	out = Nil

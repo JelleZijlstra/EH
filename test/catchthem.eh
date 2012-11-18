@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
-try {
+try
 	$print 3
-} catch {
+catch
 	printvar exception
-} finally {
-}
+finally
+end

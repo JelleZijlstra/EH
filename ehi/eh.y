@@ -76,7 +76,6 @@ EHI *yyget_extra(void *scanner);
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %token <sValue> T_CUSTOMOP
-%right ':'
 %right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ T_LEFTSHIFTEQ T_RIGHTSHIFTEQ
 %right T_DOUBLEARROW
 %right ','
@@ -89,9 +88,9 @@ EHI *yyget_extra(void *scanner);
 %left '*' '/' '%'
 %nonassoc T_PLUSPLUS T_MINMIN
 %right '@'
-%left T_ARROW '.'
-%nonassoc T_RANGE
 %nonassoc '~' '!' T_NEGATIVE
+%left T_RANGE T_ARROW '.'
+%right ':'
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF T_THIS T_SCOPE

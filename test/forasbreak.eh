@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # As much looping as possible
 for ((), value) in [1, 2, 3, 4, 5]
-	echo 'before ' + value
+	echo('before ' + value)
 	for i in value
 		echo i
 		if i == 2 && value < 4
@@ -10,7 +10,7 @@ for ((), value) in [1, 2, 3, 4, 5]
 		if i == 4
 			break 2
 		end
-		echo 'inner after ' + i
+		echo('inner after ' + i)
 	end
-	echo 'after ' + value
+	echo('after ' + value)
 end

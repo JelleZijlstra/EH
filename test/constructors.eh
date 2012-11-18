@@ -3,7 +3,7 @@
 
 # One remaining bug in the object model is that printvar sees through the difference between pseudo-objects and real ones
 printvar (Integer.new 3)
-class Foo {
+class Foo
 	public toArray = () => []
-}
-printvar (Array.new Foo).length ()
+end
+printvar (Array.new Foo.length())

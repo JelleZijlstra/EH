@@ -7,12 +7,12 @@ class Foo
 	end
 end
 echo 'foo'
-echo 'foo' + 'bar'
+echo('foo' + 'bar')
 echo foo
 foo = Foo.new ()
 baz = foo.foo
-baz ()
-foo.foo ()
+baz()
+foo.foo()
 muh = 'foo'
-foo.foo ()
-baz ()
+foo.foo()
+baz()

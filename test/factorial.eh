@@ -4,14 +4,10 @@
 func factorial: n
 	# Guard against nonpositive input
 	if n < 1
-		ret false
-	end
-	if n == 1
-		ret 1
+		throw(ArgumentError.new("Invalid argument", "factorial", n))
+	elsif n == 1
+		1
 	else
-		# Parentheses are needed here because * has higher precedence than functions calls do.
-		# Ideally those should have a higher precedence, but this runs into problems
-		# because foo -1 would get interpreted as (foo) - 1.
-		ret n * (factorial n - 1)
+		n * factorial(n - 1)
 	end
 end

@@ -10,6 +10,6 @@ class Foo
 	end
 end
 f = Foo.new ()
-printvar f.bar ()
-printvar f.useprivate ()
+printvar(f.bar())
+printvar(f.useprivate())
 echo baz

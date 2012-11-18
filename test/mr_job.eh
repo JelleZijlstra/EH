@@ -8,12 +8,12 @@ class WordCounter
 	
 	mapper = func: key, value
 		for ((), word) in value
-			this.emit word, 1
+			this.emit(word, 1)
 		end
 	end
 	
 	reducer = func: key, values
-		this.output key, values.length()
+		this.output(key, values.length())
 	end
 end
 

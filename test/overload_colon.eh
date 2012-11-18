@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
-class Foo {
-	operator: = func: n {
+class Foo
+	operator: = func: n
 		echo n
-	}
-}
-(Foo.new ()) 42
+	end
+end
+(Foo.new()) 42

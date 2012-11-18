@@ -7,48 +7,48 @@ echo 42
 if 2 == 2
 	3 + 3
 	echo (2 - 3)
-endif
+end
 echo 43
 if 3 - 3
 	echo 2
-endif
+end
 echo 44
 if (3 > 2)
 	echo 1
-endif
+end
 echo 45
 if (2 > 3)
 	echo 0
-endif
+end
 echo 46
 if 2 < 3
 	echo 1
-endif
+end
 echo 47
 if (2 > 3)
 	echo 0
-endif
+end
 echo 48
 if 2 >= 2
 	echo 1
-endif
+end
 echo 49
 if 2 >= 3
 	echo 0
-endif
+end
 echo 50
 if 2 != 3
 	echo 1
-endif
+end
 echo 51
 if 2 != 2
 	echo 0
-endif
+end
 echo 52
 while 1 != 1
 	echo 2
-endwhile
+end
 echo 53
 while 2 != 2
 	echo 1
-endwhile
+end

@@ -12,12 +12,12 @@ end
 trier func:
 	[]->1.0 = 3
 end
-trier () => (printvar []->(1..3))
+trier(() => printvar([]->(1..3)))
 trier func:
 	{}->1 = 3
 end
-trier () => (printvar {}->4)
+trier(() => printvar({}->4))
 trier func:
 	(1, 2)->'test' = 42
 end
-trier () => ((1, 2)->'test')
+trier(() => (1, 2)->'test')

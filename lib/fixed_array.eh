@@ -20,7 +20,7 @@ FixedArray.inherit class
 				this.current++
 				out
 			else
-				throw EmptyIterator.new()
+				throw(EmptyIterator.new())
 			end
 		end
 	end

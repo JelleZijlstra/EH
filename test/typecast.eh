@@ -8,18 +8,18 @@ foobar = @string baz
 echo foobar
 more = @string baz
 echo 'If typecasting works, the following line should print 33:'
-echo foobar + more
+echo(foobar + more)
 if foobar == more
 	echo 'foobar and more are the same'
-endif
+end
 if foobar == baz
 	echo 'That is not true'
-endif
+end
 if 3 == ('3'.toInt ())
 	echo 'Type juggling works!'
-endif
+end
 if 3 == '3'
 	echo 'Strict comparison does not work'
 else
 	echo 'Strict comparison works too!'
-endif
+end

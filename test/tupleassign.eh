@@ -9,11 +9,11 @@ a, b = [3, 4]
 printvar a
 printvar b
 
-a, b = Cons 5, Nil
+a, b = Cons(5, Nil)
 printvar a
 echo b
 
-# This doesn't work now if you do a, (b, c) because the parentheses are essentially ignored. Fixing this will require some yacc hacking.
+# Trickery with parentheses
 (a, b), c = [6, 7], 8
 printvar a
 printvar b

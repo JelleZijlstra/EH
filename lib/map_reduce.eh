@@ -13,11 +13,11 @@ class MapReduceJob
 		end
 		this.intermediates = []
 		for (key, value) in input
-			this.mapper key, value
+			this.mapper(key, value)
 		end
 		this.outputArray = []
 		for (key, values) in this.intermediates
-			this.reducer key, values
+			this.reducer(key, values)
 		end
 		this.outputArray
 	end

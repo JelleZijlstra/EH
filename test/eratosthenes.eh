@@ -16,6 +16,6 @@ for i in (max / 2) - 1
 end
 for i in max
 	if sieve->(i + 1) == true
-		echo i + 1
+		echo(i + 1)
 	end
 end

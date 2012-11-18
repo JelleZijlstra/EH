@@ -11,8 +11,8 @@ c1.docount ()
 c2.setcount (c1.docount ())
 
 # 4
-echo c1.docount ()
+echo(c1.docount ())
 # 4
-echo c2.docount ()
+echo(c2.docount ())
 c2.setcount 0
-echo c2.docount ()
+echo(c2.docount ())

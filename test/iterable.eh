@@ -4,8 +4,8 @@
 class Iterable
 	public each = func: f
 		i = this.getIterator()
-		while (i.hasNext())
-			f i.next()
+		while i.hasNext()
+			f(i.next())
 		end
 	end
 end
@@ -23,8 +23,8 @@ Array.inherit Iterable
 [1, 2, 3].each printvar
 
 ['foo' => 'bar', 'baz' => 'mah'].each func: k, v
-	echo 'Key is ' + k
-	echo 'Value is ' + v
+	echo('Key is ' + k)
+	echo('Value is ' + v)
 end
 
 Tuple.inherit Iterable

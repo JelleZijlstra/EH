@@ -14,7 +14,7 @@ class Bar
 		super.toString = () => "Nana"
 	end
 	public cloneIt = func:
-		printvar super.new()
+		printvar(super.new())
 	end
 end
 

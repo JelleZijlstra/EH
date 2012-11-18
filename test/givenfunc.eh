@@ -25,4 +25,4 @@ gettype true
 # string
 gettype "eggs"
 # range
-gettype 67..68
+gettype(67..68)

@@ -3,9 +3,9 @@
 func abs: input
 	# Without the 0.0, this will instead compare the Float and Integer types. This should really be fixed in the C++ code.
 	if input < 0.0
-		ret -1 * input
+		-1 * input
 	else
-		ret input
+		input
 	end
 end
 func sqrt: input

@@ -6,7 +6,7 @@ func mccarthy: n
 	if n > 100
 		ret n - 10
 	else
-		ret mccarthy mccarthy n + 11
+		ret mccarthy(mccarthy(n + 11))
 	end
 end
 

@@ -2,7 +2,7 @@
 
 # Eval as an expression
 const exprEval = func: expr
-	eval "x = " + expr + ";"
+	eval("x = (" + expr + ");")
 	x
 end
 

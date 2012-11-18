@@ -8,6 +8,6 @@ f = x => given x
 	case true, true; echo x
 end
 
-f true, false
-f false, true
+f(true, false)
+f(false, true)
 f 42

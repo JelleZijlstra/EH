@@ -3,14 +3,14 @@
 class Foo
 	private var = 1
 	private bar: n
-		echo 'Private method ' + n
-		echo 'Private property var is: ' + this.var
-	endfunc
+		echo('Private method ' + n)
+		echo('Private property var is: ' + this.var)
+	end
 	public baz: n
-		echo 'Public method ' + n
+		echo('Public method ' + n)
 		this.var = 2
 		this.bar n
-	endfunc
-endclass
+	end
+end
 foo = Foo.new ()
 foo.baz 42

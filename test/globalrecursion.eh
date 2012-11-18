@@ -1,8 +1,8 @@
 #!/usr/bin/ehi
 # Can printvar handle this?
-class B {}
-class A {
+class B; end
+class A
 	public foo = B
-}
-B.o = A.new ()
+end
+B.o = A.new()
 printvar B

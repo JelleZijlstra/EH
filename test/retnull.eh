@@ -6,5 +6,5 @@ f = func: x
 	echo "it's odd"
 	x
 end
-printvar f 2
-printvar f 3
+printvar(f 2)
+printvar(f 3)

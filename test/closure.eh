@@ -2,9 +2,9 @@
 # Illustrate that closures can exist in ehi
 class Foo
 	public bar: n
-		echo n * n
-		ret 42
-	endfunc
+		echo(n * n)
+		42
+	end
 endclass
 foo = Foo.new ()
 printvar foo

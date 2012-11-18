@@ -10,4 +10,4 @@ end
 
 f = Foo.new()
 f.setBar 42
-echo f.getBar()
+echo(f.getBar())

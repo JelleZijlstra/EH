@@ -9,21 +9,21 @@ class Foo
 	const muh = 2
 	const meh: n
 		echo n
-	endfunc
+	end
 
 	const toString:
 		"@Foo " + bar + " " + baz + " " + mah + " " + muh
-	endfunc
-endclass
+	end
+end
 foo = Foo.new ()
 printvar foo
 # Because bar is static, this will also modify bar as it appears in foo
 Foo.bar = 2
-echo foo.bar
+echo(foo.bar)
 # ... And this will change bar as it appears in the class
 foo.bar = 3
-echo Foo.bar
+echo(Foo.bar)
 # Should both generate an error
-rescue () => (Foo.muh = 42)
-rescue () => (foo.muh = 42)
-echo Foo.muh
+rescue(() => (Foo.muh = 42))
+rescue(() => (foo.muh = 42))
+echo(Foo.muh)

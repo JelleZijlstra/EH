@@ -11,10 +11,10 @@ end
 echo 'We got out of the infinite loop'
 
 while 1
-	echo 'Outer: ' + n
+	echo('Outer: ' + n)
 	n++
 	while 1
-		echo 'Inner: ' + n
+		echo('Inner: ' + n)
 		n++
 		if (n > 8)
 			echo 'Breaking 2'

@@ -59,6 +59,7 @@ EH_INITIALIZER(Map_Iterator) {
 	REGISTER_METHOD(Map_Iterator, initialize);
 	REGISTER_METHOD(Map_Iterator, hasNext);
 	REGISTER_METHOD(Map_Iterator, next);
+	REGISTER_METHOD(Map_Iterator, peek);
 }
 
 Map_Iterator::Map_Iterator(Map *map) {

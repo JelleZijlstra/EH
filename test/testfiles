@@ -246,3 +246,5 @@ addprivate.eh
 elsif.eh
 precedence.eh
 fizz_buzz.eh
+brainf.eh
+readfile.eh

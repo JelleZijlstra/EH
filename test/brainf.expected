@@ -1,0 +1,5 @@
+%%arguments%%
+hellow.bf
+%%stdout%%
+Hello World!
+%%stderr%%

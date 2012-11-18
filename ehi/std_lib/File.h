@@ -20,5 +20,6 @@ EH_METHOD(File, puts);
 EH_METHOD(File, close);
 EH_METHOD(File, toBool);
 EH_METHOD(File, finalize);
+EH_METHOD(File, readFile);
 
 EH_INITIALIZER(File);

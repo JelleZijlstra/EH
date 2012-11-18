@@ -1,5 +1,9 @@
 #include "File.h"
 
+#include <string>
+#include <fstream>
+#include <sstream>
+
 EH_INITIALIZER(File) {
 	REGISTER_METHOD(File, initialize);
 	REGISTER_METHOD(File, open);
@@ -9,6 +13,7 @@ EH_INITIALIZER(File) {
 	REGISTER_METHOD(File, close);
 	REGISTER_METHOD(File, toBool);
 	REGISTER_METHOD(File, finalize);
+	REGISTER_METHOD(File, readFile);
 }
 
 EH_METHOD(File, initialize) {
@@ -75,6 +80,16 @@ EH_METHOD(File, puts) {
 	
 	int count = fputs(args->get_stringval(), data->descriptor);	
 	return ehretval_t::make_bool(count != EOF);
+}
+EH_METHOD(File, readFile) {
+	ASSERT_TYPE(args, string_e, "File.readFile");
+	const char *file = args->get_stringval();
+	// http://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
+	std::ifstream stream(file);
+	std::stringstream buffer;
+	buffer << stream.rdbuf();
+	char *str = strdup(buffer.str().c_str());
+	return ehretval_t::make_string(str);
 }
 EH_METHOD(File, close) {
 	ASSERT_TYPE(args, null_e, "File.close");

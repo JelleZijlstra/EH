@@ -1,0 +1,4 @@
+%%stdout%%
+@string 'test
+'
+%%stderr%%

@@ -8,6 +8,8 @@
 #include "eh.h"
 #include "eh.bison.hpp"
 #include "std_lib/SyntaxError.h"
+
+void make_string(char **, char *);
 %}
 %option yylineno
 %option reentrant
@@ -16,19 +18,11 @@
 %option extra-type="class EHI *"
 %%
 ['][^']*[']	{
-				int len;
-				len = strlen(yytext);
-				yylval_param->sValue = new char[len - 1];
-				strncpy(yylval_param->sValue, yytext + 1, len - 2);
-				yylval_param->sValue[len - 2] = '\0';
+				make_string(&yylval_param->sValue, yytext);
 				return T_STRING;
 			}
 ["][^"]*["]	{
-				int len;
-				len = strlen(yytext);
-				yylval_param->sValue = new char[len - 1];
-				strncpy(yylval_param->sValue, yytext + 1, len - 2);
-				yylval_param->sValue[len - 2] = '\0';
+				make_string(&yylval_param->sValue, yytext);
 				return T_STRING;
 			}
 [\\]\n		/* Ignore escape */
@@ -211,4 +205,43 @@ ehretval_p EHI::parse_string(const char *cmd) {
 	yy_switch_to_buffer(yy_scan_string(cmd, scanner), scanner);
 	yyset_lineno(1, scanner);
 	return ehretval_t::make_int(yyparse(scanner));
+}
+
+void make_string(char **dest, char *src) {
+	src++;
+	int len = strlen(src) - 1;
+	char *deststr = new char[len + 1];
+	int dest_index = 0;
+	for(int i = 0; i < len; i++) {
+		if(src[i] == '\\') {
+			if(i == len - 1) {
+				deststr[dest_index] = '\\';
+			} else {
+				i++;
+				char c = src[i];
+				switch(c) {
+					case 'n':
+						deststr[dest_index] = '\n';
+						break;
+					case 'r':
+						deststr[dest_index] = '\b';
+						break;
+					case '0':
+						deststr[dest_index] = '\0';
+						break;
+					case 'b':
+						deststr[dest_index] = '\b';
+						break;
+					default:
+						deststr[dest_index] = c;
+						break;
+				}
+			}
+		} else {
+			deststr[dest_index] = src[i];
+		}
+		dest_index++;
+	}
+	deststr[dest_index] = '\0';
+	*dest = deststr;
 }

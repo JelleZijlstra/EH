@@ -19,3 +19,37 @@ In that case, we should be smart enough to associate the context with the object
 For the first case, we should send the library class itself as the context.
 
 For user methods, we create a new context object with the object as a parent scope, and a convenience $this variable that refers to it, as well as a self variable representing this->object_data.
+
+
+NEW FEATURE: Algebraic data types and pattern matching
+
+Goal:
+
+enum List
+	Nil, Cons(hd, tl)
+
+	public reduce = base, f => given this
+		case Nil
+			base
+		case Cons(hd, tl)
+			f(hd, tl.reduce(base, f))
+	end
+end
+
+- enum creates a special kind of class that inherits automatically from some special core class, and where the first line inside of the class includes the possible types.
+- List.Nil is an object of type EnumMember
+- Pattern match of var against Cons(hd, tl) would:
+	- Check that var's class == Cons's class
+	- Check that var's enum kind == Cons's
+	- Check that arguments match and concurrently set variables like hd and tl.
+
+Enum.initialize is const private, and instead the EnumMember serves as a constructor creating an underlying Enum object that contains the data.
+
+Initialize with List.Cons(2, List.Cons(3, List.Nil)). And we could still do Object.operator:: = rhs => List.Cons(this, rhs).
+
+So essentially, List.Nil should be a constant, but List.Cons a (constructor) function. Accomplish that by overloading operator() for some EnumMember instances.
+
+OTHER THINGS TO DO
+- Rename operator: to operator().
+- Add something to ehobj_t so we can distinguish between classes and instances, and make static methods only callable in classes.
+- Do something about the private-in-inherited-class bug.

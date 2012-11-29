@@ -994,7 +994,7 @@ ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t 
 		// This one time, we call a library method directly. If you want to override Function.operator_colon, too bad.
 		return ehlm_Function_operator_colon(function, args, this);
 	} else {
-		return call_method(function, "operator:", args, context);
+		return call_method(function, "operator()", args, context);
 	}
 }
 ehretval_p EHInterpreter::make_method(ehlibmethod_t in) {

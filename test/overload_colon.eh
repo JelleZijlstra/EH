@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 class Foo
-	operator: = func: n
+	operator() = func: n
 		echo n
 	end
 end

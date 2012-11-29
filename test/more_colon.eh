@@ -1,5 +1,5 @@
 #!/usr/bin/ehi
-Integer.operator: = func: input
+Integer.operator() = func: input
 	if input.length() == this
 		echo 'Yes, that is the length of the input'
 	else

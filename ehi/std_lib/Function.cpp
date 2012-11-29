@@ -3,7 +3,7 @@
 #include "Function.h"
 
 EH_INITIALIZER(Function) {
-	REGISTER_METHOD_RENAME(Function, operator_colon, "operator:");
+	REGISTER_METHOD_RENAME(Function, operator_colon, "operator()");
 	REGISTER_METHOD(Function, toString);
 	REGISTER_METHOD(Function, decompile);
 	REGISTER_METHOD(Function, bindTo);
@@ -28,7 +28,7 @@ EH_METHOD(Function, operator_colon) {
 		real_parent = binding->method->get_objectval()->real_parent;
 		base_object = binding->object_data;
 	} else {
-		throw_TypeError("Invalid base object for Function.operator:", obj->type(), ehi);
+		throw_TypeError("Invalid base object for Function.operator()", obj->type(), ehi);
 	}
 	ehfunc_t *f = function_object->get_objectval()->object_data->get_funcval();
 

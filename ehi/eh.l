@@ -122,7 +122,7 @@ void make_string(char **, char *);
 "--"		return T_MINMIN;
 ("//"|#).*	; /* Ignore comment */
 [;\n]		return T_SEPARATOR;
-"operator"[<>\-\+*/%=!~&^:|]+	{
+"operator"([<>\-\+*/%=!~&^:|]+|\(\))	{
 				int len = strlen(yytext);
 				yylval_param->sValue = new char[len + 1];
 				strncpy(yylval_param->sValue, yytext, len);

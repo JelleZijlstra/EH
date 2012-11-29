@@ -50,6 +50,5 @@ Initialize with List.Cons(2, List.Cons(3, List.Nil)). And we could still do Obje
 So essentially, List.Nil should be a constant, but List.Cons a (constructor) function. Accomplish that by overloading operator() for some EnumMember instances.
 
 OTHER THINGS TO DO
-- Rename operator: to operator().
 - Add something to ehobj_t so we can distinguish between classes and instances, and make static methods only callable in classes.
 - Do something about the private-in-inherited-class bug.

@@ -6,3 +6,11 @@ Map.toString = func:
 	end
 	out + "}"
 end
+
+Map.with = func: pairs
+	map = Map.new()
+	for key, value in pairs
+		map->key = value
+	end
+	map
+end

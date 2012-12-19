@@ -695,7 +695,7 @@ void ehobj_t::register_value(const std::string &name, ehretval_p value, const at
 	member->value = value;
 	this->insert(name, member);
 }
-void ehobj_t::register_member_class(const std::string &name, const int new_type_id, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *interpreter_parent, ehretval_p the_class) {
+int ehobj_t::register_member_class(const std::string &name, const int new_type_id, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *interpreter_parent, ehretval_p the_class) {
 	ehobj_t *newclass;
 	ehretval_p new_value;
 	if(the_class == NULL) {
@@ -725,6 +725,7 @@ void ehobj_t::register_member_class(const std::string &name, const int new_type_
 	member->attribute = attributes;
 	member->value = new_value;
 	this->insert(name, member);
+	return newclass->type_id;
 }
 
 ehobj_t::~ehobj_t() {

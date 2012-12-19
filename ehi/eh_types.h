@@ -330,7 +330,7 @@ public:
 
 	void register_value(const std::string &name, ehretval_p value, const attributes_t attributes);
 	
-	void register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *parent, ehretval_p the_class = NULL);
+	int register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *parent, ehretval_p the_class = NULL);
 	
 	// destructor
 	~ehobj_t();

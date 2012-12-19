@@ -26,7 +26,7 @@ NEW FEATURE: Algebraic data types and pattern matching
 Goal:
 
 enum List
-	Nil, Cons(hd, tl)
+	Nil, Cons(Object, List)
 
 	public reduce = base, f => given this
 		case Nil

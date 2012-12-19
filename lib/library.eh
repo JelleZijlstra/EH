@@ -25,3 +25,7 @@ include 'fixed_array.eh'
 include 'fixed_array_sort.eh'
 include 'generator.eh'
 include 'io.eh'
+
+test = func: arg
+	$edit 'Paremballonura atrata' -c=('$parent "Emballonura"; $parent; ' + arg)
+end

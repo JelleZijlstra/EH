@@ -173,8 +173,8 @@ eharray_t *zvaltoeh_array(HashTable *hash, EHI *ehi) {
 %typemap(directorout) ehretval_p  {
 	$result = zvaltoeh($1, this);
 }
-%typemap(out) ehretval_t {
-	$result = ehtozval(&$1, this);
+%typemap(out) ehretval_p {
+	$result = ehtozval($1, arg1);
 }
 
 class EHI {

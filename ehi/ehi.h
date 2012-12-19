@@ -132,8 +132,9 @@ public:
 	}
 	ehretval_p global_parse_string(const char *cmd) {
 		try {
-			return parse_string(cmd, parent->global_object);
-		} catch(eh_exception &) {
+			return parse_string(cmd);
+		} catch(eh_exception &e) {
+			handle_uncaught(e);
 			return NULL;
 		}
 	}
@@ -145,7 +146,7 @@ public:
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
 	ehmember_p set_property(ehretval_p object, const char *name, ehretval_p value, ehcontext_t context);
 	ehretval_p set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attributes, ehcontext_t context);
-	void handle_uncaught(eh_exception e);
+	void handle_uncaught(eh_exception &e);
 
 	/*
 	 * Accessors

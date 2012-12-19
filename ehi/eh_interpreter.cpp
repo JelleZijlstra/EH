@@ -1178,7 +1178,7 @@ void EHInterpreter::redirect_command(const char *redirect, const char *target) {
 /*
  * Exceptions
  */
-void EHI::handle_uncaught(eh_exception e) {
+void EHI::handle_uncaught(eh_exception &e) {
 	try {
 		call_method(parent->global_object, "handleUncaught", e.content, parent->global_object);
 	} catch(...) {

@@ -132,7 +132,7 @@ public:
 	}
 	ehretval_p global_parse_string(const char *cmd) {
 		try {
-			return parse_string(cmd);
+			return parse_string(cmd, parent->global_object);
 		} catch(eh_exception &e) {
 			handle_uncaught(e);
 			return NULL;

@@ -288,6 +288,9 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			case T_CLASSMEMBER:
 				eh_op_classmember(node->get_opval(), context);
 				break;
+			case T_ENUM:
+				// TODO
+				break;
 			case '[': // array declaration
 				return eh_op_array(paras[0], context);
 			case '{': // hash

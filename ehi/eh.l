@@ -93,6 +93,7 @@ void make_string(char **, char *);
 "finally"	return T_FINALLY;
 "this"		return T_THIS;
 "scope"		return T_SCOPE;
+"enum"		return T_ENUM;
 "public"	{
 				yylval_param->vValue = publica_e;
 				return T_ATTRIBUTE;

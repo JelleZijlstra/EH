@@ -62,6 +62,7 @@ EHI *yyget_extra(void *scanner);
 %token T_RET
 %token T_SEPARATOR
 %token T_NULL
+%token T_ENUM
 %token T_CLASS
 %token T_ENDCLASS
 %token T_CLASSMEMBER
@@ -98,7 +99,7 @@ EHI *yyget_extra(void *scanner);
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember 
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list 
 %type<ehNode> bareword_or_string para_expr catch_clauses catch_clause catch_clauses_braces catch_clause_braces block_expression
-%type<ehNode> elseif_clauses elseif_clause
+%type<ehNode> elseif_clauses elseif_clause enum_list enum_member enum_arg_list
 %%
 program:
 	global_list				{ 	// Don't do anything. Destructors below take 
@@ -165,6 +166,8 @@ statement:
 								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH block_expression T_SEPARATOR caselist T_END T_SEPARATOR
 							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
+	| T_ENUM T_VARIABLE T_SEPARATOR enum_list T_SEPARATOR statement_list T_END T_SEPARATOR
+							{ $$ = ADD_NODE3(T_ENUM, $2, $4, $6); }
 	| T_CLASS T_VARIABLE T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 		/* Endif and endfor */
@@ -692,7 +695,7 @@ anonclassmember:
 	;
 
 parglist:
-	block_expression				{ $$ = $1; }
+	block_expression		{ $$ = $1; }
 	| /* NULL */			{ $$ = ADD_NODE0(T_NULL); }
 	;
 
@@ -718,6 +721,23 @@ attributelist_inner:
 	| /* NULL */			{ $$ = ADD_NODE0(T_ATTRIBUTE); }
 	;
 
+enum_list:
+	enum_member				{ $$ = $1; }
+	| enum_list ',' enum_member
+							{ $$ = ADD_NODE2(',', $1, $3); }
+	;
+
+enum_member:
+	T_VARIABLE				{ $$ = ADD_NODE1(T_ENUM, $1); }
+	| T_VARIABLE '(' enum_arg_list ')'
+							{ $$ = ADD_NODE2(T_ENUM, $1, $3); }
+	;
+
+enum_arg_list:
+	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	| enum_arg_list ',' T_VARIABLE
+							{ $$ = ADD_NODE2(',', $1, $3); }
+	;	
 %%
 int eh_outer_exit(int exitval) {
 	//free_node: something. We should actually be adding stuff to the AST, I suppose.

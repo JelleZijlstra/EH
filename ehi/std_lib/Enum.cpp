@@ -1,7 +1,11 @@
 #include "Enum.h"
 
+#include <sstream>
+
 EH_INITIALIZER(Enum) {
 	REGISTER_METHOD(Enum, new);
+	REGISTER_METHOD(Enum, size);
+	REGISTER_METHOD(Enum, toString);
 	REGISTER_CLASS(Enum, Member);
 	REGISTER_CLASS(Enum, Instance);
 	parent->enum_id = obj->type_id;
@@ -39,13 +43,38 @@ void Enum::add_member_with_arguments(ehretval_p e, const char *name, Enum_Member
 	add_member(e, name, member, ehi);
 }
 
+std::string Enum::to_string() const {
+	std::ostringstream out;
+	out << "enum " << name << "\n\t";
+	for(unsigned int i = 0; i < nmembers; i++) {
+		Enum_Member *member = static_cast<Enum_Member *>(members[i]->get_objectval()->object_data->get_resourceval());
+		out << member->to_string();
+		if(i < nmembers - 1) {
+			out << ", ";
+		}
+	}
+	out << "\nend";
+	return out.str();	
+}
+
 EH_METHOD(Enum, new) {
 	throw_TypeError("Cannot instantiate Enum", ehi->get_parent()->enum_id, ehi);
 	return NULL;
 }
 
+EH_METHOD(Enum, size) {
+	ASSERT_RESOURCE(Enum, "Enum.size");
+	return ehretval_t::make_int(data->size());
+}
+
+EH_METHOD(Enum, toString) {
+	ASSERT_RESOURCE(Enum, "Enum.toString");
+	return ehretval_t::make_string(strdup(data->to_string().c_str()));
+}
+
 EH_INITIALIZER(Enum_Member) {
 	REGISTER_METHOD(Enum_Member, new);
+	REGISTER_METHOD(Enum_Member, toString);
 	REGISTER_METHOD_RENAME(Enum_Member, operator_colon, "operator()");
 	parent->enum_member_id = obj->type_id;
 }
@@ -60,6 +89,23 @@ ehretval_p Enum_Member::make(ehretval_p e, const char *name, params_t &params, E
 	int enum_member_id = ehi->get_parent()->enum_member_id;
 	LibraryBaseClass *obj = static_cast<LibraryBaseClass *>(new Enum_Member(e, name, params.size(), params));
 	return ehi->get_parent()->resource_instantiate(enum_member_id, obj);	
+}
+
+std::string Enum_Member::to_string() const {
+	if(size == 0) {
+		return name;
+	} else {
+		std::ostringstream out;
+		out << name << "(";
+		for(int i = 0; i < size; i++) {
+			out << params[i];
+			if(i < size - 1) {
+				out << ", ";
+			}
+		}
+		out << ")";
+		return out.str();
+	}
 }
 
 EH_METHOD(Enum_Member, new) {
@@ -89,8 +135,35 @@ EH_METHOD(Enum_Member, operator_colon) {
 	}
 }
 
+EH_METHOD(Enum_Member, toString) {
+	ASSERT_RESOURCE(Enum_Member, "Enum.Member.toString");
+	return ehretval_t::make_string(strdup(data->to_string().c_str()));
+}
+
 EH_INITIALIZER(Enum_Instance) {
+	REGISTER_METHOD(Enum_Instance, toString);
 	parent->enum_instance_id = obj->type_id;
+}
+
+EH_METHOD(Enum_Instance, toString) {
+	ASSERT_RESOURCE(Enum_Instance, "Enum.Instance.toString");
+	return ehretval_t::make_string(strdup(data->to_string(ehi, obj).c_str()));
+}
+
+std::string Enum_Instance::to_string(EHI *ehi, ehcontext_t context) {
+	Enum_Member *em = static_cast<Enum_Member *>(member_ptr->get_resourceval());
+	std::ostringstream out;
+	out << em->name << "(";
+	const int size = em->size;
+	for(int i = 0; i < size; i++) {
+		ehretval_p stringified = ehi->to_string(args[i], context);
+		out << stringified->get_stringval();
+		if(i < size - 1) {
+			out << ", ";
+		}
+	}
+	out << ")";
+	return out.str();
 }
 
 ehretval_p Enum_Instance::make(ehretval_p member, args_t args, EHI *ehi) {

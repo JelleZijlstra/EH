@@ -142,12 +142,39 @@ EH_METHOD(Enum_Member, toString) {
 
 EH_INITIALIZER(Enum_Instance) {
 	REGISTER_METHOD(Enum_Instance, toString);
+	REGISTER_METHOD(Enum_Instance, compare);
 	parent->enum_instance_id = obj->type_id;
 }
 
 EH_METHOD(Enum_Instance, toString) {
 	ASSERT_RESOURCE(Enum_Instance, "Enum.Instance.toString");
 	return ehretval_t::make_string(strdup(data->to_string(ehi, obj).c_str()));
+}
+
+EH_METHOD(Enum_Instance, compare) {
+	ASSERT_RESOURCE(Enum_Instance, "Enum.Instance.compare");
+	ASSERT_TYPE(args, object_e, "Enum.Instance.compare");
+	ehretval_p obj_data = args->get_objectval()->object_data;
+	ASSERT_TYPE(obj_data, resource_e, "Enum.Instance.compare");
+	Enum_Instance *rhs = static_cast<Enum_Instance *>(obj_data->get_resourceval());
+	return ehretval_t::make_int(data->compare(rhs, ehi, obj));
+}
+
+int Enum_Instance::compare(Enum_Instance *rhs, EHI *ehi, ehcontext_t context) {
+	const int member_compare = member_ptr->naive_compare(rhs->member_ptr);
+	if(member_compare != 0) {
+		return member_compare;
+	}
+	// so they are at least instances of the same Enum.Member
+	Enum_Member *em = static_cast<Enum_Member *>(member_ptr->get_resourceval());
+	for(int i = 0, size = em->size; i < size; i++) {
+		int arg_compare = ehi->compare(args[i], rhs->args[i], context);
+		if(arg_compare != 0) {
+			return arg_compare;
+		}
+	}
+	// now they're equal
+	return 0;
 }
 
 std::string Enum_Instance::to_string(EHI *ehi, ehcontext_t context) {

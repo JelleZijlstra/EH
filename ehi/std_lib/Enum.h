@@ -65,6 +65,8 @@ public:
 
 	std::string to_string(EHI *ehi, ehcontext_t context);
 
+	int compare(Enum_Instance *rhs, EHI *ehi, ehcontext_t context);
+
 	static ehretval_p make(ehretval_p member, args_t args, EHI *ehi);
 };
 
@@ -82,5 +84,6 @@ EH_METHOD(Enum_Member, toString);
 
 EH_INITIALIZER(Enum_Instance);
 EH_METHOD(Enum_Instance, toString);
+EH_METHOD(Enum_Instance, compare);
 
 #endif /* EH_ENUM_H_ */

@@ -315,4 +315,14 @@ public:
 			return NULL;
 		}
 	}
+	int compare(ehretval_p lhs, ehretval_p rhs, ehcontext_t context) {
+		ehretval_p out = call_method(lhs, "operator<=>", rhs, context);
+		if(out->type() == int_e) {
+			int comparison = out->get_intval();
+			return comparison;
+		} else {
+			throw_TypeError("operator<=> must return an int", out->type(), this);
+			return NULL;
+		}
+	}
 };

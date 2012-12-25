@@ -250,3 +250,4 @@ brainf.eh
 readfile.eh
 strings.eh
 enum.eh
+enum_compare.eh

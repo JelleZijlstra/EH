@@ -50,6 +50,7 @@ EHI *yyget_extra(void *scanner);
 %token T_AS
 %token T_IN
 %token T_GIVEN
+%token T_MATCH
 %token T_END
 %token T_SWITCH
 %token T_DEFAULT
@@ -94,7 +95,7 @@ EHI *yyget_extra(void *scanner);
 %right ':'
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
-%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_FUNC T_CLASS T_IF T_THIS T_SCOPE
+%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_FUNC T_CLASS T_IF T_THIS T_SCOPE
 
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember 
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list 
@@ -370,6 +371,8 @@ expression:
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_GIVEN block_expression T_SEPARATOR caselist T_END
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
+	| T_MATCH block_expression T_SEPARATOR caselist T_END
+							{ $$ = ADD_NODE2(T_MATCH, $2, $4); }
 	| '(' '$' command ')'
 							{ $$ = $3; }
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
@@ -533,6 +536,8 @@ block_expression:
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_GIVEN block_expression T_SEPARATOR caselist T_END
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
+	| T_MATCH block_expression T_SEPARATOR caselist T_END
+							{ $$ = ADD_NODE2(T_MATCH, $2, $4); }
 	| '(' '$' command ')'
 							{ $$ = $3; }
 	| T_IF block_expression '{' statement_list '}'
@@ -619,6 +624,8 @@ para_expr:
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_GIVEN para_expr T_SEPARATOR caselist T_END
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
+	| T_MATCH block_expression T_SEPARATOR caselist T_END
+							{ $$ = ADD_NODE2(T_MATCH, $2, $4); }
 	| '(' '$' command ')'
 							{ $$ = $3; }
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }

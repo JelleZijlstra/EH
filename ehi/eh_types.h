@@ -343,15 +343,15 @@ private:
 
 class type_repository {
 private:
-	std::map<int, std::string> id_to_string;
-	std::map<int, ehretval_p> id_to_object;
-	int next_available;
+	std::map<unsigned int, std::string> id_to_string;
+	std::map<unsigned int, ehretval_p> id_to_object;
+	unsigned int next_available;
 
 public:
 	// the size of type_enum
-	const static int first_user_type = 19;
+	const static unsigned int first_user_type = 19;
 	
-	void register_known_class(int id, std::string name, ehretval_p object) {
+	void register_known_class(unsigned int id, std::string name, ehretval_p object) {
 		assert(id < first_user_type);
 		id_to_string[id] = name;
 		id_to_object[id] = object;
@@ -364,7 +364,7 @@ public:
 		return next_available - 1;
 	}
 	
-	const std::string &get_name(int id) {
+	const std::string &get_name(unsigned int id) {
 		// pretend bindings are just functions
 		if(id == binding_e) {
 			id = func_e;
@@ -376,7 +376,7 @@ public:
 			throw std::exception();
 		}
 	}
-	ehretval_p get_object(int id) {
+	ehretval_p get_object(unsigned int id) {
 		if(id == binding_e) {
 			id = func_e;
 		}

@@ -6,6 +6,7 @@
  */
 #include "eh.h"
 #include "eh_tree.h"
+#include <stdio.h>
 
 static opnode_t *eh_addnode_base(int opcode, int nparas, ehretval_p *paras) {
 	opnode_t *ret = new opnode_t;
@@ -117,4 +118,6 @@ const char *get_typestring(type_enum type) {
 		case super_class_e: return "parent class";
 		case tuple_e: return "tuple";
 	}
+	// to keep the compiler happy
+	return NULL;
 }

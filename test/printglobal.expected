@@ -36,6 +36,20 @@ setcount <public,non-static,non-constant>: @function <library>:
 EmptyIterator <public,non-static,constant>: @object <EmptyIterator> [
 initialize <public,non-static,non-constant>: @function <library>: 
 ]
+Enum <public,non-static,constant>: @object <Enum> [
+Instance <public,non-static,non-constant>: @object <Instance> [
+compare <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
+Member <public,non-static,non-constant>: @object <Member> [
+new <public,non-static,non-constant>: @function <library>: 
+operator() <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
+new <public,non-static,non-constant>: @function <library>: 
+size <public,non-static,non-constant>: @function <library>: 
+toString <public,non-static,non-constant>: @function <library>: 
+]
 Exception <public,non-static,constant>: @object <Exception> [
 initialize <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 

@@ -1,21 +1,21 @@
 %%stdout%%
 func: ()
-	if this.l == ()
-		Nil
-	elsif this.isSingleton ()
-		this
-	else
-		
-		private const l, r = this.split (Nil, Nil)
-		l.sort ().merge (r.sort ())
+	match this
+		case Nil
+			Nil
+		case Cons ((), Nil)
+			this
+		case Cons (@hd, @tl)
+			private const l, r = this.split (Nil, Nil)
+			l.sort ().merge (r.sort ())
 	end
 end
 func: f
-	given this.l
-		case ()
+	match this
+		case Nil
 			Nil
-		default
-			Cons (f (this.l->0), this.l->1.map f)
+		case Cons (@hd, @tl)
+			Cons (f hd, tl.map f)
 	end
 end
 func: f
@@ -31,11 +31,11 @@ end
 func: n
 	given n
 		case 0
-			this.head ()
+			this.head
 		case 1
-			this.tail ()
+			this.tail
 		default
-			throw ArgumentError.new "Argument must be 0 or 1", "List.operator->", n
+			throw (ArgumentError.new ("Argument must be 0 or 1", "List.operator->", n))
 	end
 end
 %%stderr%%

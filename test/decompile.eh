@@ -1,10 +1,10 @@
 #!/usr/bin/ehi
 include '../lib/library.eh'
 
-echo(List.sort.decompile())
+echo(List.prototype.sort.decompile())
 
-echo(List.map.decompile())
+echo(List.prototype.map.decompile())
 
-echo(List.countPredicate.decompile())
+echo(List.prototype.countPredicate.decompile())
 
-echo(List.operator->.decompile())
+echo(List.prototype.operator->.decompile())

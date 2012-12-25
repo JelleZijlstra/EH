@@ -18,6 +18,11 @@ ehretval_p Enum::make(const char *name, EHI *ehi) {
 	LibraryBaseClass *obj = static_cast<LibraryBaseClass *>(new Enum(name, contents));
 	ehretval_p ret = ehi->get_parent()->resource_instantiate(enum_id, obj);
 	contents_obj->parent = ret;
+	contents_obj->inherit(ehi->get_parent()->base_object);
+	ehmember_p member;
+	member->attribute = attributes_t::make_const();
+	member->value = contents;
+	ret->get_objectval()->insert("prototype", member);
 	return ret;
 }
 

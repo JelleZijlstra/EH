@@ -1,113 +1,79 @@
 # List class
-class List
-	this.inherit Iterable
+enum List
+	Nil, Cons(head, tail)
 
-	private l
+	scope.inherit Iterable
 
-	# This is hackish
-	const empty = func:
-		private old_initialize = List.initialize
-		List.initialize = () => (this.l = null)
-		private out = List.new()
-		List.initialize = old_initialize
-		out
-	end
-	
-	initialize = func: head, tail
-		if !tail.isA List
-			throw ArgumentError.new "List tail must be a List", "List.initialize", tail
-		else
-			this.l = (head, tail)
-		end
-	end
-	
-	const head = () => this.l->0
-	const tail = () => this.l->1
+	const empty = () => Nil
 
 	const operator-> = n => given n
-		case 0; this.head()
-		case 1; this.tail()
-		default; throw ArgumentError.new "Argument must be 0 or 1", "List.operator->", n
+		case 0; this.head
+		case 1; this.tail
+		default; throw(ArgumentError.new("Argument must be 0 or 1", "List.operator->", n))
 	end
 
-	const isEmpty = () => (this.l == null)
+	const isEmpty = () => this == Nil
 
-	const isSingleton = () => (this.l != null && (this.l->1).isEmpty())
+	const isSingleton = () => (this != Nil && (this.tail == Nil))
 	
-	const map = f => given this.l
-		case null
-			Nil
-		default
-			Cons(f(this.l->0), this.l->1.map f)
+	const map = f => match this
+		case Nil; Nil
+		case Cons(@hd, @tl); Cons(f hd, tl.map f)
 	end
-	
-	const reduce = base, f => given this.l
-		case null
-			base
-		default
-			f(this.l->0, this.l->1.reduce(base, f))
+
+	public reduce = b, f => match this
+		case Nil; b
+		case Cons(@hd, @tl); f(hd, tl.reduce(b, f))
 	end
-	
-	const length = () => this.reduce (0, (k, rest => rest + 1))
-	
-	const toString = () => this.reduce("[]", (k, rest => k.toString() + "::" + rest))
 
-	const filter = f => this.reduce(Nil, func: elt, accum
-		if (f elt)
-			Cons(elt, accum)
-		else
-			accum
-		end
-	end)
+	const length = () => this.reduce(0, (k, rest => rest + 1))
+	
+	const toString = () => this.reduce("[]", (k, rest => (k.toString() + "::" + rest)))
 
-	const private reverse_append = accum => given this.l
-		case null
-			accum
-		default
-			this.l->1.reverse_append Cons(this.l->0, accum)
+	const filter = f => this.reduce(Nil, (elt, accum => given (f elt)
+		case true; Cons(elt, accum)
+		case false; accum
+	end))
+
+	const public reverse_append = accum => match this
+		case Nil; accum
+		case Cons(@hd, @tl); tl.reverse_append(Cons(hd, accum))
 	end
 
 	const reverse = () => this.reverse_append Nil
 
 	# Merge sort implementation
-	const private split = l, r => given this.l
-		case null
-			l, r
-		default
-			this.l->1.split(r, Cons(this.l->0, l))
+	const public split = l, r => match this
+		case Nil; l, r
+		case Cons(@hd, @tl); tl.split(r, Cons(hd, l))
 	end
 
-	const private merge = func: r
-		if this.l == null
-			r
-		elsif r.isEmpty()
-			this
-		elsif this.l->0 < r->0
-			Cons(this.l->0, this.l->1.merge r)
-		else
-			Cons(r->0, this.merge(r->1))
-		end
+	const public merge = r => match this
+		case Nil; r
+		case Cons(@lhd, @ltl)
+			match r
+				case Nil; this
+				case Cons(@rhd, @rtl)
+					if lhd < rhd
+						Cons(lhd, ltl.merge r)
+					else
+						Cons(rhd, this.merge rtl)
+					end
+			end
 	end
 
-	const sort = func:
-		if this.l == null
-			Nil
-		elsif this.isSingleton()
-			this
-		else
+	const sort = () => match this
+		case Nil; Nil
+		case Cons(_, Nil); this
+		case Cons(@hd, @tl)
 			private const l, r = this.split(Nil, Nil)
 			l.sort().merge(r.sort())
-		end
 	end
 
-	const rev_append = func: rhs
-		if this.l == null
-			rhs
-		elsif this.isSingleton()
-			Cons(this.l->0, rhs)
-		else
-			this.l->1.rev_append Cons(this.l->0, rhs)
-		end
+	const rev_append = rhs => match this
+		case Nil; rhs
+		case Cons(@hd, Nil); Cons(hd, rhs)
+		case Cons(@hd, @tl); tl.rev_append(Cons(hd, rhs))
 	end
 
 	const append = rhs => this.reverse().rev_append rhs
@@ -127,7 +93,7 @@ class List
 
 		public initialize = l => (this.l = l)
 		
-		public hasNext = () => !this.l.isEmpty()
+		public hasNext = () => this.l != Nil
 		
 		public next = func:
 			out, this.l = this.l
@@ -144,9 +110,9 @@ end
 # Constify it
 const List = List
 
-const Nil = List.empty()
-const Cons = List.new
-Object.operator:: = rhs => List.new(this, rhs)
+const Nil = List.Nil
+const Cons = List.Cons
+Object.operator:: = rhs => Cons(this, rhs)
 
 # Conversion methods
 Iterable.toList = () => this.reduce(Nil, (val, out => val::out))

@@ -668,6 +668,9 @@ ehretval_p EHI::eh_op_enum(opnode_t *op, ehcontext_t context) {
 	// execute internal code
 	eh_execute(code, ehcontext_t(ret, e->contents));
 
+	// remove inheritance (terrible hack)
+	e->contents->get_objectval()->super.clear();
+
 	// insert variable
 	ehmember_p member;
 	member->value = ret;
@@ -837,9 +840,11 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 bool EHI::match(ehretval_p node, ehretval_p var, ehcontext_t context) {
 	opnode_t *op = node->get_opval();
 	switch(op->op) {
+		case T_NULL:
+			return true;
 		case '@': {
 			const char *name = op->paras[0]->get_stringval();
-			attributes_t attributes = attributes_t::make(private_e, nonstatic_e, const_e);
+			attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
 			ehmember_p member;
 			member->attribute = attributes;
 			member->value = var;

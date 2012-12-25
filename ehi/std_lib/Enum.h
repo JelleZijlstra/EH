@@ -96,6 +96,7 @@ EH_METHOD(Enum_Member, operator_colon);
 EH_METHOD(Enum_Member, toString);
 
 EH_INITIALIZER(Enum_Instance);
+
 EH_METHOD(Enum_Instance, toString);
 EH_METHOD(Enum_Instance, compare);
 

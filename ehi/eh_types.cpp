@@ -475,6 +475,24 @@ std::string ehretval_t::decompile(int level) {
 					out << op->paras[1]->decompile(level + 1);
 					add_end(out, level);
 					break;
+				case T_MATCH:
+					out << "match " << op->paras[0]->decompile(level);
+					for(ehretval_p node = op->paras[1]; node->get_opval()->nparas != 0; node = node->get_opval()->paras[1]) {
+						out << "\n";
+						add_tabs(out, level + 1);
+						opnode_t *inner_op = node->get_opval()->paras[0]->get_opval();
+						if(inner_op->nparas == 1) {
+							out << "default\n";
+							add_tabs(out, level + 2);
+							out << inner_op->paras[0]->decompile(level + 2);
+						} else {
+							out << "case " << inner_op->paras[0]->decompile(level + 1) << "\n";
+							add_tabs(out, level + 2);
+							out << inner_op->paras[1]->decompile(level + 2);							
+						}
+					}
+					add_end(out, level);
+					break;
 				case T_GIVEN:
 					out << "given " << op->paras[0]->decompile(level);
 					for(ehretval_p node = op->paras[1]; node->get_opval()->nparas != 0; node = node->get_opval()->paras[1]) {
@@ -512,6 +530,15 @@ std::string ehretval_t::decompile(int level) {
 						}
 					}
 					out << "]";
+					break;
+				case '@':
+					out << "@";
+					if(op->nparas == 1) {
+						out << op->paras[0]->get_stringval();
+					} else {
+						out << op->paras[0]->decompile(level) << " ";
+						out << op->paras[1]->decompile(level);
+					}
 					break;
 				case '{':
 					out << "{";

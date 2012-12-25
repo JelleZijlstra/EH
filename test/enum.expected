@@ -9,6 +9,8 @@ Cons <public,non-static,constant>: @object <Member> [
 ]
 Nil <public,non-static,constant>: @object <Member> [
 ]
+prototype <public,non-static,constant>: @object <Null> [
+]
 ]
 Enum nullary member
 Nil

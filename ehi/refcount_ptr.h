@@ -120,12 +120,8 @@ private:
 	T *pointer;
 
 	// disallowed operations
-	array_ptr(const array_ptr&) : pointer() {
-		throw "Not allowed";
-	}
-	array_ptr operator=(const array_ptr&) {
-		throw "Not allowed";
-	}
+	array_ptr(const array_ptr&);
+	array_ptr operator=(const array_ptr&);
 public:
 	// Only provide this constructor, since others would be risky
 	array_ptr(int n) : pointer() {

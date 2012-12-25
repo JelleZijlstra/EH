@@ -10,6 +10,7 @@ class ehtuple_t {
 private:
 	const int _size;
 	ehretval_a content;
+
 public:
 	ehtuple_t(int size, ehretval_p *in) : _size(size), content(size) {
 		for(int i = 0; i < size; i++) {

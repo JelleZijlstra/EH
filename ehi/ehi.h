@@ -42,6 +42,10 @@ public:
 	ehretval_p function_object;
 	ehretval_p base_object;
 
+	int enum_id;
+	int enum_member_id;
+	int enum_instance_id;
+
 	// for some reason I haven't been able to figure out, I get a compiler error 
 	// inside glibc when I declare this as std::set<const std::string>.
 	std::set<std::string> included_files;
@@ -63,6 +67,7 @@ public:
 	ehretval_p make_method(ehlibmethod_t in);
 
 	ehretval_p instantiate(ehretval_p obj);
+	ehretval_p resource_instantiate(int type_id, LibraryBaseClass *obj);
 	// stuff for GC'ed ehretval_ts
 	ehretval_p make_object(ehobj_t *in) {
 		ehretval_p out;
@@ -232,6 +237,7 @@ private:
 	ehretval_p eh_op_colon(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_customop(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_command(const char *name, ehretval_p node, ehcontext_t context);
+	ehretval_p eh_op_enum(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_declareclass(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_declareclosure(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_dollar(ehretval_p node, ehcontext_t context);

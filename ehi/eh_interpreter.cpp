@@ -14,6 +14,7 @@
 #include "std_lib/Bool.h"
 #include "std_lib/ConstError.h"
 #include "std_lib/CountClass.h"
+#include "std_lib/Enum.h"
 #include "std_lib/Exception.h"
 #include "std_lib/File.h"
 #include "std_lib/FixedArray.h"
@@ -75,6 +76,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(FixedArray, -1)
 	LIBCLASSENTRY(Random, -1)
 	LIBCLASSENTRY(Map, -1)
+	LIBCLASSENTRY(Enum, -1)
 	{NULL, NULL, 0}
 };
 
@@ -289,8 +291,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				eh_op_classmember(node->get_opval(), context);
 				break;
 			case T_ENUM:
-				// TODO
-				break;
+				return eh_op_enum(node->get_opval(), context);
 			case '[': // array declaration
 				return eh_op_array(paras[0], context);
 			case '{': // hash
@@ -609,6 +610,60 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 	function_object->object_data = ehretval_t::make_func(f);
 	f->code = paras[1];
 	f->args = paras[0];
+	return ret;
+}
+ehretval_p EHI::eh_op_enum(opnode_t *op, ehcontext_t context) {
+	// unpack arguments
+	const char *name = eh_execute(op->paras[0], context)->get_stringval();
+	ehretval_p members_code = op->paras[1];
+	ehretval_p code = op->paras[2];
+
+	// create Enum object
+	ehretval_p ret = Enum::make(name, this);
+
+	// extract enum members
+	for(ehretval_p node = members_code; ; node = node->get_opval()->paras[0]) {
+		ehretval_p current_member;
+		bool is_last;
+		if(node->get_opval()->op == ',') {
+			current_member = node->get_opval()->paras[1];
+			is_last = false;
+		} else {
+			current_member = node;
+			is_last = true;
+		}
+
+		// handle the member
+		const char *member_name = eh_execute(current_member->get_opval()->paras[0], context)->get_stringval();
+		if(current_member->get_opval()->nparas == 1) {
+			Enum::add_nullary_member(ret, member_name, this);
+		} else {
+			std::vector<std::string> params(0);
+			for(ehretval_p argument = current_member->get_opval()->paras[1]; ; argument = argument->get_opval()->paras[0]) {
+				if(argument->get_opval()->op == ',') {
+					const char *name = eh_execute(argument->get_opval()->paras[1], context)->get_stringval();
+					params.push_back(name);
+				} else {
+					const char *name = eh_execute(argument, context)->get_stringval();
+					params.push_back(name);
+					break;
+				}
+			}
+			Enum::add_member_with_arguments(ret, member_name, params, this);
+		}
+
+		if(is_last) {
+			break;
+		}
+	}
+
+	// execute internal code
+	eh_execute(code, ret);
+
+	// insert variable
+	ehmember_p member;
+	member->value = ret;
+	context.scope->get_objectval()->insert(name, member);
 	return ret;
 }
 ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
@@ -1107,6 +1162,14 @@ ehretval_p EHInterpreter::instantiate(ehretval_p obj) {
 	new_obj->parent = old_obj->parent;
 	new_obj->real_parent = old_obj->real_parent;
 	new_obj->inherit(to_instantiate);
+	return ret;
+}
+ehretval_p EHInterpreter::resource_instantiate(int type_id, LibraryBaseClass *obj) {
+	ehretval_p class_object = repo.get_object(type_id);
+	ehretval_p obj_data = ehretval_t::make_resource(enum_id, obj);
+
+	ehretval_p ret = instantiate(class_object);
+	ret->get_objectval()->object_data = obj_data;
 	return ret;
 }
 

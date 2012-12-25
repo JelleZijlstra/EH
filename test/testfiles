@@ -253,3 +253,4 @@ enum.eh
 enum_compare.eh
 match.eh
 matchsingle.eh
+useassert.eh

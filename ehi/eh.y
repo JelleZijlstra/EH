@@ -735,7 +735,7 @@ enum_member:
 
 enum_arg_list:
 	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| enum_arg_list ',' T_VARIABLE
+	| T_VARIABLE ',' enum_arg_list
 							{ $$ = ADD_NODE2(',', $1, $3); }
 	;	
 %%

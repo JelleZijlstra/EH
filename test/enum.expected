@@ -1,0 +1,10 @@
+%%stdout%%
+@object <Instance> [
+head <public,non-static,constant>: @int 3
+tail <public,non-static,constant>: @object <Member> [
+]
+]
+3
+@object <Member> [
+]
+%%stderr%%

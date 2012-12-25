@@ -640,9 +640,9 @@ ehretval_p EHI::eh_op_enum(opnode_t *op, ehcontext_t context) {
 			Enum::add_nullary_member(ret, member_name, this);
 		} else {
 			std::vector<std::string> params(0);
-			for(ehretval_p argument = current_member->get_opval()->paras[1]; ; argument = argument->get_opval()->paras[0]) {
+			for(ehretval_p argument = current_member->get_opval()->paras[1]; ; argument = argument->get_opval()->paras[1]) {
 				if(argument->get_opval()->op == ',') {
-					const char *name = eh_execute(argument->get_opval()->paras[1], context)->get_stringval();
+					const char *name = eh_execute(argument->get_opval()->paras[0], context)->get_stringval();
 					params.push_back(name);
 				} else {
 					const char *name = eh_execute(argument, context)->get_stringval();

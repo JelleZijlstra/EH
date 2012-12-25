@@ -46,6 +46,7 @@ EH_METHOD(Enum, new) {
 
 EH_INITIALIZER(Enum_Member) {
 	REGISTER_METHOD(Enum_Member, new);
+	REGISTER_METHOD_RENAME(Enum_Member, operator_colon, "operator()");
 	parent->enum_member_id = obj->type_id;
 }
 
@@ -97,7 +98,7 @@ ehretval_p Enum_Instance::make(ehretval_p member, args_t args, EHI *ehi) {
 	Enum_Instance *ei = new Enum_Instance(member, args);
 	ehretval_p ret = ehi->get_parent()->resource_instantiate(enum_instance_id, static_cast<LibraryBaseClass *>(ei));
 	ehobj_t *obj = ret->get_objectval();
-	Enum_Member *em = static_cast<Enum_Member *>(member->get_objectval()->object_data->get_resourceval());
+	Enum_Member *em = static_cast<Enum_Member *>(member->get_resourceval());
 	for(int i = 0, len = em->size; i < len; i++) {
 		ehmember_p member;
 		member->attribute = attributes_t::make_const();

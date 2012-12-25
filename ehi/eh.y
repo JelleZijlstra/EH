@@ -302,6 +302,7 @@ expression:
 							{ $$ = ADD_NODE2(T_FUNC, $1, $3); }
 	| expression '.' T_VARIABLE
 							{ $$ = ADD_NODE2('.', $1, $3); }
+	| '@' T_VARIABLE		{ $$ = ADD_NODE1('@', $2); }
 	| '@' T_TYPE expression %prec '@'
 							{ $$ = ADD_NODE2('@', $2, $3); }
 	| expression ',' expression

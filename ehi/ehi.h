@@ -242,6 +242,8 @@ private:
 	ehretval_p eh_op_declareclosure(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_dollar(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_dot(ehretval_p *paras, ehcontext_t context);
+	ehretval_p eh_op_match(ehretval_p *paras, ehcontext_t context);
+	bool match(ehretval_p node, ehretval_p var, ehcontext_t context);
 	ehretval_p eh_op_given(ehretval_p *paras, ehcontext_t context);
 	ehretval_p eh_op_if(opnode_t *op, ehcontext_t context);
 	ehretval_p eh_op_in(opnode_t *op, ehcontext_t context);

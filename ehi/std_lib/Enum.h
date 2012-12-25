@@ -22,6 +22,8 @@ public:
 
 	std::string to_string() const;
 
+	static ehretval_p make(ehretval_p e, Enum_Member *em, EHI *ehi);
+
 	static ehretval_p make(ehretval_p e, const char *name, EHI *ehi);
 
 	static ehretval_p make(ehretval_p e, const char *name, params_t &params, EHI *ehi);
@@ -33,10 +35,13 @@ private:
 	std::vector<ehretval_p> members;
 	const std::string name;
 
-	Enum(const std::string &_name) : nmembers(0), members(0), name(_name) {}
+
+	Enum(const std::string &_name, ehretval_p _contents) : nmembers(0), members(0), name(_name), contents(_contents) {}
 
 	static void add_member(ehretval_p e, const char *name, ehretval_p member, EHI *ehi);
 public:
+	ehretval_p contents;
+
 	std::string to_string() const;
 
 	size_t size() const {
@@ -66,6 +71,14 @@ public:
 	std::string to_string(EHI *ehi, ehcontext_t context);
 
 	int compare(Enum_Instance *rhs, EHI *ehi, ehcontext_t context);
+
+	ehretval_p member() {
+		return member_ptr;
+	}
+
+	ehretval_p get(unsigned int i) {
+		return args[i];
+	}
 
 	static ehretval_p make(ehretval_p member, args_t args, EHI *ehi);
 };

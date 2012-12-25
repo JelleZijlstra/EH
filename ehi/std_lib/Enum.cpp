@@ -12,9 +12,13 @@ EH_INITIALIZER(Enum) {
 }
 
 ehretval_p Enum::make(const char *name, EHI *ehi) {
+	ehobj_t *contents_obj = new ehobj_t;
+	ehretval_p contents = ehi->get_parent()->make_object(contents_obj);
 	int enum_id = ehi->get_parent()->enum_id;
-	LibraryBaseClass *obj = static_cast<LibraryBaseClass *>(new Enum(name));
-	return ehi->get_parent()->resource_instantiate(enum_id, obj);
+	LibraryBaseClass *obj = static_cast<LibraryBaseClass *>(new Enum(name, contents));
+	ehretval_p ret = ehi->get_parent()->resource_instantiate(enum_id, obj);
+	contents_obj->parent = ret;
+	return ret;
 }
 
 Enum *Enum::extract_enum(ehretval_p obj) {
@@ -79,16 +83,20 @@ EH_INITIALIZER(Enum_Member) {
 	parent->enum_member_id = obj->type_id;
 }
 
-ehretval_p Enum_Member::make(ehretval_p e, const char *name, EHI *ehi) {
+ehretval_p Enum_Member::make(ehretval_p e, Enum_Member *em, EHI *ehi) {
 	int enum_member_id = ehi->get_parent()->enum_member_id;
-	LibraryBaseClass *obj = static_cast<LibraryBaseClass *>(new Enum_Member(e, name));
-	return ehi->get_parent()->resource_instantiate(enum_member_id, obj);
+	LibraryBaseClass *obj = static_cast<LibraryBaseClass *>(em);
+	ehretval_p ret = ehi->get_parent()->resource_instantiate(enum_member_id, obj);
+	ret->get_objectval()->inherit(Enum::extract_enum(e)->contents);
+	return ret;
+}
+
+ehretval_p Enum_Member::make(ehretval_p e, const char *name, EHI *ehi) {
+	return Enum_Member::make(e, new Enum_Member(e, name), ehi);
 }
 
 ehretval_p Enum_Member::make(ehretval_p e, const char *name, params_t &params, EHI *ehi) {
-	int enum_member_id = ehi->get_parent()->enum_member_id;
-	LibraryBaseClass *obj = static_cast<LibraryBaseClass *>(new Enum_Member(e, name, params.size(), params));
-	return ehi->get_parent()->resource_instantiate(enum_member_id, obj);	
+	return Enum_Member::make(e, new Enum_Member(e, name, params.size(), params), ehi);
 }
 
 std::string Enum_Member::to_string() const {
@@ -205,5 +213,6 @@ ehretval_p Enum_Instance::make(ehretval_p member, args_t args, EHI *ehi) {
 		member->value = args[i];
 		obj->insert(em->params[i], member);
 	}
+	obj->inherit(Enum::extract_enum(em->parent_enum)->contents);
 	return ret;
 }

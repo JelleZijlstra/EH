@@ -203,11 +203,15 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 * Unary operators
 		 */
 			case '@': // type casting
-				ret = eh_cast(
-					eh_execute(paras[0], context)->get_typeval(),
-					eh_execute(paras[1], context),
-					context
-				);
+				if(node->get_opval()->nparas == 1) {
+					throw_MiscellaneousError("Cannot use @ outside of match statement", this);
+				} else {
+					ret = eh_cast(
+						eh_execute(paras[0], context)->get_typeval(),
+						eh_execute(paras[1], context),
+						context
+					);
+				}
 				break;
 			case '~': // bitwise negation
 			  return perform_op("operator~", 0, paras, context);
@@ -231,6 +235,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				break;
 			case T_GIVEN: // inline switch statements
 				return eh_op_given(paras, context);
+			case T_MATCH:
+				return eh_op_match(paras, context);
 		/*
 		 * Exceptions
 		 */
@@ -621,6 +627,7 @@ ehretval_p EHI::eh_op_enum(opnode_t *op, ehcontext_t context) {
 
 	// create Enum object
 	ehretval_p ret = Enum::make(name, this);
+	Enum *e = Enum::extract_enum(ret);
 
 	// extract enum members
 	for(ehretval_p node = members_code; ; node = node->get_opval()->paras[0]) {
@@ -659,7 +666,7 @@ ehretval_p EHI::eh_op_enum(opnode_t *op, ehcontext_t context) {
 	}
 
 	// execute internal code
-	eh_execute(code, ret);
+	eh_execute(code, ehcontext_t(ret, e->contents));
 
 	// insert variable
 	ehmember_p member;
@@ -825,6 +832,90 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 	}
 	throw_MiscellaneousError("No matching case in given statement", this);
 	return NULL;
+}
+
+bool EHI::match(ehretval_p node, ehretval_p var, ehcontext_t context) {
+	opnode_t *op = node->get_opval();
+	switch(op->op) {
+		case '@': {
+			const char *name = op->paras[0]->get_stringval();
+			attributes_t attributes = attributes_t::make(private_e, nonstatic_e, const_e);
+			ehmember_p member;
+			member->attribute = attributes;
+			member->value = var;
+			this->set_member(context.scope, name, member, context);
+			return true;
+		}
+		case ':': {
+			ehretval_p member = eh_execute(op->paras[0], context);
+			if(!member->is_a(parent->enum_member_id)) {
+				throw_TypeError("match case is not an Enum.Member", member->type(), this);
+			}
+			ehretval_p member_em = ehretval_t::self_or_data(member);
+			Enum_Member *em = static_cast<Enum_Member *>(member_em->get_resourceval());
+
+			if(!var->is_a(parent->enum_instance_id)) {
+				return false;
+			}
+			var = ehretval_t::self_or_data(var);
+			Enum_Instance *var_ei = static_cast<Enum_Instance *>(var->get_resourceval());
+
+			if(member_em->naive_compare(var_ei->member()) != 0) {
+				return false;
+			}
+			int size = em->size;
+			if(op->paras[1]->get_opval()->op != '(') {
+				throw_MiscellaneousError("Invalid argument in Enum.Member match", this);				
+			}
+			int nargs = 1;
+			ehretval_p args = op->paras[1]->get_opval()->paras[0];
+			for(ehretval_p tmp = args;
+				tmp->type() == op_e && tmp->get_opval()->op == ',' && tmp->get_opval()->nparas != 0;
+				tmp = tmp->get_opval()->paras[1], nargs++
+			);
+			if(nargs != size) {
+				throw_MiscellaneousError("Invalid argument number in Enum.Member match", this);
+			}
+			ehretval_p arg_node = args;
+			for(int i = 0; i < nargs; i++) {
+				opnode_t *op = arg_node->get_opval();
+				if(op->op == ',') {
+					if(!match(op->paras[0], var_ei->get(i), context)) {
+						return false;
+					}
+					arg_node = arg_node->get_opval()->paras[1];
+				} else {
+					if(!match(arg_node, var_ei->get(i), context)) {
+						return false;
+					}
+					assert(i == nargs - 1);
+					break;
+				}
+			}
+			return true;
+		}
+		default: {
+			ehretval_p casevar = eh_execute(node, context);
+			ehretval_p decider = call_method(var, "operator==", casevar, context);
+			if(decider->type() != bool_e) {
+				throw_TypeError("operator== does not return a bool", decider->type(), this);
+			}
+			return decider->get_boolval();
+		}
+	}	
+}
+
+ehretval_p EHI::eh_op_match(ehretval_p *paras, ehcontext_t context) {
+	// switch variable
+	ehretval_p switchvar = eh_execute(paras[0], context);
+	for(ehretval_p node = paras[1]; node->get_opval()->nparas != 0; node = node->get_opval()->paras[1]) {
+		ehretval_p case_node = node->get_opval()->paras[0];
+		if(match(case_node->get_opval()->paras[0], switchvar, context)) {
+			return eh_execute(case_node->get_opval()->paras[1], context);
+		}
+	}
+	throw_MiscellaneousError("No matching case in match statement", this);
+	return NULL;	
 }
 ehretval_p EHI::eh_op_customop(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p lhs = eh_execute(paras[0], context);
@@ -1167,7 +1258,7 @@ ehretval_p EHInterpreter::instantiate(ehretval_p obj) {
 }
 ehretval_p EHInterpreter::resource_instantiate(int type_id, LibraryBaseClass *obj) {
 	ehretval_p class_object = repo.get_object(type_id);
-	ehretval_p obj_data = ehretval_t::make_resource(enum_id, obj);
+	ehretval_p obj_data = ehretval_t::make_resource(type_id, obj);
 
 	ehretval_p ret = instantiate(class_object);
 	ret->get_objectval()->object_data = obj_data;

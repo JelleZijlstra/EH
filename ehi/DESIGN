@@ -31,7 +31,7 @@ enum List
 	public reduce = base, f => given this
 		case Nil
 			base
-		case Cons(hd, tl)
+		case Cons(@hd, @tl)
 			f(hd, tl.reduce(base, f))
 	end
 end

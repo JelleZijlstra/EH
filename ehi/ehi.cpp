@@ -1,5 +1,7 @@
 #include "eh.h"
 
+#include <stdio.h>
+
 // Thread for the garbage collector. Before I actually start running this, I'll have to make sure the GC is thread-safe.
 void *gc_thread(void *arg) {
 	EHI *ehi = (EHI *)arg;

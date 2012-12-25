@@ -9,11 +9,11 @@ public:
 		return size_;
 	}
 	ehretval_p get(size_t index) const {
-		assert(index >= 0 && index < size_);
+		assert(index < size_);
 		return content[index];
 	}
 	void set(size_t index, ehretval_p value) {
-		assert(index >= 0 && index < size_);
+		assert(index < size_);
 		content[index] = value;		
 	}
 	FixedArray(size_t size) : size_(size), content(new ehretval_p[size]()) {}

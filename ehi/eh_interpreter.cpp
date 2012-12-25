@@ -5,6 +5,7 @@
  * Implements a Lex- and Yacc-based interpreter for the EH scripting language.
  */
 #include <cctype>
+#include <string.h>
 
 #include "eh.h"
 #include "eh_libclasses.h"

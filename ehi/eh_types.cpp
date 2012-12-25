@@ -1,5 +1,7 @@
 #include <set>
 #include <sstream>
+#include <stdio.h>
+#include <string.h>
 
 #include "eh.h"
 #include "eh_libclasses.h"

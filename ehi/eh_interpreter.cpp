@@ -135,7 +135,7 @@ void EHInterpreter::eh_init(void) {
 	global_object = this->make_object(global_ehobj);
 	base_object = this->make_object(new ehobj_t());
 	function_object = this->make_object(new ehobj_t());
-	
+
 	const attributes_t attributes = attributes_t::make_const();
 	for(int i = 0; libclasses[i].name != NULL; i++) {
 		ehretval_p new_value = NULL;
@@ -503,7 +503,7 @@ ehretval_p EHI::eh_op_if(opnode_t *op, ehcontext_t context) {
 		}
 		// if there is a final else
 		if(op->nparas == 4) {
-			return eh_execute(op->paras[3], context);			
+			return eh_execute(op->paras[3], context);
 		} else {
 			return NULL;
 		}
@@ -705,7 +705,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 
 	// execute the code within the class
 	eh_execute(code, ret);
-	
+
 	if(op->nparas == 2) {
 		// insert variable if it is a named class
 		ehmember_p member;
@@ -722,7 +722,7 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 		tmp = tmp->get_opval()->paras[1], nargs++
 	) {}
 	ehretval_a new_args(nargs);
-	
+
 	ehretval_p arg_node = node;
 	// now, fill the output tuple
 	for(int i = 0; i < nargs; i++) {
@@ -873,7 +873,7 @@ bool EHI::match(ehretval_p node, ehretval_p var, ehcontext_t context) {
 			}
 			int size = em->size;
 			if(op->paras[1]->get_opval()->op != '(') {
-				throw_MiscellaneousError("Invalid argument in Enum.Member match", this);				
+				throw_MiscellaneousError("Invalid argument in Enum.Member match", this);
 			}
 			int nargs = 1;
 			ehretval_p args = op->paras[1]->get_opval()->paras[0];
@@ -910,7 +910,7 @@ bool EHI::match(ehretval_p node, ehretval_p var, ehcontext_t context) {
 			}
 			return decider->get_boolval();
 		}
-	}	
+	}
 }
 
 ehretval_p EHI::eh_op_match(ehretval_p *paras, ehcontext_t context) {
@@ -923,7 +923,7 @@ ehretval_p EHI::eh_op_match(ehretval_p *paras, ehcontext_t context) {
 		}
 	}
 	throw_MiscellaneousError("No matching case in match statement", this);
-	return NULL;	
+	return NULL;
 }
 ehretval_p EHI::eh_op_customop(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p lhs = eh_execute(paras[0], context);
@@ -1070,7 +1070,7 @@ ehretval_p EHI::eh_try_catch(ehretval_p try_block, ehretval_p catch_blocks, ehco
 		return eh_execute(try_block, context);
 	}
 	try {
-		return eh_execute(try_block, context);	
+		return eh_execute(try_block, context);
 	} catch(eh_exception &e) {
 		// insert exception into current scope
 		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
@@ -1186,7 +1186,7 @@ ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p val
 		ehmember_p new_member;
 		new_member->value = value;
 		obj->insert(name, new_member);
-		return new_member;		
+		return new_member;
 	} else if(result->attribute.isconst == const_e) {
 		throw_ConstError(object, name, this);
 	} else if(result->attribute.visibility == private_e && !obj->context_compare(context)) {
@@ -1240,7 +1240,7 @@ ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t 
 	ehobj_t *obj = object->get_objectval();
 	ehmember_p member = obj->inherited_get(name);
 	if(member.null() || (member->attribute.visibility == private_e && !obj->context_compare(context))) {
-		throw_NameError(base_var, name, this);		
+		throw_NameError(base_var, name, this);
 	}
 	ehretval_p out = member->value;
 	if(out->is_a(func_e)) {

@@ -273,7 +273,7 @@ std::string ehretval_t::decompile(int level) {
 					break;
 				case ':':
 					out << op->paras[0]->decompile(level) << " " << op->paras[1]->decompile(level);
-					break;				
+					break;
 				case '!':
 				case '~':
 					// unary ops
@@ -362,8 +362,8 @@ std::string ehretval_t::decompile(int level) {
 					out << op->paras[0]->decompile(level) << " ^^ " << op->paras[1]->decompile(level);
 					break;
 				case T_CUSTOMOP:
-					out << op->paras[0]->decompile(level) << " " << 
-						op->paras[1]->get_stringval() << " " << 
+					out << op->paras[0]->decompile(level) << " " <<
+						op->paras[1]->get_stringval() << " " <<
 						op->paras[2]->decompile(level);
 					break;
 				case T_SEPARATOR:
@@ -468,7 +468,7 @@ std::string ehretval_t::decompile(int level) {
 					} else {
 						out << "class\n";
 						add_tabs(out, level + 1);
-						out << op->paras[0]->decompile(level + 1);						
+						out << op->paras[0]->decompile(level + 1);
 					}
 					add_end(out, level);
 					break;
@@ -491,7 +491,7 @@ std::string ehretval_t::decompile(int level) {
 						} else {
 							out << "case " << inner_op->paras[0]->decompile(level + 1) << "\n";
 							add_tabs(out, level + 2);
-							out << inner_op->paras[1]->decompile(level + 2);							
+							out << inner_op->paras[1]->decompile(level + 2);
 						}
 					}
 					add_end(out, level);
@@ -509,7 +509,7 @@ std::string ehretval_t::decompile(int level) {
 						} else {
 							out << "case " << inner_op->paras[0]->decompile(level + 1) << "\n";
 							add_tabs(out, level + 2);
-							out << inner_op->paras[1]->decompile(level + 2);							
+							out << inner_op->paras[1]->decompile(level + 2);
 						}
 					}
 					add_end(out, level);

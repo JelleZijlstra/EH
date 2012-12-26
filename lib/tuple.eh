@@ -13,7 +13,7 @@ end
 
 Tuple.each = func: f
 	for i in this.length()
-		f this->i
+		f(this->i)
 	end
 end
 

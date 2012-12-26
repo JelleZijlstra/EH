@@ -120,7 +120,6 @@ typedef struct opnode_t {
  * Other global functions
  */
 const char *get_typestring(type_enum type);
-int eh_outer_exit(int exitval);
 void yyerror(void *, const char *s);
 
 /*

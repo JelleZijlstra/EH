@@ -24,7 +24,7 @@ ehretval_p EHI::parse_interactive() {
 	while(1) {
 		char *cmd = eh_getline();
 		if(cmd == NULL) {
-			return eh_outer_exit(0);
+			return ehretval_t::make_int(0);
 		}
 		try {
 			parse_string(cmd);

@@ -518,7 +518,3 @@ enum_arg_list:
 							{ $$ = ADD_NODE2(',', $1, $3); }
 	;
 %%
-int eh_outer_exit(int exitval) {
-	//free_node: something. We should actually be adding stuff to the AST, I suppose.
-	return exitval;
-}

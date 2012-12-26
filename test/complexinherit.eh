@@ -1,46 +1,46 @@
 #!/usr/bin/ehi
-class A {
+class A
 	private a = 1
-	class AA {
+	class AA
 		private ap = 10
-		public aa: {
+		public aa:
 			echo a
-		}
-	}
-}
-class B {
+		end
+	end
+end
+class B
 	private b = 2
-	class BB {
+	class BB
 		private bp = 20
-		public bb: {
+		public bb:
 			echo b
-		}
-	}
-}
-class C {
+		end
+	end
+end
+class C
 	private c = 3
-	class CC {
+	class CC
 		private cp = 30
 		this.inherit(A.AA)
-		public cc: {
+		public cc:
 			# If everything is working right, there is no a
-			try {
+			try
 				echo a
-			} catch {
+			catch
 				echo()
-			}
+			end
 			echo c
-		}
-	}
-}
+		end
+	end
+end
 
-class D {
+class D
 	private d = 4
-	class DD {
+	class DD
 		private dp = 40
 		this.inherit(B.BB)
 		this.inherit(C.CC)
-		public dd: {
+		public dd:
 			# Expect 1
 			this.aa()
 			# Expect 2
@@ -49,14 +49,14 @@ class D {
 			this.cc()
 			# Expect 4
 			echo d
-			
+
 			# Expect 10, 20, 30, 40
 			echo(this.ap)
 			echo(this.bp)
 			echo(this.cp)
 			echo(this.dp)
-		}
-	}
-}
+		end
+	end
+end
 o = D.new().DD
 o.dd()

@@ -1,19 +1,19 @@
 #!/usr/bin/ehi
-class Foo {
+class Foo
 	public bar = 3
 
-	public baz: n {
+	public baz: n
 		ret n + this.bar
-	}
-}
-f = func: { ret Foo.new (); }
-if (4 > 3) {
+	end
+end
+f = func:; ret Foo.new (); end
+if (4 > 3)
 	echo true
-} else {
+else
 	echo false
-}
+end
 i = 3
-while (i > 0) { echo i; i--; }
-for i in 1..5 {
+while (i > 0); echo i; i--; end
+for i in 1..5
 	echo i
-}
+end

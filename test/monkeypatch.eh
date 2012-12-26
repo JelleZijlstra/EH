@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 # You can do this, but do you really want to?
-String.operator* = func: n {
+String.operator* = func: n
 	if n < 1
 		echo 'Invalid argument'
 		ret null
@@ -10,5 +10,5 @@ String.operator* = func: n {
 		out = out + this
 	end
 	out
-}
+end
 printvar("true" * 3)

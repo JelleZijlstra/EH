@@ -1,3 +1,3 @@
 #!/usr/bin/ehi
-f = func: { 42; }
+f = _ => 42
 printvar(f ())

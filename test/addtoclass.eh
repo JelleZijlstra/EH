@@ -2,7 +2,7 @@
 # Illustrate adding class members at runtime
 class Foo
 	public bar = 3
-endclass
+end
 foo = Foo.new ()
 Foo.baz = 2
 bar = Foo.new ()

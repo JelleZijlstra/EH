@@ -41,11 +41,8 @@ EHI *yyget_extra(void *scanner);
 %token T_IF
 %token T_ELSE
 %token T_ELSIF
-%token T_ENDIF
 %token T_WHILE
-%token T_ENDWHILE
 %token T_FOR
-%token T_ENDFOR
 %token T_AS
 %token T_IN
 %token T_GIVEN
@@ -53,18 +50,15 @@ EHI *yyget_extra(void *scanner);
 %token T_END
 %token T_SWITCH
 %token T_DEFAULT
-%token T_ENDSWITCH
 %token T_CASE
 %token T_BREAK
 %token T_CONTINUE
 %token T_FUNC
-%token T_ENDFUNC
 %token T_RET
 %token T_SEPARATOR
 %token T_NULL
 %token T_ENUM
 %token T_CLASS
-%token T_ENDCLASS
 %token T_CLASSMEMBER
 %token T_LITERAL
 %token T_TRY
@@ -170,19 +164,6 @@ statement:
 							{ $$ = ADD_NODE3(T_ENUM, $2, $4, $6); }
 	| T_CLASS T_VARIABLE T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
-		/* Endif and endfor */
-	| T_WHILE block_expression T_SEPARATOR statement_list T_ENDWHILE T_SEPARATOR
-							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
-	| T_FOR block_expression T_SEPARATOR statement_list T_ENDFOR T_SEPARATOR
-							{ $$ = ADD_NODE2(T_IN, $2, $4); }
-	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
-							{ $$ = ADD_NODE2('=',
-								ADD_NODE1('$', $2),
-								ADD_NODE2(T_FUNC, $4, $6)); }
-	| T_SWITCH block_expression T_SEPARATOR caselist T_ENDSWITCH T_SEPARATOR
-							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
-	| T_CLASS T_VARIABLE T_SEPARATOR statement_list T_ENDCLASS T_SEPARATOR
-							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 		/* Other statements */
 	| T_RET expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_RET, $2); }
@@ -194,7 +175,7 @@ statement:
 	| T_BREAK T_SEPARATOR	{ $$ = ADD_NODE0(T_BREAK); }
 	| T_BREAK expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_BREAK, $2); }
-							/* property declaration */
+		/* property declaration */
 	| attributelist T_VARIABLE T_SEPARATOR
 							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2), ADD_NODE0(T_NULL)); }
 	| attributelist expression '=' expression T_SEPARATOR
@@ -203,9 +184,6 @@ statement:
 							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2),
 									ADD_NODE2(T_FUNC, $4, $6)); }
 	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2),
-									ADD_NODE2(T_FUNC, $4, $6)); }
-	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_ENDFUNC T_SEPARATOR
 							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2),
 									ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_TRY '{' statement_list '}' catch_clauses_braces T_SEPARATOR
@@ -358,11 +336,7 @@ expression:
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
-	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
-							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_CLASS T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_CLASS T_SEPARATOR statement_list T_ENDCLASS
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS '{' statement_list '}'
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
@@ -380,10 +354,6 @@ expression:
 							{ $$ = ADD_NODE2(T_IF, $2, $4); }
 	| T_IF block_expression '{' statement_list '}' T_ELSE '{' statement_list '}'
 							{ $$ = ADD_NODE4(T_IF, $2, $4, ADD_NODE0(','), $8); }
-	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ENDIF
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $5); }
-	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ELSE statement_list T_ENDIF
-							{ $$ = ADD_NODE4(T_IF, $2, $4, $5, $7); }
 	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_END
 							{ $$ = ADD_NODE3(T_IF, $2, $4, $5); }
 	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ELSE statement_list T_END
@@ -521,11 +491,7 @@ block_expression:
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
-	| T_FUNC ':' parglist T_SEPARATOR statement_list T_ENDFUNC
-							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_CLASS T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_CLASS T_SEPARATOR statement_list T_ENDCLASS
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS '{' statement_list '}'
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
@@ -541,10 +507,6 @@ block_expression:
 							{ $$ = ADD_NODE2(T_IF, $2, $4); }
 	| T_IF block_expression '{' statement_list '}' T_ELSE '{' statement_list '}'
 							{ $$ = ADD_NODE4(T_IF, $2, $4, ADD_NODE0(','), $8); }
-	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ENDIF
-							{ $$ = ADD_NODE3(T_IF, $2, $4, $5); }
-	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ELSE statement_list T_ENDIF
-							{ $$ = ADD_NODE4(T_IF, $2, $4, $5, $7); }
 	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_END
 							{ $$ = ADD_NODE3(T_IF, $2, $4, $5); }
 	| T_IF block_expression T_SEPARATOR statement_list elseif_clauses T_ELSE statement_list T_END
@@ -610,8 +572,6 @@ para_expr:
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
 	| T_CLASS T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_CLASS T_SEPARATOR statement_list T_ENDCLASS
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_CLASS '{' statement_list '}'
 							{ $$ = ADD_NODE1(T_CLASS, $3); }

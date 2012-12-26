@@ -175,19 +175,6 @@ statement:
 	| '$' command T_SEPARATOR	{ $$ = $2; }
 	;
 
-catch_clauses:
-	catch_clause catch_clauses
-							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
-	;
-
-catch_clause:
-	T_CATCH T_SEPARATOR statement_list
-							{ $$ = ADD_NODE1(T_CATCH, $3); }
-	| T_CATCH T_IF expression T_SEPARATOR statement_list
-							{ $$ = ADD_NODE2(T_CATCH, $3, $5); }
-	;
-
 expression:
 	T_INTEGER				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
@@ -315,17 +302,6 @@ expression:
 							{ $$ = ADD_NODE4(T_IF, $2, $4, $5, $7); }
 	;
 
-elseif_clauses:
-	elseif_clause elseif_clauses
-							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
-	;
-
-elseif_clause:
-	T_ELSIF expression T_SEPARATOR statement_list
-							{ $$ = ADD_NODE2(T_ELSE, $2, $4); }
-	;
-
 para_expr:
 	/*
 	 * Expression used in command arguments and array and hash literal members. Disallows tuples and function calls.
@@ -395,6 +371,7 @@ para_expr:
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
 	;
 
+/* Commands */
 command:
 	T_VARIABLE paralist		{ $$ = ADD_NODE2(T_COMMAND, $1, $2); }
 	;
@@ -424,6 +401,33 @@ bareword_or_string:
 	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 
+/* If statements */
+elseif_clauses:
+	elseif_clause elseif_clauses
+							{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	;
+
+elseif_clause:
+	T_ELSIF expression T_SEPARATOR statement_list
+							{ $$ = ADD_NODE2(T_ELSE, $2, $4); }
+	;
+
+/* Try-catch */
+catch_clauses:
+	catch_clause catch_clauses
+							{ $$ = ADD_NODE2(',', $1, $2); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	;
+
+catch_clause:
+	T_CATCH T_SEPARATOR statement_list
+							{ $$ = ADD_NODE1(T_CATCH, $3); }
+	| T_CATCH T_IF expression T_SEPARATOR statement_list
+							{ $$ = ADD_NODE2(T_CATCH, $3, $5); }
+	;
+
+/* Array literals */
 arraylist:
 	arraylist_i arraymember ','
 							{ $$ = ADD_NODE2(',', $1, $2); }
@@ -444,6 +448,7 @@ arraymember:
 	| para_expr				{ $$ = ADD_NODE1(T_ARRAYMEMBER, $1); }
 	;
 
+/* Hash literals */
 anonclasslist:
 	anonclasslist_i anonclassmember ','
 							{ $$ = ADD_NODE2(',', $1, $2); }
@@ -470,6 +475,7 @@ parglist:
 	| /* NULL */			{ $$ = ADD_NODE0(T_NULL); }
 	;
 
+/* Switch etcetera */
 caselist:
 	acase caselist			{ $$ = ADD_NODE2(',', $1, $2); }
 	| /* NULL */			{ $$ = ADD_NODE0(','); }
@@ -482,6 +488,7 @@ acase:
 							{ $$ = ADD_NODE1(T_CASE, $3); }
 	;
 
+/* Property declarations */
 attributelist:
 	attributelist_inner T_ATTRIBUTE
 							{ $$ = ADD_NODE2(T_ATTRIBUTE, $1, $2); }
@@ -492,6 +499,7 @@ attributelist_inner:
 	| /* NULL */			{ $$ = ADD_NODE0(T_ATTRIBUTE); }
 	;
 
+/* Enums */
 enum_list:
 	enum_member				{ $$ = $1; }
 	| enum_list ',' enum_member

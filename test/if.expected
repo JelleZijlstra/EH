@@ -1,0 +1,6 @@
+%%stdout%%
+x equals 3
+y does not equal 3
+y equals 4
+y equals 4
+%%stderr%%

@@ -257,3 +257,4 @@ useassert.eh
 zipmatch.eh
 tryexpr.eh
 mul2.eh
+if.eh

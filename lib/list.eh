@@ -15,7 +15,7 @@ enum List
 	const isEmpty = () => this == Nil
 
 	const isSingleton = () => (this != Nil && (this.tail == Nil))
-	
+
 	const map = f => match this
 		case Nil; Nil
 		case Cons(@hd, @tl); Cons(f hd, tl.map f)
@@ -26,8 +26,14 @@ enum List
 		case Cons(@hd, @tl); f(hd, tl.reduce(b, f))
 	end
 
+	public zip = f, rhs => match this, rhs
+		case Nil, Nil; Nil
+		case (_, Nil) | (Nil, _); throw(ArgumentError.new("Lists are not of equal length", "List.zip", (this, rhs)))
+		case Cons(@lhd, @ltl), Cons(@rhd, @rtl); Cons(f(lhd, rhd), ltl.zip(f, rtl))
+	end
+
 	const length = () => this.reduce(0, (k, rest => rest + 1))
-	
+
 	const toString = () => this.reduce("[]", (k, rest => (k.toString() + "::" + rest)))
 
 	const filter = f => this.reduce(Nil, (elt, accum => given (f elt)
@@ -87,23 +93,23 @@ enum List
 		case null; val.toString()
 		default; val.toString() + glue + base
 	end))
-	
+
 	class Iterator
 		private l
 
 		public initialize = l => (this.l = l)
-		
+
 		public hasNext = () => this.l != Nil
-		
+
 		public next = func:
 			out, this.l = this.l
 			out
 		end
 	end
 	private const Iterator = Iterator
-	
+
 	const getIterator = () => this.Iterator.new this
-	
+
 	const add = v => Cons(v, this)
 end
 

@@ -168,10 +168,10 @@ statement:
 	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2),
 									ADD_NODE2(T_FUNC, $4, $6)); }
-	| T_TRY T_SEPARATOR statement_list catch_clauses T_END T_SEPARATOR
-				{ $$ = ADD_NODE2(T_TRY, $3, $4); }
-	| T_TRY T_SEPARATOR statement_list catch_clauses T_FINALLY T_SEPARATOR statement_list T_END T_SEPARATOR
-				{ $$ = ADD_NODE3(T_TRY, $3, $4, $7); }
+	| T_TRY statement_list catch_clauses T_END T_SEPARATOR
+				{ $$ = ADD_NODE2(T_TRY, $2, $3); }
+	| T_TRY statement_list catch_clauses T_FINALLY statement_list T_END T_SEPARATOR
+				{ $$ = ADD_NODE3(T_TRY, $2, $3, $5); }
 	| '$' command T_SEPARATOR	{ $$ = $2; }
 	;
 

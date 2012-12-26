@@ -81,6 +81,7 @@ func: ()
 end
 func: f
 	try
+		
 		f ()
 	catch
 		echo exception
@@ -88,12 +89,14 @@ func: f
 end
 func: ()
 	try
+		
 		echo 42
 	catch if "the world" == "coming to an end"
 		echo "Oh no!"
 	catch
 		echo "Need to put something here"
 	finally
+		
 		echo "Even this won't happen"
 	end
 end

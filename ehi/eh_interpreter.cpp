@@ -854,6 +854,30 @@ bool EHI::match(ehretval_p node, ehretval_p var, ehcontext_t context) {
 			this->set_member(context.scope, name, member, context);
 			return true;
 		}
+		case '|': {
+			return match(op->paras[0], var, context) || match(op->paras[1], var, context);
+		}
+		case ',': {
+			if(var->type() != tuple_e) {
+				return false;
+			}
+			ehtuple_t *t = var->get_tupleval();
+			const int size = t->size();
+			int i = 0;
+			for(ehretval_p arg_node = node; ; arg_node = arg_node->get_opval()->paras[1], i++) {
+				if(i == size) {
+					return false;
+				}
+				opnode_t *op = arg_node->get_opval();
+				if(op->op == ',') {
+					if(!match(op->paras[0], t->get(i), context)) {
+						return false;
+					}
+				} else {
+					return match(arg_node, t->get(i), context);
+				}
+			}
+		}
 		case ':': {
 			ehretval_p member = eh_execute(op->paras[0], context);
 			if(!member->is_a(parent->enum_member_id)) {
@@ -901,6 +925,9 @@ bool EHI::match(ehretval_p node, ehretval_p var, ehcontext_t context) {
 				}
 			}
 			return true;
+		}
+		case '(': {
+			return match(op->paras[0], var, context);
 		}
 		default: {
 			ehretval_p casevar = eh_execute(node, context);

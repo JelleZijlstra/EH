@@ -7,10 +7,95 @@
 
 #include <cmath>
 
+#include "ArgumentError.h"
+#include "Array.h"
+#include "Bool.h"
+#include "ConstError.h"
+#include "CountClass.h"
+#include "Enum.h"
+#include "Exception.h"
+#include "File.h"
+#include "FixedArray.h"
+#include "Float.h"
+#include "Function.h"
+#include "GarbageCollector.h"
 #include "GlobalObject.h"
+#include "Hash.h"
+#include "Integer.h"
+#include "LoopError.h"
+#include "MiscellaneousError.h"
+#include "NameError.h"
+#include "Null.h"
+#include "Object.h"
+#include "Random.h"
+#include "Range.h"
+#include "String.h"
+#include "SuperClass.h"
+#include "SyntaxError.h"
+#include "Tuple.h"
+#include "TypeError.h"
+#include "UnknownCommandError.h"
+#include "EmptyIterator.h"
+#include "Map.h"
+#include "VisibilityError.h"
+
 #include "../eh.bison.hpp"
 
+#define GLOBAL_REGISTER_CLASS(name, type_id) obj->register_member_class(#name, type_id, ehinit_ ## name, attributes_t::make_const(), parent)
+
 EH_INITIALIZER(GlobalObject) {
+	/*
+	 * Initialization of base classes.
+	 */
+	parent->base_object = parent->make_object(new ehobj_t());
+	parent->function_object = parent->make_object(new ehobj_t());
+	// Must be the first class registered
+	obj->register_member_class("Object", object_e, ehinit_Object, attributes_t::make_const(), parent, parent->base_object);
+	obj->inherit(parent->base_object);
+	// Must be registered before any methods are registered
+	obj->register_member_class("Function", func_e, ehinit_Function, attributes_t::make_const(), parent, parent->function_object);
+
+	// insert reference to global object
+	ehmember_p global;
+	global->attribute = attributes_t::make_const();
+	global->value = parent->global_object;
+	obj->insert("global", global);
+
+	/*
+	 * Initialize top-level classes.
+	 */
+	GLOBAL_REGISTER_CLASS(CountClass, -1);
+	GLOBAL_REGISTER_CLASS(File, -1);
+	GLOBAL_REGISTER_CLASS(Integer, int_e);
+	GLOBAL_REGISTER_CLASS(String, string_e);
+	GLOBAL_REGISTER_CLASS(Array, array_e);
+	GLOBAL_REGISTER_CLASS(Float, float_e);
+	GLOBAL_REGISTER_CLASS(Bool, bool_e);
+	GLOBAL_REGISTER_CLASS(Null, null_e);
+	GLOBAL_REGISTER_CLASS(Range, range_e);
+	GLOBAL_REGISTER_CLASS(Hash, hash_e);
+	GLOBAL_REGISTER_CLASS(Tuple, tuple_e);
+	GLOBAL_REGISTER_CLASS(SuperClass, super_class_e);
+	GLOBAL_REGISTER_CLASS(Exception, -1);
+	GLOBAL_REGISTER_CLASS(UnknownCommandError, -1);
+	GLOBAL_REGISTER_CLASS(TypeError, -1);
+	GLOBAL_REGISTER_CLASS(LoopError, -1);
+	GLOBAL_REGISTER_CLASS(NameError, -1);
+	GLOBAL_REGISTER_CLASS(ConstError, -1);
+	GLOBAL_REGISTER_CLASS(ArgumentError, -1);
+	GLOBAL_REGISTER_CLASS(SyntaxError, -1);
+	GLOBAL_REGISTER_CLASS(MiscellaneousError, -1);
+	GLOBAL_REGISTER_CLASS(GarbageCollector, -1);
+	GLOBAL_REGISTER_CLASS(EmptyIterator, -1);
+	GLOBAL_REGISTER_CLASS(FixedArray, -1);
+	GLOBAL_REGISTER_CLASS(Random, -1);
+	GLOBAL_REGISTER_CLASS(Map, -1);
+	GLOBAL_REGISTER_CLASS(Enum, -1);
+	GLOBAL_REGISTER_CLASS(VisibilityError, -1);
+
+	/*
+	 * Inititalize top-level methods.
+	 */
 	REGISTER_METHOD(GlobalObject, toString);
 	REGISTER_METHOD(GlobalObject, getinput);
 	REGISTER_METHOD(GlobalObject, printvar);
@@ -39,7 +124,7 @@ class printvar_t {
 private:
 	std::map<const void *, bool> seen;
 	EHI *ehi;
-	
+
 	void retval(ehretval_p in);
 	void array(eharray_t *in);
 	void object(ehobj_t *in);
@@ -185,7 +270,7 @@ void printvar_t::object(ehobj_t *in) {
 		if(curr->first.compare("this") == 0) {
 			continue;
 		}
-		
+
 		printf("%s <", curr->first.c_str());
 		switch(curr->second->attribute.visibility) {
 			case public_e:
@@ -219,12 +304,12 @@ void printvar_t::array(eharray_t *in) {
 	// iterate over strings
 	ARRAY_FOR_EACH_STRING(in, i) {
 		printf("'%s' => ", i->first.c_str());
-		this->retval(i->second);	
+		this->retval(i->second);
 	}
 	// and ints
 	ARRAY_FOR_EACH_INT(in, i) {
 		printf("%d => ", i->first);
-		this->retval(i->second);	
+		this->retval(i->second);
 	}
 }
 void printvar_t::tuple(ehtuple_t *in) {

@@ -744,15 +744,15 @@ int ehobj_t::register_member_class(const std::string &name, const int new_type_i
 		newclass->type_id = new_type_id;
 		interpreter_parent->repo.register_known_class(new_type_id, name, new_value);
 	}
+	// inherit from Object, except in Object itself
+	if(new_type_id != object_e && name != "GlobalObject") {
+		newclass->inherit(interpreter_parent->base_object);
+	}
 	if(name != "GlobalObject") {
 		newclass->parent = interpreter_parent->global_object;
 	}
-
-	// inherit from Object, except in Object itself
-	if(new_type_id != object_e) {
-		newclass->inherit(interpreter_parent->base_object);
-	}
 	init_func(newclass, interpreter_parent);
+	// inherit from Object, except in Object itself
 	ehmember_p member;
 	member->attribute = attributes;
 	member->value = new_value;

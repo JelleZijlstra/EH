@@ -10,78 +10,14 @@
 #include "eh.h"
 #include "eh_libclasses.h"
 #include "eh_libcmds.h"
-#include "std_lib/ArgumentError.h"
-#include "std_lib/Array.h"
-#include "std_lib/Bool.h"
 #include "std_lib/ConstError.h"
-#include "std_lib/CountClass.h"
 #include "std_lib/Enum.h"
-#include "std_lib/Exception.h"
-#include "std_lib/File.h"
-#include "std_lib/FixedArray.h"
-#include "std_lib/Float.h"
-#include "std_lib/Function.h"
-#include "std_lib/GarbageCollector.h"
 #include "std_lib/GlobalObject.h"
-#include "std_lib/Hash.h"
-#include "std_lib/Integer.h"
 #include "std_lib/LoopError.h"
 #include "std_lib/MiscellaneousError.h"
 #include "std_lib/NameError.h"
-#include "std_lib/Null.h"
-#include "std_lib/Object.h"
-#include "std_lib/Random.h"
-#include "std_lib/Range.h"
-#include "std_lib/String.h"
 #include "std_lib/SuperClass.h"
-#include "std_lib/SyntaxError.h"
-#include "std_lib/Tuple.h"
-#include "std_lib/TypeError.h"
-#include "std_lib/UnknownCommandError.h"
-#include "std_lib/EmptyIterator.h"
-#include "std_lib/Map.h"
 #include "std_lib/VisibilityError.h"
-
-typedef struct ehlc_listentry_t {
-	const char *name;
-	ehobj_t::initializer initializer;
-	int type_id;
-} ehlc_listentry_t;
-#define LIBCLASSENTRY(c, type_id) { #c, ehinit_ ## c, type_id},
-ehlc_listentry_t libclasses[] = {
-	LIBCLASSENTRY(Object, object_e)
-	LIBCLASSENTRY(CountClass, -1)
-	LIBCLASSENTRY(File, -1)
-	LIBCLASSENTRY(Integer, int_e)
-	LIBCLASSENTRY(String, string_e)
-	LIBCLASSENTRY(Function, func_e)
-	LIBCLASSENTRY(Array, array_e)
-	LIBCLASSENTRY(Float, float_e)
-	LIBCLASSENTRY(Bool, bool_e)
-	LIBCLASSENTRY(Null, null_e)
-	LIBCLASSENTRY(Range, range_e)
-	LIBCLASSENTRY(Hash, hash_e)
-	LIBCLASSENTRY(Tuple, tuple_e)
-	LIBCLASSENTRY(SuperClass, super_class_e)
-	LIBCLASSENTRY(Exception, -1)
-	LIBCLASSENTRY(UnknownCommandError, -1)
-	LIBCLASSENTRY(TypeError, -1)
-	LIBCLASSENTRY(LoopError, -1)
-	LIBCLASSENTRY(NameError, -1)
-	LIBCLASSENTRY(ConstError, -1)
-	LIBCLASSENTRY(ArgumentError, -1)
-	LIBCLASSENTRY(SyntaxError, -1)
-	LIBCLASSENTRY(GlobalObject, -1)
-	LIBCLASSENTRY(MiscellaneousError, -1)
-	LIBCLASSENTRY(GarbageCollector, -1)
-	LIBCLASSENTRY(EmptyIterator, -1)
-	LIBCLASSENTRY(FixedArray, -1)
-	LIBCLASSENTRY(Random, -1)
-	LIBCLASSENTRY(Map, -1)
-	LIBCLASSENTRY(Enum, -1)
-	LIBCLASSENTRY(VisibilityError, -1)
-	{NULL, NULL, 0}
-};
 
 typedef struct ehcmd_listentry_t {
 	const char *name;
@@ -135,23 +71,10 @@ EHInterpreter::EHInterpreter() : gc(), repo(), global_object(), function_object(
 void EHInterpreter::eh_init(void) {
 	ehobj_t *global_ehobj = new ehobj_t();
 	global_object = this->make_object(global_ehobj);
-	base_object = this->make_object(new ehobj_t());
-	function_object = this->make_object(new ehobj_t());
 
-	const attributes_t attributes = attributes_t::make_const();
-	for(int i = 0; libclasses[i].name != NULL; i++) {
-		ehretval_p new_value = NULL;
-		const int type_id = libclasses[i].type_id;
-		const char *name = libclasses[i].name;
-		if(type_id == object_e) {
-			new_value = base_object;
-		} else if(type_id == func_e) {
-			new_value = function_object;
-		} else if(strcmp(name, "GlobalObject") == 0) {
-			new_value = global_object;
-		}
-		global_ehobj->register_member_class(name, type_id, libclasses[i].initializer, attributes, this, new_value);
-	}
+	// manually register GlobalObject in itself, run initializer
+	global_ehobj->register_member_class("GlobalObject", -1, ehinit_GlobalObject, attributes_t::make_const(), this, global_object);
+
 	// insert global command table
 	ehmember_p command_table;
 	command_table->attribute = attributes_t::make_const();
@@ -168,11 +91,6 @@ void EHInterpreter::eh_init(void) {
 	for(int i = 0; libredirs[i][0] != NULL; i++) {
 		redirect_command(libredirs[i][0], libredirs[i][1]);
 	}
-	// insert reference to global object
-	ehmember_p global;
-	global->attribute = attributes_t::make_const();
-	global->value = global_object;
-	global_object->get_objectval()->insert("global", global);
 
 	gc.do_collect(global_object);
 }

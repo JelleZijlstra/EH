@@ -259,3 +259,4 @@ tryexpr.eh
 mul2.eh
 if.eh
 while_example.eh
+for_in_example.eh

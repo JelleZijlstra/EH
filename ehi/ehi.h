@@ -28,7 +28,7 @@ class EHInterpreter {
 public:
 	ehhash_t *cmdtable;
 
-private:	
+private:
 	void eh_init(void);
 
 	// disallowed operations
@@ -46,7 +46,7 @@ public:
 	int enum_member_id;
 	int enum_instance_id;
 
-	// for some reason I haven't been able to figure out, I get a compiler error 
+	// for some reason I haven't been able to figure out, I get a compiler error
 	// inside glibc when I declare this as std::set<const std::string>.
 	std::set<std::string> included_files;
 
@@ -63,7 +63,7 @@ public:
 	// helper functions
 	ehretval_p get_command(const char *name);
 	void insert_command(const char *name, ehretval_p cmd);
-	void redirect_command(const char *redirect, const char *target);	
+	void redirect_command(const char *redirect, const char *target);
 	ehretval_p make_method(ehlibmethod_t in);
 
 	ehretval_p instantiate(ehretval_p obj);
@@ -214,11 +214,11 @@ private:
 	int breaking;
 	int continuing;
 	bool returning;
-	
+
 	// execution context
 	std::string working_dir;
 	const std::string context_name;
-	
+
 	/*
 	 * Disallowed operations
 	 */

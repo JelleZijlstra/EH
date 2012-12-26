@@ -130,7 +130,7 @@ ehretval_p Array_Iterator::next(EHI *ehi) {
 		const char *key = this->string_begin->first.c_str();
 		tuple[0] = ehretval_t::make_string(strdup(key));
 		tuple[1] = this->string_begin->second;
-		this->string_begin++;	
+		this->string_begin++;
 	}
 	return ehi->get_parent()->make_tuple(new ehtuple_t(2, tuple));
 }
@@ -145,7 +145,7 @@ ehretval_p Array_Iterator::peek(EHI *ehi) const {
 		tuple[0] = ehretval_t::make_string(strdup(key));
 		tuple[1] = this->string_begin->second;
 	}
-	return ehi->get_parent()->make_tuple(new ehtuple_t(2, tuple));	
+	return ehi->get_parent()->make_tuple(new ehtuple_t(2, tuple));
 }
 
 EH_METHOD(Array_Iterator, initialize) {

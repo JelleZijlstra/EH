@@ -7,13 +7,13 @@ private:
 		short refcount;
 		short shared;
 		I content;
-		
+
 		container() : refcount(1), shared(0), content() {}
-		
+
 		void inc_rc() {
 			this->refcount++;
 		}
-		
+
 		void dec_rc() {
 			this->refcount--;
 			if(this->shared != 0) {
@@ -26,12 +26,12 @@ private:
 	};
 
 	mutable container<T>* pointer;
-	
+
 	// this to make sure we can internally access pointer
 	container<T>* &operator~() const {
 		return this->pointer;
 	}
-	
+
 	class dummy_class {};
 public:
 	static refcount_ptr<T> clone(refcount_ptr<T> in) {
@@ -39,7 +39,7 @@ public:
 		if(~in != NULL) {
 			~out = new container<T>(*~in);
 		}
-		return out;		
+		return out;
 	}
 	static bool null(refcount_ptr<T> in) {
 		return ~in == NULL;
@@ -47,7 +47,7 @@ public:
 	bool null() const {
 		return this->pointer == NULL;
 	}
-	
+
 	// constructor
 	refcount_ptr() : pointer(NULL) {}
 	explicit refcount_ptr(T *in) {
@@ -58,7 +58,7 @@ public:
 			this->pointer->content = *in;
 		}
 	}
-	
+
 	refcount_ptr(dummy_class *in) : pointer(NULL) {
 		// only for NULL initialization
 		assert(in == NULL);
@@ -66,13 +66,13 @@ public:
 
 	T &operator*() const {
 		if(this->pointer == NULL) {
-			this->pointer = new container<T>;	
+			this->pointer = new container<T>;
 		}
 		return this->pointer->content;
 	}
 	T *operator->() const {
 		if(this->pointer == NULL) {
-			this->pointer = new container<T>;	
+			this->pointer = new container<T>;
 		}
 		return &this->pointer->content;
 	}
@@ -129,15 +129,15 @@ public:
 			this->pointer = new T[n]();
 		}
 	}
-	
+
 	T &operator[](int i) {
 		return pointer[i];
 	}
-	
+
 	T operator[](int i) const {
 	  return pointer[i];
 	}
-	
+
 	operator T *() {
 		return pointer;
 	}

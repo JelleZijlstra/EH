@@ -7,7 +7,7 @@ private:
 	void type(type_enum type) {
 		this->_type = type;
 	}
-	
+
 	static bool belongs_in_gc(type_enum type) {
 		switch(type) {
 			case object_e:
@@ -20,7 +20,7 @@ private:
 				return true;
 			default:
 				return false;
-		}	
+		}
 	}
 	union {
 		// simple EH variable type
@@ -120,7 +120,7 @@ vtype get_ ## ehtype ## val() const;
 	type_enum type() const;
 
 	unsigned int extended_type() const;
-	
+
 	bool belongs_in_gc() const {
 		return belongs_in_gc(this->type());
 	}
@@ -163,28 +163,28 @@ vtype get_ ## ehtype ## val() const;
 			return 1;
 		}
 	}
-	
+
 	bool is_object() const {
 		return this->type() == object_e;
 	}
-	
+
 	ehobj_t *get_object() const {
 		assert(this->is_object());
 		return this->objectval;
 	}
-	
+
 	static ehretval_p self_or_data(const ehretval_p in);
-	
+
 	bool is_a(unsigned int in);
 	bool inherited_is_a(unsigned int in);
-	
+
 	void print();
 	bool equals(ehretval_p rhs);
 	std::list<ehretval_p> children();
 	std::string decompile(int level);
-	
+
 	~ehretval_t();
-	
+
 	static ehretval_p make_typed(type_enum type) {
 		ehretval_p out;
 		if(belongs_in_gc(type)) {
@@ -228,10 +228,10 @@ typedef struct ehmember_t {
 	// destructor
 	~ehmember_t() {
 	}
-	
+
 	ehmember_t() : attribute(attributes_t::make()), value() {}
 	ehmember_t(attributes_t atts) : attribute(atts), value() {}
-	
+
 	// convenience methods
 	bool isstatic() const {
 		return this->attribute.isstatic == static_e;
@@ -256,7 +256,7 @@ public:
 	typedef std::map<const std::string, ehmember_p> obj_map;
 	typedef obj_map::iterator obj_iterator;
 	typedef void (*initializer)(ehobj_t *obj, class EHInterpreter *parent);
-	
+
 	// properties
 	obj_map members;
 	// the object's state data
@@ -278,14 +278,14 @@ public:
 
 	bool inherited_has(const std::string &key) const;
 	ehmember_p inherited_get(const std::string &key);
-	
+
 	std::set<std::string> member_set();
 
 	// inline methods
 	size_t size() const {
 		return members.size();
 	}
-	
+
 	void insert(const std::string &name, ehmember_p value) {
 		members[name] = value;
 	}
@@ -293,7 +293,7 @@ public:
 		const std::string str(name);
 		this->insert(str, value);
 	}
-	
+
 	ehmember_p get_known(const std::string &key) {
 		assert(this->has(key));
 		return members[key];
@@ -305,7 +305,7 @@ public:
 	bool has(const char *key) const {
 		return has(std::string(key));
 	}
-	
+
 	struct ehobj_t *get_parent() const {
 		if(ehretval_p::null(this->parent)) {
 			return NULL;
@@ -313,7 +313,7 @@ public:
 			return this->parent->get_objectval();
 		}
 	}
-	
+
 	struct ehobj_t *get_real_parent() const {
 		if(ehretval_p::null(this->real_parent)) {
 			return NULL;
@@ -325,13 +325,13 @@ public:
 	void inherit(ehretval_p superclass) {
 		super.push_front(superclass);
 	}
-	
+
 	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *parent);
 
 	void register_value(const std::string &name, ehretval_p value, const attributes_t attributes);
-	
+
 	int register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *parent, ehretval_p the_class = NULL);
-	
+
 	// destructor
 	~ehobj_t();
 private:
@@ -350,20 +350,20 @@ private:
 public:
 	// the size of type_enum
 	const static unsigned int first_user_type = 19;
-	
+
 	void register_known_class(unsigned int id, std::string name, ehretval_p object) {
 		assert(id < first_user_type);
 		id_to_string[id] = name;
 		id_to_object[id] = object;
 	}
-	
+
 	int register_class(std::string name, ehretval_p object) {
 		id_to_string[next_available] = name;
 		id_to_object[next_available] = object;
 		next_available++;
 		return next_available - 1;
 	}
-	
+
 	const std::string &get_name(unsigned int id) {
 		// pretend bindings are just functions
 		if(id == binding_e) {
@@ -387,7 +387,7 @@ public:
 			return NULL;
 		}
 	}
-	
+
 	type_repository() : id_to_string(), id_to_object(), next_available(first_user_type) {}
 };
 

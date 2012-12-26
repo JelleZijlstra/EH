@@ -65,7 +65,7 @@ typedef struct attributes_t {
 	visibility_enum visibility : 2;
 	static_enum isstatic : 1;
 	const_enum isconst : 1;
-	
+
 	// can't make a constructor because this thing appears in a union, but this
 	// is almost as good
 	static attributes_t make(visibility_enum v = public_e, static_enum s = nonstatic_e, const_enum c = nonconst_e) {
@@ -108,7 +108,7 @@ typedef struct opnode_t {
 	int op; // Type of operator
 	int nparas; // Number of parameters
 	ehretval_p *paras; // Parameters
-	
+
 	~opnode_t() {
 		if(paras != NULL) {
 			delete[] paras;

@@ -97,13 +97,13 @@ EHI *yyget_extra(void *scanner);
 %nonassoc '(' ')' T_DOLLARPAREN
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_FUNC T_CLASS T_IF T_THIS T_SCOPE '_'
 
-%type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember 
-%type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list 
+%type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember
+%type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list
 %type<ehNode> bareword_or_string para_expr catch_clauses catch_clause catch_clauses_braces catch_clause_braces block_expression
 %type<ehNode> elseif_clauses elseif_clause enum_list enum_member enum_arg_list
 %%
 program:
-	global_list				{ 	// Don't do anything. Destructors below take 
+	global_list				{ 	// Don't do anything. Destructors below take
 								// care of cleanup.
 							}
 
@@ -162,7 +162,7 @@ statement:
 	| T_FOR block_expression T_IN block_expression T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE3(T_IN, $2, $4, $6); }
 	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE2('=', 
+							{ $$ = ADD_NODE2('=',
 								ADD_NODE1('$', $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_SWITCH block_expression T_SEPARATOR caselist T_END T_SEPARATOR
@@ -219,7 +219,7 @@ statement:
 				{ $$ = ADD_NODE3(T_TRY, $3, $4, $7); }
 	| '$' command T_SEPARATOR	{ $$ = $2; }
 	;
-	
+
 catch_clauses:
 	catch_clause catch_clauses
 							{ $$ = ADD_NODE2(',', $1, $2); }
@@ -575,7 +575,7 @@ para_expr:
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| para_expr '.' T_VARIABLE
 							{ $$ = ADD_NODE2('.', $1, $3); }
-	| '@' T_TYPE para_expr %prec '@'	
+	| '@' T_TYPE para_expr %prec '@'
 							{ $$ = ADD_NODE2('@', $2, $3); }
 	| para_expr T_EQ para_expr
 							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
@@ -657,7 +657,7 @@ para:
 	| '}' bareword_or_string
 							{ $$ = ADD_NODE1('}', $2); }
 	;
-	
+
 bareword_or_string:
 	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
@@ -746,7 +746,7 @@ enum_arg_list:
 	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_VARIABLE ',' enum_arg_list
 							{ $$ = ADD_NODE2(',', $1, $3); }
-	;	
+	;
 %%
 int eh_outer_exit(int exitval) {
 	//free_node: something. We should actually be adding stuff to the AST, I suppose.

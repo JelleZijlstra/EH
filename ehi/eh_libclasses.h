@@ -66,7 +66,7 @@ static inline int intcmp(int lhs, int rhs) {
 		return 0;
 	} else {
 		return 1;
-	}	
+	}
 }
 
 #endif /* _EH_LIBCLASSES_H */

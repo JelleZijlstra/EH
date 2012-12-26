@@ -17,7 +17,7 @@ if(extension_loaded("ehphp"))  {
 		private $prompt;
 		/* core commands */
 		protected static $core_commands = array(
-	
+
 		);
 		protected function __construct() {
 			parent::__construct();

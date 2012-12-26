@@ -1,7 +1,7 @@
 CC = clang++
 CCBASICFLAGS = -ggdb -fPIC -c
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic -Wextra -Wno-unused-parameter
-LDFLAGS = 
+LDFLAGS =
 LIBCLASSES = ArgumentError Array Bool ConstError CountClass Enum Exception File Float Function GarbageCollector GlobalObject Hash Integer LoopError MiscellaneousError NameError Null Object Range String SuperClass SyntaxError Tuple TypeError UnknownCommandError EmptyIterator FixedArray Random Map
 SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp eh_types.cpp eh_files.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp

@@ -39,7 +39,7 @@ void Enum::add_member(ehretval_p e, const char *name, ehretval_p member, EHI *eh
 
 	Enum *e_obj = Enum::extract_enum(e);
 	e_obj->nmembers++;
-	e_obj->members.push_back(member);	
+	e_obj->members.push_back(member);
 }
 
 void Enum::add_nullary_member(ehretval_p e, const char *name, EHI *ehi) {
@@ -63,7 +63,7 @@ std::string Enum::to_string() const {
 		}
 	}
 	out << "\nend";
-	return out.str();	
+	return out.str();
 }
 
 EH_METHOD(Enum, new) {

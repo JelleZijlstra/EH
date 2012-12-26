@@ -255,3 +255,4 @@ match.eh
 matchsingle.eh
 useassert.eh
 zipmatch.eh
+tryexpr.eh

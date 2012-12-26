@@ -88,7 +88,7 @@ EHI *yyget_extra(void *scanner);
 %right ':'
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
-%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_FUNC T_CLASS T_IF T_TRY T_THIS T_SCOPE '_'
+%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_FUNC T_CLASS T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
 
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list
@@ -134,12 +134,6 @@ statement:
 	| expression T_SEPARATOR	{ $$ = $1; }
 	| '$' command T_SEPARATOR	{ $$ = $2; }
 		/* Using T_END */
-	| T_WHILE expression T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
-	| T_FOR expression T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE2(T_IN, $2, $4); }
-	| T_FOR expression T_IN expression T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE3(T_IN, $2, $4, $6); }
 	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE2('=',
 								ADD_NODE1('$', $2),
@@ -300,6 +294,12 @@ expression:
 				{ $$ = ADD_NODE2(T_TRY, $2, $3); }
 	| T_TRY statement_list catch_clauses T_FINALLY statement_list T_END
 				{ $$ = ADD_NODE3(T_TRY, $2, $3, $5); }
+	| T_WHILE expression T_SEPARATOR statement_list T_END
+							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
+	| T_FOR expression T_SEPARATOR statement_list T_END
+							{ $$ = ADD_NODE2(T_IN, $2, $4); }
+	| T_FOR expression T_IN expression T_SEPARATOR statement_list T_END
+							{ $$ = ADD_NODE3(T_IN, $2, $4, $6); }
 	;
 
 para_expr:

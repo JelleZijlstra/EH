@@ -142,8 +142,6 @@ statement:
 							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
 	| T_ENUM T_VARIABLE T_SEPARATOR enum_list T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE3(T_ENUM, $2, $4, $6); }
-	| T_CLASS T_VARIABLE T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 		/* Other statements */
 	| T_RET expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_RET, $2); }
@@ -276,6 +274,8 @@ expression:
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
+	| T_CLASS T_VARIABLE T_SEPARATOR statement_list T_END
+							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_GIVEN expression T_SEPARATOR caselist T_END

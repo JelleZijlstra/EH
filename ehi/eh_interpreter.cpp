@@ -703,6 +703,12 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 		ehmember_p member;
 		member->value = ret;
 		context.scope->get_objectval()->insert(name, member);
+#if 0
+		// set class's own name property (commenting out until we can distinguish classes and prototypes better)
+		ehmember_p name_member;
+		name_member->value = ehretval_t::make_string(strdup(name));
+		new_obj->insert("name", name_member);
+#endif
 	}
 	return ret;
 }

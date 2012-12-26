@@ -8,16 +8,16 @@ class Iterable
 			f(i.next())
 		end
 	end
-	
+
 	private reduceHelper = it, b, f => given it.hasNext()
 		case true; f(it.next(), reduceHelper(it, b, f))
 		case false; b
 	end
-	
+
 	public reduce = b, f => reduceHelper(this.getIterator(), b, f)
-	
+
 	public iterableLength = () => this.reduce(0, (v, b => b + 1))
-	
+
 	private foldLeftHelper = it, b, f => given (it.hasNext())
 		case true
 			b = f(it.next(), b)
@@ -25,14 +25,14 @@ class Iterable
 		case false
 			b
 	end
-	
+
 	public foldLeft = b, f => foldLeftHelper(this.getIterator(), b, f)
 
 	public map = func: f
 		out = this.empty()
 		this.foldLeft(out, (v, collection => collection.add(f v)))
 	end
-	
+
 	public filter = func: f
 		this.foldLeft (this.empty(), (v, collection => given f v
 			case true; collection.add v
@@ -43,7 +43,7 @@ class Iterable
 	public reverse = func:
 		this.foldLeft(this.empty(), (b, f => b.add f))
 	end
-	
+
 	# sorting implementation
 	const private split = it, l, r => given it.hasNext()
 		case true
@@ -89,7 +89,7 @@ class Iterable
 			r = r.sort()
 			this.empty().merge(l.getIterator(), r.getIterator())
 	end
-	
+
 	const nth = func: n
 		if n < 0
 			throw ArgumentError.new("Argument must be nonnegative", "Iterable.nth", n)
@@ -118,7 +118,7 @@ class Iterable
 			end
 		end
 		out
-	end	
+	end
 
 	const public max = () => this.reduceSingle (largest, val => largest < val)
 

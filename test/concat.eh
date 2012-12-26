@@ -1,4 +1,4 @@
 #!/usr/bin/ehi
 # String concatenation
-printvar(@string 1 + 3)
-printvar((@string 1..3) + 2..4)
+printvar(1.toString() + 3)
+printvar((1..3).toString() + 2..4)

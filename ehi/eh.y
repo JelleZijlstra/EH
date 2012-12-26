@@ -37,7 +37,6 @@ EHI *yyget_extra(void *scanner);
 };
 %token <iValue> T_INTEGER
 %token <fValue> T_FLOAT
-%token <tValue> T_TYPE
 %token <bValue> T_BOOL
 %token T_IF
 %token T_ELSE
@@ -304,8 +303,6 @@ expression:
 	| expression '.' T_VARIABLE
 							{ $$ = ADD_NODE2('.', $1, $3); }
 	| '@' T_VARIABLE		{ $$ = ADD_NODE1('@', $2); }
-	| '@' T_TYPE expression %prec '@'
-							{ $$ = ADD_NODE2('@', $2, $3); }
 	| expression ',' expression
 							{ $$ = ADD_NODE2(',', $1, $3); }
 	| expression T_EQ expression
@@ -469,8 +466,6 @@ block_expression:
 							{ $$ = ADD_NODE2(T_FUNC, $1, $3); }
 	| block_expression '.' T_VARIABLE
 							{ $$ = ADD_NODE2('.', $1, $3); }
-	| '@' T_TYPE block_expression %prec '@'
-							{ $$ = ADD_NODE2('@', $2, $3); }
 	| block_expression ',' block_expression
 							{ $$ = ADD_NODE2(',', $1, $3); }
 	| block_expression T_EQ block_expression
@@ -575,8 +570,6 @@ para_expr:
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| para_expr '.' T_VARIABLE
 							{ $$ = ADD_NODE2('.', $1, $3); }
-	| '@' T_TYPE para_expr %prec '@'
-							{ $$ = ADD_NODE2('@', $2, $3); }
 	| para_expr T_EQ para_expr
 							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| para_expr '<' para_expr

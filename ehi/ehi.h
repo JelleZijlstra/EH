@@ -231,7 +231,6 @@ private:
 	ehmember_p set_member(ehretval_p object, const char *name, ehmember_p value, ehcontext_t context);
 	ehretval_p call_function(ehretval_p function, ehretval_p args, ehcontext_t context);
 	ehretval_p eh_always_execute(ehretval_p code, ehcontext_t context);
-	ehretval_p eh_cast(const type_enum type, ehretval_p in, ehcontext_t context);
 	ehretval_p eh_op_anonclass(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_array(ehretval_p node, ehcontext_t context);
 	ehretval_p eh_op_colon(ehretval_p *paras, ehcontext_t context);

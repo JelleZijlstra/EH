@@ -3,7 +3,7 @@
 echo 'Int access:'
 bar = 1
 for i in bar.length() * 8
-	echo((@string i) + ': ' + bar.getBit i)
+	echo(i.toString() + ': ' + bar.getBit i)
 end
 echo 'Int modification:'
 for i in bar.length() * 8
@@ -13,7 +13,7 @@ echo bar
 echo 'String access:'
 foo = 'test'
 for i in foo.length()
-	echo((@string i) + ': ' + foo->i)
+	echo(i.toString() + ': ' + foo->i)
 end
 echo 'String modification:'
 for i in foo.length()

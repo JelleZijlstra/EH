@@ -34,30 +34,6 @@ void make_string(char **, char *);
 				yylval_param->iValue = atoi(yytext);
 				return T_INTEGER;
 			}
-"int"		{
-				yylval_param->tValue = int_e;
-				return T_TYPE;
-			}
-"string"	{
-				yylval_param->tValue = string_e;
-				return T_TYPE;
-			}
-"array"		{
-				yylval_param->tValue = array_e;
-				return T_TYPE;
-			}
-"bool"		{
-				yylval_param->tValue = bool_e;
-				return T_TYPE;
-			}
-"float"		{
-				yylval_param->tValue = float_e;
-				return T_TYPE;
-			}
-"range"		{
-				yylval_param->tValue = range_e;
-				return T_TYPE;
-			}
 "if"		return T_IF;
 "else"		return T_ELSE;
 "elsif"		return T_ELSIF;

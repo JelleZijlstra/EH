@@ -1,3 +1,3 @@
 #!/usr/bin/ehi
 Integer.toString = () => "Hello"
-printvar @string 1
+printvar(1.toString())

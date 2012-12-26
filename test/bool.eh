@@ -13,7 +13,7 @@ printvar bar
 baz = 'test'
 meh = ''
 # Casting to bool
-echo @bool baz
-echo @bool meh
-echo @bool 1
-echo @bool 0
+echo(baz.toBool())
+echo(meh.toBool())
+echo(1.toBool())
+echo(0.toBool())

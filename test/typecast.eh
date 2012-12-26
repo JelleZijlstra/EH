@@ -1,12 +1,12 @@
 #!/usr/bin/ehi
 # To illustrate typecasting
 foo = '3'
-bar = @int foo
+bar = foo.toInt()
 echo bar
 baz = 3
-foobar = @string baz
+foobar = baz.toString()
 echo foobar
-more = @string baz
+more = baz.toString()
 echo 'If typecasting works, the following line should print 33:'
 echo(foobar + more)
 if foobar == more

@@ -10,8 +10,8 @@ func abs: input
 end
 func sqrt: input
 	const epsilon = 0.01
-	input = @float input
-	out = @float 5
+	input = input.toFloat()
+	out = 5.toFloat()
 	while (abs (out * out - input)) > epsilon
 		out = (out + input/out) / 2.0
 	end
@@ -19,7 +19,7 @@ func sqrt: input
 end
 
 if argc == 2
-	num = @int argv->1
+	num = argv->1.toInt()
 else
 	num = 27
 end

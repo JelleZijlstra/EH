@@ -3,7 +3,7 @@
 class Foo
 	public bar
 	public baz: n
-		put(@string n + ' ')
+		put(n.toString() + ' ')
 		echo myvar
 	end
 end
@@ -13,8 +13,8 @@ myvar = 'foo'
 Foo.baz 'bah'
 newvar = Foo.baz
 newvar 19
-put @string 19
-echo @string 19
+put(19.toString())
+echo(19.toString())
 func unknownglobal:
 	printvar nosuchvar
 end

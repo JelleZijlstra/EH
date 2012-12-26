@@ -2,9 +2,9 @@
 include '../lib/exception.eh'
 
 # Casting to and from floats
-printvar @float 3
-rescue(() => printvar @float true)
-printvar @int 3.2
-printvar(3 == @int 3.0)
+printvar(3.toFloat())
+rescue(() => printvar(true.toFloat()))
+printvar(3.2.toInt())
+printvar(3 == 3.0.toInt())
 printvar(3.0 == 3.0)
 printvar(3 == 3.0)

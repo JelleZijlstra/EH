@@ -206,15 +206,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 * Unary operators
 		 */
 			case '@': // type casting
-				if(node->get_opval()->nparas == 1) {
-					throw_MiscellaneousError("Cannot use @ outside of match statement", this);
-				} else {
-					ret = eh_cast(
-						eh_execute(paras[0], context)->get_typeval(),
-						eh_execute(paras[1], context),
-						context
-					);
-				}
+				throw_MiscellaneousError("Cannot use @ outside of match statement", this);
 				break;
 			case '~': // bitwise negation
 			  return perform_op("operator~", 0, paras, context);
@@ -1378,22 +1370,6 @@ void EHI::handle_uncaught(eh_exception &e) {
 	} catch(...) {
 		std::cerr << "Exception occurred while handling uncaught exception" << std::endl;
 	}
-}
-
-/*
- * Type casting
- */
-ehretval_p EHI::eh_cast(const type_enum type, ehretval_p in, ehcontext_t context) {
-	switch(type) {
-		case int_e: return this->to_int(in, context);
-		case string_e: return this->to_string(in, context);
-		case float_e: return this->to_float(in, context);
-		case bool_e: return this->to_bool(in, context);
-		case array_e: return this->to_array(in, context);
-		case range_e: return this->to_range(in, context);
-		default: throw_TypeError("Cannot use this type with global cast operator", type, this);
-	}
-	return NULL;
 }
 
 /*

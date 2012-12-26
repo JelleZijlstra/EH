@@ -2,7 +2,7 @@
 # Illustrate the AND and OR operators
 bar = 3
 foo = 0
-printvar @bool foo
+printvar(foo.toBool())
 printvar(bar and foo)
 printvar(bar && foo)
 printvar(bar or foo)

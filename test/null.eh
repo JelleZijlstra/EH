@@ -7,9 +7,9 @@ echo bar
 foo = ['foo', null, 'test']
 echo(foo -> 1)
 # Casting null to a string gives an empty string
-baz = @string bar
+baz = bar.toString()
 echo baz
 # Casting null to an int gives 0 and throws an error
-rescue(() => (ban = @int bar))
+rescue(() => (ban = bar.toInt()))
 rescue(() => printvar ban)
 printvar foo

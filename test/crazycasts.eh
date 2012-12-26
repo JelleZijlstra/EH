@@ -4,18 +4,18 @@ include '../lib/exception.eh'
 
 # Some crazy typecasts that EH supports
 # [ 0 => 1, 1 => 2, ..., 41 => 42]
-printvar @array 1..42
+printvar((1..42).toArray())
 # [ 0 => 'string']
-rescue(() => printvar @array 'string')
+rescue(() => printvar('string'.toArray()))
 # [ 0 => 42]
-rescue(() => printvar @array 42)
+rescue(() => printvar(42.toArray()))
 # [ 0 => true]
-rescue(() => printvar @array true)
+rescue(() => printvar(true.toArray()))
 # 1..42
-printvar(@range '1 to 42')
+printvar('1 to 42'.toRange())
 # error
-rescue(() => printvar @range 42)
+rescue(() => printvar(42.toRange()))
 # error
-rescue(() => printvar @bool [1])
+rescue(() => printvar([1].toBool()))
 # error
-rescue(() => printvar @bool [])
+rescue(() => printvar([].toBool()))

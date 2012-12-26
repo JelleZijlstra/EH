@@ -248,6 +248,9 @@ std::string ehretval_t::decompile(int level) {
 				case T_NULL:
 					out << "()";
 					break;
+				case '_':
+					out << "_";
+					break;
 				case '+':
 				case '-':
 				case '*':

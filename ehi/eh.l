@@ -162,7 +162,6 @@ void make_string(char **, char *);
 "^="		return T_BINXOREQ;
 ">>="		return T_RIGHTSHIFTEQ;
 "<<="		return T_LEFTSHIFTEQ;
-"_"			return T_NULL;
 [@=$+\-*/<>,:&\|^%~!\.][@=$+\-*/<>,:&\|^%~!\.]+ {
 				int len = strlen(yytext);
 				yylval_param->sValue = new char[len + 1];
@@ -170,7 +169,7 @@ void make_string(char **, char *);
 				yylval_param->sValue[len] = '\0';
 				return T_CUSTOMOP;
 			}
-[@=$+\-*/<>(),:\[\]&\|^%~!{}\.]	return *yytext; /* Single character tokens */
+[@=$+\-*/<>(),:\[\]&\|^%~!{}\._]	return *yytext; /* Single character tokens */
 [ \t]+		; /* Ignore whitespace */
 .			{
 				char message[100];

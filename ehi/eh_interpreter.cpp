@@ -199,6 +199,9 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				return paras[0];
 			case T_NULL:
 				return NULL;
+			case '_':
+				throw_MiscellaneousError("Cannot use _ in expression", this);
+				return NULL;
 		/*
 		 * Unary operators
 		 */
@@ -840,7 +843,7 @@ ehretval_p EHI::eh_op_given(ehretval_p *paras, ehcontext_t context) {
 bool EHI::match(ehretval_p node, ehretval_p var, ehcontext_t context) {
 	opnode_t *op = node->get_opval();
 	switch(op->op) {
-		case T_NULL:
+		case '_':
 			return true;
 		case '@': {
 			const char *name = op->paras[0]->get_stringval();
@@ -1023,6 +1026,7 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 		}
 		case '(':
 			return set(internal_paras[0], rvalue, attributes, context);
+		case '_':
 		case T_NULL: // allow NULL to enable ignoring values
 			return rvalue;
 		default:

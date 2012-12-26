@@ -3,7 +3,7 @@ func: ()
 	match this
 		case Nil
 			Nil
-		case Cons ((), Nil)
+		case Cons (_, Nil)
 			this
 		case Cons (@hd, @tl)
 			private const l, r = this.split (Nil, Nil)

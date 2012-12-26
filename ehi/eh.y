@@ -95,7 +95,7 @@ EHI *yyget_extra(void *scanner);
 %right ':'
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
-%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_FUNC T_CLASS T_IF T_THIS T_SCOPE
+%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_FUNC T_CLASS T_IF T_THIS T_SCOPE '_'
 
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember 
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list 
@@ -255,6 +255,7 @@ expression:
 	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
 	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
 	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
+	| '_'					{ $$ = ADD_NODE0('_'); }
 	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
 	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }

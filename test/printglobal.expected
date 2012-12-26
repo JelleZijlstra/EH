@@ -257,6 +257,9 @@ initialize <public,non-static,non-constant>: @function <library>:
 UnknownCommandError <public,non-static,constant>: @object <UnknownCommandError> [
 initialize <public,non-static,non-constant>: @function <library>: 
 ]
+VisibilityError <public,non-static,constant>: @object <VisibilityError> [
+initialize <public,non-static,non-constant>: @function <library>: 
+]
 argc <public,non-static,non-constant>: @int 1
 argv <public,non-static,non-constant>: @array [
 0 => @string 'printglobal.eh'

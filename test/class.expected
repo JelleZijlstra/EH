@@ -7,6 +7,6 @@ meh
 @function <user>: n
 42
 Calling a private method
-Unknown member mah in object of type Foo: @Foo (@Foo (3, ), )
+Cannot access private member mah in object of type Foo: @Foo (@Foo (3, ), )
 2
 %%stderr%%

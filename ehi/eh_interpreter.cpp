@@ -40,6 +40,7 @@
 #include "std_lib/UnknownCommandError.h"
 #include "std_lib/EmptyIterator.h"
 #include "std_lib/Map.h"
+#include "std_lib/VisibilityError.h"
 
 typedef struct ehlc_listentry_t {
 	const char *name;
@@ -78,6 +79,7 @@ ehlc_listentry_t libclasses[] = {
 	LIBCLASSENTRY(Random, -1)
 	LIBCLASSENTRY(Map, -1)
 	LIBCLASSENTRY(Enum, -1)
+	LIBCLASSENTRY(VisibilityError, -1)
 	{NULL, NULL, 0}
 };
 
@@ -1215,8 +1217,7 @@ ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p val
 	} else if(result->attribute.isconst == const_e) {
 		throw_ConstError(object, name, this);
 	} else if(result->attribute.visibility == private_e && !obj->context_compare(context)) {
-		// pretend private members don't exist
-		throw_NameError(object, name, this);
+		throw_VisibilityError(object, name, this);
 	} else if(result->attribute.isstatic == static_e) {
 		result->value = value;
 		return result;
@@ -1249,7 +1250,7 @@ ehmember_p EHI::set_member(ehretval_p object, const char *name, ehmember_p membe
 		}
 		if(the_member->attribute.visibility == private_e && !obj->context_compare(context)) {
 			// pretend private members don't exist
-			throw_NameError(object, name, this);
+			throw_VisibilityError(object, name, this);
 		}
 	}
 	obj->insert(name, member);
@@ -1264,8 +1265,10 @@ ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t 
 	}
 	ehobj_t *obj = object->get_objectval();
 	ehmember_p member = obj->inherited_get(name);
-	if(member.null() || (member->attribute.visibility == private_e && !obj->context_compare(context))) {
+	if(member.null()) {
 		throw_NameError(base_var, name, this);
+	} else if (member->attribute.visibility == private_e && !obj->context_compare(context)) {
+		throw_VisibilityError(base_var, name, this);
 	}
 	ehretval_p out = member->value;
 	if(out->is_a(func_e)) {

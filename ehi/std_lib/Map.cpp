@@ -38,7 +38,7 @@ EH_METHOD(Map, operator_arrow_equals) {
 EH_METHOD(Map, size) {
 	ASSERT_NULL_AND_TYPE(resource_e, "Map.size");
 	const Map *m = static_cast<Map *>(obj->get_resourceval());
-	return ehretval_t::make_int(m->size());	
+	return ehretval_t::make_int(m->size());
 }
 
 EH_METHOD(Map, has) {
@@ -52,7 +52,7 @@ EH_METHOD(Map, getIterator) {
 	unsigned int map_type = obj->get_full_type();
 	ehretval_p map_class = ehi->get_parent()->repo.get_object(map_type);
 	ehretval_p class_member = ehi->get_property(map_class, "Iterator", obj);
-	return ehi->call_method(class_member, "new", obj, obj);	
+	return ehi->call_method(class_member, "new", obj, obj);
 }
 
 EH_INITIALIZER(Map_Iterator) {

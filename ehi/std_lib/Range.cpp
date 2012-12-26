@@ -33,7 +33,7 @@ EH_METHOD(Range, operator_arrow) {
 		return obj->get_rangeval()->max;
 	} else {
 		throw_ArgumentError_out_of_range("Range.operator->", args, ehi);
-		return NULL;		
+		return NULL;
 	}
 }
 EH_METHOD(Range, toString) {
@@ -74,10 +74,10 @@ EH_METHOD(Range, compare) {
 	}
 	/*
 	 * This method returns:
-	 * -1 if lhs.min < rhs.min and lhs.max < rhs.max or lhs is fully inside rhs 
+	 * -1 if lhs.min < rhs.min and lhs.max < rhs.max or lhs is fully inside rhs
 	 *    (lhs.min > rhs.min, lhs.max < rhs.max),
 	 * 0 if lhs.min == rhs.min and lhs.max == rhs.max,
-	 * 1 if lhs.max > rhs.max, lhs.min > rhs.min or lhs.min < rhs.min, 
+	 * 1 if lhs.max > rhs.max, lhs.min > rhs.min or lhs.min < rhs.min,
 	 *    lhs.max > rhs.max
 	 */
 	ehretval_p lhs_max = obj->get_rangeval()->max;

@@ -85,7 +85,7 @@ EH_METHOD(Object, compare) {
 		lhs = obj;
 	}
 	ehretval_p rhs = get_data(args);
-	return ehretval_t::make_int(lhs->naive_compare(rhs));	
+	return ehretval_t::make_int(lhs->naive_compare(rhs));
 }
 #define CALL_COMPARE() \
 	ehretval_p comparison_p = ehi->call_method(obj, "operator<=>", args, obj); \

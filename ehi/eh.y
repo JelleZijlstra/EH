@@ -30,7 +30,6 @@ EHI *yyget_extra(void *scanner);
 	char *sValue;
 	int iValue;
 	float fValue;
-	type_enum tValue;
 	attribute_enum vValue;
 	bool bValue;
 	opnode_t *ehNode;

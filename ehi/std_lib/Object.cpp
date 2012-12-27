@@ -31,9 +31,9 @@ EH_METHOD(Object, new) {
 	return ret;
 }
 EH_METHOD(Object, inherit) {
-  	ASSERT_TYPE(args, object_e, "Object.inherit");
-  	obj->get_objectval()->inherit(args);
-  	return ehi->get_parent()->make_super_class(new ehsuper_t(args));
+	ASSERT_TYPE(args, object_e, "Object.inherit");
+	obj->get_objectval()->inherit(args);
+	return ehi->get_parent()->make_super_class(new ehsuper_t(args));
 }
 EH_METHOD(Object, initialize) {
 	return NULL;
@@ -49,11 +49,11 @@ EH_METHOD(Object, finalize) {
 	return NULL;
 }
 EH_METHOD(Object, isA) {
-  int type = args->type();
-  if(type == object_e) {
-    type = args->get_objectval()->type_id;
-  }
-  return ehretval_t::make_bool(obj->inherited_is_a(type));
+	int type = args->type();
+	if(type == object_e) {
+		type = args->get_objectval()->type_id;
+	}
+	return ehretval_t::make_bool(obj->inherited_is_a(type));
 }
 
 static ehretval_p get_data(ehretval_p in) {

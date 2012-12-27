@@ -87,7 +87,7 @@ EHI *yyget_extra(void *scanner);
 %right ':'
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')' T_DOLLARPAREN
-%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_FUNC T_CLASS T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
+%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_SWITCH T_FUNC T_CLASS T_ENUM T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
 
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list
@@ -123,22 +123,25 @@ global_list:
 	;
 
 statement_list:
-	/* NULL */				{ $$ = ADD_NODE0(T_SEPARATOR); }
+	/* NULL */				{ $$ = NULL; }
 	| statement statement_list
-							{ $$ = ADD_NODE2(T_SEPARATOR, $1, $2); }
+							{
+								if($1 == NULL) {
+									$$ = $2;
+								} else if($2 == NULL) {
+									$$ = $1;
+								} else {
+									$$ = ADD_NODE2(T_SEPARATOR, $1, $2);
+								}
+							}
 	;
 
 statement:
-	T_SEPARATOR				{ $$ = ADD_NODE0(T_SEPARATOR); }
-	| expression T_SEPARATOR	{ $$ = $1; }
-	| '$' command T_SEPARATOR	{ $$ = $2; }
-		/* Using T_END */
-	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE2('=',
-								ADD_NODE1('$', $2),
-								ADD_NODE2(T_FUNC, $4, $6)); }
-	| T_ENUM T_VARIABLE T_SEPARATOR enum_list T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE3(T_ENUM, $2, $4, $6); }
+	T_SEPARATOR				{ $$ = NULL; }
+	| expression T_SEPARATOR
+							{ $$ = $1; }
+	| '$' command T_SEPARATOR
+							{ $$ = $2; }
 		/* Other statements */
 	| T_RET expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_RET, $2); }
@@ -271,16 +274,22 @@ expression:
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
+	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END
+							{ $$ = ADD_NODE2('=',
+								ADD_NODE1('$', $2),
+								ADD_NODE2(T_FUNC, $4, $6)); }
 	| T_CLASS T_VARIABLE T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_SWITCH expression T_SEPARATOR caselist T_END
-							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
-	| T_GIVEN expression T_SEPARATOR caselist T_END
-							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_MATCH expression T_SEPARATOR caselist T_END
-							{ $$ = ADD_NODE2(T_MATCH, $2, $4); }
+	| T_ENUM T_VARIABLE T_SEPARATOR separators enum_list T_SEPARATOR statement_list T_END
+							{ $$ = ADD_NODE3(T_ENUM, $2, $5, $7); }
+	| T_SWITCH expression T_SEPARATOR separators caselist T_END
+							{ $$ = ADD_NODE2(T_SWITCH, $2, $5); }
+	| T_GIVEN expression T_SEPARATOR separators caselist T_END
+							{ $$ = ADD_NODE2(T_GIVEN, $2, $5); }
+	| T_MATCH expression T_SEPARATOR separators caselist T_END
+							{ $$ = ADD_NODE2(T_MATCH, $2, $5); }
 	| '(' '$' command ')'
 							{ $$ = $3; }
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
@@ -361,10 +370,10 @@ para_expr:
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_GIVEN expression T_SEPARATOR caselist T_END
-							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
-	| T_MATCH expression T_SEPARATOR caselist T_END
-							{ $$ = ADD_NODE2(T_MATCH, $2, $4); }
+	| T_GIVEN expression T_SEPARATOR separators caselist T_END
+							{ $$ = ADD_NODE2(T_GIVEN, $2, $5); }
+	| T_MATCH expression T_SEPARATOR separators caselist T_END
+							{ $$ = ADD_NODE2(T_MATCH, $2, $5); }
 	| '(' '$' command ')'
 							{ $$ = $3; }
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
@@ -486,6 +495,10 @@ acase:
 	| T_DEFAULT T_SEPARATOR statement_list
 							{ $$ = ADD_NODE1(T_CASE, $3); }
 	;
+
+separators:
+	T_SEPARATOR separators	{ }
+	| /* NULL */			{ }
 
 /* Property declarations */
 attributelist:

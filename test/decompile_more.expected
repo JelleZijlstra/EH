@@ -64,7 +64,6 @@ func: list
 	if length % 2 == 0
 		mean (list.nth (half - 1), list.nth half)
 	else
-		
 		list.nth half
 	end
 end
@@ -81,7 +80,6 @@ func: ()
 end
 func: f
 	try
-		
 		f ()
 	catch
 		echo exception
@@ -89,14 +87,12 @@ func: f
 end
 func: ()
 	try
-		
 		echo 42
 	catch if "the world" == "coming to an end"
 		echo "Oh no!"
 	catch
 		echo "Need to put something here"
 	finally
-		
 		echo "Even this won't happen"
 	end
 end

@@ -113,8 +113,12 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 
 	if(node->type() == op_e) {
 		//printf("Opcode %d: %d\n", node->opval->op, node->get_opval()->nparas);
-		ehretval_p *paras = node->get_opval()->paras;
-		switch(node->get_opval()->op) {
+		opnode_t *op = node->get_opval();
+		if(op == NULL) {
+			return NULL;
+		}
+		ehretval_p *paras = op->paras;
+		switch(op->op) {
 			case T_LITERAL:
 				return paras[0];
 			case T_NULL:
@@ -138,11 +142,11 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 * Control flow
 		 */
 			case T_IF:
-				return eh_op_if(node->get_opval(), context);
+				return eh_op_if(op, context);
 			case T_WHILE:
 				return eh_op_while(paras, context);
 			case T_IN:
-				return eh_op_in(node->get_opval(), context);
+				return eh_op_in(op, context);
 			case T_SWITCH: // switch statements
 				ret = eh_op_switch(paras, context);
 				// incremented in the eh_op_switch function
@@ -156,31 +160,20 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 * Exceptions
 		 */
 			case T_TRY:
-				return eh_op_try(node->get_opval(), context);
+				return eh_op_try(op, context);
 		/*
 		 * Miscellaneous
 		 */
 			case T_SEPARATOR:
-				// if we're in an empty list
-				if(node->get_opval()->nparas == 0) {
-					return ret;
-				}
-				// else execute both commands
+				// execute both commands
 				ret = eh_execute(paras[0], context);
 				if(returning || breaking || continuing) {
 					return ret;
 				} else {
-					// check for empty statement; this means that the last
-					// actual statement in a function is returned
-					ehretval_p new_node = paras[1];
-					if(new_node->type() == op_e && new_node->get_opval()->op == T_SEPARATOR && new_node->get_opval()->nparas == 0) {
-						return ret;
-					} else {
-						return eh_execute(new_node, context);
-					}
+					return eh_execute(paras[1], context);
 				}
 			case T_RET: // return from a function or the program
-				if(node->get_opval()->nparas == 0) {
+				if(op->nparas == 0) {
 					ret = NULL;
 				} else {
 					ret = eh_execute(paras[0], context);
@@ -188,10 +181,10 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 				returning = true;
 				break;
 			case T_BREAK: // break out of a loop
-				eh_op_break(node->get_opval(), context);
+				eh_op_break(op, context);
 				break;
 			case T_CONTINUE: // continue in a loop
-				eh_op_continue(node->get_opval(), context);
+				eh_op_continue(op, context);
 				break;
 		/*
 		 * Object access
@@ -208,12 +201,12 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			case T_FUNC: // function definition
 				return eh_op_declareclosure(paras, context);
 			case T_CLASS: // class declaration
-				return eh_op_declareclass(node->get_opval(), context);
+				return eh_op_declareclass(op, context);
 			case T_CLASSMEMBER:
-				eh_op_classmember(node->get_opval(), context);
+				eh_op_classmember(op, context);
 				break;
 			case T_ENUM:
-				return eh_op_enum(node->get_opval(), context);
+				return eh_op_enum(op, context);
 			case '[': // array declaration
 				return eh_op_array(paras[0], context);
 			case '{': // hash
@@ -312,7 +305,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					context
 				);
 			default:
-				std::cerr << "Unexpected opcode " << node->get_opval()->op;
+				std::cerr << "Unexpected opcode " << op->op;
 				assert(false);
 		}
 	} else {

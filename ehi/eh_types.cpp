@@ -61,7 +61,6 @@ std::list<ehretval_p> ehretval_t::children() {
 			}
 			out.push_back(o->parent);
 			out.push_back(o->object_data);
-			out.push_back(o->real_parent);
 			for(std::list<ehretval_p>::iterator i = o->super.begin(), end = o->super.end(); i != end; i++) {
 				out.push_back(*i);
 			}
@@ -653,18 +652,10 @@ ehretval_t::~ehretval_t() {
 ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) {
 	if(this->has(name)) {
 		return this->members[name];
-	} else if(this->real_parent == NULL) {
-		if(this->parent != NULL) {
-			return this->get_parent()->get_recursive(name, context);
-		} else {
-			return NULL;
-		}
+	} else if(this->parent != NULL) {
+		return this->get_parent()->get_recursive(name, context);
 	} else {
-		if(this->parent != NULL && this->get_parent()->has(name)) {
-			return this->get_parent()->members[name];
-		} else {
-			return this->get_real_parent()->get_recursive(name, context);
-		}
+		return NULL;
 	}
 }
 bool ehobj_t::inherited_has(const std::string &key) const {

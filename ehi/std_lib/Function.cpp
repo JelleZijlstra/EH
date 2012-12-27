@@ -15,17 +15,14 @@ EH_METHOD(Function, operator_colon) {
 	ehretval_p base_object;
 	ehretval_p function_object;
 	ehretval_p parent;
-	ehretval_p real_parent;
 	if(obj->is_a(func_e)) {
 		function_object = obj;
 		parent = obj->get_objectval()->parent;
-		real_parent = obj->get_objectval()->real_parent;
 		base_object = ehi->global();
 	} else if(obj->type() == binding_e) {
 		ehbinding_t *binding = obj->get_bindingval();
 		function_object = binding->method;
 		parent = binding->method->get_objectval()->parent;
-		real_parent = binding->method->get_objectval()->real_parent;
 		base_object = binding->object_data;
 	} else {
 		throw_TypeError("Invalid base object for Function.operator()", obj->type(), ehi);

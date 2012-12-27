@@ -265,12 +265,11 @@ public:
 	unsigned int type_id;
 	// for scoping
 	ehretval_p parent;
-	ehretval_p real_parent;
 	// inheritance
 	std::list<ehretval_p> super;
 
 	// constructors
-	ehobj_t() : members(), object_data(), type_id(null_e), parent(), real_parent(), super() {}
+	ehobj_t() : members(), object_data(), type_id(null_e), parent(), super() {}
 
 	// method prototypes
 	ehmember_p get_recursive(const char *name, const ehcontext_t context);
@@ -311,14 +310,6 @@ public:
 			return NULL;
 		} else {
 			return this->parent->get_objectval();
-		}
-	}
-
-	struct ehobj_t *get_real_parent() const {
-		if(ehretval_p::null(this->real_parent)) {
-			return NULL;
-		} else {
-			return this->real_parent->get_objectval();
 		}
 	}
 

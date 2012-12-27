@@ -1200,7 +1200,6 @@ ehretval_p EHInterpreter::instantiate(ehretval_p obj) {
 	ehobj_t *old_obj = to_instantiate->get_objectval();
 	new_obj->type_id = old_obj->type_id;
 	new_obj->parent = old_obj->parent;
-	new_obj->real_parent = old_obj->real_parent;
 	new_obj->inherit(to_instantiate);
 	return ret;
 }

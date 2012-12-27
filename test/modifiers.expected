@@ -1,0 +1,7 @@
+%%stdout-regex%%
+Cannot access private member a in object of type A: 0x[a-f0-9]+
+5
+Cannot set constant member c in object of type A: 0x[a-f0-9]+
+4
+Unknown member e in object of type A: 0x[a-f0-9]+
+%%stderr%%

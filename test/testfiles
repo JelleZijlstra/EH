@@ -265,3 +265,4 @@ try_catch.eh
 this_scope.eh
 switch_given.eh
 class_example.eh
+benchmark.eh

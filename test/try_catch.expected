@@ -1,0 +1,8 @@
+%%stdout%%
+NameError
+Finally!
+TypeError
+Finally!
+Some other kind of error
+Finally!
+%%stderr%%

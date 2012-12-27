@@ -261,3 +261,4 @@ if.eh
 while_example.eh
 for_in_example.eh
 break_continue.eh
+try_catch.eh

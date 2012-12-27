@@ -268,3 +268,4 @@ class_example.eh
 benchmark.eh
 scopeset.eh
 modifiers.eh
+privatelexical.eh

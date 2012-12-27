@@ -126,6 +126,7 @@ statement_list:
 	/* NULL */				{ $$ = NULL; }
 	| statement statement_list
 							{
+								// get rid of empty statements
 								if($1 == NULL) {
 									$$ = $2;
 								} else if($2 == NULL) {
@@ -271,13 +272,18 @@ expression:
 							{ $$ = ADD_NODE2(T_RIGHTSHIFT, $1, $3); }
 	| expression %prec ':' expression
 							{ $$ = ADD_NODE2(':', $1, $2); }
+	| '(' '$' command ')'	{ $$ = $3; }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
+	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE2('=',
-								ADD_NODE1('$', $2),
-								ADD_NODE2(T_FUNC, $4, $6)); }
+							{
+								$$ = ADD_NODE2('=',
+									ADD_NODE1('$', $2),
+									ADD_NODE2(T_FUNC, $4, $6)
+								);
+							}
 	| T_CLASS T_VARIABLE T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 	| T_CLASS T_SEPARATOR statement_list T_END
@@ -290,18 +296,14 @@ expression:
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $5); }
 	| T_MATCH expression T_SEPARATOR separators caselist T_END
 							{ $$ = ADD_NODE2(T_MATCH, $2, $5); }
-	| '(' '$' command ')'
-							{ $$ = $3; }
-	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
-
 	| T_IF expression T_SEPARATOR statement_list elseif_clauses T_END
 							{ $$ = ADD_NODE3(T_IF, $2, $4, $5); }
 	| T_IF expression T_SEPARATOR statement_list elseif_clauses T_ELSE statement_list T_END
 							{ $$ = ADD_NODE4(T_IF, $2, $4, $5, $7); }
 	| T_TRY statement_list catch_clauses T_END
-				{ $$ = ADD_NODE2(T_TRY, $2, $3); }
+							{ $$ = ADD_NODE2(T_TRY, $2, $3); }
 	| T_TRY statement_list catch_clauses T_FINALLY statement_list T_END
-				{ $$ = ADD_NODE3(T_TRY, $2, $3, $5); }
+							{ $$ = ADD_NODE3(T_TRY, $2, $3, $5); }
 	| T_WHILE expression T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR expression T_SEPARATOR statement_list T_END
@@ -374,8 +376,7 @@ para_expr:
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $5); }
 	| T_MATCH expression T_SEPARATOR separators caselist T_END
 							{ $$ = ADD_NODE2(T_MATCH, $2, $5); }
-	| '(' '$' command ')'
-							{ $$ = $3; }
+	| '(' '$' command ')'	{ $$ = $3; }
 	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
 	;
 
@@ -390,7 +391,7 @@ paralist:
 	;
 
 para:
-	para_expr					{ $$ = $1; }
+	para_expr				{ $$ = $1; }
 	| T_MINMIN bareword_or_string '=' para_expr
 							{ $$ = ADD_NODE2(T_LONGPARA, $2, $4); }
 	| T_MINMIN bareword_or_string
@@ -479,7 +480,7 @@ anonclassmember:
 	;
 
 parglist:
-	expression		{ $$ = $1; }
+	expression				{ $$ = $1; }
 	| /* NULL */			{ $$ = ADD_NODE0(T_NULL); }
 	;
 

@@ -1,0 +1,6 @@
+%%stdout%%
+Initializing B
+Method from B
+3
+Method from A
+%%stderr%%

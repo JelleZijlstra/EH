@@ -923,23 +923,23 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 		case '$': {
 			ehretval_p base_var = eh_execute(internal_paras[0], context);
 			const char *name = base_var->get_stringval();
+			attributes_t attributes_container = attributes_t::make();
 			if(attributes == NULL) {
 				ehmember_p member = context.scope->get_objectval()->get_recursive(name, context);
-				if(member != NULL && member->isconst()) {
-					// bug: if the const member is actually in a higher scope, this error message will be wrong
-					throw_ConstError(context.scope, name, this);
-				}
-				if(member == NULL) {
-					this->set_property(context.scope, name, rvalue, context);
-				} else {
+				if(member != NULL) {
+					if(member->isconst()) {
+						// bug: if the const member is actually in a higher scope, this error message will be wrong
+						throw_ConstError(context.scope, name, this);
+					}
 					member->value = rvalue;
+					return rvalue;
 				}
-			} else {
-				ehmember_p new_member;
-				new_member->value = rvalue;
-				new_member->attribute = *attributes;
-				this->set_member(context.scope, name, new_member, context);
+				attributes = &attributes_container;
 			}
+			ehmember_p new_member;
+			new_member->value = rvalue;
+			new_member->attribute = *attributes;
+			this->set_member(context.scope, name, new_member, context);
 			return rvalue;
 		}
 		case ',': {
@@ -1031,18 +1031,18 @@ ehretval_p EHI::eh_try_catch(ehretval_p try_block, ehretval_p catch_blocks, ehco
 	}
 }
 ehretval_p EHI::eh_always_execute(ehretval_p code, ehcontext_t context) {
-  // Execute even if we're breaking or continuing or whatever
-  bool old_returning = returning;
-  returning = false;
-  int old_breaking = breaking;
-  breaking = 0;
-  int old_continuing = continuing;
-  continuing = 0;
-  ehretval_p ret = eh_execute(code, context);
-  continuing = old_continuing;
-  breaking = old_breaking;
-  returning = old_returning;
-  return ret;
+	// Execute even if we're breaking or continuing or whatever
+	bool old_returning = returning;
+	returning = false;
+	int old_breaking = breaking;
+	breaking = 0;
+	int old_continuing = continuing;
+	continuing = 0;
+	ehretval_p ret = eh_execute(code, context);
+	continuing = old_continuing;
+	breaking = old_breaking;
+	returning = old_returning;
+	return ret;
 }
 // Perform an arbitrary operation defined as a method taking a single argument
 ehretval_p EHI::perform_op(const char *name, int nargs, ehretval_p *paras, ehcontext_t context) {

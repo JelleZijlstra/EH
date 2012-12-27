@@ -12,7 +12,7 @@
 		// Functions that have a special meaning for the interpreter, not just ones that do something special
 		var funcs = 'toString toFloat toInt toBool toRange toArray initialize finalize operator_plus operator_minus operator_times operator_divide operator_modulo operator_and operator_or operator_xor operator_tilde operator_uminus operator_colon operator_arrow operator_arrow_equals';
 
-		var keywords = 'if else set endif for endfor as count while endwhile break continue func endfunc ret class endclass inherit switch endswitch given end case default and or xor try catch finally public private static const';
+		var keywords = 'if else set endif for in endfor as count while endwhile break continue func endfunc ret class endclass inherit switch endswitch given end case default and or xor try catch finally public private static const';
 
 		var constants = 'true false null';
 

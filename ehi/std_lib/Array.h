@@ -20,15 +20,15 @@ public:
 	// properties
 	int_map int_indices;
 	string_map string_indices;
-	
+
 	// constructor
 	eharray_t() : int_indices(), string_indices() {}
-	
+
 	// inline methods
 	size_t size() const {
 		return this->int_indices.size() + this->string_indices.size();
 	}
-	
+
 	bool has(ehretval_p index) const {
 		switch(index->type()) {
 			case int_e:
@@ -39,7 +39,7 @@ public:
 				return false;
 		}
 	}
-	
+
 	// methods
 	ehretval_p &operator[](ehretval_p index);
 	void insert_retval(ehretval_p index, ehretval_p value);

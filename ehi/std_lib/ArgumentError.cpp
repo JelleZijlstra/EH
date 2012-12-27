@@ -1,3 +1,8 @@
+/*
+ * ArgumentError
+ * Thrown when a function gets an invalid argument. Used by many library
+ * methods; may also be used by user code.
+ */
 #include <sstream>
 
 #include "ArgumentError.h"
@@ -16,6 +21,13 @@ EH_INITIALIZER(ArgumentError) {
 	INHERIT_LIBRARY(Exception);
 }
 
+/*
+ * @description Initializer. Puts its arguments in the object properties
+ * <tt>message</tt>, <tt>method</tt>, and <tt>value</tt>.
+ * @argument Tuple of 3: message, method throwing the exception, and value
+ * that triggered the exception.
+ * @returns N/A
+ */
 EH_METHOD(ArgumentError, initialize) {
 	ASSERT_NARGS(3, "ArgumentError.initialize");
 	ehretval_p message = args->get_tupleval()->get(0);

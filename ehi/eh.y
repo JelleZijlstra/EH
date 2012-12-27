@@ -137,8 +137,6 @@ statement:
 							{ $$ = ADD_NODE2('=',
 								ADD_NODE1('$', $2),
 								ADD_NODE2(T_FUNC, $4, $6)); }
-	| T_SWITCH expression T_SEPARATOR caselist T_END T_SEPARATOR
-							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
 	| T_ENUM T_VARIABLE T_SEPARATOR enum_list T_SEPARATOR statement_list T_END T_SEPARATOR
 							{ $$ = ADD_NODE3(T_ENUM, $2, $4, $6); }
 		/* Other statements */
@@ -277,6 +275,8 @@ expression:
 							{ $$ = ADD_NODE2(T_CLASS, $2, $4); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
+	| T_SWITCH expression T_SEPARATOR caselist T_END
+							{ $$ = ADD_NODE2(T_SWITCH, $2, $4); }
 	| T_GIVEN expression T_SEPARATOR caselist T_END
 							{ $$ = ADD_NODE2(T_GIVEN, $2, $4); }
 	| T_MATCH expression T_SEPARATOR caselist T_END

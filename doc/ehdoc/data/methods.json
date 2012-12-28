@@ -21,7 +21,7 @@
 		"engine_use": "Called by the <tt>for-in</tt> loop",
 		"implementation": "Implemented by all Iterator classes",
 		"invariants": "Must return a Bool, and must return true as long as <tt>next</tt> return a value, and false when <tt>next</tt> would throw EmptyIterator.",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "next",
@@ -29,7 +29,7 @@
 		"engine_use": "Called by the <tt>for-in</tt> loop",
 		"implementation": "Implemented by all Iterator classes",
 		"invariants": "Must return all elements in the object on consecutive calls. See also hasNext. Throws an EmptyIterator exception when there are no elements left to iterate over.",
-		"side_effects": "Advances the iterator",
+		"side_effects": "Advances the iterator"
 	},
 	{
 		"name": "operator()",
@@ -37,7 +37,7 @@
 		"engine_use": "Called to implement function calls (<tt>a b</tt> or <tt>a(b)</tt> is equivalent to <tt>a.operator()(b)</tt>",
 		"implementation": "Performs a function call for Function objects. The engine does not actually call <tt>Function.operator()</tt> on a function call, but instead calls the underlying C++ function directly.",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator+",
@@ -45,7 +45,7 @@
 		"engine_use": "Called whenever the <tt>+</tt> operator is used",
 		"implementation": "Simple addition",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator-",
@@ -53,7 +53,7 @@
 		"engine_use": "Called whenever the <tt>-</tt> operator is used",
 		"implementation": "Simple subtraction",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator%",
@@ -61,7 +61,7 @@
 		"engine_use": "Called whenever the <tt>%</tt> operator is used",
 		"implementation": "Simple modulo",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator/",
@@ -69,7 +69,7 @@
 		"engine_use": "Called whenever the <tt>/</tt> operator is used",
 		"implementation": "Simple division",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator*",
@@ -77,7 +77,7 @@
 		"engine_use": "Called whenever the <tt>*</tt> operator is used",
 		"implementation": "Simple multiplication",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator&lt;&lt;",
@@ -85,7 +85,7 @@
 		"engine_use": "Called whenever the <tt>&lt;&lt;</tt> operator is used",
 		"implementation": "Simple left-shift",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator&gt;&gt;",
@@ -93,7 +93,7 @@
 		"engine_use": "Called whenever the <tt>&gt;&gt;</tt> operator is used",
 		"implementation": "Simple right-shift",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator&",
@@ -101,7 +101,7 @@
 		"engine_use": "Called whenever the <tt>&</tt> operator is used",
 		"implementation": "Simple binary AND",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator|",
@@ -109,7 +109,7 @@
 		"engine_use": "Called whenever the <tt>|</tt> operator is used",
 		"implementation": "Simple binary OR",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator^",
@@ -117,7 +117,7 @@
 		"engine_use": "Called whenever the <tt>^</tt> operator is used",
 		"implementation": "Simple binary XOR",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator~",
@@ -125,7 +125,7 @@
 		"engine_use": "Called whenever the <tt>~</tt> operator is used",
 		"implementation": "Simple bitwise complement",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator!",
@@ -133,7 +133,7 @@
 		"engine_use": "Called whenever the <tt>!</tt> operator is used",
 		"implementation": "Simple logical negation",
 		"invariants": "&mdash;",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator<, operator<=, operator==, operator!=, operator>, operator>=",
@@ -141,7 +141,7 @@
 		"engine_use": "Called whenever the equivalent operators are used.",
 		"implementation": "By default, these methods all call <tt>operator&lt;=&gt;</tt>.",
 		"invariants": "Must return a Bool and present a consistent, transitive ordering",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator<=>",
@@ -149,7 +149,7 @@
 		"engine_use": "Called whenever the <tt>&lt;=&gt;</tt> operator is used, and by default by several other operators",
 		"implementation": "If the types of the two objects are equal, calls the <tt>compare</tt> method to compare them, otherwise compares the types.",
 		"invariants": "As under <tt>compare</tt>",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "operator->",
@@ -165,7 +165,7 @@
 		"engine_use": "Called for assignment with <tt>-&gt;</tt> (<tt>a->b = c</tt> is equivalent to <tt>a.operator-&gt;=(b, c)</tt>",
 		"implementation": "Implemented in those container classes that allow member assignment (e.g., <tt>Hash</tt> and <tt>Array</tt>)",
 		"invariants": "After a call to this method, a subsequent call to <tt>operator-&gt;</tt> with the same argument must return the value set until another method is called on the object",
-		"side_effects": false,
+		"side_effects": false
 	},
 	{
 		"name": "toBool",
@@ -186,7 +186,7 @@
 	{
 		"name": "toArray, toFloat, toRange, toTuple",
 		"purpose": "Convert a value to the specified type",
-		"engine_use": "Used only peripherally by the engine (e.g., the Tuple constructor calls toTuple on its argument",
+		"engine_use": "Used only peripherally by the engine (e.g., the Tuple constructor calls toTuple on its argument)",
 		"implementation": "Implemented by several core classes",
 		"invariants": "Must return an object of the specified type",
 		"side_effects": false

@@ -22,7 +22,7 @@ badrange.eh
 bareword.eh
 binary_operators.eh
 bitwise.eh
-bool.eh
+bool_test.eh
 braces.eh
 break.eh
 breaking_things.eh

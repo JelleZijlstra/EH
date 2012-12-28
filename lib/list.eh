@@ -122,12 +122,3 @@ Object.operator:: = rhs => Cons(this, rhs)
 
 # Conversion methods
 Iterable.toList = () => this.reduce(Nil, Cons)
-
-Tuple.toList = func:
-	out = Nil
-	this.each (func: val
-		out = val::out
-	end)
-	# It gets returned in reversed order...
-	out
-end

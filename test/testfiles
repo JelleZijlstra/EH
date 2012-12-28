@@ -276,3 +276,4 @@ Bool.eh
 ConstError.eh
 EmptyIterator.eh
 cmdtable.eh
+bad_catch.eh

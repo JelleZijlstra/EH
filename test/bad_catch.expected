@@ -1,0 +1,4 @@
+%%stdout%%
+no
+%%stderr%%
+Uncaught exception of type NameError: Unknown member toBool in object of type Hash: 0x7fc72b004e9c

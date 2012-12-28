@@ -1006,7 +1006,7 @@ ehretval_p EHI::eh_try_catch(ehretval_p try_block, ehretval_p catch_blocks, ehco
 				return eh_execute(catch_block->paras[0], context);
 			} else {
 				// conditional catch
-				ehretval_p decider = eh_execute(catch_block->paras[0], context);
+				ehretval_p decider = to_bool(eh_execute(catch_block->paras[0], context), context);
 				if(decider->get_boolval()) {
 					return eh_execute(catch_block->paras[1], context);
 				}

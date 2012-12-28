@@ -82,6 +82,9 @@ typedef struct attributes_t {
 	static attributes_t make_static() {
 		return make(public_e, static_e, nonconst_e);
 	}
+	static attributes_t make_private() {
+		return make(private_e, nonstatic_e, nonconst_e);
+	}
 } attributes_t;
 
 // and accompanying enum used by the parser

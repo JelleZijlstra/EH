@@ -77,10 +77,9 @@ void EHInterpreter::eh_init(void) {
 	global_ehobj->register_member_class("GlobalObject", -1, ehinit_GlobalObject, attributes_t::make_const(), this, global_object);
 
 	// insert global command table
-	ehmember_p command_table;
-	command_table->attribute = attributes_t::make_const();
 	this->cmdtable = new ehhash_t();
-	command_table->value = this->make_hash(this->cmdtable);
+	ehretval_p ret = this->make_hash(this->cmdtable);
+	ehmember_p command_table = ehmember_t::make(attributes_t::make_const(), ret);
 	// insert command table into global objects
 	global_object->get_objectval()->insert("commands", command_table);
 
@@ -742,10 +741,7 @@ bool EHI::match(ehretval_p node, ehretval_p var, ehcontext_t context) {
 			return true;
 		case '@': {
 			const char *name = op->paras[0]->get_stringval();
-			attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
-			ehmember_p member;
-			member->attribute = attributes;
-			member->value = var;
+			ehmember_p member = ehmember_t::make(attributes_t::make_private(), var);
 			this->set_member(context.scope, name, member, context);
 			return true;
 		}
@@ -896,9 +892,7 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 			if(attributes == NULL) {
 				this->set_property(base_var, accessor, rvalue, context);
 			} else {
-				ehmember_p new_member;
-				new_member->value = rvalue;
-				new_member->attribute = *attributes;
+				ehmember_p new_member = ehmember_t::make(*attributes, rvalue);
 				this->set_member(base_var, accessor, new_member, context);
 			}
 			return rvalue;
@@ -918,9 +912,7 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 				}
 				attributes = &attributes_container;
 			}
-			ehmember_p new_member;
-			new_member->value = rvalue;
-			new_member->attribute = *attributes;
+			ehmember_p new_member = ehmember_t::make(*attributes, rvalue);
 			this->set_member(context.scope, name, new_member, context);
 			return rvalue;
 		}
@@ -947,7 +939,13 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 		case '(':
 			return set(internal_paras[0], rvalue, attributes, context);
 		case '_':
-		case T_NULL: // allow NULL to enable ignoring values
+			// ignore rvalue
+			return rvalue;
+		case T_NULL:
+			// assert rvalue is null, and ignore it
+			if(rvalue->type() != null_e) {
+				throw_MiscellaneousError("Non-null value assigned to null", this);
+			}
 			return rvalue;
 		case T_CLASSMEMBER: {
 			attributes_t new_attributes = parse_attributes(internal_paras[0]);
@@ -1116,9 +1114,7 @@ ehmember_p EHI::set_property(ehretval_p object, const char *name, ehretval_p val
 		return result;
 	} else {
 		// set in this object
-		ehmember_p new_member;
-		new_member->attribute = result->attribute;
-		new_member->value = value;
+		ehmember_p new_member = ehmember_t::make(result->attribute, value);
 		obj->insert(name, new_member);
 		return new_member;
 	}

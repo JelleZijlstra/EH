@@ -5,13 +5,13 @@ include '../lib/array.eh'
 
 class WordCounter
 	this.inherit MapReduceJob
-	
+
 	mapper = func: key, value
-		for ((), word) in value
+		for _, word in value
 			this.emit(word, 1)
 		end
 	end
-	
+
 	reducer = func: key, values
 		this.output(key, values.length())
 	end

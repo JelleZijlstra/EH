@@ -4,7 +4,7 @@ include '../lib/fixed_array_sort.eh'
 
 assert(argc == 4, "Usage: " + argv->0 + " min max step")
 
-const (), min, max, step = argv.map func: input
+const _, min, max, step = argv.map func: input
 	try
 		input.toInt()
 	catch

@@ -15,7 +15,7 @@ printvar (arr.map f)
 echo "Reduce"
 Array.reduce = func: f, base
 	out = base
-	for (), value in this
+	for _, value in this
 		out = f(out, value)
 	end
 	out

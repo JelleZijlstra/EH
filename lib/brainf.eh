@@ -16,7 +16,7 @@ class BrainInterpreter
 	private input = File.new "/dev/stdin"
 
 	public initialize = func: program
-		this.data = FixedArray.fill(30000, (() => 0))
+		this.data = FixedArray.fill(30000, (_ => 0))
 		this.dataptr = 0
 		this.program = program
 		this.programLength = program.length()

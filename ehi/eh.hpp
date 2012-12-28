@@ -114,6 +114,16 @@ typedef struct opnode_t {
 			delete[] paras;
 		}
 	}
+
+	static opnode_t *make(int op, int nparas) {
+		opnode_t *out = new opnode_t;
+		out->op = op;
+		out->nparas = nparas;
+		if(nparas > 0) {
+			out->paras = new ehretval_p[nparas];
+		}
+		return out;
+	}
 } opnode_t;
 
 /*

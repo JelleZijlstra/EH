@@ -29,11 +29,6 @@ toString <public,non-static,non-constant>: @function <library>:
 ConstError <public,non-static,constant>: @object <ConstError> [
 initialize <public,non-static,non-constant>: @function <library>: 
 ]
-CountClass <public,non-static,constant>: @object <CountClass> [
-docount <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-setcount <public,non-static,non-constant>: @function <library>: 
-]
 EmptyIterator <public,non-static,constant>: @object <EmptyIterator> [
 initialize <public,non-static,non-constant>: @function <library>: 
 ]

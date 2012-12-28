@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # Try to break library classes; this previously segfaulted.
-var = CountClass.new ()
-funcv = var.docount
+var = Map.new ()
+funcv = var.has
 printvar funcv ()
 class Foo
 	public bar
@@ -11,4 +11,4 @@ echo(f.bar)
 
 printvar funcv
 printvar(funcv ())
-printvar(var.docount())
+printvar(var.has())

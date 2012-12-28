@@ -1,5 +1,13 @@
 #!/usr/bin/ehi
 # I thought this might fail, but it seems to work.
+class CountClass
+	private count = 0
+
+	public docount = () => (this.count += 1)
+
+	public setcount = i => (this.count = i)
+end
+
 c1 = CountClass.new ()
 c2 = CountClass.new ()
 f = File.new ()

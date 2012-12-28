@@ -7,8 +7,8 @@ Number of pools: \d+
 Allocated blocks: \d+
 Number of pools: \d+
 Allocated blocks: \d+
-@object <CountClass> \[
+@object <Map> \[
 \]
-@int 1
+@bool false
 %%stderr%%
 Uncaught exception of type NameError: Unknown member operator-> in object of type GlobalObject: (global execution context)

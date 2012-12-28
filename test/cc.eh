@@ -3,10 +3,10 @@
 
 echo (GC = GarbageCollector)
 echo(GC.run())
-echo(CountClass.new())
+echo(Map.new())
 echo(GC.run())
 #echo GC.run()
 #echo GC.run()
-CountClass.new()
+Map.new()
 GC.run()
 String.length()

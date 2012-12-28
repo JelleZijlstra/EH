@@ -20,6 +20,6 @@ echo 3
 echo 3
 GC.stats()
 GC.stats()
-printvar (c = CountClass.new())
-printvar(c.docount())
+printvar (c = Map.new())
+printvar(c.has())
 operator-> 0

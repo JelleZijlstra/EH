@@ -1,7 +1,7 @@
 %%stdout%%
-@int 1
+@bool false
 
 @function <library>: 
-@int 2
-@int 3
+@bool false
+@bool false
 %%stderr%%

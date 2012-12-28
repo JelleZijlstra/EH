@@ -61,7 +61,7 @@ EH_METHOD(File, open) {
 /*
  * @description Read a character from a file. Returns null on failure or EOF.
  * @argument None
- * @return Character read or null
+ * @returns Character read or null
  */
 EH_METHOD(File, getc) {
 	ASSERT_TYPE(args, null_e, "File.getc");
@@ -83,7 +83,7 @@ EH_METHOD(File, getc) {
 /*
  * @description Read a line from the input file.
  * @argument None
- * @return The line read.
+ * @returns The line read
  */
 EH_METHOD(File, gets) {
 	ASSERT_TYPE(args, null_e, "File.gets");
@@ -140,7 +140,7 @@ EH_METHOD(File, readFile) {
 /*
  * @description Close the file
  * @argument None
- * @return null
+ * @returns null
  */
 EH_METHOD(File, close) {
 	ASSERT_TYPE(args, null_e, "File.close");
@@ -156,7 +156,7 @@ EH_METHOD(File, close) {
 /*
  * @description Destructor (currently not actually supported)
  * @argument None
- * @return N/A
+ * @returns N/A
  */
 EH_METHOD(File, finalize) {
 	ehi->call_method(obj, "close", NULL, obj);
@@ -166,7 +166,7 @@ EH_METHOD(File, finalize) {
 /*
  * @description Check whether this File object is associated with an open file.
  * @argument None
- * @return Bool
+ * @returns Bool
  */
 EH_METHOD(File, isOpen) {
 	ASSERT_TYPE(args, null_e, "File.isOpen");

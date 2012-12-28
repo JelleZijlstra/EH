@@ -101,8 +101,15 @@ program:
 	global_list				{
 								EHI *ehi = yyget_extra(scanner);
 								if(ehi->get_interactivity() == end_is_end_e) {
-									ehretval_p ret = ehi->eh_execute(ehretval_t::make($1), ehi->get_context());
-									return (ret->type() == int_e) ? ret->get_intval() : 0;
+									ehretval_p code = ehretval_t::make($1);
+									const ehcontext_t context = ehi->get_context();
+									if(ehi->get_parent()->optimize) {
+										code = ehi->optimize(code, context);
+									}
+									ehretval_p ret = ehi->eh_execute(code, context);
+									if(ehi->get_returning()) {
+										return (ret->type() == int_e) ? ret->get_intval() : 0;
+									}
 								}
 							}
 

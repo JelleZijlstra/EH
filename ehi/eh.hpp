@@ -110,7 +110,7 @@ typedef struct opnode_t {
 	ehretval_p *paras; // Parameters
 
 	~opnode_t() {
-		if(paras != NULL) {
+		if(nparas > 0) {
 			delete[] paras;
 		}
 	}

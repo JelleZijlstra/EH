@@ -39,6 +39,11 @@ int main(int argc, char **argv) {
 				ehi.handle_uncaught(e);
 				return -1;
 			}
+		} else if(!strcmp(argv[1], "-O")) {
+			interpreter.optimize = true;
+			interpreter.eh_setarg(argc - 1, argv + 1);
+			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object, eh_full_path(argv[1]), argv[1]);
+			ret = ehi.parse_file(argv[2], interpreter.global_object);
 		} else {
 			interpreter.eh_setarg(argc, argv);
 			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object, eh_full_path(argv[1]), argv[1]);

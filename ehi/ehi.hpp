@@ -46,6 +46,8 @@ public:
 	int enum_member_id;
 	int enum_instance_id;
 
+	bool optimize;
+
 	// for some reason I haven't been able to figure out, I get a compiler error
 	// inside glibc when I declare this as std::set<const std::string>.
 	std::set<std::string> included_files;
@@ -120,6 +122,8 @@ class EHI {
 public:
 
 	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
+
+	ehretval_p optimize(ehretval_p node, const ehcontext_t context);
 
 	virtual char *eh_getline();
 	virtual ehretval_p execute_cmd(const char *rawcmd, eharray_t *paras);

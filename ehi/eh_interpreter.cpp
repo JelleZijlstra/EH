@@ -66,7 +66,7 @@ static attributes_t parse_attributes(ehretval_p node);
 /*
  * Functions executed before and after the program itself is executed.
  */
-EHInterpreter::EHInterpreter() : gc(), repo(), global_object(), function_object(), base_object(), included_files() {
+EHInterpreter::EHInterpreter() : gc(), repo(), global_object(), function_object(), base_object(), optimize(false), included_files() {
 	eh_init();
 }
 void EHInterpreter::eh_init(void) {
@@ -559,9 +559,9 @@ ehretval_p EHI::eh_op_enum(opnode_t *op, ehcontext_t context) {
 		} else {
 			std::vector<std::string> params(0);
 			for(ehretval_p argument = current_member->get_opval()->paras[1]; ; argument = argument->get_opval()->paras[1]) {
-				const char *name = argument->get_opval()->paras[0]->get_stringval();
+				const char *name = argument->type() == op_e ? argument->get_opval()->paras[0]->get_stringval() : argument->get_stringval();
 				params.push_back(name);
-				if(argument->get_opval()->op != ',') {
+				if(argument->type() != op_e || argument->get_opval()->op != ',') {
 					break;
 				}
 			}

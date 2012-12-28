@@ -84,8 +84,9 @@ enum List
 
 	const append = rhs => this.reverse().rev_append rhs
 
-	const countPredicate = f => this.reduce(Nil, (base, val => given (f val)
-		case true; Cons(val, base)
+	# Count list members for which f elt returns true
+	const count = f => this.reduce(Nil, (base, val => given (f val)
+		case true; base + 1
 		case false; base
 	end))
 

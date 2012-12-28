@@ -76,7 +76,7 @@ error.eh
 error2.eh
 escapenewline.eh
 everythingaclass.eh
-exception.eh
+exception_test.eh
 extendbase.eh
 failedinclude.eh
 fibonacci.eh
@@ -278,3 +278,4 @@ EmptyIterator.eh
 cmdtable.eh
 bad_catch.eh
 Enum.eh
+Exception.eh

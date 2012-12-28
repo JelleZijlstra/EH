@@ -1,0 +1,18 @@
+%%stdout%%
+(foo, {})::(3, 4)::[]
+@object <Instance> [
+head <public,non-static,constant>: @tuple <2> [
+@string 'foo'
+@hash [
+]
+]
+tail <public,non-static,constant>: @object <Instance> [
+head <public,non-static,constant>: @tuple <2> [
+@int 3
+@int 4
+]
+tail <public,non-static,constant>: @object <Member> [
+]
+]
+]
+%%stderr%%

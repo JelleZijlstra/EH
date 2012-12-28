@@ -270,3 +270,5 @@ scopeset.eh
 modifiers.eh
 privatelexical.eh
 ArgumentError.eh
+array_to_list.eh
+Array.eh

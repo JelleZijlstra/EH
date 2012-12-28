@@ -12,17 +12,17 @@ private:
 	hash members;
 public:
 	typedef hash::const_iterator iterator;
-	
+
 	ehhash_t() : members() {}
-	
+
 	bool has(const char *key) const {
 		return members.count(key);
 	}
 	void set(const char *key, ehretval_p value) {
 		members[key] = value;
 	}
-	ehretval_p get(const char *key) {
-		return members[key];
+	ehretval_p get(const char *key) const {
+		return members.at(key);
 	}
 	void erase(const std::string &key) {
 		members.erase(key);
@@ -30,7 +30,7 @@ public:
 	size_t size() const {
 		return members.size();
 	}
-	
+
 	iterator begin_iterator() const {
 		return members.begin();
 	}
@@ -45,6 +45,7 @@ EH_METHOD(Hash, operator_arrow);
 EH_METHOD(Hash, operator_arrow_equals);
 EH_METHOD(Hash, has);
 EH_METHOD(Hash, delete);
+EH_METHOD(Hash, compare);
 EH_METHOD(Hash, keys);
 EH_METHOD(Hash, length);
 EH_METHOD(Hash, getIterator);

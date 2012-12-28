@@ -9,8 +9,8 @@ end
 
 Array.reduce = func: base, f
 	out = base
-	for ((), value) in this
-		out = f(out, value)
+	for value in this
+		out = f(value, out)
 	end
 	out
 end

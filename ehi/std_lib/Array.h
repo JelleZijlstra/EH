@@ -43,6 +43,7 @@ public:
 	// methods
 	ehretval_p &operator[](ehretval_p index);
 	void insert_retval(ehretval_p index, ehretval_p value);
+	int compare(eharray_t *rhs, ehcontext_t context, EHI *ehi);
 };
 #define ARRAY_FOR_EACH_STRING(array, varname) for(eharray_t::string_iterator varname = (array)->string_indices.begin(), end = (array)->string_indices.end(); varname != end; varname++)
 #define ARRAY_FOR_EACH_INT(array, varname) for(eharray_t::int_iterator varname = (array)->int_indices.begin(), end = (array)->int_indices.end(); varname != end; varname++)
@@ -54,6 +55,7 @@ EH_METHOD(Array, operator_arrow);
 EH_METHOD(Array, operator_arrow_equals);
 EH_METHOD(Array, toArray);
 EH_METHOD(Array, toTuple);
+EH_METHOD(Array, compare);
 EH_METHOD(Array, getIterator);
 
 EH_INITIALIZER(Array);

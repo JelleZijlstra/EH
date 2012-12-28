@@ -10,7 +10,7 @@ assertThrows(thrower, ArgumentError, "String.operator-> should throw an Argument
 try
 	thrower()
 catch if exception.isA ArgumentError
-	assert(exception.message.isA String)
-	assert(exception.method == 'String.operator->')
-	assert(exception.value == 4)
+	assert(exception.message.isA String, "Message must be a string")
+	assert(exception.method == 'String.operator->', "Exception was thrown by String.operator->")
+	assert(exception.value == 4, "Argument was 4")
 end

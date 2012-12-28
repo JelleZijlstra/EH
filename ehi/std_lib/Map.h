@@ -24,7 +24,7 @@ public:
 		return map.at(index);
 	}
 	void set(ehretval_p index, ehretval_p value) {
-		map[index] = value;		
+		map[index] = value;
 	}
 	bool has(ehretval_p index) const {
 		return map.count(index);
@@ -37,7 +37,10 @@ private:
 	Map operator=(const Map&);
 
 	friend class Map_Iterator;
+
+	friend EH_METHOD(Map, compare);
 };
+EH_METHOD(Map, compare);
 EH_METHOD(Map, initialize);
 EH_METHOD(Map, operator_arrow);
 EH_METHOD(Map, operator_arrow_equals);

@@ -121,7 +121,7 @@ const Cons = List.Cons
 Object.operator:: = rhs => Cons(this, rhs)
 
 # Conversion methods
-Iterable.toList = () => this.reduce(Nil, (val, out => val::out))
+Iterable.toList = () => this.reduce(Nil, Cons)
 
 Tuple.toList = func:
 	out = Nil

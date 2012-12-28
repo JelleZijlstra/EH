@@ -17,5 +17,7 @@ Tuple.each = func: f
 	end
 end
 
+Tuple.sort = () => Tuple.new(this.toList().sort())
+
 # For use in iterable: map tuple to a mutable array
 Tuple.empty = () => []

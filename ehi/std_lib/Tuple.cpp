@@ -10,8 +10,28 @@ EH_INITIALIZER(Tuple) {
 	REGISTER_METHOD(Tuple, compare);
 }
 
+/*
+ * @description Initializer. Converts an arbitrary object to a tuple by the
+ * following algorithm: call the object's .length() method; allocate a tuple of
+ * that length; call the object's .getIterator() method and add members to the
+ * tuple while iterating.
+ * @argument Object that should be converted to a tuple.
+ * @returns N/A
+ */
 EH_METHOD(Tuple, initialize) {
-	return ehi->to_tuple(args, obj);
+	ehretval_p length = ehi->call_method(args, "length", NULL, obj);
+	ASSERT_TYPE(length, int_e, "length method must return an int");
+	const int len = length->get_intval();
+
+	ehretval_a values(len);
+	ehtuple_t *t = new ehtuple_t(len, values);
+
+	ehretval_p iterator = ehi->call_method(args, "getIterator", NULL, obj);
+	for(int i = 0; i < len; i++) {
+		ehretval_p next = ehi->call_method(iterator, "next", NULL, obj);
+		t->content[i] = next;
+	}
+	return ehi->get_parent()->make_tuple(t);
 }
 EH_METHOD(Tuple, operator_arrow) {
 	ASSERT_OBJ_TYPE(tuple_e, "Tuple.operator->");
@@ -42,14 +62,9 @@ EH_METHOD(Tuple, compare) {
 	int size = lhs->size();
 	ehretval_p lhs_val, rhs_val;
 	for(int i = 0; i < size; i++) {
-		lhs_val = lhs->get(i);
-		rhs_val = rhs->get(i);
-		ehretval_p comparison = ehi->call_method(lhs_val, "operator<=>", rhs_val, obj);
-		if(comparison->type() != int_e) {
-			throw_TypeError("operator<=> does not return an Integer", comparison->type(), ehi);
-		}
-		if(comparison->get_intval() != 0) {
-			return comparison;
+		int comparison = ehi->compare(lhs->get(i), rhs->get(i), obj);
+		if(comparison != 0) {
+			return ehretval_t::make_int(comparison);
 		}
 	}
 	return ehretval_t::make_int(0);
@@ -57,7 +72,7 @@ EH_METHOD(Tuple, compare) {
 EH_METHOD(Tuple, getIterator) {
 	ASSERT_NULL_AND_TYPE(tuple_e, "Tuple.getIterator");
 	ehretval_p class_member = ehi->get_property(obj, "Iterator", obj);
-	return ehi->call_method(class_member, "new", obj, obj);	
+	return ehi->call_method(class_member, "new", obj, obj);
 }
 
 bool Tuple_Iterator::has_next() {
@@ -66,7 +81,7 @@ bool Tuple_Iterator::has_next() {
 }
 ehretval_p Tuple_Iterator::next() {
 	ehtuple_t *the_tuple = this->tuple->get_tupleval();
-	return the_tuple->get(this->position++);	
+	return the_tuple->get(this->position++);
 }
 
 EH_INITIALIZER(Tuple_Iterator) {

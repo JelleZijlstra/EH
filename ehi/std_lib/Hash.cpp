@@ -5,6 +5,7 @@ EH_INITIALIZER(Hash) {
 	REGISTER_METHOD_RENAME(Hash, operator_arrow, "operator->");
 	REGISTER_METHOD_RENAME(Hash, operator_arrow_equals, "operator->=");
 	REGISTER_METHOD(Hash, has);
+	REGISTER_METHOD(Hash, compare);
 	REGISTER_METHOD(Hash, delete);
 	REGISTER_METHOD(Hash, keys);
 	REGISTER_METHOD(Hash, length);
@@ -64,7 +65,54 @@ EH_METHOD(Hash, keys) {
 		arr->int_indices[index] = ehretval_t::make_string(strdup(name.c_str()));
 		index++;
 	}
-	return ehi->get_parent()->make_array(arr);	
+	return ehi->get_parent()->make_array(arr);
+}
+
+/*
+ * @description Compare two hashes
+ * @argument Hash to compare to
+ * @returns Integer (as specified by Object.compare)
+ */
+EH_METHOD(Hash, compare) {
+	ASSERT_OBJ_TYPE(hash_e, "Hash.compare");
+	ASSERT_TYPE(args, hash_e, "Hash.compare");
+	args = ehretval_t::self_or_data(args);
+	ehhash_t *lhs = obj->get_hashval();
+	ehhash_t *rhs = args->get_hashval();
+
+	ehhash_t::iterator lhs_it = lhs->begin_iterator();
+	ehhash_t::iterator rhs_it = rhs->begin_iterator();
+	ehhash_t::iterator lhs_end = lhs->end_iterator();
+	ehhash_t::iterator rhs_end = rhs->end_iterator();
+	while(true) {
+		// check whether we've reached the end
+		if(lhs_it == lhs_end) {
+			if(rhs_it == rhs_end) {
+				break;
+			} else {
+				return ehretval_t::make_int(-1);
+			}
+		} else if(rhs_it == rhs_end) {
+			return ehretval_t::make_int(1);
+		}
+
+		// compare keys
+		int key_cmp = lhs_it->first.compare(rhs_it->first);
+		if(key_cmp != 0) {
+			return ehretval_t::make_int(key_cmp);
+		}
+
+		// compare values
+		int value_cmp = ehi->compare(lhs_it->second, rhs_it->second, obj);
+		if(value_cmp != 0) {
+			return ehretval_t::make_int(value_cmp);
+		}
+
+		// continue iteration
+		lhs_it++;
+		rhs_it++;
+	}
+	return ehretval_t::make_int(0);
 }
 
 EH_METHOD(Hash, length) {

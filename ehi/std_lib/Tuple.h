@@ -25,6 +25,8 @@ public:
 		assert(i >= 0 && i < _size);
 		return this->content[i];
 	}
+
+	friend EH_METHOD(Tuple, initialize);
 };
 
 

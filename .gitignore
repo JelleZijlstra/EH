@@ -23,3 +23,5 @@ ehi/php_ehphp.h
 *.sublime-*
 # Used for temporary files in tester
 tmp/
+# Node dependencies
+node_modules/

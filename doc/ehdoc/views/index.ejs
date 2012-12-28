@@ -1,0 +1,10 @@
+<%- include header.ejs %>
+<p>EH is a scripting language that I developed and implemented. It grew out of command-line interfaces that I developed for PHP objects representing (among others) citations to scientific articles, mammal species, and a Wikipedia bot. This interface initially allowed only for commands to be passed to the PHP objects (a command like <tt>$bfind --authors='/Zijlstra/'</tt> would get interpreted into <tt>$this->bfind(array('authors' => '/Zijlstra/'));</tt>—a function that searches my bibliographic database). Later, I extended the PHP command-line interpreter to include features like variables, basic mathematics, functions, and loops. While this PHP tool, based mostly on regular expressions, does its job correctly, it is limited to simple statements (it cannot parse an expression like <tt>1 + 2 * 3</tt>) and lacks a proper grammar.</p>
+
+<p>Therefore, I have re-implemented EH using the standard tools Flex and Bison and a C++-based interpreter. This code is used to generate a standalone interpreter (<tt>ehi</tt>) as well as a PHP interface for the interpreter (<tt>ehphp.so</tt>), which supports execution of commands (see below) parsed in C++ using PHP code. (I also started work on a native-code compiler, <tt>ehc</tt>, but it only ever supported a small subset of the language and I haven't maintained it when I updated the parser and other infrastructure shared with <tt>ehi</tt>.) <tt>ehi</tt> adds many features to the original interpreter, including classes, complex expressions, and type casting. By now, it has evolved so much as to be completely incomptable with the original PHP-based interpreter. Still, EH is a limited language, with a small standard library, a shaky object model, and an occasionally buggy interpreter.</p>
+
+<p>This website documents the syntax and standard library of the EH language.</p>
+
+<p>The EH source code is available at <a href="https://github.com/JelleZijlstra/EH">GitHub</a>.</p>
+
+<%- include footer.ejs %>

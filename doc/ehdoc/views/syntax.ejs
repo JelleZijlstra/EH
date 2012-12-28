@@ -1,0 +1,162 @@
+<%- include header %>
+<section id="operators">
+<p>EH supports a standard set of operators similar to that in most other programming languages. The below table summarizes the operators and their precedence (from high to low). Most operators are implemented as method calls, where <tt>a <em>op</em> b</tt> is equivalent to <tt>a.operator<em>op</em> b</tt>. However, this is not true for <tt>.</tt> (object access) and <tt>=</tt> (assignment), which are core language operations; <tt>..</tt>, <tt>=&gt;</tt> and <tt>,</tt>, which construct object literals; <tt>@</tt>, used solely in pattern matching; the boolean operators <tt>&amp;&amp;</tt>, <tt>||</tt>, and <tt>^^</tt>, which have short-circuit evaluation; and <tt>++</tt>, <tt>--</tt>, and compound assignment operators (<tt>+=</tt> etcetera), which are sugar for other operators (<tt>a++</tt> is executed as <tt>a = a + 1</tt>, and <tt>a += 2</tt> as <tt>a = a + 2</tt>; note that this means that <tt>++</tt> does pre-increment).</p>
+
+<p>There are a few unusual aspects of EH operators:</p>
+<ul>
+	<li>The function call "operator" is unnamed; code like <tt>a b</tt> uses the function call operator and is thus equivalent to <tt>a.operator()(b)</tt>.</li>
+	<li>EH supports user-defined custom operators. Virtually any sequence of punctuation marks that is not otherwise used by EH can be used as a custom operator. These are implemented by calling the appropriately named <tt>operator</tt> method. For example, <tt>a ** b</tt> would be executed like <tt>a.operator**(b)</tt>. However, all user-defined operators are limited to the same precedence and associativity.</li>
+	<li>In addition to the standard boolean operators <tt>&amp;&amp;</tt> (and) and <tt>||</tt> (or), EH supports <tt>^^</tt> (boolean exclusive-or).</li>
+	<li>All boolean operators have synonymous English forms (<tt>and</tt> for <tt>&amp;&amp;</tt>; <tt>or</tt> for <tt>||</tt>; <tt>xor</tt> for <tt>^^</tt>; <tt>not</tt> for <tt>!</tt>) with the same precedence and associativity.</li>
+	<li>Instead of using the <tt>[]</tt> operator for member assignment in container objects, EH uses the arrow operator <tt>-&gt;</tt>.</li>
+</ul>
+<table>
+	<caption>EH operators</caption>
+	<tr>
+		<th>Operators</th>
+		<th>Associativity</th>
+		<th>Use</th>
+	</tr>
+	<% operators.each(function(operator) { %>
+		<tr>
+			<td><%- operator.ops.map(function(op) {
+				return "<tt>" + op + "</tt>";
+			}).join(', ') %></td>
+			<td><%= operator.assoc %></td>
+			<td><%= operator.use %></td>
+		</tr>
+	<% }) %>
+</table>
+</section>
+<section id="enums">
+	<h2>Enums</h2>
+	<p>EH enums are similar to OCaml algebraic data types. They are special objects that can only have a limited range of values. For example, the enum</p>
+<pre class="brush: eh;">
+enum Boolean
+	True, False
+end
+</pre>
+	<p>can only hold the values <tt>True</tt> and <tt>False</tt>. Enum members can also have arguments, like</p>
+<pre class="brush: eh;">
+enum Option
+	None, Some(value)
+end
+</pre>
+	<p>In this case, Options can be created with code like <tt>private x = Some(3)</tt>. This is implemented by making Option an instance of class Enum, None and Some (accessible in the program as Option.None and Option.Some) instances of Enum.Member, and an instance of Some is an Enum.Instance.</p>
+
+	<p>Enums can be conveniently processed using the pattern matching operator <tt>match</tt>. The below example defines a useful enum type and uses pattern matching to create primitive operations on the type.</p>
+<pre class="brush: eh;">
+<%- include ../../../test/match.eh %>
+</pre>
+</section>
+<section id="functions">
+<h2>Functions</h2>
+<p>Functions are central to EH. They can be defined either with the <tt>func</tt> keyword or the short-function syntax that uses the <tt>=&gt;</tt> token (e.g., <tt>x => x * x</tt>). The <tt>ret</tt> statement can be used to return a value, but if execution reaches the end of a function without encountering a <tt>ret</tt> statement, the result of the last expression evaluated is returned.</p>
+
+<p>Functions are called using the function call "operator", which is invoked simply by putting the function and its argument next to each other; <tt>fun arg</tt> calls the function <tt>fun</tt> with argument <tt>arg</tt>. All functions take exactly one argument. Functions that do not take input are simply passed null (then usually written <tt>()</tt>) as an argument, and when multiple arguments are necessary, they are put into a tuple (e.g., <tt>fun(a, b)</tt>).</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/mul2.eh %>
+</pre>
+</section>
+<section id="classes">
+<h2>Classes</h2>
+<p>EH classes can be defined with the <tt>class</tt> keyword. This keyword creates a <em>class object</em> and introduces a block that is executed within the context of the class, so assignments define class methods or properties. All classes automatically inherit from the <tt>Object</tt> class, and inheritance from other classes is implemented using the <tt>inherit</tt> method (e.g., <tt>class B; inherit A; end</tt>). Classes can be instantiated using the <tt>new</tt> method, which is inherited from <tt>Object</tt>. It creates a new object that inherits from the class object and calls that object's <tt>initialize</tt> method. The return value of this method is assigned to the object's internal <tt>object_data</tt> field, which is used by library classes (e.g., it holds the underlying function pointer of Function objects), but is not currently accessible directly to user code.</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/class_example.eh %>
+</pre>
+
+<p>The above example does not show how dynamic the EH class system is. It is possible to set properties and methods on classes after the class is declared, to pass classes around like any other value, to declare anonymous classes, and to dynamically inherit from one class to another.</p>
+
+</section>
+<section id="variables-scope">
+<h2>Assignment, variables, and scope</h2>
+<p>All EH variables are implicitly implemented as members of some object. Two special objects are always accessible to the code: the <tt>this</tt> object, referring to the object in whose context the code is running, and the <tt>scope</tt> object, referring to the current variable scope. In global and class scope, both refer to the same object; in a function, <tt>scope</tt> refers to the function's scope and <tt>this</tt> to the current object. Within an enum declaration, <tt>this</tt> refers to the enum class and <tt>scope</tt> to a special prototype object that is inherited by the enum's members and instances (I may develop a similar system in the future for classes).</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/this_scope.eh %>
+</pre>
+
+<p>Variable lookup follows lexical scope. When the code tries to access a variable <tt>x</tt>, the code first looks for a member <tt>x</tt> in the scope object, then looks up the scope's parent member (the scope active at the moment at which the scope was created), then that scope's parent, until the global scope is reached, which has no parent. For an assignment (<tt>x = 3</tt>), the engine also searches up the scope chain for a matching variable. If such a variable is found, it gets the new value; if nothing is found, a new variable is created in the current scope (not, as in JavaScript, in the global scope). This is often problematic (for example, <tt>class A; toString = () => "A"; end</tt> will assign to <tt>GlobalObject.toString</tt>), so it is advisable to explicitly create a new variable when first assigning to a local variable. This can be done by adding a modifier (e.g., <tt>private x = 3</tt>); this will always create a new variable in the current scope.</p>
+
+<p>When an object member is accessed using the <tt>.</tt> operator (e.g., <tt>this.x</tt>), the engine first looks up the variable in the object referred to, then does a depth-first search on the object's inheritance tree. For example, if <tt>A</tt> inherits <tt>B</tt> (which inherits <tt>C</tt>) and <tt>D</tt>, the engine will look up A, then B, then C, then D. It will also visit the root of the inheritance tree, which is Object. Assignment (e.g., <tt>this.x = 3</tt>) also follows the inheritance tree. When the engine encounters a <tt>const</tt> property or a property with this name of incompatible visibility, an error is thrown, and when it encounters a <tt>static</tt> property, that property is set; otherwise the property is set on the current object (even if a parent object has a member of the same name). Again, lookup in the inheritance tree can be avoided by adding a modifier, like <tt>private this.x = 3</tt>.</p>
+
+<p>If a variable or object property that does not exist is accessed, a <tt>NameError</tt> is thrown.</p>
+
+<h3>Access modifiers</h3>
+<p>Properties support various modifiers that manipulate their behavior. <tt>public</tt> and <tt>private</tt> set the visibility flag to their respective values; <tt>static</tt> and <tt>const</tt> turn on the <tt>static</tt> and <tt>const</tt> flags (which cannot be turned off explicitly). When a property is set to private, it can only be accessed from objects that inherit from the class of the object that the property is in and from the context of the object itself. Attempts to access a private property from an incompatible context yield a <tt>VisibilityError</tt>. If a property is static, attempts to set a property of that name on an object inheriting from the object will modify the original, static property, not a property of the inheriting object. If a property is <tt>const</tt>, any attempt to modify it will cause a <tt>ConstError</tt> to be thrown.</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/modifiers.eh %>
+</pre>
+
+<h3>Assignment</h3>
+<p>In addition to simple assigments (<tt>x = 3</tt>), EH supports compound assignment of the form <tt>x, y = y, x</tt>. This works by evaluating the right-hand side (in this case, into the tuple <tt>y, x</tt>) into a temporary variable (here called <tt>tmp_</tt>) and setting <tt>x = tmp_->0; y = tmp_->1</tt>. This syntax also supports more complicated forms like <tt>a, (b, c) = 1, (2, 3)</tt>. In addition, it is possible to ignore certain values by putting null instead of a variable name (e.g., <tt>a, (), c = (1, 2, 3)</tt>.</p>
+
+<p>The same syntax can be used for function arguments and for the variable in a <tt>for-in</tt> loop.</p>
+</section>
+<section id="control-flow">
+<h2>Control flow</h2>
+<h3><tt>if</tt></h3>
+<p>The <tt>if</tt> block is used for conditional code execution. It consists of a condition, followed by a code block, an optional series of <tt>elsif</tt> blocks with conditions, and an optional <tt>else</tt> block without a condition. During execution, the <tt>if</tt> condition is evaluated and the <tt>toBool</tt> method is called on the result. If this method returns <tt>true</tt>, the code block is executed. If it returns <tt>false</tt>, the conditions in the <tt>elsif</tt> blocks are evaluated, one after the other, and if one returns <tt>true</tt> the corresponding block is evaluated. If present, the <tt>else</tt> block is executed if none of the conditions returns <tt>true</tt>. An <tt>if</tt> block may also be used an expression, which returns the result of the evaluation of the block selected.</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/if.eh %>
+</pre>
+
+<h3><tt>switch</tt> and <tt>given</tt></h3>
+<p>The <tt>switch</tt> and <tt>given</tt> blocks have very similar behavior to each other and serve the same general purpose as <tt>match</tt> (see below), and I will probably remove two of them in the future. All three are used to select a code block to execute among a series of cases by repeatedly comparing their switch variables to these cases.</p>
+
+<p>Both <tt>switch</tt> and <tt>given</tt> operate by executing the case label code and calling <tt>operator==</tt> on it with the switch variable as an argument. If this function returns <tt>true</tt>, the case is executed. However, if the case label evaluates to a function, the engine calls that function with the switch variable as an argument, and executes the case if the function returns <tt>true</tt>. (In both cases, if a non-boolean value is returned, a <tt>TypeError</tt> is thrown.)</p>
+
+<p>There are two differences between <tt>switch</tt> and <tt>given</tt>. <tt>switch</tt> allows the use of the <tt>continue</tt> keyword in a switch case; if this keyword is used, the engine will continue to evaluate further cases after the one containing the <tt>continue</tt> and execute any that match (similar but not identical to omitting <tt>break</tt> in C-like languages). If no case matches the switch variable, <tt>given</tt> throws a MiscellaneousError, while <tt>switch</tt> silently returns <tt>null</tt>.</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/switch_given.eh %>
+</pre>
+
+<h3><tt>match</tt></h3>
+<p>The <tt>match</tt> block can be used for pattern matching, inspired by similar features in functional languages like OCaml. It is syntactically similar and generally works similarly to <tt>switch</tt> and <tt>given</tt>, but instead of directly executing the case labels, it performs a pattern match using the following features:</p>
+<ul>
+	<li>The <tt>_</tt> pattern matches anything.</li>
+	<li>When the pattern is a tuple (e.g., <tt>3, _</tt>), each element is matched separately against elements of the switch variable if it is a tuple. The example pattern would match any tuple of size 2 whose first element is 3.</li>
+	<li>When the <tt>|</tt> operator is used in a pattern, the switch variable is matched against each operand of the pattern until one is found that matches.</li>
+	<li>A pattern of <tt>@</tt> followed by a string sets the variable with that name to the variable matched against. For example, <tt>3, @second</tt> would match a tuple of size 2 whose first element is 3, and set the <tt>second</tt> variable to the value of the second element.</li>
+	<li>A function call is interpreted as a pattern match against an enum member (algebraic data type).</li>
+</ul>
+<p><tt>match</tt> does not support calling functions that appear as patterns (as <tt>switch</tt> and <tt>given</tt> do) or using the <tt>continue</tt> keyword. If no pattern matches, a <tt>MiscellaneousError</tt> is thrown.</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/zipmatch.eh %>
+</pre>
+
+<h3><tt>while</tt></h3>
+<p>The <tt>while</tt> block is the most basic loop construct. It executes a block of code repeatedly as long as the loop condition evaluates to <tt>true</tt> when its <tt>toBool</tt> method is called. The <tt>break</tt> and <tt>continue</tt> keywords (see below) may be used to break out of the loop or go back to the beginning.</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/while_example.eh %>
+</pre>
+
+<h3><tt>for</tt> and <tt>for-in</tt></h3>
+<p>These loops are used to iterate over an object using an iterator obtained by calling the object's <tt>getIterator</tt> method. With the <tt>for var in container</tt> syntax, the loop is executed with the <tt>var</tt> variable holding an element in the <tt>container</tt> on each loop iteration. When <tt>for container</tt> is used, the element is not accessible (this may be useful, for example, with the default <tt>Integer.Iterator</tt> in order to execute a block of code a given number of times).</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/for_in_example.eh %>
+</pre>
+
+<h3><tt>break</tt> and <tt>continue</tt></h3>
+<p>The <tt>break</tt> and <tt>continue</tt> keywords can be used to manipulate loop execution. <tt>break</tt> leaves the current loop, <tt>statement</tt> goes back to the beginning of the loop. Both can be used in <tt>while</tt> and <tt>for</tt> loops, and <tt>continue</tt> can also be used in <tt>switch</tt> blocks. They can be used with a numeric argument to break out of a number of enclosing loops (including <tt>switch</tt> blocks) at once (e.g., <tt>break 2</tt>); the default is 1. If the argument exceeds the number of loops currently executing, a LoopError is thrown.</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/break_continue.eh %>
+</pre>
+
+<h3><tt>try-catch</tt></h3>
+<p>EH supports throwing exceptions with the <tt>throw</tt> library method and catching them in <tt>try-catch</tt> blocks. Such blocks consist of a <tt>try</tt> block followed by any number of <tt>catch-if</tt> blocks, followed by optional <tt>catch</tt> and <tt>finally</tt> blocks. On execution, the <tt>try</tt> block is first executed, and when an exception is thrown that exception is matched against consecutive <tt>catch-if</tt> blocks. Such blocks are written like <tt>catch if exception.isA SyntaxError; echo "Caught a SyntaxError!"</tt>; the special variable <tt>exception</tt> holds the current exception. A bare <tt>catch</tt> block matches any exception. A <tt>finally</tt> block is always executed at the end of the execution of the block. Currently, any attempts to return, break, or continue in a <tt>finally</tt> block are ignored, but this behavior may change.</p>
+
+<pre class="brush: eh;">
+<%- include ../../../test/try_catch.eh %>
+</pre>
+</section>
+<%- include footer %>

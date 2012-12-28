@@ -1,0 +1,32 @@
+<%- include header %>
+<h2><%= name %></h2>
+<p><%- data.description %></p>
+
+<% if(data.inherits.length > 0) { %>
+	<p>Inherits from:</p>
+	<ul>
+		<% data.inherits.each(function(className) { %>
+			<li><a href="/classes/<%= className %>"><%= className %></a></li>
+		<% }) %>
+	</ul>
+<% } %>
+
+<h3>Methods</h3>
+<table>
+	<tr>
+		<th>Name</th>
+		<th>Description</th>
+		<th>Arguments</th>
+		<th>Return value</th>
+	</tr>
+	<% data.methods.each(function(method) { %>
+		<tr>
+			<td><tt><%= method.name %></tt></td>
+			<td><%- method.description %></td>
+			<td><%- method.argument %></td>
+			<td><%- method.returns %></td>
+		</tr>
+	<% }); %>
+</table>
+
+<%- include footer %>

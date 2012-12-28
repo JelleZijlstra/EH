@@ -1,0 +1,9 @@
+<%- include header %>
+<h2>EH classes</h2>
+<ul>
+	<% classes.each(function(key, value) { %>
+		<li><a href="/classes/<%= key %>"><%= key %></a></li>
+	<% }); %>
+</ul>
+
+<%- include footer %>

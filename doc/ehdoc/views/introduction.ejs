@@ -1,0 +1,38 @@
+<%- include header.ejs %>
+<h2>Hello world</h2>
+<p>Let's start with the obligatory "Hello World" example:</p>
+<pre class="brush: eh;">
+echo "Hello, world!"
+</pre>
+<p>That one could as well be a shell script; here is an object-oriented way to achieve the same goal:</p>
+<pre class="brush: eh;">
+class Printer
+	private msg
+
+	public initialize = in => this.msg = in
+
+	public print = _ => echo(this.msg)
+end
+
+p = Printer.new "Hello world"
+p.print()
+</pre>
+
+<h2>Basic features of the language</h2>
+<p>EH has tended to absorb features of any language that I worked with and liked. When I started work on the language, C and PHP were the only languages I knew well, so the language was at first most similar to PHP in semantics. The original PHP interpreter operated in a similar way to assembly language. Later, I learned OCaml and Ruby, which inspired me to add more functional and object-oriented features. The object model also has a certain similarity to that of JavaScript.</p>
+
+<p>EH is now an object-oriented language; every value is, at least theoretically, an object. All objects inherit implicitly from the base class <tt>Object</tt>. Expressions like <tt>3</tt>, <tt>"foo"</tt> or <tt>[1, 2]</tt> can be used to directly create instances of certain inbuilt classes (here, <tt>Integer</tt>, <tt>String</tt>, and <tt>Array</tt>), while other classes are created using the inherited method <tt>Object.new</tt>. EH also heavily uses functions. Functions are closures, capturing variables from their surrounding lexical scope, and they are first-class values. Methods can also be used as values.</p>
+
+<h2>Syntax</h2>
+<p>The EH syntax is perhaps most similar to that of Ruby. Control flow structures do not use curly braces, but only the <tt>end</tt> keyword. Both semicolons and newlines may be used to separate statements. Parentheses are used only for grouping statements to remove ambiguity—structures like if conditions do not need parentheses, and function calls only need parentheses when operator precedence makes it necessary (which, admittedly, is usually the case in practice). Comments may start with <tt>//</tt> or <tt>#</tt> and run to the end of the line.</p>
+
+<p>The following code snippet demonstrates a few aspects of EH syntax. The functions <tt>mul1</tt> through <tt>mul6</tt> are defined equivalently to multiply their arguments by 2.</p>
+<pre class="brush: eh;">
+<%- include ../../../test/mul2.eh %>
+</pre>
+
+<p>To understand EH syntax and semantics, it is important to realize that virtually everything in EH is an operation on an object—even a variable assignment. Variables in the global scope are members of the global object, and local variables in a function are members of that function's <em>scope object</em> (which is accessible through the keyword <tt>scope</tt>). An object has a <em>parent</em>, representing the object within which the object was declared, which is used for scope resolution: when the interpreter encounters a variable, it first looks for members of that name in the current scope object, then moves to the current scope's parent scope, and so on to the global scope.</p>
+<p>A variable may be set with a statement like <tt>x = 1</tt>. If there is no existing variable of that name, a new variable in the local scope is created. However, if there is a variable named <tt>x</tt> in an enclosing scope, this will change the value of the enclosing variable. This can be avoided by explicitly declaring the variable as a member of the current scope, with a syntax like <tt>private x = 1</tt>. Variables are referred to by their names (e.g., <tt>y = x</tt>).</p>
+<p>Commands, which are used to interface with PHP, are now a somewhat detached part of the language. They are invoked with syntax like <tt>$find --name='name'</tt>&mdash;the <tt>$token</tt>, followed by the name of a command, followed by a sequence of parameters, similar to parameters taken by command-line programs.</p>
+
+<%- include footer.ejs %>

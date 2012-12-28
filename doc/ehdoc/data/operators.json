@@ -1,0 +1,17 @@
+[
+	{"ops": ["</tt>(call operator)<tt>"], "assoc": "right", "use": "Function calls and operator()"},
+	{"ops": ["..", "->", "."], "assoc": "left", "use": "Range literals, container access, object access"},
+	{"ops": ["~", "!"], "assoc": "non-associative", "use": "Unary operators"},
+	{"ops": ["@"], "assoc": "non-associative", "use": "Used in pattern matching"},
+	{"ops": ["++", "--"], "assoc": "non-associative", "use": "Increment and decrement"},
+	{"ops": ["*", "/", "%"], "assoc": "left", "use": "Mathematical operators"},
+	{"ops": ["+", "-"], "assoc": "left", "use": "Mathematical operators"},
+	{"ops": ["<<", ">>"], "assoc": "left", "use": "Bitwise shift operators"},
+	{"ops": [">", "<", ">=", "<=", "!=", "==", "<=>"], "assoc": "left", "use": "Comparison operators"},
+	{"ops": ["</tt>(custom operators)<tt>"], "assoc": "right", "use": "Custom operators"},
+	{"ops": ["|", "^", "&"], "assoc": "left", "use": "Bitwise operators"},
+	{"ops": ["&&", "||", "^^"], "assoc": "left", "use": "Boolean operators"},
+	{"ops": [","], "assoc": "right", "use": "Tuple literals"},
+	{"ops": ["=>"], "assoc": "right", "use": "Function literals"},
+	{"ops": ["=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "&&=", "||=", "^^=", "<<=", ">>="], "assoc": "right", "use": "Assignment operators"}
+]

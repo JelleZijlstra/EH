@@ -1,0 +1,26 @@
+<%- include header %>
+<p>Many methods are called automatically by the EH engine. For example, the expression <tt>a + b</tt> is evaluated by calling the <tt>operator+</tt> method on <tt>a</tt>, with <tt>b</tt> as the argument, and <tt>!a</tt> is equivalent to <tt>a.operator!()</tt>. Similarly, the <tt>for-in</tt> loop calls the <tt>getIterator</tt> method of the object iterated over and <tt>if</tt> calls the <tt>toBool</tt> method of its condition.</p>
+
+<p>The below table lists all methods that may be called on arbitrary objects by the engine. Most are listed as being <em>side-effect-free</em> and <em>pure</em>: they are assumed to have no side effects and to return the same value when called repeatedly with the same arguments. These properties may be used in the future by the engine as an optimization. Currently only one such optimization is implemented: type-casting functions are not called when the object is already of the right type. For example, the <tt>echo</tt> function normally calls <tt>toString</tt> on its argument, but does not do so if the argument is already a String.</p>
+<table>
+	<caption>Methods called by the EH engine</tt>
+	<tr>
+		<th>Name</th>
+		<th>Intended purpose</th>
+		<th>Use in the engine</th>
+		<th>Default implementation</th>
+		<th>Invariants</th>
+		<th>Side-effect-free and pure?</th>
+	</tr>
+	<% methods.each(function(method) { %>
+		<tr>
+			<td><tt><%= method.name %></tt></td>
+			<td><%- method.purpose %></td>
+			<td><%- method.engine_use %></td>
+			<td><%- method.implementation %></td>
+			<td><%- method.invariants %></td>
+			<td><%- method.side_effects === false ? "Yes" : method.side_effects %></td>
+		</tr>
+	<% }); %>
+</table>
+<%- include footer %>

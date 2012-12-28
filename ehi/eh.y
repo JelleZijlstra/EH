@@ -66,6 +66,7 @@ EHI *yyget_extra(void *scanner);
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
 %token T_DOUBLEARROW
+%token T_CALL_METHOD
 %token T_COMMAND T_SHORTPARA T_LONGPARA T_REDIRECT
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING

@@ -257,7 +257,7 @@ private:
 	ehretval_p perform_op(const char *name, int nargs, ehretval_p *paras, ehcontext_t context);
 	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
 	void eh_op_break(opnode_t *op, ehcontext_t context);
-	void eh_op_classmember(opnode_t *op, ehcontext_t context);
+	ehretval_p eh_op_classmember(opnode_t *op, ehcontext_t context);
 	void eh_op_continue(opnode_t *op, ehcontext_t context);
 
 	ehretval_p promote(ehretval_p in, ehcontext_t context);

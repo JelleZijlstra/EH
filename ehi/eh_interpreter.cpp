@@ -192,6 +192,11 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 */
 			case ':': // function call
 				return eh_op_colon(paras, context);
+			case T_CALL_METHOD: {
+				ehretval_p obj = eh_execute(paras[0], context);
+				ehretval_p arg = eh_execute(paras[2], context);
+				return call_method(obj, paras[1]->get_stringval(), arg, context);
+			}
 			case T_THIS: // direct access to the context object
 				return context.object;
 			case T_SCOPE:
@@ -204,8 +209,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			case T_CLASS: // class declaration
 				return eh_op_declareclass(op, context);
 			case T_CLASSMEMBER:
-				eh_op_classmember(op, context);
-				break;
+				return eh_op_classmember(op, context);
 			case T_ENUM:
 				return eh_op_enum(op, context);
 			case '[': // array declaration
@@ -645,11 +649,11 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 	}
 	return parent->make_tuple(new ehtuple_t(nargs, new_args));
 }
-void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
+ehretval_p EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	// parse the attributes into an attributes_t
 	attributes_t attributes = parse_attributes(op->paras[0]);
 	// set the member
-	set(op->paras[1], NULL, &attributes, context);
+	return set(op->paras[1], NULL, &attributes, context);
 }
 ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret;
@@ -1061,11 +1065,7 @@ ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, e
 		}
 		func = parent->make_binding(new ehbinding_t(obj, method));
 	}
-	if(func == NULL) {
-		return NULL;
-	} else {
-		return call_function(func, args, context);
-	}
+	return call_function(func, args, context);
 }
 ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t context) {
 	// We special-case function calls on func_e and binding_e types; otherwise we'd end up in an infinite loop

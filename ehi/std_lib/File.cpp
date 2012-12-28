@@ -61,7 +61,7 @@ EH_METHOD(File, gets) {
 	if(data->descriptor == NULL) {
 		return NULL;
 	}
-	
+
 	char *out = new char[512];
 
 	char *ptr = fgets(out, 511, data->descriptor);
@@ -77,8 +77,8 @@ EH_METHOD(File, puts) {
 	if(data->descriptor == NULL) {
 		return NULL;
 	}
-	
-	int count = fputs(args->get_stringval(), data->descriptor);	
+
+	int count = fputs(args->get_stringval(), data->descriptor);
 	return ehretval_t::make_bool(count != EOF);
 }
 EH_METHOD(File, readFile) {
@@ -86,6 +86,9 @@ EH_METHOD(File, readFile) {
 	const char *file = args->get_stringval();
 	// http://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
 	std::ifstream stream(file);
+	if(!stream.is_open()) {
+		throw_ArgumentError("Could not read file", "File.readFile", args, ehi);
+	}
 	std::stringstream buffer;
 	buffer << stream.rdbuf();
 	char *str = strdup(buffer.str().c_str());

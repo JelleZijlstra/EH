@@ -157,13 +157,6 @@ statement:
 	| T_BREAK expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_BREAK, $2); }
 		/* property declaration */
-	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
-							{
-								$$ = ADD_NODE2('=',
-										ADD_NODE2(T_CLASSMEMBER, $1, ADD_NODE1('$', $2)),
-										ADD_NODE2(T_FUNC, $4, $6)
-								);
-							}
 	;
 
 expression:
@@ -179,8 +172,6 @@ expression:
 	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
 	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
-	| attributelist expression %prec T_ATTRIBUTE
-							{ $$ = ADD_NODE2(T_CLASSMEMBER, $1, $2); }
 	| expression T_PLUSPLUS	{
 								ehretval_p lvalue = ehretval_t::make($1);
 								$$ = eh_addnode('=', lvalue, ehretval_t::make(eh_addnode('+', lvalue, ehretval_t::make(1))));
@@ -314,6 +305,15 @@ expression:
 							{ $$ = ADD_NODE2(T_IN, $2, $4); }
 	| T_FOR expression T_IN expression T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE3(T_IN, $2, $4, $6); }
+	| attributelist expression %prec T_ATTRIBUTE
+							{ $$ = ADD_NODE2(T_CLASSMEMBER, $1, $2); }
+	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END
+							{
+								$$ = ADD_NODE2('=',
+										ADD_NODE2(T_CLASSMEMBER, $1, ADD_NODE1('$', $2)),
+										ADD_NODE2(T_FUNC, $4, $6)
+								);
+							}
 	;
 
 para_expr:

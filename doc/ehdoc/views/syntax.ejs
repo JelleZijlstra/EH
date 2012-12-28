@@ -92,7 +92,7 @@ end
 </pre>
 
 <h3>Assignment</h3>
-<p>In addition to simple assigments (<tt>x = 3</tt>), EH supports compound assignment of the form <tt>x, y = y, x</tt>. This works by evaluating the right-hand side (in this case, into the tuple <tt>y, x</tt>) into a temporary variable (here called <tt>tmp_</tt>) and setting <tt>x = tmp_->0; y = tmp_->1</tt>. This syntax also supports more complicated forms like <tt>a, (b, c) = 1, (2, 3)</tt>. In addition, it is possible to ignore certain values by putting null instead of a variable name (e.g., <tt>a, (), c = (1, 2, 3)</tt>.</p>
+<p>In addition to simple assigments (<tt>x = 3</tt>), EH supports compound assignment of the form <tt>x, y = y, x</tt>. This works by evaluating the right-hand side (in this case, into the tuple <tt>y, x</tt>) into a temporary variable (here called <tt>tmp_</tt>) and setting <tt>x = tmp_->0; y = tmp_->1</tt>. This syntax also supports more complicated forms like <tt>a, (b, c) = 1, (2, 3)</tt>. In addition, it is possible to ignore certain values by putting <tt>_</tt> instead of a variable name (e.g., <tt>a, (), c = (1, 2, 3)</tt>. If <tt>()</tt> (= null) is used instead of a variable name, the value is also ignored, but only if it is null; otherwise a MiscellaneousError is thrown. This is useful for functions that take no arguments.</p>
 
 <p>The same syntax can be used for function arguments and for the variable in a <tt>for-in</tt> loop.</p>
 </section>

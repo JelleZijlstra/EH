@@ -249,7 +249,7 @@ fizz_buzz.eh
 brainf.eh
 readfile.eh
 strings.eh
-enum.eh
+enum_test.eh
 enum_compare.eh
 match.eh
 matchsingle.eh
@@ -277,3 +277,4 @@ ConstError.eh
 EmptyIterator.eh
 cmdtable.eh
 bad_catch.eh
+Enum.eh

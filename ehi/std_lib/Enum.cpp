@@ -1,3 +1,9 @@
+/*
+ * Enum
+ * Implements enums. See <a href="/syntax">Syntax</a> for more information on
+ * enums.
+ */
+
 #include "Enum.hpp"
 
 #include <sstream>
@@ -66,16 +72,32 @@ std::string Enum::to_string() const {
 	return out.str();
 }
 
+/*
+ * @description Directly creating a new Enum is not allowed; this method always throws an error.
+ * @argument Irrelevant
+ * @returns N/A
+ */
 EH_METHOD(Enum, new) {
 	throw_TypeError("Cannot instantiate Enum", ehi->get_parent()->enum_id, ehi);
 	return NULL;
 }
 
+/*
+ * @description Returns the number of elements in an enum.
+ * @argument None
+ * @returns Integer
+ */
 EH_METHOD(Enum, size) {
 	ASSERT_RESOURCE(Enum, "Enum.size");
 	return ehretval_t::make_int(data->size());
 }
 
+/*
+ * @description Converts an enum to string. Returns a representation similar to
+ * the code used to create an enum, but omitting any methods.
+ * @argument None
+ * @returns String representation of the enum.
+ */
 EH_METHOD(Enum, toString) {
 	ASSERT_RESOURCE(Enum, "Enum.toString");
 	return ehretval_t::make_string(strdup(data->to_string().c_str()));

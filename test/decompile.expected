@@ -22,7 +22,7 @@ func: f
 	this.reduce (Nil, (func: base, val
 		given (f val)
 			case true
-				Cons (val, base)
+				base + 1
 			case false
 				base
 		end

@@ -5,6 +5,6 @@ echo(List.prototype.sort.decompile())
 
 echo(List.prototype.map.decompile())
 
-echo(List.prototype.countPredicate.decompile())
+echo(List.prototype.count.decompile())
 
 echo(List.prototype.operator->.decompile())

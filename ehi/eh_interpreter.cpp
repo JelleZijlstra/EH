@@ -38,6 +38,7 @@ const char *libredirs[][2] = {
 };
 
 static inline int count_nodes(const ehretval_p node);
+static attributes_t parse_attributes(ehretval_p node);
 
 /*
  * Stuff to be done in a loop
@@ -300,7 +301,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 		 */
 			case T_COMMAND:
 				return eh_op_command(
-					eh_execute(paras[0], context)->get_stringval(),
+					paras[0]->get_stringval(),
 					paras[1],
 					context
 				);
@@ -338,8 +339,7 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 					// set to true by default
 					value_r = ehretval_t::make_bool(true);
 				}
-				ehretval_p str = eh_execute(node_paras[0], context);
-				const char *shorts = str->get_stringval();
+				const char *shorts = node_paras[0]->get_stringval();
 				for(int i = 0, len = strlen(shorts); i < len; i++) {
 					char index[2];
 					index[0] = shorts[i];
@@ -350,8 +350,7 @@ ehretval_p EHI::eh_op_command(const char *name, ehretval_p node, ehcontext_t con
 			}
 			case T_LONGPARA: {
 				// long-form paras
-				ehretval_p str = eh_execute(node_paras[0], context);
-				const char *index = str->get_stringval();
+				const char *index = node_paras[0]->get_stringval();
 				if(node2->get_opval()->nparas == 1) {
 					paras->string_indices[index] = ehretval_t::make_bool(true);
 				} else {
@@ -529,7 +528,7 @@ ehretval_p EHI::eh_op_declareclosure(ehretval_p *paras, ehcontext_t context) {
 }
 ehretval_p EHI::eh_op_enum(opnode_t *op, ehcontext_t context) {
 	// unpack arguments
-	const char *name = eh_execute(op->paras[0], context)->get_stringval();
+	const char *name = op->paras[0]->get_stringval();
 	ehretval_p members_code = op->paras[1];
 	ehretval_p code = op->paras[2];
 
@@ -550,18 +549,15 @@ ehretval_p EHI::eh_op_enum(opnode_t *op, ehcontext_t context) {
 		}
 
 		// handle the member
-		const char *member_name = eh_execute(current_member->get_opval()->paras[0], context)->get_stringval();
+		const char *member_name = current_member->get_opval()->paras[0]->get_stringval();
 		if(current_member->get_opval()->nparas == 1) {
 			Enum::add_nullary_member(ret, member_name, this);
 		} else {
 			std::vector<std::string> params(0);
 			for(ehretval_p argument = current_member->get_opval()->paras[1]; ; argument = argument->get_opval()->paras[1]) {
-				if(argument->get_opval()->op == ',') {
-					const char *name = eh_execute(argument->get_opval()->paras[0], context)->get_stringval();
-					params.push_back(name);
-				} else {
-					const char *name = eh_execute(argument, context)->get_stringval();
-					params.push_back(name);
+				const char *name = argument->get_opval()->paras[0]->get_stringval();
+				params.push_back(name);
+				if(argument->get_opval()->op != ',') {
 					break;
 				}
 			}
@@ -595,7 +591,7 @@ ehretval_p EHI::eh_op_declareclass(opnode_t *op, ehcontext_t context) {
 	const char *name = "(anonymous class)";
 	if(op->nparas == 2) {
 		// named class
-		name = eh_execute(op->paras[0], context)->get_stringval();
+		name = op->paras[0]->get_stringval();
 		code = op->paras[1];
 	} else {
 		// nameless class
@@ -651,25 +647,9 @@ ehretval_p EHI::eh_op_tuple(ehretval_p node, ehcontext_t context) {
 }
 void EHI::eh_op_classmember(opnode_t *op, ehcontext_t context) {
 	// parse the attributes into an attributes_t
-	attributes_t attributes = attributes_t::make();
-	for(ehretval_p node = op->paras[0]; node->get_opval()->nparas != 0; node = node->get_opval()->paras[0]) {
-		switch(node->get_opval()->paras[1]->get_attributeval()) {
-			case publica_e:
-				attributes.visibility = public_e;
-				break;
-			case privatea_e:
-				attributes.visibility = private_e;
-				break;
-			case statica_e:
-				attributes.isstatic = static_e;
-				break;
-			case consta_e:
-				attributes.isconst = const_e;
-				break;
-		}
-	}
+	attributes_t attributes = parse_attributes(op->paras[0]);
 	// set the member
-	set(op->paras[1], eh_execute(op->paras[2], context), &attributes, context);
+	set(op->paras[1], NULL, &attributes, context);
 }
 ehretval_p EHI::eh_op_switch(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p ret;
@@ -876,10 +856,9 @@ ehretval_p EHI::eh_op_colon(ehretval_p *paras, ehcontext_t context) {
 	return call_function(function, args, context);
 }
 ehretval_p EHI::eh_op_dollar(ehretval_p node, ehcontext_t context) {
-	ehretval_p varname = eh_execute(node, context);
-	ehmember_p var = context.scope->get_objectval()->get_recursive(varname->get_stringval(), context);
+	ehmember_p var = context.scope->get_objectval()->get_recursive(node->get_stringval(), context);
 	if(var == NULL) {
-		throw_NameError(context.scope, varname->get_stringval(), this);
+		throw_NameError(context.scope, node->get_stringval(), this);
 		return NULL;
 	} else {
 		return var->value;
@@ -909,7 +888,7 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 				throw_TypeError("Cannot set member on primitive", base_var->type(), this);
 			}
 			// accessor is guaranteed to be a string
-			char *accessor = eh_execute(internal_paras[1], context)->get_stringval();
+			char *accessor = internal_paras[1]->get_stringval();
 			if(attributes == NULL) {
 				this->set_property(base_var, accessor, rvalue, context);
 			} else {
@@ -921,8 +900,7 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 			return rvalue;
 		}
 		case '$': {
-			ehretval_p base_var = eh_execute(internal_paras[0], context);
-			const char *name = base_var->get_stringval();
+			const char *name = internal_paras[0]->get_stringval();
 			attributes_t attributes_container = attributes_t::make();
 			if(attributes == NULL) {
 				ehmember_p member = context.scope->get_objectval()->get_recursive(name, context);
@@ -967,6 +945,10 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 		case '_':
 		case T_NULL: // allow NULL to enable ignoring values
 			return rvalue;
+		case T_CLASSMEMBER: {
+			attributes_t new_attributes = parse_attributes(internal_paras[0]);
+			return set(internal_paras[1], rvalue, &new_attributes, context);
+		}
 		default:
 			throw_MiscellaneousError("Invalid lvalue", this);
 			break;
@@ -976,7 +958,7 @@ ehretval_p EHI::set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attribut
 }
 ehretval_p EHI::eh_op_dot(ehretval_p *paras, ehcontext_t context) {
 	ehretval_p base_var = eh_execute(paras[0], context);
-	const char *accessor = eh_execute(paras[1], context)->get_stringval();
+	const char *accessor = paras[1]->get_stringval();
 	if(base_var->type() == super_class_e) {
 		return get_property(base_var->get_super_classval()->content(), accessor, context);
 	} else {
@@ -1302,4 +1284,25 @@ static inline int count_nodes(const ehretval_p node) {
 		tmp = tmp->get_opval()->paras[0], i++
 	) {}
 	return i;
+}
+
+static attributes_t parse_attributes(ehretval_p node) {
+	attributes_t attributes = attributes_t::make();
+	for( ; node->get_opval()->nparas != 0; node = node->get_opval()->paras[1]) {
+		switch(node->get_opval()->paras[0]->get_attributeval()) {
+			case publica_e:
+				attributes.visibility = public_e;
+				break;
+			case privatea_e:
+				attributes.visibility = private_e;
+				break;
+			case statica_e:
+				attributes.isstatic = static_e;
+				break;
+			case consta_e:
+				attributes.isconst = const_e;
+				break;
+		}
+	}
+	return attributes;
 }

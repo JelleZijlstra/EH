@@ -3,7 +3,7 @@ foo = 2
 baz = 4
 class Bar
 	private foo = 3
-	public tryIt:
+	public tryIt = func:
 		# 3
 		echo foo
 		# 3

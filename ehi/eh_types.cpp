@@ -391,11 +391,10 @@ std::string ehretval_t::decompile(int level) {
 					break;
 				case T_CLASSMEMBER:
 					out << op->paras[0]->decompile(level) << op->paras[1]->decompile(level);
-					out << " = " << op->paras[2]->decompile(level);
 					break;
 				case T_ATTRIBUTE:
 					if(op->nparas != 0) {
-						out << op->paras[0]->decompile(level) << op->paras[1]->decompile(level) << " ";
+						out << op->paras[0]->decompile(level) << " " << op->paras[1]->decompile(level);
 					}
 					break;
 				case T_IF:

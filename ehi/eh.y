@@ -72,6 +72,7 @@ EHI *yyget_extra(void *scanner);
 %token <sValue> T_CUSTOMOP
 %right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ T_LEFTSHIFTEQ T_RIGHTSHIFTEQ
 %right T_DOUBLEARROW
+%nonassoc T_ATTRIBUTE
 %right ','
 %left T_AND T_OR T_XOR
 %left '|' '^' '&'
@@ -91,8 +92,9 @@ EHI *yyget_extra(void *scanner);
 
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list
-%type<ehNode> bareword_or_string para_expr catch_clauses catch_clause
+%type<ehNode> para_expr catch_clauses catch_clause
 %type<ehNode> elseif_clauses elseif_clause enum_list enum_member enum_arg_list
+%type<sValue> bareword_or_string
 %%
 program:
 	global_list				{ 	// Don't do anything. Destructors below take
@@ -155,13 +157,13 @@ statement:
 	| T_BREAK expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_BREAK, $2); }
 		/* property declaration */
-	| attributelist T_VARIABLE T_SEPARATOR
-							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2), ADD_NODE0(T_NULL)); }
-	| attributelist expression '=' expression T_SEPARATOR
-							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, $2, $4); }
 	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END T_SEPARATOR
-							{ $$ = ADD_NODE3(T_CLASSMEMBER, $1, ADD_NODE1('$', $2),
-									ADD_NODE2(T_FUNC, $4, $6)); }
+							{
+								$$ = ADD_NODE2('=',
+										ADD_NODE2(T_CLASSMEMBER, $1, ADD_NODE1('$', $2)),
+										ADD_NODE2(T_FUNC, $4, $6)
+								);
+							}
 	;
 
 expression:
@@ -177,6 +179,8 @@ expression:
 	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
 	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
 	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
+	| attributelist expression %prec T_ATTRIBUTE
+							{ $$ = ADD_NODE2(T_CLASSMEMBER, $1, $2); }
 	| expression T_PLUSPLUS	{
 								ehretval_p lvalue = ehretval_t::make($1);
 								$$ = eh_addnode('=', lvalue, ehretval_t::make(eh_addnode('+', lvalue, ehretval_t::make(1))));
@@ -407,8 +411,8 @@ para:
 	;
 
 bareword_or_string:
-	T_VARIABLE				{ $$ = ADD_NODE1(T_LITERAL, $1); }
-	| T_STRING				{ $$ = ADD_NODE1(T_LITERAL, $1); }
+	T_VARIABLE				{ $$ = $1; }
+	| T_STRING				{ $$ = $1; }
 
 /* If statements */
 elseif_clauses:
@@ -503,13 +507,13 @@ separators:
 
 /* Property declarations */
 attributelist:
-	attributelist_inner T_ATTRIBUTE
+	T_ATTRIBUTE attributelist_inner
 							{ $$ = ADD_NODE2(T_ATTRIBUTE, $1, $2); }
 
 attributelist_inner:
-	attributelist_inner T_ATTRIBUTE
+	T_ATTRIBUTE attributelist_inner
 							{ $$ = ADD_NODE2(T_ATTRIBUTE, $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(T_ATTRIBUTE); }
+	| /* NULL */ %prec '='	{ $$ = ADD_NODE0(T_ATTRIBUTE); }
 	;
 
 /* Enums */

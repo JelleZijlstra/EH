@@ -3,13 +3,13 @@ include '../lib/exception.eh'
 
 class Foo
 	private baz = 42
-	public bar:
+	public bar = func:
 		printvar this
 		this = 2
 		echo this.baz
 		this
 	end
-	public useprivate:
+	public useprivate = func:
 		printvar this
 		this.baz
 	end

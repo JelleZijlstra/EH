@@ -1,3 +1,7 @@
+/*
+ * EmptyIterator
+ * Thrown when an iterator is depleted.
+ */
 #include <sstream>
 
 #include "EmptyIterator.h"
@@ -11,6 +15,11 @@ EH_INITIALIZER(EmptyIterator) {
 	INHERIT_LIBRARY(Exception);
 }
 
+/*
+ * @description Initializer. Takes no arguments.
+ * @argument None
+ * @returns N/A
+ */
 EH_METHOD(EmptyIterator, initialize) {
-	return ehretval_t::make_resource(obj->get_full_type(), new Exception(strdup("Empty iterator")));	
+	return ehretval_t::make_resource(obj->get_full_type(), new Exception(strdup("Empty iterator")));
 }

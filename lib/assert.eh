@@ -23,3 +23,17 @@ public assert = func: expr
 		throw(AssertionFailure.new desc)
 	end
 end
+
+public assertThrows = func: args
+	if args.length() > 2
+		expr, exceptionClass, desc = args
+	else
+		expr, exceptionClass = args
+		desc = "(no description)"
+	end
+	try
+		expr()
+		throw(AssertionFailure.new(desc))
+	catch if exception.isA exceptionClass
+	end
+end

@@ -7,9 +7,9 @@
  * of this code were inspired by Tom Niemann's "A Compact Guide to Lex & Yacc",
  * available at http://epaperpress.com/lexandyacc/
  */
-#include "eh.h"
+#include "eh.hpp"
 #include "eh.bison.hpp"
-#include "eh_tree.h"
+#include "eh_tree.hpp"
 extern FILE *yyin;
 EHI *yyget_extra(void *scanner);
 #define YYERROR_VERBOSE

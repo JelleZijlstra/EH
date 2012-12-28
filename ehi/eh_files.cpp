@@ -14,7 +14,7 @@
 #include <linux/limits.h>
 #endif
 
-#include "eh_files.h"
+#include "eh_files.hpp"
 
 const std::string eh_getcwd() {
 	const char *cwd = getcwd(NULL, 0);

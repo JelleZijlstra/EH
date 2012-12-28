@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "NameError.h"
+#include "NameError.hpp"
 
 void throw_NameError(ehretval_p object, const char *name, EHI *ehi) {
 	ehretval_p args[2];

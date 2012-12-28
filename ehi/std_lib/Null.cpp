@@ -1,4 +1,4 @@
-#include "Null.h"
+#include "Null.hpp"
 
 EH_INITIALIZER(Null) {
 	REGISTER_METHOD(Null, initialize);

@@ -1,4 +1,4 @@
-#include "FixedArray.h"
+#include "FixedArray.hpp"
 
 EH_INITIALIZER(FixedArray) {
 	REGISTER_METHOD(FixedArray, initialize);

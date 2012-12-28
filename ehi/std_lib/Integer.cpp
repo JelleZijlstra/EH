@@ -1,8 +1,8 @@
 #include <cmath>
 #include <limits.h>
 
-#include "Integer.h"
-#include "MiscellaneousError.h"
+#include "Integer.hpp"
+#include "MiscellaneousError.hpp"
 
 EH_INITIALIZER(Integer) {
 	REGISTER_METHOD(Integer, initialize);

@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "LoopError.h"
+#include "LoopError.hpp"
 
 void throw_LoopError(const char *msg, int level, EHI *ehi) {
 	ehretval_p args[2];

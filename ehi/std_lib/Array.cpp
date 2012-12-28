@@ -9,7 +9,7 @@
  * Python lists and JavaScript arrays, while using the Map class for more
  * general maps.
  */
-#include "Array.h"
+#include "Array.hpp"
 
 EH_INITIALIZER(Array) {
 	REGISTER_METHOD(Array, initialize);

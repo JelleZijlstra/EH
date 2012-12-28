@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "SyntaxError.h"
+#include "SyntaxError.hpp"
 
 void throw_SyntaxError(const char *message, int line, EHI *ehi) {
 	ehretval_p args[2];

@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "VisibilityError.h"
+#include "VisibilityError.hpp"
 
 void throw_VisibilityError(ehretval_p object, const char *name, EHI *ehi) {
 	ehretval_p args[2];

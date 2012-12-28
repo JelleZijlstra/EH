@@ -5,7 +5,7 @@
  * SWIG interface file for ehi
  */
 %{
-#include "eh.h"
+#include "eh.hpp"
 ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
 	return NULL;
 }
@@ -71,7 +71,7 @@ zval *ehtozval(ehretval_p in, EHI *ehi) {
 zval *hashtozval(ehhash_t *hash, EHI *ehi) {
 	zval *arr;
 	MAKE_STD_ZVAL(arr);
-	
+
 	array_init(arr);
 	HASH_FOR_EACH(hash, i) {
 		add_assoc_zval(arr, i->first.c_str(), ehtozval(i->second, ehi));
@@ -82,7 +82,7 @@ zval *hashtozval(ehhash_t *hash, EHI *ehi) {
 zval *tupletozval(ehtuple_t *tuple, EHI *ehi) {
 	zval *arr;
 	MAKE_STD_ZVAL(arr);
-	
+
 	array_init(arr);
 	for(int i = 0, size = tuple->size(); i < size; i++) {
 		add_index_zval(arr, i, ehtozval(tuple->get(i), ehi));

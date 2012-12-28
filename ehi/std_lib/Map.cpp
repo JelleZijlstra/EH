@@ -1,4 +1,4 @@
-#include "Map.h"
+#include "Map.hpp"
 
 EH_INITIALIZER(Map) {
 	REGISTER_METHOD(Map, initialize);

@@ -3,14 +3,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "eh.h"
-#include "eh_libclasses.h"
-#include "std_lib/Array.h"
-#include "std_lib/Function.h"
-#include "std_lib/Hash.h"
-#include "std_lib/Range.h"
-#include "std_lib/Tuple.h"
-#include "std_lib/SuperClass.h"
+#include "eh.hpp"
+#include "eh_libclasses.hpp"
+#include "std_lib/Array.hpp"
+#include "std_lib/Function.hpp"
+#include "std_lib/Hash.hpp"
+#include "std_lib/Range.hpp"
+#include "std_lib/Tuple.hpp"
+#include "std_lib/SuperClass.hpp"
 
 /*
  * ehretval_t

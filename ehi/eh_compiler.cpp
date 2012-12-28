@@ -5,7 +5,7 @@
  * A minimal compiler for the EH language. Does not support any useful feature
  * of the language, really.
  */
-#include "eh.h"
+#include "eh.hpp"
 #include "eh.bison.hpp"
 
 // file to write to

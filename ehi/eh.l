@@ -5,9 +5,9 @@
  *
  * Lex input specification for the EH grammar.
  */
-#include "eh.h"
+#include "eh.hpp"
 #include "eh.bison.hpp"
-#include "std_lib/SyntaxError.h"
+#include "std_lib/SyntaxError.hpp"
 
 void make_string(char **, char *);
 %}

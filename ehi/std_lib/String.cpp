@@ -1,4 +1,4 @@
-#include "String.h"
+#include "String.hpp"
 
 EH_INITIALIZER(String) {
 	REGISTER_METHOD(String, initialize);

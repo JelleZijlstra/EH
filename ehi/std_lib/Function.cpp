@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "Function.h"
+#include "Function.hpp"
 
 EH_INITIALIZER(Function) {
 	REGISTER_METHOD_RENAME(Function, operator_colon, "operator()");

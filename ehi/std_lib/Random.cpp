@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "Random.h"
+#include "Random.hpp"
 
 EH_INITIALIZER(Random) {
 	REGISTER_METHOD(Random, srand);

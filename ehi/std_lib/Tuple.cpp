@@ -1,4 +1,4 @@
-#include "Tuple.h"
+#include "Tuple.hpp"
 
 EH_INITIALIZER(Tuple) {
 	REGISTER_METHOD(Tuple, initialize);

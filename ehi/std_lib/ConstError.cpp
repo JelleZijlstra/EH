@@ -4,7 +4,7 @@
  */
 #include <sstream>
 
-#include "ConstError.h"
+#include "ConstError.hpp"
 
 void throw_ConstError(ehretval_p object, const char *name, EHI *ehi) {
 	ehretval_p args[2] = {object, ehretval_t::make_string(strdup(name))};

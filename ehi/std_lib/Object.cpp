@@ -1,7 +1,7 @@
 #include <set>
 
-#include "Object.h"
-#include "SuperClass.h"
+#include "Object.hpp"
+#include "SuperClass.hpp"
 
 EH_INITIALIZER(Object) {
 	REGISTER_METHOD(Object, new);

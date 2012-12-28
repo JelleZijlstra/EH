@@ -1,7 +1,7 @@
 #include <cmath>
 
-#include "Float.h"
-#include "MiscellaneousError.h"
+#include "Float.hpp"
+#include "MiscellaneousError.hpp"
 
 EH_INITIALIZER(Float) {
 	REGISTER_METHOD(Float, initialize);

@@ -1,4 +1,4 @@
-#include "TypeError.h"
+#include "TypeError.hpp"
 
 void throw_TypeError(const char *msg, int type, EHI *ehi) {
 	ehretval_p args[2];

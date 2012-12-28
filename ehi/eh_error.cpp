@@ -5,7 +5,7 @@
  * Code file for the EH error handling system.
  */
 
-#include "eh.h"
+#include "eh.hpp"
 
 /*
  * Exception classes

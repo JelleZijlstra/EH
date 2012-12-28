@@ -5,7 +5,7 @@
  */
 #include <sstream>
 
-#include "ArgumentError.h"
+#include "ArgumentError.hpp"
 
 void throw_ArgumentError(const char *message, const char *method, ehretval_p value, EHI *ehi) {
 	ehretval_p args[3];

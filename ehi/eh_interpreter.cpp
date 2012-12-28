@@ -7,17 +7,17 @@
 #include <cctype>
 #include <string.h>
 
-#include "eh.h"
-#include "eh_libclasses.h"
-#include "eh_libcmds.h"
-#include "std_lib/ConstError.h"
-#include "std_lib/Enum.h"
-#include "std_lib/GlobalObject.h"
-#include "std_lib/LoopError.h"
-#include "std_lib/MiscellaneousError.h"
-#include "std_lib/NameError.h"
-#include "std_lib/SuperClass.h"
-#include "std_lib/VisibilityError.h"
+#include "eh.hpp"
+#include "eh_libclasses.hpp"
+#include "eh_libcmds.hpp"
+#include "std_lib/ConstError.hpp"
+#include "std_lib/Enum.hpp"
+#include "std_lib/GlobalObject.hpp"
+#include "std_lib/LoopError.hpp"
+#include "std_lib/MiscellaneousError.hpp"
+#include "std_lib/NameError.hpp"
+#include "std_lib/SuperClass.hpp"
+#include "std_lib/VisibilityError.hpp"
 
 typedef struct ehcmd_listentry_t {
 	const char *name;

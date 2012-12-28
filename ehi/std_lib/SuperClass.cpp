@@ -1,4 +1,4 @@
-#include "SuperClass.h"
+#include "SuperClass.hpp"
 
 EH_INITIALIZER(SuperClass) {
 	REGISTER_METHOD(SuperClass, toString);

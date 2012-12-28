@@ -18,9 +18,9 @@ all: ehi ehphp
 eh_wrap.o: eh_wrap.cpp
 	$(CC) `php-config --includes` $(CCBASICFLAGS) $< -o $@
 
-eh.h: ehi.h eh.bison.hpp
+eh.hpp: ehi.hpp eh.bison.hpp
 
-%.o: %.cpp eh.h
+%.o: %.cpp eh.hpp
 	$(CC) $(CCFLAGS) $< -o $@
 
 ehc: $(COMPILER_O)

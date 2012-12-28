@@ -4,8 +4,8 @@
  *
  * Functionality to create and show the EH abstract syntax tree.
  */
-#include "eh.h"
-#include "eh_tree.h"
+#include "eh.hpp"
+#include "eh_tree.hpp"
 #include <stdio.h>
 
 static opnode_t *eh_addnode_base(int opcode, int nparas, ehretval_p *paras) {

@@ -1,11 +1,11 @@
 /*
  * Code for library commands.
  */
-#include "eh.h"
-#include "eh_libcmds.h"
-#include "eh_libclasses.h"
-#include "std_lib/GlobalObject.h"
-#include "std_lib/Array.h"
+#include "eh.hpp"
+#include "eh_libcmds.hpp"
+#include "eh_libclasses.hpp"
+#include "std_lib/GlobalObject.hpp"
+#include "std_lib/Array.hpp"
 
 EH_LIBCMD(quit) {
 	throw quit_exception();

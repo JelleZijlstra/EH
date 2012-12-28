@@ -1,4 +1,4 @@
-#include "Hash.h"
+#include "Hash.hpp"
 
 EH_INITIALIZER(Hash) {
 	REGISTER_METHOD(Hash, toArray);

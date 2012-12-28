@@ -1,4 +1,4 @@
-#include "MiscellaneousError.h"
+#include "MiscellaneousError.hpp"
 
 void throw_MiscellaneousError(const char *message, EHI *ehi) {
 	throw_error("MiscellaneousError", ehretval_t::make_string(strdup(message)), ehi);

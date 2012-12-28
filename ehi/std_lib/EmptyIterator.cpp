@@ -4,7 +4,7 @@
  */
 #include <sstream>
 
-#include "EmptyIterator.h"
+#include "EmptyIterator.hpp"
 
 void throw_EmptyIterator(EHI *ehi) {
 	throw_error("EmptyIterator", NULL, ehi);

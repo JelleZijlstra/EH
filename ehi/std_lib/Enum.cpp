@@ -1,4 +1,4 @@
-#include "Enum.h"
+#include "Enum.hpp"
 
 #include <sstream>
 

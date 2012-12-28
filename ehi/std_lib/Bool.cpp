@@ -4,7 +4,7 @@
  * false. I should look into making it an Enum.
  */
 
-#include "Bool.h"
+#include "Bool.hpp"
 
 EH_INITIALIZER(Bool) {
 	REGISTER_METHOD(Bool, initialize);

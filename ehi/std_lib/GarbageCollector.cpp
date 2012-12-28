@@ -1,4 +1,4 @@
-#include "GarbageCollector.h"
+#include "GarbageCollector.hpp"
 
 EH_INITIALIZER(GarbageCollector) {
 	REGISTER_METHOD(GarbageCollector, run);

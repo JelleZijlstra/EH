@@ -1,4 +1,4 @@
-#include "UnknownCommandError.h"
+#include "UnknownCommandError.hpp"
 
 void throw_UnknownCommandError(const char *msg, EHI *ehi) {
 	throw_error("UnknownCommandError", ehretval_t::make_string(strdup(msg)), ehi);

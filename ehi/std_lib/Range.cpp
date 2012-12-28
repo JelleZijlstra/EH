@@ -1,4 +1,4 @@
-#include "Range.h"
+#include "Range.hpp"
 
 EH_INITIALIZER(Range) {
 	REGISTER_METHOD(Range, min);

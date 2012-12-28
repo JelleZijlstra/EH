@@ -1,4 +1,4 @@
-#include "Exception.h"
+#include "Exception.hpp"
 
 EH_INITIALIZER(Exception) {
 	REGISTER_METHOD(Exception, initialize);

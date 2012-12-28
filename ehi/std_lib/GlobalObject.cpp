@@ -11,7 +11,6 @@
 #include "Array.h"
 #include "Bool.h"
 #include "ConstError.h"
-#include "CountClass.h"
 #include "Enum.h"
 #include "Exception.h"
 #include "File.h"
@@ -64,7 +63,6 @@ EH_INITIALIZER(GlobalObject) {
 	/*
 	 * Initialize top-level classes.
 	 */
-	GLOBAL_REGISTER_CLASS(CountClass, -1);
 	GLOBAL_REGISTER_CLASS(File, -1);
 	GLOBAL_REGISTER_CLASS(Integer, int_e);
 	GLOBAL_REGISTER_CLASS(String, string_e);

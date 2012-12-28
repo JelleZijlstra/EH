@@ -81,7 +81,7 @@ extendbase.eh
 failedinclude.eh
 fibonacci.eh
 fibonacci2.eh
-file.eh
+file_test.eh
 fill.eh
 float.eh
 floatcast.eh
@@ -279,3 +279,5 @@ cmdtable.eh
 bad_catch.eh
 Enum.eh
 Exception.eh
+shell.eh
+File.eh

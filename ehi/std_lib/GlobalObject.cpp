@@ -108,6 +108,7 @@ EH_INITIALIZER(GlobalObject) {
 	REGISTER_METHOD(GlobalObject, handleUncaught);
 	REGISTER_METHOD(GlobalObject, workingDir);
 	REGISTER_METHOD(GlobalObject, contextName);
+	REGISTER_METHOD(GlobalObject, shell);
 }
 
 EH_METHOD(GlobalObject, toString) {
@@ -443,4 +444,10 @@ EH_METHOD(GlobalObject, contextName) {
 EH_METHOD(GlobalObject, workingDir) {
 	ASSERT_NULL("workingDir");
 	return ehretval_t::make_string(strdup(ehi->get_working_dir().c_str()));
+}
+
+EH_METHOD(GlobalObject, shell) {
+	ASSERT_TYPE(args, string_e, "shell");
+	std::string output = eh_shell_exec(args->get_stringval());
+	return ehretval_t::make_string(strdup(output.c_str()));
 }

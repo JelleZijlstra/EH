@@ -17,5 +17,6 @@ EH_METHOD(GlobalObject, collectGarbage);
 EH_METHOD(GlobalObject, handleUncaught);
 EH_METHOD(GlobalObject, contextName);
 EH_METHOD(GlobalObject, workingDir);
+EH_METHOD(GlobalObject, shell);
 
 EH_INITIALIZER(GlobalObject);

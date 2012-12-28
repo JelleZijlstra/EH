@@ -10,11 +10,33 @@
 #include <string>
 #include <string.h>
 
+#include <sstream>
+#include <iostream>
+
 #ifdef __linux__
 #include <linux/limits.h>
 #endif
 
 #include "eh_files.hpp"
+
+class FILE_p {
+private:
+	FILE *file;
+public:
+	FILE_p(FILE *f) : file(f) {}
+
+	FILE *operator->() {
+		return file;
+	}
+
+	~FILE_p() {
+		pclose(file);
+	}
+
+	bool null() const {
+		return file == NULL;
+	}
+};
 
 const std::string eh_getcwd() {
 	const char *cwd = getcwd(NULL, 0);
@@ -39,4 +61,18 @@ const std::string eh_dirname(const std::string &name) {
 	std::string out(dirname(tmp));
 	free((void *)tmp);
 	return out;
+}
+
+const std::string eh_shell_exec(const std::string &command) {
+	FILE_p p = popen(command.c_str(), "r");
+	if(p.null()) {
+		throw eh_files_exception("Could not execute command");
+	}
+	char buffer[512];
+	std::ostringstream output;
+	while(fgets(buffer, 511, p.operator->()) != NULL) {
+		output << buffer;
+	}
+	std::cout.flush();
+	return output.str();
 }

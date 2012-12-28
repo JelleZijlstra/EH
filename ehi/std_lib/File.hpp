@@ -18,8 +18,8 @@ EH_METHOD(File, getc);
 EH_METHOD(File, gets);
 EH_METHOD(File, puts);
 EH_METHOD(File, close);
-EH_METHOD(File, toBool);
 EH_METHOD(File, finalize);
 EH_METHOD(File, readFile);
+EH_METHOD(File, isOpen);
 
 EH_INITIALIZER(File);

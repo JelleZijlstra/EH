@@ -56,10 +56,10 @@ finalize <public,non-static,non-constant>: @function <library>:
 getc <public,non-static,non-constant>: @function <library>: 
 gets <public,non-static,non-constant>: @function <library>: 
 initialize <public,non-static,non-constant>: @function <library>: 
+isOpen <public,non-static,non-constant>: @function <library>: 
 open <public,non-static,non-constant>: @function <library>: 
 puts <public,non-static,non-constant>: @function <library>: 
 readFile <public,non-static,non-constant>: @function <library>: 
-toBool <public,non-static,non-constant>: @function <library>: 
 ]
 FixedArray <public,non-static,constant>: @object <FixedArray> [
 initialize <public,non-static,non-constant>: @function <library>: 
@@ -280,6 +280,7 @@ log <public,non-static,non-constant>: @function <library>:
 pow <public,non-static,non-constant>: @function <library>: 
 printvar <public,non-static,non-constant>: @function <library>: 
 put <public,non-static,non-constant>: @function <library>: 
+shell <public,non-static,non-constant>: @function <library>: 
 throw <public,non-static,non-constant>: @function <library>: 
 toString <public,non-static,non-constant>: @function <library>: 
 workingDir <public,non-static,non-constant>: @function <library>: 

@@ -1,3 +1,7 @@
+/*
+ * ConstError
+ * Thrown when attempting to modify a constant property.
+ */
 #include <sstream>
 
 #include "ConstError.h"
@@ -12,6 +16,12 @@ EH_INITIALIZER(ConstError) {
 	INHERIT_LIBRARY(Exception);
 }
 
+/*
+ * @description Initializer. Puts its arguments in the object properties
+ * <tt>object</tt> and <tt>name</tt>.
+ * @argument Tuple of 2: object owning the property and name of the property
+ * @returns N/A
+ */
 EH_METHOD(ConstError, initialize) {
 	ASSERT_NARGS(2, "ConstError.initialize");
 	ehretval_p object = args->get_tupleval()->get(0);

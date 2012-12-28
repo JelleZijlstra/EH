@@ -54,17 +54,14 @@ enum List
 		case Cons(@hd, @tl); tl.split(r, Cons(hd, l))
 	end
 
-	const public merge = r => match this
-		case Nil; r
-		case Cons(@lhd, @ltl)
-			match r
-				case Nil; this
-				case Cons(@rhd, @rtl)
-					if lhd < rhd
-						Cons(lhd, ltl.merge r)
-					else
-						Cons(rhd, this.merge rtl)
-					end
+	const public merge = r => match this, r
+		case Nil, Nil; Nil
+		case (@l, Nil) | (Nil, @l); l
+		case Cons(@lhd, @ltl), Cons(@rhd, @rtl);
+			if lhd < rhd
+				Cons(lhd, ltl.merge r)
+			else
+				Cons(rhd, this.merge rtl)
 			end
 	end
 

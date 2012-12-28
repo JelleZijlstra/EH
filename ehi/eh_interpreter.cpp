@@ -1175,7 +1175,7 @@ ehretval_p EHInterpreter::instantiate(ehretval_p obj) {
 	ehretval_p ret = make_object(new_obj);
 	ehretval_p to_instantiate;
 	if(obj->type() == object_e) {
-		to_instantiate = ehretval_p(obj);
+		to_instantiate = obj;
 	} else {
 		to_instantiate = get_primitive_class(obj->type());
 	}

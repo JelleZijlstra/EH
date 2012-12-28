@@ -272,3 +272,4 @@ privatelexical.eh
 ArgumentError.eh
 array_to_list.eh
 Array.eh
+Bool.eh

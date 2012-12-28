@@ -17,4 +17,9 @@
 'h' => @int 42
 'test' => @bool true
 ]
+@array [
+'_ehphp' => @bool true
+0 => @string 'foo'
+1 => @string 'bar'
+]
 %%stderr%%

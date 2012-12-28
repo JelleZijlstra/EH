@@ -98,30 +98,36 @@ EHI *yyget_extra(void *scanner);
 %type<sValue> bareword_or_string
 %%
 program:
-	global_list				{ 	// Don't do anything. Destructors below take
-								// care of cleanup.
+	global_list				{
+								EHI *ehi = yyget_extra(scanner);
+								if(ehi->get_interactivity() == end_is_end_e) {
+									ehretval_p ret = ehi->eh_execute(ehretval_t::make($1), ehi->get_context());
+									return (ret->type() == int_e) ? ret->get_intval() : 0;
+								}
 							}
 
 global_list:
-	/* NULL */				{ }
+	/* NULL */				{ $$ = NULL; }
 	| statement				{
 								EHI *ehi = yyget_extra(scanner);
-								ehretval_p statement = ehretval_t::make($1);
-								ehretval_p ret = ehi->eh_execute(statement, ehi->get_context());
 								if(ehi->get_interactivity() != end_is_end_e) {
+									ehretval_p statement = ehretval_t::make($1);
+									ehretval_p ret = ehi->eh_execute(statement, ehi->get_context());
 									// TODO: make this use printvar instead
 									std::cout << "=> " << ehi->to_string(ret, ehi->get_context())->get_stringval() << std::endl;
-								}
 #if defined(DEBUG_GC) || defined(RUN_GC)
-								EHInterpreter *interpreter = ehi->get_parent();
-								interpreter->gc.do_collect(interpreter->global_object);
+									EHInterpreter *interpreter = ehi->get_parent();
+									interpreter->gc.do_collect(interpreter->global_object);
 #endif
-								// flush stdout after executing each statement
-								//fflush(stdout);
-								if(ehi->get_returning()) {
-									return (ret->type() == int_e) ? ret->get_intval() : 0;
+									if(ehi->get_returning()) {
+										return (ret->type() == int_e) ? ret->get_intval() : 0;
+									}
 								}
 							} global_list {
+								EHI *ehi = yyget_extra(scanner);
+								if(ehi->get_interactivity() == end_is_end_e) {
+									$$ = ADD_NODE2(T_SEPARATOR, $1, $3);
+								}
 							}
 	;
 

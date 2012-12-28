@@ -4,4 +4,4 @@
 printvar [1, 2]
 printvar [1]
 printvar [1,]
-printvar [1 2]
+eval "printvar [1 2]"

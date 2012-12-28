@@ -269,3 +269,4 @@ benchmark.eh
 scopeset.eh
 modifiers.eh
 privatelexical.eh
+ArgumentError.eh

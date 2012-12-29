@@ -152,6 +152,7 @@ public:
 	ehretval_p parse_interactive();
 
 	ehretval_p get_property(ehretval_p object, const char *name, ehcontext_t context);
+	ehretval_p get_property_no_binding(ehretval_p base_var, const char *name, ehcontext_t context);
 	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
 	ehmember_p set_property(ehretval_p object, const char *name, ehretval_p value, ehcontext_t context);
 	ehretval_p set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attributes, ehcontext_t context);

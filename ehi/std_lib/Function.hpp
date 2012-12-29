@@ -20,6 +20,8 @@ public:
 	ehfunc_t(functype_enum _type = user_e) : type(_type), args(), code(), libmethod_pointer(NULL) {}
 
 	~ehfunc_t() {}
+
+	static ehretval_p exec(ehretval_p base_object, ehretval_p function_object, ehretval_p args, EHI *ehi);
 private:
 	ehfunc_t(const ehfunc_t&);
 	ehfunc_t operator=(const ehfunc_t&);

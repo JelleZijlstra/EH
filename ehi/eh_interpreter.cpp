@@ -1047,23 +1047,12 @@ ehretval_p EHI::perform_op(const char *name, int nargs, ehretval_p *paras, ehcon
  * Functions
  */
 ehretval_p EHI::call_method(ehretval_p obj, const char *name, ehretval_p args, ehcontext_t context) {
-	ehretval_p func = NULL;
-	if(obj->is_object()) {
-		func = this->get_property(obj, name, context);
+	ehretval_p func = get_property_no_binding(obj, name, context);
+	if(func->is_a(func_e)) {
+		return ehfunc_t::exec(obj, func, args, this);
 	} else {
-		ehretval_p the_property = this->get_property(obj, name, context);
-		ehretval_p method;
-		if(the_property->is_a(binding_e)) {
-			method = the_property->get_bindingval()->method;
-		} else {
-			method = the_property;
-		}
-		if(!method->is_a(func_e)) {
-			throw_TypeError("Method must be a function", method->type(), this);
-		}
-		func = parent->make_binding(new ehbinding_t(obj, method));
+		return call_method(func, "operator()", args, context);
 	}
-	return call_function(func, args, context);
 }
 ehretval_p EHI::call_function(ehretval_p function, ehretval_p args, ehcontext_t context) {
 	// We special-case function calls on func_e and binding_e types; otherwise we'd end up in an infinite loop
@@ -1145,7 +1134,8 @@ ehmember_p EHI::set_member(ehretval_p object, const char *name, ehmember_p membe
 	obj->insert(name, member);
 	return member;
 }
-ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t context) {
+// get a property of the given name, without creating a binding
+ehretval_p EHI::get_property_no_binding(ehretval_p base_var, const char *name, ehcontext_t context) {
 	ehretval_p object;
 	if(base_var->is_object()) {
 		object = base_var;
@@ -1159,7 +1149,11 @@ ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t 
 	} else if (member->attribute.visibility == private_e && !obj->context_compare(context)) {
 		throw_VisibilityError(base_var, name, this);
 	}
-	ehretval_p out = member->value;
+	return member->value;
+}
+// get a property of the given name from the base_var object, creating a binding if necessary
+ehretval_p EHI::get_property(ehretval_p base_var, const char *name, ehcontext_t context) {
+	ehretval_p out = get_property_no_binding(base_var, name, context);
 	if(out->is_a(func_e)) {
 		return parent->make_binding(new ehbinding_t(base_var, out));
 	} else {

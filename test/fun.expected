@@ -1,4 +1,4 @@
 %%stdout%%
 @int 0
 %%stderr%%
-Uncaught exception of type TypeError: Method must be a function: Integer
+Uncaught exception of type NameError: Unknown member operator() in object of type Integer: 42

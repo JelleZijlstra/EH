@@ -27,19 +27,20 @@ EH_METHOD(Function, operator_colon) {
 	// on both Function and binding objects.
 	ehretval_p base_object;
 	ehretval_p function_object;
-	ehretval_p parent;
 	if(obj->is_a(func_e)) {
 		function_object = obj;
-		parent = obj->get_objectval()->parent;
 		base_object = ehi->global();
 	} else if(obj->type() == binding_e) {
 		ehbinding_t *binding = obj->get_bindingval();
 		function_object = binding->method;
-		parent = binding->method->get_objectval()->parent;
 		base_object = binding->object_data;
 	} else {
 		throw_TypeError("Invalid base object for Function.operator()", obj->type(), ehi);
 	}
+	return ehfunc_t::exec(base_object, function_object, args, ehi);
+}
+
+ehretval_p ehfunc_t::exec(ehretval_p base_object, ehretval_p function_object, ehretval_p args, EHI *ehi) {
 	ehfunc_t *f = function_object->get_objectval()->object_data->get_funcval();
 
 	if(f->type == lib_e) {
@@ -57,6 +58,7 @@ EH_METHOD(Function, operator_colon) {
 	ehi->not_returning();
 	return ret;
 }
+
 
 /*
  * @description "Decompiles" a function back into valid, executable EH code.

@@ -83,7 +83,7 @@ fibonacci.eh
 fibonacci2.eh
 file_test.eh
 fill.eh
-float.eh
+float_test.eh
 floatcast.eh
 floatmath.eh
 fold_left.eh
@@ -282,3 +282,4 @@ Exception.eh
 shell.eh
 File.eh
 FixedArray.eh
+Float.eh

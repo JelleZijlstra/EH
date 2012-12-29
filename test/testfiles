@@ -281,3 +281,4 @@ Enum.eh
 Exception.eh
 shell.eh
 File.eh
+FixedArray.eh

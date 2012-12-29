@@ -1,3 +1,7 @@
+/*
+ * FixedArray
+ * Provides contiguous arrays of fixed size.
+ */
 #include "FixedArray.hpp"
 
 EH_INITIALIZER(FixedArray) {
@@ -7,12 +11,26 @@ EH_INITIALIZER(FixedArray) {
 	REGISTER_METHOD(FixedArray, size);
 }
 
+/*
+ * @description Initializer. Creates an array of the given size.
+ * @argument Size of new array
+ * @returns N/A
+ */
 EH_METHOD(FixedArray, initialize) {
 	ASSERT_TYPE(args, int_e, "FixedArray.initialize");
+	const int size = args->get_intval();
+	if(size < 1) {
+		throw_ArgumentError("Size must be positive", "FixedArray.initialize", args, ehi);
+	}
 	FixedArray *fa = new FixedArray(args->get_intval());
 	return ehretval_t::make_resource(obj->get_full_type(), static_cast<LibraryBaseClass *>(fa));
 }
 
+/*
+ * @description Access an element in the array.
+ * @argument Index in the array
+ * @returns Element at the given index
+ */
 EH_METHOD(FixedArray, operator_arrow) {
 	ASSERT_TYPE(args, int_e, "FixedArray.operator->");
 	ASSERT_RESOURCE(FixedArray, "FixedArray.operator->");
@@ -23,6 +41,11 @@ EH_METHOD(FixedArray, operator_arrow) {
 	return data->get(index);
 }
 
+/*
+ * @description Set an element in the array.
+ * @argument Tuple of size 2: index in the array and value to set
+ * @returns Value set
+ */
 EH_METHOD(FixedArray, operator_arrow_equals) {
 	ASSERT_NARGS(2, "FixedArray.operator->=");
 	const ehtuple_t *tuple = args->get_tupleval();
@@ -39,8 +62,13 @@ EH_METHOD(FixedArray, operator_arrow_equals) {
 	return value;
 }
 
+/*
+ * @description Report the size of the array
+ * @argument None
+ * @returns Integer
+ */
 EH_METHOD(FixedArray, size) {
 	ASSERT_NULL("FixedArray.size");
 	ASSERT_RESOURCE(FixedArray, "FixedArray.size");
-	return ehretval_t::make_int(data->size());	
+	return ehretval_t::make_int(data->size());
 }

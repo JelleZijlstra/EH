@@ -37,6 +37,20 @@ ehretval_p EHI::optimize(ehretval_p node, ehcontext_t context) {
 				return val(eh_addnode('(', optimize(inner, context)));
 			}
 		}
+		case ':': {
+			// optimize method call
+			ehretval_p func = paras[0];
+			ehretval_p args = optimize(paras[1], context);
+			if(func->type() == op_e && func->get_opval()->op == '.') {
+				ehretval_p *inner_paras = func->get_opval()->paras;
+				ehretval_p base = optimize(inner_paras[0], context);
+				ehretval_p method = optimize(inner_paras[1], context);
+				return val(eh_addnode(T_CALL_METHOD, base, method, args));
+			} else {
+				ehretval_p optimized_func = optimize(func, context);
+				return val(eh_addnode(':', optimized_func, args));
+			}
+		}
 		case '=':
 		case T_FUNC:
 			// don't optimize the lvalue

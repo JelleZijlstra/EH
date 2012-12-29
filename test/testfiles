@@ -283,3 +283,5 @@ shell.eh
 File.eh
 FixedArray.eh
 Float.eh
+bindTo.eh
+Function.eh

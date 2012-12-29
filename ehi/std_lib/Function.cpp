@@ -1,3 +1,10 @@
+/*
+ * Function
+ * Represents functions. Internally, functions are in fact often represented as
+ * bindings, pairs of an object (which will be the this object inside the
+ * function) and the function itself. There is no Function constructor.
+ */
+
 #include <sstream>
 
 #include "Function.hpp"
@@ -9,6 +16,12 @@ EH_INITIALIZER(Function) {
 	REGISTER_METHOD(Function, bindTo);
 }
 
+/*
+ * @description Call a function. Overriding this method is not possible; it is
+ * called directly by the engine, rather than using the normal call mechanisms.
+ * @argument Arguments to the function call
+ * @returns Return value of the function
+ */
 EH_METHOD(Function, operator_colon) {
 	// This is probably the most important library method in EH. It works
 	// on both Function and binding objects.
@@ -44,6 +57,16 @@ EH_METHOD(Function, operator_colon) {
 	ehi->not_returning();
 	return ret;
 }
+
+/*
+ * @description "Decompiles" a function back into valid, executable EH code.
+ * This is possible because the current interpreter works on an AST that
+ * closely follows the structure of the EH code. Future optimizations or
+ * alternative execution models may change the output of this function. For
+ * C++ library functions, this method simply returns "native code".
+ * @argument None
+ * @returns String
+ */
 EH_METHOD(Function, decompile) {
 	ehretval_p hold_obj;
 	if(obj->type() == binding_e) {
@@ -55,6 +78,13 @@ EH_METHOD(Function, decompile) {
 	return ehretval_t::make_string(strdup(reduction.c_str()));
 }
 
+/*
+ * @description Provides a string representation of a function. For C++
+ * functions, this is simply "(args) => (native code)"; for user functions,
+ * the argument list is decompiled.
+ * @argument None
+ * @returns String
+ */
 EH_METHOD(Function, toString) {
 	ehretval_p hold_obj;
 	if(obj->type() == binding_e) {
@@ -72,11 +102,21 @@ EH_METHOD(Function, toString) {
 	}
 }
 
+/*
+ * @description Binds the current function to the specified object as the this
+ * object. Because the current internal object system of the interpreter is
+ * less than ideal, this is a dangerous operation, especially on C++ functions,
+ * and its use may lead to crashes.
+ * @argument Object to bind to
+ * @returns New function
+ */
 EH_METHOD(Function, bindTo) {
+	//obj = ehretval_t::self_or_data(obj);
+
 	if(obj->type() == binding_e) {
 		ehbinding_t *b = obj->get_bindingval();
 		return ehi->get_parent()->make_binding(new ehbinding_t(args, b->method));
-	} else if(obj->type() == func_e) {
+	} else if(obj->is_a(func_e)) {
 		return ehi->get_parent()->make_binding(new ehbinding_t(args, obj));
 	} else {
 		throw_TypeError("Invalid base object for Function.bindTo", obj->type(), ehi);

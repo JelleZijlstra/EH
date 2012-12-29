@@ -75,7 +75,6 @@ operator* <public,non-static,non-constant>: @function <library>:
 operator+ <public,non-static,non-constant>: @function <library>: 
 operator- <public,non-static,non-constant>: @function <library>: 
 operator/ <public,non-static,non-constant>: @function <library>: 
-operator_uminus <public,non-static,non-constant>: @function <library>: 
 sqrt <public,non-static,non-constant>: @function <library>: 
 toBool <public,non-static,non-constant>: @function <library>: 
 toFloat <public,non-static,non-constant>: @function <library>: 

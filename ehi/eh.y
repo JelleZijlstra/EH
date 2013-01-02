@@ -83,7 +83,7 @@ EHI *yyget_extra(void *scanner);
 %left T_AND T_OR T_XOR
 %left '|' '^' '&'
 %right T_CUSTOMOP
-%left '>' '<' T_GE T_LE T_NE T_SNE T_EQ T_COMPARE
+%left '>' '<' T_GE T_LE T_NE T_EQ T_COMPARE
 %left T_LEFTSHIFT T_RIGHTSHIFT
 %left '+' '-'
 %left '*' '/' '%'
@@ -250,8 +250,6 @@ expression:
 							{ $$ = ADD_NODE2(T_LE, $1, $3); }
 	| expression T_NE expression
 							{ $$ = ADD_NODE2(T_NE, $1, $3); }
-	| expression T_SNE expression
-							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
 	| expression T_COMPARE expression
 	            			{ $$ = ADD_NODE2(T_COMPARE, $1, $3); }
 	| expression '+' expression
@@ -363,8 +361,6 @@ para_expr:
 							{ $$ = ADD_NODE2(T_LE, $1, $3); }
 	| para_expr T_NE para_expr
 							{ $$ = ADD_NODE2(T_NE, $1, $3); }
-	| para_expr T_SNE para_expr
-							{ $$ = ADD_NODE2(T_SNE, $1, $3); }
 	| para_expr T_COMPARE para_expr
 	            			{ $$ = ADD_NODE2(T_COMPARE, $1, $3); }
 	| para_expr '+' para_expr

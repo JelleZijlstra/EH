@@ -82,7 +82,6 @@ public:
 
 	static ehval_p make(EHInterpreter *parent);
 };
-#define HASH_FOR_EACH(obj, varname) for(auto varname = (obj)->begin_iterator(), end = (obj)->end_iterator(); varname != end; varname++)
 
 EH_METHOD(Hash, toArray);
 EH_METHOD(Hash, operator_arrow);

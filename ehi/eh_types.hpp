@@ -247,7 +247,6 @@ private:
 	ehobj_t(const ehobj_t&);
 	ehobj_t operator=(const ehobj_t&);
 };
-#define OBJECT_FOR_EACH(obj, varname) for(ehobj_t::obj_iterator varname = (obj)->members.begin(), end = (obj)->members.end(); varname != end; varname++)
 
 EH_CLASS(Object) {
 public:

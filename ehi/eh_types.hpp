@@ -90,9 +90,13 @@ public:
 	template<class T>
 	void assert_type(const char *method, class EHI *ehi);
 
-	bool equal_type(ehval_p rhs) const;
+	bool equal_type(ehval_p rhs) const {
+		return typeid(*this) == typeid(rhs.operator*());
+	}
 
-	std::type_index type_index() const;
+	std::type_index type_index() const {
+		return std::type_index(typeid(*this));
+	}
 
 	template<class T>
 	typename T::type get_deep();
@@ -416,13 +420,6 @@ inline ehval_p ehval_t::data() {
 inline int ehval_t::naive_compare(const ehval_p &rhs) const {
 	// just compare pointer values (should "work" even if objects are not Object instances)
 	ehval_t *rhs_p = rhs.operator->();
-	if(this == rhs_p) {
-		return 0;
-	} else if(this == nullptr) {
-		return -1;
-	} else if(rhs_p == nullptr) {
-		return 1;
-	}
 	const char *lhs_val = reinterpret_cast<const char *>(static_cast<const Object *>(this)->value);
 	const char *rhs_val = reinterpret_cast<const char *>(static_cast<const Object *>(rhs_p)->value);
 	if(lhs_val < rhs_val) {

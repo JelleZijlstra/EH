@@ -303,31 +303,8 @@ inline int ehobj_t::register_member_class(const ehobj_t::initializer init_func, 
 
 #include "std_lib/Null.hpp"
 
-template<>
-inline bool ehval_t::is_a<Null>() const {
-	return (this == nullptr) || typeid(*this) == typeid(Null);
-}
-
-inline bool ehval_t::equal_type(ehval_p rhs) const {
-	bool lhs_null = this->is_a<Null>();
-	bool rhs_null = rhs->is_a<Null>();
-	if(lhs_null != rhs_null) {
-		return false;
-	} else if(lhs_null) {
-		return true;
-	} else {
-		return typeid(*this) == typeid(rhs.operator*());
-	}
-}
-
-inline std::type_index ehval_t::type_index() const {
-	return (this == nullptr) ? std::type_index(typeid(Null)) : std::type_index(typeid(*this));
-}
-
 inline int ehval_t::get_type_id(class EHInterpreter *parent) {
-	if(this == nullptr) {
-		return parent->repo.get_primitive_id<Null>();
-	} else if(this->is_a<Object>()) {
+	if(this->is_a<Object>()) {
 		return get<Object>()->type_id;
 	} else {
 		return parent->repo.get_type_id(this);
@@ -338,6 +315,4 @@ inline ehval_t *ehval_t::null_object() {
 	return Null::make().operator->();
 }
 
-
 #endif /* EH_EHI_H_ */
-

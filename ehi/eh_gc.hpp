@@ -317,11 +317,11 @@ public:
 			return *(this->operator->());
 		}
 		T *operator->() const {
-			// if(this->content == nullptr) {
-			// 	return T::null_object();
-			// } else {
+			if(this->content == nullptr) {
+				return T::null_object();
+			} else {
 				return this->content;
-			// }
+			}
 		}
 		pointer &operator=(const pointer &rhs) {
 			// decrease refcount for thing we're now referring to

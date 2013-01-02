@@ -83,7 +83,7 @@ EHI *yyget_extra(void *scanner);
 %left T_AND T_OR T_XOR
 %left '|' '^' '&'
 %right T_CUSTOMOP
-%left '>' '<' T_GE T_LE T_NE T_SE T_SNE T_EQ T_COMPARE
+%left '>' '<' T_GE T_LE T_NE T_SNE T_EQ T_COMPARE
 %left T_LEFTSHIFT T_RIGHTSHIFT
 %left '+' '-'
 %left '*' '/' '%'
@@ -119,7 +119,7 @@ program:
 							}
 
 global_list:
-	/* nullptr */				{ $$ = nullptr; }
+	/* NULL */				{ $$ = nullptr; }
 	| statement				{
 								EHI *ehi = yyget_extra(scanner);
 								if(ehi->get_interactivity() != end_is_end_e) {
@@ -144,7 +144,7 @@ global_list:
 	;
 
 statement_list:
-	/* nullptr */				{ $$ = nullptr; }
+	/* NULL */				{ $$ = nullptr; }
 	| statement statement_list
 							{
 								// get rid of empty statements
@@ -244,8 +244,6 @@ expression:
 							{ $$ = ADD_NODE2('>', $1, $3); }
 	| expression '<' expression
 							{ $$ = ADD_NODE2('<', $1, $3); }
-	| expression T_SE expression
-							{ $$ = ADD_NODE2(T_SE, $1, $3); }
 	| expression T_GE expression
 							{ $$ = ADD_NODE2(T_GE, $1, $3); }
 	| expression T_LE expression
@@ -359,8 +357,6 @@ para_expr:
 							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| para_expr '<' para_expr
 							{ $$ = ADD_NODE2('<', $1, $3); }
-	| para_expr T_SE para_expr
-							{ $$ = ADD_NODE2(T_SE, $1, $3); }
 	| para_expr T_GE para_expr
 							{ $$ = ADD_NODE2(T_GE, $1, $3); }
 	| para_expr T_LE para_expr
@@ -411,7 +407,7 @@ command:
 
 paralist:
 	para paralist			{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* nullptr */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 para:
@@ -438,7 +434,7 @@ bareword_or_string:
 elseif_clauses:
 	elseif_clause elseif_clauses
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* nullptr */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 elseif_clause:
@@ -450,7 +446,7 @@ elseif_clause:
 catch_clauses:
 	catch_clause catch_clauses
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* nullptr */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 catch_clause:
@@ -466,13 +462,13 @@ arraylist:
 							{ $$ = ADD_NODE2(',', $1, $2); }
 	| arraylist_i arraymember
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* nullptr */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 arraylist_i:
 	arraylist_i arraymember ','
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* nullptr */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 arraymember:
@@ -487,13 +483,13 @@ anonclasslist:
 							{ $$ = ADD_NODE2(',', $1, $2); }
 	| anonclasslist_i anonclassmember
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* nullptr */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 anonclasslist_i:
 	anonclasslist_i anonclassmember ','
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* nullptr */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 anonclassmember:
@@ -505,13 +501,13 @@ anonclassmember:
 
 parglist:
 	expression				{ $$ = $1; }
-	| /* nullptr */			{ $$ = ADD_NODE0(T_NULL); }
+	| /* NULL */			{ $$ = ADD_NODE0(T_NULL); }
 	;
 
 /* Switch etcetera */
 caselist:
 	acase caselist			{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* nullptr */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(','); }
 	;
 
 acase:
@@ -523,7 +519,7 @@ acase:
 
 separators:
 	T_SEPARATOR separators	{ }
-	| /* nullptr */			{ }
+	| /* NULL */			{ }
 
 /* Property declarations */
 attributelist:
@@ -533,7 +529,7 @@ attributelist:
 attributelist_inner:
 	T_ATTRIBUTE attributelist_inner
 							{ $$ = eh_addnode(T_ATTRIBUTE, Attribute::make($1), Node::make($2)); }
-	| /* nullptr */ %prec '='	{ $$ = ADD_NODE0(T_ATTRIBUTE); }
+	| /* NULL */ %prec '='	{ $$ = ADD_NODE0(T_ATTRIBUTE); }
 	;
 
 /* Enums */

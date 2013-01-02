@@ -1,8 +1,8 @@
 %%stdout%%
-@object <Instance> [
-head <public,non-static,constant>: @int 1
-tail <public,non-static,constant>: @object <Member> [
-]
+@object <Enum.Instance> [
+	head <public,non-static,constant>: @int 1
+	tail <public,non-static,constant>: @object <Enum.Member> [
+	]
 ]
 %%stderr%%
-Uncaught exception of type NameError: Unknown member l in object of type Instance: 1::[]
+Uncaught exception of type NameError: Unknown member l in object of type Enum.Instance: 1::[]

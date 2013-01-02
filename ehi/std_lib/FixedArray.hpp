@@ -3,28 +3,56 @@
  */
 #include "std_lib_includes.hpp"
 
-class FixedArray : public LibraryBaseClass {
+EH_CLASS(FixedArray) {
 public:
-	size_t size() const {
-		return size_;
+	class t {
+	public:
+		size_t size() const {
+			return size_;
+		}
+		ehval_p get(size_t index) const {
+			assert(index < size_);
+			return content[index];
+		}
+		void set(size_t index, ehval_p value) {
+			assert(index < size_);
+			content[index] = value;
+		}
+		t(size_t size) : size_(size), content(new ehval_p[size]()) {}
+		~t() {
+			delete[] content;
+		}
+	private:
+		const size_t size_;
+		ehval_p *content;
+		t(const t&);
+		t operator=(const t&);
+	};
+
+	typedef t *type;
+	type value;
+
+	virtual bool belongs_in_gc() const {
+		return true;
 	}
-	ehretval_p get(size_t index) const {
-		assert(index < size_);
-		return content[index];
+
+	virtual std::list<ehval_p> children() {
+		std::list<ehval_p> out;
+		for(int i = 0, len = value->size(); i < len; i++) {
+			out.push_back(value->get(i));
+		}
+		return out;
 	}
-	void set(size_t index, ehretval_p value) {
-		assert(index < size_);
-		content[index] = value;		
-	}
-	FixedArray(size_t size) : size_(size), content(new ehretval_p[size]()) {}
+
+	FixedArray(type val) : value(val) {}
+
 	~FixedArray() {
-		delete[] content;
+		delete value;
 	}
-private:
-	const size_t size_;
-	ehretval_p *content;
-	FixedArray(const FixedArray&);
-	FixedArray operator=(const FixedArray&);
+
+	static ehval_p make(size_t size, EHInterpreter *parent) {
+		return parent->allocate<FixedArray>(new t(size));
+	}
 };
 EH_METHOD(FixedArray, initialize);
 EH_METHOD(FixedArray, operator_arrow);

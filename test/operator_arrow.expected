@@ -1,8 +1,8 @@
 %%stdout%%
 Invalid type for argument to Array.operator->= (expected String or Integer): Float
 Invalid type for argument to Array.operator-> (expected String or Integer): Range
-Invalid type for argument to Hash.operator->=: Integer
-Invalid type for argument to Hash.operator->: Integer
+Invalid type for argument to Hash.operator->= (expected String): Integer
+Invalid type for argument to Hash.operator-> (expected String): Integer
 Unknown member operator->= in object of type Tuple: (1, 2)
-Invalid type for argument to Tuple.operator->: String
+Invalid type for argument to Tuple.operator-> (expected Integer): String
 %%stderr%%

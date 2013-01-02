@@ -1,5 +1,5 @@
 %%stdout%%
-@string '1 to 3'
+@string "1 to 3"
 @bool false
 Unknown member toBool in object of type Function: n => (user code)
 Unknown member toRange in object of type Float: 3.140000

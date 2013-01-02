@@ -1,6 +1,6 @@
 %%stdout%%
-Argument out of range (method String.operator->=): 3
-@string 'foo'
+Unknown member operator->= in object of type String: foo
+@string "foo"
 @int 3
 Argument out of range (method String.operator->): 3
 %%stderr%%

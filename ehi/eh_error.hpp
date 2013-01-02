@@ -13,6 +13,6 @@ class quit_exception : public std::exception {
  * Exceptions throwns by the interpreter.
  */
 // throw a generic error
-void throw_error(const char *class_name, ehretval_p args, EHI *ehi);
+void throw_error(const char *class_name, ehval_p args, EHI *ehi);
 
 #endif /* EH_ERROR_H_ */

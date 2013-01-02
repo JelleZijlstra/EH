@@ -1,3 +1,3 @@
 %%stdout%%
-@string 'truetruetrue'
+@string "truetruetrue"
 %%stderr%%

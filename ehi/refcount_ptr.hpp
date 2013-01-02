@@ -36,60 +36,60 @@ private:
 public:
 	static refcount_ptr<T> clone(refcount_ptr<T> in) {
 		refcount_ptr<T> out;
-		if(~in != NULL) {
+		if(~in != nullptr) {
 			~out = new container<T>(*~in);
 		}
 		return out;
 	}
 	static bool null(refcount_ptr<T> in) {
-		return ~in == NULL;
+		return ~in == nullptr;
 	}
 	bool null() const {
-		return this->pointer == NULL;
+		return this->pointer == nullptr;
 	}
 
 	// constructor
-	refcount_ptr() : pointer(NULL) {}
+	refcount_ptr() : pointer(nullptr) {}
 	explicit refcount_ptr(T *in) {
-		if(in == NULL) {
-			this->pointer = NULL;
+		if(in == nullptr) {
+			this->pointer = nullptr;
 		} else {
 			this->pointer = new container<T>;
 			this->pointer->content = *in;
 		}
 	}
 
-	refcount_ptr(dummy_class *in) : pointer(NULL) {
-		// only for NULL initialization
-		assert(in == NULL);
+	refcount_ptr(dummy_class *in) : pointer(nullptr) {
+		// only for nullptr initialization
+		assert(in == nullptr);
 	}
 
 	T &operator*() const {
-		if(this->pointer == NULL) {
+		if(this->pointer == nullptr) {
 			this->pointer = new container<T>;
 		}
 		return this->pointer->content;
 	}
 	T *operator->() const {
-		if(this->pointer == NULL) {
+		if(this->pointer == nullptr) {
 			this->pointer = new container<T>;
 		}
 		return &this->pointer->content;
 	}
 	refcount_ptr<T> &operator=(const refcount_ptr<T> &rhs) {
 		// decrease refcount for thing we're now referring to
-		if(this->pointer != NULL) {
+		if(this->pointer != nullptr) {
 			this->pointer->dec_rc();
 		}
 		this->pointer = ~rhs;
 		// and increase it for what we're now referring to
-		if(this->pointer != NULL) {
+		if(this->pointer != nullptr) {
 			this->pointer->inc_rc();
 		}
 		return *this;
 	}
 	refcount_ptr(const refcount_ptr<T> &rhs) : pointer(~rhs) {
-		if(this->pointer != NULL) {
+		if(this->pointer != nullptr) {
 			this->pointer->inc_rc();
 		}
 	}
@@ -108,7 +108,7 @@ public:
 	}
 
 	~refcount_ptr() {
-		if(this->pointer != NULL) {
+		if(this->pointer != nullptr) {
 			this->pointer->dec_rc();
 		}
 	}
@@ -143,7 +143,7 @@ public:
 	}
 
 	~array_ptr() {
-		// no need to check for NULL - delete automatically ignores it
+		// no need to check for nullptr - delete automatically ignores it
 		delete[] this->pointer;
 	}
 };

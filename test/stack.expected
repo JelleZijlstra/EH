@@ -2,11 +2,11 @@
 @int 0
 @int 1
 @array [
-0 => @int 42
+	0 => @int 42
 ]
 @int 42
 @array [
-0 => @int 42
+	0 => @int 42
 ]
 %%stderr%%
 Uncaught exception of type String: Stack empty

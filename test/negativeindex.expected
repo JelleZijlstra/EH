@@ -1,5 +1,5 @@
 %%stdout%%
-@string 's'
-@string 't'
-@string 'tost'
+@string "s"
+@string "t"
 %%stderr%%
+Uncaught exception of type NameError: Unknown member operator->= in object of type String: test

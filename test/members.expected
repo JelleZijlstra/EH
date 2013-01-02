@@ -1,21 +1,21 @@
 %%stdout%%
 @array [
-0 => @string 'compare'
-1 => @string 'finalize'
-2 => @string 'inherit'
-3 => @string 'initialize'
-4 => @string 'isA'
-5 => @string 'members'
-6 => @string 'new'
-7 => @string 'operator!='
-8 => @string 'operator<'
-9 => @string 'operator<='
-10 => @string 'operator<=>'
-11 => @string 'operator=='
-12 => @string 'operator>'
-13 => @string 'operator>='
-14 => @string 'toString'
-15 => @string 'type'
-16 => @string 'typeId'
+	0 => @string "compare"
+	1 => @string "finalize"
+	2 => @string "inherit"
+	3 => @string "initialize"
+	4 => @string "isA"
+	5 => @string "members"
+	6 => @string "new"
+	7 => @string "operator!="
+	8 => @string "operator<"
+	9 => @string "operator<="
+	10 => @string "operator<=>"
+	11 => @string "operator=="
+	12 => @string "operator>"
+	13 => @string "operator>="
+	14 => @string "toString"
+	15 => @string "type"
+	16 => @string "typeId"
 ]
 %%stderr%%

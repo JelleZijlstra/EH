@@ -34,214 +34,214 @@ EH_INITIALIZER(Integer) {
 }
 
 EH_METHOD(Integer, initialize) {
-	return ehi->to_int(args, obj);
+	return ehi->toInteger(args, obj);
 }
 EH_METHOD(Integer, operator_plus) {
-	ASSERT_OBJ_TYPE(int_e, "Integer.operator+");
-	if(args->type() == float_e) {
-		return ehretval_t::make_float((float) obj->get_intval() + args->get_floatval());
+	ASSERT_OBJ_TYPE(Integer, "Integer.operator+");
+	if(args->is_a<Float>()) {
+		return Float::make((float) obj->get<Integer>() + args->get<Float>());
 	} else {
 		// always returns an int or throws
-		args = ehi->to_int(args, obj);
-		return ehretval_t::make_int(obj->get_intval() + args->get_intval());
+		args = ehi->toInteger(args, obj);
+		return Integer::make(obj->get<Integer>() + args->get<Integer>());
 	}
 }
 EH_METHOD(Integer, operator_minus) {
-	ASSERT_OBJ_TYPE(int_e, "Integer.operator-");
-	if(args->type() == float_e) {
-		return ehretval_t::make_float((float) obj->get_intval() - args->get_floatval());
+	ASSERT_OBJ_TYPE(Integer, "Integer.operator-");
+	if(args->is_a<Float>()) {
+		return Float::make((float) obj->get<Integer>() - args->get<Float>());
 	} else {
-		args = ehi->to_int(args, obj);
-		return ehretval_t::make_int(obj->get_intval() - args->get_intval());
+		args = ehi->toInteger(args, obj);
+		return Integer::make(obj->get<Integer>() - args->get<Integer>());
 	}
 }
 EH_METHOD(Integer, operator_times) {
-	ASSERT_OBJ_TYPE(int_e, "Integer.operator*");
-	if(args->type() == float_e) {
-		return ehretval_t::make_float((float) obj->get_intval() * args->get_floatval());
+	ASSERT_OBJ_TYPE(Integer, "Integer.operator*");
+	if(args->is_a<Float>()) {
+		return Float::make(static_cast<float>(obj->get<Integer>()) * args->get<Float>());
 	} else {
-		args = ehi->to_int(args, obj);
-		return ehretval_t::make_int(obj->get_intval() * args->get_intval());
+		args = ehi->toInteger(args, obj);
+		return Integer::make(obj->get<Integer>() * args->get<Integer>());
 	}
 }
 EH_METHOD(Integer, operator_divide) {
-	ASSERT_OBJ_TYPE(int_e, "Integer.operator/");
-	if(args->type() == float_e) {
-		float val = args->get_floatval();
+	ASSERT_OBJ_TYPE(Integer, "Integer.operator/");
+	if(args->is_a<Float>()) {
+		float val = args->get<Float>();
 		if(val == 0.0) {
 			throw_MiscellaneousError("Divide by zero in Integer.operator/", ehi);
 		}
-		return ehretval_t::make_float((float) obj->get_intval() / val);
+		return Float::make(static_cast<float>(obj->get<Integer>()) / val);
 	} else {
-		args = ehi->to_int(args, obj);
-		int val = args->get_intval();
+		args = ehi->toInteger(args, obj);
+		int val = args->get<Integer>();
 		if(val == 0) {
 			throw_MiscellaneousError("Divide by zero in Integer.operator/", ehi);
 		}
-		return ehretval_t::make_int(obj->get_intval() / args->get_intval());
+		return Integer::make(obj->get<Integer>() / args->get<Integer>());
 	}
 }
 EH_METHOD(Integer, operator_modulo) {
-	ASSERT_OBJ_TYPE(int_e, "Integer.operator%");
-	ehretval_p operand = ehi->to_int(args, obj);
-	ASSERT_TYPE(operand, int_e, "Integer.operator%");
-	if(operand->get_intval() == 0) {
+	ASSERT_OBJ_TYPE(Integer, "Integer.operator%");
+	ehval_p operand = ehi->toInteger(args, obj);
+	operand->assert_type<Integer>("Integer.operator%", ehi);
+	if(operand->get<Integer>() == 0) {
 		throw_MiscellaneousError("Divide by zero in Integer.operator%", ehi);
 	}
-	return ehretval_t::make_int(obj->get_intval() % operand->get_intval());
+	return Integer::make(obj->get<Integer>() % operand->get<Integer>());
 }
 EH_METHOD(Integer, operator_and) {
-  ASSERT_OBJ_TYPE(int_e, "Integer.operator&");
-  ASSERT_TYPE(args, int_e, "Integer.operator&");
-  return ehretval_t::make_int(obj->get_intval() & args->get_intval());
+  ASSERT_OBJ_TYPE(Integer, "Integer.operator&");
+  args->assert_type<Integer>("Integer.operator&", ehi);
+  return Integer::make(obj->get<Integer>() & args->get<Integer>());
 }
 EH_METHOD(Integer, operator_or) {
-  ASSERT_OBJ_TYPE(int_e, "Integer.operator|");
-  ASSERT_TYPE(args, int_e, "Integer.operator|");
-  return ehretval_t::make_int(obj->get_intval() | args->get_intval());
+  ASSERT_OBJ_TYPE(Integer, "Integer.operator|");
+  args->assert_type<Integer>("Integer.operator|", ehi);
+  return Integer::make(obj->get<Integer>() | args->get<Integer>());
 }
 EH_METHOD(Integer, operator_xor) {
-  ASSERT_OBJ_TYPE(int_e, "Integer.operator^");
-  ASSERT_TYPE(args, int_e, "Integer.operator^");
-  return ehretval_t::make_int(obj->get_intval() ^ args->get_intval());
+  ASSERT_OBJ_TYPE(Integer, "Integer.operator^");
+  args->assert_type<Integer>("Integer.operator^", ehi);
+  return Integer::make(obj->get<Integer>() ^ args->get<Integer>());
 }
 EH_METHOD(Integer, operator_tilde) {
-  ASSERT_NULL_AND_TYPE(int_e, "Integer.operator~");
-  return ehretval_t::make_int(~obj->get_intval());
+  ASSERT_NULL_AND_TYPE(Integer, "Integer.operator~");
+  return Integer::make(~obj->get<Integer>());
 }
 EH_METHOD(Integer, operator_uminus) {
-  ASSERT_NULL_AND_TYPE(int_e, "Integer.operator-");
-  return ehretval_t::make_int(-obj->get_intval());
+  ASSERT_NULL_AND_TYPE(Integer, "Integer.operator-");
+  return Integer::make(-obj->get<Integer>());
 }
 EH_METHOD(Integer, compare) {
-	ASSERT_OBJ_TYPE(int_e, "Integer.compare");
-	ASSERT_TYPE(args, int_e, "Integer.compare");
-	return ehretval_t::make_int(intcmp(obj->get_intval(), args->get_intval()));
+	ASSERT_OBJ_TYPE(Integer, "Integer.compare");
+	args->assert_type<Integer>("Integer.compare", ehi);
+	return Integer::make(intcmp(obj->get<Integer>(), args->get<Integer>()));
 }
 EH_METHOD(Integer, operator_leftshift) {
-	ASSERT_OBJ_TYPE(int_e, "Integer.operator<<");
-	ASSERT_TYPE(args, int_e, "Integer.operator<<");
-	return ehretval_t::make_int(obj->get_intval() << args->get_intval());
+	ASSERT_OBJ_TYPE(Integer, "Integer.operator<<");
+	args->assert_type<Integer>("Integer.operator<<", ehi);
+	return Integer::make(obj->get<Integer>() << args->get<Integer>());
 }
 EH_METHOD(Integer, operator_rightshift) {
-	ASSERT_OBJ_TYPE(int_e, "Integer.operator>>");
-	ASSERT_TYPE(args, int_e, "Integer.operator>>");
-	return ehretval_t::make_int(obj->get_intval() >> args->get_intval());
+	ASSERT_OBJ_TYPE(Integer, "Integer.operator>>");
+	args->assert_type<Integer>("Integer.operator>>", ehi);
+	return Integer::make(obj->get<Integer>() >> args->get<Integer>());
 }
 EH_METHOD(Integer, abs) {
-	ASSERT_NULL_AND_TYPE(int_e, "Integer.abs");
-	return ehretval_t::make_int(abs(obj->get_intval()));
+	ASSERT_NULL_AND_TYPE(Integer, "Integer.abs");
+	return Integer::make(abs(obj->get<Integer>()));
 }
 EH_METHOD(Integer, getBit) {
-	ASSERT_OBJ_TYPE(int_e, "Integer.getBit");
-	ASSERT_TYPE(args, int_e, "Integer.getBit");
-	int index = args->get_intval();
+	ASSERT_OBJ_TYPE(Integer, "Integer.getBit");
+	args->assert_type<Integer>("Integer.getBit", ehi);
+	int index = args->get<Integer>();
 	if(index < 0 || ((unsigned) index) >= sizeof(int) * 8) {
 		throw_ArgumentError_out_of_range("Integer.getBit", args, ehi);
 	}
 	// get mask
 	const unsigned int mask = (1 << (sizeof(int) * 8 - 1)) >> index;
 	// apply mask
-	return ehretval_t::make_bool((obj->get_intval() & mask) >> (sizeof(int) * 8 - 1 - mask));
+	return Bool::make((obj->get<Integer>() & mask) >> (sizeof(int) * 8 - 1 - mask));
 }
 EH_METHOD(Integer, setBit) {
-	ASSERT_NARGS_AND_TYPE(2, int_e, "Integer.setBit");
-	ehretval_p operand = args->get_tupleval()->get(0);
-	ASSERT_TYPE(operand, int_e, "Integer.setBit");
-	int index = operand->get_intval();
+	ASSERT_NARGS_AND_TYPE(2, Integer, "Integer.setBit");
+	ehval_p operand = args->get<Tuple>()->get(0);
+	operand->assert_type<Integer>("Integer.setBit", ehi);
+	int index = operand->get<Integer>();
 	if(index < 0 || ((unsigned int) index) >= sizeof(int) * 8) {
 		throw_ArgumentError_out_of_range("Integer.setBit", operand, ehi);
 	}
 	int new_value = 0;
-	ehretval_p value = args->get_tupleval()->get(1);
-	if(value->type() == int_e) {
-		int int_value = value->get_intval();
+	ehval_p value = args->get<Tuple>()->get(1);
+	if(value->is_a<Integer>()) {
+		int int_value = value->get<Integer>();
 		if(int_value != 0 && int_value != 1) {
 			throw_ArgumentError_out_of_range("Integer.setBit", value, ehi);
 		}
 		new_value = int_value;
-	} else if(value->type() == bool_e) {
-		new_value = value->get_boolval();
+	} else if(value->is_a<Bool>()) {
+		new_value = value->get<Bool>();
 	} else {
-		throw_TypeError("Second argument to Integer.setBit must be an Integer or Bool", value->type(), ehi);
+		throw_TypeError("Second argument to Integer.setBit must be an Integer or Bool", value, ehi);
 	}
 	const unsigned int mask = (1 << (sizeof(int) * 8 - 1)) >> index;
-	int out = obj->get_intval();
+	int out = obj->get<Integer>();
 	if(new_value) {
 		out |= mask;
 	} else {
 		out &= ~mask;
 	}
-	return ehretval_t::make_int(out);
+	return Integer::make(out);
 }
 EH_METHOD(Integer, length) {
-	ASSERT_NULL_AND_TYPE(int_e, "Integer.length");
-	return ehretval_t::make_int(sizeof(int));
+	ASSERT_NULL_AND_TYPE(Integer, "Integer.length");
+	return Integer::make(sizeof(int));
 }
 EH_METHOD(Integer, toString) {
-	ASSERT_NULL_AND_TYPE(int_e, "Integer.toString");
+	ASSERT_NULL_AND_TYPE(Integer, "Integer.toString");
 	// INT_MAX has 10 decimal digits on this computer, so 12 (including sign and
 	// null terminator) should suffice for the result string
 	char *buffer = new char[12]();
-	snprintf(buffer, 12, "%d", obj->get_intval());
-	return ehretval_t::make_string(buffer);
+	snprintf(buffer, 12, "%d", obj->get<Integer>());
+	return String::make(buffer);
 }
 EH_METHOD(Integer, toBool) {
-	ASSERT_NULL_AND_TYPE(int_e, "Integer.toBool");
-	return ehretval_t::make_bool(obj->get_intval() != 0);
+	ASSERT_NULL_AND_TYPE(Integer, "Integer.toBool");
+	return Bool::make(obj->get<Integer>() != 0);
 }
 EH_METHOD(Integer, toFloat) {
-	ASSERT_NULL_AND_TYPE(int_e, "Integer.toFloat");
-	return ehretval_t::make_float((float) obj->get_intval());
+	ASSERT_NULL_AND_TYPE(Integer, "Integer.toFloat");
+	return Float::make((float) obj->get<Integer>());
 }
 EH_METHOD(Integer, toInt) {
-	ASSERT_NULL_AND_TYPE(int_e, "Integer.toInt");
+	ASSERT_NULL_AND_TYPE(Integer, "Integer.toInt");
 	return obj;
 }
 EH_METHOD(Integer, toChar) {
-	ASSERT_NULL_AND_TYPE(int_e, "Integer.toChar");
-	if(obj->get_intval() < 0 || obj->get_intval() > SCHAR_MAX) {
+	ASSERT_NULL_AND_TYPE(Integer, "Integer.toChar");
+	if(obj->get<Integer>() < 0 || obj->get<Integer>() > SCHAR_MAX) {
 		throw_ArgumentError_out_of_range("Integer.toChar", obj, ehi);
 	}
 	char *out = new char[2];
-	out[0] = obj->get_intval();
+	out[0] = obj->get<Integer>();
 	out[1] = '\0';
-	return ehretval_t::make_string(out);
+	return String::make(out);
 }
 EH_METHOD(Integer, sqrt) {
-	ASSERT_NULL_AND_TYPE(int_e, "Integer.sqrt");
-	return ehretval_t::make_int((int) sqrt((double) obj->get_intval()));
+	ASSERT_NULL_AND_TYPE(Integer, "Integer.sqrt");
+	return Integer::make((int) sqrt((double) obj->get<Integer>()));
 }
 EH_METHOD(Integer, getIterator) {
-	ASSERT_NULL_AND_TYPE(int_e, "Integer.getIterator");
-	ehretval_p iterator = ehi->get_property(obj, "Iterator", obj);
+	ASSERT_NULL_AND_TYPE(Integer, "Integer.getIterator");
+	ehval_p class_obj = ehi->get_parent()->repo.get_object(obj);
+	ehval_p iterator = class_obj->get_property("Iterator", obj, ehi);
 	return ehi->call_method(iterator, "new", obj, obj);
 }
 
-bool Integer_Iterator::has_next() {
+bool Integer_Iterator::t::has_next() {
 	return this->current < this->max;
 }
-int Integer_Iterator::next() {
+int Integer_Iterator::t::next() {
 	assert(has_next());
 	return this->current++;
 }
 EH_METHOD(Integer_Iterator, initialize) {
-	ASSERT_TYPE(args, int_e, "Integer.Iterator.initialize");
-	Integer_Iterator *data = new Integer_Iterator(args->get_intval());
-	return ehretval_t::make_resource(obj->get_full_type(), data);
+	args->assert_type<Integer>("Integer,Iterator.initialize", ehi);
+	return Integer_Iterator::make(args->get<Integer>());
 }
 EH_METHOD(Integer_Iterator, hasNext) {
-	ASSERT_TYPE(args, null_e, "Integer.Iterator.hasNext");
+	args->assert_type<Null>("Integer.Iterator.hasNext", ehi);
 	ASSERT_RESOURCE(Integer_Iterator, "Integer.Iterator.hasNext");
-	return ehretval_t::make_bool(data->has_next());
+	return Bool::make(data->has_next());
 }
 EH_METHOD(Integer_Iterator, next) {
-	ASSERT_TYPE(args, null_e, "Integer.Iterator.next");
+	args->assert_type<Null>("Integer.Iterator.next", ehi);
 	ASSERT_RESOURCE(Integer_Iterator, "Integer.Iterator.next");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
 	}
-	return ehretval_t::make_int(data->next());
+	return Integer::make(data->next());
 }
 EH_INITIALIZER(Integer_Iterator) {
 	REGISTER_METHOD(Integer_Iterator, initialize);

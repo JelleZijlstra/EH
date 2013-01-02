@@ -25,36 +25,36 @@ EH_INITIALIZER(Function) {
 EH_METHOD(Function, operator_colon) {
 	// This is probably the most important library method in EH. It works
 	// on both Function and binding objects.
-	ehretval_p base_object;
-	ehretval_p function_object;
-	if(obj->is_a(func_e)) {
+	ehval_p base_object;
+	ehval_p function_object;
+	if(obj->deep_is_a<Function>()) {
 		function_object = obj;
 		base_object = ehi->global();
-	} else if(obj->type() == binding_e) {
-		ehbinding_t *binding = obj->get_bindingval();
+	} else if(obj->is_a<Binding>()) {
+		Binding::t *binding = obj->get<Binding>();
 		function_object = binding->method;
 		base_object = binding->object_data;
 	} else {
-		throw_TypeError("Invalid base object for Function.operator()", obj->type(), ehi);
+		throw_TypeError("Invalid base object for Function.operator()", obj, ehi);
 	}
-	return ehfunc_t::exec(base_object, function_object, args, ehi);
+	return Function::exec(base_object, function_object, args, ehi);
 }
 
-ehretval_p ehfunc_t::exec(ehretval_p base_object, ehretval_p function_object, ehretval_p args, EHI *ehi) {
-	ehfunc_t *f = function_object->get_objectval()->object_data->get_funcval();
+ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p args, EHI *ehi) {
+	Function::t *f = function_object->data()->get<Function>();
 
 	if(f->type == lib_e) {
 		return f->libmethod_pointer(base_object, args, ehi);
 	}
-	ehretval_p newcontext = ehi->get_parent()->instantiate(function_object);
-	newcontext->get_objectval()->object_data = function_object->get_objectval()->object_data;
+	ehval_p newcontext = ehi->get_parent()->instantiate(function_object);
+	newcontext->get<Object>()->object_data = function_object->get<Object>()->object_data;
 
 	// set arguments
 	attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
 	ehi->set(f->args, args, &attributes, ehcontext_t(base_object, newcontext));
 
 	// execute the function
-	ehretval_p ret = ehi->eh_execute(f->code, ehcontext_t(base_object, newcontext));
+	ehval_p ret = ehi->eh_execute(f->code, ehcontext_t(base_object, newcontext));
 	ehi->not_returning();
 	return ret;
 }
@@ -70,14 +70,14 @@ ehretval_p ehfunc_t::exec(ehretval_p base_object, ehretval_p function_object, eh
  * @returns String
  */
 EH_METHOD(Function, decompile) {
-	ehretval_p hold_obj;
-	if(obj->type() == binding_e) {
+	ehval_p hold_obj;
+	if(obj->is_a<Binding>()) {
 		hold_obj = obj;
-		obj = obj->get_bindingval()->method;
+		obj = obj->get<Binding>()->method;
 	}
-	ASSERT_OBJ_TYPE(func_e, "Function.decompile");
+	ASSERT_OBJ_TYPE(Function, "Function.decompile");
 	std::string reduction = obj->decompile(0);
-	return ehretval_t::make_string(strdup(reduction.c_str()));
+	return String::make(strdup(reduction.c_str()));
 }
 
 /*
@@ -88,19 +88,19 @@ EH_METHOD(Function, decompile) {
  * @returns String
  */
 EH_METHOD(Function, toString) {
-	ehretval_p hold_obj;
-	if(obj->type() == binding_e) {
+	ehval_p hold_obj;
+	if(obj->is_a<Binding>()) {
 		hold_obj = obj;
-		obj = obj->get_bindingval()->method;
+		obj = obj->get<Binding>()->method;
 	}
-	ASSERT_OBJ_TYPE(func_e, "Function.toString");
-	ehfunc_t *f = obj->get_funcval();
+	ASSERT_OBJ_TYPE(Function, "Function.toString");
+	Function::t *f = obj->get<Function>();
 	if(f->type == lib_e) {
-		return ehretval_t::make_string(strdup("(args) => (native code)"));
+		return String::make(strdup("(args) => (native code)"));
 	} else {
 		std::ostringstream out;
 		out << f->args->decompile(0) << " => (user code)";
-		return ehretval_t::make_string(strdup(out.str().c_str()));
+		return String::make(strdup(out.str().c_str()));
 	}
 }
 
@@ -113,15 +113,34 @@ EH_METHOD(Function, toString) {
  * @returns New function
  */
 EH_METHOD(Function, bindTo) {
-	//obj = ehretval_t::self_or_data(obj);
-
-	if(obj->type() == binding_e) {
-		ehbinding_t *b = obj->get_bindingval();
-		return ehi->get_parent()->make_binding(new ehbinding_t(args, b->method));
-	} else if(obj->is_a(func_e)) {
-		return ehi->get_parent()->make_binding(new ehbinding_t(args, obj));
+	if(obj->is_a<Binding>()) {
+		Binding::t *b = obj->get<Binding>();
+		return Binding::make(args, b->method, ehi->get_parent());
+	} else if(obj->deep_is_a<Function>()) {
+		return Binding::make(args, obj, ehi->get_parent());
 	} else {
-		throw_TypeError("Invalid base object for Function.bindTo", obj->type(), ehi);
-		return NULL;
+		throw_TypeError("Invalid base object for Function.bindTo", obj, ehi);
+		return nullptr;
 	}
 }
+
+ehval_p Binding::make(ehval_p obj, ehval_p method, EHInterpreter *parent) {
+	return parent->allocate<Binding>(new Binding::t(obj, method));
+}
+
+EH_INITIALIZER(Binding) {
+	REGISTER_METHOD_RENAME(Binding, operator_colon, "operator()");
+	REGISTER_METHOD(Binding, toString);
+	REGISTER_METHOD(Binding, decompile);
+	REGISTER_METHOD(Binding, bindTo);
+}
+
+#define BINDING_METHOD(name) EH_METHOD(Binding, name) { \
+	ASSERT_RESOURCE(Binding, "Binding." #name); \
+	return ehlm_Function_ ## name(obj, args, ehi); \
+}
+
+BINDING_METHOD(operator_colon)
+BINDING_METHOD(toString)
+BINDING_METHOD(decompile)
+BINDING_METHOD(bindTo)

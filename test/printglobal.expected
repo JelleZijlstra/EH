@@ -1,287 +1,293 @@
 %%stdout%%
 @object <GlobalObject> [
-ArgumentError <public,non-static,constant>: @object <ArgumentError> [
-initialize <public,non-static,non-constant>: @function <library>: 
-]
-Array <public,non-static,constant>: @object <Array> [
-Iterator <public,non-static,non-constant>: @object <Iterator> [
-hasNext <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-next <public,non-static,non-constant>: @function <library>: 
-]
-compare <public,non-static,non-constant>: @function <library>: 
-getIterator <public,non-static,non-constant>: @function <library>: 
-has <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-length <public,non-static,non-constant>: @function <library>: 
-operator-> <public,non-static,non-constant>: @function <library>: 
-operator->= <public,non-static,non-constant>: @function <library>: 
-toArray <public,non-static,non-constant>: @function <library>: 
-toTuple <public,non-static,non-constant>: @function <library>: 
-]
-Bool <public,non-static,constant>: @object <Bool> [
-initialize <public,non-static,non-constant>: @function <library>: 
-operator! <public,non-static,non-constant>: @function <library>: 
-toBool <public,non-static,non-constant>: @function <library>: 
-toInt <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-ConstError <public,non-static,constant>: @object <ConstError> [
-initialize <public,non-static,non-constant>: @function <library>: 
-]
-EmptyIterator <public,non-static,constant>: @object <EmptyIterator> [
-initialize <public,non-static,non-constant>: @function <library>: 
-]
-Enum <public,non-static,constant>: @object <Enum> [
-Instance <public,non-static,non-constant>: @object <Instance> [
-compare <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-Member <public,non-static,non-constant>: @object <Member> [
-new <public,non-static,non-constant>: @function <library>: 
-operator() <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-new <public,non-static,non-constant>: @function <library>: 
-size <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-Exception <public,non-static,constant>: @object <Exception> [
-initialize <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-File <public,non-static,constant>: @object <File> [
-close <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-getc <public,non-static,non-constant>: @function <library>: 
-gets <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-isOpen <public,non-static,non-constant>: @function <library>: 
-open <public,non-static,non-constant>: @function <library>: 
-puts <public,non-static,non-constant>: @function <library>: 
-readFile <public,non-static,non-constant>: @function <library>: 
-]
-FixedArray <public,non-static,constant>: @object <FixedArray> [
-initialize <public,non-static,non-constant>: @function <library>: 
-operator-> <public,non-static,non-constant>: @function <library>: 
-operator->= <public,non-static,non-constant>: @function <library>: 
-size <public,non-static,non-constant>: @function <library>: 
-]
-Float <public,non-static,constant>: @object <Float> [
-abs <public,non-static,non-constant>: @function <library>: 
-compare <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-operator* <public,non-static,non-constant>: @function <library>: 
-operator+ <public,non-static,non-constant>: @function <library>: 
-operator- <public,non-static,non-constant>: @function <library>: 
-operator/ <public,non-static,non-constant>: @function <library>: 
-sqrt <public,non-static,non-constant>: @function <library>: 
-toBool <public,non-static,non-constant>: @function <library>: 
-toFloat <public,non-static,non-constant>: @function <library>: 
-toInt <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-Function <public,non-static,constant>: @object <Function> [
-bindTo <public,non-static,non-constant>: @function <library>: 
-decompile <public,non-static,non-constant>: @function <library>: 
-operator() <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-GarbageCollector <public,non-static,constant>: @object <GarbageCollector> [
-run <public,non-static,non-constant>: @function <library>: 
-stats <public,non-static,non-constant>: @function <library>: 
-]
-GlobalObject <public,non-static,constant>: (recursion)
-Hash <public,non-static,constant>: @object <Hash> [
-Iterator <public,non-static,non-constant>: @object <Iterator> [
-hasNext <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-next <public,non-static,non-constant>: @function <library>: 
-]
-compare <public,non-static,non-constant>: @function <library>: 
-delete <public,non-static,non-constant>: @function <library>: 
-getIterator <public,non-static,non-constant>: @function <library>: 
-has <public,non-static,non-constant>: @function <library>: 
-keys <public,non-static,non-constant>: @function <library>: 
-length <public,non-static,non-constant>: @function <library>: 
-operator-> <public,non-static,non-constant>: @function <library>: 
-operator->= <public,non-static,non-constant>: @function <library>: 
-toArray <public,non-static,non-constant>: @function <library>: 
-]
-Integer <public,non-static,constant>: @object <Integer> [
-Iterator <public,non-static,non-constant>: @object <Iterator> [
-hasNext <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-next <public,non-static,non-constant>: @function <library>: 
-]
-abs <public,non-static,non-constant>: @function <library>: 
-compare <public,non-static,non-constant>: @function <library>: 
-getBit <public,non-static,non-constant>: @function <library>: 
-getIterator <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-length <public,non-static,non-constant>: @function <library>: 
-operator% <public,non-static,non-constant>: @function <library>: 
-operator& <public,non-static,non-constant>: @function <library>: 
-operator* <public,non-static,non-constant>: @function <library>: 
-operator+ <public,non-static,non-constant>: @function <library>: 
-operator- <public,non-static,non-constant>: @function <library>: 
-operator/ <public,non-static,non-constant>: @function <library>: 
-operator<< <public,non-static,non-constant>: @function <library>: 
-operator>> <public,non-static,non-constant>: @function <library>: 
-operator^ <public,non-static,non-constant>: @function <library>: 
-operator_uminus <public,non-static,non-constant>: @function <library>: 
-operator| <public,non-static,non-constant>: @function <library>: 
-operator~ <public,non-static,non-constant>: @function <library>: 
-setBit <public,non-static,non-constant>: @function <library>: 
-sqrt <public,non-static,non-constant>: @function <library>: 
-toBool <public,non-static,non-constant>: @function <library>: 
-toChar <public,non-static,non-constant>: @function <library>: 
-toFloat <public,non-static,non-constant>: @function <library>: 
-toInt <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-LoopError <public,non-static,constant>: @object <LoopError> [
-initialize <public,non-static,non-constant>: @function <library>: 
-]
-Map <public,non-static,constant>: @object <Map> [
-Iterator <public,non-static,non-constant>: @object <Iterator> [
-hasNext <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-next <public,non-static,non-constant>: @function <library>: 
-peek <public,non-static,non-constant>: @function <library>: 
-]
-compare <public,non-static,non-constant>: @function <library>: 
-getIterator <public,non-static,non-constant>: @function <library>: 
-has <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-operator-> <public,non-static,non-constant>: @function <library>: 
-operator->= <public,non-static,non-constant>: @function <library>: 
-size <public,non-static,non-constant>: @function <library>: 
-]
-MiscellaneousError <public,non-static,constant>: @object <MiscellaneousError> [
-initialize <public,non-static,non-constant>: @function <library>: 
-]
-NameError <public,non-static,constant>: @object <NameError> [
-initialize <public,non-static,non-constant>: @function <library>: 
-]
-Null <public,non-static,constant>: @object <Null> [
-initialize <public,non-static,non-constant>: @function <library>: 
-toBool <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-Object <public,non-static,constant>: @object <Object> [
-compare <public,non-static,non-constant>: @function <library>: 
-finalize <public,non-static,non-constant>: @function <library>: 
-inherit <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-isA <public,non-static,non-constant>: @function <library>: 
-members <public,non-static,non-constant>: @function <library>: 
-new <public,non-static,non-constant>: @function <library>: 
-operator!= <public,non-static,non-constant>: @function <library>: 
-operator< <public,non-static,non-constant>: @function <library>: 
-operator<= <public,non-static,non-constant>: @function <library>: 
-operator<=> <public,non-static,non-constant>: @function <library>: 
-operator== <public,non-static,non-constant>: @function <library>: 
-operator> <public,non-static,non-constant>: @function <library>: 
-operator>= <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-type <public,non-static,non-constant>: @function <library>: 
-typeId <public,non-static,non-constant>: @function <library>: 
-]
-Random <public,non-static,constant>: @object <Random> [
-max <public,static,constant>: @int 2147483647
-rand <public,non-static,non-constant>: @function <library>: 
-srand <public,non-static,non-constant>: @function <library>: 
-]
-Range <public,non-static,constant>: @object <Range> [
-Iterator <public,non-static,non-constant>: @object <Iterator> [
-hasNext <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-next <public,non-static,non-constant>: @function <library>: 
-]
-compare <public,non-static,non-constant>: @function <library>: 
-getIterator <public,non-static,non-constant>: @function <library>: 
-max <public,non-static,non-constant>: @function <library>: 
-min <public,non-static,non-constant>: @function <library>: 
-operator-> <public,non-static,non-constant>: @function <library>: 
-toArray <public,non-static,non-constant>: @function <library>: 
-toRange <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-String <public,non-static,constant>: @object <String> [
-Iterator <public,non-static,non-constant>: @object <Iterator> [
-hasNext <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-next <public,non-static,non-constant>: @function <library>: 
-peek <public,non-static,non-constant>: @function <library>: 
-]
-charAtPosition <public,non-static,non-constant>: @function <library>: 
-compare <public,non-static,non-constant>: @function <library>: 
-getIterator <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-length <public,non-static,non-constant>: @function <library>: 
-operator+ <public,non-static,non-constant>: @function <library>: 
-operator-> <public,non-static,non-constant>: @function <library>: 
-operator->= <public,non-static,non-constant>: @function <library>: 
-toBool <public,non-static,non-constant>: @function <library>: 
-toFloat <public,non-static,non-constant>: @function <library>: 
-toInt <public,non-static,non-constant>: @function <library>: 
-toRange <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-]
-SuperClass <public,non-static,constant>: @object <SuperClass> [
-toString <public,non-static,non-constant>: @function <library>: 
-]
-SyntaxError <public,non-static,constant>: @object <SyntaxError> [
-initialize <public,non-static,non-constant>: @function <library>: 
-]
-Tuple <public,non-static,constant>: @object <Tuple> [
-Iterator <public,non-static,non-constant>: @object <Iterator> [
-hasNext <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-next <public,non-static,non-constant>: @function <library>: 
-]
-compare <public,non-static,non-constant>: @function <library>: 
-getIterator <public,non-static,non-constant>: @function <library>: 
-initialize <public,non-static,non-constant>: @function <library>: 
-length <public,non-static,non-constant>: @function <library>: 
-operator-> <public,non-static,non-constant>: @function <library>: 
-toTuple <public,non-static,non-constant>: @function <library>: 
-]
-TypeError <public,non-static,constant>: @object <TypeError> [
-initialize <public,non-static,non-constant>: @function <library>: 
-]
-UnknownCommandError <public,non-static,constant>: @object <UnknownCommandError> [
-initialize <public,non-static,non-constant>: @function <library>: 
-]
-VisibilityError <public,non-static,constant>: @object <VisibilityError> [
-initialize <public,non-static,non-constant>: @function <library>: 
-]
-argc <public,non-static,non-constant>: @int 1
-argv <public,non-static,non-constant>: @array [
-0 => @string 'printglobal.eh'
-]
-collectGarbage <public,non-static,non-constant>: @function <library>: 
-commands <public,non-static,constant>: @hash [
-'echo': @function <library>: 
-'put': @function <library>: 
-'q': @function <library>: 
-'quit': @function <library>: 
-]
-contextName <public,non-static,non-constant>: @function <library>: 
-echo <public,non-static,non-constant>: @function <library>: 
-eval <public,non-static,non-constant>: @function <library>: 
-getinput <public,non-static,non-constant>: @function <library>: 
-global <public,non-static,constant>: (recursion)
-handleUncaught <public,non-static,non-constant>: @function <library>: 
-include <public,non-static,non-constant>: @function <library>: 
-log <public,non-static,non-constant>: @function <library>: 
-pow <public,non-static,non-constant>: @function <library>: 
-printvar <public,non-static,non-constant>: @function <library>: 
-put <public,non-static,non-constant>: @function <library>: 
-shell <public,non-static,non-constant>: @function <library>: 
-throw <public,non-static,non-constant>: @function <library>: 
-toString <public,non-static,non-constant>: @function <library>: 
-workingDir <public,non-static,non-constant>: @function <library>: 
+	ArgumentError <public,non-static,constant>: @object <ArgumentError> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+	]
+	Array <public,non-static,constant>: @object <Array> [
+		Iterator <public,non-static,non-constant>: @object <Array.Iterator> [
+			hasNext <public,non-static,non-constant>: @function <library>: 
+			initialize <public,non-static,non-constant>: @function <library>: 
+			next <public,non-static,non-constant>: @function <library>: 
+		]
+		compare <public,non-static,non-constant>: @function <library>: 
+		getIterator <public,non-static,non-constant>: @function <library>: 
+		has <public,non-static,non-constant>: @function <library>: 
+		initialize <public,non-static,non-constant>: @function <library>: 
+		length <public,non-static,non-constant>: @function <library>: 
+		operator-> <public,non-static,non-constant>: @function <library>: 
+		operator->= <public,non-static,non-constant>: @function <library>: 
+		toArray <public,non-static,non-constant>: @function <library>: 
+		toTuple <public,non-static,non-constant>: @function <library>: 
+	]
+	Binding <public,non-static,constant>: @object <Binding> [
+		bindTo <public,non-static,non-constant>: @function <library>: 
+		decompile <public,non-static,non-constant>: @function <library>: 
+		operator() <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	Bool <public,non-static,constant>: @object <Bool> [
+		compare <public,non-static,non-constant>: @function <library>: 
+		initialize <public,non-static,non-constant>: @function <library>: 
+		operator! <public,non-static,non-constant>: @function <library>: 
+		toBool <public,non-static,non-constant>: @function <library>: 
+		toInteger <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	ConstError <public,non-static,constant>: @object <ConstError> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+	]
+	EmptyIterator <public,non-static,constant>: @object <EmptyIterator> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+	]
+	Enum <public,non-static,constant>: @object <Enum> [
+		Instance <public,non-static,non-constant>: @object <Enum.Instance> [
+			compare <public,non-static,non-constant>: @function <library>: 
+			toString <public,non-static,non-constant>: @function <library>: 
+		]
+		Member <public,non-static,non-constant>: @object <Enum.Member> [
+			new <public,non-static,non-constant>: @function <library>: 
+			operator() <public,non-static,non-constant>: @function <library>: 
+			toString <public,non-static,non-constant>: @function <library>: 
+		]
+		new <public,non-static,non-constant>: @function <library>: 
+		size <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	Exception <public,non-static,constant>: @object <Exception> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	File <public,non-static,constant>: @object <File> [
+		close <public,non-static,non-constant>: @function <library>: 
+		finalize <public,non-static,non-constant>: @function <library>: 
+		getc <public,non-static,non-constant>: @function <library>: 
+		gets <public,non-static,non-constant>: @function <library>: 
+		initialize <public,non-static,non-constant>: @function <library>: 
+		isOpen <public,non-static,non-constant>: @function <library>: 
+		open <public,non-static,non-constant>: @function <library>: 
+		puts <public,non-static,non-constant>: @function <library>: 
+		readFile <public,non-static,non-constant>: @function <library>: 
+	]
+	FixedArray <public,non-static,constant>: @object <FixedArray> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+		operator-> <public,non-static,non-constant>: @function <library>: 
+		operator->= <public,non-static,non-constant>: @function <library>: 
+		size <public,non-static,non-constant>: @function <library>: 
+	]
+	Float <public,non-static,constant>: @object <Float> [
+		abs <public,non-static,non-constant>: @function <library>: 
+		compare <public,non-static,non-constant>: @function <library>: 
+		initialize <public,non-static,non-constant>: @function <library>: 
+		operator* <public,non-static,non-constant>: @function <library>: 
+		operator+ <public,non-static,non-constant>: @function <library>: 
+		operator- <public,non-static,non-constant>: @function <library>: 
+		operator/ <public,non-static,non-constant>: @function <library>: 
+		sqrt <public,non-static,non-constant>: @function <library>: 
+		toBool <public,non-static,non-constant>: @function <library>: 
+		toFloat <public,non-static,non-constant>: @function <library>: 
+		toInteger <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	Function <public,non-static,constant>: @object <Function> [
+		bindTo <public,non-static,non-constant>: @function <library>: 
+		decompile <public,non-static,non-constant>: @function <library>: 
+		operator() <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	GarbageCollector <public,non-static,constant>: @object <GarbageCollector> [
+		run <public,non-static,non-constant>: @function <library>: 
+		stats <public,non-static,non-constant>: @function <library>: 
+	]
+	GlobalObject <public,non-static,constant>: (recursion)
+	Hash <public,non-static,constant>: @object <Hash> [
+		Iterator <public,non-static,non-constant>: @object <Hash.Iterator> [
+			hasNext <public,non-static,non-constant>: @function <library>: 
+			initialize <public,non-static,non-constant>: @function <library>: 
+			next <public,non-static,non-constant>: @function <library>: 
+		]
+		compare <public,non-static,non-constant>: @function <library>: 
+		delete <public,non-static,non-constant>: @function <library>: 
+		getIterator <public,non-static,non-constant>: @function <library>: 
+		has <public,non-static,non-constant>: @function <library>: 
+		keys <public,non-static,non-constant>: @function <library>: 
+		length <public,non-static,non-constant>: @function <library>: 
+		operator-> <public,non-static,non-constant>: @function <library>: 
+		operator->= <public,non-static,non-constant>: @function <library>: 
+		toArray <public,non-static,non-constant>: @function <library>: 
+	]
+	Integer <public,non-static,constant>: @object <Integer> [
+		Iterator <public,non-static,non-constant>: @object <Integer.Iterator> [
+			hasNext <public,non-static,non-constant>: @function <library>: 
+			initialize <public,non-static,non-constant>: @function <library>: 
+			next <public,non-static,non-constant>: @function <library>: 
+		]
+		abs <public,non-static,non-constant>: @function <library>: 
+		compare <public,non-static,non-constant>: @function <library>: 
+		getBit <public,non-static,non-constant>: @function <library>: 
+		getIterator <public,non-static,non-constant>: @function <library>: 
+		initialize <public,non-static,non-constant>: @function <library>: 
+		length <public,non-static,non-constant>: @function <library>: 
+		operator% <public,non-static,non-constant>: @function <library>: 
+		operator& <public,non-static,non-constant>: @function <library>: 
+		operator* <public,non-static,non-constant>: @function <library>: 
+		operator+ <public,non-static,non-constant>: @function <library>: 
+		operator- <public,non-static,non-constant>: @function <library>: 
+		operator/ <public,non-static,non-constant>: @function <library>: 
+		operator<< <public,non-static,non-constant>: @function <library>: 
+		operator>> <public,non-static,non-constant>: @function <library>: 
+		operator^ <public,non-static,non-constant>: @function <library>: 
+		operator_uminus <public,non-static,non-constant>: @function <library>: 
+		operator| <public,non-static,non-constant>: @function <library>: 
+		operator~ <public,non-static,non-constant>: @function <library>: 
+		setBit <public,non-static,non-constant>: @function <library>: 
+		sqrt <public,non-static,non-constant>: @function <library>: 
+		toBool <public,non-static,non-constant>: @function <library>: 
+		toChar <public,non-static,non-constant>: @function <library>: 
+		toFloat <public,non-static,non-constant>: @function <library>: 
+		toInt <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	LoopError <public,non-static,constant>: @object <LoopError> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+	]
+	Map <public,non-static,constant>: @object <Map> [
+		Iterator <public,non-static,non-constant>: @object <Map.Iterator> [
+			hasNext <public,non-static,non-constant>: @function <library>: 
+			initialize <public,non-static,non-constant>: @function <library>: 
+			next <public,non-static,non-constant>: @function <library>: 
+			peek <public,non-static,non-constant>: @function <library>: 
+		]
+		compare <public,non-static,non-constant>: @function <library>: 
+		getIterator <public,non-static,non-constant>: @function <library>: 
+		has <public,non-static,non-constant>: @function <library>: 
+		initialize <public,non-static,non-constant>: @function <library>: 
+		operator-> <public,non-static,non-constant>: @function <library>: 
+		operator->= <public,non-static,non-constant>: @function <library>: 
+		size <public,non-static,non-constant>: @function <library>: 
+	]
+	MiscellaneousError <public,non-static,constant>: @object <MiscellaneousError> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+	]
+	NameError <public,non-static,constant>: @object <NameError> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+	]
+	Null <public,non-static,constant>: @object <Null> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+		toBool <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	Object <public,non-static,constant>: @object <Object> [
+		compare <public,non-static,non-constant>: @function <library>: 
+		finalize <public,non-static,non-constant>: @function <library>: 
+		inherit <public,non-static,non-constant>: @function <library>: 
+		initialize <public,non-static,non-constant>: @function <library>: 
+		isA <public,non-static,non-constant>: @function <library>: 
+		members <public,non-static,non-constant>: @function <library>: 
+		new <public,non-static,non-constant>: @function <library>: 
+		operator!= <public,non-static,non-constant>: @function <library>: 
+		operator< <public,non-static,non-constant>: @function <library>: 
+		operator<= <public,non-static,non-constant>: @function <library>: 
+		operator<=> <public,non-static,non-constant>: @function <library>: 
+		operator== <public,non-static,non-constant>: @function <library>: 
+		operator> <public,non-static,non-constant>: @function <library>: 
+		operator>= <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+		type <public,non-static,non-constant>: @function <library>: 
+		typeId <public,non-static,non-constant>: @function <library>: 
+	]
+	Random <public,non-static,constant>: @object <Random> [
+		max <public,static,constant>: @int 2147483647
+		rand <public,non-static,non-constant>: @function <library>: 
+		srand <public,non-static,non-constant>: @function <library>: 
+	]
+	Range <public,non-static,constant>: @object <Range> [
+		Iterator <public,non-static,non-constant>: @object <Range.Iterator> [
+			hasNext <public,non-static,non-constant>: @function <library>: 
+			initialize <public,non-static,non-constant>: @function <library>: 
+			next <public,non-static,non-constant>: @function <library>: 
+		]
+		compare <public,non-static,non-constant>: @function <library>: 
+		getIterator <public,non-static,non-constant>: @function <library>: 
+		max <public,non-static,non-constant>: @function <library>: 
+		min <public,non-static,non-constant>: @function <library>: 
+		operator-> <public,non-static,non-constant>: @function <library>: 
+		toArray <public,non-static,non-constant>: @function <library>: 
+		toRange <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	String <public,non-static,constant>: @object <String> [
+		Iterator <public,non-static,non-constant>: @object <String.Iterator> [
+			hasNext <public,non-static,non-constant>: @function <library>: 
+			initialize <public,non-static,non-constant>: @function <library>: 
+			next <public,non-static,non-constant>: @function <library>: 
+			peek <public,non-static,non-constant>: @function <library>: 
+		]
+		charAtPosition <public,non-static,non-constant>: @function <library>: 
+		compare <public,non-static,non-constant>: @function <library>: 
+		getIterator <public,non-static,non-constant>: @function <library>: 
+		initialize <public,non-static,non-constant>: @function <library>: 
+		length <public,non-static,non-constant>: @function <library>: 
+		operator+ <public,non-static,non-constant>: @function <library>: 
+		operator-> <public,non-static,non-constant>: @function <library>: 
+		toBool <public,non-static,non-constant>: @function <library>: 
+		toFloat <public,non-static,non-constant>: @function <library>: 
+		toInteger <public,non-static,non-constant>: @function <library>: 
+		toRange <public,non-static,non-constant>: @function <library>: 
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	SuperClass <public,non-static,constant>: @object <SuperClass> [
+		toString <public,non-static,non-constant>: @function <library>: 
+	]
+	SyntaxError <public,non-static,constant>: @object <SyntaxError> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+	]
+	Tuple <public,non-static,constant>: @object <Tuple> [
+		Iterator <public,non-static,non-constant>: @object <Tuple.Iterator> [
+			hasNext <public,non-static,non-constant>: @function <library>: 
+			initialize <public,non-static,non-constant>: @function <library>: 
+			next <public,non-static,non-constant>: @function <library>: 
+		]
+		compare <public,non-static,non-constant>: @function <library>: 
+		getIterator <public,non-static,non-constant>: @function <library>: 
+		initialize <public,non-static,non-constant>: @function <library>: 
+		length <public,non-static,non-constant>: @function <library>: 
+		operator-> <public,non-static,non-constant>: @function <library>: 
+		toTuple <public,non-static,non-constant>: @function <library>: 
+	]
+	TypeError <public,non-static,constant>: @object <TypeError> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+	]
+	UnknownCommandError <public,non-static,constant>: @object <UnknownCommandError> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+	]
+	VisibilityError <public,non-static,constant>: @object <VisibilityError> [
+		initialize <public,non-static,non-constant>: @function <library>: 
+	]
+	argc <public,non-static,non-constant>: @int 1
+	argv <public,non-static,non-constant>: @array [
+		0 => @string "printglobal.eh"
+	]
+	collectGarbage <public,non-static,non-constant>: @function <library>: 
+	commands <public,non-static,constant>: @hash [
+		'echo': @function <library>: 
+		'put': @function <library>: 
+		'q': @function <library>: 
+		'quit': @function <library>: 
+	]
+	contextName <public,non-static,non-constant>: @function <library>: 
+	echo <public,non-static,non-constant>: @function <library>: 
+	eval <public,non-static,non-constant>: @function <library>: 
+	getinput <public,non-static,non-constant>: @function <library>: 
+	global <public,non-static,constant>: (recursion)
+	handleUncaught <public,non-static,non-constant>: @function <library>: 
+	include <public,non-static,non-constant>: @function <library>: 
+	log <public,non-static,non-constant>: @function <library>: 
+	pow <public,non-static,non-constant>: @function <library>: 
+	printvar <public,non-static,non-constant>: @function <library>: 
+	put <public,non-static,non-constant>: @function <library>: 
+	shell <public,non-static,non-constant>: @function <library>: 
+	throw <public,non-static,non-constant>: @function <library>: 
+	toString <public,non-static,non-constant>: @function <library>: 
+	workingDir <public,non-static,non-constant>: @function <library>: 
 ]
 %%stderr%%

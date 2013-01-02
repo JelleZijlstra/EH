@@ -21,7 +21,7 @@ void usage(char **argv) {
 }
 
 int main(int argc, char **argv) {
-	ehretval_p ret;
+	ehval_p ret;
 	char *infilename;
 
 	// parse arguments
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 		// set input
 		ret = interpreter.parse_file(infilename);
 		interpreter.eh_exit();
-		exit(ret->get_intval());
+		exit(ret->get<Integer>());
 	}
 	catch(...) {
 		exit(1);
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 
 void EHI::eh_init(void) {
 	outfile = fopen(outfilename, "w");
-	if(outfile == NULL) {
+	if(outfile == nullptr) {
 		fprintf(stderr, "Unable to create output file");
 		exit(1);
 	}
@@ -100,10 +100,10 @@ void EHI::eh_exit(void) {
 	return;
 }
 
-ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
-	ehretval_p ret;
-	if(node == NULL) {
-		ret = ehretval_t::make_int(0);
+ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
+	ehval_p ret;
+	if(node == nullptr) {
+		ret = Integer::make(0);
 	//printf("Executing nodetype %d\n", node->type);
 	} else switch(node->type()) {
 		/* Not sure yet how to handle strings
@@ -112,31 +112,31 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 			return node->id.name;
 		*/
 		case int_e:
-			fprintf(outfile, "pushl $%d\n", node->get_intval());
+			fprintf(outfile, "pushl $%d\n", node->get<Integer>());
 			break;
 		case op_e:
-			//printf("Executing opcode: %d\n", node->get_opval()->op);
-			switch(node->get_opval()->op) {
+			//printf("Executing opcode: %d\n", node->get<Node>()->op);
+			switch(node->get<Node>()->op) {
 				case T_COMMAND:
-					if(node->get_opval()->paras[0]->type() == string_e
-						&& !strcmp(node->get_opval()->paras[0]->get_stringval(), "echo")) {
-						node = node->get_opval()->paras[1];
-						if(node->get_opval()->nparas != 2) {
+					if(node->get<Node>()->paras[0]->type() == string_e
+						&& !strcmp(node->get<Node>()->paras[0]->get<String>(), "echo")) {
+						node = node->get<Node>()->paras[1];
+						if(node->get<Node>()->nparas != 2) {
 							break;
 						}
-						switch(node->get_opval()->paras[0]->type()) {
+						switch(node->get<Node>()->paras[0]->type()) {
 							case int_e:
 							case op_e:
 								// make sure stack is aligned
 								fprintf(outfile, "subl $4, %%esp\n");
-								eh_execute(node->get_opval()->paras[0], context);
+								eh_execute(node->get<Node>()->paras[0], context);
 								// argument will already be on top of stack
 								fprintf(outfile, "pushl $printfnum\n");
 								fprintf(outfile, "call _printf\n");
 								fprintf(outfile, "addl $8, %%esp\n");
 								break;
 							case string_e:
-								printf("Constant %d\n", node->get_opval()->paras[0]->get_intval());
+								printf("Constant %d\n", node->get<Node>()->paras[0]->get<Integer>());
 								break;
 							default:
 								fprintf(stderr, "Unsupported argument for echo\n");
@@ -148,12 +148,12 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					// we'll need a label
 					label++;
 					// compile the condition
-					eh_execute(node->get_opval()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[0], context);
 					fprintf(outfile, "popl %%eax\n");
 					fprintf(outfile, "cmpl $0, %%eax\n");
 					fprintf(outfile, "je L%03d\n", label);
 					// compile the then
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "L%03d:\n", label);
 					break;
 				case T_WHILE:
@@ -163,28 +163,28 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					// first label
 					fprintf(outfile, "L%03d:\n", label - 1);
 					// compile the condition
-					eh_execute(node->get_opval()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[0], context);
 					fprintf(outfile, "popl %%eax\n");
 					fprintf(outfile, "cmpl $0, %%eax\n");
 					fprintf(outfile, "je L%03d\n", label);
 					// compile the then
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					// jump back to condition
 					fprintf(outfile, "jmp L%03d\n", label - 1);
 					fprintf(outfile, "L%03d:\n", label);
 					break;
 				case T_SEPARATOR:
-					if(node->get_opval()->nparas == 0)
+					if(node->get<Node>()->nparas == 0)
 						break;
-					eh_execute(node->get_opval()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[0], context);
 					// discard return value
 					fprintf(outfile, "popl %%eax\n");
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%eax\n");
 					break;
 				case '=':
-					eh_execute(node->get_opval()->paras[0], context);
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -195,8 +195,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case '>':
-					eh_execute(node->get_opval()->paras[0], context);
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -207,8 +207,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case '<':
-					eh_execute(node->get_opval()->paras[0], context);
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -219,8 +219,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case T_GE:
-					eh_execute(node->get_opval()->paras[0], context);
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -231,8 +231,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case T_LE:
-					eh_execute(node->get_opval()->paras[0], context);
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -243,8 +243,8 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case T_NE:
-					eh_execute(node->get_opval()->paras[0], context);
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "xorl %%eax, %%eax\n");
@@ -255,32 +255,32 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case '+':
-					eh_execute(node->get_opval()->paras[0], context);
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "addl %%ecx, %%ebx\n");
 					fprintf(outfile, "pushl %%ebx\n");
 					break;
 				case '-':
-					eh_execute(node->get_opval()->paras[0], context);
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "subl %%ecx, %%ebx\n");
 					fprintf(outfile, "pushl %%ebx\n");
 					break;
 				case '*':
-					eh_execute(node->get_opval()->paras[0], context);
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%eax\n");
 					fprintf(outfile, "popl %%ebx\n");
 					fprintf(outfile, "imull %%ebx\n");
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				case '/':
-					eh_execute(node->get_opval()->paras[0], context);
-					eh_execute(node->get_opval()->paras[1], context);
+					eh_execute(node->get<Node>()->paras[0], context);
+					eh_execute(node->get<Node>()->paras[1], context);
 					fprintf(outfile, "popl %%ecx\n");
 					fprintf(outfile, "popl %%eax\n");
 					fprintf(outfile, "xorl %%edx, %%edx\n");
@@ -288,7 +288,7 @@ ehretval_p EHI::eh_execute(ehretval_p node, const ehcontext_t context) {
 					fprintf(outfile, "pushl %%eax\n");
 					break;
 				default:
-					printf("Unexpected opcode %d\n", node->get_opval()->op);
+					printf("Unexpected opcode %d\n", node->get<Node>()->op);
 					exit(0);
 			}
 			break;
@@ -304,12 +304,12 @@ void EHI::eh_setarg(int argc, char **argv) {
 	return;
 }
 
-EHI::EHI() : eval_parser(NULL) {}
+EHI::EHI() : eval_parser(nullptr) {}
 EHI::~EHI() {}
 
-ehretval_p EHI::execute_cmd(const char *cmd, eharray_t *paras) {
-	return NULL;
+ehval_p EHI::execute_cmd(const char *cmd, Array::t *paras) {
+	return nullptr;
 }
 char *EHI::eh_getline(EHParser *parser) {
-	return NULL;
+	return nullptr;
 }

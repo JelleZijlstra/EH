@@ -17,9 +17,8 @@ EH_INITIALIZER(Exception) {
  * @returns N/A
  */
 EH_METHOD(Exception, initialize) {
-	ASSERT_TYPE(args, string_e, "Exception.initialize");
-	Exception *e = new Exception(strdup(args->get_stringval()));
-	return ehretval_t::make_resource(obj->get_full_type(), e);
+	args->assert_type<String>("Exception.initialize", ehi);
+	return Exception::make(strdup(args->get<String>()));
 }
 
 /*
@@ -29,7 +28,7 @@ EH_METHOD(Exception, initialize) {
  * @returns String
  */
 EH_METHOD(Exception, toString) {
-	ASSERT_TYPE(args, null_e, "Exception.toString");
+	args->assert_type<Null>("Exception.toString", ehi);
 	ASSERT_RESOURCE(Exception, "Exception.toString");
-	return ehretval_t::make_string(strdup(data->msg));
+	return String::make(strdup(data));
 }

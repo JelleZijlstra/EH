@@ -1,5 +1,5 @@
 %%stdout%%
 @object <UnknownCommandError> [
-command <public,non-static,non-constant>: @string 'print'
+	command <public,non-static,non-constant>: @string "print"
 ]
 %%stderr%%

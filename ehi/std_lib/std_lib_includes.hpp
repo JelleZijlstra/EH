@@ -7,6 +7,7 @@
 #include "../eh.hpp"
 #include "../eh_libclasses.hpp"
 #include "../eh_error.hpp"
+#include "../ehi.hpp"
 #include "Exception.hpp"
 
 #endif /* EH_STD_LIB_INCLUDES_ */

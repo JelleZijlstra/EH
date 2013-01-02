@@ -14,7 +14,7 @@ static void eh_usage(char *name) {
 }
 
 int main(int argc, char **argv) {
-	ehretval_p ret;
+	ehval_p ret;
 
 	EHInterpreter interpreter;
 
@@ -56,12 +56,12 @@ int main(int argc, char **argv) {
 	}
 }
 
-ehretval_p EHI::execute_cmd(const char *name, eharray_t *paras) {
+ehval_p EHI::execute_cmd(const char *name, Array::t *paras) {
 	throw_UnknownCommandError(name, this);
-	return NULL;
+	return nullptr;
 }
 char *EHI::eh_getline() {
-	if(this->buffer == NULL) {
+	if(this->buffer == nullptr) {
 		this->buffer = new char[512];	
 	}
 	if(get_interactivity() == cli_prompt_e) {

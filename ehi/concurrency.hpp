@@ -11,7 +11,7 @@ private:
 
 public:
 	concurrent_object(T in) : content(in), mutex() {
-		pthread_mutex_init(&mutex, NULL);
+		pthread_mutex_init(&mutex, nullptr);
 	}
 	~concurrent_object() {
 		pthread_mutex_destroy(&mutex);

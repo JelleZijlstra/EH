@@ -1,13 +1,13 @@
 %%stdout%%
 @array [
-0 => @int 1
-1 => @int 42
+	0 => @int 1
+	1 => @int 42
 ]
 Unknown member toArray in object of type String: string
 Unknown member toArray in object of type Integer: 42
 Unknown member toArray in object of type Bool: true
 @range [
-@int 1
+	@int 1
 @int 42
 ]
 Unknown member toRange in object of type Integer: 42

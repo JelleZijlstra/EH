@@ -10,254 +10,172 @@
 #include "std_lib/Range.hpp"
 #include "std_lib/Tuple.hpp"
 #include "std_lib/SuperClass.hpp"
+#include "std_lib/ConstError.hpp"
+#include "std_lib/VisibilityError.hpp"
+#include "std_lib/NameError.hpp"
 
-/*
- * ehretval_t
- */
-void ehretval_t::print() {
-	std::cout << get_typestring(this->type()) << std::endl;
-	switch(this->type()) {
-		case string_e:
-			printf("%s", this->get_stringval());
-			break;
-		case int_e:
-			printf("%d", this->get_intval());
-			break;
-		case bool_e:
-			if(this->get_boolval()) {
-				printf("(true)");
-			} else {
-				printf("(false)");
-			}
-			break;
-		case null_e:
-			printf("(null)");
-			break;
-		case float_e:
-			printf("%f", this->get_floatval());
-			break;
-		case range_e:
-			this->get_rangeval()->min->print();
-			printf(" to ");
-			this->get_rangeval()->max->print();
-			break;
-		case object_e:
-			std::cout << get_typestring((type_enum) (this->get_objectval()->type_id)) << std::endl;
-		default:
-			printf("(cannot print value)");
-			break;
-	}
-	std::cout << std::endl;
-	return;
-}
-std::list<ehretval_p> ehretval_t::children() {
-	std::list<ehretval_p> out;
-	switch(this->type()) {
-		case object_e: {
-			ehobj_t *o = this->get_objectval();
-			OBJECT_FOR_EACH(o, i) {
-				out.push_back(i->second->value);
-			}
-			out.push_back(o->parent);
-			out.push_back(o->object_data);
-			for(std::list<ehretval_p>::iterator i = o->super.begin(), end = o->super.end(); i != end; i++) {
-				out.push_back(*i);
-			}
-			break;
+ehmember_p ehval_t::set_property(const char *name, ehval_p value, ehcontext_t context, EHI *ehi) {
+	// caller should ensure object is actually an object
+	ehobj_t *obj = get<Object>();
+	// unbind bindings to myself
+	if(value->is_a<Binding>()) {
+		ehval_p obj_data = value->get<Binding>()->object_data;
+		if(obj_data->is_a<Object>() && obj == obj_data->get<Object>()) {
+			ehval_p reference_retainer = value;
+			value = value->get<Binding>()->method;
 		}
-		case array_e:
-			ARRAY_FOR_EACH_INT(this->get_arrayval(), i) {
-				out.push_back(i->second);
-			}
-			ARRAY_FOR_EACH_STRING(this->get_arrayval(), i) {
-				out.push_back(i->second);
-			}
-			break;
-		case range_e:
-			out.push_back(this->get_rangeval()->min);
-			out.push_back(this->get_rangeval()->max);
-			break;
-		case binding_e:
-			out.push_back(this->get_bindingval()->method);
-			out.push_back(this->get_bindingval()->object_data);
-			break;
-		case hash_e: {
-			ehhash_t *f = this->get_hashval();
-			HASH_FOR_EACH(f, i) {
-				out.push_back(i->second);
-			}
-			break;
-		}
-		case tuple_e: {
-			ehtuple_t *t = this->get_tupleval();
-			int size = t->size();
-			for(int i = 0; i < size; i++) {
-				out.push_back(t->get(i));
-			}
-			break;
-		}
-		case super_class_e:
-			out.push_back(this->get_super_classval()->content());
-			break;
-		case resource_e:
-			break;
-		default:
-			// nothing to see here
-			break;
 	}
-	return out;
-}
-bool ehretval_t::equals(ehretval_p rhs) {
-	if(this->type() != rhs->type()) {
-		return false;
-	}
-	switch(this->type()) {
-		case int_e:
-			return (this->get_intval() == rhs->get_intval());
-		case string_e:
-			return strcmp(this->get_stringval(), rhs->get_stringval()) == 0;
-		case bool_e:
-			return (this->get_boolval() == rhs->get_boolval());
-		case null_e:
-			// null always equals null
-			return true;
-		case float_e:
-			return (this->get_floatval() == rhs->get_floatval());
-		case range_e:
-			return this->get_rangeval()->min->equals(rhs->get_rangeval()->min)
-				&& this->get_rangeval()->max->equals(rhs->get_rangeval()->max);
-		case resource_e:
-			return this->get_resourceval() == rhs->get_resourceval();
-		default:
-			// TODO: array comparison
-			return false;
-	}
-}
-bool ehretval_t::is_a(unsigned int in) {
-	unsigned int type = this->extended_type();
-	if(type == in || ((in == resource_e && type >= type_repository::first_user_type))) {
-		return true;
+	ehmember_p result = obj->inherited_get(name);
+	if(ehmember_p::null(result)) {
+		ehmember_p new_member;
+		new_member->value = value;
+		obj->insert(name, new_member);
+		return new_member;
+	} else if(result->attribute.isconst == const_e) {
+		throw_ConstError(this, name, ehi);
+	} else if(result->attribute.visibility == private_e && !obj->context_compare(context, ehi)) {
+		throw_VisibilityError(this, name, ehi);
+	} else if(result->attribute.isstatic == static_e) {
+		result->value = value;
+		return result;
 	} else {
-		return type == object_e && this->get_objectval()->type_id == in;
+		// set in this object
+		ehmember_p new_member = ehmember_t::make(result->attribute, value);
+		obj->insert(name, new_member);
+		return new_member;
 	}
+	return result;
 }
-bool ehretval_t::inherited_is_a(unsigned int in) {
-	if(this->type() == in) {
-		return true;
-	} else if(this->type() == object_e) {
-		ehobj_t *obj = this->get_objectval();
-		if(obj->type_id == in) {
-			return true;
-		} else {
-			for(std::list<ehretval_p>::const_iterator i = obj->super.begin(), end = obj->super.end(); i != end; i++) {
-				if((*i)->inherited_is_a(in)) {
-					return true;
-				}
-			}
+// insert an ehmember_p directly on this object, without worrying about inheritance
+ehmember_p ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
+	// caller should ensure object is actually an object
+	ehobj_t *obj = get<Object>();
+	// unbind bindings to myself
+	ehval_p value = member->value;
+	if(value->is_a<Binding>()) {
+		ehval_p obj_data = value->get<Binding>()->object_data;
+		if(obj_data->is_a<Object>() && obj == obj_data->get<Object>()) {
+			member->value = value->get<Binding>()->method;
 		}
 	}
-	return false;
+	if(obj->has(name)) {
+		ehmember_p the_member = obj->get_known(name);
+		if(the_member->attribute.isconst == const_e) {
+			throw_ConstError(this, name, ehi);
+		}
+		if(the_member->attribute.visibility == private_e && !obj->context_compare(context, ehi)) {
+			// pretend private members don't exist
+			throw_VisibilityError(this, name, ehi);
+		}
+	}
+	obj->insert(name, member);
+	return member;
 }
-unsigned int ehretval_t::get_full_type() const  {
-	unsigned int out = this->extended_type();
-	if(out == object_e) {
-		return this->get_objectval()->type_id;
+// get a property of the given name, without creating a binding
+ehval_p ehval_t::get_property_no_binding(const char *name, ehcontext_t context, EHI *ehi) {
+	ehval_p object;
+	if(is_a<Object>()) {
+		object = this;
+	} else if(is_a<Binding>()) {
+		object = get<Binding>()->method;
+	} else {
+		object = ehi->get_parent()->repo.get_object(this);
+	}
+	ehobj_t *obj = object->get<Object>();
+	ehmember_p member = obj->inherited_get(name);
+	if(member.null()) {
+		throw_NameError(this, name, ehi);
+	} else if (member->attribute.visibility == private_e && !obj->context_compare(context, ehi)) {
+		throw_VisibilityError(this, name, ehi);
+	}
+	return member->value;
+}
+// get a property of the given name from the base_var object, creating a binding if necessary
+ehval_p ehval_t::get_property(const char *name, ehcontext_t context, EHI *ehi) {
+	ehval_p out = get_property_no_binding(name, context, ehi);
+	if(out->deep_is_a<Function>()) {
+		return Binding::make(this, out, ehi->get_parent());
 	} else {
 		return out;
-	}
-}
-const std::string &ehretval_t::type_string(EHI *ehi) const {
-	unsigned int type = this->get_full_type();
-	return ehi->get_parent()->repo.get_name(type);
-}
-ehretval_p ehretval_t::self_or_data(const ehretval_p in) {
-	if(in->type() == object_e) {
-		return in->get_objectval()->object_data;
-	} else {
-		return in;
-	}
-}
-ehretval_t::~ehretval_t() {
-	switch(_type) {
-		// Simple types; nothing to do
-		case int_e:
-		case bool_e:
-		case float_e:
-		case type_e:
-		case null_e:
-		case attribute_e:
-		case attributestr_e:
-			break;
-		case super_class_e:
-			delete this->super_classval;
-			break;
-		case op_e:
-			delete this->opval;
-			break;
-		case string_e:
-			delete[] this->stringval;
-			break;
-		// Delete object. An ehretval_t owns the object pointed to.
-		case range_e:
-			delete this->rangeval;
-			break;
-		case object_e:
-			delete this->objectval;
-			break;
-		case func_e:
-			delete this->funcval;
-			break;
-		case array_e:
-			delete this->arrayval;
-			break;
-		case resource_e:
-			delete this->resourceval;
-			break;
-		case binding_e:
-			delete this->bindingval;
-			break;
-		case hash_e:
-			delete this->hashval;
-			break;
-		case tuple_e:
-		 	delete this->tupleval;
-		 	break;
 	}
 }
 
 /*
  * ehobj_t
  */
+ehval_p Object::make(ehobj_t *obj, class EHInterpreter *parent) {
+	return parent->allocate<Object>(obj);
+}
+
+void Object::printvar(printvar_set &set, int level, EHI *ehi) {
+	if(this->deep_is_a<Function>()) {
+		value->object_data->printvar(set, level, ehi);
+	} else {
+		void *ptr = static_cast<void *>(value);
+		if(set.count(ptr) == 0) {
+			set.insert(ptr);
+			const std::string name = ehi->get_parent()->repo.get_name(this);
+			std::cout << "@object <" << name << "> [" << std::endl;
+			for(auto &i : value->members) {
+				add_tabs(std::cout, level + 1);
+				std::cout << i.first << " <";
+				const attributes_t attribs = i.second->attribute;
+				std::cout << (attribs.visibility == public_e ? "public" : "private") << ",";
+				std::cout << (attribs.isstatic == static_e ? "static" : "non-static") << ",";
+				std::cout << (attribs.isconst == const_e ? "constant" : "non-constant") << ">: ";
+				PRINTVAR(i.second->value, level + 1);
+			}
+			add_tabs(std::cout, level);
+			std::cout << "]" << std::endl;
+		} else {
+			std::cout << "(recursion)" << std::endl;
+		}
+	}
+}
 ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) {
 	if(this->has(name)) {
 		return this->members[name];
-	} else if(this->parent != NULL) {
+	} else if(this->parent != nullptr) {
 		return this->get_parent()->get_recursive(name, context);
 	} else {
-		return NULL;
+		return nullptr;
 	}
 }
 bool ehobj_t::inherited_has(const std::string &key) const {
 	if(this->has(key)) {
 		return true;
 	}
-	for(std::list<ehretval_p>::const_iterator i = super.begin(), end = super.end(); i != end; i++) {
-		if((*i)->get_objectval()->inherited_has(key)) {
+	for(auto &i : super) {
+		if(i->get<Object>()->inherited_has(key)) {
 			return true;
 		}
 	}
 	return false;
 }
+bool ehobj_t::inherits(ehval_p obj) {
+	for(auto &i : super) {
+		if(i == obj || i->get<Object>()->inherits(obj)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+ehobj_t *ehobj_t::get_parent() const {
+	if(this->parent.null()) {
+		return nullptr;
+	} else {
+		return this->parent->get<Object>();
+	}
+}
 std::set<std::string> ehobj_t::member_set() {
 	std::set<std::string> out;
-	OBJECT_FOR_EACH(this, i) {
-		out.insert(i->first);
+	for(auto &i : this->members) {
+		out.insert(i.first);
 	}
-	for(std::list<ehretval_p>::const_iterator i = super.begin(), end = super.end(); i != end; i++) {
-		std::set<std::string> member_set = (*i)->get_objectval()->member_set();
-		for(std::set<std::string>::iterator j = member_set.begin(), iend = member_set.end(); j != iend; j++) {
-			out.insert(*j);
-		}
+	for(auto &super_class : super) {
+		auto member_set = super_class->get<Object>()->member_set();
+		out.insert(member_set.begin(), member_set.end());
 	}
 	return out;
 }
@@ -265,74 +183,60 @@ ehmember_p ehobj_t::inherited_get(const std::string &key) {
 	if(this->has(key)) {
 		return this->get_known(key);
 	}
-	for(std::list<ehretval_p>::const_iterator i = super.begin(), end = super.end(); i != end; i++) {
-		ehmember_p result = (*i)->get_objectval()->inherited_get(key);
+	for(std::list<ehval_p>::const_iterator i = super.begin(), end = super.end(); i != end; i++) {
+		ehmember_p result = (*i)->get<Object>()->inherited_get(key);
 		if(!ehmember_p::null(result)) {
 			return result;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
-bool ehobj_t::context_compare(const ehcontext_t &key) const {
+bool ehobj_t::context_compare(const ehcontext_t &key, class EHI *ehi) const {
 	// in global context, we never have access to private stuff
-	if(ehretval_p::null(key.object)) {
+	if(key.object.null()) {
 		return false;
-	} else if(key.scope->get_objectval() == this) {
+	} else if(key.scope->get<Object>() == this) {
 		return true;
-	} else if(this->type_id == key.object->get_full_type()) {
-		return true;
-	} else if(key.object->type() == object_e) {
-		return this->context_compare(key.object->get_objectval()->parent);
+	} else if(key.object->is_a<Object>()) {
+		// this may fail when the key.object is not an Object (i.e., )
+		ehobj_t *key_obj = key.object->get<Object>();
+		return (type_id == key_obj->type_id) || this->context_compare(key_obj->parent, ehi);
 	} else {
-		return false;
+		const unsigned int key_id = ehi->get_parent()->repo.get_type_id(key.object);
+		return type_id == key_id;
 	}
 }
 void ehobj_t::register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *interpreter_parent) {
-	ehretval_p func = interpreter_parent->make_method(method);
+	ehval_p func = interpreter_parent->make_method(method);
 	this->register_value(name, func, attributes);
 }
-void ehobj_t::register_value(const std::string &name, ehretval_p value, const attributes_t attributes) {
+void ehobj_t::register_value(const std::string &name, ehval_p value, const attributes_t attributes) {
 	ehmember_p member;
 	member->attribute = attributes;
 	member->value = value;
 	this->insert(name, member);
 }
-int ehobj_t::register_member_class(const std::string &name, const int new_type_id, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *interpreter_parent, ehretval_p the_class) {
-	ehobj_t *newclass;
-	ehretval_p new_value;
-	if(the_class == NULL) {
-		newclass = new ehobj_t();
-		new_value = interpreter_parent->make_object(newclass);
-	} else {
-		newclass = the_class->get_objectval();
-		new_value = the_class;
-	}
+int ehobj_t::register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *interpreter_parent) {
+	ehobj_t *newclass = new ehobj_t();
+	ehval_p new_value = Object::make(newclass, interpreter_parent);
+
 	// register class
-	if(new_type_id == -1) {
-		newclass->type_id = interpreter_parent->repo.register_class(name, new_value);
-	} else {
-		newclass->type_id = new_type_id;
-		interpreter_parent->repo.register_known_class(new_type_id, name, new_value);
-	}
+	newclass->type_id = interpreter_parent->repo.register_class(name, new_value);
+
 	// inherit from Object, except in Object itself
-	if(new_type_id != object_e && name != "GlobalObject") {
-		newclass->inherit(interpreter_parent->base_object);
-	}
-	if(name != "GlobalObject") {
-		newclass->parent = interpreter_parent->global_object;
-	}
+	newclass->inherit(interpreter_parent->base_object);
+	newclass->parent = interpreter_parent->global_object;
+
 	init_func(newclass, interpreter_parent);
 	// inherit from Object, except in Object itself
-	ehmember_p member;
-	member->attribute = attributes;
-	member->value = new_value;
+	ehmember_p member = ehmember_t::make(attributes, new_value);
 	this->insert(name, member);
 	return newclass->type_id;
 }
 
 ehobj_t::~ehobj_t() {
 	// Commenting out for now until I figure out how to get it working.
-	//ehi->call_method_obj(this, "finalize", 0, NULL, NULL);
+	//ehi->call_method_obj(this, "finalize", 0, nullptr, nullptr);
 }
 
 // eh_exception

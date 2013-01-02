@@ -1,279 +1,193 @@
 #include <set>
+#include <vector>
+#include <unordered_map>
 
-// EH value, and generic node
-typedef struct ehretval_t {
-private:
-	unsigned int _type;
-	void type(type_enum type) {
-		this->_type = type;
-	}
+#define EH_CLASS(cname) class cname; \
+	template<> inline const char *ehval_t::name<cname>() { return #cname; } \
+	class cname : public ehval_t
 
-	static bool belongs_in_gc(type_enum type) {
-		switch(type) {
-			case object_e:
-			case array_e:
-			case binding_e:
-			case hash_e:
-			case tuple_e:
-			case super_class_e:
-			case range_e:
-				return true;
-			default:
-				return false;
-		}
-	}
-	union {
-		// simple EH variable type
-		int intval;
-		char *stringval;
-		bool boolval;
-		float floatval;
-		// complex types
-		class eharray_t *arrayval;
-		struct ehobj_t *objectval;
-		class ehfunc_t *funcval;
-		class ehrange_t *rangeval;
-		// pseudo-types for internal use
-		struct opnode_t *opval;
-		type_enum typeval;
-		attribute_enum attributeval;
-		attributes_t attributestrval;
-		class LibraryBaseClass *resourceval;
-		class ehbinding_t *bindingval;
-		class ehhash_t *hashval;
-		void *base_objectval;
-		class ehtuple_t *tupleval;
-		class ehsuper_t *super_classval;
-	};
+typedef std::unordered_set<void *> printvar_set;
+
+class ehval_t : public garbage_collector<ehval_t>::data {
 public:
-	typedef garbage_collector<ehretval_t>::pointer ehretval_p;
-	//typedef refcount_ptr<ehretval_t> ehretval_p;
-	// constructors
-	ehretval_t() : _type(null_e), stringval(NULL) {}
-	ehretval_t(type_enum type) : _type(type), stringval(NULL) {}
-	// overloaded factory method; should only be used if necessary (e.g., in eh.y)
-#define EHRV_MAKE(vtype, ehtype) static ehretval_p make(vtype in) { \
-	ehretval_p out; \
-	out->type(ehtype ## _e); \
-	out->ehtype ## val = in; \
-	return out; \
-}
-	EHRV_MAKE(type_enum, type)
-	EHRV_MAKE(attribute_enum, attribute)
-	EHRV_MAKE(int, int)
-	EHRV_MAKE(char *, string)
-	EHRV_MAKE(bool, bool)
-	EHRV_MAKE(float, float)
-	EHRV_MAKE(struct opnode_t *, op)
-#undef EHRV_MAKE
-#define EHRV_SET(vtype, ehtype) static ehretval_p make_ ## ehtype(vtype in) { \
-	ehretval_p out; \
-	if(belongs_in_gc(ehtype ## _e)) { \
-		assert(false); \
-	} \
-	out->type(ehtype ## _e); \
-	out->ehtype ## val = in; \
-	return out; \
-} \
-vtype get_ ## ehtype ## val() const;
-	EHRV_SET(int, int)
-	EHRV_SET(char *, string)
-	EHRV_SET(bool, bool)
-	EHRV_SET(float, float)
-	EHRV_SET(class eharray_t *, array)
-	EHRV_SET(struct ehobj_t *, object)
-	EHRV_SET(class ehrange_t *, range)
-	EHRV_SET(struct opnode_t *, op)
-	EHRV_SET(attribute_enum, attribute)
-	EHRV_SET(attributes_t, attributestr)
-	EHRV_SET(class ehfunc_t *, func)
-	EHRV_SET(type_enum, type)
-	EHRV_SET(ehbinding_t *, binding)
-	EHRV_SET(class ehhash_t *, hash)
-	EHRV_SET(class ehtuple_t *, tuple)
-	EHRV_SET(class ehsuper_t *, super_class)
-#undef EHRV_SET
-	static ehretval_p make_resource(int type_id, class LibraryBaseClass *obj) {
-		ehretval_p out;
-		out->_type = type_id;
-		out->resourceval = obj;
-		return out;
-	}
-	class LibraryBaseClass *get_resourceval() const;
+	typedef garbage_collector<ehval_t>::pointer ehval_p;
 
-	// special constructors for GC'ed types
-#define EHRV_GC(vtype, ehtype) static void fill_ ## ehtype(ehretval_p in, vtype val) { \
-	in->type(ehtype ## _e); \
-	in->ehtype ## val = val; \
-}
-	EHRV_GC(ehobj_t *, object)
-	EHRV_GC(eharray_t *, array)
-	EHRV_GC(ehbinding_t *, binding)
-	EHRV_GC(ehrange_t *, range)
-	EHRV_GC(class ehhash_t *, hash)
-	EHRV_GC(class ehfunc_t *, func)
-	EHRV_GC(class ehtuple_t *, tuple)
-	EHRV_GC(class ehsuper_t *, super_class)
-#undef EHRV_GC
+	// context
+	struct ehcontext_t {
+		ehval_p object;
+		ehval_p scope;
 
-	// other methods
-	type_enum type() const;
+		ehcontext_t(ehval_p _object, ehval_p _scope) : object(_object), scope(_scope) {}
 
-	unsigned int extended_type() const;
+		ehcontext_t(ehval_p in) : object(in), scope(in) {}
 
-	bool belongs_in_gc() const {
-		return belongs_in_gc(this->type());
+		ehcontext_t() : object(), scope() {}
+	};
+
+	// Variables and object members (which are the same)
+	class ehmember_t {
+	public:
+		typedef refcount_ptr<ehmember_t> ehmember_p;
+
+		attributes_t attribute;
+		ehval_p value;
+
+		// destructor
+		~ehmember_t() {}
+
+		ehmember_t() : attribute(attributes_t::make()), value() {}
+		ehmember_t(attributes_t atts) : attribute(atts), value() {}
+
+		// convenience methods
+		bool isstatic() const {
+			return this->attribute.isstatic == static_e;
+		}
+		bool isconst() const {
+			return this->attribute.isconst == const_e;
+		}
+
+		static ehmember_p make(attributes_t attribute, ehval_p value) {
+			ehmember_p out;
+			out->attribute = attribute;
+			out->value = value;
+			return out;
+		}
+	};
+
+	typedef ehmember_t::ehmember_p ehmember_p;
+
+	ehval_t() {}
+
+	virtual ~ehval_t() {}
+
+	virtual std::list<ehval_p> children() {
+		return {};
 	}
 
-	unsigned int get_full_type() const;
-	const std::string &type_string(class EHI *ehi) const;
-
-	bool operator<(const ehretval_p &rhs) const {
-		return naive_compare(rhs) == -1;
+	virtual std::string decompile(int level) {
+		// all types that may appear in the AST should define a specialization
+		assert(false);
+		return "";
 	}
 
-	bool operator==(const ehretval_p &rhs) const {
-		return naive_compare(rhs) == 0;
+	virtual void printvar(printvar_set &seen, int level, class EHI *ehi) {
+		std::cout << "@other object" << std::endl;
 	}
 
-	int compare(const ehretval_p &rhs) const {
-		unsigned int my_type = this->extended_type();
-		unsigned int rhs_type = rhs->extended_type();
-		if(my_type < rhs_type) {
+	template<class T>
+	typename T::type get() {
+		assert(typeid(*this) == typeid(T));
+		// previous line established that this cast is safe
+		T *derived = static_cast<T *>(this);
+		return derived->value;
+	}
+
+	template<class T>
+	bool is_a() const {
+		return (this != nullptr) && (typeid(*this) == typeid(T));
+	}
+
+	template<class T>
+	void assert_type(const char *method, class EHI *ehi);
+
+	bool equal_type(ehval_p rhs) const;
+
+	std::type_index type_index() const;
+
+	template<class T>
+	typename T::type get_deep();
+
+	template<class T>
+	typename T::type assert_deep(const char *method, class EHI *ehi);
+
+	template<class T>
+	bool deep_is_a();
+
+	template<class T>
+	static inline const char *name() {
+		// should never happen; classes will provide specializations
+		throw;
+	}
+
+	static ehval_t *null_object();
+
+	template<class T>
+	bool inherited_is_a();
+
+	int get_type_id(class EHInterpreter *parent);
+
+	ehval_p data();
+
+	bool operator<(const ehval_p &rhs) const {
+		return compare(rhs) == -1;
+	}
+
+	bool operator==(const ehval_p &rhs) const {
+		return compare(rhs) == 0;
+	}
+
+	int compare(const ehval_p &rhs) const {
+		ehval_t *rhs_obj = rhs.operator->();
+		if(this == nullptr) {
+			return rhs_obj == nullptr ? 0 : -1;
+		} else if(rhs_obj == nullptr) {
+			return 1;
+		}
+		std::type_index l_index(typeid(*this));
+		std::type_index r_index(typeid(*rhs_obj));
+		if(l_index < r_index) {
 			return -1;
-		} else if(my_type == rhs_type) {
+		} else if(l_index == r_index) {
 			return naive_compare(rhs);
 		} else {
 			return 1;
 		}
 	}
 
-	// Compare two ehretval_ps (guaranteed to be of the same type)
-	int naive_compare(const ehretval_p &rhs) const {
-		if(this->type() == null_e) {
-			return 0;
-		}
-		void *lhs_val = reinterpret_cast<void *>(this->objectval);
-		void *rhs_val = reinterpret_cast<void *>(rhs->objectval);
-		if(lhs_val < rhs_val) {
-			return -1;
-		} else if(lhs_val == rhs_val) {
-			return 0;
-		} else {
-			return 1;
-		}
-	}
+	// Compare two ehval_ps (guaranteed to be of the same type)
+	int naive_compare(const ehval_p &rhs) const;
 
-	bool is_object() const {
-		return this->type() == object_e;
-	}
-
-	ehobj_t *get_object() const {
-		assert(this->is_object());
-		return this->objectval;
-	}
-
-	static ehretval_p self_or_data(const ehretval_p in);
-
-	bool is_a(unsigned int in);
-	bool inherited_is_a(unsigned int in);
-
-	void print();
-	bool equals(ehretval_p rhs);
-	std::list<ehretval_p> children();
-	std::string decompile(int level);
-
-	~ehretval_t();
-
-	static ehretval_p make_typed(type_enum type) {
-		ehretval_p out;
-		if(belongs_in_gc(type)) {
-			// can't do that here
-			assert(false);
-		}
-		out->type(type);
-		// this should NULL the union
-		out->stringval = NULL;
-		return out;
-	}
-	static ehretval_p make(ehretval_p in) {
-		return in;
-	}
-} ehretval_t;
-
-typedef ehretval_t::ehretval_p ehretval_p;
-typedef array_ptr<ehretval_p> ehretval_a;
-
-// context
-struct ehcontext_t {
-	ehretval_p object;
-	ehretval_p scope;
-
-	ehcontext_t(ehretval_p _object, ehretval_p _scope) : object(_object), scope(_scope) {}
-
-	ehcontext_t(ehretval_p in) : object(in), scope(in) {}
-
-	ehcontext_t() : object(), scope() {}
+	ehmember_p set_member(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
+	ehval_p get_property(const char *name, ehcontext_t context, class EHI *ehi);
+	ehval_p get_property_no_binding(const char *name, ehcontext_t context, class EHI *ehi);
+	ehmember_p set_property(const char *name, ehval_p value, ehcontext_t context, class EHI *ehi);
 };
 
-typedef ehretval_p (*ehlibmethod_t)(ehretval_p, ehretval_p, class EHI *);
+typedef ehval_t::ehval_p ehval_p;
 
-// Variables and object members (which are the same)
-typedef struct ehmember_t {
-	typedef refcount_ptr<ehmember_t> ehmember_p;
+typedef array_ptr<ehval_p> ehretval_a;
 
-	attributes_t attribute;
-	ehretval_p value;
+typedef ehval_t::ehcontext_t ehcontext_t;
+typedef ehval_t::ehmember_t ehmember_t;
 
-	// destructor
-	~ehmember_t() {
-	}
+typedef ehval_p (*ehlibmethod_t)(ehval_p, ehval_p, class EHI *);
 
-	ehmember_t() : attribute(attributes_t::make()), value() {}
-	ehmember_t(attributes_t atts) : attribute(atts), value() {}
-
-	// convenience methods
-	bool isstatic() const {
-		return this->attribute.isstatic == static_e;
-	}
-	bool isconst() const {
-		return this->attribute.isconst == const_e;
-	}
-
-	static ehmember_p make(attributes_t attribute, ehretval_p value) {
-		ehmember_p out;
-		out->attribute = attribute;
-		out->value = value;
-		return out;
-	}
-} ehmember_t;
 typedef ehmember_t::ehmember_p ehmember_p;
 
 // EH object
-typedef struct ehobj_t {
+class ehobj_t {
 public:
 	// typedefs
 	typedef std::map<const std::string, ehmember_p> obj_map;
-	typedef obj_map::iterator obj_iterator;
 	typedef void (*initializer)(ehobj_t *obj, class EHInterpreter *parent);
 
 	// properties
 	obj_map members;
 	// the object's state data
-	ehretval_p object_data;
+	ehval_p object_data;
 	// the type
 	unsigned int type_id;
 	// for scoping
-	ehretval_p parent;
+	ehval_p parent;
 	// inheritance
-	std::list<ehretval_p> super;
+	std::list<ehval_p> super;
 
 	// constructors
-	ehobj_t() : members(), object_data(), type_id(null_e), parent(), super() {}
+	ehobj_t() : members(), object_data(), type_id(0), parent(), super() {}
 
 	// method prototypes
 	ehmember_p get_recursive(const char *name, const ehcontext_t context);
-	bool context_compare(const ehcontext_t &key) const;
+	bool context_compare(const ehcontext_t &key, class EHI *ehi) const;
 
 	bool inherited_has(const std::string &key) const;
 	ehmember_p inherited_get(const std::string &key);
@@ -305,23 +219,22 @@ public:
 		return has(std::string(key));
 	}
 
-	struct ehobj_t *get_parent() const {
-		if(ehretval_p::null(this->parent)) {
-			return NULL;
-		} else {
-			return this->parent->get_objectval();
-		}
-	}
+	ehobj_t *get_parent() const;
 
-	void inherit(ehretval_p superclass) {
+	void inherit(ehval_p superclass) {
 		super.push_front(superclass);
 	}
 
+	bool inherits(ehval_p obj);
+
 	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *parent);
 
-	void register_value(const std::string &name, ehretval_p value, const attributes_t attributes);
+	void register_value(const std::string &name, ehval_p value, const attributes_t attributes);
 
-	int register_member_class(const std::string &name, const int type_id, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *parent, ehretval_p the_class = NULL);
+	int register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *interpreter_parent);
+
+	template<class T>
+	int register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, class EHInterpreter *interpreter_parent, ehval_p the_class = nullptr);
 
 	// destructor
 	~ehobj_t();
@@ -329,109 +242,194 @@ private:
 	// ehobj_t should never be handled directly
 	ehobj_t(const ehobj_t&);
 	ehobj_t operator=(const ehobj_t&);
-} ehobj_t;
+};
 #define OBJECT_FOR_EACH(obj, varname) for(ehobj_t::obj_iterator varname = (obj)->members.begin(), end = (obj)->members.end(); varname != end; varname++)
+
+EH_CLASS(Object) {
+public:
+	typedef ehobj_t *type;
+	ehobj_t *value;
+
+	Object(ehobj_t *val) : value(val) {}
+
+	virtual ~Object() {
+		delete value;
+	}
+
+	virtual bool belongs_in_gc() const {
+		return true;
+	}
+
+	virtual std::list<ehval_p> children() {
+		std::list<ehval_p> out;
+		for(auto &kv : value->members) {
+			out.push_back(kv.second->value);
+		}
+		out.push_back(value->parent);
+		out.push_back(value->object_data);
+		for(auto &i : value->super) {
+			out.push_back(i);
+		}
+		return out;
+	}
+
+	virtual void printvar(printvar_set &set, int level, EHI *ehi);
+
+	static ehval_p make(ehobj_t *obj, class EHInterpreter *parent);
+
+	template<class T>
+	bool inherits() {
+		for(auto &i : value->super) {
+			if(i->inherited_is_a<T>()) {
+				return true;
+			}
+		}
+		return false;
+	}
+};
 
 class type_repository {
 private:
-	std::map<unsigned int, std::string> id_to_string;
-	std::map<unsigned int, ehretval_p> id_to_object;
-	unsigned int next_available;
+	class type_info {
+	public:
+		const bool is_inbuilt;
+		const std::string name;
+		ehval_p type_object;
+
+		type_info(bool ii, const std::string &n, ehval_p to) : is_inbuilt(ii), name(n), type_object(to) {}
+	};
+
+	std::unordered_map<std::type_index, int> inbuilt_types;
+
+	std::vector<type_info> types;
 
 public:
-	// the size of type_enum
-	const static unsigned int first_user_type = 19;
-
-	void register_known_class(unsigned int id, std::string name, ehretval_p object) {
-		assert(id < first_user_type);
-		id_to_string[id] = name;
-		id_to_object[id] = object;
+	template<class T>
+	int register_inbuilt_class(ehval_p object) {
+		const int type_id = register_class(ehval_t::name<T>(), object, true);
+		inbuilt_types[std::type_index(typeid(T))] = type_id;
+		return type_id;
 	}
 
-	int register_class(std::string name, ehretval_p object) {
-		id_to_string[next_available] = name;
-		id_to_object[next_available] = object;
-		next_available++;
-		return next_available - 1;
+	template<class T>
+	ehval_p get_primitive_class() const {
+		return types.at(get_primitive_id<T>()).type_object;
 	}
 
-	const std::string &get_name(unsigned int id) {
-		// pretend bindings are just functions
-		if(id == binding_e) {
-			id = func_e;
-		}
-		if(id_to_string.count(id) == 1) {
-			return id_to_string[id];
+	template<class T>
+	int get_primitive_id() const {
+		return inbuilt_types.at(std::type_index(typeid(T)));;
+	}
+
+	int get_type_id(ehval_p obj) const {
+		return inbuilt_types.at(std::type_index(typeid(*obj.operator->())));
+	}
+
+	int register_class(const std::string &name, ehval_p value, bool is_inbuilt = false) {
+		const int type_id = types.size();
+		types.push_back(type_info(is_inbuilt, name, value));
+		return type_id;
+	}
+
+	const std::string &get_name(ehval_p obj) const {
+		if(obj->is_a<Object>()) {
+			return types.at(obj->get<Object>()->type_id).name;
 		} else {
-			assert(false);
-			throw std::exception();
+			const int type_id = inbuilt_types.at(obj->type_index());
+			return types.at(type_id).name;
 		}
 	}
-	ehretval_p get_object(unsigned int id) {
-		if(id == binding_e) {
-			id = func_e;
-		}
-		if(id_to_object.count(id) == 1) {
-			return id_to_object[id];
+	ehval_p get_object(ehval_p obj) const {
+		if(obj->is_a<Object>()) {
+			return types.at(obj->get<Object>()->type_id).type_object;
 		} else {
-			assert(false);
-			return NULL;
+			const int type_id = inbuilt_types.at(obj->type_index());
+			return types.at(type_id).type_object;
 		}
 	}
 
-	type_repository() : id_to_string(), id_to_object(), next_available(first_user_type) {}
+	ehval_p get_object(int type_id) const {
+		return types.at(type_id).type_object;
+	}
+
+	type_repository() : inbuilt_types(), types() {}
 };
 
 class eh_exception : public std::exception {
 public:
-	ehretval_p content;
+	ehval_p content;
 
-	eh_exception(ehretval_p _content) : content(_content) {}
+	eh_exception(ehval_p _content) : content(_content) {}
 
 	virtual ~eh_exception() throw();
 };
 
-// define methods
-inline type_enum ehretval_t::type() const {
-	if(this == NULL) {
-		return null_e;
-	} else if(this->_type >= type_repository::first_user_type) {
-		return resource_e;
+template<class T>
+inline typename T::type ehval_t::get_deep() {
+	ehval_t *me = this;
+	if(typeid(*this) == typeid(Object)) {
+		me = get<Object>()->object_data.operator->();
+	}
+	return me->get<T>();
+}
+
+template<class T>
+inline typename T::type ehval_t::assert_deep(const char *method, class EHI *ehi) {
+	ehval_t *me = this;
+	if(typeid(*me) == typeid(Object)) {
+		me = get<Object>()->object_data.operator->();
+	}
+	me->assert_type<T>(method, ehi);
+	return me;
+}
+
+template<class T>
+inline bool ehval_t::deep_is_a() {
+	if(this->is_a<Object>()) {
+		ehval_t *me = get<Object>()->object_data.operator->();
+		return me->is_a<T>();
 	} else {
-		return static_cast<type_enum>(this->_type);
+		return this->is_a<T>();
 	}
 }
-inline unsigned int ehretval_t::extended_type() const {
-	if(this == NULL) {
-		return null_e;
+
+template<class T>
+inline bool ehval_t::inherited_is_a() {
+	if(this->is_a<T>()) {
+		return true;
+	} else if(this->is_a<Object>()) {
+		Object *obj = static_cast<Object *>(this);
+		return obj->inherits<T>();
 	} else {
-		return this->_type;
+		return false;
 	}
 }
-inline class LibraryBaseClass *ehretval_t::get_resourceval() const {
-	assert(this->type() == resource_e || this->type() >= type_repository::first_user_type);
-	return this->resourceval;
+
+inline ehval_p ehval_t::data() {
+	if(this->is_a<Object>()) {
+		return get<Object>()->object_data;
+	} else {
+		return this;
+	}
 }
-#define EHRV_SET(vtype, ehtype) inline vtype ehretval_t::get_ ## ehtype ## val() const { \
-	if(this->type() == object_e && ehtype ## _e != object_e) { \
-		return this->get_objectval()->object_data->get_ ## ehtype ## val(); \
-	} \
-	assert(this->type() == ehtype ## _e); \
-	return this->ehtype ## val; \
+
+inline int ehval_t::naive_compare(const ehval_p &rhs) const {
+	// just compare pointer values (should "work" even if objects are not Object instances)
+	ehval_t *rhs_p = rhs.operator->();
+	if(this == rhs_p) {
+		return 0;
+	} else if(this == nullptr) {
+		return -1;
+	} else if(rhs_p == nullptr) {
+		return 1;
+	}
+	const char *lhs_val = reinterpret_cast<const char *>(static_cast<const Object *>(this)->value);
+	const char *rhs_val = reinterpret_cast<const char *>(static_cast<const Object *>(rhs_p)->value);
+	if(lhs_val < rhs_val) {
+		return -1;
+	} else if(lhs_val == rhs_val) {
+		return 0;
+	} else {
+		return 1;
+	}
 }
-EHRV_SET(int, int)
-EHRV_SET(char *, string)
-EHRV_SET(bool, bool)
-EHRV_SET(float, float)
-EHRV_SET(class eharray_t *, array)
-EHRV_SET(struct ehobj_t *, object)
-EHRV_SET(class ehrange_t *, range)
-EHRV_SET(struct opnode_t *, op)
-EHRV_SET(attribute_enum, attribute)
-EHRV_SET(attributes_t, attributestr)
-EHRV_SET(class ehfunc_t *, func)
-EHRV_SET(type_enum, type)
-EHRV_SET(ehbinding_t *, binding)
-EHRV_SET(class ehhash_t *, hash)
-EHRV_SET(class ehtuple_t *, tuple)
-EHRV_SET(class ehsuper_t *, super_class)

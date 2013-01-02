@@ -28,8 +28,8 @@ EH_INITIALIZER(File) {
  * @returns N/A
  */
 EH_METHOD(File, initialize) {
-	ehretval_p new_obj = ehretval_t::make_resource(obj->get_full_type(), static_cast<LibraryBaseClass *>(new File()));
-	if(args->type() != null_e) {
+	ehval_p new_obj = static_cast<ehval_t *>(new File());
+	if(!args->is_a<Null>()) {
 		ehlm_File_open(new_obj, args, ehi);
 	}
 	return new_obj;
@@ -41,21 +41,22 @@ EH_METHOD(File, initialize) {
  * @returns True on success, false on failure
  */
 EH_METHOD(File, open) {
-	ASSERT_TYPE(args, string_e, "File.open");
+	args->assert_type<String>("File.open", ehi);
 	ASSERT_RESOURCE(File, "File.open");
+	File *f = static_cast<File *>(obj.operator->());
 	// close any open file
-	if(data->descriptor != NULL) {
-		fclose(data->descriptor);
-		data->descriptor = NULL;
+	if(data != nullptr) {
+		fclose(data);
+		f->value = nullptr;
 	}
 
 	// and open the new one
-	FILE *mfile = fopen(args->get_stringval(), "r+");
-	if(mfile == NULL) {
-		return ehretval_t::make_bool(false);
+	FILE *mfile = fopen(args->get<String>(), "r+");
+	if(mfile == nullptr) {
+		return Bool::make(false);
 	}
-	data->descriptor = mfile;
-	return ehretval_t::make_bool(true);
+	f->value = mfile;
+	return Bool::make(true);
 }
 
 /*
@@ -64,20 +65,20 @@ EH_METHOD(File, open) {
  * @returns Character read or null
  */
 EH_METHOD(File, getc) {
-	ASSERT_TYPE(args, null_e, "File.getc");
+	args->assert_type<Null>("File.getc", ehi);
 	ASSERT_RESOURCE(File, "File.getc");
 
-	if(data->descriptor == NULL) {
-		return NULL;
+	if(data == nullptr) {
+		return nullptr;
 	}
-	int c = fgetc(data->descriptor);
+	int c = fgetc(data);
 	if(c == EOF) {
-		return NULL;
+		return nullptr;
 	}
 	char *out = new char[2];
 	out[0] = c;
 	out[1] = '\0';
-	return ehretval_t::make_string(out);
+	return String::make(out);
 }
 
 /*
@@ -86,20 +87,20 @@ EH_METHOD(File, getc) {
  * @returns The line read
  */
 EH_METHOD(File, gets) {
-	ASSERT_TYPE(args, null_e, "File.gets");
+	args->assert_type<Null>("File.gets", ehi);
 	ASSERT_RESOURCE(File, "File.gets");
-	if(data->descriptor == NULL) {
-		return NULL;
+	if(data == nullptr) {
+		return nullptr;
 	}
 
 	char *out = new char[512];
 
-	char *ptr = fgets(out, 511, data->descriptor);
-	if(ptr == NULL) {
+	char *ptr = fgets(out, 511, data);
+	if(ptr == nullptr) {
 		delete[] out;
-		return NULL;
+		return nullptr;
 	}
-	return ehretval_t::make_string(out);
+	return String::make(out);
 }
 
 /*
@@ -108,14 +109,14 @@ EH_METHOD(File, gets) {
  * @returns True on success, false on failure, null if file is closed
  */
 EH_METHOD(File, puts) {
-	ASSERT_TYPE(args, string_e, "File.puts");
+	args->assert_type<String>("File.puts", ehi);
 	ASSERT_RESOURCE(File, "File.puts");
-	if(data->descriptor == NULL) {
-		return NULL;
+	if(data == nullptr) {
+		return nullptr;
 	}
 
-	int count = fputs(args->get_stringval(), data->descriptor);
-	return ehretval_t::make_bool(count != EOF);
+	int count = fputs(args->get<String>(), data);
+	return Bool::make(count != EOF);
 }
 
 /*
@@ -124,8 +125,8 @@ EH_METHOD(File, puts) {
  * @returns Content of the file
  */
 EH_METHOD(File, readFile) {
-	ASSERT_TYPE(args, string_e, "File.readFile");
-	const char *file = args->get_stringval();
+	args->assert_type<String>("File.readFile", ehi);
+	const char *file = args->get<String>();
 	// http://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
 	std::ifstream stream(file);
 	if(!stream.is_open()) {
@@ -134,7 +135,7 @@ EH_METHOD(File, readFile) {
 	std::stringstream buffer;
 	buffer << stream.rdbuf();
 	char *str = strdup(buffer.str().c_str());
-	return ehretval_t::make_string(str);
+	return String::make(str);
 }
 
 /*
@@ -143,14 +144,15 @@ EH_METHOD(File, readFile) {
  * @returns null
  */
 EH_METHOD(File, close) {
-	ASSERT_TYPE(args, null_e, "File.close");
+	args->assert_type<Null>("File.close", ehi);
+	File *f = static_cast<File *>(obj->data().operator->());
 	ASSERT_RESOURCE(File, "File.close");
-	if(data->descriptor == NULL) {
-		return NULL;
+	if(data == nullptr) {
+		return nullptr;
 	}
-	fclose(data->descriptor);
-	data->descriptor = NULL;
-	return NULL;
+	fclose(data);
+	f->value = nullptr;
+	return nullptr;
 }
 
 /*
@@ -159,8 +161,8 @@ EH_METHOD(File, close) {
  * @returns N/A
  */
 EH_METHOD(File, finalize) {
-	ehi->call_method(obj, "close", NULL, obj);
-	return NULL;
+	ehi->call_method(obj, "close", nullptr, obj);
+	return nullptr;
 }
 
 /*
@@ -169,7 +171,7 @@ EH_METHOD(File, finalize) {
  * @returns Bool
  */
 EH_METHOD(File, isOpen) {
-	ASSERT_TYPE(args, null_e, "File.isOpen");
+	args->assert_type<Null>("File.isOpen", ehi);
 	ASSERT_RESOURCE(File, "File.isOpen");
-	return ehretval_t::make_bool(data->descriptor != NULL);
+	return Bool::make(data != nullptr);
 }

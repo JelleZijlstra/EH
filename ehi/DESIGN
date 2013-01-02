@@ -3,3 +3,16 @@ OTHER THINGS TO DO
 	- Float == 0.0 segfaults
 	- List.prototype.propertyDoesNotExist segfaults
 - Do something about the private-in-inherited-class bug.
+
+REPLACING EHRETVAL_T
+When we allocate a value, we do
+ehval_p i = Integer::make(3);
+or
+ehval_p a = Array::make(new eharray_t, ehi);
+
+ehval_p Integer::make(int in) {
+	Integer *obj = new Integer(in);
+}
+
+USING C++11 FEATURES:
+- type_index

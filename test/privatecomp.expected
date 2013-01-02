@@ -1,8 +1,8 @@
 %%stdout%%
 @object <A> [
-bar <private,non-static,constant>: @int 2
-baz <public,static,constant>: null
-foo <private,non-static,constant>: @int 1
-quux <public,static,constant>: null
+	bar <private,non-static,constant>: @int 2
+	baz <public,static,constant>: null
+	foo <private,non-static,constant>: @int 1
+	quux <public,static,constant>: null
 ]
 %%stderr%%

@@ -1,6 +1,6 @@
 %%stdout%%
-@string 'String'
-@string 'Integer'
-@string 'Bool'
-@string 'Range'
+@string "String"
+@string "Integer"
+@string "Bool"
+@string "Range"
 %%stderr%%

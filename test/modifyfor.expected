@@ -1,10 +1,10 @@
 %%stdout%%
-@string 'foo'
+@string "foo"
 @int 1
-@string 'foo'
+@string "foo"
 @int 3
 @array [
-'foo' => @int 1
+	'foo' => @int 1
 ]
 @int 1
 %%stderr%%

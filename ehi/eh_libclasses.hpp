@@ -11,36 +11,38 @@
 #define EH_INITIALIZER(name) void ehinit_ ## name (ehobj_t *obj, EHInterpreter *parent)
 #define REGISTER_METHOD(classn, name) obj->register_method(#name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), parent)
 #define REGISTER_METHOD_RENAME(classn, name, user_name) obj->register_method(user_name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), parent)
-#define REGISTER_CLASS(classn, name) obj->register_member_class(#name, -1, ehinit_ ## classn ##_ ## name, attributes_t::make(), parent)
+#define REGISTER_CLASS(classn, name) obj->register_member_class<classn ## _ ## name>(ehinit_ ## classn ##_ ## name, #name, attributes_t::make(), parent)
 #define REGISTER_CONSTANT(classn, name, value) obj->register_value(#name, value, attributes_t::make(public_e, static_e, const_e))
-#define INHERIT_LIBRARY(classname) 	obj->inherit(parent->global_object->get_objectval()->get_known(#classname)->value)
+#define INHERIT_LIBRARY(classname) 	obj->inherit(parent->global_object->get<Object>()->get_known(#classname)->value)
 
-#define EH_METHOD(classn, name) ehretval_p ehlm_ ## classn ## _ ## name(ehretval_p obj, ehretval_p args, EHI *ehi)
+#define EH_METHOD(classn, name) ehval_p ehlm_ ## classn ## _ ## name(ehval_p obj, ehval_p args, EHI *ehi)
 
-#define ASSERT_TYPE(operand, ehtype, method) if(!operand->is_a(ehtype)) { \
-	throw_TypeError("Invalid type for argument to " method, operand->type(), ehi); \
-}
+#define ASSERT_TYPE(operand, ehtype, method) operand->assert_type<ehtype>(method, ehi);
 
-#define ASSERT_NARGS(count, method) ASSERT_TYPE(args, tuple_e, method); \
-	if(args->get_tupleval()->size() != count) { \
+#define ASSERT_NARGS(count, method) args->assert_type<Tuple>(method, ehi); \
+	if(args->get<Tuple>()->size() != count) { \
 		throw_ArgumentError("Argument must be a tuple of size " #count, method, args, ehi); \
 	}
 
-#define ASSERT_OBJ_TYPE(ehtype, method) ehretval_p _obj = obj; \
-obj = ehretval_t::self_or_data(obj); \
-if(obj->type() != ehtype && !obj->is_a(ehtype)) { \
-	throw_TypeError("Invalid base object for " #method, obj->type(), ehi); \
+#define ASSERT_OBJ_TYPE(ehtype, method) ehval_p _obj = obj; \
+obj = obj->data(); \
+if(!obj->is_a<ehtype>()) { \
+	throw_TypeError("Invalid base object for " #method, obj, ehi); \
 }
 
-#define ASSERT_NULL(method) if(args->type() != null_e) { \
-	throw_TypeError("Argument to " #method " must be null", args->type(), ehi); \
+#define ASSERT_NULL(method) if(!args->is_a<Null>()) { \
+	throw_TypeError("Argument to " #method " must be null", args, ehi); \
 }
 
 #define ASSERT_NARGS_AND_TYPE(count, ehtype, method) ASSERT_NARGS(count, method); ASSERT_OBJ_TYPE(ehtype, method);
 #define ASSERT_NULL_AND_TYPE(ehtype, method) ASSERT_NULL(method); ASSERT_OBJ_TYPE(ehtype, method);
 
-#define ASSERT_RESOURCE(type, method) ASSERT_OBJ_TYPE(resource_e, method); \
-	type *data = static_cast<type *>(obj->get_resourceval());
+#define ASSERT_RESOURCE(ehtype, method) ASSERT_OBJ_TYPE(ehtype, method); \
+	ehtype::type data = obj->get<ehtype>();
+
+#define EH_CHILD_CLASS(parent, cname) class parent ## _ ## cname; \
+	template<> inline const char *ehval_t::name<parent ## _ ## cname>() { return #parent "." #cname; } \
+	class parent ## _ ## cname : public ehval_t
 
 
 class LibraryBaseClass {

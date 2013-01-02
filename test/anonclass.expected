@@ -1,6 +1,6 @@
 %%stdout%%
 @hash [
-'foo': @string 'bar'
-'test': @int 2
+	'foo': @string "bar"
+	'test': @int 2
 ]
 %%stderr%%

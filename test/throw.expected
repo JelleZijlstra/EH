@@ -2,7 +2,7 @@
 I am getting called
 @int 2
 Caught it
-@string 'I don't like numbers that are divisible by three'
+@string "I don't like numbers that are divisible by three"
 I am getting called
 @int 42
 %%stderr%%

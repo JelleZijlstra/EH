@@ -17,30 +17,30 @@ void *gc_thread(void *arg) {
 
 int EHI::eh_interactive(interactivity_enum new_interactivity) {
 	this->interactivity = new_interactivity;
-	ehretval_p ret = parse_interactive();
-	return (ret->type() == int_e) ? ret->get_intval() : 0;
+	ehval_p ret = parse_interactive();
+	return ret->is_a<Integer>() ? ret->get<Integer>() : 0;
 }
-ehretval_p EHI::parse_interactive() {
+ehval_p EHI::parse_interactive() {
 	while(1) {
 		char *cmd = eh_getline();
-		if(cmd == NULL) {
-			return ehretval_t::make_int(0);
+		if(cmd == nullptr) {
+			return Integer::make(0);
 		}
 		try {
 			parse_string(cmd);
 		} catch(eh_exception &e) {
 			handle_uncaught(e);
 		} catch(quit_exception &) {
-			return ehretval_t::make_int(0);
+			return Integer::make(0);
 		}
 	}
 }
 
-ehretval_p EHI::parse_file(const char *name, ehcontext_t context) {
+ehval_p EHI::parse_file(const char *name, ehcontext_t context) {
 	FILE *infile = fopen(name, "r");
-	if(infile == NULL) {
+	if(infile == nullptr) {
 		fprintf(stderr, "Could not open input file\n");
-		return NULL;
+		return nullptr;
 	}
 	EHI parser(end_is_end_e, this->get_parent(), context, eh_full_path(name), name);
 	// if a syntax error occurs, stop parsing and return -1
@@ -48,10 +48,10 @@ ehretval_p EHI::parse_file(const char *name, ehcontext_t context) {
 		return parser.parse_file(infile);
 	} catch(eh_exception &e) {
 		handle_uncaught(e);
-		return NULL;
+		return nullptr;
 	}
 }
-ehretval_p EHI::parse_string(const char *cmd, ehcontext_t context) {
+ehval_p EHI::parse_string(const char *cmd, ehcontext_t context) {
 	EHI parser(end_is_end_e, this->get_parent(), context, working_dir, "(eval'd code)");
 	return parser.parse_string(cmd);
 }

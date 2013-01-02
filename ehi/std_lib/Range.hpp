@@ -1,21 +1,57 @@
 /*
  * Range class
  */
+#include "std_lib_includes.hpp"
 #ifndef EH_RANGE_H_
 #define EH_RANGE_H_
 
-#include "std_lib_includes.hpp"
+#include "Integer.hpp"
 
-// range
-class ehrange_t {
+EH_CLASS(Range) {
 public:
-	ehretval_p min;
-	ehretval_p max;
-	
-	ehrange_t(ehretval_p _min, ehretval_p _max) : min(_min), max(_max) {
-		assert(min->type() == max->type());
+	class t {
+	public:
+		ehval_p min;
+		ehval_p max;
+
+		t(ehval_p _min, ehval_p _max) : min(_min), max(_max) {
+			assert(min->equal_type(max));
+		}
+	};
+
+	typedef t *type;
+	type value;
+
+	Range(t *c) : value(c) {}
+
+	~Range() {
+		delete value;
 	}
-	ehrange_t() : min(ehretval_t::make_int(0)), max(ehretval_t::make_int(0)) {}
+
+	virtual bool belongs_in_gc() const {
+		return true;
+	}
+
+	virtual std::list<ehval_p> children() {
+		return { value->min, value->max };
+	}
+
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) {
+		void *ptr = static_cast<void *>(value);
+		if(set.count(ptr) == 0) {
+			set.insert(ptr);
+			std::cout << "@range [" << std::endl;
+			add_tabs(std::cout, level + 1);
+			PRINTVAR(value->min, level + 1);
+			PRINTVAR(value->max, level + 1);
+			add_tabs(std::cout, level);
+			std::cout << "]" << std::endl;
+		} else {
+			std::cout << "(recursion)" << std::endl;
+		}
+	}
+
+	static ehval_p make(ehval_p min, ehval_p max, EHInterpreter *parent);
 };
 
 EH_METHOD(Range, initialize);
@@ -30,17 +66,40 @@ EH_METHOD(Range, getIterator);
 
 EH_INITIALIZER(Range);
 
-class Range_Iterator : public LibraryBaseClass {
+EH_CHILD_CLASS(Range, Iterator) {
 public:
-	Range_Iterator(ehretval_p _range) : range(_range), current(this->range->get_rangeval()->min) {}
-	~Range_Iterator() {}
-	bool has_next(EHI *ehi);
-	ehretval_p next(EHI *ehi);
-private:
-	ehretval_p range;
-	ehretval_p current;
-	Range_Iterator(const Range_Iterator&);
-	Range_Iterator operator=(const Range_Iterator&);
+	class t {
+	public:
+		t(ehval_p _range) : range(_range), current(this->range->get<Range>()->min) {}
+
+		bool has_next(EHI *ehi);
+		ehval_p next(EHI *ehi);
+		ehval_p range;
+		ehval_p current;
+
+	private:
+		t(const t&);
+		t operator=(const t&);
+	};
+
+	typedef t *type;
+	type value;
+
+	Range_Iterator(type val) : value(val) {}
+
+	~Range_Iterator() {
+		delete value;
+	}
+
+	virtual bool belongs_in_gc() const {
+		return true;
+	}
+
+	virtual std::list<ehval_p> children() {
+		return { value->range, value->current };
+	}
+
+	static ehval_p make(ehval_p range, EHInterpreter *parent);
 };
 EH_METHOD(Range_Iterator, initialize);
 EH_METHOD(Range_Iterator, hasNext);

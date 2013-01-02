@@ -7,5 +7,5 @@ factory = func: n
 end
 o = factory 42
 printvar o
-printvar(o.bar ())
+printvar(o.bar())
 printvar(o.foo)

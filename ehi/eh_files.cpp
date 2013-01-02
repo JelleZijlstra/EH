@@ -34,12 +34,12 @@ public:
 	}
 
 	bool null() const {
-		return file == NULL;
+		return file == nullptr;
 	}
 };
 
 const std::string eh_getcwd() {
-	const char *cwd = getcwd(NULL, 0);
+	const char *cwd = getcwd(nullptr, 0);
 	const std::string out(cwd);
 	free((void *)cwd);
 	return out;
@@ -70,7 +70,7 @@ const std::string eh_shell_exec(const std::string &command) {
 	}
 	char buffer[512];
 	std::ostringstream output;
-	while(fgets(buffer, 511, p.operator->()) != NULL) {
+	while(fgets(buffer, 511, p.operator->()) != nullptr) {
 		output << buffer;
 	}
 	std::cout.flush();

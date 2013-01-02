@@ -1,7 +1,7 @@
 // VisibilityError: thrown when accessing a private member from an inappropriate context
 #include "std_lib_includes.hpp"
 
-void throw_VisibilityError(ehretval_p object, const char *name, EHI *ehi);
+void throw_VisibilityError(ehval_p object, const char *name, EHI *ehi);
 
 EH_METHOD(VisibilityError, initialize);
 

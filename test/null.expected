@@ -2,11 +2,11 @@
 
 
 
-Unknown member toInt in object of type Null: 
+Unknown member toInteger in object of type Null: 
 Unknown member ban in object of type Function: () => (user code)
 @array [
-0 => @string 'foo'
-1 => null
-2 => @string 'test'
+	0 => @string "foo"
+	1 => null
+	2 => @string "test"
 ]
 %%stderr%%

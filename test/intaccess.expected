@@ -40,5 +40,5 @@ String access:
 2: s
 3: t
 String modification:
-uuuu
 %%stderr%%
+Uncaught exception of type NameError: Unknown member operator->= in object of type String: test

@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 # Implementation of the McCarthy function in EH
-# This version uses more compact syntax that is allowed by ehi, but not by the 
+# This version uses more compact syntax that is allowed by ehi, but not by the
 # PHP interpreter.
 func mccarthy: n
 	if n > 100
@@ -16,7 +16,7 @@ if argc > 2
 	ret 1
 end
 if argc == 2
-	input = argv->1.toInt()
+	input = argv->1.toInteger()
 else
 	input = getinput ()
 end

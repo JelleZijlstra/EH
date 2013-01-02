@@ -5,14 +5,25 @@
 #define EH_EXCEPTION_H_
 
 #include "std_lib_includes.hpp"
- 
-class Exception : public LibraryBaseClass {
+
+EH_CLASS(Exception) {
 public:
-	const char *msg;
-	Exception(const char *_msg) : msg(_msg) {}
+	typedef const char *type;
+	const char *value;
+
+	Exception(const char *msg) : value(msg) {}
 	virtual ~Exception() {
-		delete[] msg;
+		delete[] value;
 	}
+
+	virtual bool belongs_in_gc() const {
+		return false;
+	}
+
+	static ehval_p make(const char *value) {
+		return static_cast<ehval_t*>(new Exception(value));
+	}
+
 private:
 	Exception(const Exception&);
 	Exception operator=(const Exception&);

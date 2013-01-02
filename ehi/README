@@ -19,7 +19,7 @@ interpreter:
   turn my smart pointer implementations into intrusive pointers, implemented
   through inheritance.
 - Introduce enums.
-- Store some types of objects directly in ehretval_p objects, instead of
+- Store some types of objects directly in ehval_p objects, instead of
   requiring a pointer.
 - Fix a GC bug that leads to some objects being prematurely freed (to reproduce,
   compile with -DDEBUG_GC and run test/mythrow.eh). This is apparently to do 

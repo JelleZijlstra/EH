@@ -8,6 +8,7 @@
 #include "eh.hpp"
 #include "eh.bison.hpp"
 #include "std_lib/SyntaxError.hpp"
+#include "std_lib/Integer.hpp"
 
 void make_string(char **, char *);
 %}
@@ -27,7 +28,7 @@ void make_string(char **, char *);
 			}
 [\\]\n		/* Ignore escape */
 -?[0-9]*\.[0-9]+	{
-				yylval_param->fValue = strtof(yytext, NULL);
+				yylval_param->fValue = strtof(yytext, nullptr);
 				return T_FLOAT;
 			}
 -?[0-9]+		{
@@ -66,19 +67,19 @@ void make_string(char **, char *);
 "scope"		return T_SCOPE;
 "enum"		return T_ENUM;
 "public"	{
-				yylval_param->vValue = publica_e;
+				yylval_param->vValue = Attribute::publica_e;
 				return T_ATTRIBUTE;
 			}
 "private"	{
-				yylval_param->vValue = privatea_e;
+				yylval_param->vValue = Attribute::privatea_e;
 				return T_ATTRIBUTE;
 			}
 "static"	{
-				yylval_param->vValue = statica_e;
+				yylval_param->vValue = Attribute::statica_e;
 				return T_ATTRIBUTE;
 			}
 "const"		{
-				yylval_param->vValue = consta_e;
+				yylval_param->vValue = Attribute::consta_e;
 				return T_ATTRIBUTE;
 			}
 "true"		{
@@ -167,16 +168,16 @@ void yyerror(void *scanner, const char *s) {
 	throw_SyntaxError(s, yyget_lineno((yyscan_t)scanner), ehi);
 }
 
-ehretval_p EHI::parse_file(FILE *infile) {
+ehval_p EHI::parse_file(FILE *infile) {
 	yy_buffer = yy_create_buffer(infile, YY_BUF_SIZE, scanner);
 	yy_switch_to_buffer(yy_buffer, scanner);
-	return ehretval_t::make_int(yyparse(scanner));
+	return Integer::make(yyparse(scanner));
 }
 
-ehretval_p EHI::parse_string(const char *cmd) {
+ehval_p EHI::parse_string(const char *cmd) {
 	yy_switch_to_buffer(yy_scan_string(cmd, scanner), scanner);
 	yyset_lineno(1, scanner);
-	return ehretval_t::make_int(yyparse(scanner));
+	return Integer::make(yyparse(scanner));
 }
 
 void make_string(char **dest, char *src) {

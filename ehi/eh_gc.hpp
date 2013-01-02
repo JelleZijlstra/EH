@@ -51,49 +51,33 @@ private:
 	 * constants
 	 */
 	const static int pool_size = 512;
+	const static int self_freed = 1;
 
 	/*
 	 * types
 	 */
-	class block {
+	class block;
+public:
+	class data {
 	public:
 		short refcount;
 		short gc_data;
-		// could we make an explicit union here? That might fail because T is not a POD. In any case, this is implicitly a union of a T and a block*
-		T content;
-		
-		block() : refcount(1), gc_data(0), content() {}
-		
+
 		// get the next pointer from a free block. Havoc will result if this is called on an allocated block.
-		block *get_next_pointer() const {
+		class garbage_collector::block *get_next_pointer() {
 			assert(!this->is_allocated());
-			return *(block **)&this->content;
+			char *ptr = reinterpret_cast<char *>(this) + sizeof(data);
+			return *reinterpret_cast<class garbage_collector::block **>(ptr);
 		}
-		void set_next_pointer(block *in) {
-			*(block **)&this->content = in;
-		}
-		
-		bool is_self_freed() const {
-			return this->get_next_pointer() == (block *)1;
-		}
-		bool is_allocated() const {
-			return this->refcount != 0;
-		}
-		// set bits, numbered from 0 to 15
-		void set_gc_bit(int bit) {
-			this->gc_data |= (1 << (15 - bit));
-		}
-		void unset_gc_bit(int bit) {
-			this->gc_data &= ~(1 << (15 - bit));		
-		}
-		bool get_gc_bit(int bit) const {
-			return (bool) (this->gc_data & (1 << (15 - bit)));
+		void set_next_pointer(void *in) {
+			char *ptr = reinterpret_cast<char *>(this) + sizeof(data);
+			*reinterpret_cast<void **>(ptr) = in;
 		}
 
 		void inc_rc() {
 			this->refcount++;
 		}
-		
+
 		void dec_rc() {
 			// this may happen if we free a still-referenced object as unreachable
 			if(this->refcount == 0) {
@@ -101,26 +85,77 @@ private:
 			}
 			this->refcount--;
 			if(this->refcount == 0) {
-				if(this->content.belongs_in_gc()) {
+				if(this->belongs_in_gc()) {
 					// We can free this block now, but there is no way to let
 					// the	pool know that this block is free. Thus, we instead
 					// set the next_pointer to 1, and the sweeper will
 					// understand that this is a self-freed block.
 					this->suicide();
-					this->set_next_pointer((block *)1);
+					this->set_next_pointer(reinterpret_cast<void *>(self_freed));
 				} else {
 					delete this;
 				}
 			}
 		}
-		
+
+		// set bits, numbered from 0 to 15
+		void set_gc_bit(int bit) {
+			this->gc_data |= (1 << (15 - bit));
+		}
+		void unset_gc_bit(int bit) {
+			this->gc_data &= ~(1 << (15 - bit));
+		}
+		bool get_gc_bit(int bit) const {
+			return static_cast<bool>(this->gc_data & (1 << (15 - bit)));
+		}
+
+		bool is_allocated() {
+			return this->refcount != 0;
+		}
+
 		void suicide() {
 			// needed to avoid bugs with the destructor indirectly
 			// leading to the refcount for this block being lowered
 			this->refcount = 0;
-			this->content.~T();
+			this->~data();
 			this->refcount = 0;
 			this->gc_data = 0;
+		}
+
+		// don't set the gc_data - it's set by garbage_collector code below
+		data() : refcount(1) {}
+
+		virtual ~data() {}
+
+		virtual bool belongs_in_gc() const {
+			return false;
+		}
+	};
+
+private:
+	class block {
+	public:
+		T content;
+		// needed so we can use this for classes inheriting from T
+		void *padding;
+
+		data *get_data() {
+			return reinterpret_cast<data *>(&this->content);
+		}
+
+		// get the next pointer from a free block. Havoc will result if this is called on an allocated block.
+		block *get_next_pointer() {
+			return this->get_data()->get_next_pointer();
+		}
+		void set_next_pointer(block *in) {
+			this->get_data()->set_next_pointer(in);
+		}
+
+		bool is_self_freed() {
+			return this->get_next_pointer() == reinterpret_cast<block *>(self_freed);
+		}
+		bool is_allocated() {
+			return this->get_data()->refcount != 0;
 		}
 	};
 
@@ -131,22 +166,22 @@ private:
 	public:
 		// pointer to next pool in the list
 		pool *next;
-		
+
 		// pointer to the first free block in the list
 		block *first_free_block;
 		// number of free blocks left
 		int free_blocks;
 
 		uint8_t blocks[pool_size * sizeof(block)];
-		
-		pool(pool *_next = NULL) : next(_next), first_free_block(NULL), free_blocks(pool_size), blocks() {
+
+		pool(pool *_next = nullptr) : next(_next), first_free_block(nullptr), free_blocks(pool_size), blocks() {
 			first_free_block = reinterpret_cast<block *>(&blocks[0]);
 		}
-		
+
 		~pool() {
 			assert(free_blocks == pool_size);
 		}
-		
+
 		void flush() {
 			if(free_blocks < pool_size) {
 				// kill everything
@@ -161,10 +196,10 @@ private:
 					if(this->empty()) {
 						break;
 					}
-				}				
+				}
 			}
 		}
-		
+
 		// methods
 		bool full() const {
 			return free_blocks == 0;
@@ -172,19 +207,19 @@ private:
 		bool empty() const {
 			return free_blocks == pool_size;
 		}
-		
+
 		void dealloc(block *b) {
 #ifdef DEBUG_GC
 			std::cout << "Freeing block at " << b << std::endl;
 			std::cout << "Refcount: " << b->refcount << std::endl;
 			b->content.print();
 #endif /* DEBUG_GC */
-			b->suicide();
+			b->get_data()->suicide();
 			b->set_next_pointer(this->first_free_block);
 			this->first_free_block = b;
 			free_blocks++;
 		}
-		
+
 		void harvest_self_freed(block *b) {
 #ifdef DEBUG_GC
 			std::cout << "Harvesting block at " << b << std::endl;
@@ -194,15 +229,15 @@ private:
 			this->first_free_block = b;
 			free_blocks++;
 		}
-		
+
 		void sweep(int previous_bit, int new_bit) {
 			for(int i = 0; i < pool_size; i++) {
 				block *b = reinterpret_cast<block *>(&this->blocks[i * sizeof(block)]);
-				if(b->is_allocated() && !b->get_gc_bit(new_bit)) {
+				if(b->is_allocated() && !b->get_data()->get_gc_bit(new_bit)) {
 					this->dealloc(b);
 				} else {
 					// unset old GC bits
-					b->unset_gc_bit(previous_bit);
+					b->get_data()->unset_gc_bit(previous_bit);
 					// assimilate self-freed blocks
 					if(!b->is_allocated() && b->is_self_freed()) {
 						this->harvest_self_freed(b);
@@ -215,7 +250,7 @@ private:
 			}
 		}
 	};
-	
+
 	class marking_bit {
 	private:
 		int value;
@@ -240,7 +275,7 @@ private:
 				return this->value - 1;
 			}
 		}
-		
+
 		marking_bit() : value(0) {}
 	};
 
@@ -253,23 +288,25 @@ private:
 public:
 	class pointer {
 	private:
-		mutable block *content;
-		
-		block *&operator~() const {
+		mutable T *content;
+
+		T *&operator~() const {
 			return this->content;
 		}
-		class dummy_class {};
 	public:
 		/*
 		 * Constructors
 		 */
-		pointer() : content(NULL) {}
-		pointer(int in) : content(NULL) {
-			// only for NULL initialization
-			assert(in == 0);
-		}
+		pointer() : content(nullptr) {}
+		// my compiler apparently doesn't have std::nullptr_t
+		pointer(decltype(nullptr)) : content(nullptr) {}
 		pointer(const pointer &rhs) : content(~rhs) {
-			if(this->content != NULL) {
+			if(this->content != nullptr) {
+				this->content->inc_rc();
+			}
+		}
+		pointer(T *in) : content(in) {
+			if(this->content != nullptr) {
 				this->content->inc_rc();
 			}
 		}
@@ -277,43 +314,33 @@ public:
 		 * Overloading
 		 */
 		T &operator*() const {
-			if(this->content == NULL) {
-				this->content = new block;
-			}
-			return this->content->content;
+			return *(this->operator->());
 		}
 		T *operator->() const {
-			if(this->content == NULL) {
-				this->content = new block;
-			}
-			return &this->content->content;
+			// if(this->content == nullptr) {
+			// 	return T::null_object();
+			// } else {
+				return this->content;
+			// }
 		}
 		pointer &operator=(const pointer &rhs) {
 			// decrease refcount for thing we're now referring to
-			if(this->content != NULL) {
+			if(this->content != nullptr) {
 				this->content->dec_rc();
 			}
 			this->content = ~rhs;
 			// and increase it for what we're now referring to
-			if(this->content != NULL) {
+			if(this->content != nullptr) {
 				this->content->inc_rc();
 			}
 			return *this;
 		}
-		pointer &operator=(dummy_class *rhs) {
-			assert(rhs == NULL);
-			if(this->content != NULL) {
-				this->content->dec_rc();
-			}
-			this->content = NULL;
-			return *this;
-		}
-	
+
 		bool operator==(const pointer &rhs) {
 			return this->content == ~rhs;
 		}
 		bool operator==(void *rhs) {
-			return (void *)this->content == rhs;
+			return static_cast<void *>(this->content) == rhs;
 		}
 		bool operator!=(const pointer &rhs) {
 			return this->content != ~rhs;
@@ -328,13 +355,13 @@ public:
 		int compare(const pointer &rhs) const {
 			if(this->content == ~rhs) {
 				return 0;
-			} else if(null(*this)) {
+			} else if(this->null()) {
 				return -1;
-			} else if(null(rhs)) {
+			} else if(rhs.null()) {
 				return 1;
 			} else {
-				return this->content->content.compare(rhs);
-			}			
+				return this->compare(rhs);
+			}
 		}
 		bool operator<(const pointer &rhs) const {
 			return this->compare(rhs) == -1;
@@ -351,73 +378,67 @@ public:
 		bool operator>(const pointer &rhs) const {
 			return this->compare(rhs) == 1;
 		}
-		
+
 		/*
 		 * Destructor
 		 */
 		~pointer() {
-			if(this->content != NULL) {
+			if(this->content != nullptr) {
 				this->content->dec_rc();
 			}
 		}
-		
+
 		/*
 		 * Static methods
 		 */
-		static bool null(pointer in) {
-			return ~in == NULL;
+		bool null() const {
+			return this->content == nullptr;
 		}
-		
+
 		friend class garbage_collector;
 	};
 
-private:	
+private:
 	/*
 	 * private properties
 	 */
-	
+
 	// first pool in the linked list
 	pool *first_pool;
 	// pool we're currently allocating from
 	pool *current_pool;
 	// current bit used for marking by the GC
 	marking_bit current_bit;
-	
+
 	/*
 	 * private methods
 	 */
-	block *real_allocate() {
+	data *real_allocate() {
 		// find pool
 		if(this->current_pool->full()) {
 			this->find_current_pool();
 		}
-		return alloc(current_pool);
-	}
-	
-	// Allocate a block in the given pool. This cannot be a member of pool because it needs access to global GC state.
-	block *alloc(pool *p) {
+		pool *p = current_pool;
 		assert(!p->full());
 		block *out = p->first_free_block;
 		block *next = p->first_free_block->get_next_pointer();
-		if(next == NULL) {
+		if(next == nullptr) {
 			// it's the next block
 			p->first_free_block++;
 		} else {
 			p->first_free_block = next;
 		}
 		p->free_blocks--;
-		
-		// create the object
-		new(&out->content) T();
+
+		data *d = out->get_data();
 		// first set GC bit, then tell GC that this has been allocated
-		out->set_gc_bit(this->current_bit.get());
-		out->set_gc_bit(this->current_bit.next());
-		out->refcount = 1;
-		return out;
+		d->set_gc_bit(this->current_bit.get());
+		d->set_gc_bit(this->current_bit.next());
+		return d;
 	}
-	
+
 	void find_current_pool() {
-		for(pool *p = this->first_pool; p != NULL; p = p->next) {
+		for(pool *p = this->first_pool; p != nullptr; p = p->next) {
 			if(!p->full()) {
 				this->current_pool = p;
 				return;
@@ -427,35 +448,37 @@ private:
 		this->first_pool = new pool(this->first_pool);
 		this->current_pool = this->first_pool;
 	}
-	
+
 	/*
 	 * Garbage collection.
 	 */
 	void do_mark(pointer root) {
 		int bit = this->current_bit.next();
 		// ignore already marked objects and objects that are not in GC
-		if(root == NULL || !root->belongs_in_gc() || (~root)->get_gc_bit(bit)) {
+		if(root == nullptr || !root->belongs_in_gc() || root->get_gc_bit(bit)) {
 			return;
 		}
-		(~root)->set_gc_bit(bit);
+		root->set_gc_bit(bit);
 
-		std::list<pointer> children = root->children();
-		for(typename std::list<pointer>::iterator i = children.begin(), end = children.end(); i != end; i++) {
-			this->do_mark(*i);
+		auto children = root->children();
+		// std::cout << "Size of children: " << children.size() << std::endl;
+		// std::cout << (typeid(root.operator*())).name() << std::endl;
+ 		for(auto &i : children) {
+			do_mark(i);
 		}
 	}
-	
+
 	// Remove all blocks with no references to them found by do_mark().
 	void do_sweep() {
 		int new_bit = this->current_bit.get();
 		int previous_bit = this->current_bit.prev();
-		for(pool *p = this->first_pool; p != NULL; p = p->next) {
+		for(pool *p = this->first_pool; p != nullptr; p = p->next) {
 			p->sweep(previous_bit, new_bit);
 		}
 		// remove pools that are now empty
-		for(pool *p = this->first_pool, *prev = NULL; p != NULL; prev = p, p = p->next) {
+		for(pool *p = this->first_pool, *prev = nullptr; p != nullptr; prev = p, p = p->next) {
 			if(p->empty()) {
-				if(prev == NULL) {
+				if(prev == nullptr) {
 					this->first_pool = p->next;
 				} else {
 					prev->next = p->next;
@@ -464,7 +487,7 @@ private:
 					this->find_current_pool();
 				}
 				delete p;
-				if(prev == NULL) {
+				if(prev == nullptr) {
 					p = this->first_pool;
 				} else {
 					p = prev;
@@ -473,14 +496,13 @@ private:
 		}
 	}
 public:
-	// flag checked by the GC thread: if true, it stops	
+	// flag checked by the GC thread: if true, it stops
 	concurrent_object<bool> do_stop;
 
-	// public methods
-	void allocate(pointer &p) {
-		~p = this->real_allocate();
+	data *get_space() {
+		return real_allocate();
 	}
-	
+
 	void do_collect(pointer root) {
 #ifdef DEBUG_GC
 		std::cout << "Starting GC run..." << std::endl;
@@ -498,7 +520,7 @@ public:
 	void print_stats() {
 		int num_pools = 0;
 		int allocated_blocks = 0;
-		for(pool *p = this->first_pool; p != NULL; p = p->next) {
+		for(pool *p = this->first_pool; p != nullptr; p = p->next) {
 			num_pools++;
 			allocated_blocks += (pool_size - p->free_blocks);
 		}
@@ -511,14 +533,14 @@ public:
 		// otherwise our strategy won't work
 		assert(sizeof(T) >= sizeof(void *));
 	}
-	
+
 	~garbage_collector() {
-		for(pool *p = this->first_pool; p != NULL; p = p->next) {
+		for(pool *p = this->first_pool; p != nullptr; p = p->next) {
 			p->flush();
-		}	
-	
-		pool *next = NULL;
-		for(pool *p = this->first_pool; p != NULL; p = next) {
+		}
+
+		pool *next = nullptr;
+		for(pool *p = this->first_pool; p != nullptr; p = next) {
 			next = p->next;
 			delete p;
 		}

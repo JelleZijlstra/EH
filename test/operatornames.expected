@@ -1,5 +1,5 @@
 %%stdout%%
 @object <Foo> [
-f <public,non-static,non-constant>: @int 7
+	f <public,non-static,non-constant>: @int 7
 ]
 %%stderr%%

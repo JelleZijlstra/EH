@@ -3,11 +3,10 @@
 #include "SyntaxError.hpp"
 
 void throw_SyntaxError(const char *message, int line, EHI *ehi) {
-	ehretval_p args[2];
-	args[0] = ehretval_t::make_string(strdup(message));
-	args[1] = ehretval_t::make_int(line);
-	ehretval_p arg = ehi->get_parent()->make_tuple(new ehtuple_t(2, args));
-	throw_error("SyntaxError", arg, ehi);
+	ehval_p args[2];
+	args[0] = String::make(strdup(message));
+	args[1] = Integer::make(line);
+	throw_error("SyntaxError", Tuple::make(2, args, ehi->get_parent()), ehi);
 }
 
 EH_INITIALIZER(SyntaxError) {
@@ -17,17 +16,16 @@ EH_INITIALIZER(SyntaxError) {
 
 EH_METHOD(SyntaxError, initialize) {
 	ASSERT_NARGS(2, "SyntaxError.initialize");
-	ehretval_p message = args->get_tupleval()->get(0);
-	ASSERT_TYPE(message, string_e, "SyntaxError.initialize");
-	ehi->set_property(obj, "errorMessage", message, ehi->global());
+	ehval_p message = args->get<Tuple>()->get(0);
+	message->assert_type<String>("SyntaxError.initialize", ehi);
+	obj->set_property("errorMessage", message, ehi->global(), ehi);
 
-	ehretval_p line = args->get_tupleval()->get(1);
-	ASSERT_TYPE(line, int_e, "SyntaxError.initialize");
-	ehi->set_property(obj, "line", line, ehi->global());
+	ehval_p line = args->get<Tuple>()->get(1);
+	line->assert_type<Integer>("SyntaxError.initialize", ehi);
+	obj->set_property("line", line, ehi->global(), ehi);
 
 	std::ostringstream exception_msg;
-	exception_msg << message->get_stringval() << " at line ";
-	exception_msg << line->get_intval();
-	Exception *e = new Exception(strdup(exception_msg.str().c_str()));
-	return ehretval_t::make_resource(obj->get_full_type(), e);
+	exception_msg << message->get<String>() << " at line ";
+	exception_msg << line->get<Integer>();
+	return Exception::make(strdup(exception_msg.str().c_str()));
 }

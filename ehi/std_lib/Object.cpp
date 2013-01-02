@@ -26,125 +26,119 @@ EH_INITIALIZER(Object) {
 }
 
 EH_METHOD(Object, new) {
-	ehretval_p ret = ehi->get_parent()->instantiate(obj);
-	ret->get_objectval()->object_data = ehi->call_method(ret, "initialize", args, obj);
+	ehval_p ret = ehi->get_parent()->instantiate(obj);
+	ret->get<Object>()->object_data = ehi->call_method(ret, "initialize", args, obj);
 	return ret;
 }
 EH_METHOD(Object, inherit) {
-	ASSERT_TYPE(args, object_e, "Object.inherit");
-	obj->get_objectval()->inherit(args);
-	return ehi->get_parent()->make_super_class(new ehsuper_t(args));
+	args->assert_type<Object>("Object.inherit", ehi);
+	obj->get<Object>()->inherit(args);
+	return SuperClass::make(args, ehi->get_parent());
 }
 EH_METHOD(Object, initialize) {
-	return NULL;
+	return nullptr;
 }
 EH_METHOD(Object, toString) {
-	ASSERT_TYPE(args, null_e, "Object.toString");
+	args->assert_type<Null>("Object.toString", ehi);
 	const size_t len = sizeof(void *) * 2 + 3;
 	char *out = new char[len]();
 	snprintf(out, len, "%p", reinterpret_cast<void *>(obj.operator->()));
-	return ehretval_t::make_string(out);
+	return String::make(out);
 }
 EH_METHOD(Object, finalize) {
-	return NULL;
+	return nullptr;
 }
 EH_METHOD(Object, isA) {
-	int type = args->type();
-	if(type == object_e) {
-		type = args->get_objectval()->type_id;
+	if(!args->is_a<Object>()) {
+		args = ehi->get_parent()->repo.get_object(args);
 	}
-	return ehretval_t::make_bool(obj->inherited_is_a(type));
-}
-
-static ehretval_p get_data(ehretval_p in) {
-	if(in->is_object()) {
-		return in->get_objectval()->object_data;
+	type_repository &repo = ehi->get_parent()->repo;
+	ehval_p type_object = repo.get_object(obj);
+	if(type_object == args) {
+		return Bool::make(true);
+	} else if(obj->is_a<Object>()) {
+		return Bool::make(obj->get<Object>()->inherits(args));
 	} else {
-		return in;
+		return Bool::make(type_object->get<Object>()->inherits(args));
 	}
-
 }
+
 EH_METHOD(Object, operator_compare) {
-	int lhs_type = obj->get_full_type();
-	int rhs_type = args->get_full_type();
+	int lhs_type = obj->get_type_id(ehi->get_parent());
+	int rhs_type = args->get_type_id(ehi->get_parent());
 	int comparison = intcmp(lhs_type, rhs_type);
 	if(comparison != 0) {
-		return ehretval_t::make_int(comparison);
+		return Integer::make(comparison);
 	} else {
 		return ehi->call_method(obj, "compare", args, obj);
 	}
 }
 EH_METHOD(Object, compare) {
-	int lhs_type = obj->get_full_type();
-	int rhs_type = args->get_full_type();
-	if(lhs_type != rhs_type) {
-		throw_TypeError("Arguments to Object.compare must have the same type", rhs_type, ehi);
-	}
-	ehretval_p lhs = get_data(obj);
-	if(lhs->type() == null_e) {
+	ehval_p lhs = obj->data();
+	if(lhs->is_a<Null>()) {
 		lhs = obj;
 	}
-	ehretval_p rhs = get_data(args);
-	return ehretval_t::make_int(lhs->naive_compare(rhs));
+	ehval_p rhs = args->data();
+	if(!lhs->equal_type(rhs)) {
+		throw_TypeError("Arguments to Object.compare must have the same type", rhs, ehi);
+	}
+	return Integer::make(lhs->naive_compare(rhs));
 }
 #define CALL_COMPARE() \
-	ehretval_p comparison_p = ehi->call_method(obj, "operator<=>", args, obj); \
-	if(comparison_p->type() != int_e) { \
-		throw_TypeError("operator<=> must return an Integer", comparison_p->type(), ehi); \
-	} \
-	int comparison = comparison_p->get_intval();
+	ehval_p comparison_p = ehi->call_method_typed<Integer>(obj, "operator<=>", args, obj); \
+	int comparison = comparison_p->get<Integer>();
 
 EH_METHOD(Object, operator_equals) {
 	CALL_COMPARE();
-	return ehretval_t::make_bool(comparison == 0);
+	return Bool::make(comparison == 0);
 }
 EH_METHOD(Object, operator_ne) {
 	CALL_COMPARE();
-	return ehretval_t::make_bool(comparison != 0);
+	return Bool::make(comparison != 0);
 }
 EH_METHOD(Object, operator_gt) {
 	CALL_COMPARE();
-	return ehretval_t::make_bool(comparison > 0);
+	return Bool::make(comparison > 0);
 }
 EH_METHOD(Object, operator_gte) {
 	CALL_COMPARE();
-	return ehretval_t::make_bool(comparison >= 0);
+	return Bool::make(comparison >= 0);
 }
 EH_METHOD(Object, operator_lt) {
 	CALL_COMPARE();
-	return ehretval_t::make_bool(comparison < 0);
+	return Bool::make(comparison < 0);
 }
 EH_METHOD(Object, operator_lte) {
 	CALL_COMPARE();
-	return ehretval_t::make_bool(comparison <= 0);
+	return Bool::make(comparison <= 0);
 }
 EH_METHOD(Object, type) {
-	int type = obj->get_full_type();
-	std::string name = ehi->get_parent()->repo.get_name(type);
-	return ehretval_t::make_string(strdup(name.c_str()));
+	std::string name = ehi->get_parent()->repo.get_name(obj);
+	return String::make(strdup(name.c_str()));
 }
 EH_METHOD(Object, typeId) {
-	return ehretval_t::make_int(obj->get_full_type());
+	return Integer::make(obj->get_type_id(ehi->get_parent()));
 }
 // return all members in the class
 EH_METHOD(Object, members) {
-	ehretval_p reference_retainer = obj;
-	if(obj->type() != object_e) {
-		obj = ehi->get_parent()->get_primitive_class(obj->type());
+	ehval_p reference_retainer = obj;
+	if(!obj->is_a<Object>()) {
+		obj = ehi->get_parent()->repo.get_object(obj);
 	}
-	std::set<std::string> members = obj->get_objectval()->member_set();
-	eharray_t *out = new eharray_t();
+	std::set<std::string> members = obj->get<Object>()->member_set();
+	ehval_p out = Array::make(ehi->get_parent());
+	Array::t *arr = out->get<Array>();
 	int index = 0;
 	for(std::set<std::string>::iterator i = members.begin(), end = members.end(); i != end; i++, index++) {
-		out->int_indices[index] = ehretval_t::make_string(strdup((*i).c_str()));
+		arr->int_indices[index] = String::make(strdup((*i).c_str()));
 	}
-	return ehi->get_parent()->make_array(out);
+	return out;
 }
 
 // TODO: make these private methods. I'm pretty sure you can crash ehi with these.
 EH_METHOD(Object, data) {
-	if(obj->type() == object_e) {
-		return obj->get_objectval()->object_data;
+	if(obj->is_a<Object>()) {
+		return obj->get<Object>()->object_data;
 	} else {
 		return obj;
 	}
@@ -152,10 +146,10 @@ EH_METHOD(Object, data) {
 
 EH_METHOD(Object, setData) {
 	// impossible to set object_data on primitive
-	if(!obj->type() == object_e) {
-		throw_TypeError("setData", obj->type(), ehi);
+	if(!obj->is_a<Object>()) {
+		throw_TypeError("setData", obj, ehi);
 	}
-	obj->get_objectval()->object_data = args;
+	obj->get<Object>()->object_data = args;
 	// enable chaining
 	return obj;
 }

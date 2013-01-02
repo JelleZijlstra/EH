@@ -1,25 +1,25 @@
 %%stdout%%
 @array [
-'_ehphp' => @bool true
-'a' => @bool true
-'b' => @bool true
-'bam' => @array [
-0 => @int 3
-1 => @int 4
-]
-'c' => @int 42
-'d' => @bool true
-'e' => @bool true
-'f' => @int 42
-'foo' => @string 'bar'
-'foox' => @string 'barx'
-'g' => @int 42
-'h' => @int 42
-'test' => @bool true
+	'_ehphp' => @bool true
+	'a' => @bool true
+	'b' => @bool true
+	'bam' => @array [
+		0 => @int 3
+		1 => @int 4
+	]
+	'c' => @int 42
+	'd' => @bool true
+	'e' => @bool true
+	'f' => @int 42
+	'foo' => @string "bar"
+	'foox' => @string "barx"
+	'g' => @int 42
+	'h' => @int 42
+	'test' => @bool true
 ]
 @array [
-'_ehphp' => @bool true
-0 => @string 'foo'
-1 => @string 'bar'
+	'_ehphp' => @bool true
+	0 => @string "foo"
+	1 => @string "bar"
 ]
 %%stderr%%

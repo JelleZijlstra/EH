@@ -10,6 +10,11 @@ EH_INITIALIZER(Tuple) {
 	REGISTER_METHOD(Tuple, compare);
 }
 
+ehval_p Tuple::make(int size, ehval_p *in, EHInterpreter *parent) {
+	return parent->allocate<Tuple>(new t(size, in));
+}
+
+
 /*
  * @description Initializer. Converts an arbitrary object to a tuple by the
  * following algorithm: call the object's .length() method; allocate a tuple of
@@ -19,68 +24,71 @@ EH_INITIALIZER(Tuple) {
  * @returns N/A
  */
 EH_METHOD(Tuple, initialize) {
-	ehretval_p length = ehi->call_method(args, "length", NULL, obj);
-	ASSERT_TYPE(length, int_e, "length method must return an int");
-	const int len = length->get_intval();
+	ehval_p length = ehi->call_method_typed<Integer>(args, "length", nullptr, obj);
+	const int len = length->get<Integer>();
 
 	ehretval_a values(len);
-	ehtuple_t *t = new ehtuple_t(len, values);
 
-	ehretval_p iterator = ehi->call_method(args, "getIterator", NULL, obj);
+	ehval_p iterator = ehi->call_method(args, "getIterator", nullptr, obj);
 	for(int i = 0; i < len; i++) {
-		ehretval_p next = ehi->call_method(iterator, "next", NULL, obj);
-		t->content[i] = next;
+		values[i] = ehi->call_method(iterator, "next", nullptr, obj);
 	}
-	return ehi->get_parent()->make_tuple(t);
+	return Tuple::make(len, values, ehi->get_parent());
 }
 EH_METHOD(Tuple, operator_arrow) {
-	ASSERT_OBJ_TYPE(tuple_e, "Tuple.operator->");
-	ASSERT_TYPE(args, int_e, "Tuple.operator->");
-	int index = args->get_intval();
-	if(index < 0 || index >= obj->get_tupleval()->size()) {
+	ASSERT_OBJ_TYPE(Tuple, "Tuple.operator->");
+	args->assert_type<Integer>("Tuple.operator->", ehi);
+	int index = args->get<Integer>();
+	if(index < 0 || index >= obj->get<Tuple>()->size()) {
     	throw_ArgumentError_out_of_range("Tuple.operator->", args, ehi);
 	}
-  	return obj->get_tupleval()->get(index);
+  	return obj->get<Tuple>()->get(index);
 }
 EH_METHOD(Tuple, length) {
-  	ASSERT_NULL_AND_TYPE(tuple_e, "Tuple.length");
-  	return ehretval_t::make_int(obj->get_tupleval()->size());
+  	ASSERT_NULL_AND_TYPE(Tuple, "Tuple.length");
+  	return Integer::make(obj->get<Tuple>()->size());
 }
 EH_METHOD(Tuple, toTuple) {
-	ASSERT_OBJ_TYPE(tuple_e, "Tuple.toTuple");
+	ASSERT_OBJ_TYPE(Tuple, "Tuple.toTuple");
 	return obj;
 }
 EH_METHOD(Tuple, compare) {
-	ASSERT_OBJ_TYPE(tuple_e, "Tuple.compare");
-	ASSERT_TYPE(args, tuple_e, "Tuple.compare");
-	ehtuple_t *lhs = obj->get_tupleval();
-	ehtuple_t *rhs = args->get_tupleval();
+	ASSERT_OBJ_TYPE(Tuple, "Tuple.compare");
+	args = args->data();
+	args->assert_type<Tuple>("Tuple.compare", ehi);
+	Tuple::t *lhs = obj->get<Tuple>();
+	Tuple::t *rhs = args->get<Tuple>();
 	int size_cmp = intcmp(lhs->size(), rhs->size());
 	if(size_cmp != 0) {
-		return ehretval_t::make_int(size_cmp);
+		return Integer::make(size_cmp);
 	}
 	int size = lhs->size();
-	ehretval_p lhs_val, rhs_val;
+	ehval_p lhs_val, rhs_val;
 	for(int i = 0; i < size; i++) {
 		int comparison = ehi->compare(lhs->get(i), rhs->get(i), obj);
 		if(comparison != 0) {
-			return ehretval_t::make_int(comparison);
+			return Integer::make(comparison);
 		}
 	}
-	return ehretval_t::make_int(0);
+	return Integer::make(0);
 }
 EH_METHOD(Tuple, getIterator) {
-	ASSERT_NULL_AND_TYPE(tuple_e, "Tuple.getIterator");
-	ehretval_p class_member = ehi->get_property(obj, "Iterator", obj);
+	ASSERT_NULL_AND_TYPE(Tuple, "Tuple.getIterator");
+	ehval_p class_member = obj->get_property("Iterator", obj, ehi);
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 
-bool Tuple_Iterator::has_next() {
-	ehtuple_t *the_tuple = this->tuple->get_tupleval();
+ehval_p Tuple_Iterator::make(ehval_p tuple, EHInterpreter *parent) {
+	return parent->allocate<Tuple_Iterator>(new t(tuple));
+}
+
+
+bool Tuple_Iterator::t::has_next() {
+	Tuple::t *the_tuple = this->tuple->get<Tuple>();
 	return this->position < the_tuple->size();
 }
-ehretval_p Tuple_Iterator::next() {
-	ehtuple_t *the_tuple = this->tuple->get_tupleval();
+ehval_p Tuple_Iterator::t::next() {
+	Tuple::t *the_tuple = this->tuple->get<Tuple>();
 	return the_tuple->get(this->position++);
 }
 
@@ -91,17 +99,16 @@ EH_INITIALIZER(Tuple_Iterator) {
 }
 
 EH_METHOD(Tuple_Iterator, initialize) {
-	ASSERT_TYPE(args, tuple_e, "Tuple.Iterator.initialize");
-	Tuple_Iterator *it = new Tuple_Iterator(args);
-	return ehretval_t::make_resource(obj->get_full_type(), static_cast<LibraryBaseClass *>(it));
+	args->assert_type<Tuple>("Tuple.Iterator.initialize", ehi);
+	return Tuple_Iterator::make(args, ehi->get_parent());
 }
 EH_METHOD(Tuple_Iterator, hasNext) {
-	ASSERT_TYPE(args, null_e, "Tuple.Iterator.hasNext");
+	args->assert_type<Null>("Tuple.Iterator.hasNext", ehi);
 	ASSERT_RESOURCE(Tuple_Iterator, "Tuple.Iterator.hasNext");
-	return ehretval_t::make_bool(data->has_next());
+	return Bool::make(data->has_next());
 }
 EH_METHOD(Tuple_Iterator, next) {
-	ASSERT_TYPE(args, null_e, "Tuple.Iterator.next");
+	args->assert_type<Null>("Tuple.Iterator.next", ehi);
 	ASSERT_RESOURCE(Tuple_Iterator, "Tuple.Iterator.next");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);

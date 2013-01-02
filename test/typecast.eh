@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # To illustrate typecasting
 foo = '3'
-bar = foo.toInt()
+bar = foo.toInteger()
 echo bar
 baz = 3
 foobar = baz.toString()
@@ -15,7 +15,7 @@ end
 if foobar == baz
 	echo 'That is not true'
 end
-if 3 == ('3'.toInt ())
+if 3 == ('3'.toInteger())
 	echo 'Type juggling works!'
 end
 if 3 == '3'

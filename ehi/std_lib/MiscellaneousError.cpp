@@ -1,7 +1,7 @@
 #include "MiscellaneousError.hpp"
 
 void throw_MiscellaneousError(const char *message, EHI *ehi) {
-	throw_error("MiscellaneousError", ehretval_t::make_string(strdup(message)), ehi);
+	throw_error("MiscellaneousError", String::make(strdup(message)), ehi);
 }
 
 EH_INITIALIZER(MiscellaneousError) {
@@ -10,7 +10,7 @@ EH_INITIALIZER(MiscellaneousError) {
 }
 
 EH_METHOD(MiscellaneousError, initialize) {
-	ASSERT_TYPE(args, string_e, "MiscellaneousError.initialize");
-	ehi->set_property(obj, "message", args, ehi->global());
-	return ehretval_t::make_resource(obj->get_full_type(), new Exception(strdup(args->get_stringval())));
+	args->assert_type<String>("MiscellaneousError.initialize", ehi);
+	obj->set_property("message", args, ehi->global(), ehi);
+	return Exception::make(strdup(args->get<String>()));
 }

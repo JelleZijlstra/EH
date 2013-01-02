@@ -1,3 +1,5 @@
+#ifndef EH_EHI_H_
+#define EH_EHI_H_
 /*
  * ehi.h
  * Jelle Zijlstra, December 2011
@@ -7,6 +9,13 @@
 #include "concurrency.hpp"
 #include "eh_files.hpp"
 #include "std_lib/Function.hpp"
+#include "std_lib/Integer.hpp"
+#include "std_lib/String.hpp"
+#include "std_lib/Float.hpp"
+#include "std_lib/Bool.hpp"
+#include "std_lib/GlobalObject.hpp"
+
+#include <sstream>
 
 /*
  * Flex and Bison
@@ -26,7 +35,7 @@ void *gc_thread(void *arg);
 
 class EHInterpreter {
 public:
-	ehhash_t *cmdtable;
+	Hash::ehhash_t *cmdtable;
 
 private:
 	void eh_init(void);
@@ -36,11 +45,11 @@ private:
 	EHInterpreter operator=(const EHInterpreter&);
 public:
 	// our GC
-	garbage_collector<ehretval_t> gc;
+	garbage_collector<ehval_t> gc;
 	type_repository repo;
-	ehretval_p global_object;
-	ehretval_p function_object;
-	ehretval_p base_object;
+	ehval_p global_object;
+	ehval_p function_object;
+	ehval_p base_object;
 
 	int enum_id;
 	int enum_member_id;
@@ -52,8 +61,8 @@ public:
 	// inside glibc when I declare this as std::set<const std::string>.
 	std::set<std::string> included_files;
 
-	ehretval_p get_primitive_class(type_enum in) {
-		return this->repo.get_object(in);
+	ehval_p get_primitive_class(ehval_p obj) {
+		return this->repo.get_object(obj);
 	}
 
 	void eh_setarg(int argc, char **argv);
@@ -63,55 +72,19 @@ public:
 	virtual ~EHInterpreter();
 
 	// helper functions
-	ehretval_p get_command(const char *name);
-	void insert_command(const char *name, ehretval_p cmd);
+	ehval_p get_command(const char *name);
+	void insert_command(const char *name, ehval_p cmd);
 	void redirect_command(const char *redirect, const char *target);
-	ehretval_p make_method(ehlibmethod_t in);
+	ehval_p make_method(ehlibmethod_t in);
 
-	ehretval_p instantiate(ehretval_p obj);
-	ehretval_p resource_instantiate(int type_id, LibraryBaseClass *obj);
+	ehval_p instantiate(ehval_p obj);
+	ehval_p resource_instantiate(int type_id, ehval_p obj);
 	// stuff for GC'ed ehretval_ts
-	ehretval_p make_object(ehobj_t *in) {
-		ehretval_p out;
-		this->gc.allocate(out);
-		ehretval_t::fill_object(out, in);
-		return out;
-	}
-	ehretval_p make_binding(ehbinding_t *in) {
-		ehretval_p out;
-		this->gc.allocate(out);
-		ehretval_t::fill_binding(out, in);
-		return out;
-	}
-	ehretval_p make_range(ehrange_t *in) {
-		ehretval_p out;
-		this->gc.allocate(out);
-		ehretval_t::fill_range(out, in);
-		return out;
-	}
-	ehretval_p make_array(eharray_t *in) {
-		ehretval_p out;
-		this->gc.allocate(out);
-		ehretval_t::fill_array(out, in);
-		return out;
-	}
-	ehretval_p make_hash(ehhash_t *in) {
-		ehretval_p out;
-		this->gc.allocate(out);
-		ehretval_t::fill_hash(out, in);
-		return out;
-	}
-	ehretval_p make_tuple(ehtuple_t *in) {
-		ehretval_p out;
-		this->gc.allocate(out);
-		ehretval_t::fill_tuple(out, in);
-		return out;
-	}
-	ehretval_p make_super_class(ehsuper_t *in) {
-		ehretval_p out;
-		this->gc.allocate(out);
-		ehretval_t::fill_super_class(out, in);
-		return out;
+	template<class T>
+	ehval_p allocate(typename T::type val) {
+		void *place = gc.get_space();
+		T *obj = new(place) T(val);
+		return obj;
 	}
 };
 
@@ -121,41 +94,51 @@ public:
 class EHI {
 public:
 
-	ehretval_p eh_execute(ehretval_p node, const ehcontext_t context);
+	ehval_p eh_execute(ehval_p node, const ehcontext_t context);
 
-	ehretval_p optimize(ehretval_p node, const ehcontext_t context);
+	ehval_p optimize(ehval_p node, const ehcontext_t context);
 
 	virtual char *eh_getline();
-	virtual ehretval_p execute_cmd(const char *rawcmd, eharray_t *paras);
+	virtual ehval_p execute_cmd(const char *rawcmd, Array::t *paras);
 
-	ehretval_p parse_file(FILE *infile);
-	ehretval_p parse_string(const char *cmd);
+	ehval_p parse_file(FILE *infile);
+	ehval_p parse_string(const char *cmd);
 
 	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
-	ehretval_p global_parse_file(const char *name) {
+	ehval_p global_parse_file(const char *name) {
 		try {
 			return parse_file(name, parent->global_object);
 		} catch(eh_exception &) {
-			return NULL;
+			return nullptr;
 		}
 	}
-	ehretval_p global_parse_string(const char *cmd) {
+	ehval_p global_parse_string(const char *cmd) {
 		try {
 			return parse_string(cmd, parent->global_object);
 		} catch(eh_exception &e) {
 			handle_uncaught(e);
-			return NULL;
+			return nullptr;
 		}
 	}
-	ehretval_p parse_string(const char *cmd, ehcontext_t context);
-	ehretval_p parse_file(const char *name, ehcontext_t context);
-	ehretval_p parse_interactive();
+	ehval_p parse_string(const char *cmd, ehcontext_t context);
+	ehval_p parse_file(const char *name, ehcontext_t context);
+	ehval_p parse_interactive();
 
-	ehretval_p get_property(ehretval_p object, const char *name, ehcontext_t context);
-	ehretval_p get_property_no_binding(ehretval_p base_var, const char *name, ehcontext_t context);
-	ehretval_p call_method(ehretval_p in, const char *name, ehretval_p args, ehcontext_t context);
-	ehmember_p set_property(ehretval_p object, const char *name, ehretval_p value, ehcontext_t context);
-	ehretval_p set(ehretval_p lvalue, ehretval_p rvalue, attributes_t *attributes, ehcontext_t context);
+	ehval_p call_method(ehval_p in, const char *name, ehval_p args, ehcontext_t context);
+
+	template<class T>
+	ehval_p call_method_typed(ehval_p in, const char *name, ehval_p args, ehcontext_t context) {
+		ehval_p out = call_method(in, name, args, context);
+		if(!out->is_a<T>()) {
+			std::ostringstream message;
+			message << "Method " << name << " must return a value of type ";
+			message << ehval_t::name<T>();
+			throw_TypeError(message.str().c_str(), out, this);
+		}
+		return out;
+	}
+
+	ehval_p set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcontext_t context);
 	void handle_uncaught(eh_exception &e);
 
 	/*
@@ -176,7 +159,7 @@ public:
 	ehcontext_t get_context() const {
 		return interpreter_context;
 	}
-	ehretval_p global() const {
+	ehval_p global() const {
 		return parent->global_object;
 	}
 	const std::string &get_context_name() const {
@@ -192,7 +175,7 @@ public:
 	EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), interpreter_context(_context), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
 		yylex_init_extra(this, &scanner);
 	}
-	EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(NULL), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
+	EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
 		yylex_init_extra(this, &scanner);
 		parent = new EHInterpreter();
 		interpreter_context = parent->global_object;
@@ -233,102 +216,128 @@ private:
 	/*
 	 * Private methods
 	 */
-	ehmember_p set_member(ehretval_p object, const char *name, ehmember_p value, ehcontext_t context);
-	ehretval_p call_function(ehretval_p function, ehretval_p args, ehcontext_t context);
-	ehretval_p eh_always_execute(ehretval_p code, ehcontext_t context);
-	ehretval_p eh_op_anonclass(ehretval_p node, ehcontext_t context);
-	ehretval_p eh_op_array(ehretval_p node, ehcontext_t context);
-	ehretval_p eh_op_colon(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_customop(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_command(const char *name, ehretval_p node, ehcontext_t context);
-	ehretval_p eh_op_enum(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_declareclass(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_declareclosure(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_dollar(ehretval_p node, ehcontext_t context);
-	ehretval_p eh_op_dot(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_match(ehretval_p *paras, ehcontext_t context);
-	bool match(ehretval_p node, ehretval_p var, ehcontext_t context);
-	ehretval_p eh_op_given(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_if(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_in(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_set(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_switch(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_op_try(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_tuple(ehretval_p node, ehcontext_t context);
-	ehretval_p eh_op_while(ehretval_p *paras, ehcontext_t context);
-	ehretval_p eh_rangetoarray(const ehrange_t *const range);
-	ehretval_p eh_try_catch(ehretval_p try_block, ehretval_p catch_blocks, ehcontext_t context);
-	ehretval_p eh_xtoarray(ehretval_p in);
-	ehretval_p perform_op(const char *name, int nargs, ehretval_p *paras, ehcontext_t context);
-	void array_insert(eharray_t *array, ehretval_p in, int place, ehcontext_t context);
-	void eh_op_break(opnode_t *op, ehcontext_t context);
-	ehretval_p eh_op_classmember(opnode_t *op, ehcontext_t context);
-	void eh_op_continue(opnode_t *op, ehcontext_t context);
+	ehval_p call_function(ehval_p function, ehval_p args, ehcontext_t context);
+	ehval_p eh_always_execute(ehval_p code, ehcontext_t context);
+	ehval_p eh_op_anonclass(ehval_p node, ehcontext_t context);
+	ehval_p eh_op_array(ehval_p node, ehcontext_t context);
+	ehval_p eh_op_colon(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_customop(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_command(const char *name, ehval_p node, ehcontext_t context);
+	ehval_p eh_op_enum(Node::t *op, ehcontext_t context);
+	ehval_p eh_op_declareclass(Node::t *op, ehcontext_t context);
+	ehval_p eh_op_declareclosure(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_dollar(ehval_p node, ehcontext_t context);
+	ehval_p eh_op_dot(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_match(ehval_p *paras, ehcontext_t context);
+	bool match(ehval_p node, ehval_p var, ehcontext_t context);
+	ehval_p eh_op_given(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_if(Node::t *op, ehcontext_t context);
+	ehval_p eh_op_in(Node::t *op, ehcontext_t context);
+	ehval_p eh_op_set(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_switch(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_try(Node::t *op, ehcontext_t context);
+	ehval_p eh_op_tuple(ehval_p node, ehcontext_t context);
+	ehval_p eh_op_while(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_try_catch(ehval_p try_block, ehval_p catch_blocks, ehcontext_t context);
+	ehval_p eh_xtoarray(ehval_p in);
+	ehval_p perform_op(const char *name, int nargs, ehval_p *paras, ehcontext_t context);
+	void array_insert(Array::t *array, ehval_p in, int place, ehcontext_t context);
+	void eh_op_break(Node::t *op, ehcontext_t context);
+	ehval_p eh_op_classmember(Node::t *op, ehcontext_t context);
+	void eh_op_continue(Node::t *op, ehcontext_t context);
 
-	ehretval_p promote(ehretval_p in, ehcontext_t context);
-	bool eh_floatequals(float infloat, ehretval_p operand2, ehcontext_t context) {
-		ehretval_p operand = this->to_int(operand2, context);
+	ehval_p promote(ehval_p in, ehcontext_t context);
+	bool eh_floatequals(float infloat, ehval_p operand2, ehcontext_t context) {
+		ehval_p operand = this->toInteger(operand2, context);
 		// checks whether a float equals an int. C++ handles this correctly.
-		if(operand->type() != int_e) {
-			return false;
-		}
-		return (infloat == static_cast<float>(operand->get_intval()));
+		return (infloat == static_cast<float>(operand->get<Integer>()));
 	}
 
 public:
 	// conversion methods, guaranteed to return the type they're supposed to return
-#define CASTER(method_name, ehtype) ehretval_p to_ ## ehtype(ehretval_p in, ehcontext_t context) { \
-	if(in->type() == ehtype ## _e) { \
+#define CASTER(class_name) ehval_p to ## class_name(ehval_p in, ehcontext_t context) { \
+	if(in->is_a<class_name>()) { \
 		return in; \
 	} \
-	ehretval_p out = call_method(in, #method_name, NULL, context); \
-	if(out->type() == ehtype ## _e) { \
-		return out; \
-	} else { \
-		throw_TypeError(#method_name " must return a " #ehtype, out->type(), this); \
-		return NULL; \
-	} \
+	return call_method_typed<class_name>(in, "to" #class_name, nullptr, context); \
 }
-	CASTER(toString, string)
-	CASTER(toInt, int)
-	CASTER(toFloat, float)
-	CASTER(toBool, bool)
+	CASTER(String)
+	CASTER(Integer)
+	CASTER(Float)
+	CASTER(Bool)
 #undef CASTER
-	ehretval_p to_array(ehretval_p in, ehcontext_t context) {
-		ehretval_p out = call_method(in, "toArray", NULL, context);
-		if(out->type() == array_e) {
-			return out;
-		} else {
-			throw_TypeError("toArray must return an array", out->type(), this);
-			return NULL;
-		}
-	}
-	ehretval_p to_range(ehretval_p in, ehcontext_t context) {
-		ehretval_p out = call_method(in, "toRange", NULL, context);
-		if(out->type() == range_e) {
-			return out;
-		} else {
-			throw_TypeError("toRange must return a range", out->type(), this);
-			return NULL;
-		}
-	}
-	ehretval_p to_tuple(ehretval_p in, ehcontext_t context) {
-		ehretval_p out = call_method(in, "toTuple", NULL, context);
-		if(out->type() == tuple_e) {
-			return out;
-		} else {
-			throw_TypeError("toTuple must return a tuple", out->type(), this);
-			return NULL;
-		}
-	}
-	int compare(ehretval_p lhs, ehretval_p rhs, ehcontext_t context) {
-		ehretval_p out = call_method(lhs, "operator<=>", rhs, context);
-		if(out->type() == int_e) {
-			int comparison = out->get_intval();
-			return comparison;
-		} else {
-			throw_TypeError("operator<=> must return an int", out->type(), this);
-			return NULL;
-		}
+
+	int compare(ehval_p lhs, ehval_p rhs, ehcontext_t context) {
+		return call_method_typed<Integer>(lhs, "operator<=>", rhs, context)->get<Integer>();
 	}
 };
+
+template<class T>
+inline int ehobj_t::register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, class EHInterpreter *interpreter_parent, ehval_p the_class) {
+	ehobj_t *newclass;
+	ehval_p new_value;
+	if(the_class == nullptr) {
+		newclass = new ehobj_t();
+		new_value = Object::make(newclass, interpreter_parent);
+	} else {
+		newclass = the_class->get<Object>();
+		new_value = the_class;
+	}
+
+	// register class
+	newclass->type_id = interpreter_parent->repo.register_inbuilt_class<T>(new_value);
+
+	// inherit from Object, except in Object itself
+	if(typeid(T) != typeid(GlobalObject)) {
+		if(typeid(T) != typeid(Object)) {
+			newclass->inherit(interpreter_parent->base_object);
+		}
+		newclass->parent = interpreter_parent->global_object;
+	}
+	init_func(newclass, interpreter_parent);
+	// inherit from Object, except in Object itself
+	ehmember_p member = ehmember_t::make(attributes, new_value);
+	this->insert(name, member);
+	return newclass->type_id;
+}
+
+#include "std_lib/Null.hpp"
+
+template<>
+inline bool ehval_t::is_a<Null>() const {
+	return (this == nullptr) || typeid(*this) == typeid(Null);
+}
+
+inline bool ehval_t::equal_type(ehval_p rhs) const {
+	bool lhs_null = this->is_a<Null>();
+	bool rhs_null = rhs->is_a<Null>();
+	if(lhs_null != rhs_null) {
+		return false;
+	} else if(lhs_null) {
+		return true;
+	} else {
+		return typeid(*this) == typeid(rhs.operator*());
+	}
+}
+
+inline std::type_index ehval_t::type_index() const {
+	return (this == nullptr) ? std::type_index(typeid(Null)) : std::type_index(typeid(*this));
+}
+
+inline int ehval_t::get_type_id(class EHInterpreter *parent) {
+	if(this == nullptr) {
+		return parent->repo.get_primitive_id<Null>();
+	} else if(this->is_a<Object>()) {
+		return get<Object>()->type_id;
+	} else {
+		return parent->repo.get_type_id(this);
+	}
+}
+
+inline ehval_t *ehval_t::null_object() {
+	return Null::make().operator->();
+}
+
+
+#endif /* EH_EHI_H_ */
+

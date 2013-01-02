@@ -19,8 +19,8 @@ assert(true.toBool() == true, "still true")
 assert(false.toBool() == false, "still false")
 
 # @method toInt
-assert(true.toInt() == 1, "true = 1")
-assert(false.toInt() == 0, "false = 0")
+assert(true.toInteger() == 1, "true = 1")
+assert(false.toInteger() == 0, "false = 0")
 
 # @method operator!
 assert((!true) == false, "that's how it works")

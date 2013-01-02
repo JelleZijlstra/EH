@@ -15,53 +15,47 @@
 #include <map>
 #include <algorithm>
 #include <list>
+#include <typeindex>
+#include <unordered_set>
 
 #include "refcount_ptr.hpp"
 #include "eh_gc.hpp"
+
+#define PRINTVAR(value, level) if((value).null()) { \
+	std::cout << "null" << std::endl; \
+} else { \
+	(value)->printvar(set, level, ehi); \
+}
+
+template<class T>
+static void add_tabs(T &out, int levels) {
+	for(int i = 0; i < levels; i++) {
+		out << "\t";
+	}
+}
 
 /*
  * Enums used in the parser and interpreter
  */
 
-enum type_enum {
-	null_e = 0,
-	string_e = 1,
-	int_e = 2,
-	bool_e = 3,
-	type_e = 4, // for internal use with type casting
-	array_e = 5,
-	hash_e = 6,
-	func_e = 7, // methods
-	object_e = 8,
-	op_e = 10,
-	attribute_e = 11,
-	attributestr_e = 12,
-	range_e = 13,
-	float_e = 14,
-	resource_e = 15,
-	binding_e = 16,
-	super_class_e = 17,
-	tuple_e = 18
-};
-
 // attributes of class members
-typedef enum visibility_enum {
+enum visibility_enum {
 	public_e = 0,
 	private_e = 1
-} visibility_enum;
+};
 
-typedef enum static_enum {
+enum static_enum {
 	nonstatic_e = 0,
 	static_e = 1
-} static_enum;
+};
 
-typedef enum const_enum {
+enum const_enum {
 	nonconst_e = 0,
 	const_e = 1
-} const_enum;
+};
 
 // struct for class member attributes
-typedef struct attributes_t {
+struct attributes_t {
 	visibility_enum visibility : 2;
 	static_enum isstatic : 1;
 	const_enum isconst : 1;
@@ -85,54 +79,54 @@ typedef struct attributes_t {
 	static attributes_t make_private() {
 		return make(private_e, nonstatic_e, nonconst_e);
 	}
-} attributes_t;
+};
+
+#include "eh_types.hpp"
 
 // and accompanying enum used by the parser
-typedef enum attribute_enum {
-	publica_e,
-	privatea_e,
-	statica_e,
-	consta_e
-} attribute_enum;
+EH_CLASS(Attribute) {
+public:
+	enum attribute_enum {
+		publica_e,
+		privatea_e,
+		statica_e,
+		consta_e
+	};
+
+	typedef attribute_enum type;
+	type value;
+
+	Attribute(attribute_enum v) : value(v) {}
+
+	~Attribute() {}
+
+	static ehval_p make(attribute_enum v) {
+		return new Attribute(v);
+	}
+
+	std::string decompile(int level) {
+		switch(value) {
+			case publica_e: return "public";
+			case privatea_e: return "private";
+			case statica_e: return "static";
+			case consta_e: return "const";
+		}
+	}
+};
 
 typedef enum functype_enum {
 	user_e,
 	lib_e
 } functype_enum;
 
-#include "eh_types.hpp"
-
 /*
  * Parser and interpreter structs
  */
-
-// Operator
-typedef struct opnode_t {
-	int op; // Type of operator
-	int nparas; // Number of parameters
-	ehretval_p *paras; // Parameters
-
-	~opnode_t() {
-		if(nparas > 0) {
-			delete[] paras;
-		}
-	}
-
-	static opnode_t *make(int op, int nparas) {
-		opnode_t *out = new opnode_t;
-		out->op = op;
-		out->nparas = nparas;
-		if(nparas > 0) {
-			out->paras = new ehretval_p[nparas];
-		}
-		return out;
-	}
-} opnode_t;
+#include "Node.hpp"
 
 /*
  * Other global functions
  */
-const char *get_typestring(type_enum type);
 void yyerror(void *, const char *s);
 
 /*

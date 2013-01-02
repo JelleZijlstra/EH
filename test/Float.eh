@@ -42,8 +42,8 @@ assert(0.0.toString() == "0.000000", "lots of zeros")
 assert(-1.0.toString() == "-1.000000", "works with negative numbers too")
 
 # @method toInt
-assert(0.0.toInt() == 0, "0.0 == 0")
-assert(1.2.toInt() == 1, "1.2 gets truncated to 1")
+assert(0.0.toInteger() == 0, "0.0 == 0")
+assert(1.2.toInteger() == 1, "1.2 gets truncated to 1")
 
 # @method toBool
 assert(1.0.toBool(), "non-zero float is true")

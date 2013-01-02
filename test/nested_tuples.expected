@@ -6,10 +6,10 @@ test
 foo
 bar
 @tuple <2> [
-@int 1
-@tuple <2> [
-@int 2
-@int 3
-]
+	@int 1
+	@tuple <2> [
+		@int 2
+		@int 3
+	]
 ]
 %%stderr%%

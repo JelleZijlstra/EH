@@ -5,82 +5,167 @@
 
 #include "std_lib_includes.hpp"
 
-class Enum_Member : public LibraryBaseClass {
+EH_CHILD_CLASS(Enum, Member) {
 public:
-	typedef const std::vector<std::string> params_t;
+	class t {
+	public:
+		typedef const std::vector<std::string> params_t;
 
-	ehretval_p parent_enum;
-	const int size;
-	const std::string name;
-	params_t params;
+		ehval_p parent_enum;
+		const int size;
+		const std::string name;
+		params_t params;
 
-	Enum_Member(ehretval_p _parent, const std::string &_name) : parent_enum(_parent), size(0), name(_name), params() {}
+		t(ehval_p _parent, const std::string &_name) : parent_enum(_parent), size(0), name(_name), params() {}
 
-	Enum_Member(ehretval_p _parent, const std::string &_name, int _size, params_t &_params) : parent_enum(_parent), size(_size), name(_name), params(_params) {
-		assert(params.size() == (unsigned long) size);
+		t(ehval_p _parent, const std::string &_name, int _size, params_t &_params) : parent_enum(_parent), size(_size), name(_name), params(_params) {
+			assert(params.size() == (unsigned long) size);
+		}
+
+		std::string toString() const;
+
+		static ehval_p make(ehval_p e, Enum_Member::t *em, EHI *ehi);
+
+		static ehval_p make(ehval_p e, const char *name, EHI *ehi);
+
+		static ehval_p make(ehval_p e, const char *name, params_t &params, EHI *ehi);
+	};
+
+	typedef t *type;
+	type value;
+
+	virtual bool belongs_in_gc() const {
+		return true;
 	}
 
-	std::string to_string() const;
+	virtual std::list<ehval_p> children() {
+		return { value->parent_enum };
+	}
 
-	static ehretval_p make(ehretval_p e, Enum_Member *em, EHI *ehi);
+	~Enum_Member() {
+		delete value;
+	}
 
-	static ehretval_p make(ehretval_p e, const char *name, EHI *ehi);
+	Enum_Member(type val) : value(val) {}
 
-	static ehretval_p make(ehretval_p e, const char *name, params_t &params, EHI *ehi);
+	static ehval_p make(t *em, EHInterpreter *parent) {
+		return parent->allocate<Enum_Member>(em);
+	}
 };
 
-class Enum : public LibraryBaseClass {
-private:
-	size_t nmembers;
-	std::vector<ehretval_p> members;
-	const std::string name;
-
-
-	Enum(const std::string &_name, ehretval_p _contents) : nmembers(0), members(0), name(_name), contents(_contents) {}
-
-	static void add_member(ehretval_p e, const char *name, ehretval_p member, EHI *ehi);
+EH_CLASS(Enum) {
 public:
-	ehretval_p contents;
+	class t {
+	private:
+		size_t nmembers;
+		std::vector<ehval_p> members;
+		const std::string name;
 
-	std::string to_string() const;
+		t(const std::string &_name, ehval_p _contents) : nmembers(0), members(0), name(_name), contents(_contents) {}
 
-	size_t size() const {
-		return nmembers;
+		static void add_member(ehval_p e, const char *name, ehval_p member, EHI *ehi);
+	public:
+		// prototype
+		ehval_p contents;
+
+		std::string toString() const;
+
+		size_t size() const {
+			return nmembers;
+		}
+
+		std::vector<ehval_p> get_members() {
+			return members;
+		}
+
+		static void add_nullary_member(ehval_p e, const char *name, EHI *ehi);
+
+		static void add_member_with_arguments(ehval_p e, const char *name, Enum_Member::t::params_t params, EHI *ehi);
+
+		static ehval_p make(const char *name, EHI *ehi);
+
+		static t *extract_enum(ehval_p obj);
+	};
+
+	typedef t *type;
+	type value;
+
+	virtual bool belongs_in_gc() const {
+		return true;
 	}
 
-	static void add_nullary_member(ehretval_p e, const char *name, EHI *ehi);
+	virtual std::list<ehval_p> children() {
+		std::list<ehval_p> out;
+		out.push_back(value->contents);
+		for(auto &i : value->get_members()) {
+			out.push_back(i);
+		}
+		return out;
+	}
 
-	static void add_member_with_arguments(ehretval_p e, const char *name, Enum_Member::params_t params, EHI *ehi);
+	~Enum() {
+		delete value;
+	}
 
-	static ehretval_p make(const char *name, EHI *ehi);
+	Enum(type val) : value(val) {}
 
-	static Enum *extract_enum(ehretval_p obj);
+	static ehval_p make(t *value, EHInterpreter *parent) {
+		return parent->allocate<Enum>(value);
+	}
 };
 
-class Enum_Instance : public LibraryBaseClass {
+EH_CHILD_CLASS(Enum, Instance) {
 public:
-	typedef std::vector<ehretval_p> args_t;
-private:
-	ehretval_p member_ptr;
+	class t {
+	public:
+		typedef std::vector<ehval_p> args_t;
 
-	const args_t args;
+		ehval_p member_ptr;
 
-public:
-	Enum_Instance(ehretval_p _member_ptr, args_t _args) : member_ptr(_member_ptr), args(_args) {}
+		const args_t args;
 
-	std::string to_string(EHI *ehi, ehcontext_t context);
+		t(ehval_p _member_ptr, args_t _args) : member_ptr(_member_ptr), args(_args) {}
 
-	int compare(Enum_Instance *rhs, EHI *ehi, ehcontext_t context);
+		std::string toString(EHI *ehi, ehcontext_t context);
 
-	ehretval_p member() {
-		return member_ptr;
+		int compare(Enum_Instance::t *rhs, EHI *ehi, ehcontext_t context);
+
+		ehval_p member() {
+			return member_ptr;
+		}
+
+		ehval_p get(unsigned int i) {
+			return args[i];
+		}
+
+		static ehval_p make(ehval_p member, args_t args, EHI *ehi);
+	};
+
+	typedef t *type;
+	type value;
+
+	virtual bool belongs_in_gc() const {
+		return true;
 	}
 
-	ehretval_p get(unsigned int i) {
-		return args[i];
+	virtual std::list<ehval_p> children() {
+		std::list<ehval_p> out;
+		out.push_back(value->member_ptr);
+		for(auto &i : value->args) {
+			out.push_back(i);
+		}
+		return out;
 	}
 
-	static ehretval_p make(ehretval_p member, args_t args, EHI *ehi);
+	~Enum_Instance() {
+		delete value;
+	}
+
+	Enum_Instance(type val) : value(val) {}
+
+	static ehval_p make(type val, EHInterpreter *parent) {
+		return parent->allocate<Enum_Instance>(val);
+	}
 };
 
 EH_INITIALIZER(Enum);

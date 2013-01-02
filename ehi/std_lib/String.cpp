@@ -4,11 +4,10 @@ EH_INITIALIZER(String) {
 	REGISTER_METHOD(String, initialize);
 	REGISTER_METHOD_RENAME(String, operator_plus, "operator+");
 	REGISTER_METHOD_RENAME(String, operator_arrow, "operator->");
-	REGISTER_METHOD_RENAME(String, operator_arrow_equals, "operator->=");
 	REGISTER_METHOD(String, compare);
 	REGISTER_METHOD(String, length);
 	REGISTER_METHOD(String, toString);
-	REGISTER_METHOD(String, toInt);
+	REGISTER_METHOD(String, toInteger);
 	REGISTER_METHOD(String, toFloat);
 	REGISTER_METHOD(String, toBool);
 	REGISTER_METHOD(String, toRange);
@@ -18,24 +17,24 @@ EH_INITIALIZER(String) {
 }
 
 EH_METHOD(String, initialize) {
-	return ehi->to_string(args, obj);
+	return ehi->toString(args, obj);
 }
 EH_METHOD(String, operator_plus) {
-	ASSERT_OBJ_TYPE(string_e, "String.operator+");
-	ehretval_p operand = ehi->to_string(args, obj);
-	ASSERT_TYPE(operand, string_e, "String.operator+");
-	size_t len1 = strlen(obj->get_stringval());
-	size_t len2 = strlen(operand->get_stringval());
+	ASSERT_OBJ_TYPE(String, "String.operator+");
+	ehval_p operand = ehi->toString(args, obj);
+	operand->assert_type<String>("String.operator+", ehi);
+	size_t len1 = strlen(obj->get<String>());
+	size_t len2 = strlen(operand->get<String>());
 	char *out = new char[len1 + len2 + 1];
-	strcpy(out, obj->get_stringval());
-	strcpy(out + len1, operand->get_stringval());
-	return ehretval_t::make_string(out); 
+	strcpy(out, obj->get<String>());
+	strcpy(out + len1, operand->get<String>());
+	return String::make(out);
 }
 EH_METHOD(String, operator_arrow) {
-	ASSERT_OBJ_TYPE(string_e, "String.operator->");
-	ASSERT_TYPE(args, int_e, "String.operator->");
-	int index = args->get_intval();
-	size_t len = strlen(obj->get_stringval());
+	ASSERT_OBJ_TYPE(String, "String.operator->");
+	args->assert_type<Integer>("String.operator->", ehi);
+	int index = args->get<Integer>();
+	size_t len = strlen(obj->get<String>());
 	// allow negative index
 	if(index < 0) {
 		index += len;
@@ -44,34 +43,15 @@ EH_METHOD(String, operator_arrow) {
 		throw_ArgumentError_out_of_range("String.operator->", args, ehi);
 	}
 	char *out = new char[2]();
-	out[0] = obj->get_stringval()[index];
+	out[0] = obj->get<String>()[index];
 	out[1] = '\0';
-	return ehretval_t::make_string(out);
-}
-EH_METHOD(String, operator_arrow_equals) {
-	ASSERT_NARGS_AND_TYPE(2, string_e, "String.operator->=");
-	ehretval_p operand1 = args->get_tupleval()->get(0);
-	ASSERT_TYPE(operand1, int_e, "String.operator->=");
-	int index = operand1->get_intval();
-	size_t len = strlen(obj->get_stringval());
-	if(index < 0) {
-		index += len;
-	}
-	if(index < 0 || ((unsigned) index) >= len) {
-		throw_ArgumentError_out_of_range("String.operator->=", operand1, ehi);
-	}
-	ehretval_p operand2 = ehi->to_string(args->get_tupleval()->get(1), obj);
-	if(strlen(operand2->get_stringval()) == 0) {
-		throw_ArgumentError("Argument cannot be a zero-length string", "String.operator->=", args->get_tupleval()->get(1), ehi);
-	}
-	obj->get_stringval()[index] = operand2->get_stringval()[0];
-	return operand2;
+	return String::make(out);
 }
 EH_METHOD(String, compare) {
-	ASSERT_OBJ_TYPE(string_e, "String.compare");
-	ASSERT_TYPE(args, string_e, "String.compare");
-	const char *lhs = obj->get_stringval();
-	const char *rhs = args->get_stringval();
+	ASSERT_OBJ_TYPE(String, "String.compare");
+	args->assert_type<String>("String.compare", ehi);
+	const char *lhs = obj->get<String>();
+	const char *rhs = args->get<String>();
 	int comparison = strcmp(lhs, rhs);
 	// strcmp may return any negative or positive integer; standardize on -1 and 1 for EH
 	if(comparison < 0) {
@@ -79,45 +59,45 @@ EH_METHOD(String, compare) {
 	} else if(comparison > 0) {
 		comparison = 1;
 	}
-	return ehretval_t::make_int(comparison);
+	return Integer::make(comparison);
 }
 EH_METHOD(String, length) {
-	ASSERT_NULL_AND_TYPE(string_e, "String.length");
-	return ehretval_t::make_int(strlen(obj->get_stringval()));
+	ASSERT_NULL_AND_TYPE(String, "String.length");
+	return Integer::make(strlen(obj->get<String>()));
 }
 EH_METHOD(String, toString) {
-	ASSERT_NULL_AND_TYPE(string_e, "String.toString");
+	ASSERT_NULL_AND_TYPE(String, "String.toString");
 	return obj;
 }
-EH_METHOD(String, toInt) {
-	ASSERT_NULL_AND_TYPE(string_e, "String.toInt");
+EH_METHOD(String, toInteger) {
+	ASSERT_NULL_AND_TYPE(String, "String.toInteger");
 	char *endptr;
-	ehretval_p ret = ehretval_t::make_int(strtol(obj->get_stringval(), &endptr, 0));
+	ehval_p ret = Integer::make(strtol(obj->get<String>(), &endptr, 0));
 	// If in == endptr, strtol read no digits and there was no conversion.
-	if(obj->get_stringval() == endptr) {
-		throw_ArgumentError("Cannot convert String to Integer", "String.toInt", obj, ehi);
+	if(obj->get<String>() == endptr) {
+		throw_ArgumentError("Cannot convert String to Integer", "String.toInteger", obj, ehi);
 	}
 	return ret;
 }
 EH_METHOD(String, toFloat) {
-	ASSERT_NULL_AND_TYPE(string_e, "String.toFloat");
+	ASSERT_NULL_AND_TYPE(String, "String.toFloat");
 	char *endptr;
-	ehretval_p ret = ehretval_t::make_float(strtof(obj->get_stringval(), &endptr));
+	ehval_p ret = Float::make(strtof(obj->get<String>(), &endptr));
 	// If in == endptr, strtof read no digits and there was no conversion.
-	if(obj->get_stringval() == endptr) {
+	if(obj->get<String>() == endptr) {
 		throw_ArgumentError("Cannot convert String to Float", "String.toFloat", obj, ehi);
 	}
 	return ret;
 }
 EH_METHOD(String, toBool) {
-	ASSERT_NULL_AND_TYPE(string_e, "String.toBool");
-	return ehretval_t::make_bool(obj->get_stringval()[0] != '\0');
+	ASSERT_NULL_AND_TYPE(String, "String.toBool");
+	return Bool::make(obj->get<String>()[0] != '\0');
 }
 EH_METHOD(String, toRange) {
-	ASSERT_NULL_AND_TYPE(string_e, "String.toRange");
+	ASSERT_NULL_AND_TYPE(String, "String.toRange");
 	// attempt to find two integers in the string
 	int min, max;
-	char *in = obj->get_stringval();
+	const char *in = obj->get<String>();
 	char *ptr;
 	// get lower part of range
 	for(int i = 0; ; i++) {
@@ -135,26 +115,25 @@ EH_METHOD(String, toRange) {
 			throw_ArgumentError("Cannot convert String to Range", "String.toRange", obj, ehi);
 		}
 		if(isdigit(ptr[i])) {
-			max = strtol(&ptr[i], NULL, 0);
+			max = strtol(&ptr[i], nullptr, 0);
 			break;
 		}
 	}
-	ehrange_t *range = new ehrange_t(ehretval_t::make_int(min), ehretval_t::make_int(max));
-	return ehi->get_parent()->make_range(range);
+	return Range::make(Integer::make(min), Integer::make(max), ehi->get_parent());
 }
 EH_METHOD(String, charAtPosition) {
-	ASSERT_OBJ_TYPE(string_e, "String.charAtPosition");
-	ASSERT_TYPE(args, int_e, "String.charAtPosition");
-	int index = args->get_intval();
-	const char *string = obj->get_stringval();
+	ASSERT_OBJ_TYPE(String, "String.charAtPosition");
+	args->assert_type<Integer>("String.charAtPosition", ehi);
+	int index = args->get<Integer>();
+	const char *string = obj->get<String>();
 	if(index < 0 || ((unsigned) index) >= strlen(string)) {
 		throw_ArgumentError_out_of_range("String.charAtPosition", args, ehi);
 	}
-	return ehretval_t::make_int(string[index]);
+	return Integer::make(string[index]);
 }
 EH_METHOD(String, getIterator) {
-	ASSERT_NULL_AND_TYPE(string_e, "String.getIterator");
-	ehretval_p class_member = ehi->get_property(obj, "Iterator", obj);
+	ASSERT_NULL_AND_TYPE(String, "String.getIterator");
+	ehval_p class_member = obj->get_property("Iterator", obj, ehi);
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 
@@ -165,33 +144,36 @@ EH_INITIALIZER(String_Iterator) {
 	REGISTER_METHOD(String_Iterator, peek);
 }
 
-bool String_Iterator::has_next() const {
-	const char *content = this->string->get_stringval();
+ehval_p String_Iterator::make(ehval_p string, EHInterpreter *parent) {
+	return parent->allocate<String_Iterator>(new t(string));
+}
+
+bool String_Iterator::t::has_next() const {
+	const char *content = this->string->get<String>();
 	return this->position < strlen(content);
 }
-char String_Iterator::next() {
+char String_Iterator::t::next() {
 	assert(this->has_next());
-	const char *content = this->string->get_stringval();
-	return content[this->position++];	
+	const char *content = this->string->get<String>();
+	return content[this->position++];
 }
-char String_Iterator::peek() const {
+char String_Iterator::t::peek() const {
 	assert(this->has_next());
-	const char *content = this->string->get_stringval();
+	const char *content = this->string->get<String>();
 	return content[this->position];
 }
 
 EH_METHOD(String_Iterator, initialize) {
-	ASSERT_TYPE(args, string_e, "String.Iterator.initialize");
-	String_Iterator *data = new String_Iterator(args);
-	return ehretval_t::make_resource(obj->get_full_type(), data);
+	args->assert_type<String>("String.Iterator.initialize", ehi);
+	return String_Iterator::make(args, ehi->get_parent());
 }
 EH_METHOD(String_Iterator, hasNext) {
-	ASSERT_TYPE(args, null_e, "String.Iterator.hasNext");
+	args->assert_type<Null>("String.Iterator.hasNext", ehi);
 	ASSERT_RESOURCE(String_Iterator, "String.Iterator.hasNext");
-	return ehretval_t::make_bool(data->has_next());
+	return Bool::make(data->has_next());
 }
 EH_METHOD(String_Iterator, next) {
-	ASSERT_TYPE(args, null_e, "String.Iterator.next");
+	args->assert_type<Null>("String.Iterator.next", ehi);
 	ASSERT_RESOURCE(String_Iterator, "String.Iterator.next");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
@@ -199,10 +181,10 @@ EH_METHOD(String_Iterator, next) {
 	char *out = new char[2]();
 	out[0] = data->next();
 	out[1] = '\0';
-	return ehretval_t::make_string(out);
+	return String::make(out);
 }
 EH_METHOD(String_Iterator, peek) {
-	ASSERT_TYPE(args, null_e, "String.Iterator.next");
+	args->assert_type<Null>("String.Iterator.next", ehi);
 	ASSERT_RESOURCE(String_Iterator, "String.Iterator.peek");
 	if(!data->has_next()) {
 		throw_EmptyIterator(ehi);
@@ -210,5 +192,5 @@ EH_METHOD(String_Iterator, peek) {
 	char *out = new char[2]();
 	out[0] = data->peek();
 	out[1] = '\0';
-	return ehretval_t::make_string(out);
+	return String::make(out);
 }

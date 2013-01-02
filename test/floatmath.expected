@@ -1,11 +1,11 @@
 %%stdout%%
-@float 4.820000
-@float 5.275200
-@float 1.869048
-@float 13.375795
+@float 4.82
+@float 5.2752
+@float 1.86905
+@float 13.3758
 @int 0
 @int 1
-@float 131.880005
-@float 45.139999
-@float 131.880005
+@float 131.88
+@float 45.14
+@float 131.88
 %%stderr%%

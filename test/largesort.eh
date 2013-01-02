@@ -6,7 +6,7 @@ assert(argc == 4, "Usage: " + argv->0 + " min max step")
 
 const _, min, max, step = argv.map func: input
 	try
-		input.toInt()
+		input.toInteger()
 	catch
 		0
 	end

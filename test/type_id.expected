@@ -1,5 +1,5 @@
-%%stdout%%
-@int 2
-@int 0
+%%stdout-regex%%
+@int \d+
+@int \d+
 @bool true
 %%stderr%%

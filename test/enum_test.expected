@@ -5,30 +5,30 @@ enum List
 	Cons(head, tail), Nil
 end
 @object <Enum> [
-Cons <public,non-static,constant>: @object <Member> [
-]
-Nil <public,non-static,constant>: @object <Member> [
-]
-prototype <public,non-static,constant>: @object <Null> [
-]
+	Cons <public,non-static,constant>: @object <Enum.Member> [
+	]
+	Nil <public,non-static,constant>: @object <Enum.Member> [
+	]
+	prototype <public,non-static,constant>: @object <GlobalObject> [
+	]
 ]
 Enum nullary member
 Nil
-@object <Member> [
+@object <Enum.Member> [
 ]
 Enum member with arguments
 Cons(head, tail)
-@object <Member> [
+@object <Enum.Member> [
 ]
 Enum instance
 Cons(3, Nil)
-@object <Instance> [
-head <public,non-static,constant>: @int 3
-tail <public,non-static,constant>: @object <Member> [
-]
+@object <Enum.Instance> [
+	head <public,non-static,constant>: @int 3
+	tail <public,non-static,constant>: @object <Enum.Member> [
+	]
 ]
 Enum instance members
 3
-@object <Member> [
+@object <Enum.Member> [
 ]
 %%stderr%%

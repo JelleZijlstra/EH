@@ -1,7 +1,7 @@
 %%stdout%%
 true
 false
-Invalid type for argument to pow: Integer
+Invalid type for argument to pow (expected Tuple): Integer
 Argument must be a tuple of size 2 (method pow): (3, 2, false)
 false
 %%stderr%%

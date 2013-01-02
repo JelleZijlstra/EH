@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 // CS50 Problem Set 1: greedy
 if argc == 2
-	money = argv->1.toInt()
+	money = argv->1.toInteger()
 else
 	money = 0
 end

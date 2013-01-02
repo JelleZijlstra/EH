@@ -1,25 +1,25 @@
 %%stdout%%
-@string 'f'
-@string 'o'
-@string 'o'
+@string "f"
+@string "o"
+@string "o"
 @int 1
 @int 2
 @int 3
 @tuple <2> [
-@string 'foo'
-@string 'bar'
+	@string "foo"
+	@string "bar"
 ]
 @tuple <2> [
-@int 0
-@int 1
+	@int 0
+	@int 1
 ]
 @tuple <2> [
-@int 1
-@int 2
+	@int 1
+	@int 2
 ]
 @tuple <2> [
-@int 2
-@int 3
+	@int 2
+	@int 3
 ]
 Key is baz
 Value is mah

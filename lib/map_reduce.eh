@@ -21,21 +21,21 @@ class MapReduceJob
 		end
 		this.outputArray
 	end
-	
+
 	emit = func: key, value
 		if !(this.intermediates.has key)
 			this.intermediates->key = []
 		end
 		this.intermediates->key.append value
 	end
-	
+
 	output = func: key, value
 		this.outputArray->key = value
 	end
-	
+
 	combiner = null
-	
+
 	mapper = null
-	
+
 	reducer = null
 end

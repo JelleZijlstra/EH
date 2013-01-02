@@ -17,13 +17,12 @@ EH_INITIALIZER(FixedArray) {
  * @returns N/A
  */
 EH_METHOD(FixedArray, initialize) {
-	ASSERT_TYPE(args, int_e, "FixedArray.initialize");
-	const int size = args->get_intval();
+	args->assert_type<Integer>("FixedArray.initialize", ehi);
+	const int size = args->get<Integer>();
 	if(size < 1) {
 		throw_ArgumentError("Size must be positive", "FixedArray.initialize", args, ehi);
 	}
-	FixedArray *fa = new FixedArray(args->get_intval());
-	return ehretval_t::make_resource(obj->get_full_type(), static_cast<LibraryBaseClass *>(fa));
+	return FixedArray::make(args->get<Integer>(), ehi->get_parent());
 }
 
 /*
@@ -32,9 +31,9 @@ EH_METHOD(FixedArray, initialize) {
  * @returns Element at the given index
  */
 EH_METHOD(FixedArray, operator_arrow) {
-	ASSERT_TYPE(args, int_e, "FixedArray.operator->");
+	args->assert_type<Integer>("FixedArray.operator->", ehi);
 	ASSERT_RESOURCE(FixedArray, "FixedArray.operator->");
-	const int index = args->get_intval();
+	const int index = args->get<Integer>();
 	if(index < 0 || index >= (int) data->size()) {
 		throw_ArgumentError("index out of range", "FixedArray.operator->", args, ehi);
 	}
@@ -48,13 +47,13 @@ EH_METHOD(FixedArray, operator_arrow) {
  */
 EH_METHOD(FixedArray, operator_arrow_equals) {
 	ASSERT_NARGS(2, "FixedArray.operator->=");
-	const ehtuple_t *tuple = args->get_tupleval();
-	ehretval_p index_val = tuple->get(0);
-	ASSERT_TYPE(index_val, int_e, "FixedArray.operator->=");
-	ehretval_p value = tuple->get(1);
+	const Tuple::t *tuple = args->get<Tuple>();
+	ehval_p index_val = tuple->get(0);
+	index_val->assert_type<Integer>("FixedArray.operator->=", ehi);
+	ehval_p value = tuple->get(1);
 	ASSERT_RESOURCE(FixedArray, "FixedArray.operator->=");
 
-	const int index = index_val->get_intval();
+	const int index = index_val->get<Integer>();
 	if(index < 0 || index >= (int) data->size()) {
 		throw_ArgumentError("index out of range", "FixedArray.operator->", args, ehi);
 	}
@@ -70,5 +69,5 @@ EH_METHOD(FixedArray, operator_arrow_equals) {
 EH_METHOD(FixedArray, size) {
 	ASSERT_NULL("FixedArray.size");
 	ASSERT_RESOURCE(FixedArray, "FixedArray.size");
-	return ehretval_t::make_int(data->size());
+	return Integer::make(data->size());
 }

@@ -285,3 +285,5 @@ FixedArray.eh
 Float.eh
 bindTo.eh
 Function.eh
+bind_crash.eh
+empty.eh

@@ -1,11 +1,10 @@
 #include "TypeError.hpp"
 
-void throw_TypeError(const char *msg, int type, EHI *ehi) {
-	ehretval_p args[2];
-	args[0] = ehretval_t::make_string(strdup(msg));
-	args[1] = ehretval_t::make_int(type);
-	ehretval_p arg = ehi->get_parent()->make_tuple(new ehtuple_t(2, args));
-	throw_error("TypeError", arg, ehi);
+void throw_TypeError(const char *msg, ehval_p obj, EHI *ehi) {
+	ehval_p args[2];
+	args[0] = String::make(strdup(msg));
+	args[1] = obj;
+	throw_error("TypeError", Tuple::make(2, args, ehi->get_parent()), ehi);
 }
 
 EH_INITIALIZER(TypeError) {
@@ -14,14 +13,16 @@ EH_INITIALIZER(TypeError) {
 }
 
 EH_METHOD(TypeError, initialize) {
-	ASSERT_TYPE(args, tuple_e, "TypeError.initialize");
-	ehretval_p msg = args->get_tupleval()->get(0);
-	ASSERT_TYPE(msg, string_e, "TypeError.initialize");
-	ehretval_p id = args->get_tupleval()->get(1);
-	ASSERT_TYPE(id, int_e, "TypeError.initialize");
-	ehi->set_property(obj, "message", msg, ehi->global());
-	std::string type_str = ehi->get_parent()->repo.get_name(id->get_intval());
-	ehi->set_property(obj, "type", id, ehi->global());
-	std::string exception_msg = std::string(msg->get_stringval()) + ": " + type_str;
-	return ehretval_t::make_resource(obj->get_full_type(), new Exception(strdup(exception_msg.c_str())));
+	args->assert_type<Tuple>("TypeError.initialize", ehi);
+
+	ehval_p msg = args->get<Tuple>()->get(0);
+	msg->assert_type<String>("TypeError.initialize", ehi);
+	obj->set_property("message", msg, ehi->global(), ehi);
+
+	ehval_p id = args->get<Tuple>()->get(1);
+	std::string type_str = ehi->get_parent()->repo.get_name(id);
+	ehval_p type_obj = ehi->get_parent()->repo.get_object(id);
+	obj->set_property("type", type_obj, ehi->global(), ehi);
+	std::string exception_msg = std::string(msg->get<String>()) + ": " + type_str;
+	return Exception::make(strdup(exception_msg.c_str()));
 }

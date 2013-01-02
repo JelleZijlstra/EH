@@ -87,7 +87,7 @@ FixedArray.inherit class
 			end
 
 			private comparisons = false
-			private integerGap = gap.toInt()
+			private integerGap = gap.toInteger()
 			for i in size - integerGap
 				if this->i > this->(i + integerGap)
 					this.swap(i, i + integerGap)
@@ -175,7 +175,7 @@ FixedArray.inherit class
 		private const conversionFactor = Random.max.toFloat() / arraySize + 1
 		for i in size
 			private n = this->i
-			private index = (n / conversionFactor).toInt()
+			private index = (n / conversionFactor).toInteger()
 			sorter->index = n::(sorter->index)
 		end
 

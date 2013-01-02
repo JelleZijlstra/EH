@@ -7,12 +7,12 @@
 
 #include "ArgumentError.hpp"
 
-void throw_ArgumentError(const char *message, const char *method, ehretval_p value, EHI *ehi) {
-	ehretval_p args[3];
-	args[0] = ehretval_t::make_string(strdup(message));
-	args[1] = ehretval_t::make_string(strdup(method));
+void throw_ArgumentError(const char *message, const char *method, ehval_p value, EHI *ehi) {
+	ehval_p args[3];
+	args[0] = String::make(strdup(message));
+	args[1] = String::make(strdup(method));
 	args[2] = value;
-	ehretval_p the_tuple = ehi->get_parent()->make_tuple(new ehtuple_t(3, args));
+	ehval_p the_tuple = Tuple::make(3, args, ehi->get_parent());
 	throw_error("ArgumentError", the_tuple, ehi);
 }
 
@@ -30,21 +30,20 @@ EH_INITIALIZER(ArgumentError) {
  */
 EH_METHOD(ArgumentError, initialize) {
 	ASSERT_NARGS(3, "ArgumentError.initialize");
-	ehretval_p message = args->get_tupleval()->get(0);
-	ASSERT_TYPE(message, string_e, "ArgumentError.initialize");
-	ehi->set_property(obj, "message", message, ehi->global());
+	ehval_p message = args->get<Tuple>()->get(0);
+	message->assert_type<String>("ArgumentError.initialize", ehi);
+	obj->set_property("message", message, ehi->global(), ehi);
 
-	ehretval_p method = args->get_tupleval()->get(1);
-	ASSERT_TYPE(method, string_e, "ArgumentError.initialize");
-	ehi->set_property(obj, "method", method, ehi->global());
+	ehval_p method = args->get<Tuple>()->get(1);
+	method->assert_type<String>("ArgumentError.initialize", ehi);
+	obj->set_property("method", method, ehi->global(), ehi);
 
-	ehretval_p value = args->get_tupleval()->get(2);
-	ehi->set_property(obj, "value", value, ehi->global());
+	ehval_p value = args->get<Tuple>()->get(2);
+	obj->set_property("value", value, ehi->global(), ehi);
 
 	std::ostringstream exception_msg;
-	exception_msg << message->get_stringval() << " (method ";
-	exception_msg << method->get_stringval() << "): ";
-	exception_msg << ehi->to_string(value, ehi->global())->get_stringval();
-	Exception *e = new Exception(strdup(exception_msg.str().c_str()));
-	return ehretval_t::make_resource(obj->get_full_type(), e);
+	exception_msg << message->get<String>() << " (method ";
+	exception_msg << method->get<String>() << "): ";
+	exception_msg << ehi->toString(value, ehi->global())->get<String>();
+	return static_cast<ehval_t *>(new Exception(strdup(exception_msg.str().c_str())));
 }

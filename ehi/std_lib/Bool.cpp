@@ -10,7 +10,8 @@ EH_INITIALIZER(Bool) {
 	REGISTER_METHOD(Bool, initialize);
 	REGISTER_METHOD(Bool, toString);
 	REGISTER_METHOD(Bool, toBool);
-	REGISTER_METHOD(Bool, toInt);
+	REGISTER_METHOD(Bool, toInteger);
+	REGISTER_METHOD(Bool, compare);
 	REGISTER_METHOD_RENAME(Bool, operator_bang, "operator!");
 }
 
@@ -20,7 +21,26 @@ EH_INITIALIZER(Bool) {
  * @returns N/A
  */
 EH_METHOD(Bool, initialize) {
-	return ehi->to_bool(args, obj);
+	return ehi->toBool(args, obj);
+}
+
+/*
+ * @description Compare one bool to another.
+ * @argument Value to compare to
+ * @return Integer
+ */
+EH_METHOD(Bool, compare) {
+	ASSERT_TYPE(args, Bool, "Bool.compare");
+	ASSERT_OBJ_TYPE(Bool, "Bool.compare");
+	bool lhs = obj->get<Bool>();
+	bool rhs = args->get<Bool>();
+	if(lhs == rhs) {
+		return Integer::make(0);
+	} else if(lhs == false) {
+		return Integer::make(-1);
+	} else {
+		return Integer::make(1);
+	}
 }
 
 /*
@@ -29,14 +49,14 @@ EH_METHOD(Bool, initialize) {
  * @returns String
  */
 EH_METHOD(Bool, toString) {
-	ASSERT_NULL_AND_TYPE(bool_e, "Bool.toString");
+	ASSERT_NULL_AND_TYPE(Bool, "Bool.toString");
 	char *str;
-	if(obj->get_boolval()) {
+	if(obj->get<Bool>()) {
 		str = strdup("true");
 	} else {
 		str = strdup("false");
 	}
-	return ehretval_t::make_string(str);
+	return String::make(str);
 }
 
 /*
@@ -45,7 +65,7 @@ EH_METHOD(Bool, toString) {
  * @returns The bool itself.
  */
 EH_METHOD(Bool, toBool) {
-	ASSERT_NULL_AND_TYPE(bool_e, "Bool.toBool");
+	ASSERT_NULL_AND_TYPE(Bool, "Bool.toBool");
 	return obj;
 }
 
@@ -54,12 +74,12 @@ EH_METHOD(Bool, toBool) {
  * @argument None
  * @returns Integer
  */
-EH_METHOD(Bool, toInt) {
-	ASSERT_NULL_AND_TYPE(bool_e, "Bool.toInt");
-	if(obj->get_boolval()) {
-		return ehretval_t::make_int(1);
+EH_METHOD(Bool, toInteger) {
+	ASSERT_NULL_AND_TYPE(Bool, "Bool.toInteger");
+	if(obj->get<Bool>()) {
+		return Integer::make(1);
 	} else {
-		return ehretval_t::make_int(0);
+		return Integer::make(0);
 	}
 }
 
@@ -69,6 +89,6 @@ EH_METHOD(Bool, toInt) {
  * @returns Bool
  */
 EH_METHOD(Bool, operator_bang) {
-  ASSERT_NULL_AND_TYPE(bool_e, "Bool.operator!");
-  return ehretval_t::make_bool(!obj->get_boolval());
+  ASSERT_NULL_AND_TYPE(Bool, "Bool.operator!");
+  return Bool::make(!obj->get<Bool>());
 }

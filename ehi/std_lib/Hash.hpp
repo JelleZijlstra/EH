@@ -1,44 +1,88 @@
 /*
- * Hash class
+ * Hash
+ * Provides a mapping from strings to arbitrary values. Despite the name, it
+ * currently does not use a hash table, but a C++ std::map.
  */
-#ifndef EH_HASH_H_
-#define EH_HASH_H_
 #include "std_lib_includes.hpp"
 
-// hash
-class ehhash_t {
-private:
-	typedef std::map<std::string, ehretval_p> hash;
-	hash members;
+#ifndef EH_HASH_H_
+#define EH_HASH_H_
+
+EH_CLASS(Hash) {
 public:
-	typedef hash::const_iterator iterator;
+	class ehhash_t {
+	public:
+		typedef std::map<std::string, ehval_p> hash;
+		hash members;
+		typedef hash::const_iterator iterator;
 
-	ehhash_t() : members() {}
+		ehhash_t() : members() {}
 
-	bool has(const char *key) const {
-		return members.count(key);
-	}
-	void set(const char *key, ehretval_p value) {
-		members[key] = value;
-	}
-	ehretval_p get(const char *key) const {
-		return members.at(key);
-	}
-	void erase(const std::string &key) {
-		members.erase(key);
-	}
-	size_t size() const {
-		return members.size();
+		bool has(const char *key) const {
+			return members.count(key);
+		}
+		void set(const char *key, ehval_p value) {
+			members[key] = value;
+		}
+		ehval_p get(const char *key) const {
+			return members.at(key);
+		}
+		void erase(const std::string &key) {
+			members.erase(key);
+		}
+		size_t size() const {
+			return members.size();
+		}
+
+		iterator begin_iterator() const {
+			return members.begin();
+		}
+		iterator end_iterator() const {
+			return members.end();
+		}
+	};
+
+	typedef ehhash_t *type;
+	type value;
+
+	Hash(type c) : value(c) {}
+
+	~Hash() {
+		delete value;
 	}
 
-	iterator begin_iterator() const {
-		return members.begin();
+	virtual bool belongs_in_gc() const {
+		return true;
 	}
-	iterator end_iterator() const {
-		return members.end();
+
+	virtual std::list<ehval_p> children() {
+		std::list<ehval_p> out;
+		for(auto &i : value->members) {
+			out.push_back(i.second);
+		}
+		return out;
 	}
+
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) {
+		void *ptr = static_cast<void *>(value);
+		if(set.count(ptr) == 0) {
+			set.insert(ptr);
+			std::cout << "@hash [" << std::endl;
+			for(auto &i : value->members) {
+				add_tabs(std::cout, level + 1);
+				std::cout << "'" << i.first << "': ";
+				PRINTVAR(i.second, level + 1);
+			}
+			add_tabs(std::cout, level);
+			std::cout << "]" << std::endl;
+		} else {
+			std::cout << "(recursion)" << std::endl;
+		}
+	}
+
+	static ehval_p make(EHInterpreter *parent);
 };
-#define HASH_FOR_EACH(obj, varname) for(ehhash_t::iterator varname = (obj)->begin_iterator(), end = (obj)->end_iterator(); varname != end; varname++)
+#define HASH_FOR_EACH(obj, varname) for(auto varname = (obj)->begin_iterator(), end = (obj)->end_iterator(); varname != end; varname++)
 
 EH_METHOD(Hash, toArray);
 EH_METHOD(Hash, operator_arrow);
@@ -52,18 +96,41 @@ EH_METHOD(Hash, getIterator);
 
 EH_INITIALIZER(Hash);
 
-class Hash_Iterator : public LibraryBaseClass {
-public:
-	Hash_Iterator(ehretval_p _hash) : hash(_hash), current(this->hash->get_hashval()->begin_iterator()), end(this->hash->get_hashval()->end_iterator()) {}
-	~Hash_Iterator() {}
-	bool has_next();
-	ehretval_p next(EHI *ehi);
+EH_CHILD_CLASS(Hash, Iterator) {
 private:
-	ehretval_p hash;
-	ehhash_t::iterator current;
-	ehhash_t::iterator end;
-	Hash_Iterator(const Hash_Iterator&);
-	Hash_Iterator operator=(const Hash_Iterator&);
+	class t {
+	public:
+		t(ehval_p _hash) : hash(_hash), current(this->hash->get<Hash>()->begin_iterator()), end(this->hash->get<Hash>()->end_iterator()) {}
+		~t() {}
+		bool has_next();
+		ehval_p next(EHI *ehi);
+		ehval_p hash;
+	private:
+		Hash::ehhash_t::iterator current;
+		Hash::ehhash_t::iterator end;
+		t(const t&);
+		t operator=(const t&);
+	};
+
+public:
+	Hash_Iterator(t *c) : value(c) {}
+
+	typedef t *type;
+	type value;
+
+	~Hash_Iterator() {
+		delete value;
+	}
+
+	virtual bool belongs_in_gc() const {
+		return true;
+	}
+
+	virtual std::list<ehval_p> children() {
+		return std::list<ehval_p> { value->hash };
+	}
+
+	static ehval_p make(ehval_p hash, EHInterpreter *parent);
 };
 EH_METHOD(Hash_Iterator, initialize);
 EH_METHOD(Hash_Iterator, hasNext);

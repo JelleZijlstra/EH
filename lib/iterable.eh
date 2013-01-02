@@ -60,7 +60,7 @@ class Iterable
 			end
 		else
 			given (r.hasNext())
-				case false; (this.add l.next()).merge(l, r)
+				case false; (this.add(l.next())).merge(l, r)
 				case true
 					const private l_head = l.peek()
 					const private r_head = r.peek()

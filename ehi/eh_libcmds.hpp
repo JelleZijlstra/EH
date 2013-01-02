@@ -2,7 +2,7 @@
  * Header file for EH library commands
  */
 
-#define EH_LIBCMD(name) ehretval_p ehlcmd_ ## name(ehretval_p obj, ehretval_p paras, EHI *ehi)
+#define EH_LIBCMD(name) ehval_p ehlcmd_ ## name(ehval_p obj, ehval_p paras, EHI *ehi)
 
 EH_LIBCMD(quit);
 EH_LIBCMD(echo);

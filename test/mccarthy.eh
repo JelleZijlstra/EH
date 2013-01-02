@@ -18,7 +18,7 @@ if argc > 2
 	ret 1
 end
 if argc == 2
-	input = argv->1.toInt()
+	input = argv->1.toInteger()
 else
 	input = getinput ()
 end

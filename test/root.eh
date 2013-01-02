@@ -19,7 +19,7 @@ func sqrt: input
 end
 
 if argc == 2
-	num = argv->1.toInt()
+	num = argv->1.toInteger()
 else
 	num = 27
 end

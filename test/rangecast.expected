@@ -1,7 +1,7 @@
 %%stdout%%
 @array [
-0 => @int 1
-1 => @int 3
+	0 => @int 1
+	1 => @int 3
 ]
 %%stderr%%
 Uncaught exception of type NameError: Unknown member toRange in object of type Array: [ 0 => 1, 1 => 3, ]

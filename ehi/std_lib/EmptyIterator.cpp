@@ -7,7 +7,7 @@
 #include "EmptyIterator.hpp"
 
 void throw_EmptyIterator(EHI *ehi) {
-	throw_error("EmptyIterator", NULL, ehi);
+	throw_error("EmptyIterator", nullptr, ehi);
 }
 
 EH_INITIALIZER(EmptyIterator) {
@@ -21,5 +21,5 @@ EH_INITIALIZER(EmptyIterator) {
  * @returns N/A
  */
 EH_METHOD(EmptyIterator, initialize) {
-	return ehretval_t::make_resource(obj->get_full_type(), new Exception(strdup("Empty iterator")));
+	return Exception::make(strdup("Empty iterator"));
 }

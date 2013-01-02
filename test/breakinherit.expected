@@ -3,14 +3,14 @@ Too bad, that did not work
 @object <A> [
 ]
 @object <A> [
-A <public,non-static,non-constant>: @object <A> [
-b <public,non-static,non-constant>: null
-]
-a <public,non-static,non-constant>: @object <A> [
-]
-exception <public,non-static,non-constant>: @object <NameError> [
-name <public,non-static,non-constant>: @string 'A'
-object <public,non-static,non-constant>: (recursion)
-]
+	A <public,non-static,non-constant>: @object <A> [
+		b <public,non-static,non-constant>: null
+	]
+	a <public,non-static,non-constant>: @object <A> [
+	]
+	exception <public,non-static,non-constant>: @object <NameError> [
+		name <public,non-static,non-constant>: @string "A"
+		object <public,non-static,non-constant>: (recursion)
+	]
 ]
 %%stderr%%

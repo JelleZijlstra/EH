@@ -1,5 +1,5 @@
 %%stdout%%
-@float 3.000000
+@float 3
 Unknown member toFloat in object of type Bool: true
 @int 3
 @bool true

@@ -10,6 +10,6 @@ echo(foo -> 1)
 baz = bar.toString()
 echo baz
 # Casting null to an int gives 0 and throws an error
-rescue(() => (ban = bar.toInt()))
+rescue(() => (ban = bar.toInteger()))
 rescue(() => printvar ban)
 printvar foo

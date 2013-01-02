@@ -3,15 +3,22 @@
  */
 #include "std_lib_includes.hpp"
 
-class File : public LibraryBaseClass {
+EH_CLASS(File) {
 public:
-	FILE *descriptor;
-	File() : descriptor(NULL) {}
+	typedef FILE *type;
+	type value;
+
+	File() : value(nullptr) {}
 	~File() {}
+
+	virtual bool belongs_in_gc() const {
+		return false;
+	}
 private:
 	File(const File&);
 	File operator=(const File&);
 };
+
 EH_METHOD(File, initialize);
 EH_METHOD(File, open);
 EH_METHOD(File, getc);

@@ -1,7 +1,7 @@
-void free_node(ehretval_p in);
-opnode_t *eh_addnode(int opcode);
-opnode_t *eh_addnode(int opcode, ehretval_p first);
-opnode_t *eh_addnode(int opcode, ehretval_p first, ehretval_p second);
-opnode_t *eh_addnode(int opcode, ehretval_p first, ehretval_p second, ehretval_p third);
-opnode_t *eh_addnode(int opcode, ehretval_p first, ehretval_p second, ehretval_p third, ehretval_p fourth);
-void print_tree(const ehretval_p in, const int n);
+void free_node(ehval_p in);
+Node::t *eh_addnode(int opcode);
+Node::t *eh_addnode(int opcode, ehval_p first);
+Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second);
+Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third);
+Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval_p fourth);
+void print_tree(const ehval_p in, const int n);

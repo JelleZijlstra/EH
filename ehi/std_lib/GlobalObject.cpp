@@ -40,56 +40,56 @@
 
 #include "../eh.bison.hpp"
 
-#define GLOBAL_REGISTER_CLASS(name, type_id) obj->register_member_class(#name, type_id, ehinit_ ## name, attributes_t::make_const(), parent)
+#define GLOBAL_REGISTER_CLASS(name) obj->register_member_class<name>(ehinit_ ## name, #name, attributes_t::make_const(), parent)
+#define REGISTER_PURE_CLASS(name) obj->register_member_class(#name, ehinit_ ## name, attributes_t::make_const(), parent)
 
 EH_INITIALIZER(GlobalObject) {
 	/*
 	 * Initialization of base classes.
 	 */
-	parent->base_object = parent->make_object(new ehobj_t());
-	parent->function_object = parent->make_object(new ehobj_t());
+	parent->base_object = Object::make(new ehobj_t(), parent);
+	parent->function_object = Object::make(new ehobj_t(), parent);
 	// Must be the first class registered
-	obj->register_member_class("Object", object_e, ehinit_Object, attributes_t::make_const(), parent, parent->base_object);
+	obj->register_member_class<Object>(ehinit_Object, "Object", attributes_t::make_const(), parent, parent->base_object);
 	obj->inherit(parent->base_object);
 	// Must be registered before any methods are registered
-	obj->register_member_class("Function", func_e, ehinit_Function, attributes_t::make_const(), parent, parent->function_object);
+	obj->register_member_class<Function>(ehinit_Function, "Function", attributes_t::make_const(), parent, parent->function_object);
 
 	// insert reference to global object
-	ehmember_p global;
-	global->attribute = attributes_t::make_const();
-	global->value = parent->global_object;
+	ehmember_p global = ehmember_t::make(attributes_t::make_const(), parent->global_object);
 	obj->insert("global", global);
 
 	/*
 	 * Initialize top-level classes.
 	 */
-	GLOBAL_REGISTER_CLASS(File, -1);
-	GLOBAL_REGISTER_CLASS(Integer, int_e);
-	GLOBAL_REGISTER_CLASS(String, string_e);
-	GLOBAL_REGISTER_CLASS(Array, array_e);
-	GLOBAL_REGISTER_CLASS(Float, float_e);
-	GLOBAL_REGISTER_CLASS(Bool, bool_e);
-	GLOBAL_REGISTER_CLASS(Null, null_e);
-	GLOBAL_REGISTER_CLASS(Range, range_e);
-	GLOBAL_REGISTER_CLASS(Hash, hash_e);
-	GLOBAL_REGISTER_CLASS(Tuple, tuple_e);
-	GLOBAL_REGISTER_CLASS(SuperClass, super_class_e);
-	GLOBAL_REGISTER_CLASS(Exception, -1);
-	GLOBAL_REGISTER_CLASS(UnknownCommandError, -1);
-	GLOBAL_REGISTER_CLASS(TypeError, -1);
-	GLOBAL_REGISTER_CLASS(LoopError, -1);
-	GLOBAL_REGISTER_CLASS(NameError, -1);
-	GLOBAL_REGISTER_CLASS(ConstError, -1);
-	GLOBAL_REGISTER_CLASS(ArgumentError, -1);
-	GLOBAL_REGISTER_CLASS(SyntaxError, -1);
-	GLOBAL_REGISTER_CLASS(MiscellaneousError, -1);
-	GLOBAL_REGISTER_CLASS(GarbageCollector, -1);
-	GLOBAL_REGISTER_CLASS(EmptyIterator, -1);
-	GLOBAL_REGISTER_CLASS(FixedArray, -1);
-	GLOBAL_REGISTER_CLASS(Random, -1);
-	GLOBAL_REGISTER_CLASS(Map, -1);
-	GLOBAL_REGISTER_CLASS(Enum, -1);
-	GLOBAL_REGISTER_CLASS(VisibilityError, -1);
+	GLOBAL_REGISTER_CLASS(Binding);
+	GLOBAL_REGISTER_CLASS(File);
+	GLOBAL_REGISTER_CLASS(Integer);
+	GLOBAL_REGISTER_CLASS(String);
+	GLOBAL_REGISTER_CLASS(Array);
+	GLOBAL_REGISTER_CLASS(Float);
+	GLOBAL_REGISTER_CLASS(Bool);
+	GLOBAL_REGISTER_CLASS(Null);
+	GLOBAL_REGISTER_CLASS(Range);
+	GLOBAL_REGISTER_CLASS(Hash);
+	GLOBAL_REGISTER_CLASS(Tuple);
+	GLOBAL_REGISTER_CLASS(SuperClass);
+	GLOBAL_REGISTER_CLASS(Exception);
+	REGISTER_PURE_CLASS(UnknownCommandError);
+	REGISTER_PURE_CLASS(TypeError);
+	REGISTER_PURE_CLASS(LoopError);
+	REGISTER_PURE_CLASS(NameError);
+	REGISTER_PURE_CLASS(ConstError);
+	REGISTER_PURE_CLASS(ArgumentError);
+	REGISTER_PURE_CLASS(SyntaxError);
+	REGISTER_PURE_CLASS(MiscellaneousError);
+	REGISTER_PURE_CLASS(GarbageCollector);
+	REGISTER_PURE_CLASS(EmptyIterator);
+	GLOBAL_REGISTER_CLASS(FixedArray);
+	REGISTER_PURE_CLASS(Random);
+	GLOBAL_REGISTER_CLASS(Map);
+	GLOBAL_REGISTER_CLASS(Enum);
+	REGISTER_PURE_CLASS(VisibilityError);
 
 	/*
 	 * Inititalize top-level methods.
@@ -112,225 +112,27 @@ EH_INITIALIZER(GlobalObject) {
 }
 
 EH_METHOD(GlobalObject, toString) {
-	return ehretval_t::make_string(strdup("(global execution context)"));
+	return String::make(strdup("(global execution context)"));
 }
 
 /*
  * printvar
  */
 
-class printvar_t {
-private:
-	std::map<const void *, bool> seen;
-	EHI *ehi;
-
-	void retval(ehretval_p in);
-	void array(eharray_t *in);
-	void object(ehobj_t *in);
-	void tuple(ehtuple_t *in);
-
-	printvar_t(const printvar_t&) : seen(), ehi() {
-		throw "Not allowed";
-	}
-	printvar_t operator=(const printvar_t&) {
-		throw "Not allowed";
-	}
-public:
-	printvar_t(ehretval_p in, EHI *_ehi) : seen(), ehi(_ehi) {
-		this->retval(in);
-	}
-};
-
-// helper functions for printvar
-void printvar_t::retval(ehretval_p in) {
-	switch(in->type()) {
-		case null_e:
-			printf("null\n");
-			break;
-		case int_e:
-			printf("@int %d\n", in->get_intval());
-			break;
-		case string_e:
-			printf("@string '%s'\n", in->get_stringval());
-			break;
-		case bool_e:
-			if(in->get_boolval())
-				printf("@bool true\n");
-			else
-				printf("@bool false\n");
-			break;
-		case array_e:
-			if(this->seen.count((void *)in->get_arrayval()) == 0) {
-				this->seen[(void *)in->get_arrayval()] = true;
-				printf("@array [\n");
-				this->array(in->get_arrayval());
-				printf("]\n");
-			} else {
-				printf("(recursion)\n");
-			}
-			break;
-		case tuple_e:
-		  if(this->seen.count((void *)in->get_tupleval()) == 0) {
-		    this->seen[(void *)in->get_tupleval()] = true;
-		    printf("@tuple <%d> [\n", in->get_tupleval()->size());
-		    this->tuple(in->get_tupleval());
-		    printf("]\n");
-		  } else {
-		    printf("(recursion)");
-		  }
-		  break;
-		case object_e: {
-			EHInterpreter *parent = ehi->get_parent();
-			ehobj_t *obj = in->get_objectval();
-			if(obj->type_id != func_e || obj->object_data->type() != func_e) {
-				if(this->seen.count((void *)obj) == 0) {
-					this->seen[(void *)obj] = true;
-					const char *name = parent->repo.get_name(obj->type_id).c_str();
-					printf("@object <%s> [\n", name);
-					this->object(obj);
-					printf("]\n");
-				} else {
-					printf("(recursion)\n");
-				}
-			} else {
-				this->retval(obj->object_data);
-			}
-			break;
-		}
-		case func_e: {
-			ehfunc_t *f = in->get_funcval();
-			printf("@function <");
-			switch(f->type) {
-				case user_e:
-					printf("user");
-					printf(">: ");
-					printf("%s", f->args->decompile(0).c_str());
-					break;
-				case lib_e:
-					printf("library");
-					printf(">: ");
-					break;
-			}
-			printf("\n");
-			break;
-		}
-		case type_e:
-			printf("@type %s\n", get_typestring(in->get_typeval()));
-			break;
-		case op_e:
-			printf("@op %d\n", in->get_opval()->op);
-			break;
-		case attribute_e:
-			printf("@attribute %d\n", in->get_attributeval());
-			break;
-		case attributestr_e:
-			printf("@attributestr\n");
-			break;
-		case range_e: {
-			ehrange_t *range = in->get_rangeval();
-			if(this->seen.count((void *)range) == 0) {
-				printf("@range [\n");
-				this->retval(range->min);
-				this->retval(range->max);
-				printf("]\n");
-				this->seen[(void *)range] = true;
-			} else {
-				printf("(recursion)\n");
-			}
-			break;
-		}
-		case float_e:
-			printf("@float %f\n", in->get_floatval());
-			break;
-		case resource_e:
-			printf("@resource\n");
-			break;
-		case binding_e:
-			// pretend it's just a method
-			this->retval(in->get_bindingval()->method);
-			break;
-		case hash_e:
-			printf("@hash [\n");
-			HASH_FOR_EACH(in->get_hashval(), i) {
-				printf("'%s': ", i->first.c_str());
-				this->retval(i->second);
-			}
-			printf("]\n");
-			break;
-		case super_class_e:
-			printf("@parent class\n");
-			break;
-	}
-	return;
-}
-void printvar_t::object(ehobj_t *in) {
-	OBJECT_FOR_EACH(in, curr) {
-		// ignore $this
-		if(curr->first.compare("this") == 0) {
-			continue;
-		}
-
-		printf("%s <", curr->first.c_str());
-		switch(curr->second->attribute.visibility) {
-			case public_e:
-				printf("public,");
-				break;
-			case private_e:
-				printf("private,");
-				break;
-		}
-		switch(curr->second->attribute.isstatic) {
-			case static_e:
-				printf("static,");
-				break;
-			case nonstatic_e:
-				printf("non-static,");
-				break;
-		}
-		switch(curr->second->attribute.isconst) {
-			case const_e:
-				printf("constant");
-				break;
-			case nonconst_e:
-				printf("non-constant");
-				break;
-		}
-		printf(">: ");
-		this->retval(curr->second->value);
-	}
-}
-void printvar_t::array(eharray_t *in) {
-	// iterate over strings
-	ARRAY_FOR_EACH_STRING(in, i) {
-		printf("'%s' => ", i->first.c_str());
-		this->retval(i->second);
-	}
-	// and ints
-	ARRAY_FOR_EACH_INT(in, i) {
-		printf("%d => ", i->first);
-		this->retval(i->second);
-	}
-}
-void printvar_t::tuple(ehtuple_t *in) {
-	int size = in->size();
-	for(int i = 0; i < size; i++) {
-		this->retval(in->get(i));
-	}
-}
-
 EH_METHOD(GlobalObject, printvar) {
-	printvar_t printer(args, ehi);
-	// this function always returns NULL
-	return NULL;
+	printvar_set set;
+	PRINTVAR(args, 0);
+	// this function always returns nullptr
+	return nullptr;
 }
 
 /*
  * Including files
  */
 EH_METHOD(GlobalObject, include) {
-	ASSERT_TYPE(args, string_e, "include");
+	args->assert_type<String>("include", ehi);
 	// do the work
-	const char *filename = args->get_stringval();
+	const char *filename = args->get<String>();
 	std::string full_path;
 	if(filename[0] == '/') {
 		full_path = filename;
@@ -340,7 +142,7 @@ EH_METHOD(GlobalObject, include) {
 	// prevent including the same file more than once
 	std::set<std::string> &included = ehi->get_parent()->included_files;
 	if(included.count(full_path) > 0) {
-		return NULL;
+		return nullptr;
 	}
 	included.insert(full_path);
 	FILE *infile = fopen(full_path.c_str(), "r");
@@ -350,7 +152,7 @@ EH_METHOD(GlobalObject, include) {
 	const std::string dirname = eh_dirname(full_path);
 	EHI parser(end_is_end_e, ehi->get_parent(), obj, dirname, filename);
 	try {
-		ehretval_p ret = parser.parse_file(infile);
+		ehval_p ret = parser.parse_file(infile);
 		fclose(infile);
 		return ret;
 	} catch(...) {
@@ -362,38 +164,38 @@ EH_METHOD(GlobalObject, include) {
 // power
 EH_METHOD(GlobalObject, pow) {
 	ASSERT_NARGS(2, "pow");
-	ehretval_p rhs = args->get_tupleval()->get(0);
-	ehretval_p lhs = args->get_tupleval()->get(1);
-	if(rhs->type() == int_e) {
-		if(lhs->type() == int_e) {
-			return ehretval_t::make_int(pow((float) rhs->get_intval(), (float) lhs->get_intval()));
-		} else if(lhs->type() == float_e) {
-			return ehretval_t::make_float(pow((float) rhs->get_intval(), lhs->get_floatval()));
+	ehval_p rhs = args->get<Tuple>()->get(0);
+	ehval_p lhs = args->get<Tuple>()->get(1);
+	if(rhs->is_a<Integer>()) {
+		if(lhs->is_a<Integer>()) {
+			return Integer::make(pow((float) rhs->get<Integer>(), (float) lhs->get<Integer>()));
+		} else if(lhs->is_a<Float>()) {
+			return Float::make(pow((float) rhs->get<Integer>(), lhs->get<Float>()));
 		} else {
-			throw_TypeError("Invalid type for argument to pow", lhs->type(), ehi);
+			throw_TypeError("Invalid type for argument to pow", lhs, ehi);
 		}
-	} else if(rhs->type() == float_e) {
-		if(lhs->type() == int_e) {
-			return ehretval_t::make_float(pow(rhs->get_floatval(), (float) lhs->get_intval()));
-		} else if(lhs->type() == float_e) {
-			return ehretval_t::make_float(pow(rhs->get_floatval(), lhs->get_floatval()));
+	} else if(rhs->is_a<Float>()) {
+		if(lhs->is_a<Integer>()) {
+			return Float::make(pow(rhs->get<Float>(), (float) lhs->get<Integer>()));
+		} else if(lhs->is_a<Float>()) {
+			return Float::make(pow(rhs->get<Float>(), lhs->get<Float>()));
 		} else {
-			throw_TypeError("Invalid type for argument to pow", lhs->type(), ehi);
+			throw_TypeError("Invalid type for argument to pow", lhs, ehi);
 		}
 	} else {
-		throw_TypeError("Invalid type for argument to pow", rhs->type(), ehi);
+		throw_TypeError("Invalid type for argument to pow", rhs, ehi);
 	}
-	return NULL;
+	return nullptr;
 }
 
 EH_METHOD(GlobalObject, log) {
-	ehretval_p arg = ehi->to_float(args, obj);
-	return ehretval_t::make_float(log(arg->get_floatval()));
+	ehval_p arg = ehi->toFloat(args, obj);
+	return Float::make(log(arg->get<Float>()));
 }
 
 EH_METHOD(GlobalObject, eval) {
-	ehretval_p arg = ehi->to_string(args, obj);
-	return ehi->parse_string(arg->get_stringval(), obj);
+	ehval_p arg = ehi->toString(args, obj);
+	return ehi->parse_string(arg->get<String>(), obj);
 }
 
 EH_METHOD(GlobalObject, getinput) {
@@ -401,7 +203,7 @@ EH_METHOD(GlobalObject, getinput) {
 	// more accurately, getint
 	int i = 0;
 	fscanf(stdin, "%d", &i);
-	ehretval_p ret = ehretval_t::make_int(i);
+	ehval_p ret = Integer::make(i);
 	return ret;
 }
 
@@ -410,44 +212,43 @@ EH_METHOD(GlobalObject, throw) {
 }
 
 EH_METHOD(GlobalObject, echo) {
-	ehretval_p str = ehi->to_string(args, obj);
-	std::cout << str->get_stringval() << std::endl;
-	return NULL;
+	ehval_p str = ehi->toString(args, obj);
+	std::cout << str->get<String>() << std::endl;
+	return nullptr;
 }
 
 EH_METHOD(GlobalObject, put) {
-	ehretval_p str = ehi->to_string(args, obj);
-	std::cout << str->get_stringval();
-	return NULL;
+	ehval_p str = ehi->toString(args, obj);
+	std::cout << str->get<String>();
+	return nullptr;
 }
 
 EH_METHOD(GlobalObject, collectGarbage) {
 	ehi->get_parent()->gc.do_collect(ehi->global());
-	return NULL;
+	return nullptr;
 }
 
 EH_METHOD(GlobalObject, handleUncaught) {
-	int type = args->get_full_type();
-	const std::string &type_string = ehi->get_parent()->repo.get_name(type);
+	const std::string &type_string = ehi->get_parent()->repo.get_name(args);
 	// we're in global context now. Remember this object, because otherwise the string may be freed before we're done with it.
-	ehretval_p stringval = ehi->to_string(args, ehi->global());
-	const char *msg = stringval->get_stringval();
+	ehval_p stringval = ehi->toString(args, ehi->global());
+	const char *msg = stringval->get<String>();
 	std::cerr << "Uncaught exception of type " << type_string << ": " << msg << std::endl;
-	return NULL;
+	return nullptr;
 }
 
 EH_METHOD(GlobalObject, contextName) {
 	ASSERT_NULL("contextName");
-	return ehretval_t::make_string(strdup(ehi->get_context_name().c_str()));
+	return String::make(strdup(ehi->get_context_name().c_str()));
 }
 
 EH_METHOD(GlobalObject, workingDir) {
 	ASSERT_NULL("workingDir");
-	return ehretval_t::make_string(strdup(ehi->get_working_dir().c_str()));
+	return String::make(strdup(ehi->get_working_dir().c_str()));
 }
 
 EH_METHOD(GlobalObject, shell) {
-	ASSERT_TYPE(args, string_e, "shell");
-	std::string output = eh_shell_exec(args->get_stringval());
-	return ehretval_t::make_string(strdup(output.c_str()));
+	args->assert_type<String>("shell", ehi);
+	std::string output = eh_shell_exec(args->get<String>());
+	return String::make(strdup(output.c_str()));
 }

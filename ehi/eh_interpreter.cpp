@@ -10,6 +10,7 @@
 #include "eh.hpp"
 #include "eh_libclasses.hpp"
 #include "eh_libcmds.hpp"
+#include "std_lib/Binding.hpp"
 #include "std_lib/ConstError.hpp"
 #include "std_lib/Enum.hpp"
 #include "std_lib/GlobalObject.hpp"
@@ -1043,8 +1044,10 @@ ehval_p EHI::call_method(ehval_p obj, const char *name, ehval_p args, ehcontext_
 	}
 }
 ehval_p EHI::call_function(ehval_p function, ehval_p args, ehcontext_t context) {
-	// We special-case function calls on func_e and binding_e types; otherwise we'd end up in an infinite loop
-	if(function->is_a<Binding>() || function->deep_is_a<Function>()) {
+	// We special-case function calls on Function and Binding types; otherwise we'd end up in an infinite loop
+	if(function->is_a<Binding>()) {
+		return ehlm_Binding_operator_colon(function, args, this);
+	} else if(function->deep_is_a<Function>()) {
 		// This one time, we call a library method directly. If you want to override Function.operator_colon, too bad.
 		return ehlm_Function_operator_colon(function, args, this);
 	} else {

@@ -9,6 +9,7 @@
 
 #include "ArgumentError.hpp"
 #include "Array.hpp"
+#include "Binding.hpp"
 #include "Bool.hpp"
 #include "ConstError.hpp"
 #include "Enum.hpp"

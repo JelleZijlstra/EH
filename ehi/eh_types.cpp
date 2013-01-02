@@ -6,6 +6,7 @@
 #include "eh_libclasses.hpp"
 #include "std_lib/Array.hpp"
 #include "std_lib/Function.hpp"
+#include "std_lib/Binding.hpp"
 #include "std_lib/Hash.hpp"
 #include "std_lib/Range.hpp"
 #include "std_lib/Tuple.hpp"
@@ -76,8 +77,6 @@ ehval_p ehval_t::get_property_no_binding(const char *name, ehcontext_t context, 
 	ehval_p object;
 	if(is_a<Object>()) {
 		object = this;
-	} else if(is_a<Binding>()) {
-		object = get<Binding>()->method;
 	} else {
 		object = ehi->get_parent()->repo.get_object(this);
 	}

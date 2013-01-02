@@ -8,6 +8,8 @@
 #include <sstream>
 
 #include "Function.hpp"
+#include "Binding.hpp"
+#include "MiscellaneousError.hpp"
 
 EH_INITIALIZER(Function) {
 	REGISTER_METHOD_RENAME(Function, operator_colon, "operator()");
@@ -23,21 +25,8 @@ EH_INITIALIZER(Function) {
  * @returns Return value of the function
  */
 EH_METHOD(Function, operator_colon) {
-	// This is probably the most important library method in EH. It works
-	// on both Function and binding objects.
-	ehval_p base_object;
-	ehval_p function_object;
-	if(obj->deep_is_a<Function>()) {
-		function_object = obj;
-		base_object = ehi->global();
-	} else if(obj->is_a<Binding>()) {
-		Binding::t *binding = obj->get<Binding>();
-		function_object = binding->method;
-		base_object = binding->object_data;
-	} else {
-		throw_TypeError("Invalid base object for Function.operator()", obj, ehi);
-	}
-	return Function::exec(base_object, function_object, args, ehi);
+	ASSERT_OBJ_TYPE(Function, "Function.operator()");
+	return Function::exec(ehi->global(), _obj, args, ehi);
 }
 
 ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p args, EHI *ehi) {
@@ -59,7 +48,6 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 	return ret;
 }
 
-
 /*
  * @description "Decompiles" a function back into valid, executable EH code.
  * This is possible because the current interpreter works on an AST that
@@ -70,11 +58,6 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
  * @returns String
  */
 EH_METHOD(Function, decompile) {
-	ehval_p hold_obj;
-	if(obj->is_a<Binding>()) {
-		hold_obj = obj;
-		obj = obj->get<Binding>()->method;
-	}
 	ASSERT_OBJ_TYPE(Function, "Function.decompile");
 	std::string reduction = obj->decompile(0);
 	return String::make(strdup(reduction.c_str()));
@@ -88,11 +71,6 @@ EH_METHOD(Function, decompile) {
  * @returns String
  */
 EH_METHOD(Function, toString) {
-	ehval_p hold_obj;
-	if(obj->is_a<Binding>()) {
-		hold_obj = obj;
-		obj = obj->get<Binding>()->method;
-	}
 	ASSERT_OBJ_TYPE(Function, "Function.toString");
 	Function::t *f = obj->get<Function>();
 	if(f->type == lib_e) {
@@ -106,41 +84,11 @@ EH_METHOD(Function, toString) {
 
 /*
  * @description Binds the current function to the specified object as the this
- * object. Because the current internal object system of the interpreter is
- * less than ideal, this is a dangerous operation, especially on C++ functions,
- * and its use may lead to crashes.
+ * object.
  * @argument Object to bind to
  * @returns New function
  */
 EH_METHOD(Function, bindTo) {
-	if(obj->is_a<Binding>()) {
-		Binding::t *b = obj->get<Binding>();
-		return Binding::make(args, b->method, ehi->get_parent());
-	} else if(obj->deep_is_a<Function>()) {
-		return Binding::make(args, obj, ehi->get_parent());
-	} else {
-		throw_TypeError("Invalid base object for Function.bindTo", obj, ehi);
-		return nullptr;
-	}
+	ASSERT_OBJ_TYPE(Function, "Function.bindTo");
+	return Binding::make(args, _obj, ehi->get_parent());
 }
-
-ehval_p Binding::make(ehval_p obj, ehval_p method, EHInterpreter *parent) {
-	return parent->allocate<Binding>(new Binding::t(obj, method));
-}
-
-EH_INITIALIZER(Binding) {
-	REGISTER_METHOD_RENAME(Binding, operator_colon, "operator()");
-	REGISTER_METHOD(Binding, toString);
-	REGISTER_METHOD(Binding, decompile);
-	REGISTER_METHOD(Binding, bindTo);
-}
-
-#define BINDING_METHOD(name) EH_METHOD(Binding, name) { \
-	ASSERT_RESOURCE(Binding, "Binding." #name); \
-	return ehlm_Function_ ## name(obj, args, ehi); \
-}
-
-BINDING_METHOD(operator_colon)
-BINDING_METHOD(toString)
-BINDING_METHOD(decompile)
-BINDING_METHOD(bindTo)

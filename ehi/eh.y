@@ -167,12 +167,12 @@ statement:
 		/* Other statements */
 	| T_RET expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_RET, $2); }
-	| T_RET T_SEPARATOR		{ $$ = ADD_NODE0(T_RET); }
+	| T_RET T_SEPARATOR		{ $$ = eh_addnode(T_RET, Null::make()); }
 	| T_CONTINUE T_SEPARATOR
-							{ $$ = ADD_NODE0(T_CONTINUE); }
+							{ $$ = eh_addnode(T_CONTINUE, Integer::make(1)); }
 	| T_CONTINUE expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_CONTINUE, $2); }
-	| T_BREAK T_SEPARATOR	{ $$ = ADD_NODE0(T_BREAK); }
+	| T_BREAK T_SEPARATOR	{ $$ = eh_addnode(T_BREAK, Integer::make(1)); }
 	| T_BREAK expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_BREAK, $2); }
 		/* property declaration */

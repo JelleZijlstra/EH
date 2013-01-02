@@ -174,11 +174,7 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 					return eh_execute(paras[1], context);
 				}
 			case T_RET: // return from a function or the program
-				if(op->nparas == 0) {
-					ret = nullptr;
-				} else {
-					ret = eh_execute(paras[0], context);
-				}
+				ret = eh_execute(paras[0], context);
 				returning = true;
 				break;
 			case T_BREAK: // break out of a loop
@@ -451,40 +447,28 @@ ehval_p EHI::eh_op_in(Node::t *op, ehcontext_t context) {
 	return iteree;
 }
 void EHI::eh_op_break(Node::t *op, ehcontext_t context) {
-	int level;
-	if(op->nparas == 0) {
-		level = 1;
-	} else {
-		ehval_p level_v = eh_execute(op->paras[0], context);
-		if(!level_v->is_a<Integer>()) {
-			throw_TypeError("break operator requires an Integer argument", level_v, this);
-		}
-		level = level_v->get<Integer>();
+	ehval_p level_v = eh_execute(op->paras[0], context);
+	if(!level_v->is_a<Integer>()) {
+		throw_TypeError("break operator requires an Integer argument", level_v, this);
 	}
+	const int level = level_v->get<Integer>();
 	// break as many levels as specified by the argument
 	if(level > inloop) {
 		throw_LoopError("break", level, this);
 	}
 	breaking = level;
-	return;
 }
 void EHI::eh_op_continue(Node::t *op, ehcontext_t context) {
-	int level;
-	if(op->nparas == 0) {
-		level = 1;
-	} else {
-		ehval_p level_v = eh_execute(op->paras[0], context);
-		if(!level_v->is_a<Integer>()) {
-			throw_TypeError("continue operator requires an Integer argument", level_v, this);
-		}
-		level = level_v->get<Integer>();
+	ehval_p level_v = eh_execute(op->paras[0], context);
+	if(!level_v->is_a<Integer>()) {
+		throw_TypeError("continue operator requires an Integer argument", level_v, this);
 	}
+	const int level = level_v->get<Integer>();
 	// break as many levels as specified by the argument
 	if(level > inloop) {
 		throw_LoopError("continue", level, this);
 	}
 	continuing = level;
-	return;
 }
 ehval_p EHI::eh_op_array(ehval_p node, ehcontext_t context) {
 	ehval_p ret = Array::make(parent);

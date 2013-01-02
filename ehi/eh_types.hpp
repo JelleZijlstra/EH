@@ -250,8 +250,8 @@ private:
 
 EH_CLASS(Object) {
 public:
-	typedef ehobj_t *type;
-	ehobj_t *value;
+	typedef ehobj_t *const type;
+	type value;
 
 	Object(ehobj_t *val) : value(val) {}
 

@@ -211,7 +211,7 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				return eh_op_named_class(paras, context);
 			case T_CLASS: // anonymous class declaration
 				return eh_op_class(paras, context);
-			case T_CLASSMEMBER:
+			case T_CLASS_MEMBER:
 				return eh_op_classmember(op, context);
 			case T_ENUM:
 				return eh_op_enum(op, context);
@@ -904,7 +904,7 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcon
 				throw_MiscellaneousError("Non-null value assigned to null", this);
 			}
 			return rvalue;
-		case T_CLASSMEMBER: {
+		case T_CLASS_MEMBER: {
 			attributes_t new_attributes = parse_attributes(internal_paras[0]);
 			return set(internal_paras[1], rvalue, &new_attributes, context);
 		}
@@ -1066,15 +1066,15 @@ ehval_p EHInterpreter::resource_instantiate(int type_id, ehval_p obj) {
 void EHI::array_insert(Array::t *array, ehval_p in, int place, ehcontext_t context) {
 	/*
 	 * We'll assume we're always getting a correct ehval_p, referring to a
-	 * T_ARRAYMEMBER token. If there is 1 parameter, that means it's a
+	 * T_ARRAY_MEMBER token. If there is 1 parameter, that means it's a
 	 * non-labeled array member, which we'll give an integer array index; if
 	 * there are 2, we'll either use the integer array index or a hash of the
 	 * string index.
 	 */
-	if(in->get<Node>()->nparas == 1) {
+	if(in->get<Node>()->op == T_ARRAY_MEMBER_NO_KEY) {
 		// if there is no explicit key, simply use the place argument
 		array->int_indices[place] = eh_execute(in->get<Node>()->paras[0], context);
-	} else {
+	} else { // T_ARRAY_MEMBER
 		const ehval_p label = eh_execute(in->get<Node>()->paras[0], context);
 		ehval_p var = eh_execute(in->get<Node>()->paras[1], context);
 		if(label->is_a<Integer>()) {

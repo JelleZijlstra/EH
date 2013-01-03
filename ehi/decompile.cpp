@@ -218,7 +218,7 @@ std::string Node::decompile(int level) {
 		case T_RET:
 			out << "ret " << op->paras[0]->decompile(level);
 			break;
-		case T_CLASSMEMBER:
+		case T_CLASS_MEMBER:
 			out << op->paras[0]->decompile(level) << op->paras[1]->decompile(level);
 			break;
 		case T_ATTRIBUTE:
@@ -343,7 +343,7 @@ std::string Node::decompile(int level) {
 			for(ehval_p n = op->paras[0]; n->get<Node>()->op != T_END; n = n->get<Node>()->paras[0]) {
 				Node::t *member_op = n->get<Node>()->paras[1]->get<Node>();
 				out << member_op->paras[0]->decompile(level);
-				if(member_op->nparas != 1) {
+				if(member_op->op == T_ARRAY_MEMBER) {
 					out << " => " << member_op->paras[1]->decompile(level);
 				}
 				if(n->get<Node>()->paras[0]->get<Node>()->op != T_END) {

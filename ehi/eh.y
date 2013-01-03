@@ -63,15 +63,15 @@ EHI *yyget_extra(void *scanner);
 %token T_NULL
 %token T_ENUM
 %token T_CLASS
-%token T_CLASSMEMBER
+%token T_CLASS_MEMBER
 %token T_LITERAL
 %token T_TRY
 %token T_CATCH
 %token T_FINALLY
 %token <vValue> T_ATTRIBUTE
-%token T_ARRAYMEMBER
+%token T_ARRAY_MEMBER
 %token T_DOUBLEARROW
-%token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS T_IF_ELSE T_NULLARY_ENUM T_ENUM_WITH_ARGUMENTS
+%token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS T_IF_ELSE T_NULLARY_ENUM T_ENUM_WITH_ARGUMENTS T_ARRAY_MEMBER_NO_KEY
 %token T_COMMAND T_SHORTPARA T_LONGPARA T_REDIRECT
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
@@ -321,11 +321,11 @@ expression:
 	| T_FOR expression T_IN expression T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE3(T_FOR_IN, $2, $4, $6); }
 	| attributelist expression %prec T_ATTRIBUTE
-							{ $$ = ADD_NODE2(T_CLASSMEMBER, $1, $2); }
+							{ $$ = ADD_NODE2(T_CLASS_MEMBER, $1, $2); }
 	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END
 							{
 								$$ = ADD_NODE2('=',
-										ADD_NODE2(T_CLASSMEMBER, $1, eh_addnode('$', String::make($2))),
+										ADD_NODE2(T_CLASS_MEMBER, $1, eh_addnode('$', String::make($2))),
 										ADD_NODE2(T_FUNC, $4, $6)
 								);
 							}
@@ -469,8 +469,8 @@ arraylist_i:
 
 arraymember:
 	para_expr T_DOUBLEARROW para_expr
-							{ $$ = ADD_NODE2(T_ARRAYMEMBER, $1, $3); }
-	| para_expr				{ $$ = ADD_NODE1(T_ARRAYMEMBER, $1); }
+							{ $$ = ADD_NODE2(T_ARRAY_MEMBER, $1, $3); }
+	| para_expr				{ $$ = ADD_NODE1(T_ARRAY_MEMBER_NO_KEY, $1); }
 	;
 
 /* Hash literals */
@@ -490,9 +490,9 @@ anonclasslist_i:
 
 anonclassmember:
 	T_VARIABLE ':' para_expr
-							{ $$ = eh_addnode(T_ARRAYMEMBER, String::make($1), Node::make($3)); }
+							{ $$ = eh_addnode(T_ARRAY_MEMBER, String::make($1), Node::make($3)); }
 	| T_STRING ':' para_expr
-							{ $$ = eh_addnode(T_ARRAYMEMBER, String::make($1), Node::make($3)); }
+							{ $$ = eh_addnode(T_ARRAY_MEMBER, String::make($1), Node::make($3)); }
 	;
 
 parglist:

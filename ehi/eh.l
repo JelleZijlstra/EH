@@ -90,7 +90,6 @@ void make_string(char **, char *);
 				yylval_param->bValue = false;
 				return T_BOOL;
 			}
-"$("		return T_DOLLARPAREN;
 "++"		return T_PLUSPLUS;
 "--"		return T_MINMIN;
 ("//"|#).*	; /* Ignore comment */

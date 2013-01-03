@@ -96,7 +96,7 @@ EHI *yyget_extra(void *scanner);
 %left T_RANGE T_ARROW '.'
 %right ':'
 %nonassoc '[' ']' '{' '}'
-%nonassoc '(' ')' T_DOLLARPAREN
+%nonassoc '(' ')'
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_SWITCH T_FUNC T_CLASS T_ENUM T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
 
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember

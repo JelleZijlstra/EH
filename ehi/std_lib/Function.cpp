@@ -10,6 +10,7 @@
 #include "Function.hpp"
 #include "Binding.hpp"
 #include "MiscellaneousError.hpp"
+#include "SuperClass.hpp"
 
 EH_INITIALIZER(Function) {
 	REGISTER_METHOD_RENAME(Function, operator_colon, "operator()");
@@ -31,6 +32,10 @@ EH_METHOD(Function, operator_colon) {
 
 ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p args, EHI *ehi) {
 	Function::t *f = function_object->data()->get<Function>();
+
+	if(base_object->is_a<SuperClass>()) {
+		base_object = base_object->get<SuperClass>();
+	}
 
 	if(f->type == lib_e) {
 		return f->libmethod_pointer(base_object, args, ehi);

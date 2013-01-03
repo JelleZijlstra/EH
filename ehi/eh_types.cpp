@@ -74,12 +74,10 @@ ehmember_p ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t 
 }
 // get a property of the given name, without creating a binding
 ehval_p ehval_t::get_property_no_binding(const char *name, ehcontext_t context, EHI *ehi) {
-	ehval_p object;
-	if(is_a<Object>()) {
-		object = this;
-	} else {
-		object = ehi->get_parent()->repo.get_object(this);
+	if(is_a<SuperClass>()) {
+		return get<SuperClass>()->get_property_no_binding(name, context, ehi);
 	}
+	ehval_p object = is_a<Object>() ? this : ehi->get_parent()->repo.get_object(this);
 	ehobj_t *obj = object->get<Object>();
 	ehmember_p member = obj->inherited_get(name);
 	if(member.null()) {

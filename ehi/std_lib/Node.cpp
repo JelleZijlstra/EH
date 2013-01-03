@@ -206,6 +206,9 @@ std::string Node::decompile(int level) {
 		case T_ACCESS:
 			out << op->paras[0]->decompile(level) << "." << op->paras[1]->get<String>();
 			break;
+		case T_CALL_METHOD:
+			out << op->paras[0]->decompile(level) << "." << op->paras[1]->get<String>() << "(" << op->paras[2]->decompile(level) << ")";
+			break;
 		case T_CALL:
 			out << op->paras[0]->decompile(level) << " " << op->paras[1]->decompile(level);
 			break;

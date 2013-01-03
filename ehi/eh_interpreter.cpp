@@ -921,11 +921,7 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcon
 ehval_p EHI::eh_op_dot(ehval_p *paras, ehcontext_t context) {
 	ehval_p base_var = eh_execute(paras[0], context);
 	const char *accessor = paras[1]->get<String>();
-	if(base_var->is_a<SuperClass>()) {
-		return base_var->get<SuperClass>()->get_property(accessor, context, this);
-	} else {
-		return base_var->get_property(accessor, context, this);
-	}
+	return base_var->get_property(accessor, context, this);
 }
 ehval_p EHI::eh_op_try_finally(ehval_p *paras, ehcontext_t context) {
 	ehval_p try_block = paras[0];

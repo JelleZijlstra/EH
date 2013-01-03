@@ -28,30 +28,31 @@ ehval_p EHI::optimize(ehval_p node, ehcontext_t context) {
 			return paras[0];
 		case T_NULL:
 			return nullptr;
-		case '(': {
+		case T_GROUPING: {
 			ehval_p inner = paras[0];
-			if(inner->is_a<Node>() && inner->get<Node>()->op != ',') {
+			if(inner->is_a<Node>() && inner->get<Node>()->op != T_COMMA) {
 				return optimize(inner, context);
 			} else {
-				return val(eh_addnode('(', optimize(inner, context)));
+				return val(eh_addnode(T_GROUPING, optimize(inner, context)));
 			}
 		}
-		case ':': {
+		case T_CALL: {
 			// optimize method call
 			ehval_p func = paras[0];
 			ehval_p args = optimize(paras[1], context);
-			if(func->is_a<Node>() && func->get<Node>()->op == '.') {
+			if(func->is_a<Node>() && func->get<Node>()->op == T_ACCESS) {
 				ehval_p *inner_paras = func->get<Node>()->paras;
 				ehval_p base = optimize(inner_paras[0], context);
 				ehval_p method = optimize(inner_paras[1], context);
 				return val(eh_addnode(T_CALL_METHOD, base, method, args));
 			} else {
 				ehval_p optimized_func = optimize(func, context);
-				return val(eh_addnode(':', optimized_func, args));
+				return val(eh_addnode(T_CALL, optimized_func, args));
 			}
 		}
-		case '=':
+		case T_ASSIGN:
 		case T_FUNC:
+		case T_CASE:
 			// don't optimize the lvalue
 			return val(eh_addnode(op->op, paras[0], optimize(paras[1], context)));
 		default: {

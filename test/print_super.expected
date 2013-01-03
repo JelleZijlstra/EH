@@ -1,7 +1,7 @@
-%%stdout%%
+%%stdout-regex%%
 @parent class
-(inherited class)
-@object <Foo> [
-]
+0x[a-f\d]+
+@object <Foo> \[
+\]
 %%stderr%%
 Uncaught exception of type TypeError: Cannot set member on parent class: SuperClass

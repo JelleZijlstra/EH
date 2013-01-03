@@ -75,7 +75,7 @@ EHI *yyget_extra(void *scanner);
 %token T_ARRAY_MEMBER_NO_KEY T_ANYTHING T_GROUPING T_ASSIGN T_ADD T_SUBTRACT T_MULTIPLY T_DIVIDE T_MODULO T_GREATER
 %token T_LESSER T_BINARY_AND T_BINARY_OR T_BINARY_XOR T_BINARY_COMPLEMENT T_NOT T_MATCH_SET T_COMMA T_ARRAY_LITERAL
 %token T_HASH_LITERAL T_CALL T_ACCESS
-%token T_COMMAND T_SHORTPARA T_LONGPARA T_REDIRECT
+%token T_COMMAND T_SHORTPARA T_LONGPARA
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %token <sValue> T_CUSTOMOP
@@ -419,10 +419,6 @@ para:
 							{ $$ = eh_addnode(T_SHORTPARA, String::make($2), Bool::make(true)); }
 	| '-' bareword_or_string '=' para_expr
 							{ $$ = eh_addnode(T_SHORTPARA, String::make($2), Node::make($4)); }
-	| '>' bareword_or_string
-							{ $$ = eh_addnode(T_REDIRECT, String::make($2)); }
-	| '}' bareword_or_string
-							{ $$ = eh_addnode('}', String::make($2)); }
 	;
 
 bareword_or_string:

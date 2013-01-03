@@ -335,35 +335,33 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, ehcontext_t context) 
 	for( ; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
 		ehval_p node2 = node->get<Node>()->paras[0];
 		// every para_expr should have an op associated with it
-		assert(node2->is_a<Node>());
-		ehval_p *node_paras = node2->get<Node>()->paras;
-		switch(node2->get<Node>()->op) {
-			case T_SHORTPARA: {
-				// short paras: set each short-form option to the same thing
-				value_r = eh_execute(node_paras[1], context);
-				const char *shorts = node_paras[0]->get<String>();
-				for(int i = 0, len = strlen(shorts); i < len; i++) {
-					char index[2];
-					index[0] = shorts[i];
-					index[1] = '\0';
-					paras->string_indices[index] = value_r;
+		if(node2->is_a<Node>()) {
+			ehval_p *node_paras = node2->get<Node>()->paras;
+			switch(node2->get<Node>()->op) {
+				case T_SHORTPARA: {
+					// short paras: set each short-form option to the same thing
+					value_r = eh_execute(node_paras[1], context);
+					const char *shorts = node_paras[0]->get<String>();
+					for(int i = 0, len = strlen(shorts); i < len; i++) {
+						char index[2];
+						index[0] = shorts[i];
+						index[1] = '\0';
+						paras->string_indices[index] = value_r;
+					}
+					break;
 				}
-				break;
+				case T_LONGPARA:
+					// long-form paras
+					paras->string_indices[node_paras[0]->get<String>()] = eh_execute(node_paras[1], context);
+					break;
+				default: // non-named parameters with an expression
+					paras->int_indices[count] = eh_execute(node2, context);
+					count++;
+					break;
 			}
-			case T_LONGPARA:
-				// long-form paras
-				paras->string_indices[node_paras[0]->get<String>()] = eh_execute(node_paras[1], context);
-				break;
-			case T_REDIRECT:
-				paras->string_indices[">"] = eh_execute(node_paras[0], context);
-				break;
-			case '}':
-				paras->string_indices["}"] = eh_execute(node_paras[0], context);
-				break;
-			default: // non-named parameters with an expression
-				paras->int_indices[count] = eh_execute(node2, context);
-				count++;
-				break;
+		} else {
+			paras->int_indices[count] = eh_execute(node2, context);
+			count++;
 		}
 	}
 	// insert indicator that this is an EH-PHP command
@@ -593,9 +591,8 @@ ehval_p EHI::eh_op_tuple(ehval_p node, ehcontext_t context) {
 	ehval_p arg_node = node;
 	// now, fill the output tuple
 	for(int i = 0; i < nargs; i++) {
-		Node::t *op = arg_node->get<Node>();
-		if(op->op == T_COMMA) {
-			new_args[i] = eh_execute(op->paras[0], context);
+		if(arg_node->is_a<Node>() && arg_node->get<Node>()->op == T_COMMA) {
+			new_args[i] = eh_execute(arg_node->get<Node>()->paras[0], context);
 			arg_node = arg_node->get<Node>()->paras[1];
 		} else {
 			new_args[i] = eh_execute(arg_node, context);
@@ -692,95 +689,101 @@ ehval_p EHI::eh_op_given(ehval_p *paras, ehcontext_t context) {
 }
 
 bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
-	Node::t *op = node->get<Node>();
-	switch(op->op) {
-		case T_ANYTHING:
-			return true;
-		case T_MATCH_SET: {
-			const char *name = op->paras[0]->get<String>();
-			ehmember_p member = ehmember_t::make(attributes_t::make_private(), var);
-			context.scope->set_member(name, member, context, this);
-			return true;
-		}
-		case T_BINARY_OR: {
-			return match(op->paras[0], var, context) || match(op->paras[1], var, context);
-		}
-		case T_COMMA: {
-			if(!var->is_a<Tuple>()) {
-				return false;
+	if(!node->is_a<Node>()) {
+		ehval_p casevar = eh_execute(node, context);
+		ehval_p decider = call_method_typed<Bool>(var, "operator==", casevar, context);
+		return decider->get<Bool>();
+	} else {
+		Node::t *op = node->get<Node>();
+		switch(op->op) {
+			case T_ANYTHING:
+				return true;
+			case T_MATCH_SET: {
+				const char *name = op->paras[0]->get<String>();
+				ehmember_p member = ehmember_t::make(attributes_t::make_private(), var);
+				context.scope->set_member(name, member, context, this);
+				return true;
 			}
-			Tuple::t *t = var->get<Tuple>();
-			const int size = t->size();
-			int i = 0;
-			for(ehval_p arg_node = node; ; arg_node = arg_node->get<Node>()->paras[1], i++) {
-				if(i == size) {
+			case T_BINARY_OR: {
+				return match(op->paras[0], var, context) || match(op->paras[1], var, context);
+			}
+			case T_COMMA: {
+				if(!var->is_a<Tuple>()) {
 					return false;
 				}
-				Node::t *op = arg_node->get<Node>();
-				if(op->op == T_COMMA) {
-					if(!match(op->paras[0], t->get(i), context)) {
+				Tuple::t *t = var->get<Tuple>();
+				const int size = t->size();
+				int i = 0;
+				for(ehval_p arg_node = node; ; arg_node = arg_node->get<Node>()->paras[1], i++) {
+					if(i == size) {
 						return false;
 					}
-				} else {
-					return match(arg_node, t->get(i), context);
+					Node::t *op = arg_node->get<Node>();
+					if(op->op == T_COMMA) {
+						if(!match(op->paras[0], t->get(i), context)) {
+							return false;
+						}
+					} else {
+						return match(arg_node, t->get(i), context);
+					}
 				}
 			}
-		}
-		case T_CALL: {
-			ehval_p member = eh_execute(op->paras[0], context);
-			ehval_p member_em = member->data();
-			if(!member_em->is_a<Enum_Member>()) {
-				throw_TypeError("match case is not an Enum.Member", member, this);
-			}
-			Enum_Member::t *em = member_em->get<Enum_Member>();
-
-			var = var->data();
-			if(!var->is_a<Enum_Instance>()) {
-				return false;
-			}
-			Enum_Instance::t *var_ei = var->get<Enum_Instance>();
-
-			if(member_em->naive_compare(var_ei->member()) != 0) {
-				return false;
-			}
-			int size = em->size;
-			if(op->paras[1]->get<Node>()->op != T_GROUPING) {
-				throw_MiscellaneousError("Invalid argument in Enum.Member match", this);
-			}
-			int nargs = 1;
-			ehval_p args = op->paras[1]->get<Node>()->paras[0];
-			for(ehval_p tmp = args;
-				tmp->is_a<Node>() && tmp->get<Node>()->op == T_COMMA && tmp->get<Node>()->op != T_END;
-				tmp = tmp->get<Node>()->paras[1], nargs++
-			);
-			if(nargs != size) {
-				throw_MiscellaneousError("Invalid argument number in Enum.Member match", this);
-			}
-			ehval_p arg_node = args;
-			for(int i = 0; i < nargs; i++) {
-				Node::t *op = arg_node->get<Node>();
-				if(op->op == T_COMMA) {
-					if(!match(op->paras[0], var_ei->get(i), context)) {
-						return false;
-					}
-					arg_node = arg_node->get<Node>()->paras[1];
-				} else {
-					if(!match(arg_node, var_ei->get(i), context)) {
-						return false;
-					}
-					assert(i == nargs - 1);
-					break;
+			case T_CALL: {
+				ehval_p member = eh_execute(op->paras[0], context);
+				ehval_p member_em = member->data();
+				if(!member_em->is_a<Enum_Member>()) {
+					throw_TypeError("match case is not an Enum.Member", member, this);
 				}
+				Enum_Member::t *em = member_em->get<Enum_Member>();
+
+				var = var->data();
+				if(!var->is_a<Enum_Instance>()) {
+					return false;
+				}
+				Enum_Instance::t *var_ei = var->get<Enum_Instance>();
+
+				if(member_em->naive_compare(var_ei->member()) != 0) {
+					return false;
+				}
+				int size = em->size;
+				if(op->paras[1]->get<Node>()->op != T_GROUPING) {
+					throw_MiscellaneousError("Invalid argument in Enum.Member match", this);
+				}
+				int nargs = 1;
+				ehval_p args = op->paras[1]->get<Node>()->paras[0];
+				for(ehval_p tmp = args;
+					tmp->is_a<Node>() && tmp->get<Node>()->op == T_COMMA && tmp->get<Node>()->op != T_END;
+					tmp = tmp->get<Node>()->paras[1], nargs++
+				);
+				if(nargs != size) {
+					throw_MiscellaneousError("Invalid argument number in Enum.Member match", this);
+				}
+				ehval_p arg_node = args;
+				for(int i = 0; i < nargs; i++) {
+					if(arg_node->is_a<Node>() && arg_node->get<Node>()->op == T_COMMA) {
+						ehval_p *paras = arg_node->get<Node>()->paras;
+						if(!match(paras[0], var_ei->get(i), context)) {
+							return false;
+						}
+						arg_node = paras[1];
+					} else {
+						if(!match(arg_node, var_ei->get(i), context)) {
+							return false;
+						}
+						assert(i == nargs - 1);
+						break;
+					}
+				}
+				return true;
 			}
-			return true;
-		}
-		case T_GROUPING: {
-			return match(op->paras[0], var, context);
-		}
-		default: {
-			ehval_p casevar = eh_execute(node, context);
-			ehval_p decider = call_method_typed<Bool>(var, "operator==", casevar, context);
-			return decider->get<Bool>();
+			case T_GROUPING: {
+				return match(op->paras[0], var, context);
+			}
+			default: {
+				ehval_p casevar = eh_execute(node, context);
+				ehval_p decider = call_method_typed<Bool>(var, "operator==", casevar, context);
+				return decider->get<Bool>();
+			}
 		}
 	}
 }

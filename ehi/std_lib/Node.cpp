@@ -59,7 +59,7 @@ const std::map<int, std::pair<const char *, int> > node_nparas {
 	TOKEN(T_BINARY_AND, 2),
 	TOKEN(T_BINARY_OR, 2),
 	TOKEN(T_BINARY_XOR, 2),
-	TOKEN(T_BINARY_COMPLEMENT, 2),
+	TOKEN(T_BINARY_COMPLEMENT, 1),
 	TOKEN(T_NOT, 1),
 	TOKEN(T_MATCH_SET, 1),
 	TOKEN(T_COMMA, 2),
@@ -70,7 +70,6 @@ const std::map<int, std::pair<const char *, int> > node_nparas {
 	TOKEN(T_COMMAND, 2),
 	TOKEN(T_SHORTPARA, 2),
 	TOKEN(T_LONGPARA, 2),
-	TOKEN(T_REDIRECT, 1),
 	TOKEN(T_VARIABLE, 1),
 	TOKEN(T_CUSTOMOP, 3),
 	TOKEN(T_XOR, 2),
@@ -487,12 +486,6 @@ std::string Node::decompile(int level) {
 					case T_LONGPARA:
 						out << " --" << node2->paras[0]->decompile(level);
 						out << "=" << node2->paras[1]->decompile(level);
-						break;
-					case T_REDIRECT:
-						out << " > " << node2->paras[0]->decompile(level);
-						break;
-					case '}':
-						out << " } " << node2->paras[0]->decompile(level);
 						break;
 					default:
 						out << " " << node->get<Node>()->paras[0]->decompile(level);

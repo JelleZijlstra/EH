@@ -11,7 +11,7 @@ private testf = func: arg
 		default; 5
 	end
 
-	$bfind --test --test2=42 -asdf -sjkl=3 >hello }hello
+	$bfind --test --test2=42 -asdf -sjkl=3
 end
 
 echo(testf.decompile())

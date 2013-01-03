@@ -9,7 +9,7 @@ func: arg
 		default
 			5
 	end
-	$bfind --"test"=true --"test2"=42 -"asdf"=true -"sjkl"=3 > "hello" } "hello"
+	$bfind --"test"=true --"test2"=42 -"asdf"=true -"sjkl"=3
 
 end
 %%stderr%%

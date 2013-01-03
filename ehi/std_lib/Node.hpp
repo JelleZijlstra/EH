@@ -8,18 +8,17 @@ public:
 	class t {
 	public:
 		int op; // Type of operator
-		int nparas; // Number of parameters
 		ehval_p *paras; // Parameters
 
 		~t() {
-			if(nparas > 0) {
-				delete[] paras;
-			}
+			delete[] paras;
 		}
 
-		t(int _op, int _nparas) : op(_op), nparas(_nparas) {
+		t(int _op, int nparas) : op(_op) {
 			if(nparas > 0) {
 				paras = new ehval_p[nparas];
+			} else {
+				paras = nullptr;
 			}
 		}
 	};

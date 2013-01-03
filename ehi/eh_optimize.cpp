@@ -23,7 +23,6 @@ ehval_p EHI::optimize(ehval_p node, ehcontext_t context) {
 		return nullptr;
 	}
 	ehval_p *paras = op->paras;
-	const int nparas = op->nparas;
 	switch(op->op) {
 		case T_LITERAL:
 			return paras[0];
@@ -56,6 +55,7 @@ ehval_p EHI::optimize(ehval_p node, ehcontext_t context) {
 			// don't optimize the lvalue
 			return val(eh_addnode(op->op, paras[0], optimize(paras[1], context)));
 		default: {
+			const int nparas = node_nparas.at(op->op).second;
 			Node::t *out = new Node::t(op->op, nparas);
 			for(int i = 0; i < nparas; i++) {
 				out->paras[i] = optimize(paras[i], context);

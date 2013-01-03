@@ -510,7 +510,7 @@ acase:
 	T_CASE expression T_SEPARATOR statement_list
 							{ $$ = ADD_NODE2(T_CASE, $2, $4); }
 	| T_DEFAULT T_SEPARATOR statement_list
-							{ $$ = ADD_NODE1(T_CASE, $3); }
+							{ $$ = ADD_NODE1(T_DEFAULT, $3); }
 	;
 
 separators:

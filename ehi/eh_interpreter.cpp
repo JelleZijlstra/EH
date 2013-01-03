@@ -639,7 +639,7 @@ ehval_p EHI::eh_op_switch(ehval_p *paras, ehcontext_t context) {
 	for(ehval_p node = paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
 		Node::t *op = node->get<Node>()->paras[0]->get<Node>();
 		// execute default
-		if(op->nparas == 1) {
+		if(op->op == T_DEFAULT) {
 			ret = eh_execute(op->paras[0], context);
 		} else {
 			ehval_p casevar = eh_execute(op->paras[0], context);
@@ -685,7 +685,7 @@ ehval_p EHI::eh_op_given(ehval_p *paras, ehcontext_t context) {
 	for(ehval_p node = paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
 		const Node::t *op = node->get<Node>()->paras[0]->get<Node>();
 		// execute default
-		if(op->nparas == 1) {
+		if(op->op == T_DEFAULT) {
 			return eh_execute(op->paras[0], context);
 		}
 		ehval_p casevar = eh_execute(op->paras[0], context);
@@ -807,9 +807,12 @@ ehval_p EHI::eh_op_match(ehval_p *paras, ehcontext_t context) {
 	// switch variable
 	ehval_p switchvar = eh_execute(paras[0], context);
 	for(ehval_p node = paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
-		ehval_p case_node = node->get<Node>()->paras[0];
-		if(match(case_node->get<Node>()->paras[0], switchvar, context)) {
-			return eh_execute(case_node->get<Node>()->paras[1], context);
+		Node::t *case_node = node->get<Node>()->paras[0]->get<Node>();
+		if(case_node->op == T_DEFAULT) {
+			throw_MiscellaneousError("Cannot use T_DEFAULT in match statement", this);
+		}
+		if(match(case_node->paras[0], switchvar, context)) {
+			return eh_execute(case_node->paras[1], context);
 		}
 	}
 	throw_MiscellaneousError("No matching case in match statement", this);

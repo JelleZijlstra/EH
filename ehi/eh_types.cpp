@@ -122,7 +122,7 @@ void Object::printvar(printvar_set &set, int level, EHI *ehi) {
 				std::cout << (attribs.visibility == public_e ? "public" : "private") << ",";
 				std::cout << (attribs.isstatic == static_e ? "static" : "non-static") << ",";
 				std::cout << (attribs.isconst == const_e ? "constant" : "non-constant") << ">: ";
-				PRINTVAR(i.second->value, level + 1);
+				i.second->value->printvar(set, level + 1, ehi);
 			}
 			add_tabs(std::cout, level);
 			std::cout << "]" << std::endl;

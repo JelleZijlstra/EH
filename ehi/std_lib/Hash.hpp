@@ -71,7 +71,7 @@ public:
 			for(auto &i : value->members) {
 				add_tabs(std::cout, level + 1);
 				std::cout << "'" << i.first << "': ";
-				PRINTVAR(i.second, level + 1);
+				i.second->printvar(set, level + 1, ehi);
 			}
 			add_tabs(std::cout, level);
 			std::cout << "]" << std::endl;

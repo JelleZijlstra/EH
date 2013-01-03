@@ -122,7 +122,7 @@ EH_METHOD(GlobalObject, toString) {
 
 EH_METHOD(GlobalObject, printvar) {
 	printvar_set set;
-	PRINTVAR(args, 0);
+	args->printvar(set, 0, ehi);
 	// this function always returns nullptr
 	return nullptr;
 }

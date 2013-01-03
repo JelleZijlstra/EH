@@ -42,8 +42,8 @@ public:
 			set.insert(ptr);
 			std::cout << "@range [" << std::endl;
 			add_tabs(std::cout, level + 1);
-			PRINTVAR(value->min, level + 1);
-			PRINTVAR(value->max, level + 1);
+			value->min->printvar(set, level + 1, ehi);
+			value->max->printvar(set, level + 1, ehi);
 			add_tabs(std::cout, level);
 			std::cout << "]" << std::endl;
 		} else {

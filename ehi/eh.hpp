@@ -21,12 +21,6 @@
 #include "refcount_ptr.hpp"
 #include "eh_gc.hpp"
 
-#define PRINTVAR(value, level) if((value).null()) { \
-	std::cout << "null" << std::endl; \
-} else { \
-	(value)->printvar(set, level, ehi); \
-}
-
 template<class T>
 static void add_tabs(T &out, int levels) {
 	for(int i = 0; i < levels; i++) {

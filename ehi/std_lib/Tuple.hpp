@@ -53,7 +53,7 @@ public:
 			std::cout << "@tuple <" << size << "> [" << std::endl;
 			for(int i = 0; i < size; i++) {
 				add_tabs(std::cout, level + 1);
-				PRINTVAR(value->get(i), level + 1);
+				value->get(i)->printvar(set, level + 1, ehi);
 			}
 			add_tabs(std::cout, level);
 			std::cout << "]" << std::endl;

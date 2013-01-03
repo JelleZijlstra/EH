@@ -250,16 +250,16 @@ std::string Node::decompile(int level) {
 			out << op->paras[2]->decompile(level + 1);
 			add_end(out, level);
 			break;
+		case T_NAMED_CLASS:
+			out << "class " << op->paras[0]->get<String>() << "\n";
+			add_tabs(out, level + 1);
+			out << op->paras[1]->decompile(level + 1);
+			add_end(out, level);
+			break;
 		case T_CLASS:
-			if(op->nparas == 2) {
-				out << "class " << op->paras[0]->get<String>() << "\n";
-				add_tabs(out, level + 1);
-				out << op->paras[1]->decompile(level + 1);
-			} else {
-				out << "class\n";
-				add_tabs(out, level + 1);
-				out << op->paras[0]->decompile(level + 1);
-			}
+			out << "class\n";
+			add_tabs(out, level + 1);
+			out << op->paras[0]->decompile(level + 1);
 			add_end(out, level);
 			break;
 		case T_FUNC:

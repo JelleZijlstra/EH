@@ -224,7 +224,9 @@ private:
 	ehval_p eh_op_customop(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_command(const char *name, ehval_p node, ehcontext_t context);
 	ehval_p eh_op_enum(Node::t *op, ehcontext_t context);
-	ehval_p eh_op_declareclass(Node::t *op, ehcontext_t context);
+	ehval_p eh_op_class(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_named_class(ehval_p *paras, ehcontext_t context);
+	ehval_p declare_class(const char *name, ehval_p code, ehcontext_t context);
 	ehval_p eh_op_declareclosure(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_dollar(ehval_p node, ehcontext_t context);
 	ehval_p eh_op_dot(ehval_p *paras, ehcontext_t context);

@@ -71,7 +71,7 @@ EHI *yyget_extra(void *scanner);
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
 %token T_DOUBLEARROW
-%token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN
+%token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS
 %token T_COMMAND T_SHORTPARA T_LONGPARA T_REDIRECT
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
@@ -295,7 +295,7 @@ expression:
 								);
 							}
 	| T_CLASS T_VARIABLE T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(T_CLASS, String::make($2), Node::make($4)); }
+							{ $$ = eh_addnode(T_NAMED_CLASS, String::make($2), Node::make($4)); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_ENUM T_VARIABLE T_SEPARATOR separators enum_list T_SEPARATOR statement_list T_END

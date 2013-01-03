@@ -205,8 +205,10 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 		 */
 			case T_FUNC: // function definition
 				return eh_op_declareclosure(paras, context);
-			case T_CLASS: // class declaration
-				return eh_op_declareclass(op, context);
+			case T_NAMED_CLASS: // named class declaration
+				return eh_op_named_class(paras, context);
+			case T_CLASS: // anonymous class declaration
+				return eh_op_class(paras, context);
 			case T_CLASSMEMBER:
 				return eh_op_classmember(op, context);
 			case T_ENUM:
@@ -549,22 +551,25 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 	context.scope->get<Object>()->insert(name, member);
 	return ret;
 }
-ehval_p EHI::eh_op_declareclass(Node::t *op, ehcontext_t context) {
-	// create the ehretval_t
+ehval_p EHI::eh_op_class(ehval_p *paras, ehcontext_t context) {
+	return declare_class("(anonymous class)", paras[0], context);
+}
+ehval_p EHI::eh_op_named_class(ehval_p *paras, ehcontext_t context) {
+	const char *name = paras[0]->get<String>();
+	ehval_p ret = declare_class(name, paras[1], context);
+	ehmember_p member = ehmember_t::make(attributes_t::make(), ret);
+	context.scope->get<Object>()->insert(name, member);
+#if 0
+	// set class's own name property (commenting out until we can distinguish classes and prototypes better)
+	ehmember_p name_member = ehmember_t::make(attributes_t::make(), String::make(strdup(name)));
+	new_obj->insert("name", name_member);
+#endif
+	return ret;
+}
+ehval_p EHI::declare_class(const char *name, ehval_p code, ehcontext_t context) {
+	// create the class object
 	ehobj_t *new_obj = new ehobj_t();
 	ehval_p ret = Object::make(new_obj, parent);
-
-	// process parameters
-	ehval_p code;
-	const char *name = "(anonymous class)";
-	if(op->nparas == 2) {
-		// named class
-		name = op->paras[0]->get<String>();
-		code = op->paras[1];
-	} else {
-		// nameless class
-		code = op->paras[0];
-	}
 
 	new_obj->type_id = parent->repo.register_class(name, ret);
 	new_obj->parent = context.scope;
@@ -575,18 +580,6 @@ ehval_p EHI::eh_op_declareclass(Node::t *op, ehcontext_t context) {
 	// execute the code within the class
 	eh_execute(code, ret);
 
-	if(op->nparas == 2) {
-		// insert variable if it is a named class
-		ehmember_p member;
-		member->value = ret;
-		context.scope->get<Object>()->insert(name, member);
-#if 0
-		// set class's own name property (commenting out until we can distinguish classes and prototypes better)
-		ehmember_p name_member;
-		name_member->value = String::make(strdup(name));
-		new_obj->insert("name", name_member);
-#endif
-	}
 	return ret;
 }
 ehval_p EHI::eh_op_tuple(ehval_p node, ehcontext_t context) {

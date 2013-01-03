@@ -14,4 +14,4 @@ for i in fa.size()
 end
 fa.each(i => echo i)
 
-echo(FixedArray.with [1, 2, 3])
+echo(FixedArray.mapFrom [1, 2, 3])

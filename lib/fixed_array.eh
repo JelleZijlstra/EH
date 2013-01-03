@@ -43,9 +43,9 @@ FixedArray.toString = func:
 	out + ']'
 end
 
-FixedArray.with = func: input
-	private const sizes = input.length()
-	private const out = FixedArray.new sizes
+FixedArray.mapFrom = func: input
+	private const size = input.length()
+	private const out = FixedArray.new size
 	private index = 0
 	for i in input
 		out->index = i

@@ -7,7 +7,7 @@ Map.toString = func:
 	out + "}"
 end
 
-Map.with = func: pairs
+Map.mapFrom = func: pairs
 	map = Map.new()
 	for key, value in pairs
 		map->key = value

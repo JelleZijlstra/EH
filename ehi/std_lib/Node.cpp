@@ -6,6 +6,23 @@
 
 #include "std_lib_includes.hpp"
 #include "Node.hpp"
+#include "../eh.bison.hpp"
+
+
+#define TOKEN(name, nparas) {name, {#name, nparas}}
+
+const std::map<int, std::pair<const char *, int> > node_nparas {
+	TOKEN(T_SEPARATOR, 2),
+	TOKEN(T_LITERAL, 1),
+	TOKEN(T_RET, 1),
+	TOKEN(T_BREAK, 1),
+	TOKEN(T_CONTINUE, 1),
+	TOKEN(T_NULL, 0),
+	TOKEN(T_SCOPE, 0),
+	TOKEN(T_THIS, 0),
+	TOKEN(T_VARIABLE, 1),
+	TOKEN(T_ANYTHING, 0)
+};
 
 static void add_end(std::ostringstream &out, int levels) {
 	out << "\n";
@@ -79,41 +96,61 @@ std::string Node::decompile(int level) {
 		case T_NULL:
 			out << "()";
 			break;
-		case '_':
+		case T_ANYTHING:
 			out << "_";
 			break;
-		case '+':
-		case '-':
-		case '*':
-		case '/':
-		case '%':
-		case '=':
-		case '<':
-		case '>':
-		case '|':
-		case '^':
-		case '&':
-			// binary ops
-			out << op->paras[0]->decompile(level) << " " << char(op->op) << " " << op->paras[1]->decompile(level);
+		case T_ASSIGN:
+			out << op->paras[0]->decompile(level) << " = " << op->paras[1]->decompile(level);
 			break;
-		case ',':
+		case T_ADD:
+			out << op->paras[0]->decompile(level) << " + " << op->paras[1]->decompile(level);
+			break;
+		case T_SUBTRACT:
+			out << op->paras[0]->decompile(level) << " - " << op->paras[1]->decompile(level);
+			break;
+		case T_MULTIPLY:
+			out << op->paras[0]->decompile(level) << " * " << op->paras[1]->decompile(level);
+			break;
+		case T_DIVIDE:
+			out << op->paras[0]->decompile(level) << " / " << op->paras[1]->decompile(level);
+			break;
+		case T_MODULO:
+			out << op->paras[0]->decompile(level) << " % " << op->paras[1]->decompile(level);
+			break;
+		case T_GREATER:
+			out << op->paras[0]->decompile(level) << " > " << op->paras[1]->decompile(level);
+			break;
+		case T_LESSER:
+			out << op->paras[0]->decompile(level) << " < " << op->paras[1]->decompile(level);
+			break;
+		case T_BINARY_OR:
+			out << op->paras[0]->decompile(level) << " | " << op->paras[1]->decompile(level);
+			break;
+		case T_BINARY_XOR:
+			out << op->paras[0]->decompile(level) << " ^ " << op->paras[1]->decompile(level);
+			break;
+		case T_BINARY_AND:
+			out << op->paras[0]->decompile(level) << " & " << op->paras[1]->decompile(level);
+			break;
+		case T_COMMA:
 			out << op->paras[0]->decompile(level) << ", " << op->paras[1]->decompile(level);
 			break;
-		case '.':
+		case T_ACCESS:
 			out << op->paras[0]->decompile(level) << "." << op->paras[1]->get<String>();
 			break;
-		case ':':
+		case T_CALL:
 			out << op->paras[0]->decompile(level) << " " << op->paras[1]->decompile(level);
 			break;
-		case '!':
-		case '~':
-			// unary ops
-			out << char(op->op) << op->paras[0]->decompile(level);
+		case T_NOT:
+			out << "!" << op->paras[0]->decompile(level);
 			break;
-		case '$':
+		case T_BINARY_COMPLEMENT:
+			out << "~" << op->paras[0]->decompile(level);
+			break;
+		case T_VARIABLE:
 			out << op->paras[0]->get<String>();
 			break;
-		case '(':
+		case T_GROUPING:
 			out << '(' << op->paras[0]->decompile(level) << ')';
 			break;
 		case T_RANGE:
@@ -270,7 +307,7 @@ std::string Node::decompile(int level) {
 			for(ehval_p node = op->paras[1]; ; node = node->get<Node>()->paras[0]) {
 				ehval_p current_member;
 				bool is_last;
-				if(node->get<Node>()->op == ',') {
+				if(node->get<Node>()->op == T_COMMA) {
 					current_member = node->get<Node>()->paras[1];
 					is_last = false;
 				} else {
@@ -285,7 +322,7 @@ std::string Node::decompile(int level) {
 					for(ehval_p argument = current_member->get<Node>()->paras[1]; ; argument = argument->get<Node>()->paras[1]) {
 						ehval_p name = argument->is_a<Node>() ? argument->get<Node>()->paras[0] : argument;
 						out << name->get<String>();
-						if(!argument->is_a<Node>() || argument->get<Node>()->op != ',') {
+						if(!argument->is_a<Node>() || argument->get<Node>()->op != T_COMMA) {
 							break;
 						} else {
 							out << ", ";
@@ -339,7 +376,7 @@ std::string Node::decompile(int level) {
 			out << op->paras[2]->decompile(level + 1);
 			add_end(out, level);
 			break;
-		case '[':
+		case T_ARRAY_LITERAL:
 			out << "[";
 			for(ehval_p n = op->paras[0]; n->get<Node>()->op != T_END; n = n->get<Node>()->paras[0]) {
 				Node::t *member_op = n->get<Node>()->paras[1]->get<Node>();
@@ -353,11 +390,11 @@ std::string Node::decompile(int level) {
 			}
 			out << "]";
 			break;
-		case '@':
+		case T_MATCH_SET:
 			out << "@";
 			out << op->paras[0]->get<String>();
 			break;
-		case '{':
+		case T_HASH_LITERAL:
 			out << "{";
 			for(ehval_p n = op->paras[0]; n->get<Node>()->op != T_END; n = n->get<Node>()->paras[0]) {
 				Node::t *member_op = n->get<Node>()->paras[1]->get<Node>();

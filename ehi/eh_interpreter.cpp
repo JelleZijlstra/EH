@@ -123,20 +123,20 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				return paras[0];
 			case T_NULL:
 				return nullptr;
-			case '_':
+			case T_ANYTHING:
 				throw_MiscellaneousError("Cannot use _ in expression", this);
 				return nullptr;
 		/*
 		 * Unary operators
 		 */
-			case '@': // type casting
+			case T_MATCH_SET: // type casting
 				throw_MiscellaneousError("Cannot use @ outside of match statement", this);
 				break;
-			case '~': // bitwise negation
+			case T_BINARY_COMPLEMENT: // bitwise negation
 			  return perform_op("operator~", 0, paras, context);
 			case T_NEGATIVE: // sign change
 			  return perform_op("operator-", 0, paras, context);
-			case '!': // Boolean not
+			case T_NOT: // Boolean not
 			  return perform_op("operator!", 0, paras, context);
 		/*
 		 * Control flow
@@ -191,7 +191,7 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 		/*
 		 * Object access
 		 */
-			case ':': // function call
+			case T_CALL: // function call
 				return eh_op_colon(paras, context);
 			case T_CALL_METHOD: {
 				ehval_p obj = eh_execute(paras[0], context);
@@ -215,11 +215,11 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				return eh_op_classmember(op, context);
 			case T_ENUM:
 				return eh_op_enum(op, context);
-			case '[': // array declaration
+			case T_ARRAY_LITERAL: // array declaration
 				return eh_op_array(paras[0], context);
-			case '{': // hash
+			case T_HASH_LITERAL: // hash
 				return eh_op_anonclass(paras[0], context);
-			case ',': // tuple
+			case T_COMMA: // tuple
 				return eh_op_tuple(node, context);
 			case T_RANGE:
 				operand1 = eh_execute(paras[0], context);
@@ -231,7 +231,7 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 		/*
 		 * Binary operators
 		 */
-			case '.':
+			case T_ACCESS:
 				return eh_op_dot(paras, context);
 			case T_ARROW:
 				return perform_op("operator->", 1, paras, context);
@@ -239,37 +239,37 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				return perform_op("operator==", 1, paras, context);
 			case T_NE:
 				return perform_op("operator!=", 1, paras, context);
-			case '>':
+			case T_GREATER:
 				return perform_op("operator>", 1, paras, context);
 			case T_GE:
 				return perform_op("operator>=", 1, paras, context);
-			case '<':
+			case T_LESSER:
 				return perform_op("operator<", 1, paras, context);
 			case T_LE:
 				return perform_op("operator<=", 1, paras, context);
 			case T_COMPARE:
 				return perform_op("operator<=>", 1, paras, context);
-			case '+': // string concatenation, addition
+			case T_ADD:
 				return perform_op("operator+", 1, paras, context);
-			case '-': // subtraction
+			case T_SUBTRACT:
 				return perform_op("operator-", 1, paras, context);
-			case '*':
+			case T_MULTIPLY:
 				return perform_op("operator*", 1, paras, context);
-			case '/':
+			case T_DIVIDE:
 				return perform_op("operator/", 1, paras, context);
-			case '%':
+			case T_MODULO:
 				return perform_op("operator%", 1, paras, context);
-			case '&':
+			case T_BINARY_AND:
 				return perform_op("operator&", 1, paras, context);
-			case '^':
+			case T_BINARY_XOR:
 				return perform_op("operator^", 1, paras, context);
-			case '|':
+			case T_BINARY_OR:
 				return perform_op("operator|", 1, paras, context);
 			case T_LEFTSHIFT:
 				return perform_op("operator<<", 1, paras, context);
 			case T_RIGHTSHIFT:
 				return perform_op("operator>>", 1, paras, context);
-			case '(':
+			case T_GROUPING:
 				// this is to make nested tuples work
 				return eh_execute(paras[0], context);
 			case T_AND: // AND; use short-circuit operation
@@ -299,9 +299,9 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 		/*
 		 * Variable manipulation
 		 */
-			case '=':
+			case T_ASSIGN:
 				return eh_op_set(paras, context);
-			case '$': // variable dereference
+			case T_VARIABLE: // variable dereference
 				return eh_op_dollar(paras[0], context);
 		/*
 		 * Commands
@@ -509,7 +509,7 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 	for(ehval_p node = members_code; ; node = node->get<Node>()->paras[0]) {
 		ehval_p current_member;
 		bool is_last;
-		if(node->get<Node>()->op == ',') {
+		if(node->get<Node>()->op == T_COMMA) {
 			current_member = node->get<Node>()->paras[1];
 			is_last = false;
 		} else {
@@ -526,7 +526,7 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 			for(ehval_p argument = current_member->get<Node>()->paras[1]; ; argument = argument->get<Node>()->paras[1]) {
 				const char *name = argument->is_a<Node>() ? argument->get<Node>()->paras[0]->get<String>() : argument->get<String>();
 				params.push_back(name);
-				if(!argument->is_a<Node>() || argument->get<Node>()->op != ',') {
+				if(!argument->is_a<Node>() || argument->get<Node>()->op != T_COMMA) {
 					break;
 				}
 			}
@@ -585,7 +585,7 @@ ehval_p EHI::eh_op_tuple(ehval_p node, ehcontext_t context) {
 	int nargs = 1;
 	// first determine the size of the tuple
 	for(ehval_p tmp = node;
-		tmp->is_a<Node>() && tmp->get<Node>()->op == ',' && tmp->get<Node>()->op != T_END;
+		tmp->is_a<Node>() && tmp->get<Node>()->op == T_COMMA && tmp->get<Node>()->op != T_END;
 		tmp = tmp->get<Node>()->paras[1], nargs++
 	) {}
 	ehretval_a new_args(nargs);
@@ -594,7 +594,7 @@ ehval_p EHI::eh_op_tuple(ehval_p node, ehcontext_t context) {
 	// now, fill the output tuple
 	for(int i = 0; i < nargs; i++) {
 		Node::t *op = arg_node->get<Node>();
-		if(op->op == ',') {
+		if(op->op == T_COMMA) {
 			new_args[i] = eh_execute(op->paras[0], context);
 			arg_node = arg_node->get<Node>()->paras[1];
 		} else {
@@ -694,18 +694,18 @@ ehval_p EHI::eh_op_given(ehval_p *paras, ehcontext_t context) {
 bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 	Node::t *op = node->get<Node>();
 	switch(op->op) {
-		case '_':
+		case T_ANYTHING:
 			return true;
-		case '@': {
+		case T_MATCH_SET: {
 			const char *name = op->paras[0]->get<String>();
 			ehmember_p member = ehmember_t::make(attributes_t::make_private(), var);
 			context.scope->set_member(name, member, context, this);
 			return true;
 		}
-		case '|': {
+		case T_BINARY_OR: {
 			return match(op->paras[0], var, context) || match(op->paras[1], var, context);
 		}
-		case ',': {
+		case T_COMMA: {
 			if(!var->is_a<Tuple>()) {
 				return false;
 			}
@@ -717,7 +717,7 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 					return false;
 				}
 				Node::t *op = arg_node->get<Node>();
-				if(op->op == ',') {
+				if(op->op == T_COMMA) {
 					if(!match(op->paras[0], t->get(i), context)) {
 						return false;
 					}
@@ -726,7 +726,7 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 				}
 			}
 		}
-		case ':': {
+		case T_CALL: {
 			ehval_p member = eh_execute(op->paras[0], context);
 			ehval_p member_em = member->data();
 			if(!member_em->is_a<Enum_Member>()) {
@@ -744,13 +744,13 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 				return false;
 			}
 			int size = em->size;
-			if(op->paras[1]->get<Node>()->op != '(') {
+			if(op->paras[1]->get<Node>()->op != T_GROUPING) {
 				throw_MiscellaneousError("Invalid argument in Enum.Member match", this);
 			}
 			int nargs = 1;
 			ehval_p args = op->paras[1]->get<Node>()->paras[0];
 			for(ehval_p tmp = args;
-				tmp->is_a<Node>() && tmp->get<Node>()->op == ',' && tmp->get<Node>()->op != T_END;
+				tmp->is_a<Node>() && tmp->get<Node>()->op == T_COMMA && tmp->get<Node>()->op != T_END;
 				tmp = tmp->get<Node>()->paras[1], nargs++
 			);
 			if(nargs != size) {
@@ -759,7 +759,7 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 			ehval_p arg_node = args;
 			for(int i = 0; i < nargs; i++) {
 				Node::t *op = arg_node->get<Node>();
-				if(op->op == ',') {
+				if(op->op == T_COMMA) {
 					if(!match(op->paras[0], var_ei->get(i), context)) {
 						return false;
 					}
@@ -774,7 +774,7 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 			}
 			return true;
 		}
-		case '(': {
+		case T_GROUPING: {
 			return match(op->paras[0], var, context);
 		}
 		default: {
@@ -835,7 +835,7 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcon
 			ehval_p base_var = eh_execute(internal_paras[0], context);
 			return call_method(base_var, "operator->=", Tuple::make(2, args, parent), context);
 		}
-		case '.': {
+		case T_ACCESS: {
 			ehval_p base_var = eh_execute(internal_paras[0], context);
 			if(base_var->is_a<SuperClass>()) {
 				throw_TypeError("Cannot set member on parent class", base_var, this);
@@ -854,7 +854,7 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcon
 			}
 			return rvalue;
 		}
-		case '$': {
+		case T_VARIABLE: {
 			const char *name = internal_paras[0]->get<String>();
 			attributes_t attributes_container = attributes_t::make();
 			if(attributes == nullptr) {
@@ -873,7 +873,7 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcon
 			context.scope->set_member(name, new_member, context, this);
 			return rvalue;
 		}
-		case ',': {
+		case T_COMMA: {
 			ehval_p arg_node = lvalue;
 			for(int i = 0; true; i++) {
 				Node::t *op = arg_node->get<Node>();
@@ -883,7 +883,7 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcon
 				} else {
 					internal_rvalue = nullptr;
 				}
-				if(op->op == ',') {
+				if(op->op == T_COMMA) {
 					set(op->paras[0], internal_rvalue, attributes, context);
 					arg_node = op->paras[1];
 				} else {
@@ -893,9 +893,9 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcon
 			}
 			return rvalue;
 		}
-		case '(':
+		case T_GROUPING:
 			return set(internal_paras[0], rvalue, attributes, context);
-		case '_':
+		case T_ANYTHING:
 			// ignore rvalue
 			return rvalue;
 		case T_NULL:

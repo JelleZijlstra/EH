@@ -1,6 +1,8 @@
 #ifndef EH_NODE_H_
 #define EH_NODE_H_
 
+extern const std::map<int, std::pair<const char *, int> > node_nparas;
+
 EH_CLASS(Node) {
 public:
 	class t {

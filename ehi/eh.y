@@ -26,7 +26,7 @@ EHI *yyget_extra(void *scanner);
 #define ADD_NODE2(opcode, first, second) eh_addnode(opcode, Node::make(first), Node::make(second))
 #define ADD_NODE3(opcode, first, second, third) eh_addnode(opcode, Node::make(first), Node::make(second), Node::make(third))
 #define ADD_NODE4(opcode, first, second, third, fourth) eh_addnode(opcode, Node::make(first), Node::make(second), Node::make(third), Node::make(fourth))
-#define ADD_COMPOUND(opcode, lval, rval, result) ehval_p lvalue = Node::make(lval); result = eh_addnode('=', lvalue, Node::make(eh_addnode(opcode, lvalue, Node::make(rval))))
+#define ADD_COMPOUND(opcode, lval, rval, result) ehval_p lvalue = Node::make(lval); result = eh_addnode(T_ASSIGN, lvalue, Node::make(eh_addnode(opcode, lvalue, Node::make(rval))))
 
 %}
 %pure-parser
@@ -71,7 +71,10 @@ EHI *yyget_extra(void *scanner);
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAY_MEMBER
 %token T_DOUBLEARROW
-%token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS T_IF_ELSE T_NULLARY_ENUM T_ENUM_WITH_ARGUMENTS T_ARRAY_MEMBER_NO_KEY
+%token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS T_IF_ELSE T_NULLARY_ENUM T_ENUM_WITH_ARGUMENTS
+%token T_ARRAY_MEMBER_NO_KEY T_ANYTHING T_GROUPING T_ASSIGN T_ADD T_SUBTRACT T_MULTIPLY T_DIVIDE T_MODULO T_GREATER
+%token T_LESSER T_BINARY_AND T_BINARY_OR T_BINARY_XOR T_BINARY_COMPLEMENT T_NOT T_MATCH_SET T_COMMA T_ARRAY_LITERAL
+%token T_HASH_LITERAL T_CALL T_ACCESS
 %token T_COMMAND T_SHORTPARA T_LONGPARA T_REDIRECT
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
@@ -183,37 +186,37 @@ expression:
 	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
 	| T_BOOL				{ $$ = eh_addnode(T_LITERAL, Bool::make($1)); }
 	| T_FLOAT				{ $$ = eh_addnode(T_LITERAL, Float::make($1)); }
-	| T_VARIABLE			{ $$ = eh_addnode('$', String::make($1)); }
+	| T_VARIABLE			{ $$ = eh_addnode(T_VARIABLE, String::make($1)); }
 	| T_STRING				{ $$ = eh_addnode(T_LITERAL, String::make($1)); }
 	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
 	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
-	| '_'					{ $$ = ADD_NODE0('_'); }
-	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
-	| '~' expression		{ $$ = ADD_NODE1('~', $2); }
-	| '!' expression		{ $$ = ADD_NODE1('!', $2); }
-	| '@' T_VARIABLE		{ $$ = eh_addnode('@', String::make($2)); }
+	| '_'					{ $$ = ADD_NODE0(T_ANYTHING); }
+	| '(' expression ')'	{ $$ = ADD_NODE1(T_GROUPING, $2); }
+	| '~' expression		{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
+	| '!' expression		{ $$ = ADD_NODE1(T_NOT, $2); }
+	| '@' T_VARIABLE		{ $$ = eh_addnode(T_MATCH_SET, String::make($2)); }
 	| expression T_PLUSPLUS	{
 								ehval_p lvalue = Node::make($1);
-								$$ = eh_addnode('=', lvalue, Node::make(eh_addnode('+', lvalue, Integer::make(1))));
+								$$ = eh_addnode(T_ASSIGN, lvalue, Node::make(eh_addnode(T_ADD, lvalue, Integer::make(1))));
 							}
 	| expression T_MINMIN	{
 								ehval_p lvalue = Node::make($1);
-								$$ = eh_addnode('=', lvalue, Node::make(eh_addnode('-', lvalue, Integer::make(1))));
+								$$ = eh_addnode(T_ASSIGN, lvalue, Node::make(eh_addnode(T_SUBTRACT, lvalue, Integer::make(1))));
 							}
 	| expression T_CUSTOMOP expression
 							{ $$ = eh_addnode(T_CUSTOMOP, Node::make($1), String::make($2), Node::make($3)); }
 	| expression '=' expression
-							{ $$ = ADD_NODE2('=', $1, $3); }
+							{ $$ = ADD_NODE2(T_ASSIGN, $1, $3); }
 	| expression T_PLUSEQ expression
-							{ ADD_COMPOUND('+', $1, $3, $$); }
+							{ ADD_COMPOUND(T_ADD, $1, $3, $$); }
 	| expression T_MINEQ expression
-							{ ADD_COMPOUND('-', $1, $3, $$); }
+							{ ADD_COMPOUND(T_SUBTRACT, $1, $3, $$); }
 	| expression T_MULTIPLYEQ expression
-							{ ADD_COMPOUND('*', $1, $3, $$); }
+							{ ADD_COMPOUND(T_MULTIPLY, $1, $3, $$); }
 	| expression T_DIVIDEEQ expression
-							{ ADD_COMPOUND('/', $1, $3, $$); }
+							{ ADD_COMPOUND(T_DIVIDE, $1, $3, $$); }
 	| expression T_MODULOEQ expression
-							{ ADD_COMPOUND('%', $1, $3, $$); }
+							{ ADD_COMPOUND(T_MODULO, $1, $3, $$); }
 	| expression T_ANDEQ expression
 							{ ADD_COMPOUND(T_AND, $1, $3, $$); }
 	| expression T_OREQ expression
@@ -221,11 +224,11 @@ expression:
 	| expression T_XOREQ expression
 							{ ADD_COMPOUND(T_XOR, $1, $3, $$); }
 	| expression T_BINANDEQ expression
-							{ ADD_COMPOUND('&', $1, $3, $$); }
+							{ ADD_COMPOUND(T_BINARY_AND, $1, $3, $$); }
 	| expression T_BINOREQ expression
-							{ ADD_COMPOUND('|', $1, $3, $$); }
+							{ ADD_COMPOUND(T_BINARY_OR, $1, $3, $$); }
 	| expression T_BINXOREQ expression
-							{ ADD_COMPOUND('^', $1, $3, $$); }
+							{ ADD_COMPOUND(T_BINARY_XOR, $1, $3, $$); }
 	| expression T_LEFTSHIFTEQ expression
 							{ ADD_COMPOUND(T_LEFTSHIFT, $1, $3, $$); }
 	| expression T_RIGHTSHIFTEQ expression
@@ -235,15 +238,15 @@ expression:
 	| expression T_DOUBLEARROW expression
 							{ $$ = ADD_NODE2(T_FUNC, $1, $3); }
 	| expression '.' T_VARIABLE
-							{ $$ = eh_addnode('.', Node::make($1), String::make($3)); }
+							{ $$ = eh_addnode(T_ACCESS, Node::make($1), String::make($3)); }
 	| expression ',' expression
-							{ $$ = ADD_NODE2(',', $1, $3); }
+							{ $$ = ADD_NODE2(T_COMMA, $1, $3); }
 	| expression T_EQ expression
 							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| expression '>' expression
-							{ $$ = ADD_NODE2('>', $1, $3); }
+							{ $$ = ADD_NODE2(T_GREATER, $1, $3); }
 	| expression '<' expression
-							{ $$ = ADD_NODE2('<', $1, $3); }
+							{ $$ = ADD_NODE2(T_LESSER, $1, $3); }
 	| expression T_GE expression
 							{ $$ = ADD_NODE2(T_GE, $1, $3); }
 	| expression T_LE expression
@@ -253,21 +256,21 @@ expression:
 	| expression T_COMPARE expression
 	            			{ $$ = ADD_NODE2(T_COMPARE, $1, $3); }
 	| expression '+' expression
-							{ $$ = ADD_NODE2('+', $1, $3); }
+							{ $$ = ADD_NODE2(T_ADD, $1, $3); }
 	| expression '-' expression
-							{ $$ = ADD_NODE2('-', $1, $3); }
+							{ $$ = ADD_NODE2(T_SUBTRACT, $1, $3); }
 	| expression '*' expression
-							{ $$ = ADD_NODE2('*', $1, $3); }
+							{ $$ = ADD_NODE2(T_MULTIPLY, $1, $3); }
 	| expression '/' expression
-							{ $$ = ADD_NODE2('/', $1, $3); }
+							{ $$ = ADD_NODE2(T_DIVIDE, $1, $3); }
 	| expression '%' expression
-							{ $$ = ADD_NODE2('%', $1, $3); }
+							{ $$ = ADD_NODE2(T_MODULO, $1, $3); }
 	| expression '^' expression
-							{ $$ = ADD_NODE2('^', $1, $3); }
+							{ $$ = ADD_NODE2(T_BINARY_XOR, $1, $3); }
 	| expression '|' expression
-							{ $$ = ADD_NODE2('|', $1, $3); }
+							{ $$ = ADD_NODE2(T_BINARY_OR, $1, $3); }
 	| expression '&' expression
-							{ $$ = ADD_NODE2('&', $1, $3); }
+							{ $$ = ADD_NODE2(T_BINARY_AND, $1, $3); }
 	| expression T_AND expression
 							{ $$ = ADD_NODE2(T_AND, $1, $3); }
 	| expression T_OR expression
@@ -281,16 +284,16 @@ expression:
 	| expression T_RIGHTSHIFT expression
 							{ $$ = ADD_NODE2(T_RIGHTSHIFT, $1, $3); }
 	| expression %prec ':' expression
-							{ $$ = ADD_NODE2(':', $1, $2); }
+							{ $$ = ADD_NODE2(T_CALL, $1, $2); }
 	| '(' '$' command ')'	{ $$ = $3; }
-	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
-	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
+	| '[' arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $2); }
+	| '{' anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $2); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END
 							{
-								$$ = ADD_NODE2('=',
-									eh_addnode('$', String::make($2)),
+								$$ = ADD_NODE2(T_ASSIGN,
+									eh_addnode(T_VARIABLE, String::make($2)),
 									ADD_NODE2(T_FUNC, $4, $6)
 								);
 							}
@@ -324,8 +327,8 @@ expression:
 							{ $$ = ADD_NODE2(T_CLASS_MEMBER, $1, $2); }
 	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END
 							{
-								$$ = ADD_NODE2('=',
-										ADD_NODE2(T_CLASS_MEMBER, $1, eh_addnode('$', String::make($2))),
+								$$ = ADD_NODE2(T_ASSIGN,
+										ADD_NODE2(T_CLASS_MEMBER, $1, eh_addnode(T_VARIABLE, String::make($2))),
 										ADD_NODE2(T_FUNC, $4, $6)
 								);
 							}
@@ -339,22 +342,22 @@ para_expr:
 	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
 	| T_BOOL				{ $$ = eh_addnode(T_LITERAL, Bool::make($1)); }
 	| T_FLOAT				{ $$ = eh_addnode(T_LITERAL, Float::make($1)); }
-	| T_VARIABLE			{ $$ = eh_addnode('$', String::make($1)); }
+	| T_VARIABLE			{ $$ = eh_addnode(T_VARIABLE, String::make($1)); }
 	| T_STRING				{ $$ = eh_addnode(T_LITERAL, String::make($1)); }
 	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
 	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
-	| '_'					{ $$ = ADD_NODE0('_'); }
-	| '(' expression ')'	{ $$ = ADD_NODE1('(', $2); }
-	| '~' para_expr			{ $$ = ADD_NODE1('~', $2); }
-	| '!' para_expr			{ $$ = ADD_NODE1('!', $2); }
+	| '_'					{ $$ = ADD_NODE0(T_ANYTHING); }
+	| '(' expression ')'	{ $$ = ADD_NODE1(T_GROUPING, $2); }
+	| '~' para_expr			{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
+	| '!' para_expr			{ $$ = ADD_NODE1(T_NOT, $2); }
 	| para_expr T_ARROW para_expr
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| para_expr '.' T_VARIABLE
-							{ $$ = eh_addnode('.', Node::make($1), String::make($3)); }
+							{ $$ = eh_addnode(T_ACCESS, Node::make($1), String::make($3)); }
 	| para_expr T_EQ para_expr
 							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| para_expr '<' para_expr
-							{ $$ = ADD_NODE2('<', $1, $3); }
+							{ $$ = ADD_NODE2(T_LESSER, $1, $3); }
 	| para_expr T_GE para_expr
 							{ $$ = ADD_NODE2(T_GE, $1, $3); }
 	| para_expr T_LE para_expr
@@ -364,19 +367,19 @@ para_expr:
 	| para_expr T_COMPARE para_expr
 	            			{ $$ = ADD_NODE2(T_COMPARE, $1, $3); }
 	| para_expr '+' para_expr
-							{ $$ = ADD_NODE2('+', $1, $3); }
+							{ $$ = ADD_NODE2(T_ADD, $1, $3); }
 	| para_expr '*' para_expr
-							{ $$ = ADD_NODE2('*', $1, $3); }
+							{ $$ = ADD_NODE2(T_MULTIPLY, $1, $3); }
 	| para_expr '/' para_expr
-							{ $$ = ADD_NODE2('/', $1, $3); }
+							{ $$ = ADD_NODE2(T_DIVIDE, $1, $3); }
 	| para_expr '%' para_expr
-							{ $$ = ADD_NODE2('%', $1, $3); }
+							{ $$ = ADD_NODE2(T_MODULO, $1, $3); }
 	| para_expr '^' para_expr
-							{ $$ = ADD_NODE2('^', $1, $3); }
+							{ $$ = ADD_NODE2(T_BINARY_XOR, $1, $3); }
 	| para_expr '|' para_expr
-							{ $$ = ADD_NODE2('|', $1, $3); }
+							{ $$ = ADD_NODE2(T_BINARY_OR, $1, $3); }
 	| para_expr '&' para_expr
-							{ $$ = ADD_NODE2('&', $1, $3); }
+							{ $$ = ADD_NODE2(T_BINARY_AND, $1, $3); }
 	| para_expr T_AND para_expr
 							{ $$ = ADD_NODE2(T_AND, $1, $3); }
 	| para_expr T_OR para_expr
@@ -385,7 +388,7 @@ para_expr:
 							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
 	| para_expr T_RANGE para_expr
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
-	| '[' arraylist ']'		{ $$ = ADD_NODE1('[', $2); }
+	| '[' arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $2); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_GIVEN expression T_SEPARATOR separators caselist T_END
@@ -393,7 +396,7 @@ para_expr:
 	| T_MATCH expression T_SEPARATOR separators caselist T_END
 							{ $$ = ADD_NODE2(T_MATCH, $2, $5); }
 	| '(' '$' command ')'	{ $$ = $3; }
-	| '{' anonclasslist '}'	{ $$ = ADD_NODE1('{', $2); }
+	| '{' anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $2); }
 	;
 
 /* Commands */
@@ -402,7 +405,7 @@ command:
 	;
 
 paralist:
-	para paralist			{ $$ = ADD_NODE2(',', $1, $2); }
+	para paralist			{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
@@ -429,7 +432,7 @@ bareword_or_string:
 /* If statements */
 elseif_clauses:
 	elseif_clause elseif_clauses
-							{ $$ = ADD_NODE2(',', $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
@@ -441,7 +444,7 @@ elseif_clause:
 /* Try-catch */
 catch_clauses:
 	catch_clause catch_clauses
-							{ $$ = ADD_NODE2(',', $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
@@ -455,15 +458,15 @@ catch_clause:
 /* Array literals */
 arraylist:
 	arraylist_i arraymember ','
-							{ $$ = ADD_NODE2(',', $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
 	| arraylist_i arraymember
-							{ $$ = ADD_NODE2(',', $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 arraylist_i:
 	arraylist_i arraymember ','
-							{ $$ = ADD_NODE2(',', $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
@@ -476,15 +479,15 @@ arraymember:
 /* Hash literals */
 anonclasslist:
 	anonclasslist_i anonclassmember ','
-							{ $$ = ADD_NODE2(',', $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
 	| anonclasslist_i anonclassmember
-							{ $$ = ADD_NODE2(',', $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 anonclasslist_i:
 	anonclasslist_i anonclassmember ','
-							{ $$ = ADD_NODE2(',', $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
@@ -502,7 +505,7 @@ parglist:
 
 /* Switch etcetera */
 caselist:
-	acase caselist			{ $$ = ADD_NODE2(',', $1, $2); }
+	acase caselist			{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
@@ -532,7 +535,7 @@ attributelist_inner:
 enum_list:
 	enum_member				{ $$ = $1; }
 	| enum_list ',' enum_member
-							{ $$ = ADD_NODE2(',', $1, $3); }
+							{ $$ = ADD_NODE2(T_COMMA, $1, $3); }
 	;
 
 enum_member:
@@ -544,6 +547,6 @@ enum_member:
 enum_arg_list:
 	T_VARIABLE				{ $$ = eh_addnode(T_LITERAL, String::make($1)); }
 	| T_VARIABLE ',' enum_arg_list
-							{ $$ = eh_addnode(',', String::make($1), Node::make($3)); }
+							{ $$ = eh_addnode(T_COMMA, String::make($1), Node::make($3)); }
 	;
 %%

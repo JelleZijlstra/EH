@@ -122,7 +122,7 @@ typedef enum functype_enum {
 /*
  * Parser and interpreter structs
  */
-#include "Node.hpp"
+#include "std_lib/Node.hpp"
 
 /*
  * Other global functions

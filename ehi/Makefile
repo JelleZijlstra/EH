@@ -2,8 +2,8 @@ CC = clang++
 CCBASICFLAGS = -ggdb -fPIC -c -std=c++11 -stdlib=libc++
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic -Wextra -Wno-unused-parameter
 LDFLAGS = -std=c++11 -stdlib=libc++
-LIBCLASSES = ArgumentError Array Binding Bool ConstError Enum Exception File Float Function GarbageCollector GlobalObject Hash Integer LoopError MiscellaneousError NameError Null Object Range String SuperClass SyntaxError Tuple TypeError UnknownCommandError EmptyIterator FixedArray Random Map VisibilityError
-SOURCES = eh.flex.cpp eh.bison.cpp eh_tree.cpp eh_error.cpp ehi.cpp eh_types.cpp eh_files.cpp eh_optimize.cpp decompile.cpp
+LIBCLASSES = ArgumentError Array Binding Bool ConstError Enum Exception File Float Function GarbageCollector GlobalObject Hash Integer LoopError MiscellaneousError NameError Node Null Object Range String SuperClass SyntaxError Tuple TypeError UnknownCommandError EmptyIterator FixedArray Random Map VisibilityError
+SOURCES = eh.flex.cpp eh.bison.cpp eh_error.cpp ehi.cpp eh_types.cpp eh_files.cpp eh_optimize.cpp
 COMPILER = $(SOURCES) eh_compiler.cpp
 COMPILER_O = $(COMPILER:.cpp=.o)
 INTERPRETER = $(SOURCES) eh_libcmds.cpp eh_interpreter.cpp $(patsubst %, std_lib/%.cpp, $(LIBCLASSES))

@@ -9,7 +9,7 @@
  */
 #include "eh.hpp"
 #include "eh.bison.hpp"
-#include "eh_tree.hpp"
+#include "std_lib/Node.hpp"
 #include "std_lib/Integer.hpp"
 #include "std_lib/String.hpp"
 #include "std_lib/Float.hpp"

@@ -4,7 +4,7 @@
  * Optimize the AST of an EH program.
  */
 #include "eh.hpp"
-#include "eh_tree.hpp"
+#include "std_lib/Node.hpp"
 
 // Don't think this would actually help; problem is that we need to put the method name in an ehval_p, which costs memory
 #define UNARY_OP(op, method) case op: \

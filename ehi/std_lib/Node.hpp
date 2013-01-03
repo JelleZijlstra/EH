@@ -1,4 +1,6 @@
-// Operator
+#ifndef EH_NODE_H_
+#define EH_NODE_H_
+
 EH_CLASS(Node) {
 public:
 	class t {
@@ -39,3 +41,11 @@ public:
 		return static_cast<ehval_t *>(new Node(val));
 	}
 };
+
+Node::t *eh_addnode(int opcode);
+Node::t *eh_addnode(int opcode, ehval_p first);
+Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second);
+Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third);
+Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval_p fourth);
+
+#endif /* EH_NODE_H_ */

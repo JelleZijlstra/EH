@@ -1,10 +1,11 @@
 /*
- * decompile.cpp
- * Decompile a piece of EH AST into EH code.
+ * Node
+ * Represent a node of the AST.
  */
 #include <sstream>
 
-#include "eh.hpp"
+#include "std_lib_includes.hpp"
+#include "Node.hpp"
 
 static void add_end(std::ostringstream &out, int levels) {
 	out << "\n";
@@ -399,4 +400,34 @@ std::string Node::decompile(int level) {
 			break;
 	}
 	return out.str();
+}
+
+Node::t *eh_addnode(int opcode) {
+	return new Node::t(opcode, 0);
+}
+Node::t *eh_addnode(int opcode, ehval_p first) {
+	Node::t *op = new Node::t(opcode, 1);
+	op->paras[0] = first;
+	return op;
+}
+Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second) {
+	Node::t *op = new Node::t(opcode, 2);
+	op->paras[0] = first;
+	op->paras[1] = second;
+	return op;
+}
+Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third) {
+	Node::t *op = new Node::t(opcode, 3);
+	op->paras[0] = first;
+	op->paras[1] = second;
+	op->paras[2] = third;
+	return op;
+}
+Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval_p fourth) {
+	Node::t *op = new Node::t(opcode, 4);
+	op->paras[0] = first;
+	op->paras[1] = second;
+	op->paras[2] = third;
+	op->paras[3] = fourth;
+	return op;
 }

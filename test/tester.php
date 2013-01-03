@@ -94,6 +94,9 @@ array_shift($argv);
 if(isset($argv[0]) && $argv[0] === '--valgrind') {
 	array_shift($argv);
 	TestCase::$executer = 'valgrind -q --leak-check=full /usr/bin/ehi';
+} else if(isset($argv[0]) && $argv[0] === '-O') {
+	array_shift($argv);
+	TestCase::$executer = '/usr/bin/ehi -O';
 } else {
 	TestCase::$executer = '/usr/bin/ehi';
 }
@@ -110,7 +113,7 @@ if(count($argv) === 0) {
 	while(($file = trim(fgets($testfiles))) !== '') {
 		TestCase::make($file);
 	}
-	fclose($testfiles);	
+	fclose($testfiles);
 } else {
 	foreach($argv as $argument) {
 		TestCase::make($argument);

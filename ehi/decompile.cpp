@@ -11,6 +11,47 @@ static void add_end(std::ostringstream &out, int levels) {
 	add_tabs(out, levels);
 	out << "end";
 }
+static void decompile_try_catch(std::ostringstream &out, ehval_p *paras, int level) {
+	out << "try\n";
+	add_tabs(out, level + 1);
+	out << paras[0]->decompile(level + 1);
+
+	Node::t *catch_op = paras[1]->get<Node>();
+	for(; catch_op->op != T_END; catch_op = catch_op->paras[1]->get<Node>()) {
+		Node::t *catch_block = catch_op->paras[0]->get<Node>();
+		out << "\n";
+		add_tabs(out, level);
+		if(catch_block->op == T_CATCH) {
+			out << "catch\n";
+			add_tabs(out, level + 1);
+			out << catch_block->paras[0]->decompile(level + 1);
+		} else {
+			// conditional catch (T_CATCH_IF)
+			out << "catch if " << catch_block->paras[0]->decompile(level) << "\n";
+			add_tabs(out, level + 1);
+			out << catch_block->paras[1]->decompile(level + 1);
+		}
+	}
+}
+static void decompile_match_like(std::ostringstream &out, const char *name, ehval_p *paras, int level) {
+	out << name << " " << paras[0]->decompile(level);
+	for(ehval_p node = paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
+		out << "\n";
+		add_tabs(out, level + 1);
+		Node::t *inner_op = node->get<Node>()->paras[0]->get<Node>();
+		if(inner_op->op == T_DEFAULT) {
+			out << "default\n";
+			add_tabs(out, level + 2);
+			out << inner_op->paras[0]->decompile(level + 2);
+		} else {
+			out << "case " << inner_op->paras[0]->decompile(level + 1) << "\n";
+			add_tabs(out, level + 2);
+			out << inner_op->paras[1]->decompile(level + 2);
+		}
+	}
+	add_end(out, level);
+}
+
 std::string Node::decompile(int level) {
 	std::ostringstream out;
 	Node::t *op = value;
@@ -139,17 +180,16 @@ std::string Node::decompile(int level) {
 				op->paras[1]->get<String>() << " " <<
 				op->paras[2]->decompile(level);
 			break;
-		case T_SEPARATOR:
-			if(op->nparas != 0) {
-				out << op->paras[0]->decompile(level);
-				ehval_p r = op->paras[1];
-				if(!r->is_a<Node>() || r->get<Node>()->op != T_SEPARATOR || r->get<Node>()->nparas != 0) {
-					out << "\n";
-					add_tabs(out, level);
-					out << op->paras[1]->decompile(level);
-				}
+		case T_SEPARATOR: {
+			out << op->paras[0]->decompile(level);
+			ehval_p r = op->paras[1];
+			if(!r->is_a<Node>() || r->get<Node>()->op != T_SEPARATOR || r->get<Node>()->op != T_END) {
+				out << "\n";
+				add_tabs(out, level);
+				out << op->paras[1]->decompile(level);
 			}
 			break;
+		}
 		case T_END:
 			// ignore, used to end lists
 			break;
@@ -160,26 +200,20 @@ std::string Node::decompile(int level) {
 			out << "scope";
 			break;
 		case T_RET:
-			if(op->nparas == 0) {
-				out << "ret";
-			} else {
-				out << "ret " << op->paras[0]->decompile(level);
-			}
+			out << "ret " << op->paras[0]->decompile(level);
 			break;
 		case T_CLASSMEMBER:
 			out << op->paras[0]->decompile(level) << op->paras[1]->decompile(level);
 			break;
 		case T_ATTRIBUTE:
-			if(op->nparas != 0) {
-				out << op->paras[0]->decompile(level) << " " << op->paras[1]->decompile(level);
-			}
+			out << op->paras[0]->decompile(level) << " " << op->paras[1]->decompile(level);
 			break;
 		case T_IF:
 			out << "if " << op->paras[0]->decompile(level) << "\n";
 			add_tabs(out, level + 1);
 			out << op->paras[1]->decompile(level + 1);
 			if(op->nparas > 2) {
-				for(Node::t *iop = op->paras[2]->get<Node>(); iop->nparas != 0; iop = iop->paras[1]->get<Node>()) {
+				for(Node::t *iop = op->paras[2]->get<Node>(); iop->op != T_END; iop = iop->paras[1]->get<Node>()) {
 					ehval_p *current_block = iop->paras[0]->get<Node>()->paras;
 					out << "\n";
 					add_tabs(out, level);
@@ -203,38 +237,19 @@ std::string Node::decompile(int level) {
 			out << op->paras[1]->decompile(level + 1);
 			add_end(out, level);
 			break;
-		case T_TRY: {
-			out << "try\n";
-			add_tabs(out, level + 1);
-			out << op->paras[0]->decompile(level + 1);
-
-			Node::t *catch_op = op->paras[1]->get<Node>();
-			for(; catch_op->nparas != 0; catch_op = catch_op->paras[1]->get<Node>()) {
-				Node::t *catch_block = catch_op->paras[0]->get<Node>();
-				out << "\n";
-				add_tabs(out, level);
-				if(catch_block->nparas == 1) {
-					out << "catch\n";
-					add_tabs(out, level + 1);
-					out << catch_block->paras[0]->decompile(level + 1);
-				} else {
-					// conditional catch
-					out << "catch if " << catch_block->paras[0]->decompile(level) << "\n";
-					add_tabs(out, level + 1);
-					out << catch_block->paras[1]->decompile(level + 1);
-				}
-			}
-
-			if(op->nparas == 3) {
-				out << "\n";
-				add_tabs(out, level);
-				out << "finally\n";
-				add_tabs(out, level + 1);
-				out << op->paras[2]->decompile(level + 1);
-			}
+		case T_TRY:
+			decompile_try_catch(out, op->paras, level);
 			add_end(out, level);
 			break;
-		}
+		case T_TRY_FINALLY:
+			decompile_try_catch(out, op->paras, level);
+			out << "\n";
+			add_tabs(out, level);
+			out << "finally\n";
+			add_tabs(out, level + 1);
+			out << op->paras[2]->decompile(level + 1);
+			add_end(out, level);
+			break;
 		case T_CLASS:
 			if(op->nparas == 2) {
 				out << "class " << op->paras[0]->get<String>() << "\n";
@@ -253,43 +268,22 @@ std::string Node::decompile(int level) {
 			out << op->paras[1]->decompile(level + 1);
 			add_end(out, level);
 			break;
+		case T_SWITCH:
+			decompile_match_like(out, "switch", op->paras, level);
+			break;
 		case T_MATCH:
-			out << "match " << op->paras[0]->decompile(level);
-			for(ehval_p node = op->paras[1]; node->get<Node>()->nparas != 0; node = node->get<Node>()->paras[1]) {
-				out << "\n";
-				add_tabs(out, level + 1);
-				Node::t *inner_op = node->get<Node>()->paras[0]->get<Node>();
-				if(inner_op->nparas == 1) {
-					out << "default\n";
-					add_tabs(out, level + 2);
-					out << inner_op->paras[0]->decompile(level + 2);
-				} else {
-					out << "case " << inner_op->paras[0]->decompile(level + 1) << "\n";
-					add_tabs(out, level + 2);
-					out << inner_op->paras[1]->decompile(level + 2);
-				}
-			}
-			add_end(out, level);
+			decompile_match_like(out, "match", op->paras, level);
 			break;
 		case T_GIVEN:
-			out << "given " << op->paras[0]->decompile(level);
-			for(ehval_p node = op->paras[1]; node->get<Node>()->nparas != 0; node = node->get<Node>()->paras[1]) {
-				out << "\n";
-				add_tabs(out, level + 1);
-				Node::t *inner_op = node->get<Node>()->paras[0]->get<Node>();
-				if(inner_op->nparas == 1) {
-					out << "default\n";
-					add_tabs(out, level + 2);
-					out << inner_op->paras[0]->decompile(level + 2);
-				} else {
-					out << "case " << inner_op->paras[0]->decompile(level + 1) << "\n";
-					add_tabs(out, level + 2);
-					out << inner_op->paras[1]->decompile(level + 2);
-				}
-			}
+			decompile_match_like(out, "given", op->paras, level);
+			break;
+		case T_FOR:
+			out << "for " << op->paras[0]->decompile(level) << "\n";
+			add_tabs(out, level + 1);
+			out << op->paras[1]->decompile(level + 1);
 			add_end(out, level);
 			break;
-		case T_IN:
+		case T_FOR_IN:
 			out << "for " << op->paras[0]->decompile(level) << " in " << op->paras[1]->decompile(level) << "\n";
 			add_tabs(out, level + 1);
 			out << op->paras[2]->decompile(level + 1);
@@ -297,13 +291,13 @@ std::string Node::decompile(int level) {
 			break;
 		case '[':
 			out << "[";
-			for(ehval_p n = op->paras[0]; n->get<Node>()->nparas != 0; n = n->get<Node>()->paras[0]) {
+			for(ehval_p n = op->paras[0]; n->get<Node>()->op != T_END; n = n->get<Node>()->paras[0]) {
 				Node::t *member_op = n->get<Node>()->paras[1]->get<Node>();
 				out << member_op->paras[0]->decompile(level);
 				if(member_op->nparas != 1) {
 					out << " => " << member_op->paras[1]->decompile(level);
 				}
-				if(n->get<Node>()->paras[0]->get<Node>()->nparas != 0) {
+				if(n->get<Node>()->paras[0]->get<Node>()->op != T_END) {
 					out << ", ";
 				}
 			}
@@ -311,22 +305,17 @@ std::string Node::decompile(int level) {
 			break;
 		case '@':
 			out << "@";
-			if(op->nparas == 1) {
-				out << op->paras[0]->get<String>();
-			} else {
-				out << op->paras[0]->decompile(level) << " ";
-				out << op->paras[1]->decompile(level);
-			}
+			out << op->paras[0]->get<String>();
 			break;
 		case '{':
 			out << "{";
-			for(ehval_p n = op->paras[0]; n->get<Node>()->nparas != 0; n = n->get<Node>()->paras[0]) {
+			for(ehval_p n = op->paras[0]; n->get<Node>()->op != T_END; n = n->get<Node>()->paras[0]) {
 				Node::t *member_op = n->get<Node>()->paras[1]->get<Node>();
 				out << member_op->paras[0]->decompile(level);
 				if(member_op->nparas != 1) {
 					out << ": " << member_op->paras[1]->decompile(level);
 				}
-				if(n->get<Node>()->paras[0]->get<Node>()->nparas != 0) {
+				if(n->get<Node>()->paras[0]->get<Node>()->op != T_END) {
 					out << ", ";
 				}
 			}
@@ -334,20 +323,16 @@ std::string Node::decompile(int level) {
 			break;
 		case T_COMMAND:
 			out << "$" << op->paras[0]->get<String>();
-			for(ehval_p node = op->paras[1]; node->get<Node>()->nparas != 0; node = node->get<Node>()->paras[1]) {
+			for(ehval_p node = op->paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
 				Node::t *node2 = node->get<Node>()->paras[0]->get<Node>();
 				switch(node2->op) {
 					case T_SHORTPARA:
 						out << " -" << node2->paras[0]->decompile(level);
-						if(node2->nparas == 2) {
-							out << "=" << node2->paras[1]->decompile(level);
-						}
+						out << "=" << node2->paras[1]->decompile(level);
 						break;
 					case T_LONGPARA:
 						out << " --" << node2->paras[0]->decompile(level);
-						if(node2->nparas == 2) {
-							out << "=" << node2->paras[1]->decompile(level);
-						}
+						out << "=" << node2->paras[1]->decompile(level);
 						break;
 					case T_REDIRECT:
 						out << " > " << node2->paras[0]->decompile(level);

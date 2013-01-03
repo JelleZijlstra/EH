@@ -232,10 +232,13 @@ private:
 	bool match(ehval_p node, ehval_p var, ehcontext_t context);
 	ehval_p eh_op_given(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_if(Node::t *op, ehcontext_t context);
-	ehval_p eh_op_in(Node::t *op, ehcontext_t context);
+	ehval_p do_for_loop(ehval_p iteree_block, ehval_p body_block, int op, ehval_p set_block, ehcontext_t context);
+	ehval_p eh_op_for(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_for_in(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_set(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_switch(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_try(Node::t *op, ehcontext_t context);
+	ehval_p eh_op_try(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_try_finally(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_tuple(ehval_p node, ehcontext_t context);
 	ehval_p eh_op_while(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_try_catch(ehval_p try_block, ehval_p catch_blocks, ehcontext_t context);

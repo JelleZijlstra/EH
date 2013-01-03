@@ -75,7 +75,7 @@ func: ()
 	end
 end
 func: ()
-	$test --"foo"=3 --"bar" -"adf" -"kjkl"={"foo": "baz"}
+	$test --"foo"=3 --"bar"=true -"adf"=true -"kjkl"={"foo": "baz"}
 
 end
 func: f

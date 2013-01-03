@@ -145,8 +145,10 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				return eh_op_if(op, context);
 			case T_WHILE:
 				return eh_op_while(paras, context);
-			case T_IN:
-				return eh_op_in(op, context);
+			case T_FOR:
+				return eh_op_for(paras, context);
+			case T_FOR_IN:
+				return eh_op_for_in(paras, context);
 			case T_SWITCH: // switch statements
 				ret = eh_op_switch(paras, context);
 				// incremented in the eh_op_switch function
@@ -160,7 +162,9 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 		 * Exceptions
 		 */
 			case T_TRY:
-				return eh_op_try(op, context);
+				return eh_op_try(paras, context);
+			case T_TRY_FINALLY:
+				return eh_op_try_finally(paras, context);
 		/*
 		 * Miscellaneous
 		 */
@@ -332,13 +336,7 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, ehcontext_t context) 
 		switch(node2->get<Node>()->op) {
 			case T_SHORTPARA: {
 				// short paras: set each short-form option to the same thing
-				if(node2->get<Node>()->nparas == 2) {
-					// set to something else if specified
-					value_r = eh_execute(node_paras[1], context);
-				} else {
-					// set to true by default
-					value_r = Bool::make(true);
-				}
+				value_r = eh_execute(node_paras[1], context);
 				const char *shorts = node_paras[0]->get<String>();
 				for(int i = 0, len = strlen(shorts); i < len; i++) {
 					char index[2];
@@ -348,16 +346,10 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, ehcontext_t context) 
 				}
 				break;
 			}
-			case T_LONGPARA: {
+			case T_LONGPARA:
 				// long-form paras
-				const char *index = node_paras[0]->get<String>();
-				if(node2->get<Node>()->nparas == 1) {
-					paras->string_indices[index] = Bool::make(true);
-				} else {
-					paras->string_indices[index] = eh_execute(node_paras[1], context);
-				}
+				paras->string_indices[node_paras[0]->get<String>()] = eh_execute(node_paras[1], context);
 				break;
-			}
 			case T_REDIRECT:
 				paras->string_indices[">"] = eh_execute(node_paras[0], context);
 				break;
@@ -417,15 +409,7 @@ ehval_p EHI::eh_op_while(ehval_p *paras, ehcontext_t context) {
 	inloop--;
 	return ret;
 }
-ehval_p EHI::eh_op_in(Node::t *op, ehcontext_t context) {
-	ehval_p iteree_block, body_block;
-	if(op->nparas == 3) {
-		iteree_block = op->paras[1];
-		body_block = op->paras[2];
-	} else {
-		iteree_block = op->paras[0];
-		body_block = op->paras[1];
-	}
+ehval_p EHI::do_for_loop(ehval_p iteree_block, ehval_p body_block, int op, ehval_p set_block, ehcontext_t context) {
 	ehval_p iteree = eh_execute(iteree_block, context);
 	ehval_p iterator = call_method(iteree, "getIterator", nullptr, context);
 	inloop++;
@@ -435,15 +419,21 @@ ehval_p EHI::eh_op_in(Node::t *op, ehcontext_t context) {
 			break;
 		}
 		ehval_p next = call_method(iterator, "next", nullptr, context);
-		if(op->nparas == 3) {
+		if(op == T_FOR_IN) {
 			attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
-			set(op->paras[0], next, &attributes, context);
+			set(set_block, next, &attributes, context);
 		}
 		ehval_p ret = eh_execute(body_block, context);
 		LOOPCHECKS;
 	}
 	inloop--;
 	return iteree;
+}
+ehval_p EHI::eh_op_for(ehval_p *paras, ehcontext_t context) {
+	return do_for_loop(paras[0], paras[1], T_FOR, nullptr, context);
+}
+ehval_p EHI::eh_op_for_in(ehval_p *paras, ehcontext_t context) {
+	return do_for_loop(paras[1], paras[2], T_FOR_IN, paras[0], context);
 }
 void EHI::eh_op_break(Node::t *op, ehcontext_t context) {
 	ehval_p level_v = eh_execute(op->paras[0], context);
@@ -942,23 +932,24 @@ ehval_p EHI::eh_op_dot(ehval_p *paras, ehcontext_t context) {
 		return base_var->get_property(accessor, context, this);
 	}
 }
-ehval_p EHI::eh_op_try(Node::t *op, ehcontext_t context) {
-	ehval_p try_block = op->paras[0];
-	ehval_p catch_blocks = op->paras[1];
-	if(op->nparas == 2) {
-		return eh_try_catch(try_block, catch_blocks, context);
-	} else {
-		ehval_p finally_block = op->paras[2];
-		ehval_p ret;
-		try {
-			ret = eh_try_catch(try_block, catch_blocks, context);
-		} catch(...) {
-			eh_always_execute(finally_block, context);
-			throw;
-		}
+ehval_p EHI::eh_op_try_finally(ehval_p *paras, ehcontext_t context) {
+	ehval_p try_block = paras[0];
+	ehval_p catch_blocks = paras[1];
+	ehval_p finally_block = paras[2];
+	ehval_p ret;
+	try {
+		ret = eh_try_catch(try_block, catch_blocks, context);
+	} catch(...) {
 		eh_always_execute(finally_block, context);
-		return ret;
+		throw;
 	}
+	eh_always_execute(finally_block, context);
+	return ret;
+}
+ehval_p EHI::eh_op_try(ehval_p *paras, ehcontext_t context) {
+	ehval_p try_block = paras[0];
+	ehval_p catch_blocks = paras[1];
+	return eh_try_catch(try_block, catch_blocks, context);
 }
 ehval_p EHI::eh_try_catch(ehval_p try_block, ehval_p catch_blocks, ehcontext_t context) {
 	Node::t *catch_op = catch_blocks->get<Node>();
@@ -975,10 +966,10 @@ ehval_p EHI::eh_try_catch(ehval_p try_block, ehval_p catch_blocks, ehcontext_t c
 		context.scope->set_member("exception", exception_member, context, this);
 		for(; catch_op->op != T_END; catch_op = catch_op->paras[1]->get<Node>()) {
 			Node::t *catch_block = catch_op->paras[0]->get<Node>();
-			if(catch_block->nparas == 1) {
+			if(catch_block->op == T_CATCH) {
 				return eh_execute(catch_block->paras[0], context);
 			} else {
-				// conditional catch
+				// conditional catch (T_CATCH_IF)
 				ehval_p decider = toBool(eh_execute(catch_block->paras[0], context), context);
 				if(decider->get<Bool>()) {
 					return eh_execute(catch_block->paras[1], context);

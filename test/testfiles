@@ -288,3 +288,4 @@ Function.eh
 bind_crash.eh
 empty.eh
 match_default.eh
+decompile_rare.eh

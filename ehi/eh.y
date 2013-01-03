@@ -71,7 +71,7 @@ EHI *yyget_extra(void *scanner);
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
 %token T_DOUBLEARROW
-%token T_CALL_METHOD
+%token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN
 %token T_COMMAND T_SHORTPARA T_LONGPARA T_REDIRECT
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
@@ -313,13 +313,13 @@ expression:
 	| T_TRY statement_list catch_clauses T_END
 							{ $$ = ADD_NODE2(T_TRY, $2, $3); }
 	| T_TRY statement_list catch_clauses T_FINALLY statement_list T_END
-							{ $$ = ADD_NODE3(T_TRY, $2, $3, $5); }
+							{ $$ = ADD_NODE3(T_TRY_FINALLY, $2, $3, $5); }
 	| T_WHILE expression T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_WHILE, $2, $4); }
 	| T_FOR expression T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE2(T_IN, $2, $4); }
+							{ $$ = ADD_NODE2(T_FOR, $2, $4); }
 	| T_FOR expression T_IN expression T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE3(T_IN, $2, $4, $6); }
+							{ $$ = ADD_NODE3(T_FOR_IN, $2, $4, $6); }
 	| attributelist expression %prec T_ATTRIBUTE
 							{ $$ = ADD_NODE2(T_CLASSMEMBER, $1, $2); }
 	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END
@@ -411,9 +411,9 @@ para:
 	| T_MINMIN bareword_or_string '=' para_expr
 							{ $$ = eh_addnode(T_LONGPARA, String::make($2), Node::make($4)); }
 	| T_MINMIN bareword_or_string
-							{ $$ = eh_addnode(T_LONGPARA, String::make($2)); }
+							{ $$ = eh_addnode(T_LONGPARA, String::make($2), Bool::make(true)); }
 	| '-' bareword_or_string
-							{ $$ = eh_addnode(T_SHORTPARA, String::make($2)); }
+							{ $$ = eh_addnode(T_SHORTPARA, String::make($2), Bool::make(true)); }
 	| '-' bareword_or_string '=' para_expr
 							{ $$ = eh_addnode(T_SHORTPARA, String::make($2), Node::make($4)); }
 	| '>' bareword_or_string
@@ -449,7 +449,7 @@ catch_clause:
 	T_CATCH T_SEPARATOR statement_list
 							{ $$ = ADD_NODE1(T_CATCH, $3); }
 	| T_CATCH T_IF expression T_SEPARATOR statement_list
-							{ $$ = ADD_NODE2(T_CATCH, $3, $5); }
+							{ $$ = ADD_NODE2(T_CATCH_IF, $3, $5); }
 	;
 
 /* Array literals */

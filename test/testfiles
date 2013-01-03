@@ -289,3 +289,4 @@ bind_crash.eh
 empty.eh
 match_default.eh
 decompile_rare.eh
+decompile_enum.eh

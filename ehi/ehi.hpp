@@ -233,7 +233,7 @@ private:
 	ehval_p eh_op_match(ehval_p *paras, ehcontext_t context);
 	bool match(ehval_p node, ehval_p var, ehcontext_t context);
 	ehval_p eh_op_given(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_if(Node::t *op, ehcontext_t context);
+	ehval_p eh_op_if(int token, ehval_p *paras, ehcontext_t context);
 	ehval_p do_for_loop(ehval_p iteree_block, ehval_p body_block, int op, ehval_p set_block, ehcontext_t context);
 	ehval_p eh_op_for(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_for_in(ehval_p *paras, ehcontext_t context);

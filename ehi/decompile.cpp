@@ -51,10 +51,26 @@ static void decompile_match_like(std::ostringstream &out, const char *name, ehva
 	}
 	add_end(out, level);
 }
+static void decompile_if(std::ostringstream &out, ehval_p *paras, int level) {
+	out << "if " << paras[0]->decompile(level) << "\n";
+	add_tabs(out, level + 1);
+	out << paras[1]->decompile(level + 1);
+	for(Node::t *iop = paras[2]->get<Node>(); iop->op != T_END; iop = iop->paras[1]->get<Node>()) {
+		ehval_p *current_block = iop->paras[0]->get<Node>()->paras;
+		out << "\n";
+		add_tabs(out, level);
+		out << "elsif " << current_block[0]->decompile(level) << "\n";
+		add_tabs(out, level + 1);
+		out << current_block[1]->decompile(level);
+	}
+}
 
 std::string Node::decompile(int level) {
 	std::ostringstream out;
 	Node::t *op = value;
+	if(op == nullptr) {
+		return "";
+	}
 	switch(op->op) {
 		case T_LITERAL:
 			out << op->paras[0]->decompile(level);
@@ -209,26 +225,16 @@ std::string Node::decompile(int level) {
 			out << op->paras[0]->decompile(level) << " " << op->paras[1]->decompile(level);
 			break;
 		case T_IF:
-			out << "if " << op->paras[0]->decompile(level) << "\n";
+			decompile_if(out, op->paras, level);
+			add_end(out, level);
+			break;
+		case T_IF_ELSE:
+			decompile_if(out, op->paras, level);
+			out << "\n";
+			add_tabs(out, level);
+			out << "else\n";
 			add_tabs(out, level + 1);
-			out << op->paras[1]->decompile(level + 1);
-			if(op->nparas > 2) {
-				for(Node::t *iop = op->paras[2]->get<Node>(); iop->op != T_END; iop = iop->paras[1]->get<Node>()) {
-					ehval_p *current_block = iop->paras[0]->get<Node>()->paras;
-					out << "\n";
-					add_tabs(out, level);
-					out << "elsif " << current_block[0]->decompile(level) << "\n";
-					add_tabs(out, level + 1);
-					out << current_block[1]->decompile(level);
-				}
-				if(op->nparas == 4) {
-					out << "\n";
-					add_tabs(out, level);
-					out << "else\n";
-					add_tabs(out, level + 1);
-					out << op->paras[3]->decompile(level + 1);
-				}
-			}
+			out << op->paras[3]->decompile(level + 1);
 			add_end(out, level);
 			break;
 		case T_WHILE:
@@ -254,6 +260,49 @@ std::string Node::decompile(int level) {
 			out << "class " << op->paras[0]->get<String>() << "\n";
 			add_tabs(out, level + 1);
 			out << op->paras[1]->decompile(level + 1);
+			add_end(out, level);
+			break;
+		case T_ENUM:
+			out << "enum " << op->paras[0]->get<String>() << "\n";
+			add_tabs(out, level + 1);
+			// decompile member list
+			for(ehval_p node = op->paras[1]; ; node = node->get<Node>()->paras[0]) {
+				ehval_p current_member;
+				bool is_last;
+				if(node->get<Node>()->op == ',') {
+					current_member = node->get<Node>()->paras[1];
+					is_last = false;
+				} else {
+					current_member = node;
+					is_last = true;
+				}
+
+				// handle the member
+				out << current_member->get<Node>()->paras[0]->get<String>();
+				if(current_member->get<Node>()->op == T_ENUM_WITH_ARGUMENTS) {
+					out << "(";
+					for(ehval_p argument = current_member->get<Node>()->paras[1]; ; argument = argument->get<Node>()->paras[1]) {
+						ehval_p name = argument->is_a<Node>() ? argument->get<Node>()->paras[0] : argument;
+						out << name->get<String>();
+						if(!argument->is_a<Node>() || argument->get<Node>()->op != ',') {
+							break;
+						} else {
+							out << ", ";
+						}
+					}
+					out << ")";
+				}
+
+				if(is_last) {
+					break;
+				} else {
+					out << ", ";
+				}
+			}
+			out << "\n";
+			add_tabs(out, level + 1);
+			// decompile code
+			out << op->paras[2]->decompile(level + 1);
 			add_end(out, level);
 			break;
 		case T_CLASS:

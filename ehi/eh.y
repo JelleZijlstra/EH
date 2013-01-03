@@ -71,7 +71,7 @@ EHI *yyget_extra(void *scanner);
 %token <vValue> T_ATTRIBUTE
 %token T_ARRAYMEMBER
 %token T_DOUBLEARROW
-%token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS
+%token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS T_IF_ELSE T_NULLARY_ENUM T_ENUM_WITH_ARGUMENTS
 %token T_COMMAND T_SHORTPARA T_LONGPARA T_REDIRECT
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
@@ -309,7 +309,7 @@ expression:
 	| T_IF expression T_SEPARATOR statement_list elseif_clauses T_END
 							{ $$ = ADD_NODE3(T_IF, $2, $4, $5); }
 	| T_IF expression T_SEPARATOR statement_list elseif_clauses T_ELSE statement_list T_END
-							{ $$ = ADD_NODE4(T_IF, $2, $4, $5, $7); }
+							{ $$ = ADD_NODE4(T_IF_ELSE, $2, $4, $5, $7); }
 	| T_TRY statement_list catch_clauses T_END
 							{ $$ = ADD_NODE2(T_TRY, $2, $3); }
 	| T_TRY statement_list catch_clauses T_FINALLY statement_list T_END
@@ -536,9 +536,9 @@ enum_list:
 	;
 
 enum_member:
-	T_VARIABLE				{ $$ = eh_addnode(T_ENUM, String::make($1)); }
+	T_VARIABLE				{ $$ = eh_addnode(T_NULLARY_ENUM, String::make($1)); }
 	| T_VARIABLE '(' enum_arg_list ')'
-							{ $$ = eh_addnode(T_ENUM, String::make($1), Node::make($3)); }
+							{ $$ = eh_addnode(T_ENUM_WITH_ARGUMENTS, String::make($1), Node::make($3)); }
 	;
 
 enum_arg_list:

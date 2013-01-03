@@ -142,7 +142,9 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 		 * Control flow
 		 */
 			case T_IF:
-				return eh_op_if(op, context);
+				return eh_op_if(T_IF, paras, context);
+			case T_IF_ELSE:
+				return eh_op_if(T_IF_ELSE, paras, context);
 			case T_WHILE:
 				return eh_op_while(paras, context);
 			case T_FOR:
@@ -378,23 +380,20 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, ehcontext_t context) 
 	returning = false;
 	return ret;
 }
-ehval_p EHI::eh_op_if(Node::t *op, ehcontext_t context) {
-	if(this->toBool(eh_execute(op->paras[0], context), context)->get<Bool>()) {
-		return eh_execute(op->paras[1], context);
-	} else if(op->nparas == 2) {
-		// if something { do_something() }
-		return nullptr;
+ehval_p EHI::eh_op_if(int token, ehval_p *paras, ehcontext_t context) {
+	if(this->toBool(eh_execute(paras[0], context), context)->get<Bool>()) {
+		return eh_execute(paras[1], context);
 	} else {
 		// loop through elsifs
-		for(Node::t *iop = op->paras[2]->get<Node>(); iop->op != T_END; iop = iop->paras[1]->get<Node>()) {
+		for(Node::t *iop = paras[2]->get<Node>(); iop->op != T_END; iop = iop->paras[1]->get<Node>()) {
 			ehval_p *current_block = iop->paras[0]->get<Node>()->paras;
 			if(this->toBool(eh_execute(current_block[0], context), context)->get<Bool>()) {
 				return eh_execute(current_block[1], context);
 			}
 		}
 		// if there is a final else
-		if(op->nparas == 4) {
-			return eh_execute(op->paras[3], context);
+		if(token == T_IF_ELSE) {
+			return eh_execute(paras[3], context);
 		} else {
 			return nullptr;
 		}
@@ -520,9 +519,9 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 
 		// handle the member
 		const char *member_name = current_member->get<Node>()->paras[0]->get<String>();
-		if(current_member->get<Node>()->nparas == 1) {
+		if(current_member->get<Node>()->op == T_NULLARY_ENUM) {
 			Enum::t::add_nullary_member(ret, member_name, this);
-		} else {
+		} else { // T_ENUM_WITH_ARGUMENTS
 			std::vector<std::string> params(0);
 			for(ehval_p argument = current_member->get<Node>()->paras[1]; ; argument = argument->get<Node>()->paras[1]) {
 				const char *name = argument->is_a<Node>() ? argument->get<Node>()->paras[0]->get<String>() : argument->get<String>();

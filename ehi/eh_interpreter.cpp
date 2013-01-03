@@ -113,7 +113,6 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 	bool b1, b2;
 
 	if(node->is_a<Node>()) {
-		//printf("Opcode %d: %d\n", node->opval->op, node->get<Node>()->nparas);
 		Node::t *op = node->get<Node>();
 		if(op == nullptr) {
 			return nullptr;
@@ -325,7 +324,7 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, ehcontext_t context) 
 	ehval_p args = Array::make(parent);
 	Array::t *paras = args->get<Array>();
 	// loop through the paras given
-	for( ; node->get<Node>()->nparas != 0; node = node->get<Node>()->paras[1]) {
+	for( ; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
 		ehval_p node2 = node->get<Node>()->paras[0];
 		// every para_expr should have an op associated with it
 		assert(node2->is_a<Node>());
@@ -393,7 +392,7 @@ ehval_p EHI::eh_op_if(Node::t *op, ehcontext_t context) {
 		return nullptr;
 	} else {
 		// loop through elsifs
-		for(Node::t *iop = op->paras[2]->get<Node>(); iop->nparas != 0; iop = iop->paras[1]->get<Node>()) {
+		for(Node::t *iop = op->paras[2]->get<Node>(); iop->op != T_END; iop = iop->paras[1]->get<Node>()) {
 			ehval_p *current_block = iop->paras[0]->get<Node>()->paras;
 			if(this->toBool(eh_execute(current_block[0], context), context)->get<Bool>()) {
 				return eh_execute(current_block[1], context);
@@ -475,10 +474,10 @@ ehval_p EHI::eh_op_array(ehval_p node, ehcontext_t context) {
 	// need to count array members first, because they are reversed in our node.
 	// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
 	int count = 0;
-	for(ehval_p node2 = node; node2->get<Node>()->nparas != 0; node2 = node2->get<Node>()->paras[0]) {
+	for(ehval_p node2 = node; node2->get<Node>()->op != T_END; node2 = node2->get<Node>()->paras[0]) {
 		count++;
 	}
-	for(ehval_p node2 = node; node2->get<Node>()->nparas != 0; node2 = node2->get<Node>()->paras[0]) {
+	for(ehval_p node2 = node; node2->get<Node>()->op != T_END; node2 = node2->get<Node>()->paras[0]) {
 		array_insert(ret->get<Array>(), node2->get<Node>()->paras[1], --count, context);
 	}
 	return ret;
@@ -486,7 +485,7 @@ ehval_p EHI::eh_op_array(ehval_p node, ehcontext_t context) {
 ehval_p EHI::eh_op_anonclass(ehval_p node, ehcontext_t context) {
 	ehval_p ret = Hash::make(parent);
 	Hash::ehhash_t *new_hash = ret->get<Hash>();
-	for( ; node->get<Node>()->nparas != 0; node = node->get<Node>()->paras[0]) {
+	for( ; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[0]) {
 		ehval_p *myparas = node->get<Node>()->paras[1]->get<Node>()->paras;
 		// nodes here will always have the name in para 0 and value in para 1
 		ehval_p value = eh_execute(myparas[1], context);
@@ -604,7 +603,7 @@ ehval_p EHI::eh_op_tuple(ehval_p node, ehcontext_t context) {
 	int nargs = 1;
 	// first determine the size of the tuple
 	for(ehval_p tmp = node;
-		tmp->is_a<Node>() && tmp->get<Node>()->op == ',' && tmp->get<Node>()->nparas != 0;
+		tmp->is_a<Node>() && tmp->get<Node>()->op == ',' && tmp->get<Node>()->op != T_END;
 		tmp = tmp->get<Node>()->paras[1], nargs++
 	) {}
 	ehretval_a new_args(nargs);
@@ -637,7 +636,7 @@ ehval_p EHI::eh_op_switch(ehval_p *paras, ehcontext_t context) {
 
 	// switch variable
 	ehval_p switchvar = eh_execute(paras[0], context);
-	for(ehval_p node = paras[1]; node->get<Node>()->nparas != 0; node = node->get<Node>()->paras[1]) {
+	for(ehval_p node = paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
 		Node::t *op = node->get<Node>()->paras[0]->get<Node>();
 		// execute default
 		if(op->nparas == 1) {
@@ -683,7 +682,7 @@ ehval_p EHI::eh_op_switch(ehval_p *paras, ehcontext_t context) {
 ehval_p EHI::eh_op_given(ehval_p *paras, ehcontext_t context) {
 	// switch variable
 	ehval_p switchvar = eh_execute(paras[0], context);
-	for(ehval_p node = paras[1]; node->get<Node>()->nparas != 0; node = node->get<Node>()->paras[1]) {
+	for(ehval_p node = paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
 		const Node::t *op = node->get<Node>()->paras[0]->get<Node>();
 		// execute default
 		if(op->nparas == 1) {
@@ -769,7 +768,7 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 			int nargs = 1;
 			ehval_p args = op->paras[1]->get<Node>()->paras[0];
 			for(ehval_p tmp = args;
-				tmp->is_a<Node>() && tmp->get<Node>()->op == ',' && tmp->get<Node>()->nparas != 0;
+				tmp->is_a<Node>() && tmp->get<Node>()->op == ',' && tmp->get<Node>()->op != T_END;
 				tmp = tmp->get<Node>()->paras[1], nargs++
 			);
 			if(nargs != size) {
@@ -807,7 +806,7 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 ehval_p EHI::eh_op_match(ehval_p *paras, ehcontext_t context) {
 	// switch variable
 	ehval_p switchvar = eh_execute(paras[0], context);
-	for(ehval_p node = paras[1]; node->get<Node>()->nparas != 0; node = node->get<Node>()->paras[1]) {
+	for(ehval_p node = paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
 		ehval_p case_node = node->get<Node>()->paras[0];
 		if(match(case_node->get<Node>()->paras[0], switchvar, context)) {
 			return eh_execute(case_node->get<Node>()->paras[1], context);
@@ -961,7 +960,7 @@ ehval_p EHI::eh_op_try(Node::t *op, ehcontext_t context) {
 ehval_p EHI::eh_try_catch(ehval_p try_block, ehval_p catch_blocks, ehcontext_t context) {
 	Node::t *catch_op = catch_blocks->get<Node>();
 	// don't try/catch if there are no catch blocks
-	if(catch_op->nparas == 0) {
+	if(catch_op->op == T_END) {
 		return eh_execute(try_block, context);
 	}
 	try {
@@ -971,7 +970,7 @@ ehval_p EHI::eh_try_catch(ehval_p try_block, ehval_p catch_blocks, ehcontext_t c
 		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
 		ehmember_p exception_member = ehmember_t::make(attributes, e.content);
 		context.scope->set_member("exception", exception_member, context, this);
-		for(; catch_op->nparas != 0; catch_op = catch_op->paras[1]->get<Node>()) {
+		for(; catch_op->op != T_END; catch_op = catch_op->paras[1]->get<Node>()) {
 			Node::t *catch_block = catch_op->paras[0]->get<Node>();
 			if(catch_block->nparas == 1) {
 				return eh_execute(catch_block->paras[0], context);
@@ -1157,7 +1156,7 @@ static inline int count_nodes(const ehval_p node) {
 	// count a list like an argument list. Assumes correct layout.
 	int i = 0;
 	for(ehval_p tmp = node;
-		tmp->get<Node>()->nparas != 0;
+		tmp->get<Node>()->op != T_END;
 		tmp = tmp->get<Node>()->paras[0], i++
 	) {}
 	return i;
@@ -1165,7 +1164,7 @@ static inline int count_nodes(const ehval_p node) {
 
 static attributes_t parse_attributes(ehval_p node) {
 	attributes_t attributes = attributes_t::make();
-	for( ; node->get<Node>()->nparas != 0; node = node->get<Node>()->paras[1]) {
+	for( ; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
 		switch(node->get<Node>()->paras[0]->get<Attribute>()) {
 			case Attribute::publica_e:
 				attributes.visibility = public_e;

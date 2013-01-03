@@ -403,7 +403,7 @@ command:
 
 paralist:
 	para paralist			{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 para:
@@ -430,7 +430,7 @@ bareword_or_string:
 elseif_clauses:
 	elseif_clause elseif_clauses
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 elseif_clause:
@@ -442,7 +442,7 @@ elseif_clause:
 catch_clauses:
 	catch_clause catch_clauses
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 catch_clause:
@@ -458,13 +458,13 @@ arraylist:
 							{ $$ = ADD_NODE2(',', $1, $2); }
 	| arraylist_i arraymember
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 arraylist_i:
 	arraylist_i arraymember ','
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 arraymember:
@@ -479,13 +479,13 @@ anonclasslist:
 							{ $$ = ADD_NODE2(',', $1, $2); }
 	| anonclasslist_i anonclassmember
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 anonclasslist_i:
 	anonclasslist_i anonclassmember ','
 							{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 anonclassmember:
@@ -503,7 +503,7 @@ parglist:
 /* Switch etcetera */
 caselist:
 	acase caselist			{ $$ = ADD_NODE2(',', $1, $2); }
-	| /* NULL */			{ $$ = ADD_NODE0(','); }
+	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 acase:
@@ -525,7 +525,7 @@ attributelist:
 attributelist_inner:
 	T_ATTRIBUTE attributelist_inner
 							{ $$ = eh_addnode(T_ATTRIBUTE, Attribute::make($1), Node::make($2)); }
-	| /* NULL */ %prec '='	{ $$ = ADD_NODE0(T_ATTRIBUTE); }
+	| /* NULL */ %prec '='	{ $$ = ADD_NODE0(T_END); }
 	;
 
 /* Enums */

@@ -150,6 +150,9 @@ std::string Node::decompile(int level) {
 				}
 			}
 			break;
+		case T_END:
+			// ignore, used to end lists
+			break;
 		case T_THIS:
 			out << "this";
 			break;

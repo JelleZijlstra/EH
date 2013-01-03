@@ -14,6 +14,9 @@
 #include "std_lib/Float.hpp"
 #include "std_lib/Bool.hpp"
 #include "std_lib/GlobalObject.hpp"
+#include "std_lib/Array.hpp"
+#include "std_lib/TypeError.hpp"
+#include "std_lib/Hash.hpp"
 
 #include <sstream>
 

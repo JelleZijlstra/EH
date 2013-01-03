@@ -6,8 +6,6 @@
 #ifndef _EH_LIBCLASSES_H
 #define _EH_LIBCLASSES_H
 
-#include "eh.hpp"
-
 #define EH_INITIALIZER(name) void ehinit_ ## name (ehobj_t *obj, EHInterpreter *parent)
 #define REGISTER_METHOD(classn, name) obj->register_method(#name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), parent)
 #define REGISTER_METHOD_RENAME(classn, name, user_name) obj->register_method(user_name, &ehlm_ ## classn ## _ ## name, attributes_t::make(), parent)
@@ -44,21 +42,7 @@ if(!obj->is_a<ehtype>()) { \
 	template<> inline const char *ehval_t::name<parent ## _ ## cname>() { return #parent "." #cname; } \
 	class parent ## _ ## cname : public ehval_t
 
-
-class LibraryBaseClass {
-public:
-	virtual ~LibraryBaseClass() {}
-};
-
-// has to come after macro definitions for EH_METHOD and EXTERN_EHLC, as well
-// as definition of LibraryBaseClass
-#include "std_lib/TypeError.hpp"
-#include "std_lib/ArgumentError.hpp"
-#include "std_lib/EmptyIterator.hpp"
-#include "std_lib/Tuple.hpp"
-#include "std_lib/Range.hpp"
-#include "std_lib/Hash.hpp"
-#include "std_lib/Array.hpp"
+// has to come after macro definitions for EH_METHOD and EXTERN_EHLC
 
 // Helpers
 static inline int intcmp(int lhs, int rhs) {

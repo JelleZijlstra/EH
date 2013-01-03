@@ -49,4 +49,10 @@ Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second);
 Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third);
 Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval_p fourth);
 
+#include "../eh_libclasses.hpp"
+
+EH_INITIALIZER(Node);
+
+EH_METHOD(Node, execute);
+
 #endif /* EH_NODE_H_ */

@@ -92,6 +92,18 @@ const std::map<int, std::pair<const char *, int> > node_nparas {
 T_INTEGER, T_FLOAT, T_BOOL, T_AS, T_IN, T_FINALLY, T_STRING, T_RIGHTSHIFTEQ, T_LEFTSHIFTEQ, T_BINXOREQ, T_BINOREQ, T_BINANDEQ, T_XOREQ, T_OREQ, T_ANDEQ, T_MODULOEQ, T_DIVIDEEQ, T_MULTIPLYEQ, T_MINEQ, T_PLUSEQ, T_MINMIN, T_PLUSPLUS, T_NEGATIVE
  */
 
+EH_INITIALIZER(Node) {
+	REGISTER_METHOD(Node, execute);
+	for(auto &kv : node_nparas) {
+		obj->register_value(kv.second.first, Integer::make(kv.first), attributes_t::make_const());
+	}
+}
+
+EH_METHOD(Node, execute) {
+	ASSERT_RESOURCE(Node, "Node.execute");
+	return ehi->eh_execute(obj->data(), ehi->global());
+}
+
 static void add_end(std::ostringstream &out, int levels) {
 	out << "\n";
 	add_tabs(out, levels);

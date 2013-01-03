@@ -198,6 +198,8 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				ehval_p arg = eh_execute(paras[2], context);
 				return call_method(obj, paras[1]->get<String>(), arg, context);
 			}
+			case T_APPLY_MACRO:
+				return call_function(eh_execute(paras[0], context), paras[1], context);
 			case T_THIS: // direct access to the context object
 				return context.object;
 			case T_SCOPE:

@@ -25,6 +25,7 @@
 #include "LoopError.hpp"
 #include "MiscellaneousError.hpp"
 #include "NameError.hpp"
+#include "Node.hpp"
 #include "Null.hpp"
 #include "Object.hpp"
 #include "Random.hpp"
@@ -76,6 +77,7 @@ EH_INITIALIZER(GlobalObject) {
 	GLOBAL_REGISTER_CLASS(Tuple);
 	GLOBAL_REGISTER_CLASS(SuperClass);
 	GLOBAL_REGISTER_CLASS(Exception);
+	GLOBAL_REGISTER_CLASS(Node);
 	REGISTER_PURE_CLASS(UnknownCommandError);
 	REGISTER_PURE_CLASS(TypeError);
 	REGISTER_PURE_CLASS(LoopError);

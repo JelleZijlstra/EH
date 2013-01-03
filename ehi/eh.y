@@ -438,7 +438,7 @@ elseif_clauses:
 
 elseif_clause:
 	T_ELSIF expression T_SEPARATOR statement_list
-							{ $$ = ADD_NODE2(T_ELSE, $2, $4); }
+							{ $$ = ADD_NODE2(T_ELSIF, $2, $4); }
 	;
 
 /* Try-catch */

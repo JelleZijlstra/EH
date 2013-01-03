@@ -361,9 +361,7 @@ std::string Node::decompile(int level) {
 			for(ehval_p n = op->paras[0]; n->get<Node>()->op != T_END; n = n->get<Node>()->paras[0]) {
 				Node::t *member_op = n->get<Node>()->paras[1]->get<Node>();
 				out << member_op->paras[0]->decompile(level);
-				if(member_op->nparas != 1) {
-					out << ": " << member_op->paras[1]->decompile(level);
-				}
+				out << ": " << member_op->paras[1]->decompile(level);
 				if(n->get<Node>()->paras[0]->get<Node>()->op != T_END) {
 					out << ", ";
 				}

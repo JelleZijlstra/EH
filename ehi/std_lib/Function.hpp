@@ -14,6 +14,11 @@
  */
 EH_CLASS(Function) {
 public:
+	enum functype_enum {
+		user_e,
+		lib_e
+	};
+
 	class t {
 	public:
 		functype_enum type;

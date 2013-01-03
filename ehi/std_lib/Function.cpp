@@ -73,7 +73,7 @@ EH_METHOD(Function, decompile) {
 EH_METHOD(Function, toString) {
 	ASSERT_OBJ_TYPE(Function, "Function.toString");
 	Function::t *f = obj->get<Function>();
-	if(f->type == lib_e) {
+	if(f->type == Function::lib_e) {
 		return String::make(strdup("(args) => (native code)"));
 	} else {
 		std::ostringstream out;

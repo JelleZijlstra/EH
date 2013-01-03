@@ -485,7 +485,7 @@ ehval_p EHI::eh_op_anonclass(ehval_p node, ehcontext_t context) {
 	return ret;
 }
 ehval_p EHI::eh_op_declareclosure(ehval_p *paras, ehcontext_t context) {
-	Function::t *f = new Function::t(user_e);
+	Function::t *f = new Function::t(Function::user_e);
 	ehval_p ret = parent->instantiate(parent->repo.get_primitive_class<Function>());
 	ehobj_t *function_object = ret->get<Object>();
 	function_object->parent = context.scope;
@@ -1028,7 +1028,7 @@ ehval_p EHInterpreter::make_method(ehlibmethod_t in) {
 	ehval_p func = Object::make(function_obj, this);
 	function_obj->parent = nullptr;
 	function_obj->type_id = function_object->get<Object>()->type_id;
-	Function::t *f = new Function::t(lib_e);
+	Function::t *f = new Function::t(Function::lib_e);
 	f->libmethod_pointer = in;
 	function_obj->object_data = Function::make(f);
 	function_obj->inherit(this->function_object);

@@ -114,11 +114,6 @@ public:
 	}
 };
 
-typedef enum functype_enum {
-	user_e,
-	lib_e
-} functype_enum;
-
 /*
  * Parser and interpreter structs
  */

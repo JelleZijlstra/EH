@@ -41,18 +41,15 @@
 		initialize <public,non-static,non-constant>: @function <library>: 
 	]
 	Enum <public,non-static,constant>: @object <Enum> [
-		Instance <public,non-static,non-constant>: @object <Enum.Instance> [
-			compare <public,non-static,non-constant>: @function <library>: 
-			toString <public,non-static,non-constant>: @function <library>: 
-		]
-		Member <public,non-static,non-constant>: @object <Enum.Member> [
-			new <public,non-static,non-constant>: @function <library>: 
-			operator() <public,non-static,non-constant>: @function <library>: 
-			toString <public,non-static,non-constant>: @function <library>: 
-		]
+		compare <public,non-static,non-constant>: @function <library>: 
+		isConstructor <public,non-static,non-constant>: @function <library>: 
+		map <public,non-static,non-constant>: @function <library>: 
 		new <public,non-static,non-constant>: @function <library>: 
-		size <public,non-static,non-constant>: @function <library>: 
+		operator() <public,non-static,non-constant>: @function <library>: 
+		operator-> <public,non-static,non-constant>: @function <library>: 
 		toString <public,non-static,non-constant>: @function <library>: 
+		type <public,non-static,non-constant>: @function <library>: 
+		typeId <public,non-static,non-constant>: @function <library>: 
 	]
 	Exception <public,non-static,constant>: @object <Exception> [
 		initialize <public,non-static,non-constant>: @function <library>: 

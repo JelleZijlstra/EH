@@ -4,15 +4,14 @@ OTHER THINGS TO DO
 	- List.prototype.propertyDoesNotExist segfaults
 - Do something about the private-in-inherited-class bug.
 
-REPLACING EHRETVAL_T
-When we allocate a value, we do
-ehval_p i = Integer::make(3);
-or
-ehval_p a = Array::make(new eharray_t, ehi);
+RETHINKING ENUMS
+Enum creates a real class with its own type_id. Enum overloads new() to throw an exception.
 
-ehval_p Integer::make(int in) {
-	Integer *obj = new Integer(in);
-}
+There is a separate Enum.Instance class holding:
+- enum id of this enum member
+- type id of the parent class
+- array of parameters
 
-USING C++11 FEATURES:
-- type_index
+Enum class holds information about each id - number of params.
+
+Overloads operator() to create a new Enum.Instance object if params == null and type_id takes arguments.

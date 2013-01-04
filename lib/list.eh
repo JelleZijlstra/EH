@@ -6,15 +6,20 @@ enum List
 
 	const empty = () => Nil
 
-	const operator-> = n => given n
-		case 0; this.head
-		case 1; this.tail
-		default; throw(ArgumentError.new("Argument must be 0 or 1", "List.operator->", n))
+	const operator-> = n => match this
+		case Cons(@hd, @tl); given n
+			case 0; hd
+			case 1; tl
+			default; throw(ArgumentError.new("Argument must be 0 or 1", "List.operator->", n))
+		end
 	end
 
 	const isEmpty = () => this == Nil
 
-	const isSingleton = () => (this != Nil && (this.tail == Nil))
+	const isSingleton = () => match this
+		case (Nil | Cons(_, Nil)); true
+		case _; false
+	end
 
 	const map = f => match this
 		case Nil; Nil
@@ -104,7 +109,7 @@ enum List
 			out
 		end
 	end
-	private const Iterator = Iterator
+	const Iterator = Iterator
 
 	const getIterator = () => this.Iterator.new this
 

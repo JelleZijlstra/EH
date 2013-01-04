@@ -24,5 +24,5 @@ echo e
 printvar e
 
 echo 'Enum instance members'
-echo(e.head)
-printvar(e.tail)
+echo(e->0)
+printvar(e->1)

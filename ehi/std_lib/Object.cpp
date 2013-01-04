@@ -49,6 +49,8 @@ EH_METHOD(Object, finalize) {
 	return nullptr;
 }
 EH_METHOD(Object, isA) {
+	ehval_p _obj = obj;
+	obj = obj->get_underlying_object(ehi->get_parent());
 	if(!args->is_a<Object>()) {
 		args = ehi->get_parent()->repo.get_object(args);
 	}
@@ -57,9 +59,9 @@ EH_METHOD(Object, isA) {
 	if(type_object == args) {
 		return Bool::make(true);
 	} else if(obj->is_a<Object>()) {
-		return Bool::make(obj->get<Object>()->inherits(args));
+		return Bool::make(obj->get<Object>()->inherits(args, ehi->get_parent()));
 	} else {
-		return Bool::make(type_object->get<Object>()->inherits(args));
+		return Bool::make(type_object->get<Object>()->inherits(args, ehi->get_parent()));
 	}
 }
 
@@ -122,10 +124,8 @@ EH_METHOD(Object, typeId) {
 // return all members in the class
 EH_METHOD(Object, members) {
 	ehval_p reference_retainer = obj;
-	if(!obj->is_a<Object>()) {
-		obj = ehi->get_parent()->repo.get_object(obj);
-	}
-	std::set<std::string> members = obj->get<Object>()->member_set();
+	obj = obj->get_underlying_object(ehi->get_parent());
+	std::set<std::string> members = obj->get<Object>()->member_set(ehi->get_parent());
 	ehval_p out = Array::make(ehi->get_parent());
 	Array::t *arr = out->get<Array>();
 	int index = 0;

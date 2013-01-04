@@ -6,7 +6,7 @@ enum X
 	public run = () => match this
 		case D; echo "D"
 		case A(@e); echo("A of " + e)
-		case B(3); echo("B of " + this.c)
+		case B(3); echo("B of " + 3)
 		case B(@f); echo("Other B of " + f)
 	end
 end

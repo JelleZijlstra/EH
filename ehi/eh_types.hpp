@@ -155,6 +155,7 @@ public:
 	ehval_p get_property(const char *name, ehcontext_t context, class EHI *ehi);
 	ehval_p get_property_no_binding(const char *name, ehcontext_t context, class EHI *ehi);
 	ehmember_p set_property(const char *name, ehval_p value, ehcontext_t context, class EHI *ehi);
+	ehval_p get_underlying_object(class EHInterpreter *parent);
 };
 
 typedef ehval_t::ehval_p ehval_p;
@@ -193,10 +194,11 @@ public:
 	ehmember_p get_recursive(const char *name, const ehcontext_t context);
 	bool context_compare(const ehcontext_t &key, class EHI *ehi) const;
 
-	bool inherited_has(const std::string &key) const;
-	ehmember_p inherited_get(const std::string &key);
+	bool inherited_has(const std::string &key, EHInterpreter *parent) const;
+	ehmember_p inherited_get(const std::string &key, EHInterpreter *parent);
+	ehmember_p recursive_inherited_get(const std::string &key);
 
-	std::set<std::string> member_set();
+	std::set<std::string> member_set(EHInterpreter *parent);
 
 	// inline methods
 	size_t size() const {
@@ -229,7 +231,7 @@ public:
 		super.push_front(superclass);
 	}
 
-	bool inherits(ehval_p obj);
+	bool inherits(ehval_p obj, EHInterpreter *parent);
 
 	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *parent);
 

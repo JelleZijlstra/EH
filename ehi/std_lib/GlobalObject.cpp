@@ -53,7 +53,6 @@ EH_INITIALIZER(GlobalObject) {
 	parent->function_object = Object::make(new ehobj_t(), parent);
 	// Must be the first class registered
 	obj->register_member_class<Object>(ehinit_Object, "Object", attributes_t::make_const(), parent, parent->base_object);
-	obj->inherit(parent->base_object);
 	// Must be registered before any methods are registered
 	obj->register_member_class<Function>(ehinit_Function, "Function", attributes_t::make_const(), parent, parent->function_object);
 

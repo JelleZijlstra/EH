@@ -7,6 +7,7 @@
 #include "std_lib/Array.hpp"
 #include "std_lib/Function.hpp"
 #include "std_lib/Binding.hpp"
+#include "std_lib/Enum.hpp"
 #include "std_lib/Hash.hpp"
 #include "std_lib/Range.hpp"
 #include "std_lib/Tuple.hpp"
@@ -26,8 +27,8 @@ ehmember_p ehval_t::set_property(const char *name, ehval_p value, ehcontext_t co
 			value = value->get<Binding>()->method;
 		}
 	}
-	ehmember_p result = obj->inherited_get(name);
-	if(ehmember_p::null(result)) {
+	ehmember_p result = obj->inherited_get(name, ehi->get_parent());
+	if(result.null()) {
 		ehmember_p new_member;
 		new_member->value = value;
 		obj->insert(name, new_member);
@@ -72,17 +73,27 @@ ehmember_p ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t 
 	obj->insert(name, member);
 	return member;
 }
+ehval_p ehval_t::get_underlying_object(EHInterpreter *parent) {
+	if(is_a<Object>()) {
+		return this;
+	} else if(is_a<SuperClass>()) {
+		return get<SuperClass>();
+	} else if(is_a<Enum_Instance>()) {
+		const int type_id = get<Enum_Instance>()->type_id;
+		return parent->repo.get_object(type_id);
+	} else {
+		return parent->repo.get_object(this);
+	}
+}
+
 // get a property of the given name, without creating a binding
 ehval_p ehval_t::get_property_no_binding(const char *name, ehcontext_t context, EHI *ehi) {
-	if(is_a<SuperClass>()) {
-		return get<SuperClass>()->get_property_no_binding(name, context, ehi);
-	}
-	ehval_p object = is_a<Object>() ? this : ehi->get_parent()->repo.get_object(this);
+	ehval_p object = get_underlying_object(ehi->get_parent());
 	ehobj_t *obj = object->get<Object>();
-	ehmember_p member = obj->inherited_get(name);
+	ehmember_p member = obj->inherited_get(name, ehi->get_parent());
 	if(member.null()) {
 		throw_NameError(this, name, ehi);
-	} else if (member->attribute.visibility == private_e && !obj->context_compare(context, ehi)) {
+	} else if(member->attribute.visibility == private_e && !obj->context_compare(context, ehi)) {
 		throw_VisibilityError(this, name, ehi);
 	}
 	return member->value;
@@ -138,20 +149,51 @@ ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) {
 		return nullptr;
 	}
 }
-bool ehobj_t::inherited_has(const std::string &key) const {
-	if(this->has(key)) {
+bool ehobj_t::inherited_has(const std::string &key, EHInterpreter *parent) const {
+	if(this->has(key) || parent->base_object->get<Object>()->has(key)) {
 		return true;
 	}
 	for(auto &i : super) {
-		if(i->get<Object>()->inherited_has(key)) {
+		if(i->get<Object>()->inherited_has(key, parent)) {
 			return true;
 		}
 	}
 	return false;
 }
-bool ehobj_t::inherits(ehval_p obj) {
+// recursive version that does not check superclasses Object
+ehmember_p ehobj_t::recursive_inherited_get(const std::string &key) {
+	if(this->has(key)) {
+		return this->get_known(key);
+	}
 	for(auto &i : super) {
-		if(i == obj || i->get<Object>()->inherits(obj)) {
+		ehmember_p result = i->get<Object>()->recursive_inherited_get(key);
+		if(!result.null()) {
+			return result;
+		}
+	}
+	return nullptr;
+}
+ehmember_p ehobj_t::inherited_get(const std::string &key, EHInterpreter *parent) {
+	if(this->has(key)) {
+		return this->get_known(key);
+	}
+	for(auto &i : super) {
+		ehmember_p result = i->get<Object>()->recursive_inherited_get(key);
+		if(!result.null()) {
+			return result;
+		}
+	}
+	if(parent->base_object->get<Object>()->has(key)) {
+		return parent->base_object->get<Object>()->get_known(key);
+	}
+	return nullptr;
+}
+bool ehobj_t::inherits(ehval_p obj, EHInterpreter *parent) {
+	if(parent->base_object == obj) {
+		return true;
+	}
+	for(auto &i : super) {
+		if(i == obj || i->get<Object>()->inherits(obj, parent)) {
 			return true;
 		}
 	}
@@ -165,28 +207,21 @@ ehobj_t *ehobj_t::get_parent() const {
 		return this->parent->get<Object>();
 	}
 }
-std::set<std::string> ehobj_t::member_set() {
+std::set<std::string> ehobj_t::member_set(EHInterpreter *parent) {
 	std::set<std::string> out;
 	for(auto &i : this->members) {
 		out.insert(i.first);
 	}
 	for(auto &super_class : super) {
-		auto member_set = super_class->get<Object>()->member_set();
+		auto member_set = super_class->get<Object>()->member_set(nullptr);
 		out.insert(member_set.begin(), member_set.end());
 	}
+	if(parent != nullptr) {
+		ehobj_t *base_object = parent->base_object->get<Object>();
+		auto object_set = base_object->member_set(nullptr);
+		out.insert(object_set.begin(), object_set.end());
+	}
 	return out;
-}
-ehmember_p ehobj_t::inherited_get(const std::string &key) {
-	if(this->has(key)) {
-		return this->get_known(key);
-	}
-	for(std::list<ehval_p>::const_iterator i = super.begin(), end = super.end(); i != end; i++) {
-		ehmember_p result = (*i)->get<Object>()->inherited_get(key);
-		if(!ehmember_p::null(result)) {
-			return result;
-		}
-	}
-	return nullptr;
 }
 bool ehobj_t::context_compare(const ehcontext_t &key, class EHI *ehi) const {
 	// in global context, we never have access to private stuff
@@ -220,8 +255,6 @@ int ehobj_t::register_member_class(const char *name, const ehobj_t::initializer 
 	// register class
 	newclass->type_id = interpreter_parent->repo.register_class(name, new_value);
 
-	// inherit from Object, except in Object itself
-	newclass->inherit(interpreter_parent->base_object);
 	newclass->parent = interpreter_parent->global_object;
 
 	init_func(newclass, interpreter_parent);

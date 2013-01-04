@@ -501,9 +501,23 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 	ehval_p members_code = op->paras[1];
 	ehval_p code = op->paras[2];
 
-	// create Enum object
-	ehval_p ret = Enum::t::make(name, this);
-	Enum::t *e = Enum::t::extract_enum(ret);
+	// create wrapper object
+	ehobj_t *enum_obj = new ehobj_t();
+	ehval_p ret = Object::make(enum_obj, parent);
+
+	// create enum object
+	ehval_p enum_class_obj = Enum::make(name);
+	Enum::t *e = enum_class_obj->get<Enum>();
+
+	// register class
+	const int type_id = parent->repo.register_class(name, ret);
+
+	// inherit from Object, then Enum
+	enum_obj->inherit(parent->repo.get_primitive_class<Enum>());
+
+	enum_obj->type_id = type_id;
+	enum_obj->parent = context.scope;
+	enum_obj->object_data = enum_class_obj;
 
 	// extract enum members
 	for(ehval_p node = members_code; ; node = node->get<Node>()->paras[0]) {
@@ -519,10 +533,8 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 
 		// handle the member
 		const char *member_name = current_member->get<Node>()->paras[0]->get<String>();
-		if(current_member->get<Node>()->op == T_NULLARY_ENUM) {
-			Enum::t::add_nullary_member(ret, member_name, this);
-		} else { // T_ENUM_WITH_ARGUMENTS
-			std::vector<std::string> params(0);
+		std::vector<std::string> params(0);
+		if(current_member->get<Node>()->op == T_ENUM_WITH_ARGUMENTS) {
 			for(ehval_p argument = current_member->get<Node>()->paras[1]; ; argument = argument->get<Node>()->paras[1]) {
 				const char *name = argument->is_a<Node>() ? argument->get<Node>()->paras[0]->get<String>() : argument->get<String>();
 				params.push_back(name);
@@ -530,8 +542,15 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 					break;
 				}
 			}
-			Enum::t::add_member_with_arguments(ret, member_name, params, this);
 		}
+		// insert object into the Enum object
+		const int member_id = e->add_member(member_name, params);
+
+		// insert member into the class
+		auto ei = new Enum_Instance::t(type_id, member_id, params.size(), nullptr);
+		auto ei_obj = Enum_Instance::make(ei, parent);
+		ehmember_p member = ehmember_t::make(attributes_t::make_const(), ei_obj);
+		enum_obj->insert(member_name, member);
 
 		if(is_last) {
 			break;
@@ -539,14 +558,10 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 	}
 
 	// execute internal code
-	eh_execute(code, ehcontext_t(ret, e->contents));
-
-	// remove inheritance (terrible hack)
-	e->contents->get<Object>()->super.clear();
+	eh_execute(code, ret);
 
 	// insert variable
-	ehmember_p member;
-	member->value = ret;
+	ehmember_p member = ehmember_t::make(attributes_t::make(), ret);
 	context.scope->get<Object>()->insert(name, member);
 	return ret;
 }
@@ -572,9 +587,6 @@ ehval_p EHI::declare_class(const char *name, ehval_p code, ehcontext_t context) 
 
 	new_obj->type_id = parent->repo.register_class(name, ret);
 	new_obj->parent = context.scope;
-
-	// inherit from Object
-	new_obj->inherit(parent->base_object);
 
 	// execute the code within the class
 	eh_execute(code, ret);
@@ -732,22 +744,23 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 			}
 			case T_CALL: {
 				ehval_p member = eh_execute(op->paras[0], context);
-				ehval_p member_em = member->data();
-				if(!member_em->is_a<Enum_Member>()) {
+				if(!member->is_a<Enum_Instance>()) {
 					throw_TypeError("match case is not an Enum.Member", member, this);
 				}
-				Enum_Member::t *em = member_em->get<Enum_Member>();
+				const auto em = member->get<Enum_Instance>();
+				if(em->members != nullptr) {
+					throw_MiscellaneousError("Invalid argument in Enum match", this);
+				}
 
-				var = var->data();
 				if(!var->is_a<Enum_Instance>()) {
 					return false;
 				}
-				Enum_Instance::t *var_ei = var->get<Enum_Instance>();
+				const auto var_ei = var->get<Enum_Instance>();
 
-				if(member_em->naive_compare(var_ei->member()) != 0) {
+				if(var_ei->members == nullptr || em->type_compare(var_ei) != 0) {
 					return false;
 				}
-				int size = em->size;
+				const int size = em->nmembers;
 				if(op->paras[1]->get<Node>()->op != T_GROUPING) {
 					throw_MiscellaneousError("Invalid argument in Enum.Member match", this);
 				}
@@ -1041,12 +1054,7 @@ ehval_p EHInterpreter::make_method(ehlibmethod_t in) {
 ehval_p EHInterpreter::instantiate(ehval_p obj) {
 	ehobj_t *new_obj = new ehobj_t();
 	ehval_p ret = Object::make(new_obj, this);
-	ehval_p to_instantiate;
-	if(obj->is_a<Object>()) {
-		to_instantiate = obj;
-	} else {
-		to_instantiate = repo.get_object(obj);
-	}
+	ehval_p to_instantiate = obj->get_underlying_object(this);
 	ehobj_t *old_obj = to_instantiate->get<Object>();
 	new_obj->type_id = old_obj->type_id;
 	new_obj->parent = old_obj->parent;

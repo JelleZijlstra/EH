@@ -1,7 +1,7 @@
 %%stdout%%
-@object <Enum.Instance> [
-	head <public,non-static,constant>: @int 1
-	tail <public,non-static,constant>: @object <Enum.Member> [
+@enum instance Cons <List> [
+	head: @int 1
+	tail: @enum instance Nil <List> [
 	]
 ]
 %%stderr%%

@@ -2,33 +2,29 @@
 Testing echo, then printvar
 Enum class
 enum List
-	Cons(head, tail), Nil
+	Nil, Cons(head, tail)
 end
-@object <Enum> [
-	Cons <public,non-static,constant>: @object <Enum.Member> [
-	]
-	Nil <public,non-static,constant>: @object <Enum.Member> [
-	]
-	prototype <public,non-static,constant>: @object <GlobalObject> [
+@object <List> [
+	Cons <public,non-static,constant>: @enum constructor Cons <List>: head, tail
+	Nil <public,non-static,constant>: @enum instance Nil <List> [
 	]
 ]
 Enum nullary member
 Nil
-@object <Enum.Member> [
+@enum instance Nil <List> [
 ]
 Enum member with arguments
 Cons(head, tail)
-@object <Enum.Member> [
-]
+@enum constructor Cons <List>: head, tail
 Enum instance
 Cons(3, Nil)
-@object <Enum.Instance> [
-	head <public,non-static,constant>: @int 3
-	tail <public,non-static,constant>: @object <Enum.Member> [
+@enum instance Cons <List> [
+	head: @int 3
+	tail: @enum instance Nil <List> [
 	]
 ]
 Enum instance members
 3
-@object <Enum.Member> [
+@enum instance Nil <List> [
 ]
 %%stderr%%

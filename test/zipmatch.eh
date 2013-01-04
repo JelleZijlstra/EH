@@ -9,7 +9,7 @@ include '../lib/library.eh'
 # 	Nil, Cons(head, tail)
 # end
 
-List.prototype.zip = f, rhs => match this, rhs
+List.zip = f, rhs => match this, rhs
 	# pattern matches if both operands are Nil
 	case Nil, Nil; Nil
 	# pattern matches if either operand is Nil; second operand is ignored

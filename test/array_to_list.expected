@@ -1,17 +1,17 @@
 %%stdout%%
 (foo, {})::(3, 4)::[]
-@object <Enum.Instance> [
-	head <public,non-static,constant>: @tuple <2> [
+@enum instance Cons <List> [
+	head: @tuple <2> [
 		@string "foo"
 		@hash [
 		]
 	]
-	tail <public,non-static,constant>: @object <Enum.Instance> [
-		head <public,non-static,constant>: @tuple <2> [
+	tail: @enum instance Cons <List> [
+		head: @tuple <2> [
 			@int 3
 			@int 4
 		]
-		tail <public,non-static,constant>: @object <Enum.Member> [
+		tail: @enum instance Nil <List> [
 		]
 	]
 ]

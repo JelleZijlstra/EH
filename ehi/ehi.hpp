@@ -128,6 +128,7 @@ public:
 	ehval_p parse_interactive();
 
 	ehval_p call_method(ehval_p in, const char *name, ehval_p args, ehcontext_t context);
+	ehval_p call_function(ehval_p function, ehval_p args, ehcontext_t context);
 
 	template<class T>
 	ehval_p call_method_typed(ehval_p in, const char *name, ehval_p args, ehcontext_t context) {
@@ -219,7 +220,6 @@ private:
 	/*
 	 * Private methods
 	 */
-	ehval_p call_function(ehval_p function, ehval_p args, ehcontext_t context);
 	ehval_p eh_always_execute(ehval_p code, ehcontext_t context);
 	ehval_p eh_op_anonclass(ehval_p node, ehcontext_t context);
 	ehval_p eh_op_array(ehval_p node, ehcontext_t context);
@@ -297,9 +297,6 @@ inline int ehobj_t::register_member_class(const ehobj_t::initializer init_func, 
 
 	// inherit from Object, except in Object itself
 	if(typeid(T) != typeid(GlobalObject)) {
-		if(typeid(T) != typeid(Object)) {
-			newclass->inherit(interpreter_parent->base_object);
-		}
 		newclass->parent = interpreter_parent->global_object;
 	}
 	init_func(newclass, interpreter_parent);

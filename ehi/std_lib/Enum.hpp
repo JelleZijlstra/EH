@@ -1,106 +1,60 @@
 #ifndef EH_ENUM_H_
 #define EH_ENUM_H_
 
-#include <vector>
+#include <unordered_map>
 
 #include "std_lib_includes.hpp"
 
-EH_CHILD_CLASS(Enum, Member) {
-public:
-	class t {
-	public:
-		typedef const std::vector<std::string> params_t;
-
-		ehval_p parent_enum;
-		const int size;
-		const std::string name;
-		params_t params;
-
-		t(ehval_p _parent, const std::string &_name) : parent_enum(_parent), size(0), name(_name), params() {}
-
-		t(ehval_p _parent, const std::string &_name, int _size, params_t &_params) : parent_enum(_parent), size(_size), name(_name), params(_params) {
-			assert(params.size() == (unsigned long) size);
-		}
-
-		std::string toString() const;
-
-		static ehval_p make(ehval_p e, Enum_Member::t *em, EHI *ehi);
-
-		static ehval_p make(ehval_p e, const char *name, EHI *ehi);
-
-		static ehval_p make(ehval_p e, const char *name, params_t &params, EHI *ehi);
-	};
-
-	typedef t *type;
-	type value;
-
-	virtual bool belongs_in_gc() const {
-		return true;
-	}
-
-	virtual std::list<ehval_p> children() {
-		return { value->parent_enum };
-	}
-
-	~Enum_Member() {
-		delete value;
-	}
-
-	Enum_Member(type val) : value(val) {}
-
-	static ehval_p make(t *em, EHInterpreter *parent) {
-		return parent->allocate<Enum_Member>(em);
-	}
-};
-
 EH_CLASS(Enum) {
 public:
+	class member_info {
+	public:
+		std::string name;
+		std::vector<std::string> members;
+
+		member_info(const std::string &_name, const std::vector<std::string> &_members) : name(_name), members(_members) {}
+
+		member_info() : name(), members() {}
+
+		const std::string to_string() const;
+	};
+
 	class t {
 	private:
 		size_t nmembers;
-		std::vector<ehval_p> members;
+		unsigned int next_id;
+
+	public:
+		std::unordered_map<unsigned int, member_info> member_map;
 		const std::string name;
 
-		t(const std::string &_name, ehval_p _contents) : nmembers(0), members(0), name(_name), contents(_contents) {}
-
-		static void add_member(ehval_p e, const char *name, ehval_p member, EHI *ehi);
-	public:
-		// prototype
-		ehval_p contents;
-
-		std::string toString() const;
+		const std::string to_string() const;
 
 		size_t size() const {
 			return nmembers;
 		}
 
-		std::vector<ehval_p> get_members() {
-			return members;
+		t(const std::string &_name) : nmembers(0), next_id(0), member_map(), name(_name) {}
+
+		unsigned int add_member(const std::string &name, const std::vector<std::string> &members, unsigned int id = 0) {
+			member_info member(name, members);
+
+			if(id == 0) {
+				id = next_id;
+			}
+			member_map[id] = member;
+
+			next_id = id + 1;
+			nmembers++;
+			return id;
 		}
-
-		static void add_nullary_member(ehval_p e, const char *name, EHI *ehi);
-
-		static void add_member_with_arguments(ehval_p e, const char *name, Enum_Member::t::params_t params, EHI *ehi);
-
-		static ehval_p make(const char *name, EHI *ehi);
-
-		static t *extract_enum(ehval_p obj);
 	};
 
 	typedef t *type;
 	type value;
 
 	virtual bool belongs_in_gc() const {
-		return true;
-	}
-
-	virtual std::list<ehval_p> children() {
-		std::list<ehval_p> out;
-		out.push_back(value->contents);
-		for(auto &i : value->get_members()) {
-			out.push_back(i);
-		}
-		return out;
+		return false;
 	}
 
 	~Enum() {
@@ -109,8 +63,8 @@ public:
 
 	Enum(type val) : value(val) {}
 
-	static ehval_p make(t *value, EHInterpreter *parent) {
-		return parent->allocate<Enum>(value);
+	static ehval_p make(const std::string name) {
+		return static_cast<ehval_t *>(new Enum(new t(name)));
 	}
 };
 
@@ -118,27 +72,44 @@ EH_CHILD_CLASS(Enum, Instance) {
 public:
 	class t {
 	public:
-		typedef std::vector<ehval_p> args_t;
+		const unsigned int type_id;
 
-		ehval_p member_ptr;
+		const unsigned int member_id;
 
-		const args_t args;
+		const unsigned int nmembers;
 
-		t(ehval_p _member_ptr, args_t _args) : member_ptr(_member_ptr), args(_args) {}
+		ehval_p *const members;
 
-		std::string toString(EHI *ehi, ehcontext_t context);
+		t(unsigned int type, unsigned int member, unsigned int n, ehval_p *args) : type_id(type), member_id(member), nmembers(n), members(args) {}
+
+		~t() {
+			delete[] members;
+		}
+
+		int type_compare(Enum_Instance::t *rhs);
 
 		int compare(Enum_Instance::t *rhs, EHI *ehi, ehcontext_t context);
 
-		ehval_p member() {
-			return member_ptr;
-		}
-
 		ehval_p get(unsigned int i) {
-			return args[i];
+			assert(i < nmembers);
+			return members[i];
 		}
 
-		static ehval_p make(ehval_p member, args_t args, EHI *ehi);
+		const ehval_p get_parent_enum(EHI *ehi) const {
+			return ehi->get_parent()->repo.get_object(type_id)->data();
+		}
+
+		const Enum::member_info &get_member_info(EHI *ehi) const {
+			Enum::t *parent_enum = get_parent_enum(ehi)->get<Enum>();
+			return parent_enum->member_map[member_id];
+		}
+
+		bool is_constructor() const {
+			return nmembers > 0 && members == nullptr;
+		}
+	private:
+		t(const t &) =delete;
+		t operator=(const t &) =delete;
 	};
 
 	typedef t *type;
@@ -150,14 +121,16 @@ public:
 
 	virtual std::list<ehval_p> children() {
 		std::list<ehval_p> out;
-		out.push_back(value->member_ptr);
-		for(auto &i : value->args) {
-			out.push_back(i);
+		const int size = value->nmembers;
+		for(int i = 0; i < size; i++) {
+			out.push_back(value->get(i));
 		}
 		return out;
 	}
 
-	~Enum_Instance() {
+	virtual void printvar(printvar_set &set, int level, EHI *ehi);
+
+	virtual ~Enum_Instance() {
 		delete value;
 	}
 
@@ -166,23 +139,21 @@ public:
 	static ehval_p make(type val, EHInterpreter *parent) {
 		return parent->allocate<Enum_Instance>(val);
 	}
+private:
+	Enum_Instance(const Enum_Instance &) =delete;
+	Enum_Instance operator=(const Enum_Instance &) =delete;
 };
 
 EH_INITIALIZER(Enum);
 
 EH_METHOD(Enum, new);
-EH_METHOD(Enum, size);
 EH_METHOD(Enum, toString);
-
-EH_INITIALIZER(Enum_Member);
-
-EH_METHOD(Enum_Member, new);
-EH_METHOD(Enum_Member, operator_colon);
-EH_METHOD(Enum_Member, toString);
-
-EH_INITIALIZER(Enum_Instance);
-
-EH_METHOD(Enum_Instance, toString);
-EH_METHOD(Enum_Instance, compare);
+EH_METHOD(Enum, operator_colon);
+EH_METHOD(Enum, compare);
+EH_METHOD(Enum, typeId);
+EH_METHOD(Enum, type);
+EH_METHOD(Enum, isConstructor);
+EH_METHOD(Enum, operator_arrow);
+EH_METHOD(Enum, map);
 
 #endif /* EH_ENUM_H_ */

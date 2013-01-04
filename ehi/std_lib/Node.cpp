@@ -6,6 +6,7 @@
 
 #include "std_lib_includes.hpp"
 #include "Node.hpp"
+#include "Attribute.hpp"
 #include "../eh.bison.hpp"
 
 #define TOKEN(name, nparas) {name, {#name, nparas}}

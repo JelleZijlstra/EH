@@ -1,6 +1,13 @@
 #include "eh.hpp"
+#include "std_lib/Attribute.hpp"
+#include "eh.bison.hpp"
 
 #include <stdio.h>
+
+int yylex(YYSTYPE *, void *);
+int yylex_init_extra(class EHI *, void **);
+int yylex_destroy(void *);
+struct yy_buffer_state *yy_scan_string (const char *str);
 
 // Thread for the garbage collector. Before I actually start running this, I'll have to make sure the GC is thread-safe.
 void *gc_thread(void *arg) {
@@ -13,6 +20,19 @@ void *gc_thread(void *arg) {
 		}
 		parent->gc.do_collect(parent->global_object);
 	}
+}
+
+EHI::EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), interpreter_context(_context), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
+	yylex_init_extra(this, &scanner);
+}
+EHI::EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
+	yylex_init_extra(this, &scanner);
+	parent = new EHInterpreter();
+	interpreter_context = parent->global_object;
+}
+EHI::~EHI() {
+	yylex_destroy(scanner);
+	delete[] this->buffer;
 }
 
 int EHI::eh_interactive(interactivity_enum new_interactivity) {

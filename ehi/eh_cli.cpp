@@ -5,7 +5,6 @@
  * Default implementation of EH, used in the standalone interpreter.
  */
 #include "eh.hpp"
-#include "eh.bison.hpp"
 #include "std_lib/UnknownCommandError.hpp"
 
 static void eh_usage(char *name) {
@@ -62,7 +61,7 @@ ehval_p EHI::execute_cmd(const char *name, Array::t *paras) {
 }
 char *EHI::eh_getline() {
 	if(this->buffer == nullptr) {
-		this->buffer = new char[512];	
+		this->buffer = new char[512];
 	}
 	if(get_interactivity() == cli_prompt_e) {
 		printf("> ");

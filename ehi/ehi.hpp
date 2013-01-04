@@ -4,7 +4,6 @@
  * ehi.h
  * Jelle Zijlstra, December 2011
  */
-#include "eh.bison.hpp"
 #include "eh_error.hpp"
 #include "concurrency.hpp"
 #include "eh_files.hpp"
@@ -17,16 +16,13 @@
 #include "std_lib/Array.hpp"
 #include "std_lib/TypeError.hpp"
 #include "std_lib/Hash.hpp"
+#include "std_lib/Node.hpp"
 
 #include <sstream>
 
 /*
  * Flex and Bison
  */
-int yylex(YYSTYPE *, void *);
-int yylex_init_extra(class EHI *, void **);
-int yylex_destroy(void *);
-struct yy_buffer_state *yy_scan_string (const char *str);
 
 typedef enum {
 	cli_prompt_e,
@@ -176,18 +172,9 @@ public:
 	/*
 	 * Constructors and destructors.
 	 */
-	EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), interpreter_context(_context), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
-		yylex_init_extra(this, &scanner);
-	}
-	EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
-		yylex_init_extra(this, &scanner);
-		parent = new EHInterpreter();
-		interpreter_context = parent->global_object;
-	}
-	virtual ~EHI(void) {
-		yylex_destroy(scanner);
-		delete[] this->buffer;
-	}
+	EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name);
+	EHI();
+	virtual ~EHI();
 private:
 
 	/*

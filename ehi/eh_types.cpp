@@ -140,6 +140,18 @@ void Object::printvar(printvar_set &set, int level, EHI *ehi) {
 		}
 	}
 }
+void ehobj_t::add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *parent, int member_id) {
+	auto e = object_data->get<Enum>();
+
+	// insert object into the Enum object
+	member_id = e->add_member(name, params, member_id);
+
+	// insert member into the class
+	auto ei = new Enum_Instance::t(type_id, member_id, params.size(), nullptr);
+	auto ei_obj = Enum_Instance::make(ei, parent);
+	ehmember_p member = ehmember_t::make(attributes_t::make_const(), ei_obj);
+	insert(name, member);
+}
 ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) {
 	if(this->has(name)) {
 		return this->members[name];
@@ -258,11 +270,23 @@ int ehobj_t::register_member_class(const char *name, const ehobj_t::initializer 
 	newclass->parent = interpreter_parent->global_object;
 
 	init_func(newclass, interpreter_parent);
-	// inherit from Object, except in Object itself
+
 	ehmember_p member = ehmember_t::make(attributes, new_value);
 	this->insert(name, member);
 	return newclass->type_id;
 }
+int ehobj_t::register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, class EHInterpreter *interpreter_parent) {
+	const ehval_p ret = Enum::make_enum_class(name, interpreter_parent->global_object, interpreter_parent);
+	auto enum_obj = ret->get<Object>();
+
+	init_func(enum_obj, interpreter_parent);
+
+	ehmember_p member = ehmember_t::make(attributes, ret);
+	insert(name, member);
+
+	return enum_obj->type_id;
+}
+
 
 ehobj_t::~ehobj_t() {
 	// Commenting out for now until I figure out how to get it working.

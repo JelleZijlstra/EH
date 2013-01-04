@@ -8,19 +8,25 @@
  * available at http://epaperpress.com/lexandyacc/
  */
 #include "eh.hpp"
-#include "eh.bison.hpp"
 #include "std_lib/Node.hpp"
 #include "std_lib/Integer.hpp"
 #include "std_lib/String.hpp"
 #include "std_lib/Float.hpp"
 #include "std_lib/Bool.hpp"
+#include "std_lib/Attribute.hpp"
+
+#include "eh.bison.hpp"
 
 extern FILE *yyin;
+
 EHI *yyget_extra(void *scanner);
+int yylex(YYSTYPE *, void *);
+
 #define YYERROR_VERBOSE
 #define YYLEX_PARAM scanner
 
 // can't overload macros
+#define PARENT yyget_extra(scanner)->get_parent()
 #define ADD_NODE0(opcode) eh_addnode(opcode)
 #define ADD_NODE1(opcode, first) eh_addnode(opcode, Node::make(first))
 #define ADD_NODE2(opcode, first, second) eh_addnode(opcode, Node::make(first), Node::make(second))
@@ -522,11 +528,11 @@ separators:
 /* Property declarations */
 attributelist:
 	T_ATTRIBUTE attributelist_inner
-							{ $$ = eh_addnode(T_ATTRIBUTE, Attribute::make($1), Node::make($2)); }
+							{ $$ = eh_addnode(T_ATTRIBUTE, Attribute::make($1, PARENT), Node::make($2)); }
 
 attributelist_inner:
 	T_ATTRIBUTE attributelist_inner
-							{ $$ = eh_addnode(T_ATTRIBUTE, Attribute::make($1), Node::make($2)); }
+							{ $$ = eh_addnode(T_ATTRIBUTE, Attribute::make($1, PARENT), Node::make($2)); }
 	| /* NULL */ %prec '='	{ $$ = ADD_NODE0(T_END); }
 	;
 

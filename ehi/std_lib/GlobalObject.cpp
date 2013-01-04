@@ -9,6 +9,7 @@
 
 #include "ArgumentError.hpp"
 #include "Array.hpp"
+#include "Attribute.hpp"
 #include "Binding.hpp"
 #include "Bool.hpp"
 #include "ConstError.hpp"
@@ -44,6 +45,7 @@
 
 #define GLOBAL_REGISTER_CLASS(name) obj->register_member_class<name>(ehinit_ ## name, #name, attributes_t::make_const(), parent)
 #define REGISTER_PURE_CLASS(name) obj->register_member_class(#name, ehinit_ ## name, attributes_t::make_const(), parent)
+#define REGISTER_ENUM_CLASS(name) obj->register_enum_class(ehinit_ ## name, #name, attributes_t::make_const(), parent)
 
 EH_INITIALIZER(GlobalObject) {
 	/*
@@ -63,6 +65,8 @@ EH_INITIALIZER(GlobalObject) {
 	/*
 	 * Initialize top-level classes.
 	 */
+	GLOBAL_REGISTER_CLASS(Enum);
+	REGISTER_ENUM_CLASS(Attribute);
 	GLOBAL_REGISTER_CLASS(Binding);
 	GLOBAL_REGISTER_CLASS(File);
 	GLOBAL_REGISTER_CLASS(Integer);
@@ -90,7 +94,6 @@ EH_INITIALIZER(GlobalObject) {
 	GLOBAL_REGISTER_CLASS(FixedArray);
 	REGISTER_PURE_CLASS(Random);
 	GLOBAL_REGISTER_CLASS(Map);
-	GLOBAL_REGISTER_CLASS(Enum);
 	REGISTER_PURE_CLASS(VisibilityError);
 
 	/*

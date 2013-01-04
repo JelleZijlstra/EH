@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 
-#include "std_lib_includes.hpp"
+#include "../eh_libclasses.hpp"
 
 EH_CLASS(Enum) {
 public:
@@ -66,6 +66,8 @@ public:
 	static ehval_p make(const std::string name) {
 		return static_cast<ehval_t *>(new Enum(new t(name)));
 	}
+
+	static ehval_p make_enum_class(const char *name, ehval_p scope, EHInterpreter *parent);
 };
 
 EH_CHILD_CLASS(Enum, Instance) {
@@ -82,7 +84,7 @@ public:
 
 		t(unsigned int type, unsigned int member, unsigned int n, ehval_p *args) : type_id(type), member_id(member), nmembers(n), members(args) {}
 
-		~t() {
+		virtual ~t() {
 			delete[] members;
 		}
 
@@ -106,6 +108,10 @@ public:
 
 		bool is_constructor() const {
 			return nmembers > 0 && members == nullptr;
+		}
+
+		virtual std::string decompile(int level) {
+			return "";
 		}
 	private:
 		t(const t &) =delete;
@@ -138,6 +144,10 @@ public:
 
 	static ehval_p make(type val, EHInterpreter *parent) {
 		return parent->allocate<Enum_Instance>(val);
+	}
+
+	virtual std::string decompile(int level) {
+		return value->decompile(level);
 	}
 private:
 	Enum_Instance(const Enum_Instance &) =delete;

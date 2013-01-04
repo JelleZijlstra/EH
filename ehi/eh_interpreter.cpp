@@ -19,6 +19,9 @@
 #include "std_lib/NameError.hpp"
 #include "std_lib/SuperClass.hpp"
 #include "std_lib/VisibilityError.hpp"
+#include "std_lib/Attribute.hpp"
+#include "std_lib/Node.hpp"
+#include "eh.bison.hpp"
 
 typedef struct ehcmd_listentry_t {
 	const char *name;
@@ -501,23 +504,8 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 	ehval_p members_code = op->paras[1];
 	ehval_p code = op->paras[2];
 
-	// create wrapper object
-	ehobj_t *enum_obj = new ehobj_t();
-	ehval_p ret = Object::make(enum_obj, parent);
-
-	// create enum object
-	ehval_p enum_class_obj = Enum::make(name);
-	Enum::t *e = enum_class_obj->get<Enum>();
-
-	// register class
-	const int type_id = parent->repo.register_class(name, ret);
-
-	// inherit from Object, then Enum
-	enum_obj->inherit(parent->repo.get_primitive_class<Enum>());
-
-	enum_obj->type_id = type_id;
-	enum_obj->parent = context.scope;
-	enum_obj->object_data = enum_class_obj;
+	ehval_p ret = Enum::make_enum_class(name, context.scope, parent);
+	ehobj_t *enum_obj = ret->get<Object>();
 
 	// extract enum members
 	for(ehval_p node = members_code; ; node = node->get<Node>()->paras[0]) {
@@ -543,14 +531,7 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 				}
 			}
 		}
-		// insert object into the Enum object
-		const int member_id = e->add_member(member_name, params);
-
-		// insert member into the class
-		auto ei = new Enum_Instance::t(type_id, member_id, params.size(), nullptr);
-		auto ei_obj = Enum_Instance::make(ei, parent);
-		ehmember_p member = ehmember_t::make(attributes_t::make_const(), ei_obj);
-		enum_obj->insert(member_name, member);
+		enum_obj->add_enum_member(member_name, params, parent);
 
 		if(is_last) {
 			break;
@@ -1160,7 +1141,7 @@ static inline int count_nodes(const ehval_p node) {
 static attributes_t parse_attributes(ehval_p node) {
 	attributes_t attributes = attributes_t::make();
 	for( ; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
-		switch(node->get<Node>()->paras[0]->get<Attribute>()) {
+		switch(node->get<Node>()->paras[0]->get<Enum_Instance>()->member_id) {
 			case Attribute::publica_e:
 				attributes.visibility = public_e;
 				break;

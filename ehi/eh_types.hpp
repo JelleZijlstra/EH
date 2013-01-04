@@ -242,6 +242,10 @@ public:
 	template<class T>
 	int register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, class EHInterpreter *interpreter_parent, ehval_p the_class = nullptr);
 
+	int register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, class EHInterpreter *interpreter_parent);
+
+	void add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *parent, int member_id = 0);
+
 	// destructor
 	~ehobj_t();
 private:

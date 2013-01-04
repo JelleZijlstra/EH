@@ -77,42 +77,6 @@ struct attributes_t {
 
 #include "eh_types.hpp"
 
-// and accompanying enum used by the parser
-EH_CLASS(Attribute) {
-public:
-	enum attribute_enum {
-		publica_e,
-		privatea_e,
-		statica_e,
-		consta_e
-	};
-
-	typedef attribute_enum type;
-	type value;
-
-	Attribute(attribute_enum v) : value(v) {}
-
-	~Attribute() {}
-
-	static ehval_p make(attribute_enum v) {
-		return new Attribute(v);
-	}
-
-	std::string decompile(int level) {
-		switch(value) {
-			case publica_e: return "public";
-			case privatea_e: return "private";
-			case statica_e: return "static";
-			case consta_e: return "const";
-		}
-	}
-};
-
-/*
- * Parser and interpreter structs
- */
-#include "std_lib/Node.hpp"
-
 /*
  * Other global functions
  */
@@ -121,7 +85,6 @@ void yyerror(void *, const char *s);
 /*
  * EH interpreter
  */
-#include "eh.bison.hpp"
 #include "ehi.hpp"
 
 #endif /* EH_H_ */

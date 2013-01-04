@@ -3,6 +3,7 @@
  * Implements enums. See <a href="/syntax">Syntax</a> for more information on
  * enums.
  */
+#include "std_lib_includes.hpp"
 
 #include "Enum.hpp"
 #include "MiscellaneousError.hpp"
@@ -40,6 +41,26 @@ EH_INITIALIZER(Enum) {
 
 	// register a type id for Enum_Instance
 	parent->repo.register_inbuilt_class<Enum_Instance>(Null::make());
+}
+
+ehval_p Enum::make_enum_class(const char *name, ehval_p scope, EHInterpreter *parent) {
+	// create wrapper object
+	ehobj_t *enum_obj = new ehobj_t();
+	ehval_p ret = Object::make(enum_obj, parent);
+
+	// create enum object
+	ehval_p enum_class_obj = Enum::make(name);
+
+	// register class
+	const int type_id = parent->repo.register_class(name, ret);
+
+	// inherit from Enum
+	enum_obj->inherit(parent->repo.get_primitive_class<Enum>());
+
+	enum_obj->type_id = type_id;
+	enum_obj->parent = scope;
+	enum_obj->object_data = enum_class_obj;
+	return ret;
 }
 
 void Enum_Instance::printvar(printvar_set &set, int level, EHI *ehi) {

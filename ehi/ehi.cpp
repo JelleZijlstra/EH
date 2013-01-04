@@ -1,5 +1,6 @@
 #include "eh.hpp"
 #include "std_lib/Attribute.hpp"
+#include "std_lib/Node.hpp"
 #include "eh.bison.hpp"
 
 #include <stdio.h>
@@ -18,14 +19,14 @@ void *gc_thread(void *arg) {
 		if(do_stop) {
 			pthread_exit(0);
 		}
-		parent->gc.do_collect(parent->global_object);
+		parent->gc.do_collect({parent->global_object});
 	}
 }
 
-EHI::EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), interpreter_context(_context), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
+EHI::EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), interpreter_context(_context), code(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
 	yylex_init_extra(this, &scanner);
 }
-EHI::EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
+EHI::EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(nullptr), code(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
 	yylex_init_extra(this, &scanner);
 	parent = new EHInterpreter();
 	interpreter_context = parent->global_object;

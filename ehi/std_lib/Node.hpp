@@ -1,53 +1,39 @@
 #ifndef EH_NODE_H_
 #define EH_NODE_H_
 
-extern const std::map<int, std::pair<const char *, int> > node_nparas;
+#include "Enum.hpp"
+#include "Null.hpp"
 
-EH_CLASS(Node) {
+class Node : public Enum_Instance::t {
 public:
-	class t {
-	public:
-		int op; // Type of operator
-		ehval_p *paras; // Parameters
+	const static int node_id = 6;
 
-		~t() {
-			delete[] paras;
+	Node(int op, int nparas) : Enum_Instance::t(node_id, op, nparas, nullptr) {
+		if(nparas > 0) {
+			members = new ehval_p[nparas];
 		}
-
-		t(int _op, int nparas) : op(_op) {
-			if(nparas > 0) {
-				paras = new ehval_p[nparas];
-			} else {
-				paras = nullptr;
-			}
-		}
-	};
-
-	typedef t *type;
-	type value;
-
-	~Node() {
-		delete value;
-	}
-
-	Node(type val) : value(val) {}
-
-	virtual bool belongs_in_gc() const {
-		return false;
 	}
 
 	virtual std::string decompile(int level);
 
-	static ehval_p make(type val) {
-		return static_cast<ehval_t *>(new Node(val));
+	static ehval_p make(Node *val, EHInterpreter *parent) {
+		if(val == nullptr) {
+			return Null::make();
+		} else {
+			return parent->allocate<Enum_Instance>(val);
+		}
+	}
+
+	static bool is_a(ehval_p obj) {
+		return obj->is_a<Enum_Instance>() && (obj->get<Enum_Instance>()->type_id == node_id);
 	}
 };
 
-Node::t *eh_addnode(int opcode);
-Node::t *eh_addnode(int opcode, ehval_p first);
-Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second);
-Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third);
-Node::t *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval_p fourth);
+Node *eh_addnode(int opcode);
+Node *eh_addnode(int opcode, ehval_p first);
+Node *eh_addnode(int opcode, ehval_p first, ehval_p second);
+Node *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third);
+Node *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval_p fourth);
 
 #include "../eh_libclasses.hpp"
 

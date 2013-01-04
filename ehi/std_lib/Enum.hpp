@@ -80,7 +80,7 @@ public:
 
 		const unsigned int nmembers;
 
-		ehval_p *const members;
+		ehval_p *members;
 
 		t(unsigned int type, unsigned int member, unsigned int n, ehval_p *args) : type_id(type), member_id(member), nmembers(n), members(args) {}
 
@@ -127,9 +127,11 @@ public:
 
 	virtual std::list<ehval_p> children() {
 		std::list<ehval_p> out;
-		const int size = value->nmembers;
-		for(int i = 0; i < size; i++) {
-			out.push_back(value->get(i));
+		if(value->members != nullptr) {
+			const int size = value->nmembers;
+			for(int i = 0; i < size; i++) {
+				out.push_back(value->get(i));
+			}
 		}
 		return out;
 	}
@@ -140,7 +142,9 @@ public:
 		delete value;
 	}
 
-	Enum_Instance(type val) : value(val) {}
+	Enum_Instance(type val) : value(val) {
+		assert(value != nullptr);
+	}
 
 	static ehval_p make(type val, EHInterpreter *parent) {
 		return parent->allocate<Enum_Instance>(val);

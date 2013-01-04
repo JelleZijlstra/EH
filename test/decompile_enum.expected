@@ -2,7 +2,7 @@
 func: ()
 	enum A
 		D(e), C(a, b), B
-		
+		()
 	end
 	enum B
 		D(a, b), C

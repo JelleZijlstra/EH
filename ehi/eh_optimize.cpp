@@ -12,27 +12,25 @@
 #define UNARY_OP(op, method) case op: \
  	return eh_addnode(T_CALL_METHOD, optimize(paras[0], context), String::make(method), optimize(paras[1], context))
 
-static inline ehval_p val(Node::t *op) {
-	return Node::make(op);
-}
+#define val(op) Node::make(op, parent)
 
 ehval_p EHI::optimize(ehval_p node, ehcontext_t context) {
-	if(!node->is_a<Node>()) {
+	if(Node::is_a(node)) {
 		return node;
 	}
-	Node::t *op = node->get<Node>();
+	Enum_Instance::t *op = node->get<Enum_Instance>();
 	if(op == nullptr) {
 		return nullptr;
 	}
-	ehval_p *paras = op->paras;
-	switch(op->op) {
+	ehval_p *paras = op->members;
+	switch(op->member_id) {
 		case T_LITERAL:
 			return paras[0];
 		case T_NULL:
 			return nullptr;
 		case T_GROUPING: {
 			ehval_p inner = paras[0];
-			if(inner->is_a<Node>() && inner->get<Node>()->op != T_COMMA) {
+			if(inner->is_a<Enum_Instance>() && inner->get<Enum_Instance>()->member_id != T_COMMA) {
 				return optimize(inner, context);
 			} else {
 				return val(eh_addnode(T_GROUPING, optimize(inner, context)));
@@ -42,8 +40,8 @@ ehval_p EHI::optimize(ehval_p node, ehcontext_t context) {
 			// optimize method call
 			ehval_p func = paras[0];
 			ehval_p args = optimize(paras[1], context);
-			if(func->is_a<Node>() && func->get<Node>()->op == T_ACCESS) {
-				ehval_p *inner_paras = func->get<Node>()->paras;
+			if(func->is_a<Enum_Instance>() && func->get<Enum_Instance>()->member_id == T_ACCESS) {
+				ehval_p *inner_paras = func->get<Enum_Instance>()->members;
 				ehval_p base = optimize(inner_paras[0], context);
 				ehval_p method = optimize(inner_paras[1], context);
 				return val(eh_addnode(T_CALL_METHOD, base, method, args));
@@ -56,12 +54,12 @@ ehval_p EHI::optimize(ehval_p node, ehcontext_t context) {
 		case T_FUNC:
 		case T_CASE:
 			// don't optimize the lvalue
-			return val(eh_addnode(op->op, paras[0], optimize(paras[1], context)));
+			return val(eh_addnode(op->member_id, paras[0], optimize(paras[1], context)));
 		default: {
-			const int nparas = node_nparas.at(op->op).second;
-			Node::t *out = new Node::t(op->op, nparas);
+			const int nparas = op->nmembers;
+			Node *out = new Node(op->member_id, nparas);
 			for(int i = 0; i < nparas; i++) {
-				out->paras[i] = optimize(paras[i], context);
+				out->members[i] = optimize(paras[i], context);
 			}
 			return val(out);
 		}

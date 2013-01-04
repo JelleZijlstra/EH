@@ -96,11 +96,11 @@ void EHInterpreter::eh_init(void) {
 		redirect_command(libredirs[i][0], libredirs[i][1]);
 	}
 
-	gc.do_collect(global_object);
+	gc.do_collect({global_object});
 }
 void EHInterpreter::eh_exit(void) {
 	this->global_object->get<Object>()->members.erase("global");
-	this->gc.do_collect(this->global_object);
+	this->gc.do_collect({this->global_object});
 	return;
 }
 EHInterpreter::~EHInterpreter() {
@@ -115,13 +115,13 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 	ehval_p ret, operand1, operand2;
 	bool b1, b2;
 
-	if(node->is_a<Node>()) {
-		Node::t *op = node->get<Node>();
+	if(Node::is_a(node)) {
+		Enum_Instance::t *op = node->get<Enum_Instance>();
 		if(op == nullptr) {
 			return nullptr;
 		}
-		ehval_p *paras = op->paras;
-		switch(op->op) {
+		ehval_p *paras = op->members;
+		switch(op->member_id) {
 			case T_LITERAL:
 				return paras[0];
 			case T_NULL:
@@ -186,10 +186,10 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				returning = true;
 				break;
 			case T_BREAK: // break out of a loop
-				eh_op_break(op, context);
+				eh_op_break(paras, context);
 				break;
 			case T_CONTINUE: // continue in a loop
-				eh_op_continue(op, context);
+				eh_op_continue(paras, context);
 				break;
 		/*
 		 * Object access
@@ -217,9 +217,9 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 			case T_CLASS: // anonymous class declaration
 				return eh_op_class(paras, context);
 			case T_CLASS_MEMBER:
-				return eh_op_classmember(op, context);
+				return eh_op_classmember(paras, context);
 			case T_ENUM:
-				return eh_op_enum(op, context);
+				return eh_op_enum(paras, context);
 			case T_ARRAY_LITERAL: // array declaration
 				return eh_op_array(paras[0], context);
 			case T_HASH_LITERAL: // hash
@@ -318,7 +318,7 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 					context
 				);
 			default:
-				std::cerr << "Unexpected opcode " << op->op;
+				std::cerr << "Unexpected opcode " << op->member_id;
 				assert(false);
 		}
 	} else {
@@ -337,12 +337,12 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, ehcontext_t context) 
 	ehval_p args = Array::make(parent);
 	Array::t *paras = args->get<Array>();
 	// loop through the paras given
-	for( ; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
-		ehval_p node2 = node->get<Node>()->paras[0];
+	for( ; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
+		ehval_p node2 = node->get<Enum_Instance>()->members[0];
 		// every para_expr should have an op associated with it
-		if(node2->is_a<Node>()) {
-			ehval_p *node_paras = node2->get<Node>()->paras;
-			switch(node2->get<Node>()->op) {
+		if(Node::is_a(node2)) {
+			ehval_p *node_paras = node2->get<Enum_Instance>()->members;
+			switch(node2->get<Enum_Instance>()->member_id) {
 				case T_SHORTPARA: {
 					// short paras: set each short-form option to the same thing
 					value_r = eh_execute(node_paras[1], context);
@@ -388,8 +388,8 @@ ehval_p EHI::eh_op_if(int token, ehval_p *paras, ehcontext_t context) {
 		return eh_execute(paras[1], context);
 	} else {
 		// loop through elsifs
-		for(Node::t *iop = paras[2]->get<Node>(); iop->op != T_END; iop = iop->paras[1]->get<Node>()) {
-			ehval_p *current_block = iop->paras[0]->get<Node>()->paras;
+		for(Enum_Instance::t *iop = paras[2]->get<Enum_Instance>(); iop->member_id != T_END; iop = iop->members[1]->get<Enum_Instance>()) {
+			ehval_p *current_block = iop->members[0]->get<Enum_Instance>()->members;
 			if(this->toBool(eh_execute(current_block[0], context), context)->get<Bool>()) {
 				return eh_execute(current_block[1], context);
 			}
@@ -439,8 +439,8 @@ ehval_p EHI::eh_op_for(ehval_p *paras, ehcontext_t context) {
 ehval_p EHI::eh_op_for_in(ehval_p *paras, ehcontext_t context) {
 	return do_for_loop(paras[1], paras[2], T_FOR_IN, paras[0], context);
 }
-void EHI::eh_op_break(Node::t *op, ehcontext_t context) {
-	ehval_p level_v = eh_execute(op->paras[0], context);
+void EHI::eh_op_break(ehval_p *paras, ehcontext_t context) {
+	ehval_p level_v = eh_execute(paras[0], context);
 	if(!level_v->is_a<Integer>()) {
 		throw_TypeError("break operator requires an Integer argument", level_v, this);
 	}
@@ -451,8 +451,8 @@ void EHI::eh_op_break(Node::t *op, ehcontext_t context) {
 	}
 	breaking = level;
 }
-void EHI::eh_op_continue(Node::t *op, ehcontext_t context) {
-	ehval_p level_v = eh_execute(op->paras[0], context);
+void EHI::eh_op_continue(ehval_p *paras, ehcontext_t context) {
+	ehval_p level_v = eh_execute(paras[0], context);
 	if(!level_v->is_a<Integer>()) {
 		throw_TypeError("continue operator requires an Integer argument", level_v, this);
 	}
@@ -468,19 +468,19 @@ ehval_p EHI::eh_op_array(ehval_p node, ehcontext_t context) {
 	// need to count array members first, because they are reversed in our node.
 	// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
 	int count = 0;
-	for(ehval_p node2 = node; node2->get<Node>()->op != T_END; node2 = node2->get<Node>()->paras[0]) {
+	for(ehval_p node2 = node; node2->get<Enum_Instance>()->member_id != T_END; node2 = node2->get<Enum_Instance>()->members[0]) {
 		count++;
 	}
-	for(ehval_p node2 = node; node2->get<Node>()->op != T_END; node2 = node2->get<Node>()->paras[0]) {
-		array_insert(ret->get<Array>(), node2->get<Node>()->paras[1], --count, context);
+	for(ehval_p node2 = node; node2->get<Enum_Instance>()->member_id != T_END; node2 = node2->get<Enum_Instance>()->members[0]) {
+		array_insert(ret->get<Array>(), node2->get<Enum_Instance>()->members[1], --count, context);
 	}
 	return ret;
 }
 ehval_p EHI::eh_op_anonclass(ehval_p node, ehcontext_t context) {
 	ehval_p ret = Hash::make(parent);
 	Hash::ehhash_t *new_hash = ret->get<Hash>();
-	for( ; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[0]) {
-		ehval_p *myparas = node->get<Node>()->paras[1]->get<Node>()->paras;
+	for( ; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[0]) {
+		ehval_p *myparas = node->get<Enum_Instance>()->members[1]->get<Enum_Instance>()->members;
 		// nodes here will always have the name in para 0 and value in para 1
 		ehval_p value = eh_execute(myparas[1], context);
 		new_hash->set(myparas[0]->get<String>(), value);
@@ -498,21 +498,21 @@ ehval_p EHI::eh_op_declareclosure(ehval_p *paras, ehcontext_t context) {
 	f->args = paras[0];
 	return ret;
 }
-ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
+ehval_p EHI::eh_op_enum(ehval_p *paras, ehcontext_t context) {
 	// unpack arguments
-	const char *name = op->paras[0]->get<String>();
-	ehval_p members_code = op->paras[1];
-	ehval_p code = op->paras[2];
+	const char *name = paras[0]->get<String>();
+	ehval_p members_code = paras[1];
+	ehval_p code = paras[2];
 
 	ehval_p ret = Enum::make_enum_class(name, context.scope, parent);
 	ehobj_t *enum_obj = ret->get<Object>();
 
 	// extract enum members
-	for(ehval_p node = members_code; ; node = node->get<Node>()->paras[0]) {
+	for(ehval_p node = members_code; ; node = node->get<Enum_Instance>()->members[0]) {
 		ehval_p current_member;
 		bool is_last;
-		if(node->get<Node>()->op == T_COMMA) {
-			current_member = node->get<Node>()->paras[1];
+		if(node->get<Enum_Instance>()->member_id == T_COMMA) {
+			current_member = node->get<Enum_Instance>()->members[1];
 			is_last = false;
 		} else {
 			current_member = node;
@@ -520,13 +520,13 @@ ehval_p EHI::eh_op_enum(Node::t *op, ehcontext_t context) {
 		}
 
 		// handle the member
-		const char *member_name = current_member->get<Node>()->paras[0]->get<String>();
+		const char *member_name = current_member->get<Enum_Instance>()->members[0]->get<String>();
 		std::vector<std::string> params(0);
-		if(current_member->get<Node>()->op == T_ENUM_WITH_ARGUMENTS) {
-			for(ehval_p argument = current_member->get<Node>()->paras[1]; ; argument = argument->get<Node>()->paras[1]) {
-				const char *name = argument->is_a<Node>() ? argument->get<Node>()->paras[0]->get<String>() : argument->get<String>();
+		if(current_member->get<Enum_Instance>()->member_id == T_ENUM_WITH_ARGUMENTS) {
+			for(ehval_p argument = current_member->get<Enum_Instance>()->members[1]; ; argument = argument->get<Enum_Instance>()->members[1]) {
+				const char *name = Node::is_a(argument) ? argument->get<Enum_Instance>()->members[0]->get<String>() : argument->get<String>();
 				params.push_back(name);
-				if(!argument->is_a<Node>() || argument->get<Node>()->op != T_COMMA) {
+				if(!Node::is_a(argument) || argument->get<Enum_Instance>()->member_id != T_COMMA) {
 					break;
 				}
 			}
@@ -578,17 +578,17 @@ ehval_p EHI::eh_op_tuple(ehval_p node, ehcontext_t context) {
 	int nargs = 1;
 	// first determine the size of the tuple
 	for(ehval_p tmp = node;
-		tmp->is_a<Node>() && tmp->get<Node>()->op == T_COMMA && tmp->get<Node>()->op != T_END;
-		tmp = tmp->get<Node>()->paras[1], nargs++
+		Node::is_a(tmp) && tmp->get<Enum_Instance>()->member_id == T_COMMA && tmp->get<Enum_Instance>()->member_id != T_END;
+		tmp = tmp->get<Enum_Instance>()->members[1], nargs++
 	) {}
 	ehretval_a new_args(nargs);
 
 	ehval_p arg_node = node;
 	// now, fill the output tuple
 	for(int i = 0; i < nargs; i++) {
-		if(arg_node->is_a<Node>() && arg_node->get<Node>()->op == T_COMMA) {
-			new_args[i] = eh_execute(arg_node->get<Node>()->paras[0], context);
-			arg_node = arg_node->get<Node>()->paras[1];
+		if(Node::is_a(arg_node) && arg_node->get<Enum_Instance>()->member_id == T_COMMA) {
+			new_args[i] = eh_execute(arg_node->get<Enum_Instance>()->members[0], context);
+			arg_node = arg_node->get<Enum_Instance>()->members[1];
 		} else {
 			new_args[i] = eh_execute(arg_node, context);
 			assert(i == nargs - 1);
@@ -597,11 +597,11 @@ ehval_p EHI::eh_op_tuple(ehval_p node, ehcontext_t context) {
 	}
 	return Tuple::make(nargs, new_args, parent);
 }
-ehval_p EHI::eh_op_classmember(Node::t *op, ehcontext_t context) {
+ehval_p EHI::eh_op_classmember(ehval_p *paras, ehcontext_t context) {
 	// parse the attributes into an attributes_t
-	attributes_t attributes = parse_attributes(op->paras[0]);
+	attributes_t attributes = parse_attributes(paras[0]);
 	// set the member
-	return set(op->paras[1], nullptr, &attributes, context);
+	return set(paras[1], nullptr, &attributes, context);
 }
 ehval_p EHI::eh_op_switch(ehval_p *paras, ehcontext_t context) {
 	ehval_p ret;
@@ -610,13 +610,13 @@ ehval_p EHI::eh_op_switch(ehval_p *paras, ehcontext_t context) {
 
 	// switch variable
 	ehval_p switchvar = eh_execute(paras[0], context);
-	for(ehval_p node = paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
-		Node::t *op = node->get<Node>()->paras[0]->get<Node>();
+	for(ehval_p node = paras[1]; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
+		Enum_Instance::t *op = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>();
 		// execute default
-		if(op->op == T_DEFAULT) {
-			ret = eh_execute(op->paras[0], context);
+		if(op->member_id == T_DEFAULT) {
+			ret = eh_execute(op->members[0], context);
 		} else {
-			ehval_p casevar = eh_execute(op->paras[0], context);
+			ehval_p casevar = eh_execute(op->members[0], context);
 			ehval_p decider;
 			// try to call function
 			if(casevar->deep_is_a<Function>() || casevar->is_a<Binding>()) {
@@ -629,7 +629,7 @@ ehval_p EHI::eh_op_switch(ehval_p *paras, ehcontext_t context) {
 			}
 			// apply the decider
 			if(decider->get<Bool>()) {
-				ret = eh_execute(op->paras[1], context);
+				ret = eh_execute(op->members[1], context);
 			} else {
 				continue;
 			}
@@ -656,13 +656,13 @@ ehval_p EHI::eh_op_switch(ehval_p *paras, ehcontext_t context) {
 ehval_p EHI::eh_op_given(ehval_p *paras, ehcontext_t context) {
 	// switch variable
 	ehval_p switchvar = eh_execute(paras[0], context);
-	for(ehval_p node = paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
-		const Node::t *op = node->get<Node>()->paras[0]->get<Node>();
+	for(ehval_p node = paras[1]; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
+		const Enum_Instance::t *op = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>();
 		// execute default
-		if(op->op == T_DEFAULT) {
-			return eh_execute(op->paras[0], context);
+		if(op->member_id == T_DEFAULT) {
+			return eh_execute(op->members[0], context);
 		}
-		ehval_p casevar = eh_execute(op->paras[0], context);
+		ehval_p casevar = eh_execute(op->members[0], context);
 		ehval_p decider;
 		if(casevar->deep_is_a<Function>() || casevar->is_a<Binding>()) {
 			decider = call_function(casevar, switchvar, context);
@@ -676,7 +676,7 @@ ehval_p EHI::eh_op_given(ehval_p *paras, ehcontext_t context) {
 			}
 		}
 		if(decider->get<Bool>()) {
-			return eh_execute(op->paras[1], context);
+			return eh_execute(op->members[1], context);
 		}
 	}
 	throw_MiscellaneousError("No matching case in given statement", this);
@@ -684,23 +684,23 @@ ehval_p EHI::eh_op_given(ehval_p *paras, ehcontext_t context) {
 }
 
 bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
-	if(!node->is_a<Node>()) {
+	if(!Node::is_a(node)) {
 		ehval_p casevar = eh_execute(node, context);
 		ehval_p decider = call_method_typed<Bool>(var, "operator==", casevar, context);
 		return decider->get<Bool>();
 	} else {
-		Node::t *op = node->get<Node>();
-		switch(op->op) {
+		Enum_Instance::t *op = node->get<Enum_Instance>();
+		switch(op->member_id) {
 			case T_ANYTHING:
 				return true;
 			case T_MATCH_SET: {
-				const char *name = op->paras[0]->get<String>();
+				const char *name = op->members[0]->get<String>();
 				ehmember_p member = ehmember_t::make(attributes_t::make_private(), var);
 				context.scope->set_member(name, member, context, this);
 				return true;
 			}
 			case T_BINARY_OR: {
-				return match(op->paras[0], var, context) || match(op->paras[1], var, context);
+				return match(op->members[0], var, context) || match(op->members[1], var, context);
 			}
 			case T_COMMA: {
 				if(!var->is_a<Tuple>()) {
@@ -709,13 +709,13 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 				Tuple::t *t = var->get<Tuple>();
 				const int size = t->size();
 				int i = 0;
-				for(ehval_p arg_node = node; ; arg_node = arg_node->get<Node>()->paras[1], i++) {
+				for(ehval_p arg_node = node; ; arg_node = arg_node->get<Enum_Instance>()->members[1], i++) {
 					if(i == size) {
 						return false;
 					}
-					Node::t *op = arg_node->get<Node>();
-					if(op->op == T_COMMA) {
-						if(!match(op->paras[0], t->get(i), context)) {
+					Enum_Instance::t *op = arg_node->get<Enum_Instance>();
+					if(op->member_id == T_COMMA) {
+						if(!match(op->members[0], t->get(i), context)) {
 							return false;
 						}
 					} else {
@@ -724,7 +724,7 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 				}
 			}
 			case T_CALL: {
-				ehval_p member = eh_execute(op->paras[0], context);
+				ehval_p member = eh_execute(op->members[0], context);
 				if(!member->is_a<Enum_Instance>()) {
 					throw_TypeError("match case is not an Enum.Member", member, this);
 				}
@@ -742,22 +742,22 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 					return false;
 				}
 				const int size = em->nmembers;
-				if(op->paras[1]->get<Node>()->op != T_GROUPING) {
+				if(op->members[1]->get<Enum_Instance>()->member_id != T_GROUPING) {
 					throw_MiscellaneousError("Invalid argument in Enum.Member match", this);
 				}
 				int nargs = 1;
-				ehval_p args = op->paras[1]->get<Node>()->paras[0];
+				ehval_p args = op->members[1]->get<Enum_Instance>()->members[0];
 				for(ehval_p tmp = args;
-					tmp->is_a<Node>() && tmp->get<Node>()->op == T_COMMA && tmp->get<Node>()->op != T_END;
-					tmp = tmp->get<Node>()->paras[1], nargs++
+					Node::is_a(tmp) && tmp->get<Enum_Instance>()->member_id == T_COMMA && tmp->get<Enum_Instance>()->member_id != T_END;
+					tmp = tmp->get<Enum_Instance>()->members[1], nargs++
 				);
 				if(nargs != size) {
 					throw_MiscellaneousError("Invalid argument number in Enum.Member match", this);
 				}
 				ehval_p arg_node = args;
 				for(int i = 0; i < nargs; i++) {
-					if(arg_node->is_a<Node>() && arg_node->get<Node>()->op == T_COMMA) {
-						ehval_p *paras = arg_node->get<Node>()->paras;
+					if(Node::is_a(arg_node) && arg_node->get<Enum_Instance>()->member_id == T_COMMA) {
+						ehval_p *paras = arg_node->get<Enum_Instance>()->members;
 						if(!match(paras[0], var_ei->get(i), context)) {
 							return false;
 						}
@@ -773,7 +773,7 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 				return true;
 			}
 			case T_GROUPING: {
-				return match(op->paras[0], var, context);
+				return match(op->members[0], var, context);
 			}
 			default: {
 				ehval_p casevar = eh_execute(node, context);
@@ -787,13 +787,13 @@ bool EHI::match(ehval_p node, ehval_p var, ehcontext_t context) {
 ehval_p EHI::eh_op_match(ehval_p *paras, ehcontext_t context) {
 	// switch variable
 	ehval_p switchvar = eh_execute(paras[0], context);
-	for(ehval_p node = paras[1]; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
-		Node::t *case_node = node->get<Node>()->paras[0]->get<Node>();
-		if(case_node->op == T_DEFAULT) {
+	for(ehval_p node = paras[1]; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
+		Enum_Instance::t *case_node = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>();
+		if(case_node->member_id == T_DEFAULT) {
 			throw_MiscellaneousError("Cannot use T_DEFAULT in match statement", this);
 		}
-		if(match(case_node->paras[0], switchvar, context)) {
-			return eh_execute(case_node->paras[1], context);
+		if(match(case_node->members[0], switchvar, context)) {
+			return eh_execute(case_node->members[1], context);
 		}
 	}
 	throw_MiscellaneousError("No matching case in match statement", this);
@@ -825,8 +825,8 @@ ehval_p EHI::eh_op_set(ehval_p *paras, ehcontext_t context) {
 	return set(paras[0], rvalue, nullptr, context);
 }
 ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcontext_t context) {
-	ehval_p *internal_paras = lvalue->get<Node>()->paras;
-	switch(lvalue->get<Node>()->op) {
+	ehval_p *internal_paras = lvalue->get<Enum_Instance>()->members;
+	switch(lvalue->get<Enum_Instance>()->member_id) {
 		case T_ARROW: {
 			ehval_p args[2];
 			args[0] = eh_execute(internal_paras[1], context);
@@ -875,16 +875,16 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcon
 		case T_COMMA: {
 			ehval_p arg_node = lvalue;
 			for(int i = 0; true; i++) {
-				Node::t *op = arg_node->get<Node>();
+				Enum_Instance::t *op = arg_node->get<Enum_Instance>();
 				ehval_p internal_rvalue;
 				if(!rvalue->is_a<Null>()) {
 					internal_rvalue = call_method(rvalue, "operator->", Integer::make(i), context);
 				} else {
 					internal_rvalue = nullptr;
 				}
-				if(op->op == T_COMMA) {
-					set(op->paras[0], internal_rvalue, attributes, context);
-					arg_node = op->paras[1];
+				if(op->member_id == T_COMMA) {
+					set(op->members[0], internal_rvalue, attributes, context);
+					arg_node = op->members[1];
 				} else {
 					set(arg_node, internal_rvalue, attributes, context);
 					break;
@@ -939,9 +939,9 @@ ehval_p EHI::eh_op_try(ehval_p *paras, ehcontext_t context) {
 	return eh_try_catch(try_block, catch_blocks, context);
 }
 ehval_p EHI::eh_try_catch(ehval_p try_block, ehval_p catch_blocks, ehcontext_t context) {
-	Node::t *catch_op = catch_blocks->get<Node>();
+	Enum_Instance::t *catch_op = catch_blocks->get<Enum_Instance>();
 	// don't try/catch if there are no catch blocks
-	if(catch_op->op == T_END) {
+	if(catch_op->member_id == T_END) {
 		return eh_execute(try_block, context);
 	}
 	try {
@@ -951,15 +951,15 @@ ehval_p EHI::eh_try_catch(ehval_p try_block, ehval_p catch_blocks, ehcontext_t c
 		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
 		ehmember_p exception_member = ehmember_t::make(attributes, e.content);
 		context.scope->set_member("exception", exception_member, context, this);
-		for(; catch_op->op != T_END; catch_op = catch_op->paras[1]->get<Node>()) {
-			Node::t *catch_block = catch_op->paras[0]->get<Node>();
-			if(catch_block->op == T_CATCH) {
-				return eh_execute(catch_block->paras[0], context);
+		for(; catch_op->member_id != T_END; catch_op = catch_op->members[1]->get<Enum_Instance>()) {
+			Enum_Instance::t *catch_block = catch_op->members[0]->get<Enum_Instance>();
+			if(catch_block->member_id == T_CATCH) {
+				return eh_execute(catch_block->members[0], context);
 			} else {
 				// conditional catch (T_CATCH_IF)
-				ehval_p decider = toBool(eh_execute(catch_block->paras[0], context), context);
+				ehval_p decider = toBool(eh_execute(catch_block->members[0], context), context);
 				if(decider->get<Bool>()) {
-					return eh_execute(catch_block->paras[1], context);
+					return eh_execute(catch_block->members[1], context);
 				}
 			}
 		}
@@ -1061,12 +1061,12 @@ void EHI::array_insert(Array::t *array, ehval_p in, int place, ehcontext_t conte
 	 * there are 2, we'll either use the integer array index or a hash of the
 	 * string index.
 	 */
-	if(in->get<Node>()->op == T_ARRAY_MEMBER_NO_KEY) {
+	if(in->get<Enum_Instance>()->member_id == T_ARRAY_MEMBER_NO_KEY) {
 		// if there is no explicit key, simply use the place argument
-		array->int_indices[place] = eh_execute(in->get<Node>()->paras[0], context);
+		array->int_indices[place] = eh_execute(in->get<Enum_Instance>()->members[0], context);
 	} else { // T_ARRAY_MEMBER
-		const ehval_p label = eh_execute(in->get<Node>()->paras[0], context);
-		ehval_p var = eh_execute(in->get<Node>()->paras[1], context);
+		const ehval_p label = eh_execute(in->get<Enum_Instance>()->members[0], context);
+		ehval_p var = eh_execute(in->get<Enum_Instance>()->members[1], context);
 		if(label->is_a<Integer>()) {
 			array->int_indices[label->get<Integer>()] = var;
 		} else if(label->is_a<String>()) {
@@ -1132,16 +1132,16 @@ static inline int count_nodes(const ehval_p node) {
 	// count a list like an argument list. Assumes correct layout.
 	int i = 0;
 	for(ehval_p tmp = node;
-		tmp->get<Node>()->op != T_END;
-		tmp = tmp->get<Node>()->paras[0], i++
+		tmp->get<Enum_Instance>()->member_id != T_END;
+		tmp = tmp->get<Enum_Instance>()->members[0], i++
 	) {}
 	return i;
 }
 
 static attributes_t parse_attributes(ehval_p node) {
 	attributes_t attributes = attributes_t::make();
-	for( ; node->get<Node>()->op != T_END; node = node->get<Node>()->paras[1]) {
-		switch(node->get<Node>()->paras[0]->get<Enum_Instance>()->member_id) {
+	for( ; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
+		switch(node->get<Enum_Instance>()->members[0]->get<Enum_Instance>()->member_id) {
 			case Attribute::publica_e:
 				attributes.visibility = public_e;
 				break;

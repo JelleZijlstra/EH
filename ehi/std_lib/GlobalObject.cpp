@@ -66,7 +66,8 @@ EH_INITIALIZER(GlobalObject) {
 	 * Initialize top-level classes.
 	 */
 	GLOBAL_REGISTER_CLASS(Enum);
-	REGISTER_ENUM_CLASS(Attribute);
+	REGISTER_ENUM_CLASS(Attribute); // 5
+	REGISTER_ENUM_CLASS(Node); // 6
 	GLOBAL_REGISTER_CLASS(Binding);
 	GLOBAL_REGISTER_CLASS(File);
 	GLOBAL_REGISTER_CLASS(Integer);
@@ -80,7 +81,6 @@ EH_INITIALIZER(GlobalObject) {
 	GLOBAL_REGISTER_CLASS(Tuple);
 	GLOBAL_REGISTER_CLASS(SuperClass);
 	GLOBAL_REGISTER_CLASS(Exception);
-	GLOBAL_REGISTER_CLASS(Node);
 	REGISTER_PURE_CLASS(UnknownCommandError);
 	REGISTER_PURE_CLASS(TypeError);
 	REGISTER_PURE_CLASS(LoopError);
@@ -229,7 +229,7 @@ EH_METHOD(GlobalObject, put) {
 }
 
 EH_METHOD(GlobalObject, collectGarbage) {
-	ehi->get_parent()->gc.do_collect(ehi->global());
+	ehi->get_parent()->gc.do_collect({ehi->global(), ehi->get_code()});
 	return nullptr;
 }
 

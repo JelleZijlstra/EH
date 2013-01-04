@@ -503,12 +503,14 @@ public:
 		return real_allocate();
 	}
 
-	void do_collect(pointer root) {
+	void do_collect(std::initializer_list<pointer> roots) {
 #ifdef DEBUG_GC
 		std::cout << "Starting GC run..." << std::endl;
 		print_stats();
 #endif /* DEBUG_GC */
-		this->do_mark(root);
+		for(auto &root : roots) {
+			this->do_mark(root);
+		}
 		this->current_bit.inc();
 		this->do_sweep();
 #ifdef DEBUG_GC

@@ -16,7 +16,6 @@
 #include "std_lib/Array.hpp"
 #include "std_lib/TypeError.hpp"
 #include "std_lib/Hash.hpp"
-#include "std_lib/Node.hpp"
 
 #include <sstream>
 
@@ -162,6 +161,12 @@ public:
 	ehval_p global() const {
 		return parent->global_object;
 	}
+	ehval_p get_code() const {
+		return code;
+	}
+	void set_code(ehval_p c) {
+		code = c;
+	}
 	const std::string &get_context_name() const {
 		return context_name;
 	}
@@ -187,6 +192,7 @@ private:
 	char *buffer;
 	EHInterpreter *parent;
 	ehcontext_t interpreter_context;
+	ehval_p code;
 
 	// number of loops we're currently in
 	int inloop;
@@ -213,7 +219,7 @@ private:
 	ehval_p eh_op_colon(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_customop(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_command(const char *name, ehval_p node, ehcontext_t context);
-	ehval_p eh_op_enum(Node::t *op, ehcontext_t context);
+	ehval_p eh_op_enum(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_class(ehval_p *paras, ehcontext_t context);
 	ehval_p eh_op_named_class(ehval_p *paras, ehcontext_t context);
 	ehval_p declare_class(const char *name, ehval_p code, ehcontext_t context);
@@ -237,9 +243,9 @@ private:
 	ehval_p eh_xtoarray(ehval_p in);
 	ehval_p perform_op(const char *name, int nargs, ehval_p *paras, ehcontext_t context);
 	void array_insert(Array::t *array, ehval_p in, int place, ehcontext_t context);
-	void eh_op_break(Node::t *op, ehcontext_t context);
-	ehval_p eh_op_classmember(Node::t *op, ehcontext_t context);
-	void eh_op_continue(Node::t *op, ehcontext_t context);
+	void eh_op_break(ehval_p *paras, ehcontext_t context);
+	ehval_p eh_op_classmember(ehval_p *paras, ehcontext_t context);
+	void eh_op_continue(ehval_p *paras, ehcontext_t context);
 
 	ehval_p promote(ehval_p in, ehcontext_t context);
 	bool eh_floatequals(float infloat, ehval_p operand2, ehcontext_t context) {

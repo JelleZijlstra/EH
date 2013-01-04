@@ -8,11 +8,11 @@
  * available at http://epaperpress.com/lexandyacc/
  */
 #include "eh.hpp"
-#include "std_lib/Node.hpp"
 #include "std_lib/Integer.hpp"
 #include "std_lib/String.hpp"
 #include "std_lib/Float.hpp"
 #include "std_lib/Bool.hpp"
+#include "std_lib/Node.hpp"
 #include "std_lib/Attribute.hpp"
 
 #include "eh.bison.hpp"
@@ -27,12 +27,13 @@ int yylex(YYSTYPE *, void *);
 
 // can't overload macros
 #define PARENT yyget_extra(scanner)->get_parent()
+#define NODE(val) Node::make(val, PARENT)
 #define ADD_NODE0(opcode) eh_addnode(opcode)
-#define ADD_NODE1(opcode, first) eh_addnode(opcode, Node::make(first))
-#define ADD_NODE2(opcode, first, second) eh_addnode(opcode, Node::make(first), Node::make(second))
-#define ADD_NODE3(opcode, first, second, third) eh_addnode(opcode, Node::make(first), Node::make(second), Node::make(third))
-#define ADD_NODE4(opcode, first, second, third, fourth) eh_addnode(opcode, Node::make(first), Node::make(second), Node::make(third), Node::make(fourth))
-#define ADD_COMPOUND(opcode, lval, rval, result) ehval_p lvalue = Node::make(lval); result = eh_addnode(T_ASSIGN, lvalue, Node::make(eh_addnode(opcode, lvalue, Node::make(rval))))
+#define ADD_NODE1(opcode, first) eh_addnode(opcode, NODE(first))
+#define ADD_NODE2(opcode, first, second) eh_addnode(opcode, NODE(first), NODE(second))
+#define ADD_NODE3(opcode, first, second, third) eh_addnode(opcode, NODE(first), NODE(second), NODE(third))
+#define ADD_NODE4(opcode, first, second, third, fourth) eh_addnode(opcode, NODE(first), NODE(second), NODE(third), NODE(fourth))
+#define ADD_COMPOUND(opcode, lval, rval, result) ehval_p lvalue = NODE(lval); result = eh_addnode(T_ASSIGN, lvalue, NODE(eh_addnode(opcode, lvalue, NODE(rval))))
 
 %}
 %pure-parser
@@ -43,7 +44,7 @@ int yylex(YYSTYPE *, void *);
 	float fValue;
 	Attribute::attribute_enum vValue;
 	bool bValue;
-	Node::t *ehNode;
+	Node *ehNode;
 };
 %token <iValue> T_INTEGER
 %token <fValue> T_FLOAT
@@ -116,12 +117,13 @@ program:
 	global_list				{
 								EHI *ehi = yyget_extra(scanner);
 								if(ehi->get_interactivity() == end_is_end_e) {
-									ehval_p code = Node::make($1);
+									ehval_p code = NODE($1);
+									ehi->set_code(code);
 									const ehcontext_t context = ehi->get_context();
 									if(ehi->get_parent()->optimize) {
-										code = ehi->optimize(code, context);
+										ehi->set_code(ehi->optimize(code, context));
 									}
-									ehval_p ret = ehi->eh_execute(code, context);
+									ehval_p ret = ehi->eh_execute(ehi->get_code(), context);
 									if(ehi->get_returning()) {
 										return (ret->is_a<Integer>()) ? ret->get<Integer>() : 0;
 									}
@@ -133,7 +135,7 @@ global_list:
 	| statement				{
 								EHI *ehi = yyget_extra(scanner);
 								if(ehi->get_interactivity() != end_is_end_e) {
-									ehval_p statement = Node::make($1);
+									ehval_p statement = NODE($1);
 									ehval_p ret = ehi->eh_execute(statement, ehi->get_context());
 									// TODO: make this use printvar instead
 									std::cout << "=> " << ehi->toString(ret, ehi->get_context())->get<String>() << std::endl;
@@ -205,15 +207,15 @@ expression:
 	| expression T_WITH expression
 							{ $$ = ADD_NODE2(T_APPLY_MACRO, $1, $3); }
 	| expression T_PLUSPLUS	{
-								ehval_p lvalue = Node::make($1);
-								$$ = eh_addnode(T_ASSIGN, lvalue, Node::make(eh_addnode(T_ADD, lvalue, Integer::make(1))));
+								ehval_p lvalue = NODE($1);
+								$$ = eh_addnode(T_ASSIGN, lvalue, NODE(eh_addnode(T_ADD, lvalue, Integer::make(1))));
 							}
 	| expression T_MINMIN	{
-								ehval_p lvalue = Node::make($1);
-								$$ = eh_addnode(T_ASSIGN, lvalue, Node::make(eh_addnode(T_SUBTRACT, lvalue, Integer::make(1))));
+								ehval_p lvalue = NODE($1);
+								$$ = eh_addnode(T_ASSIGN, lvalue, NODE(eh_addnode(T_SUBTRACT, lvalue, Integer::make(1))));
 							}
 	| expression T_CUSTOMOP expression
-							{ $$ = eh_addnode(T_CUSTOMOP, Node::make($1), String::make($2), Node::make($3)); }
+							{ $$ = eh_addnode(T_CUSTOMOP, NODE($1), String::make($2), NODE($3)); }
 	| expression '=' expression
 							{ $$ = ADD_NODE2(T_ASSIGN, $1, $3); }
 	| expression T_PLUSEQ expression
@@ -247,7 +249,7 @@ expression:
 	| expression T_DOUBLEARROW expression
 							{ $$ = ADD_NODE2(T_FUNC, $1, $3); }
 	| expression '.' T_VARIABLE
-							{ $$ = eh_addnode(T_ACCESS, Node::make($1), String::make($3)); }
+							{ $$ = eh_addnode(T_ACCESS, NODE($1), String::make($3)); }
 	| expression ',' expression
 							{ $$ = ADD_NODE2(T_COMMA, $1, $3); }
 	| expression T_EQ expression
@@ -307,11 +309,11 @@ expression:
 								);
 							}
 	| T_CLASS T_VARIABLE T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(T_NAMED_CLASS, String::make($2), Node::make($4)); }
+							{ $$ = eh_addnode(T_NAMED_CLASS, String::make($2), NODE($4)); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_ENUM T_VARIABLE T_SEPARATOR separators enum_list T_SEPARATOR statement_list T_END
-							{ $$ = eh_addnode(T_ENUM, String::make($2), Node::make($5), Node::make($7)); }
+							{ $$ = eh_addnode(T_ENUM, String::make($2), NODE($5), NODE($7)); }
 	| T_SWITCH expression T_SEPARATOR separators caselist T_END
 							{ $$ = ADD_NODE2(T_SWITCH, $2, $5); }
 	| T_GIVEN expression T_SEPARATOR separators caselist T_END
@@ -362,7 +364,7 @@ para_expr:
 	| para_expr T_ARROW para_expr
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| para_expr '.' T_VARIABLE
-							{ $$ = eh_addnode(T_ACCESS, Node::make($1), String::make($3)); }
+							{ $$ = eh_addnode(T_ACCESS, NODE($1), String::make($3)); }
 	| para_expr T_EQ para_expr
 							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| para_expr '<' para_expr
@@ -410,7 +412,7 @@ para_expr:
 
 /* Commands */
 command:
-	T_VARIABLE paralist		{ $$ = eh_addnode(T_COMMAND, String::make($1), Node::make($2)); }
+	T_VARIABLE paralist		{ $$ = eh_addnode(T_COMMAND, String::make($1), NODE($2)); }
 	;
 
 paralist:
@@ -421,13 +423,13 @@ paralist:
 para:
 	para_expr				{ $$ = $1; }
 	| T_MINMIN bareword_or_string '=' para_expr
-							{ $$ = eh_addnode(T_LONGPARA, String::make($2), Node::make($4)); }
+							{ $$ = eh_addnode(T_LONGPARA, String::make($2), NODE($4)); }
 	| T_MINMIN bareword_or_string
 							{ $$ = eh_addnode(T_LONGPARA, String::make($2), Bool::make(true)); }
 	| '-' bareword_or_string
 							{ $$ = eh_addnode(T_SHORTPARA, String::make($2), Bool::make(true)); }
 	| '-' bareword_or_string '=' para_expr
-							{ $$ = eh_addnode(T_SHORTPARA, String::make($2), Node::make($4)); }
+							{ $$ = eh_addnode(T_SHORTPARA, String::make($2), NODE($4)); }
 	;
 
 bareword_or_string:
@@ -498,9 +500,9 @@ anonclasslist_i:
 
 anonclassmember:
 	T_VARIABLE ':' para_expr
-							{ $$ = eh_addnode(T_ARRAY_MEMBER, String::make($1), Node::make($3)); }
+							{ $$ = eh_addnode(T_ARRAY_MEMBER, String::make($1), NODE($3)); }
 	| T_STRING ':' para_expr
-							{ $$ = eh_addnode(T_ARRAY_MEMBER, String::make($1), Node::make($3)); }
+							{ $$ = eh_addnode(T_ARRAY_MEMBER, String::make($1), NODE($3)); }
 	;
 
 parglist:
@@ -528,11 +530,11 @@ separators:
 /* Property declarations */
 attributelist:
 	T_ATTRIBUTE attributelist_inner
-							{ $$ = eh_addnode(T_ATTRIBUTE, Attribute::make($1, PARENT), Node::make($2)); }
+							{ $$ = eh_addnode(T_ATTRIBUTE, Attribute::make($1, PARENT), NODE($2)); }
 
 attributelist_inner:
 	T_ATTRIBUTE attributelist_inner
-							{ $$ = eh_addnode(T_ATTRIBUTE, Attribute::make($1, PARENT), Node::make($2)); }
+							{ $$ = eh_addnode(T_ATTRIBUTE, Attribute::make($1, PARENT), NODE($2)); }
 	| /* NULL */ %prec '='	{ $$ = ADD_NODE0(T_END); }
 	;
 
@@ -546,12 +548,12 @@ enum_list:
 enum_member:
 	T_VARIABLE				{ $$ = eh_addnode(T_NULLARY_ENUM, String::make($1)); }
 	| T_VARIABLE '(' enum_arg_list ')'
-							{ $$ = eh_addnode(T_ENUM_WITH_ARGUMENTS, String::make($1), Node::make($3)); }
+							{ $$ = eh_addnode(T_ENUM_WITH_ARGUMENTS, String::make($1), NODE($3)); }
 	;
 
 enum_arg_list:
 	T_VARIABLE				{ $$ = eh_addnode(T_LITERAL, String::make($1)); }
 	| T_VARIABLE ',' enum_arg_list
-							{ $$ = eh_addnode(T_COMMA, String::make($1), Node::make($3)); }
+							{ $$ = eh_addnode(T_COMMA, String::make($1), NODE($3)); }
 	;
 %%

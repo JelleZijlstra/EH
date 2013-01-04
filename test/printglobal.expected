@@ -19,6 +19,16 @@
 		toArray <public,non-static,non-constant>: @function <library>: 
 		toTuple <public,non-static,non-constant>: @function <library>: 
 	]
+	Attribute <public,non-static,constant>: @object <Attribute> [
+		constAttribute <public,non-static,constant>: @enum instance constAttribute <Attribute> [
+		]
+		privateAttribute <public,non-static,constant>: @enum instance privateAttribute <Attribute> [
+		]
+		publicAttribute <public,non-static,constant>: @enum instance publicAttribute <Attribute> [
+		]
+		staticAttribute <public,non-static,constant>: @enum instance staticAttribute <Attribute> [
+		]
+	]
 	Binding <public,non-static,constant>: @object <Binding> [
 		bindTo <public,non-static,non-constant>: @function <library>: 
 		decompile <public,non-static,non-constant>: @function <library>: 

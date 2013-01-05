@@ -21,11 +21,11 @@ public:
 		return false;
 	}
 
-	virtual void printvar(printvar_set &set, int level, EHI *ehi) {
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
 		std::cout << "@float " << value << std::endl;
 	}
 
-	virtual std::string decompile(int level) {
+	virtual std::string decompile(int level) const override {
 		std::ostringstream out { value };
 		return out.str();
 	}

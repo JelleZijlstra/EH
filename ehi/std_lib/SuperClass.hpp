@@ -12,11 +12,11 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		return { value };
 	}
 
-	virtual void printvar(printvar_set &set, int level, EHI *ehi) {
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
 		std::cout << "@parent class" << std::endl;
 	}
 

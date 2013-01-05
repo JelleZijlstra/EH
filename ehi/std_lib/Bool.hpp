@@ -20,11 +20,11 @@ public:
 		return false;
 	}
 
-	virtual std::string decompile(int level) {
+	virtual std::string decompile(int level) const override {
 		return value ? "true" : "false";
 	}
 
-	virtual void printvar(printvar_set &, int level, EHI *ehi) {
+	virtual void printvar(printvar_set &, int, EHI *) override {
 		std::cout << (value ? "@bool true" : "@bool false") << std::endl;
 	}
 private:

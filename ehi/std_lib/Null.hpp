@@ -10,15 +10,15 @@ EH_CLASS(Null) {
 public:
 	static ehval_p null_obj;
 
-	virtual bool belongs_in_gc() const {
+	virtual bool belongs_in_gc() const override {
 		return false;
 	}
 
-	virtual std::string decompile(int level) {
+	virtual std::string decompile(int) const override {
 		return "()";
 	}
 
-	virtual void printvar(printvar_set& set, int level, EHI *ehi) {
+	virtual void printvar(printvar_set &, int, EHI *) override {
 		std::cout << "null" << std::endl;
 	}
 

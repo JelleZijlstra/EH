@@ -29,7 +29,7 @@ public:
 		}
 	}
 
-	virtual std::string decompile(int level) {
+	virtual std::string decompile(int level) const override {
 		switch(member_id) {
 			case publica_e: return "public";
 			case privatea_e: return "private";

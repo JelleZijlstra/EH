@@ -55,7 +55,7 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		std::list<ehval_p> out;
 		for(auto &i : value->members) {
 			out.push_back(i.second);
@@ -63,7 +63,7 @@ public:
 		return out;
 	}
 
-	virtual void printvar(printvar_set &set, int level, EHI *ehi) {
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
 		void *ptr = static_cast<void *>(value);
 		if(set.count(ptr) == 0) {
 			set.insert(ptr);
@@ -125,7 +125,7 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		return std::list<ehval_p> { value->hash };
 	}
 

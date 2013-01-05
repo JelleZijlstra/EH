@@ -32,11 +32,11 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		return { value->min, value->max };
 	}
 
-	virtual void printvar(printvar_set &set, int level, EHI *ehi) {
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
 		void *ptr = static_cast<void *>(value);
 		if(set.count(ptr) == 0) {
 			set.insert(ptr);
@@ -95,7 +95,7 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		return { value->range, value->current };
 	}
 

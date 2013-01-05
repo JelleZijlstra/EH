@@ -15,11 +15,11 @@ public:
 		return false;
 	}
 
-	virtual std::string decompile(int level) {
+	virtual std::string decompile(int level) const override {
 		return std::string("\"") + value + "\"";
 	}
 
-	virtual void printvar(printvar_set &set, int level, EHI *ehi) {
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
 		std::cout << "@string \"" << value << "\"" << std::endl;
 	}
 
@@ -78,7 +78,7 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		return { value->string };
 	}
 

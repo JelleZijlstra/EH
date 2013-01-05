@@ -41,7 +41,7 @@ public:
 		return false;
 	}
 
-	virtual std::string decompile(int level) {
+	virtual std::string decompile(int level) const override {
 		if(value->type == lib_e) {
 			return "(args) => (native code)";
 		} else {
@@ -59,7 +59,7 @@ public:
 		}
 	}
 
-	virtual void printvar(printvar_set &set, int level, EHI *ehi) {
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
 		std::cout << "@function <";
 		switch(value->type) {
 			case user_e:

@@ -57,7 +57,7 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		std::list<ehval_p> out;
 		for(auto &i : value->map) {
 			out.push_back(i.first);
@@ -111,7 +111,7 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		return { value->map };
 	}
 

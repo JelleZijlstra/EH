@@ -36,7 +36,7 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		std::list<ehval_p> out;
 		for(int i = 0, len = value->size(); i < len; i++) {
 			out.push_back(value->get(i));

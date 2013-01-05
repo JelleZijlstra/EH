@@ -176,9 +176,9 @@ static void decompile_if(std::ostringstream &out, ehval_p *paras, int level) {
 	}
 }
 
-std::string Node::decompile(int level) {
+std::string Node::decompile(int level) const {
 	std::ostringstream out;
-	Node *op = this;
+	const Node *op = this;
 	if(op == nullptr) {
 		return "";
 	}

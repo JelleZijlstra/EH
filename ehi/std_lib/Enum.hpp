@@ -110,7 +110,7 @@ public:
 			return nmembers > 0 && members == nullptr;
 		}
 
-		virtual std::string decompile(int level) {
+		virtual std::string decompile(int level) const {
 			return "";
 		}
 	private:
@@ -125,7 +125,7 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		std::list<ehval_p> out;
 		if(value->members != nullptr) {
 			const int size = value->nmembers;
@@ -136,7 +136,7 @@ public:
 		return out;
 	}
 
-	virtual void printvar(printvar_set &set, int level, EHI *ehi);
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override;
 
 	virtual ~Enum_Instance() {
 		delete value;
@@ -150,7 +150,7 @@ public:
 		return parent->allocate<Enum_Instance>(val);
 	}
 
-	virtual std::string decompile(int level) {
+	virtual std::string decompile(int level) const override {
 		return value->decompile(level);
 	}
 private:

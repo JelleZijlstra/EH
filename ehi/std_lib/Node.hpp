@@ -14,7 +14,7 @@ public:
 		}
 	}
 
-	virtual std::string decompile(int level);
+	virtual std::string decompile(int level) const override;
 
 	static ehval_p make(Node *val, EHInterpreter *parent) {
 		if(val == nullptr) {
@@ -47,11 +47,11 @@ public:
 	typedef ehcontext_t *type;
 	type value;
 
-	bool belongs_in_gc() const {
+	virtual bool belongs_in_gc() const override {
 		return true;
 	}
 
-	std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		return { value->object, value->scope };
 	}
 
@@ -61,7 +61,7 @@ public:
 		delete value;
 	}
 
-	virtual void printvar(printvar_set &set, int level, class EHI *ehi);
+	virtual void printvar(printvar_set &set, int level, class EHI *ehi) override;
 
 	static ehval_p make(const ehcontext_t &context, EHInterpreter *parent) {
 		return parent->allocate<Node_Context>(new ehcontext_t(context));

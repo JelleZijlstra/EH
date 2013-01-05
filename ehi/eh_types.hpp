@@ -60,25 +60,25 @@ public:
 
 	virtual ~ehval_t() {}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const {
 		return {};
 	}
 
-	virtual std::string decompile(int level) {
+	virtual std::string decompile(int level) const {
 		// all types that may appear in the AST should define a specialization
 		assert(false);
 		return "";
 	}
 
-	virtual void printvar(printvar_set &seen, int level, class EHI *ehi) {
+	virtual void printvar(printvar_set &set, int level, class EHI *ehi) {
 		std::cout << "@other object" << std::endl;
 	}
 
 	template<class T>
-	typename T::type get() {
+	typename T::type get() const {
 		assert(typeid(*this) == typeid(T));
 		// previous line established that this cast is safe
-		T *derived = static_cast<T *>(this);
+		auto derived = static_cast<const T *>(this);
 		return derived->value;
 	}
 
@@ -105,7 +105,7 @@ public:
 	typename T::type assert_deep(const char *method, class EHI *ehi);
 
 	template<class T>
-	bool deep_is_a();
+	bool deep_is_a() const;
 
 	template<class T>
 	static inline const char *name() {
@@ -269,7 +269,7 @@ public:
 		return true;
 	}
 
-	virtual std::list<ehval_p> children() {
+	virtual std::list<ehval_p> children() const override {
 		std::list<ehval_p> out;
 		for(auto &kv : value->members) {
 			out.push_back(kv.second->value);
@@ -282,7 +282,7 @@ public:
 		return out;
 	}
 
-	virtual void printvar(printvar_set &set, int level, EHI *ehi);
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override;
 
 	static ehval_p make(ehobj_t *obj, class EHInterpreter *parent);
 
@@ -393,7 +393,7 @@ inline typename T::type ehval_t::assert_deep(const char *method, class EHI *ehi)
 }
 
 template<class T>
-inline bool ehval_t::deep_is_a() {
+inline bool ehval_t::deep_is_a() const {
 	if(this->is_a<Object>()) {
 		ehval_t *me = get<Object>()->object_data.operator->();
 		return me->is_a<T>();

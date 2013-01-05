@@ -21,13 +21,13 @@ public:
 		return false;
 	}
 
-	virtual std::string decompile(int level) {
+	virtual std::string decompile(int level) const override {
 		std::ostringstream out;
 		out << value;
 		return out.str();
 	}
 
-	virtual void printvar(printvar_set &set, int level, EHI *ehi) {
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
 		std::cout << "@int " << value << std::endl;
 	}
 private:

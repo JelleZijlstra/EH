@@ -21,7 +21,7 @@ public:
 
 		ehcontext_t(ehval_p in) : object(in), scope(in) {}
 
-		ehcontext_t() : object(), scope() {}
+		ehcontext_t() : object(nullptr), scope(nullptr) {}
 	};
 
 	// Variables and object members (which are the same)
@@ -35,8 +35,8 @@ public:
 		// destructor
 		~ehmember_t() {}
 
-		ehmember_t() : attribute(attributes_t::make()), value() {}
-		ehmember_t(attributes_t atts) : attribute(atts), value() {}
+		ehmember_t() : attribute(attributes_t::make()), value(nullptr) {}
+		ehmember_t(attributes_t atts) : attribute(atts), value(nullptr) {}
 
 		// convenience methods
 		bool isstatic() const {
@@ -116,9 +116,9 @@ public:
 	static ehval_t *null_object();
 
 	template<class T>
-	bool inherited_is_a();
+	bool inherited_is_a() const;
 
-	int get_type_id(class EHInterpreter *parent);
+	int get_type_id(const class EHInterpreter *parent);
 
 	ehval_p data();
 
@@ -155,7 +155,7 @@ public:
 	ehval_p get_property(const char *name, ehcontext_t context, class EHI *ehi);
 	ehval_p get_property_no_binding(const char *name, ehcontext_t context, class EHI *ehi);
 	ehmember_p set_property(const char *name, ehval_p value, ehcontext_t context, class EHI *ehi);
-	ehval_p get_underlying_object(class EHInterpreter *parent);
+	ehval_p get_underlying_object(const class EHInterpreter *parent);
 };
 
 typedef ehval_t::ehval_p ehval_p;
@@ -409,11 +409,11 @@ inline bool ehval_t::deep_is_a() const {
 }
 
 template<class T>
-inline bool ehval_t::inherited_is_a() {
-	if(this->is_a<T>()) {
+inline bool ehval_t::inherited_is_a() const {
+	if(is_a<T>()) {
 		return true;
-	} else if(this->is_a<Object>()) {
-		Object *obj = static_cast<Object *>(this);
+	} else if(is_a<Object>()) {
+		auto obj = static_cast<const Object *>(this);
 		return obj->inherits<T>();
 	} else {
 		return false;

@@ -301,18 +301,16 @@ public:
 		/*
 		 * Constructors
 		 */
-		pointer() : content(nullptr) {}
+		pointer() : pointer(nullptr) {}
 		// my compiler apparently doesn't have std::nullptr_t
-		pointer(decltype(nullptr)) : content(nullptr) {}
+		pointer(decltype(nullptr)) : pointer(T::null_object()) {}
 		pointer(const pointer &rhs) : content(~rhs) {
-			if(this->content != nullptr) {
-				this->content->inc_rc();
-			}
+			assert(content != nullptr);
+			this->content->inc_rc();
 		}
 		pointer(T *in) : content(in) {
-			if(this->content != nullptr) {
-				this->content->inc_rc();
-			}
+			assert(content != nullptr);
+			this->content->inc_rc();
 		}
 		/*
 		 * Overloading

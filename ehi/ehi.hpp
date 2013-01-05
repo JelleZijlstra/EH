@@ -301,8 +301,8 @@ inline int ehobj_t::register_member_class(const ehobj_t::initializer init_func, 
 
 #include "std_lib/Null.hpp"
 
-inline int ehval_t::get_type_id(class EHInterpreter *parent) {
-	if(this->is_a<Object>()) {
+inline int ehval_t::get_type_id(const EHInterpreter *parent) {
+	if(is_a<Object>()) {
 		return get<Object>()->type_id;
 	} else {
 		return parent->repo.get_type_id(this);

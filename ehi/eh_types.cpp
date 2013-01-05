@@ -76,7 +76,7 @@ ehmember_p ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t 
 	obj->insert(name, member);
 	return member;
 }
-ehval_p ehval_t::get_underlying_object(EHInterpreter *parent) {
+ehval_p ehval_t::get_underlying_object(const EHInterpreter *parent) {
 	if(is_a<Object>()) {
 		return this;
 	} else if(is_a<SuperClass>()) {
@@ -239,7 +239,7 @@ std::set<std::string> ehobj_t::member_set(const EHInterpreter *parent) const {
 
 bool ehobj_t::context_compare(const ehcontext_t &key, const class EHI *ehi) const {
 	// in global context, we never have access to private stuff
-	if(key.object.null()) {
+	if(key.object->is_a<Null>()) {
 		return false;
 	} else if(key.scope->get<Object>() == this) {
 		return true;

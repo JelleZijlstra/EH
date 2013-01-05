@@ -26,7 +26,7 @@ public:
 		ehval_p code;
 		ehlibmethod_t libmethod_pointer;
 
-		t(functype_enum _type = user_e) : type(_type), args(), code(), libmethod_pointer(nullptr) {}
+		t(functype_enum _type = user_e) : type(_type), args(nullptr), code(nullptr), libmethod_pointer(nullptr) {}
 
 		~t() {}
 
@@ -37,9 +37,13 @@ public:
 	typedef t *type;
 	type value;
 
-	virtual bool belongs_in_gc() const {
+	virtual bool belongs_in_gc() const override {
 		return false;
 	}
+
+	// virtual std::list<ehval_p> children() const override {
+	// 	return {args, code};
+	// }
 
 	virtual std::string decompile(int level) const override {
 		if(value->type == lib_e) {

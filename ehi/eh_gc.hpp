@@ -360,7 +360,7 @@ public:
 			} else if(rhs.null()) {
 				return 1;
 			} else {
-				return this->compare(rhs);
+				return this->content->compare(rhs);
 			}
 		}
 		bool operator<(const pointer &rhs) const {

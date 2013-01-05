@@ -191,14 +191,14 @@ public:
 	ehobj_t() : members(), object_data(), type_id(0), parent(), super() {}
 
 	// method prototypes
-	ehmember_p get_recursive(const char *name, const ehcontext_t context);
+	ehmember_p get_recursive(const char *name, const ehcontext_t context) const;
 	bool context_compare(const ehcontext_t &key, class EHI *ehi) const;
 
-	bool inherited_has(const std::string &key, EHInterpreter *parent) const;
-	ehmember_p inherited_get(const std::string &key, EHInterpreter *parent);
-	ehmember_p recursive_inherited_get(const std::string &key);
+	bool inherited_has(const std::string &key, const EHInterpreter *parent) const;
+	ehmember_p inherited_get(const std::string &key, const EHInterpreter *parent) const;
+	ehmember_p recursive_inherited_get(const std::string &key) const;
 
-	std::set<std::string> member_set(EHInterpreter *parent);
+	std::set<std::string> member_set(const EHInterpreter *parent) const;
 
 	// inline methods
 	size_t size() const {
@@ -213,9 +213,9 @@ public:
 		this->insert(str, value);
 	}
 
-	ehmember_p get_known(const std::string &key) {
+	ehmember_p get_known(const std::string &key) const {
 		assert(this->has(key));
-		return members[key];
+		return members.at(key);
 	}
 
 	bool has(const std::string &key) const {
@@ -231,7 +231,7 @@ public:
 		super.push_front(superclass);
 	}
 
-	bool inherits(ehval_p obj, EHInterpreter *parent);
+	bool inherits(const ehval_p obj, const EHInterpreter *parent) const;
 
 	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *parent);
 
@@ -287,8 +287,8 @@ public:
 	static ehval_p make(ehobj_t *obj, class EHInterpreter *parent);
 
 	template<class T>
-	bool inherits() {
-		for(auto &i : value->super) {
+	bool inherits() const {
+		for(const auto &i : value->super) {
 			if(i->inherited_is_a<T>()) {
 				return true;
 			}
@@ -330,17 +330,17 @@ public:
 		return inbuilt_types.at(std::type_index(typeid(T)));;
 	}
 
-	int get_type_id(ehval_p obj) const {
+	int get_type_id(const ehval_p obj) const {
 		return inbuilt_types.at(std::type_index(typeid(*obj.operator->())));
 	}
 
-	int register_class(const std::string &name, ehval_p value, bool is_inbuilt = false) {
+	int register_class(const std::string &name, const ehval_p value, const bool is_inbuilt = false) {
 		const int type_id = types.size();
 		types.push_back(type_info(is_inbuilt, name, value));
 		return type_id;
 	}
 
-	const std::string &get_name(ehval_p obj) const {
+	const std::string &get_name(const ehval_p obj) const {
 		if(obj->is_a<Object>()) {
 			return types.at(obj->get<Object>()->type_id).name;
 		} else {
@@ -348,7 +348,7 @@ public:
 			return types.at(type_id).name;
 		}
 	}
-	ehval_p get_object(ehval_p obj) const {
+	ehval_p get_object(const ehval_p obj) const {
 		if(obj->is_a<Object>()) {
 			return types.at(obj->get<Object>()->type_id).type_object;
 		} else {
@@ -357,7 +357,7 @@ public:
 		}
 	}
 
-	ehval_p get_object(int type_id) const {
+	ehval_p get_object(const int type_id) const {
 		return types.at(type_id).type_object;
 	}
 

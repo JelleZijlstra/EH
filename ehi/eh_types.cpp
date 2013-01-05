@@ -152,16 +152,16 @@ void ehobj_t::add_enum_member(const char *name, const std::vector<std::string> &
 	ehmember_p member = ehmember_t::make(attributes_t::make_const(), ei_obj);
 	insert(name, member);
 }
-ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) {
+ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) const {
 	if(this->has(name)) {
-		return this->members[name];
+		return this->members.at(name);
 	} else if(this->parent != nullptr) {
 		return this->get_parent()->get_recursive(name, context);
 	} else {
 		return nullptr;
 	}
 }
-bool ehobj_t::inherited_has(const std::string &key, EHInterpreter *parent) const {
+bool ehobj_t::inherited_has(const std::string &key, const EHInterpreter *parent) const {
 	if(this->has(key) || parent->base_object->get<Object>()->has(key)) {
 		return true;
 	}
@@ -173,7 +173,7 @@ bool ehobj_t::inherited_has(const std::string &key, EHInterpreter *parent) const
 	return false;
 }
 // recursive version that does not check superclasses Object
-ehmember_p ehobj_t::recursive_inherited_get(const std::string &key) {
+ehmember_p ehobj_t::recursive_inherited_get(const std::string &key) const {
 	if(this->has(key)) {
 		return this->get_known(key);
 	}
@@ -185,7 +185,7 @@ ehmember_p ehobj_t::recursive_inherited_get(const std::string &key) {
 	}
 	return nullptr;
 }
-ehmember_p ehobj_t::inherited_get(const std::string &key, EHInterpreter *parent) {
+ehmember_p ehobj_t::inherited_get(const std::string &key, const EHInterpreter *parent) const {
 	if(this->has(key)) {
 		return this->get_known(key);
 	}
@@ -200,11 +200,11 @@ ehmember_p ehobj_t::inherited_get(const std::string &key, EHInterpreter *parent)
 	}
 	return nullptr;
 }
-bool ehobj_t::inherits(ehval_p obj, EHInterpreter *parent) {
+bool ehobj_t::inherits(const ehval_p obj, const EHInterpreter *parent) const {
 	if(parent->base_object == obj) {
 		return true;
 	}
-	for(auto &i : super) {
+	for(const auto &i : super) {
 		if(i == obj || i->get<Object>()->inherits(obj, parent)) {
 			return true;
 		}
@@ -219,7 +219,7 @@ ehobj_t *ehobj_t::get_parent() const {
 		return this->parent->get<Object>();
 	}
 }
-std::set<std::string> ehobj_t::member_set(EHInterpreter *parent) {
+std::set<std::string> ehobj_t::member_set(const EHInterpreter *parent) const {
 	std::set<std::string> out;
 	for(auto &i : this->members) {
 		out.insert(i.first);

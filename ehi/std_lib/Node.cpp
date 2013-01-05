@@ -105,7 +105,9 @@ EH_INITIALIZER(Node) {
 
 EH_METHOD(Node, execute) {
 	ASSERT_OBJ_TYPE(Enum_Instance, "Node.execute");
-	return ehi->eh_execute(obj, ehi->global());
+	args = args->data();
+	ASSERT_TYPE(args, Node_Context, "Node.execute");
+	return ehi->eh_execute(obj, *args->get<Node_Context>());
 }
 
 static void add_end(std::ostringstream &out, int levels) {

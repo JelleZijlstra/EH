@@ -154,7 +154,7 @@ ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) c
 	} else if(this->parent != nullptr) {
 		return this->get_parent()->get_recursive(name, context);
 	} else {
-		return nullptr;
+		return ehmember_p(nullptr);
 	}
 }
 
@@ -181,7 +181,7 @@ ehmember_p ehobj_t::recursive_inherited_get(const std::string &key) const {
 			return result;
 		}
 	}
-	return nullptr;
+	return ehmember_p(nullptr);
 }
 
 ehmember_p ehobj_t::inherited_get(const std::string &key, const EHInterpreter *parent) const {
@@ -197,7 +197,7 @@ ehmember_p ehobj_t::inherited_get(const std::string &key, const EHInterpreter *p
 	if(parent->base_object->get<Object>()->has(key)) {
 		return parent->base_object->get<Object>()->get_known(key);
 	}
-	return nullptr;
+	return ehmember_p(nullptr);
 }
 
 bool ehobj_t::inherits(const ehval_p obj, const EHInterpreter *parent) const {
@@ -273,9 +273,7 @@ void ehobj_t::register_method(const std::string &name, const ehlibmethod_t metho
 }
 
 void ehobj_t::register_value(const std::string &name, ehval_p value, const attributes_t attributes) {
-	ehmember_p member;
-	member->attribute = attributes;
-	member->value = value;
+	ehmember_p member(attributes, value);
 	this->insert(name, member);
 }
 

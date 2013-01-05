@@ -37,6 +37,7 @@ public:
 
 		ehmember_t() : attribute(attributes_t::make()), value(nullptr) {}
 		ehmember_t(attributes_t atts) : attribute(atts), value(nullptr) {}
+		ehmember_t(attributes_t atts, ehval_p val) : attribute(atts), value(val) {}
 
 		// convenience methods
 		bool isstatic() const {
@@ -47,9 +48,7 @@ public:
 		}
 
 		static ehmember_p make(attributes_t attribute, ehval_p value) {
-			ehmember_p out;
-			out->attribute = attribute;
-			out->value = value;
+			ehmember_p out(attribute, value);
 			return out;
 		}
 	};

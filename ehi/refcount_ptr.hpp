@@ -1,14 +1,13 @@
 template<class T>
 class refcount_ptr {
 private:
-	template<class I>
 	class container {
 	public:
 		short refcount;
-		short shared;
-		I content;
+		T content;
 
-		container() : refcount(1), shared(0), content() {}
+		template<typename... Args>
+		container(Args&&... args) : refcount(1), content(std::forward<Args>(args)...) {}
 
 		void inc_rc() {
 			this->refcount++;
@@ -16,92 +15,66 @@ private:
 
 		void dec_rc() {
 			this->refcount--;
-			if(this->shared != 0) {
-				this->shared--;
-			}
 			if(this->refcount == 0) {
 				delete this;
 			}
 		}
 	};
 
-	mutable container<T>* pointer;
+	mutable container* pointer;
 
-	// this to make sure we can internally access pointer
-	container<T>* &operator~() const {
-		return this->pointer;
-	}
-
-	class dummy_class {};
 public:
-	static refcount_ptr<T> clone(refcount_ptr<T> in) {
-		refcount_ptr<T> out;
-		if(~in != nullptr) {
-			~out = new container<T>(*~in);
-		}
-		return out;
-	}
-	static bool null(refcount_ptr<T> in) {
-		return ~in == nullptr;
-	}
 	bool null() const {
 		return this->pointer == nullptr;
 	}
 
 	// constructor
-	refcount_ptr() : pointer(nullptr) {}
+	// refcount_ptr() : pointer(nullptr) {}
+
 	explicit refcount_ptr(T *in) {
-		if(in == nullptr) {
-			this->pointer = nullptr;
-		} else {
-			this->pointer = new container<T>;
-			this->pointer->content = *in;
+		assert(in != nullptr);
+		this->pointer = new container();
+		this->pointer->content = *in;
+	}
+
+	refcount_ptr(decltype(nullptr)) : pointer(nullptr) {}
+
+	refcount_ptr(const refcount_ptr &rhs) : pointer(rhs.pointer) {
+		if(pointer != nullptr) {
+			pointer->inc_rc();
 		}
 	}
 
-	refcount_ptr(dummy_class *in) : pointer(nullptr) {
-		// only for nullptr initialization
-		assert(in == nullptr);
-	}
+	template<class... Args>
+	explicit refcount_ptr(Args&&... args) : pointer(new container(std::forward<Args>(args)...)) {}
 
 	T &operator*() const {
-		if(this->pointer == nullptr) {
-			this->pointer = new container<T>;
-		}
 		return this->pointer->content;
 	}
 	T *operator->() const {
-		if(this->pointer == nullptr) {
-			this->pointer = new container<T>;
-		}
 		return &this->pointer->content;
 	}
-	refcount_ptr<T> &operator=(const refcount_ptr<T> &rhs) {
+	refcount_ptr &operator=(const refcount_ptr &rhs) {
 		// decrease refcount for thing we're now referring to
 		if(this->pointer != nullptr) {
 			this->pointer->dec_rc();
 		}
-		this->pointer = ~rhs;
+		this->pointer = rhs.pointer;
 		// and increase it for what we're now referring to
 		if(this->pointer != nullptr) {
 			this->pointer->inc_rc();
 		}
 		return *this;
 	}
-	refcount_ptr(const refcount_ptr<T> &rhs) : pointer(~rhs) {
-		if(this->pointer != nullptr) {
-			this->pointer->inc_rc();
-		}
-	}
 
-	bool operator==(const refcount_ptr<T> &rhs) {
-		return this->pointer == ~rhs;
+	bool operator==(const refcount_ptr &rhs) {
+		return this->pointer == rhs.pointer;
 	}
 	bool operator==(void *rhs) {
 		return (void *)this->pointer == rhs;
 	}
-	bool operator!=(const refcount_ptr<T> &rhs) {
-		return this->pointer != ~rhs;
+	bool operator!=(const refcount_ptr &rhs) {
+		return this->pointer != rhs.pointer;
 	}
 	bool operator!=(void *rhs) {
 		return (void *)this->pointer != rhs;

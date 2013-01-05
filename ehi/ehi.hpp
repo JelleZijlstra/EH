@@ -274,7 +274,7 @@ public:
 };
 
 template<class T>
-inline int ehobj_t::register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, class EHInterpreter *interpreter_parent, ehval_p the_class) {
+inline int ehobj_t::register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class) {
 	ehobj_t *newclass;
 	ehval_p new_value;
 	if(the_class == nullptr) {

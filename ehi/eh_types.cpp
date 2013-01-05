@@ -16,6 +16,9 @@
 #include "std_lib/VisibilityError.hpp"
 #include "std_lib/NameError.hpp"
 
+/*
+ * ehval_t
+ */
 ehmember_p ehval_t::set_property(const char *name, ehval_p value, ehcontext_t context, EHI *ehi) {
 	// caller should ensure object is actually an object
 	ehobj_t *obj = get<Object>();
@@ -109,9 +112,9 @@ ehval_p ehval_t::get_property(const char *name, ehcontext_t context, EHI *ehi) {
 }
 
 /*
- * ehobj_t
+ * Object
  */
-ehval_p Object::make(ehobj_t *obj, class EHInterpreter *parent) {
+ehval_p Object::make(ehobj_t *obj, EHInterpreter *parent) {
 	return parent->allocate<Object>(obj);
 }
 
@@ -140,18 +143,11 @@ void Object::printvar(printvar_set &set, int level, EHI *ehi) {
 		}
 	}
 }
-void ehobj_t::add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *parent, int member_id) {
-	auto e = object_data->get<Enum>();
 
-	// insert object into the Enum object
-	member_id = e->add_member(name, params, member_id);
-
-	// insert member into the class
-	auto ei = new Enum_Instance::t(type_id, member_id, params.size(), nullptr);
-	auto ei_obj = Enum_Instance::make(ei, parent);
-	ehmember_p member = ehmember_t::make(attributes_t::make_const(), ei_obj);
-	insert(name, member);
-}
+/*
+ * ehobj_t
+ */
+// const methods
 ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) const {
 	if(this->has(name)) {
 		return this->members.at(name);
@@ -161,6 +157,7 @@ ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) c
 		return nullptr;
 	}
 }
+
 bool ehobj_t::inherited_has(const std::string &key, const EHInterpreter *parent) const {
 	if(this->has(key) || parent->base_object->get<Object>()->has(key)) {
 		return true;
@@ -172,6 +169,7 @@ bool ehobj_t::inherited_has(const std::string &key, const EHInterpreter *parent)
 	}
 	return false;
 }
+
 // recursive version that does not check superclasses Object
 ehmember_p ehobj_t::recursive_inherited_get(const std::string &key) const {
 	if(this->has(key)) {
@@ -185,6 +183,7 @@ ehmember_p ehobj_t::recursive_inherited_get(const std::string &key) const {
 	}
 	return nullptr;
 }
+
 ehmember_p ehobj_t::inherited_get(const std::string &key, const EHInterpreter *parent) const {
 	if(this->has(key)) {
 		return this->get_known(key);
@@ -200,6 +199,7 @@ ehmember_p ehobj_t::inherited_get(const std::string &key, const EHInterpreter *p
 	}
 	return nullptr;
 }
+
 bool ehobj_t::inherits(const ehval_p obj, const EHInterpreter *parent) const {
 	if(parent->base_object == obj) {
 		return true;
@@ -219,6 +219,7 @@ ehobj_t *ehobj_t::get_parent() const {
 		return this->parent->get<Object>();
 	}
 }
+
 std::set<std::string> ehobj_t::member_set(const EHInterpreter *parent) const {
 	std::set<std::string> out;
 	for(auto &i : this->members) {
@@ -235,7 +236,8 @@ std::set<std::string> ehobj_t::member_set(const EHInterpreter *parent) const {
 	}
 	return out;
 }
-bool ehobj_t::context_compare(const ehcontext_t &key, class EHI *ehi) const {
+
+bool ehobj_t::context_compare(const ehcontext_t &key, const class EHI *ehi) const {
 	// in global context, we never have access to private stuff
 	if(key.object.null()) {
 		return false;
@@ -250,17 +252,34 @@ bool ehobj_t::context_compare(const ehcontext_t &key, class EHI *ehi) const {
 		return type_id == key_id;
 	}
 }
-void ehobj_t::register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *interpreter_parent) {
+
+// non-const methods
+void ehobj_t::add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *interpreter_parent, int member_id) {
+	auto e = object_data->get<Enum>();
+
+	// insert object into the Enum object
+	member_id = e->add_member(name, params, member_id);
+
+	// insert member into the class
+	auto ei = new Enum_Instance::t(type_id, member_id, params.size(), nullptr);
+	auto ei_obj = Enum_Instance::make(ei, interpreter_parent);
+	ehmember_p member = ehmember_t::make(attributes_t::make_const(), ei_obj);
+	insert(name, member);
+}
+
+void ehobj_t::register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHInterpreter *interpreter_parent) {
 	ehval_p func = interpreter_parent->make_method(method);
 	this->register_value(name, func, attributes);
 }
+
 void ehobj_t::register_value(const std::string &name, ehval_p value, const attributes_t attributes) {
 	ehmember_p member;
 	member->attribute = attributes;
 	member->value = value;
 	this->insert(name, member);
 }
-int ehobj_t::register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *interpreter_parent) {
+
+int ehobj_t::register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, EHInterpreter *interpreter_parent) {
 	ehobj_t *newclass = new ehobj_t();
 	ehval_p new_value = Object::make(newclass, interpreter_parent);
 
@@ -275,7 +294,8 @@ int ehobj_t::register_member_class(const char *name, const ehobj_t::initializer 
 	this->insert(name, member);
 	return newclass->type_id;
 }
-int ehobj_t::register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, class EHInterpreter *interpreter_parent) {
+
+int ehobj_t::register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent) {
 	const ehval_p ret = Enum::make_enum_class(name, interpreter_parent->global_object, interpreter_parent);
 	auto enum_obj = ret->get<Object>();
 
@@ -287,12 +307,12 @@ int ehobj_t::register_enum_class(const ehobj_t::initializer init_func, const cha
 	return enum_obj->type_id;
 }
 
-
 ehobj_t::~ehobj_t() {
 	// Commenting out for now until I figure out how to get it working.
 	//ehi->call_method_obj(this, "finalize", 0, nullptr, nullptr);
 }
 
-// eh_exception
-
-eh_exception::~eh_exception() throw() {}
+/*
+ * eh_exception
+ */
+eh_exception::~eh_exception() noexcept {}

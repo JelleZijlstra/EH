@@ -172,11 +172,15 @@ typedef ehmember_t::ehmember_p ehmember_p;
 // EH object
 class ehobj_t {
 public:
-	// typedefs
+	/*
+	 * typedefs
+	 */
 	typedef std::map<const std::string, ehmember_p> obj_map;
-	typedef void (*initializer)(ehobj_t *obj, class EHInterpreter *parent);
+	typedef void (*initializer)(ehobj_t *obj, EHInterpreter *parent);
 
-	// properties
+	/*
+	 * properties
+	 */
 	obj_map members;
 	// the object's state data
 	ehval_p object_data;
@@ -187,30 +191,34 @@ public:
 	// inheritance
 	std::list<ehval_p> super;
 
-	// constructors
+	/*
+	 * constructor etcetera
+	 */
 	ehobj_t() : members(), object_data(), type_id(0), parent(), super() {}
+	~ehobj_t();
 
-	// method prototypes
+	// ehobj_t should never be handled directly
+	ehobj_t(const ehobj_t&) = delete;
+	ehobj_t operator=(const ehobj_t&) = delete;
+
+	/*
+	 * const methods
+	 */
 	ehmember_p get_recursive(const char *name, const ehcontext_t context) const;
-	bool context_compare(const ehcontext_t &key, class EHI *ehi) const;
+	bool context_compare(const ehcontext_t &key, const EHI *ehi) const;
 
 	bool inherited_has(const std::string &key, const EHInterpreter *parent) const;
 	ehmember_p inherited_get(const std::string &key, const EHInterpreter *parent) const;
 	ehmember_p recursive_inherited_get(const std::string &key) const;
 
 	std::set<std::string> member_set(const EHInterpreter *parent) const;
+	ehobj_t *get_parent() const;
+	bool inherits(const ehval_p obj, const EHInterpreter *parent) const;
+
 
 	// inline methods
 	size_t size() const {
 		return members.size();
-	}
-
-	void insert(const std::string &name, ehmember_p value) {
-		members[name] = value;
-	}
-	void insert(const char *name, ehmember_p value) {
-		const std::string str(name);
-		this->insert(str, value);
 	}
 
 	ehmember_p get_known(const std::string &key) const {
@@ -221,37 +229,35 @@ public:
 	bool has(const std::string &key) const {
 		return members.count(key);
 	}
+
 	bool has(const char *key) const {
 		return has(std::string(key));
 	}
 
-	ehobj_t *get_parent() const;
+	/*
+	 * non-const methods
+	 */
+
+	void insert(const std::string &name, ehmember_p value) {
+		members[name] = value;
+	}
+	void insert(const char *name, ehmember_p value) {
+		const std::string str(name);
+		this->insert(str, value);
+	}
 
 	void inherit(ehval_p superclass) {
 		super.push_front(superclass);
 	}
 
-	bool inherits(const ehval_p obj, const EHInterpreter *parent) const;
-
-	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, class EHInterpreter *parent);
-
+	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHInterpreter *interpreter_parent);
 	void register_value(const std::string &name, ehval_p value, const attributes_t attributes);
-
-	int register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, class EHInterpreter *interpreter_parent);
+	int register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent);
+	void add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *parent, int member_id = 0);
+	int register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, EHInterpreter *interpreter_parent);
 
 	template<class T>
-	int register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, class EHInterpreter *interpreter_parent, ehval_p the_class = nullptr);
-
-	int register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, class EHInterpreter *interpreter_parent);
-
-	void add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *parent, int member_id = 0);
-
-	// destructor
-	~ehobj_t();
-private:
-	// ehobj_t should never be handled directly
-	ehobj_t(const ehobj_t&);
-	ehobj_t operator=(const ehobj_t&);
+	int register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class = nullptr);
 };
 
 EH_CLASS(Object) {
@@ -284,7 +290,7 @@ public:
 
 	virtual void printvar(printvar_set &set, int level, EHI *ehi) override;
 
-	static ehval_p make(ehobj_t *obj, class EHInterpreter *parent);
+	static ehval_p make(ehobj_t *obj, EHInterpreter *parent);
 
 	template<class T>
 	bool inherits() const {

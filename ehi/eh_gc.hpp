@@ -66,8 +66,8 @@ public:
 		// get the next pointer from a free block. Havoc will result if this is called on an allocated block.
 		class garbage_collector::block *get_next_pointer() {
 			assert(!this->is_allocated());
-			char *ptr = reinterpret_cast<char *>(this) + sizeof(data);
-			return *reinterpret_cast<class garbage_collector::block **>(ptr);
+			auto ptr = reinterpret_cast<char *>(this) + sizeof(data);
+			return reinterpret_cast<class garbage_collector::block *>(ptr);
 		}
 		void set_next_pointer(void *in) {
 			char *ptr = reinterpret_cast<char *>(this) + sizeof(data);
@@ -109,7 +109,7 @@ public:
 			return static_cast<bool>(this->gc_data & (1 << (15 - bit)));
 		}
 
-		bool is_allocated() {
+		bool is_allocated() const {
 			return this->refcount != 0;
 		}
 
@@ -139,6 +139,9 @@ private:
 		// needed so we can use this for classes inheriting from T
 		void *padding;
 
+		const data *get_data() const {
+			return reinterpret_cast<const data *>(&this->content);
+		}
 		data *get_data() {
 			return reinterpret_cast<data *>(&this->content);
 		}
@@ -154,7 +157,7 @@ private:
 		bool is_self_freed() {
 			return this->get_next_pointer() == reinterpret_cast<block *>(self_freed);
 		}
-		bool is_allocated() {
+		bool is_allocated() const {
 			return this->get_data()->refcount != 0;
 		}
 	};
@@ -336,19 +339,6 @@ public:
 			return *this;
 		}
 
-		bool operator==(const pointer &rhs) {
-			return this->content == ~rhs;
-		}
-		bool operator==(void *rhs) {
-			return static_cast<void *>(this->content) == rhs;
-		}
-		bool operator!=(const pointer &rhs) {
-			return this->content != ~rhs;
-		}
-		bool operator!=(void *rhs) {
-			return (void *)this->content != rhs;
-		}
-
 		/*
 		 * So that it can be used in a map
 		 */
@@ -519,7 +509,7 @@ public:
 #endif /* DEBUG_GC */
 	}
 
-	void print_stats() {
+	void print_stats() const {
 		int num_pools = 0;
 		int allocated_blocks = 0;
 		for(pool *p = this->first_pool; p != nullptr; p = p->next) {

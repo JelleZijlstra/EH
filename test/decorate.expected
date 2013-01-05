@@ -1,0 +1,5 @@
+%%stdout%%
+@object <Foo> [
+	toString <private,non-static,non-constant>: @function <user>: ()
+]
+%%stderr%%

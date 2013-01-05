@@ -71,7 +71,7 @@ public:
 EH_INITIALIZER(Node_Context);
 
 EH_METHOD(Node_Context, initialize);
-EH_METHOD(Node_Context, object);
-EH_METHOD(Node_Context, scope);
+EH_METHOD(Node_Context, getObject);
+EH_METHOD(Node_Context, getScope);
 
 #endif /* EH_NODE_H_ */

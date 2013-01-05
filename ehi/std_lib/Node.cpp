@@ -561,8 +561,8 @@ Node *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval
 
 EH_INITIALIZER(Node_Context) {
 	REGISTER_METHOD(Node_Context, initialize);
-	REGISTER_METHOD(Node_Context, object);
-	REGISTER_METHOD(Node_Context, scope);
+	REGISTER_METHOD(Node_Context, getObject);
+	REGISTER_METHOD(Node_Context, getScope);
 }
 
 void Node_Context::printvar(printvar_set &set, int level, class EHI *ehi) {
@@ -592,12 +592,12 @@ EH_METHOD(Node_Context, initialize) {
 	return Node_Context::make(ehcontext_t(object, scope), ehi->get_parent());
 }
 
-EH_METHOD(Node_Context, object) {
-	ASSERT_RESOURCE(Node_Context, "Node.Context.object");
+EH_METHOD(Node_Context, getObject) {
+	ASSERT_RESOURCE(Node_Context, "Node.Context.getObject");
 	return data->object;
 }
 
-EH_METHOD(Node_Context, scope) {
-	ASSERT_RESOURCE(Node_Context, "Node.Context.scope");
+EH_METHOD(Node_Context, getScope) {
+	ASSERT_RESOURCE(Node_Context, "Node.Context.getScope");
 	return data->scope;
 }

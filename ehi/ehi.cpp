@@ -57,7 +57,7 @@ ehval_p EHI::parse_interactive() {
 	}
 }
 
-ehval_p EHI::parse_file(const char *name, ehcontext_t context) {
+ehval_p EHI::parse_file(const char *name, const ehcontext_t &context) {
 	FILE *infile = fopen(name, "r");
 	if(infile == nullptr) {
 		fprintf(stderr, "Could not open input file\n");
@@ -72,7 +72,7 @@ ehval_p EHI::parse_file(const char *name, ehcontext_t context) {
 		return nullptr;
 	}
 }
-ehval_p EHI::parse_string(const char *cmd, ehcontext_t context) {
+ehval_p EHI::parse_string(const char *cmd, const ehcontext_t &context) {
 	EHI parser(end_is_end_e, this->get_parent(), context, working_dir, "(eval'd code)");
 	return parser.parse_string(cmd);
 }

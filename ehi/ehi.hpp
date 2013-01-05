@@ -118,15 +118,15 @@ public:
 			return nullptr;
 		}
 	}
-	ehval_p parse_string(const char *cmd, ehcontext_t context);
-	ehval_p parse_file(const char *name, ehcontext_t context);
+	ehval_p parse_string(const char *cmd, const ehcontext_t &context);
+	ehval_p parse_file(const char *name, const ehcontext_t &context);
 	ehval_p parse_interactive();
 
-	ehval_p call_method(ehval_p in, const char *name, ehval_p args, ehcontext_t context);
-	ehval_p call_function(ehval_p function, ehval_p args, ehcontext_t context);
+	ehval_p call_method(ehval_p in, const char *name, ehval_p args, const ehcontext_t &context);
+	ehval_p call_function(ehval_p function, ehval_p args, const ehcontext_t &context);
 
 	template<class T>
-	ehval_p call_method_typed(ehval_p in, const char *name, ehval_p args, ehcontext_t context) {
+	ehval_p call_method_typed(ehval_p in, const char *name, ehval_p args, const ehcontext_t &context) {
 		ehval_p out = call_method(in, name, args, context);
 		if(!out->is_a<T>()) {
 			std::ostringstream message;
@@ -137,7 +137,7 @@ public:
 		return out;
 	}
 
-	ehval_p set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, ehcontext_t context);
+	ehval_p set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const ehcontext_t &context);
 	void handle_uncaught(eh_exception &e);
 
 	/*
@@ -213,42 +213,42 @@ private:
 	/*
 	 * Private methods
 	 */
-	ehval_p eh_always_execute(ehval_p code, ehcontext_t context);
-	ehval_p eh_op_anonclass(ehval_p node, ehcontext_t context);
-	ehval_p eh_op_array(ehval_p node, ehcontext_t context);
-	ehval_p eh_op_colon(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_customop(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_command(const char *name, ehval_p node, ehcontext_t context);
-	ehval_p eh_op_enum(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_class(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_named_class(ehval_p *paras, ehcontext_t context);
-	ehval_p declare_class(const char *name, ehval_p code, ehcontext_t context);
-	ehval_p eh_op_declareclosure(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_dollar(ehval_p node, ehcontext_t context);
-	ehval_p eh_op_dot(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_match(ehval_p *paras, ehcontext_t context);
-	bool match(ehval_p node, ehval_p var, ehcontext_t context);
-	ehval_p eh_op_given(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_if(int token, ehval_p *paras, ehcontext_t context);
-	ehval_p do_for_loop(ehval_p iteree_block, ehval_p body_block, int op, ehval_p set_block, ehcontext_t context);
-	ehval_p eh_op_for(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_for_in(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_set(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_switch(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_try(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_try_finally(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_tuple(ehval_p node, ehcontext_t context);
-	ehval_p eh_op_while(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_try_catch(ehval_p try_block, ehval_p catch_blocks, ehcontext_t context);
+	ehval_p eh_always_execute(ehval_p code, const ehcontext_t &context);
+	ehval_p eh_op_anonclass(ehval_p node, const ehcontext_t &context);
+	ehval_p eh_op_array(ehval_p node, const ehcontext_t &context);
+	ehval_p eh_op_colon(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_customop(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_command(const char *name, ehval_p node, const ehcontext_t &context);
+	ehval_p eh_op_enum(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_class(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_named_class(ehval_p *paras, const ehcontext_t &context);
+	ehval_p declare_class(const char *name, ehval_p code, const ehcontext_t &context);
+	ehval_p eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_dollar(ehval_p node, const ehcontext_t &context);
+	ehval_p eh_op_dot(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_match(ehval_p *paras, const ehcontext_t &context);
+	bool match(ehval_p node, ehval_p var, const ehcontext_t &context);
+	ehval_p eh_op_given(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_if(int token, ehval_p *paras, const ehcontext_t &context);
+	ehval_p do_for_loop(ehval_p iteree_block, ehval_p body_block, int op, ehval_p set_block, const ehcontext_t &context);
+	ehval_p eh_op_for(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_for_in(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_set(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_switch(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_try(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_try_finally(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_tuple(ehval_p node, const ehcontext_t &context);
+	ehval_p eh_op_while(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_try_catch(ehval_p try_block, ehval_p catch_blocks, const ehcontext_t &context);
 	ehval_p eh_xtoarray(ehval_p in);
-	ehval_p perform_op(const char *name, int nargs, ehval_p *paras, ehcontext_t context);
-	void array_insert(Array::t *array, ehval_p in, int place, ehcontext_t context);
-	void eh_op_break(ehval_p *paras, ehcontext_t context);
-	ehval_p eh_op_classmember(ehval_p *paras, ehcontext_t context);
-	void eh_op_continue(ehval_p *paras, ehcontext_t context);
+	ehval_p perform_op(const char *name, int nargs, ehval_p *paras, const ehcontext_t &context);
+	void array_insert(Array::t *array, ehval_p in, int place, const ehcontext_t &context);
+	void eh_op_break(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_classmember(ehval_p *paras, const ehcontext_t &context);
+	void eh_op_continue(ehval_p *paras, const ehcontext_t &context);
 
-	ehval_p promote(ehval_p in, ehcontext_t context);
-	bool eh_floatequals(float infloat, ehval_p operand2, ehcontext_t context) {
+	ehval_p promote(ehval_p in, const ehcontext_t &context);
+	bool eh_floatequals(float infloat, ehval_p operand2, const ehcontext_t &context) {
 		ehval_p operand = this->toInteger(operand2, context);
 		// checks whether a float equals an int. C++ handles this correctly.
 		return (infloat == static_cast<float>(operand->get<Integer>()));
@@ -256,7 +256,7 @@ private:
 
 public:
 	// conversion methods, guaranteed to return the type they're supposed to return
-#define CASTER(class_name) ehval_p to ## class_name(ehval_p in, ehcontext_t context) { \
+#define CASTER(class_name) ehval_p to ## class_name(ehval_p in, const ehcontext_t &context) { \
 	if(in->is_a<class_name>()) { \
 		return in; \
 	} \
@@ -268,7 +268,7 @@ public:
 	CASTER(Bool)
 #undef CASTER
 
-	int compare(ehval_p lhs, ehval_p rhs, ehcontext_t context) {
+	int compare(ehval_p lhs, ehval_p rhs, const ehcontext_t &context) {
 		return call_method_typed<Integer>(lhs, "operator<=>", rhs, context)->get<Integer>();
 	}
 };

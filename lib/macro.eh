@@ -14,4 +14,6 @@ class Macro
 		case Node.T_ASSIGN(@lvalue, @rvalue)
 			Node.T_ASSIGN(Node.T_CLASS_MEMBER(privateAttrs, lvalue), rvalue)
 	end
+
+	public identity = code => code
 end

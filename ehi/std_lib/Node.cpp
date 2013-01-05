@@ -99,6 +99,8 @@ EH_INITIALIZER(Node) {
 	TOKEN(T_RANGE, 2);
 	TOKEN(T_SCOPE, 0);
 	TOKEN(T_THIS, 0);
+	TOKEN(T_RAW, 1);
+	REGISTER_CLASS(Node, Context);
 }
 
 EH_METHOD(Node, execute) {
@@ -546,4 +548,47 @@ Node *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval
 	op->members[2] = third;
 	op->members[3] = fourth;
 	return op;
+}
+
+EH_INITIALIZER(Node_Context) {
+	REGISTER_METHOD(Node_Context, initialize);
+	REGISTER_METHOD(Node_Context, object);
+	REGISTER_METHOD(Node_Context, scope);
+}
+
+void Node_Context::printvar(printvar_set &set, int level, class EHI *ehi) {
+	void *ptr = static_cast<void *>(value);
+	if(set.count(ptr) == 0) {
+		std::cout << "@context [\n";
+		add_tabs(std::cout, level + 1);
+		std::cout << "object: ";
+		value->object->printvar(set, level + 1, ehi);
+		add_tabs(std::cout, level + 1);
+		std::cout << "scope: ";
+		value->scope->printvar(set, level + 1, ehi);
+		add_tabs(std::cout, level);
+		std::cout << "]\n";
+	} else {
+		std::cout << "(recursion)\n";
+	}
+}
+
+
+EH_METHOD(Node_Context, initialize) {
+	ASSERT_NARGS(2, "Node.Context.initialize");
+	auto t = args->get<Tuple>();
+	auto object = t->get(0);
+	auto scope = t->get(1);
+	ASSERT_TYPE(scope, Object, "Node.Context.initialize");
+	return Node_Context::make(ehcontext_t(object, scope), ehi->get_parent());
+}
+
+EH_METHOD(Node_Context, object) {
+	ASSERT_RESOURCE(Node_Context, "Node.Context.object");
+	return data->object;
+}
+
+EH_METHOD(Node_Context, scope) {
+	ASSERT_RESOURCE(Node_Context, "Node.Context.scope");
+	return data->scope;
 }

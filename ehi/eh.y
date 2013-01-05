@@ -81,13 +81,13 @@ int yylex(YYSTYPE *, void *);
 %token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS T_IF_ELSE T_NULLARY_ENUM T_ENUM_WITH_ARGUMENTS
 %token T_ARRAY_MEMBER_NO_KEY T_ANYTHING T_GROUPING T_ASSIGN T_ADD T_SUBTRACT T_MULTIPLY T_DIVIDE T_MODULO T_GREATER
 %token T_LESSER T_BINARY_AND T_BINARY_OR T_BINARY_XOR T_BINARY_COMPLEMENT T_NOT T_MATCH_SET T_COMMA T_ARRAY_LITERAL
-%token T_HASH_LITERAL T_CALL T_ACCESS T_APPLY_MACRO
+%token T_HASH_LITERAL T_CALL T_ACCESS
 %token T_COMMAND T_SHORTPARA T_LONGPARA
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
 %token <sValue> T_CUSTOMOP
+%nonassoc T_RAW
 %right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ T_LEFTSHIFTEQ T_RIGHTSHIFTEQ
-%right T_WITH
 %right T_DOUBLEARROW
 %nonassoc T_ATTRIBUTE
 %right ','
@@ -204,8 +204,7 @@ expression:
 	| '~' expression		{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
 	| '!' expression		{ $$ = ADD_NODE1(T_NOT, $2); }
 	| '@' T_VARIABLE		{ $$ = eh_addnode(T_MATCH_SET, String::make($2)); }
-	| expression T_WITH expression
-							{ $$ = ADD_NODE2(T_APPLY_MACRO, $1, $3); }
+	| T_RAW expression		{ $$ = ADD_NODE1(T_RAW, $2); }
 	| expression T_PLUSPLUS	{
 								ehval_p lvalue = NODE($1);
 								$$ = eh_addnode(T_ASSIGN, lvalue, NODE(eh_addnode(T_ADD, lvalue, Integer::make(1))));

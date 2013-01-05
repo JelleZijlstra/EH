@@ -41,4 +41,36 @@ EH_INITIALIZER(Node);
 
 EH_METHOD(Node, execute);
 
+EH_CHILD_CLASS(Node, Context) {
+public:
+	typedef ehcontext_t *type;
+	type value;
+
+	bool belongs_in_gc() const {
+		return true;
+	}
+
+	std::list<ehval_p> children() {
+		return { value->object, value->scope };
+	}
+
+	Node_Context(type val) : value(val) {}
+
+	~Node_Context() {
+		delete value;
+	}
+
+	virtual void printvar(printvar_set &set, int level, class EHI *ehi);
+
+	static ehval_p make(const ehcontext_t &context, EHInterpreter *parent) {
+		return parent->allocate<Node_Context>(new ehcontext_t(context));
+	}
+};
+
+EH_INITIALIZER(Node_Context);
+
+EH_METHOD(Node_Context, initialize);
+EH_METHOD(Node_Context, object);
+EH_METHOD(Node_Context, scope);
+
 #endif /* EH_NODE_H_ */

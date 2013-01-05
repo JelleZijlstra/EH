@@ -180,6 +180,11 @@
 		initialize <public,non-static,non-constant>: @function <library>: 
 	]
 	Node <public,non-static,constant>: @object <Node> [
+		Context <public,non-static,non-constant>: @object <Node.Context> [
+			initialize <public,non-static,non-constant>: @function <library>: 
+			object <public,non-static,non-constant>: @function <library>: 
+			scope <public,non-static,non-constant>: @function <library>: 
+		]
 		T_ACCESS <public,non-static,constant>: @enum constructor T_ACCESS <Node>: parameter, parameter
 		T_ADD <public,non-static,constant>: @enum constructor T_ADD <Node>: parameter, parameter
 		T_AND <public,non-static,constant>: @enum constructor T_AND <Node>: parameter, parameter
@@ -245,6 +250,7 @@
 		T_NULLARY_ENUM <public,non-static,constant>: @enum constructor T_NULLARY_ENUM <Node>: parameter
 		T_OR <public,non-static,constant>: @enum constructor T_OR <Node>: parameter, parameter
 		T_RANGE <public,non-static,constant>: @enum constructor T_RANGE <Node>: parameter, parameter
+		T_RAW <public,non-static,constant>: @enum constructor T_RAW <Node>: parameter
 		T_RET <public,non-static,constant>: @enum constructor T_RET <Node>: parameter
 		T_RIGHTSHIFT <public,non-static,constant>: @enum constructor T_RIGHTSHIFT <Node>: parameter, parameter
 		T_SCOPE <public,non-static,constant>: @enum instance T_SCOPE <Node> [

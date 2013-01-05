@@ -68,7 +68,7 @@ void make_string(char **, char *);
 "this"		return T_THIS;
 "scope"		return T_SCOPE;
 "enum"		return T_ENUM;
-"with"		return T_WITH;
+"raw"		return T_RAW;
 "public"	{
 				yylval_param->vValue = Attribute::publica_e;
 				return T_ATTRIBUTE;

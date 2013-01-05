@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 
-private macro = code => (() => code.execute())
+private macro = code, context => (() => code.execute())
 
-private f = (macro with 3)
+private f = (macro raw 3)
 
 printvar(f())

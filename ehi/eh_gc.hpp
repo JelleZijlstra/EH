@@ -66,8 +66,8 @@ public:
 		// get the next pointer from a free block. Havoc will result if this is called on an allocated block.
 		class garbage_collector::block *get_next_pointer() {
 			assert(!this->is_allocated());
-			auto ptr = reinterpret_cast<char *>(this) + sizeof(data);
-			return reinterpret_cast<class garbage_collector::block *>(ptr);
+			char *ptr = reinterpret_cast<char *>(this) + sizeof(data);
+			return *reinterpret_cast<class garbage_collector::block **>(ptr);
 		}
 		void set_next_pointer(void *in) {
 			char *ptr = reinterpret_cast<char *>(this) + sizeof(data);
@@ -139,11 +139,12 @@ private:
 		// needed so we can use this for classes inheriting from T
 		void *padding;
 
-		const data *get_data() const {
-			return reinterpret_cast<const data *>(&this->content);
-		}
 		data *get_data() {
 			return reinterpret_cast<data *>(&this->content);
+		}
+
+		const data *get_data() const {
+			return reinterpret_cast<const data *>(&this->content);
 		}
 
 		// get the next pointer from a free block. Havoc will result if this is called on an allocated block.

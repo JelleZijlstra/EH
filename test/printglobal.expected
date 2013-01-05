@@ -181,9 +181,9 @@
 	]
 	Node <public,non-static,constant>: @object <Node> [
 		Context <public,non-static,non-constant>: @object <Node.Context> [
+			getObject <public,non-static,non-constant>: @function <library>: 
+			getScope <public,non-static,non-constant>: @function <library>: 
 			initialize <public,non-static,non-constant>: @function <library>: 
-			object <public,non-static,non-constant>: @function <library>: 
-			scope <public,non-static,non-constant>: @function <library>: 
 		]
 		T_ACCESS <public,non-static,constant>: @enum constructor T_ACCESS <Node>: parameter, parameter
 		T_ADD <public,non-static,constant>: @enum constructor T_ADD <Node>: parameter, parameter
@@ -266,6 +266,7 @@
 		T_VARIABLE <public,non-static,constant>: @enum constructor T_VARIABLE <Node>: parameter
 		T_WHILE <public,non-static,constant>: @enum constructor T_WHILE <Node>: parameter, parameter
 		T_XOR <public,non-static,constant>: @enum constructor T_XOR <Node>: parameter, parameter
+		decompile <public,non-static,non-constant>: @function <library>: 
 		execute <public,non-static,non-constant>: @function <library>: 
 	]
 	Null <public,non-static,constant>: @object <Null> [

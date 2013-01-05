@@ -40,6 +40,7 @@ Node *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval
 EH_INITIALIZER(Node);
 
 EH_METHOD(Node, execute);
+EH_METHOD(Node, decompile);
 
 EH_CHILD_CLASS(Node, Context) {
 public:

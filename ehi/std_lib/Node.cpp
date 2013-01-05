@@ -24,6 +24,7 @@ const std::vector<std::string> vec4 = {"parameter", "parameter", "parameter", "p
 
 EH_INITIALIZER(Node) {
 	REGISTER_METHOD(Node, execute);
+	REGISTER_METHOD(Node, decompile);
 	TOKEN(T_IF, 3);
 	TOKEN(T_ELSE, 2);
 	TOKEN(T_ELSIF, 2);
@@ -108,6 +109,12 @@ EH_METHOD(Node, execute) {
 	args = args->data();
 	ASSERT_TYPE(args, Node_Context, "Node.execute");
 	return ehi->eh_execute(obj, *args->get<Node_Context>());
+}
+
+EH_METHOD(Node, decompile) {
+	ASSERT_OBJ_TYPE(Enum_Instance, "Node.decompile");
+	auto str = obj->decompile(0);
+	return String::make(strdup(str.c_str()));
 }
 
 static void add_end(std::ostringstream &out, int levels) {

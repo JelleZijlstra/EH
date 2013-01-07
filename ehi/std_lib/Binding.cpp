@@ -17,6 +17,8 @@ EH_INITIALIZER(Binding) {
 	REGISTER_METHOD(Binding, decompile);
 	REGISTER_METHOD(Binding, bindTo);
 	REGISTER_METHOD(Binding, new);
+	REGISTER_METHOD(Binding, method);
+	REGISTER_METHOD(Binding, object);
 }
 
 /*
@@ -46,9 +48,8 @@ EH_METHOD(Binding, decompile) {
  * @returns New binding
  */
 EH_METHOD(Binding, bindTo) {
-	ASSERT_OBJ_TYPE(Binding, "Binding.bindTo");
-	Binding::t *b = obj->get<Binding>();
-	return Binding::make(args, b->method, ehi->get_parent());
+	ASSERT_RESOURCE(Binding, "Binding.bindTo");
+	return Binding::make(args, data->method, ehi->get_parent());
 }
 
 /*
@@ -58,8 +59,8 @@ EH_METHOD(Binding, bindTo) {
  * @returns String
  */
 EH_METHOD(Binding, toString) {
-	ASSERT_OBJ_TYPE(Binding, "Binding.toString");
-	return ehlm_Function_toString(obj->get<Binding>()->method, nullptr, ehi);
+	ASSERT_RESOURCE(Binding, "Binding.toString");
+	return ehlm_Function_toString(data->method, nullptr, ehi);
 }
 
 /*
@@ -68,7 +69,26 @@ EH_METHOD(Binding, toString) {
  * @returns Method's return value
  */
 EH_METHOD(Binding, operator_colon) {
-	ASSERT_OBJ_TYPE(Binding, "Binding.operator()");
-	Binding::t *binding = obj->get<Binding>();
-	return Function::exec(binding->object_data, binding->method, args, ehi);
+	ASSERT_RESOURCE(Binding, "Binding.operator()");
+	return Function::exec(data->object_data, data->method, args, ehi);
+}
+
+/*
+ * @description Returns a binding's object.
+ * @argument None
+ * @returns Object
+ */
+EH_METHOD(Binding, object) {
+	ASSERT_RESOURCE(Binding, "Binding.object");
+	return data->object_data;
+}
+
+/*
+ * @description Returns a binding's function object.
+ * @argument None
+ * @returns Function
+ */
+EH_METHOD(Binding, method) {
+	ASSERT_RESOURCE(Binding, "Binding.method");
+	return data->method;
 }

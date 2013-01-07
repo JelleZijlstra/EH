@@ -292,3 +292,4 @@ decompile_rare.eh
 decompile_enum.eh
 macro.eh
 decorate.eh
+Binding.eh

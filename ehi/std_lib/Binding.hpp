@@ -19,7 +19,7 @@ public:
 
 	Binding(t *val) : value(val) {}
 
-	virtual bool belongs_in_gc() const {
+	virtual bool belongs_in_gc() const override {
 		return true;
 	}
 
@@ -47,6 +47,8 @@ EH_METHOD(Binding, toString);
 EH_METHOD(Binding, decompile);
 EH_METHOD(Binding, bindTo);
 EH_METHOD(Binding, new);
+EH_METHOD(Binding, object);
+EH_METHOD(Binding, method);
 
 EH_INITIALIZER(Binding);
 

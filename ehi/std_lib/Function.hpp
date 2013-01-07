@@ -38,12 +38,12 @@ public:
 	type value;
 
 	virtual bool belongs_in_gc() const override {
-		return false;
+		return true;
 	}
 
-	// virtual std::list<ehval_p> children() const override {
-	// 	return {args, code};
-	// }
+	virtual std::list<ehval_p> children() const override {
+		return { value->args, value->code };
+	}
 
 	virtual std::string decompile(int level) const override {
 		if(value->type == lib_e) {

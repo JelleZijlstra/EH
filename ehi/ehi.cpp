@@ -1,6 +1,8 @@
 #include "eh.hpp"
+#include "std_lib/ArgumentError.hpp"
 #include "std_lib/Attribute.hpp"
 #include "std_lib/Node.hpp"
+#include "std_lib/String.hpp"
 #include "eh.bison.hpp"
 #include "eh.flex.hpp"
 
@@ -46,7 +48,7 @@ ehval_p EHI::parse_interactive() {
 			return Integer::make(0);
 		}
 		try {
-			parse_string(cmd);
+			execute_string(cmd);
 		} catch(eh_exception &e) {
 			handle_uncaught(e);
 		} catch(quit_exception &) {
@@ -55,32 +57,33 @@ ehval_p EHI::parse_interactive() {
 	}
 }
 
-ehval_p EHI::parse_file(const char *name, const ehcontext_t &context) {
-	FILE *infile = fopen(name, "r");
-	if(infile == nullptr) {
-		fprintf(stderr, "Could not open input file\n");
-		return nullptr;
-	}
+ehval_p EHI::spawning_parse_file(const char *name, const ehcontext_t &context) {
 	EHI parser(end_is_end_e, this->get_parent(), context, eh_full_path(name), name);
-	// if a syntax error occurs, stop parsing and return -1
 	try {
-		return parser.parse_file(infile);
+		return parser.execute_named_file(name);
 	} catch(eh_exception &e) {
 		handle_uncaught(e);
 		return nullptr;
 	}
 }
-ehval_p EHI::parse_string(const char *cmd, const ehcontext_t &context) {
+ehval_p EHI::spawning_parse_string(const char *cmd, const ehcontext_t &context) {
 	EHI parser(end_is_end_e, this->get_parent(), context, working_dir, "(eval'd code)");
-	return parser.parse_string(cmd);
+	return parser.execute_string(cmd);
 }
 
-ehval_p EHI::parse_file(FILE *infile) {
+void EHI::parse_file(FILE *infile) {
 	yy_buffer = yy_create_buffer(infile, YY_BUF_SIZE, scanner);
 	yy_switch_to_buffer(yy_buffer, scanner);
 	yyparse(scanner);
+}
 
-	// now execute the code
+void EHI::parse_string(const char *cmd) {
+	yy_switch_to_buffer(yy_scan_string(cmd, scanner), scanner);
+	yyset_lineno(1, scanner);
+	yyparse(scanner);
+}
+
+ehval_p EHI::execute_code() {
 	const ehcontext_t context = get_context();
 	if(parent->optimize) {
 		code = optimize(code, context);
@@ -88,9 +91,21 @@ ehval_p EHI::parse_file(FILE *infile) {
 	return eh_execute(code, context);
 }
 
-ehval_p EHI::parse_string(const char *cmd) {
-	yy_switch_to_buffer(yy_scan_string(cmd, scanner), scanner);
-	yyset_lineno(1, scanner);
-	yyparse(scanner);
-	return eh_execute(code, get_context());
+ehval_p EHI::execute_file(FILE *infile) {
+	parse_file(infile);
+	return execute_code();
 }
+
+ehval_p EHI::execute_named_file(const char *name) {
+	FILE *infile = fopen(name, "r");
+	if(infile == nullptr) {
+		throw_ArgumentError("Could not open input file", "EH core", String::make(strdup(name)), this);
+	}
+	return execute_file(infile);
+}
+
+ehval_p EHI::execute_string(const char *cmd) {
+	parse_string(cmd);
+	return execute_code();
+}
+

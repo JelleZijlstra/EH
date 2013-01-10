@@ -33,20 +33,25 @@ int main(int argc, char **argv) {
 			}
 			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object, eh_getcwd(), "ehi -r");
 			try {
-				ret = ehi.parse_string(argv[2], interpreter.global_object);
+				ret = ehi.execute_string(argv[2]);
 			} catch(eh_exception &e) {
 				ehi.handle_uncaught(e);
 				return -1;
 			}
-		} else if(!strcmp(argv[1], "-O")) {
-			interpreter.optimize = true;
-			interpreter.eh_setarg(argc - 1, argv + 1);
-			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object, eh_full_path(argv[1]), argv[1]);
-			ret = ehi.parse_file(argv[2], interpreter.global_object);
 		} else {
+			if(!strcmp(argv[1], "-O")) {
+				interpreter.optimize = true;
+				argc--;
+				argv++;
+			}
 			interpreter.eh_setarg(argc, argv);
 			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object, eh_full_path(argv[1]), argv[1]);
-			ret = ehi.parse_file(argv[1], interpreter.global_object);
+			try {
+				ret = ehi.execute_named_file(argv[1]);
+			} catch(eh_exception &e) {
+				ehi.handle_uncaught(e);
+				return -1;
+			}
 		}
 		//TODO: let scripts determine exit status
 		return 0;

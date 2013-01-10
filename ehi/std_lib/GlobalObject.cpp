@@ -149,20 +149,10 @@ EH_METHOD(GlobalObject, include) {
 		return nullptr;
 	}
 	included.insert(full_path);
-	FILE *infile = fopen(full_path.c_str(), "r");
-	if(!infile) {
-		throw_ArgumentError("Unable to open file", "include", args, ehi);
-	}
+
 	const std::string dirname = eh_dirname(full_path);
 	EHI parser(end_is_end_e, ehi->get_parent(), obj, dirname, filename);
-	try {
-		ehval_p ret = parser.parse_file(infile);
-		fclose(infile);
-		return ret;
-	} catch(...) {
-		fclose(infile);
-		throw;
-	}
+	return parser.execute_named_file(full_path.c_str());
 }
 
 // power

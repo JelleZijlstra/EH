@@ -4,4 +4,4 @@ This is a library function
 42
 This is a method belonging to a library class
 %%stderr%%
-Uncaught exception of type ArgumentError: Unable to open file (method include): nosuchthing
+Uncaught exception of type ArgumentError: Could not open input file (method EH core): /Users/jellezijlstra/code/EH/test/nosuchthing

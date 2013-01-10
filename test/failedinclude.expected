@@ -1,4 +1,4 @@
 %%stdout%%
-Unable to open file (method include): thisfiledoesnotexist
+Could not open input file (method EH core): /Users/jellezijlstra/code/EH/test/thisfiledoesnotexist
 42
 %%stderr%%

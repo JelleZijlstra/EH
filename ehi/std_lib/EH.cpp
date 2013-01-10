@@ -22,7 +22,7 @@ EH_METHOD(EH, eval) {
 	ehval_p scope = Object::make(scope_obj, ehi->get_parent());
 	scope_obj->type_id = 1; // Object
 	scope_obj->parent = ehi->global();
-	ehi->parse_string(arg->get<String>(), scope);
+	ehi->spawning_parse_string(arg->get<String>(), scope);
 	return scope;
 }
 

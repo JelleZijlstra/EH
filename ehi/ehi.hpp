@@ -99,29 +99,46 @@ public:
 	virtual char *eh_getline();
 	virtual ehval_p execute_cmd(const char *rawcmd, Array::t *paras);
 
-	ehval_p parse_file(FILE *infile);
-	ehval_p parse_string(const char *cmd);
+	// simply parse a FILE or string
+	void parse_file(FILE *infile);
+	void parse_string(const char *cmd);
 
-	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
+	// parse and execute
+	ehval_p execute_file(FILE *infile);
+	ehval_p execute_named_file(const char *name);
+	ehval_p execute_string(const char *cmd);
+
+	// parse while spawning a new EHI object
+	ehval_p spawning_parse_string(const char *cmd, const ehcontext_t &context);
+	ehval_p spawning_parse_file(const char *name, const ehcontext_t &context);
+
+	// execute stuff in global context, without worrying about exceptions
 	ehval_p global_parse_file(const char *name) {
 		try {
-			return parse_file(name, parent->global_object);
+			return spawning_parse_file(name, parent->global_object);
 		} catch(eh_exception &) {
 			return nullptr;
 		}
 	}
 	ehval_p global_parse_string(const char *cmd) {
 		try {
-			return parse_string(cmd, parent->global_object);
+			return spawning_parse_string(cmd, parent->global_object);
 		} catch(eh_exception &e) {
 			handle_uncaught(e);
 			return nullptr;
 		}
 	}
-	ehval_p parse_string(const char *cmd, const ehcontext_t &context);
-	ehval_p parse_file(const char *name, const ehcontext_t &context);
+
+	// execute the code object of the EHI
+	ehval_p execute_code();
+
+	// interactive parsing
+	int eh_interactive(interactivity_enum interactivity = cli_prompt_e);
 	ehval_p parse_interactive();
 
+	/*
+	 * EH API: operations exposed to the standard library.
+	 */
 	ehval_p call_method(ehval_p in, const char *name, ehval_p args, const ehcontext_t &context);
 	ehval_p call_function(ehval_p function, ehval_p args, const ehcontext_t &context);
 
@@ -132,7 +149,7 @@ public:
 			std::ostringstream message;
 			message << "Method " << name << " must return a value of type ";
 			message << ehval_t::name<T>();
-			throw_TypeError(message.str().c_str(), out, this);
+			throw_TypeError(strdup(message.str().c_str()), out, this);
 		}
 		return out;
 	}

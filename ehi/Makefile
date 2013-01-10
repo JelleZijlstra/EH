@@ -37,7 +37,7 @@ eh.bison.cpp eh.bison.hpp: eh.y
 	bison -v -y -d eh.y --output='eh.bison.cpp'
 
 eh.flex.cpp: eh.l eh.bison.hpp
-	flex eh.l
+	flex --header-file=eh.flex.hpp eh.l
 
 eh_wrap.cpp: eh.i
 	swig -c++ -php5 eh.i

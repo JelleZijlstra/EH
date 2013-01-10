@@ -16,11 +16,7 @@
 #include "std_lib/Attribute.hpp"
 
 #include "eh.bison.hpp"
-
-extern FILE *yyin;
-
-EHI *yyget_extra(void *scanner);
-int yylex(YYSTYPE *, void *);
+#include "eh.flex.hpp"
 
 #define YYERROR_VERBOSE
 #define YYLEX_PARAM scanner

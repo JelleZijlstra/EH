@@ -150,8 +150,6 @@ void make_string(char **, char *);
 				yyerror(yyscanner, message);
 			}
 %%
-int yyparse(void *);
-
 int yywrap(yyscan_t scanner) {
 	EHI *parser = yyget_extra(scanner);
 	if(parser->get_interactivity() != end_is_end_e) {
@@ -168,26 +166,6 @@ int yywrap(yyscan_t scanner) {
 void yyerror(void *scanner, const char *s) {
 	EHI *ehi = yyget_extra(scanner);
 	throw_SyntaxError(s, yyget_lineno((yyscan_t)scanner), ehi);
-}
-
-ehval_p EHI::parse_file(FILE *infile) {
-	yy_buffer = yy_create_buffer(infile, YY_BUF_SIZE, scanner);
-	yy_switch_to_buffer(yy_buffer, scanner);
-	yyparse(scanner);
-
-	// now execute the code
-	const ehcontext_t context = get_context();
-	if(parent->optimize) {
-		code = optimize(code, context);
-	}
-	return eh_execute(code, context);
-}
-
-ehval_p EHI::parse_string(const char *cmd) {
-	yy_switch_to_buffer(yy_scan_string(cmd, scanner), scanner);
-	yyset_lineno(1, scanner);
-	yyparse(scanner);
-	return eh_execute(code, get_context());
 }
 
 void make_string(char **dest, char *src) {

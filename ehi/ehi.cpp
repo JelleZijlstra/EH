@@ -2,13 +2,11 @@
 #include "std_lib/Attribute.hpp"
 #include "std_lib/Node.hpp"
 #include "eh.bison.hpp"
+#include "eh.flex.hpp"
 
 #include <stdio.h>
 
-int yylex(YYSTYPE *, void *);
-int yylex_init_extra(class EHI *, void **);
-int yylex_destroy(void *);
-struct yy_buffer_state *yy_scan_string (const char *str);
+int yyparse(void *);
 
 // Thread for the garbage collector. Before I actually start running this, I'll have to make sure the GC is thread-safe.
 void *gc_thread(void *arg) {
@@ -75,4 +73,24 @@ ehval_p EHI::parse_file(const char *name, const ehcontext_t &context) {
 ehval_p EHI::parse_string(const char *cmd, const ehcontext_t &context) {
 	EHI parser(end_is_end_e, this->get_parent(), context, working_dir, "(eval'd code)");
 	return parser.parse_string(cmd);
+}
+
+ehval_p EHI::parse_file(FILE *infile) {
+	yy_buffer = yy_create_buffer(infile, YY_BUF_SIZE, scanner);
+	yy_switch_to_buffer(yy_buffer, scanner);
+	yyparse(scanner);
+
+	// now execute the code
+	const ehcontext_t context = get_context();
+	if(parent->optimize) {
+		code = optimize(code, context);
+	}
+	return eh_execute(code, context);
+}
+
+ehval_p EHI::parse_string(const char *cmd) {
+	yy_switch_to_buffer(yy_scan_string(cmd, scanner), scanner);
+	yyset_lineno(1, scanner);
+	yyparse(scanner);
+	return eh_execute(code, get_context());
 }

@@ -5,6 +5,7 @@ Node.Context.toString = () => "(context: " + this.getObject() + ", " + this.getS
 class Macro
 	public decorate = func: f, (code, context)
 		private processedCode = f code
+		echo processedCode
 		processedCode.execute context
 	end
 

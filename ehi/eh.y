@@ -119,14 +119,6 @@ program:
 								if(ehi->get_interactivity() == end_is_end_e) {
 									ehval_p code = NODE($1);
 									ehi->set_code(code);
-									const ehcontext_t context = ehi->get_context();
-									if(ehi->get_parent()->optimize) {
-										ehi->set_code(ehi->optimize(code, context));
-									}
-									ehval_p ret = ehi->eh_execute(ehi->get_code(), context);
-									if(ehi->get_returning()) {
-										return (ret->is_a<Integer>()) ? ret->get<Integer>() : 0;
-									}
 								}
 							}
 
@@ -137,7 +129,6 @@ global_list:
 								if(ehi->get_interactivity() != end_is_end_e) {
 									ehval_p statement = NODE($1);
 									ehval_p ret = ehi->eh_execute(statement, ehi->get_context());
-									// TODO: make this use printvar instead
 									std::cout << "=> " << ehi->toString(ret, ehi->get_context())->get<String>() << std::endl;
 #if defined(DEBUG_GC) || defined(RUN_GC)
 									EHInterpreter *interpreter = ehi->get_parent();

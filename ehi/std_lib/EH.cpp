@@ -9,6 +9,7 @@ EH_INITIALIZER(EH) {
 	REGISTER_METHOD(EH, eval);
 	REGISTER_METHOD(EH, collectGarbage);
 	REGISTER_METHOD(EH, contextName);
+	REGISTER_METHOD(EH, parse);
 }
 
 /*
@@ -45,4 +46,17 @@ EH_METHOD(EH, collectGarbage) {
 EH_METHOD(EH, contextName) {
 	ASSERT_NULL("contextName");
 	return String::make(strdup(ehi->get_context_name().c_str()));
+}
+
+/*
+ * @description Parses a string into a piece of AST.
+ * @argument String to parse
+ * @returns Node
+ */
+EH_METHOD(EH, parse) {
+	ASSERT_TYPE(args, String, "EH.parse");
+	const char *cmd = args->get<String>();
+	EHI parser(end_is_end_e, ehi->get_parent(), ehi->get_context(), ehi->get_working_dir(), "(eval'd code)");
+	parser.parse_string(cmd);
+	return parser.get_code();
 }

@@ -1,3 +1,3 @@
 #!/usr/bin/ehi
 echo(workingDir())
-echo(contextName())
+echo(EH.contextName())

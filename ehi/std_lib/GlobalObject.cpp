@@ -13,6 +13,7 @@
 #include "Binding.hpp"
 #include "Bool.hpp"
 #include "ConstError.hpp"
+#include "EH.hpp"
 #include "Enum.hpp"
 #include "Exception.hpp"
 #include "File.hpp"
@@ -95,6 +96,7 @@ EH_INITIALIZER(GlobalObject) {
 	REGISTER_PURE_CLASS(Random);
 	GLOBAL_REGISTER_CLASS(Map);
 	REGISTER_PURE_CLASS(VisibilityError);
+	REGISTER_PURE_CLASS(EH);
 
 	/*
 	 * Inititalize top-level methods.
@@ -105,14 +107,11 @@ EH_INITIALIZER(GlobalObject) {
 	REGISTER_METHOD(GlobalObject, include);
 	REGISTER_METHOD(GlobalObject, pow);
 	REGISTER_METHOD(GlobalObject, log);
-	REGISTER_METHOD(GlobalObject, eval);
 	REGISTER_METHOD(GlobalObject, throw);
 	REGISTER_METHOD(GlobalObject, echo);
 	REGISTER_METHOD(GlobalObject, put);
-	REGISTER_METHOD(GlobalObject, collectGarbage);
 	REGISTER_METHOD(GlobalObject, handleUncaught);
 	REGISTER_METHOD(GlobalObject, workingDir);
-	REGISTER_METHOD(GlobalObject, contextName);
 	REGISTER_METHOD(GlobalObject, shell);
 }
 
@@ -198,11 +197,6 @@ EH_METHOD(GlobalObject, log) {
 	return Float::make(log(arg->get<Float>()));
 }
 
-EH_METHOD(GlobalObject, eval) {
-	ehval_p arg = ehi->toString(args, obj);
-	return ehi->parse_string(arg->get<String>(), obj);
-}
-
 EH_METHOD(GlobalObject, getinput) {
 	ASSERT_NULL("getinput");
 	// more accurately, getint
@@ -228,11 +222,6 @@ EH_METHOD(GlobalObject, put) {
 	return nullptr;
 }
 
-EH_METHOD(GlobalObject, collectGarbage) {
-	ehi->get_parent()->gc.do_collect({ehi->global(), ehi->get_code()});
-	return nullptr;
-}
-
 EH_METHOD(GlobalObject, handleUncaught) {
 	const std::string &type_string = ehi->get_parent()->repo.get_name(args);
 	// we're in global context now. Remember this object, because otherwise the string may be freed before we're done with it.
@@ -240,11 +229,6 @@ EH_METHOD(GlobalObject, handleUncaught) {
 	const char *msg = stringval->get<String>();
 	std::cerr << "Uncaught exception of type " << type_string << ": " << msg << std::endl;
 	return nullptr;
-}
-
-EH_METHOD(GlobalObject, contextName) {
-	ASSERT_NULL("contextName");
-	return String::make(strdup(ehi->get_context_name().c_str()));
 }
 
 EH_METHOD(GlobalObject, workingDir) {

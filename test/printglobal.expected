@@ -49,6 +49,11 @@
 	ConstError <public,non-static,constant>: @object <ConstError> [
 		initialize <public,non-static,non-constant>: @function <library>: 
 	]
+	EH <public,non-static,constant>: @object <EH> [
+		collectGarbage <public,non-static,non-constant>: @function <library>: 
+		contextName <public,non-static,non-constant>: @function <library>: 
+		eval <public,non-static,non-constant>: @function <library>: 
+	]
 	EmptyIterator <public,non-static,constant>: @object <EmptyIterator> [
 		initialize <public,non-static,non-constant>: @function <library>: 
 	]
@@ -367,16 +372,13 @@
 	argv <public,non-static,non-constant>: @array [
 		0 => @string "printglobal.eh"
 	]
-	collectGarbage <public,non-static,non-constant>: @function <library>: 
 	commands <public,non-static,constant>: @hash [
 		'echo': @function <library>: 
 		'put': @function <library>: 
 		'q': @function <library>: 
 		'quit': @function <library>: 
 	]
-	contextName <public,non-static,non-constant>: @function <library>: 
 	echo <public,non-static,non-constant>: @function <library>: 
-	eval <public,non-static,non-constant>: @function <library>: 
 	getinput <public,non-static,non-constant>: @function <library>: 
 	global <public,non-static,constant>: (recursion)
 	handleUncaught <public,non-static,non-constant>: @function <library>: 

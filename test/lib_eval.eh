@@ -5,7 +5,7 @@ include '../lib/eval.eh'
 
 printvar(exprEval "[]")
 printvar(universalEval "{}")
-universalEval "x = 42;"
-printvar x
+private obj = universalEval "x = 42;"
+printvar(obj.x)
 
 universalEval "x + - / *"

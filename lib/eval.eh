@@ -2,14 +2,14 @@
 
 # Eval as an expression
 const exprEval = func: expr
-	eval("x = (" + expr + ");")
-	x
+	private obj = EH.eval("x = (" + expr + ");")
+	obj.x
 end
 
 # Eval as either an expression or a statement
 const universalEval = func: input
 	try
-		eval input
+		EH.eval input
 	catch
 		exprEval input
 	end

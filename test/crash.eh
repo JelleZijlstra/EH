@@ -9,12 +9,12 @@ try
 	length 0
 catch
 end
-collectGarbage()
+EH.collectGarbage()
 try
 	length 0
 catch
 end
-collectGarbage()
+EH.collectGarbage()
 echo 3
 #printvar global
 echo 3

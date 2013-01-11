@@ -13,6 +13,7 @@ EH_INITIALIZER(String) {
 	REGISTER_METHOD(String, toRange);
 	REGISTER_METHOD(String, charAtPosition);
 	REGISTER_METHOD(String, getIterator);
+	REGISTER_METHOD(String, trim);
 	REGISTER_CLASS(String, Iterator);
 }
 
@@ -135,6 +136,36 @@ EH_METHOD(String, getIterator) {
 	ASSERT_NULL_AND_TYPE(String, "String.getIterator");
 	ehval_p class_member = obj->get_property("Iterator", obj, ehi);
 	return ehi->call_method(class_member, "new", obj, obj);
+}
+
+/*
+ * @description Trim leading and trailing whitespace from a string.
+ * @argument None
+ * @returns New string
+ */
+EH_METHOD(String, trim) {
+	ASSERT_RESOURCE(String, "String.trim");
+	const size_t starting_len = strlen(data);
+	const char *start_ptr = data;
+	const char *end_ptr = start_ptr + starting_len;
+	// left-trim
+	while(start_ptr < end_ptr && isspace(start_ptr[0])) {
+		start_ptr++;
+	}
+	// right trim
+	while(end_ptr > start_ptr && isspace(end_ptr[-1])) {
+		end_ptr--;
+	}
+	const size_t new_len = end_ptr - start_ptr;
+	if(starting_len == new_len) {
+		// just return the existing string
+		return obj;
+	} else {
+		char *new_str = new char[new_len + 1];
+		strncpy(new_str, start_ptr, new_len);
+		new_str[new_len] = '\0';
+		return String::make(new_str);
+	}
 }
 
 EH_INITIALIZER(String_Iterator) {

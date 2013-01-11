@@ -47,6 +47,7 @@ EH_METHOD(String, toBool);
 EH_METHOD(String, toRange);
 EH_METHOD(String, charAtPosition);
 EH_METHOD(String, getIterator);
+EH_METHOD(String, trim);
 
 EH_INITIALIZER(String);
 

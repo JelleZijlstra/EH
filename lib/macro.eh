@@ -60,6 +60,10 @@ class Macro
 				Node.T_CALL_METHOD(optimize l, "operator==", optimize r)
 			case (Node.T_ANYTHING | Node.T_MATCH_SET(_))
 				throw(MiscellaneousError.new("Cannot use T_ANYTHING or T_MATCH_SET outside of match expression"))
+			case Node.T_SEPARATOR((), @rhs)
+				optimize rhs
+			case Node.T_SEPARATOR(@lhs, ())
+				optimize lhs
 			case _; code.map optimize
 		end
 	else

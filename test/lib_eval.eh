@@ -1,11 +1,11 @@
 #!/usr/bin/ehi
-include '../lib/eval.eh'
+include '../lib/eh.eh'
 
 # Test the eval library
 
-printvar(exprEval "[]")
-printvar(universalEval "{}")
-private obj = universalEval "x = 42;"
+printvar(EH.exprEval "[]")
+printvar(EH.universalEval "{}")
+private obj = EH.universalEval "x = 42;"
 printvar(obj.x)
 
-universalEval "x + - / *"
+EH.universalEval "x + - / *"

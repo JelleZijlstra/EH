@@ -74,7 +74,10 @@
 	private context = Node.Context.new(this, this)
 
 	global.include = func: name
-		private code = EH.parse(File.readFile(global.workingDir() + "/" + name))
+		if name->0 != '/'
+			name = global.workingDir() + "/" + name
+		end
+		private code = EH.parse(File.readFile name)
 		private stacked = applyStack code
 		stacked.execute context
 	end

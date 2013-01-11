@@ -123,6 +123,8 @@ class Iterable
 	const public max = () => this.reduceSingle (largest, val => largest < val)
 
 	const public min = () => this.reduceSingle (smallest, val => smallest > val)
+
+	const public clone = () => this.map(x => x)
 end
 
 # Dynamic inheritance in iterable library classes

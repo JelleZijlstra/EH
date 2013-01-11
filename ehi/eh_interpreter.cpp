@@ -781,7 +781,7 @@ bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 			}
 			default: {
 				ehval_p casevar = eh_execute(node, context);
-				ehval_p decider = call_method_typed<Bool>(var, "operator==", casevar, context);
+				ehval_p decider = call_method_typed<Bool>(casevar, "operator==", var, context);
 				return decider->get<Bool>();
 			}
 		}

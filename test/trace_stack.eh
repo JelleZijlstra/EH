@@ -3,4 +3,4 @@
 # include magic stack tracer
 include '../lib/stack_trace.eh'
 
-include 'thrower.eh'
+include(argv->1)

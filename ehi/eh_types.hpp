@@ -112,7 +112,7 @@ public:
 		throw;
 	}
 
-	static ehval_t *null_object();
+	static ehval_p null_object();
 
 	template<class T>
 	bool inherited_is_a() const;

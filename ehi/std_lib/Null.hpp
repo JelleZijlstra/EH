@@ -25,6 +25,10 @@ public:
 	static ehval_p make() {
 		return null_obj;
 	}
+
+	Null() {}
+
+	virtual ~Null() {}
 };
 
 EH_METHOD(Null, initialize);

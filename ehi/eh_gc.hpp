@@ -294,9 +294,6 @@ public:
 	private:
 		mutable T *content;
 
-		T *&operator~() const {
-			return this->content;
-		}
 	public:
 		/*
 		 * Constructors
@@ -304,7 +301,7 @@ public:
 		pointer() : pointer(nullptr) {}
 		// my compiler apparently doesn't have std::nullptr_t
 		pointer(decltype(nullptr)) : pointer(T::null_object()) {}
-		pointer(const pointer &rhs) : content(~rhs) {
+		pointer(const pointer &rhs) : content(rhs.content) {
 			assert(content != nullptr);
 			this->content->inc_rc();
 		}
@@ -320,7 +317,7 @@ public:
 		}
 		T *operator->() const {
 			if(this->content == nullptr) {
-				return T::null_object();
+				return T::null_object().content;
 			} else {
 				return this->content;
 			}
@@ -330,7 +327,7 @@ public:
 			if(this->content != nullptr) {
 				this->content->dec_rc();
 			}
-			this->content = ~rhs;
+			this->content = rhs.content;
 			// and increase it for what we're now referring to
 			if(this->content != nullptr) {
 				this->content->inc_rc();
@@ -342,7 +339,7 @@ public:
 		 * So that it can be used in a map
 		 */
 		int compare(const pointer &rhs) const {
-			if(this->content == ~rhs) {
+			if(this->content == rhs.content) {
 				return 0;
 			} else if(this->null()) {
 				return -1;

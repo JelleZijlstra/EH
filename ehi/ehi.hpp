@@ -330,8 +330,8 @@ inline int ehval_t::get_type_id(const EHInterpreter *parent) {
 	}
 }
 
-inline ehval_t *ehval_t::null_object() {
-	return Null::make().operator->();
+inline ehval_p ehval_t::null_object() {
+	return Null::make();
 }
 
 #endif /* EH_EHI_H_ */

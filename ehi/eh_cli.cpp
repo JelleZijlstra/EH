@@ -5,7 +5,6 @@
  * Default implementation of EH, used in the standalone interpreter.
  */
 #include "eh.hpp"
-#include "std_lib/UnknownCommandError.hpp"
 
 static void eh_usage(char *name) {
 	fprintf(stderr, "Usage: %s\n\t%s file [arguments]\n\t%s -i\n\t%s -r code\n", name, name, name, name);
@@ -58,18 +57,4 @@ int main(int argc, char **argv) {
 	} catch(...) {
 		return -1;
 	}
-}
-
-ehval_p EHI::execute_cmd(const char *name, Array::t *paras) {
-	throw_UnknownCommandError(name, this);
-	return nullptr;
-}
-char *EHI::eh_getline() {
-	if(this->buffer == nullptr) {
-		this->buffer = new char[512];
-	}
-	if(get_interactivity() == cli_prompt_e) {
-		printf("> ");
-	}
-	return fgets(buffer, 511, stdin);
 }

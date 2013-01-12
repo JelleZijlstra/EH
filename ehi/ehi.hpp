@@ -197,6 +197,11 @@ public:
 	EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name);
 	EHI();
 	virtual ~EHI();
+
+	/*
+	 * Operations exposed for the purposes of the compiler
+	 */
+	ehval_p eh_op_dollar(ehval_p node, const ehcontext_t &context);
 private:
 
 	/*
@@ -241,7 +246,6 @@ private:
 	ehval_p eh_op_named_class(ehval_p *paras, const ehcontext_t &context);
 	ehval_p declare_class(const char *name, ehval_p code, const ehcontext_t &context);
 	ehval_p eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context);
-	ehval_p eh_op_dollar(ehval_p node, const ehcontext_t &context);
 	ehval_p eh_op_dot(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_match(ehval_p *paras, const ehcontext_t &context);
 	bool match(ehval_p node, ehval_p var, const ehcontext_t &context);

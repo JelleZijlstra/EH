@@ -13,6 +13,7 @@ doc/*.pdf
 ehi/eh.bison.cpp
 ehi/eh.bison.hpp
 ehi/eh.flex.cpp
+ehi/eh.flex.hpp
 ehi/eh_wrap.cpp
 ehi/eh_wrap.h
 ehi/ehc

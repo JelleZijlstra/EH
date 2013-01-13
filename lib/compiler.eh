@@ -29,27 +29,12 @@ class Compiler
 
 	public initialize = func: fileName
 		this.fileName = fileName
-		this.functions = Nil
 	end
 
 	public compile = func: outputFile
 		private code = Macro.optimize(EH.parseFile(this.fileName))
 		private mainf = StringBuilder.new()
-		mainf << "int main(int argc, char *argv[]) {\n"
-		# setup code
-		mainf << "EHInterpreter interpreter;\n"
-		mainf << "interpreter.eh_setarg(argc, argv);\n"
-		mainf << 'EHI ehi_obj(end_is_end_e, &interpreter, interpreter.global_object, eh_getcwd(), "' << this.fileName << '");\n'
-		mainf << "EHI *ehi = &ehi_obj;\n"
-		mainf << "ehcontext_t context = ehi->get_context();\n"
-		mainf << "try {\n"
-		mainf << "eh_main(ehi, ehi->get_context());\n"
-		mainf << "} catch (eh_exception &e) {\n"
-		mainf << "ehi->handle_uncaught(e);\n"
-		mainf << "return -1;\n"
-		mainf << "}\n"
-		mainf << "return 0;\n"
-		mainf << "}\n"
+		mainf << 'const char *get_filename() { return "' << this.fileName << '"; }\n'
 
 		private eh_mainf = StringBuilder.new()
 		eh_mainf << "ehval_p eh_main(EHI *ehi, const ehcontext_t &context) {\nehval_p ret;\n"
@@ -74,7 +59,7 @@ class Compiler
 		output.close()
 
 		# compile the C++
-		echo shell("cd tmp && clang++ -v compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
+		shell("cd tmp && clang++ compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
 	end
 
 	private doCompile = func: sb, code

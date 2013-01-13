@@ -165,8 +165,8 @@ private:
 
 	class pool {
 	private:
-		pool(const pool&);
-		pool operator=(const pool&);
+		pool(const pool&) = delete;
+		pool operator=(const pool&) = delete;
 	public:
 		// pointer to next pool in the list
 		pool *next;

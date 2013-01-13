@@ -29,7 +29,7 @@ class Compiler
 
 	public initialize = func: fileName
 		this.fileName = fileName
-		this.functions = []
+		this.functions = Nil
 	end
 
 	public compile = func: outputFile

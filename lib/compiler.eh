@@ -124,7 +124,7 @@ class Compiler
 		this.counter++
 
 		private sb = StringBuilder.new()
-		sb << "ehval_p " << func_name << "(ehval_p obj, ehval_p args, EHI *ehi) {\n"
+		sb << "ehval_p " << func_name << "(ehval_p obj, ehval_p args, EHI *ehi, const ehcontext_t &context) {\n"
 		sb << "ehval_p ret;\n"
 		this.compile_set(sb, args, "args")
 

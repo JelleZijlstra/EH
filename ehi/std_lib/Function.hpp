@@ -16,15 +16,21 @@ EH_CLASS(Function) {
 public:
 	enum functype_enum {
 		user_e,
-		lib_e
+		lib_e,
+		compiled_e
 	};
+
+	typedef ehval_p (*compiled_method)(ehval_p, ehval_p, class EHI *, const ehcontext_t &context);
 
 	class t {
 	public:
 		functype_enum type;
 		ehval_p args;
 		ehval_p code;
-		ehlibmethod_t libmethod_pointer;
+		union {
+			ehlibmethod_t libmethod_pointer;
+			compiled_method compiled_pointer;
+		};
 
 		t(functype_enum _type = user_e) : type(_type), args(nullptr), code(nullptr), libmethod_pointer(nullptr) {}
 
@@ -46,7 +52,7 @@ public:
 	}
 
 	virtual std::string decompile(int level) const override {
-		if(value->type == lib_e) {
+		if(value->type == lib_e || value->type == compiled_e) {
 			return "(args) => (native code)";
 		} else {
 			std::ostringstream out;
@@ -72,6 +78,9 @@ public:
 				break;
 			case lib_e:
 				std::cout << "library>: ";
+				break;
+			case compiled_e:
+				std::cout << "compiled>: ";
 				break;
 		}
 		std::cout << std::endl;

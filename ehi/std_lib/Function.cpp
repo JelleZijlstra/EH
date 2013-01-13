@@ -37,20 +37,28 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 		base_object = base_object->get<SuperClass>();
 	}
 
-	if(f->type == lib_e) {
-		return f->libmethod_pointer(base_object, args, ehi);
+	switch(f->type) {
+		case lib_e:
+			return f->libmethod_pointer(base_object, args, ehi);
+		case compiled_e: {
+			ehval_p newcontext = ehi->get_parent()->instantiate(function_object);
+			newcontext->get<Object>()->object_data = function_object->get<Object>()->object_data;
+			return f->compiled_pointer(base_object, args, ehi, newcontext);
+		}
+		case user_e: {
+			ehval_p newcontext = ehi->get_parent()->instantiate(function_object);
+			newcontext->get<Object>()->object_data = function_object->get<Object>()->object_data;
+
+			// set arguments
+			attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
+			ehi->set(f->args, args, &attributes, ehcontext_t(base_object, newcontext));
+
+			// execute the function
+			ehval_p ret = ehi->eh_execute(f->code, ehcontext_t(base_object, newcontext));
+			ehi->not_returning();
+			return ret;
+		}
 	}
-	ehval_p newcontext = ehi->get_parent()->instantiate(function_object);
-	newcontext->get<Object>()->object_data = function_object->get<Object>()->object_data;
-
-	// set arguments
-	attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
-	ehi->set(f->args, args, &attributes, ehcontext_t(base_object, newcontext));
-
-	// execute the function
-	ehval_p ret = ehi->eh_execute(f->code, ehcontext_t(base_object, newcontext));
-	ehi->not_returning();
-	return ret;
 }
 
 /*

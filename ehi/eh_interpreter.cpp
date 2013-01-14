@@ -483,8 +483,8 @@ ehval_p EHI::eh_op_array(ehval_p node, const ehcontext_t &context) {
 ehval_p EHI::eh_op_anonclass(ehval_p node, const ehcontext_t &context) {
 	ehval_p ret = Hash::make(parent);
 	Hash::ehhash_t *new_hash = ret->get<Hash>();
-	for( ; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[0]) {
-		ehval_p *myparas = node->get<Enum_Instance>()->members[1]->get<Enum_Instance>()->members;
+	for( ; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
+		ehval_p *myparas = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>()->members;
 		// nodes here will always have the name in para 0 and value in para 1
 		ehval_p value = eh_execute(myparas[1], context);
 		new_hash->set(myparas[0]->get<String>(), value);

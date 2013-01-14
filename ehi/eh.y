@@ -472,15 +472,15 @@ arraymember:
 /* Hash literals */
 anonclasslist:
 	anonclasslist_i anonclassmember ','
-							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| anonclasslist_i anonclassmember
-							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 anonclasslist_i:
 	anonclasslist_i anonclassmember ','
-							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 

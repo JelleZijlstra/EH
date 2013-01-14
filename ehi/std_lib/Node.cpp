@@ -101,6 +101,7 @@ EH_INITIALIZER(Node) {
 	TOKEN(T_SCOPE, 0);
 	TOKEN(T_THIS, 0);
 	TOKEN(T_RAW, 1);
+	TOKEN(T_LIST, 1); // used for the convenience of the compiler: gives a tuple of code blocks rather than the nasty T_COMMA stuff
 	REGISTER_CLASS(Node, Context);
 }
 

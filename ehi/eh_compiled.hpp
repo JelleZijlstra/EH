@@ -40,6 +40,10 @@ static inline ehval_p make_range(ehval_p l, ehval_p r, EHI *ehi) {
 	return Range::make(l, r, ehi->get_parent());
 }
 
+static inline bool boolify(ehval_p val, const ehcontext_t &context, EHI *ehi) {
+	return ehi->toBool(val, context)->get<Bool>();
+}
+
 };
 
 int main(int argc, char *argv[]) {

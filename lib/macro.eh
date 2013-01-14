@@ -105,4 +105,39 @@ class Macro
 	else
 		code
 	end
+
+	class ListifyIterator
+		private l
+
+		public initialize = l => (this.l = l)
+
+		public hasNext = _ => this.l != Node.T_END
+
+		public next = () => match this.l
+			case Node.T_COMMA(@left, @right)
+				this.l = right
+				left.map listify
+			case Node.T_END
+				throw(EmptyIterator.new())
+			case @other
+				this.l = Node.T_END
+				other
+		end
+
+		# trickery to get .length() to work
+		this.inherit Iterable
+		public getIterator = () => this
+		public length = () => ListifyIterator.new(this.l).iterableLength()
+	end
+
+	public listify = code => if code.typeId() == Node.typeId()
+		match code
+			case Node.T_COMMA(_, _)
+				Node.T_LIST(Tuple.initialize(ListifyIterator.new code))
+			case _
+				code.map listify
+		end
+	else
+		code
+	end
 end

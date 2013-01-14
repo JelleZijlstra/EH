@@ -212,6 +212,9 @@ class Compiler
 					this.doCompile(sb, body)
 					sb << "}\n"
 					sb << assignment << iteree_name
+				case T_IF(@condition, @if_block, @elsif_blocks)
+					private condition_name = this.doCompile(sb, if_block)
+					sb << "if(eh_compiled::boolify(" << condition_name << ", context, ehi)) {"
 				# Literals
 				case Node.T_FUNC(@args, @code)
 					private func_name = this.compile_function(args, code)

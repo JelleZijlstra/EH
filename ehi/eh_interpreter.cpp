@@ -302,7 +302,7 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				operand2 = eh_execute(paras[1], context);
 				b1 = this->toBool(operand1, context)->get<Bool>();
 				b2 = this->toBool(operand2, context)->get<Bool>();
-				return Bool::make((b1 && !b2) || (!b1 && b2));
+				return Bool::make(b1 != b2);
 			case T_CUSTOMOP:
 				return eh_op_customop(paras, context);
 		/*

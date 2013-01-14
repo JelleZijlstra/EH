@@ -251,6 +251,17 @@ class Compiler
 					private left_name = this.doCompile(sb, left)
 					private right_name = this.doCompile(sb, right)
 					sb << assignment << "eh_compiled::make_range(" << left_name << ", " << right_name << ", ehi)"
+				case Node.T_HASH_LITERAL(Node.T_LIST(@hash))
+					sb << assignment << "Hash::make(ehi->get_parent());\n"
+					private hash_name = this.get_var_name "hash"
+					sb << "Hash::ehhash_t *" << hash_name << " = " << var_name << "->get<Hash>();\n"
+					for member in hash
+						match member
+							case Node.T_ARRAY_MEMBER(@key, @value)
+								private value_name = this.doCompile(sb, value)
+								sb << hash_name << '->set("' << key << '", ' << value_name << ");\n"
+						end
+					end
 				case Node.T_LIST(@items) # Tuple
 					private member_names = []
 					private size = items.length()
@@ -292,7 +303,6 @@ class Compiler
 		inner_builder << "ehval_p ret;\n" # ignored
 		this.doCompile(inner_builder, body)
 		inner_builder << "}\n"
-
 
 		sb << "ehval_p " << var_name << ' = eh_compiled::make_class("' << class_name << '", ' << body_name << ", context, ehi);\n"
 	end
@@ -337,7 +347,7 @@ class Compiler
 		if else_block != null
 			sb << "} else {\n"
 			private else_name = this.doCompile(sb, else_block)
-			sb << name << "= " << else_name << ";\n"
+			sb << name << " = " << else_name << ";\n"
 		end
 		# print closing braces
 		for elsifs.length() + 1
@@ -402,4 +412,5 @@ class Compiler
 end
 
 private co = Compiler.new(argv->1)
+#private co = Compiler.new("/Users/jellezijlstra/code/EH/lib/tmp/test4.eh")
 co.compile "tmp/compile_test.cpp"

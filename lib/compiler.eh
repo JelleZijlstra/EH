@@ -222,10 +222,31 @@ class Compiler
 					this.compile_elsifs(sb, var_name, condition, if_block, elsif_blocks, null)
 				case Node.T_IF_ELSE(@condition, @if_block, Node.T_LIST(@elsif_blocks), @else_block)
 					this.compile_elsifs(sb, var_name, condition, if_block, elsif_blocks, else_block)
+				# Boolean operators
+				case Node.T_AND(@left, @right)
+					private left_name = this.doCompile(sb, left)
+					sb << assignment << "Bool::make(false);\n"
+					sb << "if(eh_compiled::boolify(" << left_name << ", context, ehi)) {\n"
+					private right_name = this.doCompile(sb, right)
+					sb << var_name << " = ehi->toBool(" << right_name << ", context);\n"
+					sb << "}\n"
+				case Node.T_OR(@left, @right)
+					private left_name = this.doCompile(sb, left)
+					sb << assignment << "Bool::make(true);\n"
+					sb << "if(eh_compiled::boolify(" << left_name << ", context, ehi)) {\n"
+					private right_name = this.doCompile(sb, right)
+					sb << var_name << " = ehi->toBool(" << right_name << ", context);\n"
+					sb << "}\n"
+				case Node.T_XOR(@left, @right)
+					private left_name = this.doCompile(sb, left)
+					sb << "bool " << left_name << "_bool = eh_compiled::boolify(" << left_name << ", context, ehi)) {\n"
+					private right_name = this.doCompile(sb, right)
+					sb << "bool " << right_name << "_bool = eh_compiled::boolify(" << right_name << ", context, ehi)) {\n"
+					sb << assignment << "Bool::make(" << left_name << "_bool != " << right_name << "_bool);\n"
 				# Literals
 				case Node.T_FUNC(@args, @code)
 					private func_name = this.compile_function(args, code)
-					sb << var_name << " = eh_compiled::make_closure(" << func_name << ", context, ehi)"
+					sb << assignment << "eh_compiled::make_closure(" << func_name << ", context, ehi)"
 				case Node.T_RANGE(@left, @right)
 					private left_name = this.doCompile(sb, left)
 					private right_name = this.doCompile(sb, right)
@@ -244,6 +265,12 @@ class Compiler
 						end
 					end
 					sb << "}, ehi->get_parent())"
+				case Node.T_CLASS(@body)
+					this.compile_class(sb, var_name, "(anonymous class)", body)
+				case Node.T_NAMED_CLASS(@name, @body)
+					this.compile_class(sb, var_name, name, body)
+					sb << 'context.scope->set_member("' << name << '", ehmember_p(attributes_t(), '
+					sb << var_name << "), context, ehi)"
 				case _
 					printvar code
 					throw(MiscellaneousError.new("Cannot compile this expression"))
@@ -256,13 +283,27 @@ class Compiler
 		var_name
 	end
 
+	private compile_class = func: sb, var_name, class_name, body
+		private body_name = this.get_var_name "class"
+		private inner_builder = StringBuilder.new()
+		this.functions = inner_builder::this.functions
+
+		inner_builder << "void " << body_name << "(const ehcontext_t &context, EHI *ehi) {\n"
+		inner_builder << "ehval_p ret;\n" # ignored
+		this.doCompile(inner_builder, body)
+		inner_builder << "}\n"
+
+
+		sb << "ehval_p " << var_name << ' = eh_compiled::make_class("' << class_name << '", ' << body_name << ", context, ehi);\n"
+	end
+
 	private compile_function = func: args, code
 		private func_name = this.get_var_name "function"
 
 		private sb = StringBuilder.new()
 		sb << "ehval_p " << func_name << "(ehval_p obj, ehval_p args, EHI *ehi, const ehcontext_t &context) {\n"
 		sb << "ehval_p ret;\n"
-		this.compile_set(sb, args, "args", Attribute.make_private())
+		this.compile_set(sb, args, "args", Attributes.make_private())
 
 		this.doCompile(sb, code)
 		sb << "return ret;\n}\n"

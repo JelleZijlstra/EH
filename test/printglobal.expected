@@ -244,6 +244,7 @@
 		T_LE <public,non-static,constant>: @enum constructor T_LE <Node>: parameter, parameter
 		T_LEFTSHIFT <public,non-static,constant>: @enum constructor T_LEFTSHIFT <Node>: parameter, parameter
 		T_LESSER <public,non-static,constant>: @enum constructor T_LESSER <Node>: parameter, parameter
+		T_LIST <public,non-static,constant>: @enum constructor T_LIST <Node>: parameter
 		T_LITERAL <public,non-static,constant>: @enum constructor T_LITERAL <Node>: parameter
 		T_LONGPARA <public,non-static,constant>: @enum constructor T_LONGPARA <Node>: parameter, parameter
 		T_MATCH <public,non-static,constant>: @enum constructor T_MATCH <Node>: parameter, parameter

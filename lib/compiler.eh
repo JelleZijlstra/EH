@@ -18,6 +18,10 @@ class StringBuilder
 	public toString = () => this.pieces.reduce("", (elt, rest => rest + elt))
 end
 
+class NotImplemented
+	this.inherit Exception
+end
+
 class Attributes
 	private is_private = false
 	private is_static = false
@@ -132,6 +136,7 @@ class Compiler
 			end
 		else
 			match code
+				# Basic operations (variables, assignments, calls)
 				case Node.T_CALL_METHOD(@obj, @method, @args)
 					private obj_name = this.doCompile(sb, obj)
 					private args_name = this.doCompile(sb, args)
@@ -147,23 +152,38 @@ class Compiler
 					this.doCompile(sb, lhs)
 					private returning_name = this.doCompile(sb, rhs)
 					sb << assignment << returning_name
+				case Node.T_ASSIGN(@lvalue, @rvalue)
+					private rvalue_name = this.doCompile(sb, rvalue)
+					this.compile_set(sb, lvalue, rvalue_name, null)
+					sb << assignment << rvalue_name << ";\n"
+				# Constants
 				case Node.T_NULL
 					sb << assignment << "Null::make()"
 				case Node.T_THIS
 					sb << assignment << "context.object"
 				case Node.T_SCOPE
 					sb << assignment << "context.scope"
+				# Flow control
 				case Node.T_RET(@val)
 					private ret_name = this.doCompile(sb, val)
 					sb << assignment << ret_name << ";\n"
 					sb << "return " << ret_name
+				case Node.T_WHILE(@condition, @body)
+					sb << assignment << "Null::make();\n"
+					sb << "do {\n"
+					private cond_name = this.doCompile(sb, condition)
+					sb << "if(!ehi->toBool(" << cond_name << ", context)->get<Bool>()) {\nbreak;\n}\n"
+					private body_name = this.doCompile(sb, body)
+					sb << assignment << body_name << ";\n"
+					sb << "} while(true);\n"
+				# Literals
 				case Node.T_FUNC(@args, @code)
 					private func_name = this.compile_function(args, code)
-					sb << assignment << "eh_compiled::make_closure(" << func_name << ", context, ehi)"
-				case Node.T_ASSIGN(@lvalue, @rvalue)
-					private rvalue_name = this.doCompile(sb, rvalue)
-					this.compile_set(sb, lvalue, rvalue_name, null)
-					sb << assignment << rvalue_name << ";\n"
+					sb << var_name << " = eh_compiled::make_closure(" << func_name << ", context, ehi)"
+				case Node.T_RANGE(@left, @right)
+					private left_name = this.doCompile(sb, left)
+					private right_name = this.doCompile(sb, right)
+					sb << assignment << "eh_compiled::make_range(" << left_name << ", " << right_name << ", ehi);\n"
 				case _
 					printvar code
 					throw(MiscellaneousError.new("Cannot compile this expression"))
@@ -225,7 +245,7 @@ class Compiler
 				this.counter++
 				sb << "ehmember_p " << member_name << ' = context.scope->get<Object>()->get_recursive("'
 				sb << var_name << '", context);\n'
-				sb << "if(" << member_name << " == nullptr) {\n"
+				sb << "if(" << member_name << " != nullptr) {\n"
 				sb << "if(" << member_name << "->isconst()) {\n"
 				sb << 'throw_ConstError(context.scope, "' << var_name << '", ehi);\n}\n'
 				sb << member_name << "->value = " << name << ";\n"
@@ -241,6 +261,8 @@ class Compiler
 			this.compile_set(sb, lval, name, inner_attributes)
 		case Node.T_GROUPING(@lval)
 			this.compile_set(sb, lval, name, attributes)
+		case Node.T_COMMA(@left, @right)
+			throw(NotImplemented.new "Need to find a way to handle tuples gracefully")
 		case _
 			printvar lvalue
 			throw(MiscellaneousError.new "Cannot compile this lvalue")

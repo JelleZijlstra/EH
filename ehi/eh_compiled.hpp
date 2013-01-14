@@ -33,6 +33,13 @@ static inline ehval_p get_variable(const char *name, const ehcontext_t &context,
 	}
 }
 
+static inline ehval_p make_range(ehval_p l, ehval_p r, EHI *ehi) {
+	if(!l->equal_type(r)) {
+		throw_TypeError("Range members must have the same type", r, ehi);
+	}
+	return Range::make(l, r, ehi->get_parent());
+}
+
 };
 
 int main(int argc, char *argv[]) {

@@ -1,6 +1,9 @@
 // Functionality to ease the duties of the EH compiler
 
 #include "eh.hpp"
+#include "std_lib/SuperClass.hpp"
+#include "std_lib/NameError.hpp"
+#include "std_lib/ConstError.hpp"
 
 static const char *get_filename();
 ehval_p eh_main(EHI *ehi, const ehcontext_t &context);
@@ -18,6 +21,16 @@ static inline ehval_p make_closure(Function::compiled_method method, const ehcon
 	function_obj->inherit(function_object);
 	function_obj->parent = context.scope;
 	return func;
+}
+
+static inline ehval_p get_variable(const char *name, const ehcontext_t &context, EHI *ehi) {
+	ehmember_p var = context.scope->get<Object>()->get_recursive(name, context);
+	if(var == nullptr) {
+		throw_NameError(context.scope, name, ehi);
+		return nullptr;
+	} else {
+		return var->value;
+	}
 }
 
 };

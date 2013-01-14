@@ -200,6 +200,18 @@ class Compiler
 					this.doCompile(sb, body)
 					sb << "}\n"
 					sb << assignment << iteree_name
+				case Node.T_FOR_IN(@inner_var_name, @iteree, @body)
+					private iteree_name = this.doCompile(sb, iteree)
+					private iterator_name = this.get_var_name "for_iterator"
+					sb << "ehval_p " << iterator_name << " = ehi->call_method(" << iteree_name
+					sb << ', "getIterator", nullptr, context);\n'
+					sb << "while(ehi->call_method_typed<Bool>(" << iterator_name << ', "hasNext", nullptr, context)->get<Bool>()) {\n'
+					# name will not clash, because there won't be another one in this scope
+					sb << "ehval_p next = ehi->call_method(" << iterator_name << ', "next", nullptr, context);\n'
+					this.compile_set(sb, inner_var_name, "next", Attributes.make_private())
+					this.doCompile(sb, body)
+					sb << "}\n"
+					sb << assignment << iteree_name
 				# Literals
 				case Node.T_FUNC(@args, @code)
 					private func_name = this.compile_function(args, code)

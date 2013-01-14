@@ -428,7 +428,7 @@ ehval_p EHI::do_for_loop(ehval_p iteree_block, ehval_p body_block, int op, ehval
 		}
 		ehval_p next = call_method(iterator, "next", nullptr, context);
 		if(op == T_FOR_IN) {
-			attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
+			attributes_t attributes = attributes_t(private_e, nonstatic_e, nonconst_e);
 			set(set_block, next, &attributes, context);
 		}
 		ehval_p ret = eh_execute(body_block, context);
@@ -546,7 +546,7 @@ ehval_p EHI::eh_op_enum(ehval_p *paras, const ehcontext_t &context) {
 	eh_execute(code, ret);
 
 	// insert variable
-	ehmember_p member = ehmember_t::make(attributes_t::make(), ret);
+	ehmember_p member = ehmember_t::make(attributes_t(), ret);
 	context.scope->get<Object>()->insert(name, member);
 	return ret;
 }
@@ -556,11 +556,11 @@ ehval_p EHI::eh_op_class(ehval_p *paras, const ehcontext_t &context) {
 ehval_p EHI::eh_op_named_class(ehval_p *paras, const ehcontext_t &context) {
 	const char *name = paras[0]->get<String>();
 	ehval_p ret = declare_class(name, paras[1], context);
-	ehmember_p member = ehmember_t::make(attributes_t::make(), ret);
+	ehmember_p member = ehmember_t::make(attributes_t(), ret);
 	context.scope->get<Object>()->insert(name, member);
 #if 0
 	// set class's own name property (commenting out until we can distinguish classes and prototypes better)
-	ehmember_p name_member = ehmember_t::make(attributes_t::make(), String::make(strdup(name)));
+	ehmember_p name_member = ehmember_t::make(attributes_t(), String::make(strdup(name)));
 	new_obj->insert("name", name_member);
 #endif
 	return ret;
@@ -859,7 +859,7 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 		}
 		case T_VARIABLE: {
 			const char *name = internal_paras[0]->get<String>();
-			attributes_t attributes_container = attributes_t::make();
+			attributes_t attributes_container = attributes_t();
 			if(attributes == nullptr) {
 				ehmember_p member = context.scope->get<Object>()->get_recursive(name, context);
 				if(member != nullptr) {
@@ -952,7 +952,7 @@ ehval_p EHI::eh_try_catch(ehval_p try_block, ehval_p catch_blocks, const ehconte
 		return eh_execute(try_block, context);
 	} catch(eh_exception &e) {
 		// insert exception into current scope
-		attributes_t attributes = attributes_t::make(public_e, nonstatic_e, nonconst_e);
+		attributes_t attributes = attributes_t(public_e, nonstatic_e, nonconst_e);
 		ehmember_p exception_member = ehmember_t::make(attributes, e.content);
 		context.scope->set_member("exception", exception_member, context, this);
 		for(; catch_op->member_id != T_END; catch_op = catch_op->members[1]->get<Enum_Instance>()) {
@@ -1143,7 +1143,7 @@ static inline int count_nodes(const ehval_p node) {
 }
 
 static attributes_t parse_attributes(ehval_p node) {
-	attributes_t attributes = attributes_t::make();
+	attributes_t attributes = attributes_t();
 	for( ; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
 		switch(node->get<Enum_Instance>()->members[0]->get<Enum_Instance>()->member_id) {
 			case Attribute::publica_e:

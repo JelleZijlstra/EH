@@ -50,7 +50,7 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 			newcontext->get<Object>()->object_data = function_object->get<Object>()->object_data;
 
 			// set arguments
-			attributes_t attributes = attributes_t::make(private_e, nonstatic_e, nonconst_e);
+			attributes_t attributes(private_e, nonstatic_e, nonconst_e);
 			ehi->set(f->args, args, &attributes, ehcontext_t(base_object, newcontext));
 
 			// execute the function

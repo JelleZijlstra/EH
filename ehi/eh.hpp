@@ -54,25 +54,18 @@ struct attributes_t {
 	static_enum isstatic : 1;
 	const_enum isconst : 1;
 
-	// can't make a constructor because this thing appears in a union, but this
-	// is almost as good
-	static attributes_t make(visibility_enum v = public_e, static_enum s = nonstatic_e, const_enum c = nonconst_e) {
-		attributes_t out;
-		out.visibility = v;
-		out.isstatic = s;
-		out.isconst = c;
-		return out;
-	}
 	// convenience methods
 	static attributes_t make_const() {
-		return make(public_e, nonstatic_e, const_e);
+		return attributes_t(public_e, nonstatic_e, const_e);
 	}
 	static attributes_t make_static() {
-		return make(public_e, static_e, nonconst_e);
+		return attributes_t(public_e, static_e, nonconst_e);
 	}
 	static attributes_t make_private() {
-		return make(private_e, nonstatic_e, nonconst_e);
+		return attributes_t(private_e, nonstatic_e, nonconst_e);
 	}
+
+	attributes_t(visibility_enum v = public_e, static_enum s = nonstatic_e, const_enum c = nonconst_e) : visibility(v), isstatic(s), isconst(c) {}
 };
 
 #include "eh_types.hpp"

@@ -35,7 +35,7 @@ public:
 		// destructor
 		~ehmember_t() {}
 
-		ehmember_t() : attribute(attributes_t::make()), value(nullptr) {}
+		ehmember_t() : attribute(attributes_t()), value(nullptr) {}
 		ehmember_t(attributes_t atts) : attribute(atts), value(nullptr) {}
 		ehmember_t(attributes_t atts, ehval_p val) : attribute(atts), value(val) {}
 

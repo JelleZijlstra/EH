@@ -22,6 +22,20 @@ class NotImplemented
 	this.inherit Exception
 end
 
+class Counter
+	private counts = {}
+
+	public initialize = () => (this.counts = {})
+
+	public get_id = group => if this.counts.has group
+		this.counts->group += 1
+		this.counts->group
+	else
+		this.counts->group = 0
+		0
+	end
+end
+
 class Attributes
 	private is_private = false
 	private is_static = false
@@ -77,12 +91,13 @@ class Compiler
 
 	private output
 	private functions = Nil
-	private counter = 0
+	private counter
 
 	const private static header = '#include "../../ehi/eh_compiled.hpp"\n'
 
 	public initialize = func: fileName
 		this.fileName = fileName
+		this.counter = Counter.new()
 	end
 
 	public compile = func: outputFile
@@ -117,8 +132,7 @@ class Compiler
 	end
 
 	private doCompile = func: sb, code
-		private var_name = "eh_var" + this.counter
-		this.counter++
+		private var_name = this.get_var_name "var"
 		private assignment = "ehval_p " + var_name + " = "
 		if code.typeId() != Node.typeId()
 			sb << assignment
@@ -155,7 +169,7 @@ class Compiler
 				case Node.T_ASSIGN(@lvalue, @rvalue)
 					private rvalue_name = this.doCompile(sb, rvalue)
 					this.compile_set(sb, lvalue, rvalue_name, null)
-					sb << assignment << rvalue_name << ";\n"
+					sb << assignment << rvalue_name
 				# Constants
 				case Node.T_NULL
 					sb << assignment << "Null::make()"
@@ -170,12 +184,22 @@ class Compiler
 					sb << "return " << ret_name
 				case Node.T_WHILE(@condition, @body)
 					sb << assignment << "Null::make();\n"
-					sb << "do {\n"
+					sb << "while(true) {\n"
 					private cond_name = this.doCompile(sb, condition)
 					sb << "if(!ehi->toBool(" << cond_name << ", context)->get<Bool>()) {\nbreak;\n}\n"
 					private body_name = this.doCompile(sb, body)
 					sb << assignment << body_name << ";\n"
-					sb << "} while(true);\n"
+					sb << "}"
+				case Node.T_FOR(@iteree, @body)
+					private iteree_name = this.doCompile(sb, iteree)
+					private iterator_name = this.get_var_name "for_iterator"
+					sb << "ehval_p " << iterator_name << " = ehi->call_method(" << iteree_name
+					sb << ', "getIterator", nullptr, context);\n'
+					sb << "while(ehi->call_method_typed<Bool>(" << iterator_name << ', "hasNext", nullptr, context)->get<Bool>()) {\n'
+					sb << "ehi->call_method(" << iterator_name << ', "next", nullptr, context);\n'
+					this.doCompile(sb, body)
+					sb << "}\n"
+					sb << assignment << iteree_name
 				# Literals
 				case Node.T_FUNC(@args, @code)
 					private func_name = this.compile_function(args, code)
@@ -183,7 +207,7 @@ class Compiler
 				case Node.T_RANGE(@left, @right)
 					private left_name = this.doCompile(sb, left)
 					private right_name = this.doCompile(sb, right)
-					sb << assignment << "eh_compiled::make_range(" << left_name << ", " << right_name << ", ehi);\n"
+					sb << assignment << "eh_compiled::make_range(" << left_name << ", " << right_name << ", ehi)"
 				case _
 					printvar code
 					throw(MiscellaneousError.new("Cannot compile this expression"))
@@ -197,8 +221,7 @@ class Compiler
 	end
 
 	private compile_function = func: args, code
-		private func_name = "ehc_function" + this.counter
-		this.counter++
+		private func_name = this.get_var_name "function"
 
 		private sb = StringBuilder.new()
 		sb << "ehval_p " << func_name << "(ehval_p obj, ehval_p args, EHI *ehi, const ehcontext_t &context) {\n"
@@ -241,8 +264,7 @@ class Compiler
 			end
 		case Node.T_VARIABLE(@var_name)
 			if attributes == null
-				private member_name = "ehc_member" + this.counter
-				this.counter++
+				private member_name = this.get_var_name "member"
 				sb << "ehmember_p " << member_name << ' = context.scope->get<Object>()->get_recursive("'
 				sb << var_name << '", context);\n'
 				sb << "if(" << member_name << " != nullptr) {\n"
@@ -267,6 +289,9 @@ class Compiler
 			printvar lvalue
 			throw(MiscellaneousError.new "Cannot compile this lvalue")
 	end
+
+	# get a unique variable name with the given identifying part
+	private get_var_name = id => "ehc_" + id + (this.counter.get_id id)
 end
 
 private co = Compiler.new(argv->1)

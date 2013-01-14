@@ -69,6 +69,17 @@ public:
 	}
 
 	static ehval_p make(int size, ehval_p *in, EHInterpreter *parent);
+
+	static ehval_p create(std::initializer_list<ehval_p> members, EHInterpreter *parent) {
+		const int size = members.size();
+		ehretval_a arr(size);
+		int i = 0;
+		for(auto &it : members) {
+			arr[i] = it;
+			i++;
+		}
+		return make(size, arr, parent);
+	}
 };
 
 EH_METHOD(Tuple, initialize);

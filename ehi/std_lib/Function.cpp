@@ -43,7 +43,7 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 		case compiled_e: {
 			ehval_p newcontext = ehi->get_parent()->instantiate(function_object);
 			newcontext->get<Object>()->object_data = function_object->get<Object>()->object_data;
-			return f->compiled_pointer(base_object, args, ehi, newcontext);
+			return f->compiled_pointer(base_object, args, ehi, ehcontext_t(base_object, newcontext));
 		}
 		case user_e: {
 			ehval_p newcontext = ehi->get_parent()->instantiate(function_object);

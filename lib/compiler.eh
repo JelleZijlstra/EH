@@ -101,7 +101,7 @@ class Compiler
 	end
 
 	public compile = func: outputFile
-		private code = Macro.optimize(EH.parseFile(this.fileName))
+		private code = Macro.listify(Macro.optimize(EH.parseFile(this.fileName)))
 		private mainf = StringBuilder.new()
 		mainf << 'const char *get_filename() { return "' << this.fileName << '"; }\n'
 
@@ -170,6 +170,9 @@ class Compiler
 					private rvalue_name = this.doCompile(sb, rvalue)
 					this.compile_set(sb, lvalue, rvalue_name, null)
 					sb << assignment << rvalue_name
+				case Node.T_GROUPING(@val)
+					private val_name = this.doCompile(sb, val)
+					sb << assignment << val_name
 				# Constants
 				case Node.T_NULL
 					sb << assignment << "Null::make()"
@@ -212,9 +215,18 @@ class Compiler
 					this.doCompile(sb, body)
 					sb << "}\n"
 					sb << assignment << iteree_name
-				case T_IF(@condition, @if_block, @elsif_blocks)
+				case Node.T_IF(@condition, @if_block, Node.T_LIST(@elsif_blocks))
+					sb << assignment << "Null::make();\n"
 					private condition_name = this.doCompile(sb, if_block)
 					sb << "if(eh_compiled::boolify(" << condition_name << ", context, ehi)) {"
+					private if_result = this.doCompile(sb, if_block)
+					sb << var_name < " = " << if_result << ";\n"
+					for elsif_block in elsif_blocks
+						match elsif_block
+							case Node.T_ELSIF(@elsif_condition, @elsif_body)
+								sb << "} else if(eh_compiled::boolify(" << els
+						end
+					end
 				# Literals
 				case Node.T_FUNC(@args, @code)
 					private func_name = this.compile_function(args, code)
@@ -223,6 +235,20 @@ class Compiler
 					private left_name = this.doCompile(sb, left)
 					private right_name = this.doCompile(sb, right)
 					sb << assignment << "eh_compiled::make_range(" << left_name << ", " << right_name << ", ehi)"
+				case Node.T_LIST(@items) # Tuple
+					private member_names = []
+					private size = items.length()
+					for i in size
+						member_names->i = this.doCompile(sb, items->i)
+					end
+					sb << assignment << "Tuple::create({"
+					for i, name in member_names
+						sb << name
+						if i < size - 1
+							sb << ", "
+						end
+					end
+					sb << "}, ehi->get_parent())"
 				case _
 					printvar code
 					throw(MiscellaneousError.new("Cannot compile this expression"))

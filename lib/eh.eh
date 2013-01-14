@@ -16,3 +16,5 @@ const EH.universalEval = func: input
 end
 
 const EH.parseFile = file => EH.parse(File.readFile file)
+
+const EH.equalType = lhs, rhs => lhs.typeId() == rhs.typeId()

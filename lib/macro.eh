@@ -116,7 +116,11 @@ class Macro
 		public next = () => match this.l
 			case Node.T_COMMA(@left, @right)
 				this.l = right
-				left.map listify
+				if EH.equalType(left, Node)
+					left.map listify
+				else
+					left
+				end
 			case Node.T_END
 				throw(EmptyIterator.new())
 			case @other

@@ -128,7 +128,7 @@ class Compiler
 		output.close()
 
 		# compile the C++
-		shell("cd tmp && clang++ compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
+		shell("cd tmp && clang++ -O3 compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
 	end
 
 	private doCompile = func: sb, code
@@ -173,6 +173,9 @@ class Compiler
 				case Node.T_GROUPING(@val)
 					private val_name = this.doCompile(sb, val)
 					sb << assignment << val_name
+				case Node.T_ACCESS(@base, @accessor)
+					private base_name = this.doCompile(sb, base)
+					sb << assignment << base_name << '->get_property("' << accessor << '", context, ehi);\n'
 				# Constants
 				case Node.T_NULL
 					sb << assignment << "Null::make()"
@@ -216,17 +219,9 @@ class Compiler
 					sb << "}\n"
 					sb << assignment << iteree_name
 				case Node.T_IF(@condition, @if_block, Node.T_LIST(@elsif_blocks))
-					sb << assignment << "Null::make();\n"
-					private condition_name = this.doCompile(sb, if_block)
-					sb << "if(eh_compiled::boolify(" << condition_name << ", context, ehi)) {"
-					private if_result = this.doCompile(sb, if_block)
-					sb << var_name < " = " << if_result << ";\n"
-					for elsif_block in elsif_blocks
-						match elsif_block
-							case Node.T_ELSIF(@elsif_condition, @elsif_body)
-								sb << "} else if(eh_compiled::boolify(" << els
-						end
-					end
+					this.compile_elsifs(sb, var_name, condition, if_block, elsif_blocks, null)
+				case Node.T_IF_ELSE(@condition, @if_block, Node.T_LIST(@elsif_blocks), @else_block)
+					this.compile_elsifs(sb, var_name, condition, if_block, elsif_blocks, else_block)
 				# Literals
 				case Node.T_FUNC(@args, @code)
 					private func_name = this.compile_function(args, code)
@@ -277,6 +272,36 @@ class Compiler
 
 		# return name of the C++ function created
 		func_name
+	end
+
+	private compile_elsifs = func: sb, name, condition, if_block, elsifs, else_block
+		# pint out if block
+		sb << "ehval_p " << name << " = Null::make();\n"
+		private condition_name = this.doCompile(sb, condition)
+		sb << "if(eh_compiled::boolify(" << condition_name << ", context, ehi)) {\n"
+		private if_result = this.doCompile(sb, if_block)
+		sb << name << " = " << if_result << ";\n"
+		# print out elsif blocks
+		for elsif_block in elsifs
+			match elsif_block
+				case Node.T_ELSIF(@elsif_condition, @elsif_body)
+					sb << "} else {\n"
+					private condition_name = this.doCompile(sb, elsif_condition)
+					sb << "if(eh_compiled::boolify(" << condition_name << ", context, ehi)) {\n"
+					private block_result = this.doCompile(sb, elsif_body)
+					sb << name << " = " << block_result << ";\n"
+			end
+		end
+		# print out else block, if present
+		if else_block != null
+			sb << "} else {\n"
+			private else_name = this.doCompile(sb, else_block)
+			sb << name << "= " << else_name << ";\n"
+		end
+		# print closing braces
+		for elsifs.length() + 1
+			sb << "}\n"
+		end
 	end
 
 	private compile_set = sb, lvalue, name, attributes => match lvalue

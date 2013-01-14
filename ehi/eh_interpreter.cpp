@@ -557,7 +557,7 @@ ehval_p EHI::eh_op_named_class(ehval_p *paras, const ehcontext_t &context) {
 	const char *name = paras[0]->get<String>();
 	ehval_p ret = declare_class(name, paras[1], context);
 	ehmember_p member = ehmember_t::make(attributes_t(), ret);
-	context.scope->get<Object>()->insert(name, member);
+	context.scope->set_member(name, member, context, this);
 #if 0
 	// set class's own name property (commenting out until we can distinguish classes and prototypes better)
 	ehmember_p name_member = ehmember_t::make(attributes_t(), String::make(strdup(name)));

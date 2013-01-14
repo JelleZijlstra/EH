@@ -44,6 +44,22 @@ static inline bool boolify(ehval_p val, const ehcontext_t &context, EHI *ehi) {
 	return ehi->toBool(val, context)->get<Bool>();
 }
 
+typedef void (*class_f)(const ehcontext_t &, EHI *);
+
+static inline ehval_p make_class(const char *name, class_f code, const ehcontext_t &context, EHI *ehi) {
+	EHInterpreter *parent = ehi->get_parent();
+	ehobj_t *new_obj = new ehobj_t();
+	ehval_p ret = Object::make(new_obj, parent);
+
+	new_obj->type_id = parent->repo.register_class(name, ret);
+	new_obj->parent = context.scope;
+
+	// execute the code within the class
+	code(ret, ehi);
+
+	return ret;
+}
+
 };
 
 int main(int argc, char *argv[]) {

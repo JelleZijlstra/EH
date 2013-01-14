@@ -1,0 +1,4 @@
+%%stdout%%
+Cannot set constant member Foo in object of type GlobalObject: (global execution context)
+4
+%%stderr%%

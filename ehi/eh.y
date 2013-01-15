@@ -451,15 +451,15 @@ catch_clause:
 /* Array literals */
 arraylist:
 	arraylist_i arraymember ','
-							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| arraylist_i arraymember
-							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 arraylist_i:
 	arraylist_i arraymember ','
-							{ $$ = ADD_NODE2(T_COMMA, $1, $2); }
+							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 

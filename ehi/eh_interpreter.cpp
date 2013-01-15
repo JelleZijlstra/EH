@@ -472,11 +472,11 @@ ehval_p EHI::eh_op_array(ehval_p node, const ehcontext_t &context) {
 	// need to count array members first, because they are reversed in our node.
 	// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
 	int count = 0;
-	for(ehval_p node2 = node; node2->get<Enum_Instance>()->member_id != T_END; node2 = node2->get<Enum_Instance>()->members[0]) {
+	for(ehval_p node2 = node; node2->get<Enum_Instance>()->member_id != T_END; node2 = node2->get<Enum_Instance>()->members[1]) {
 		count++;
 	}
-	for(ehval_p node2 = node; node2->get<Enum_Instance>()->member_id != T_END; node2 = node2->get<Enum_Instance>()->members[0]) {
-		array_insert(ret->get<Array>(), node2->get<Enum_Instance>()->members[1], --count, context);
+	for(ehval_p node2 = node; node2->get<Enum_Instance>()->member_id != T_END; node2 = node2->get<Enum_Instance>()->members[1]) {
+		array_insert(ret->get<Array>(), node2->get<Enum_Instance>()->members[0], --count, context);
 	}
 	return ret;
 }

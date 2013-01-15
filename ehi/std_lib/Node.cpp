@@ -475,13 +475,13 @@ std::string Node::decompile(int level) const {
 			break;
 		case T_ARRAY_LITERAL:
 			out << "[";
-			for(ehval_p n = op->members[0]; n->get<Enum_Instance>()->member_id != T_END; n = n->get<Enum_Instance>()->members[0]) {
-				Enum_Instance::t *member_op = n->get<Enum_Instance>()->members[1]->get<Enum_Instance>();
+			for(ehval_p n = op->members[0]; n->get<Enum_Instance>()->member_id != T_END; n = n->get<Enum_Instance>()->members[1]) {
+				Enum_Instance::t *member_op = n->get<Enum_Instance>()->members[0]->get<Enum_Instance>();
 				out << member_op->members[0]->decompile(level);
 				if(member_op->member_id == T_ARRAY_MEMBER) {
 					out << " => " << member_op->members[1]->decompile(level);
 				}
-				if(n->get<Enum_Instance>()->members[0]->get<Enum_Instance>()->member_id != T_END) {
+				if(n->get<Enum_Instance>()->members[1]->get<Enum_Instance>()->member_id != T_END) {
 					out << ", ";
 				}
 			}

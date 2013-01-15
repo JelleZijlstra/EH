@@ -53,7 +53,7 @@ if(extension_loaded("ehphp"))  {
 					'autocompleter' => $this->getAutocompleter(),
 				));
 			} catch(EHException $e) {
-				echo "Exception occurred in getline: ";
+				echo PHP_EOL . "Exception occurred in getline: ";
 				echo $e;
 				return '';
 			} catch(StopException $e) {

@@ -18,31 +18,28 @@ class Iterable
 
 	public iterableLength = () => this.reduce(0, (v, b => b + 1))
 
-	private foldLeftHelper = it, b, f => given (it.hasNext())
+	private foldLeftHelper = it, base, f => given (it.hasNext())
 		case true
-			b = f(it.next(), b)
-			foldLeftHelper(it, b, f)
+			base = f(it.next(), base)
+			foldLeftHelper(it, base, f)
 		case false
-			b
+			base
 	end
 
-	public foldLeft = b, f => foldLeftHelper(this.getIterator(), b, f)
+	public foldLeft = base, f => foldLeftHelper(this.getIterator(), base, f)
 
-	public map = func: f
-		out = this.empty()
-		this.foldLeft(out, (v, collection => collection.add(f v)))
-	end
+	public map = f => this.foldLeft(this.empty(), (v, collection => collection.add(f v)))
 
-	public filter = func: f
-		this.foldLeft (this.empty(), (v, collection => given f v
-			case true; collection.add v
-			case false; collection
-		end))
-	end
+	public filter = f => this.foldLeft(this.empty(), (v, collection => given f v
+		case true; collection.add v
+		case false; collection
+	end))
 
-	public reverse = func:
-		this.foldLeft(this.empty(), (b, f => b.add f))
-	end
+	public reverse = () => this.reduce(this.empty(), (elt, accum => accum.append elt))
+
+	# default implementation of append just adds
+	# types that by default add to the front (i.e., List) should override this method
+	public append = elt => this.add elt
 
 	# sorting implementation
 	const private split = it, l, r => given it.hasNext()

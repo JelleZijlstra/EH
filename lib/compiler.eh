@@ -15,7 +15,15 @@ class StringBuilder
 		this
 	end
 
-	public toString = () => this.pieces.reduce("", (elt, rest => rest + elt))
+	# implement this non-recursively until the compiler can optimize tail recursion
+	# elegant version: () => this.pieces.reduce("", (elt, rest => rest + elt))
+	public toString = func:
+		private out = ''
+		for piece in this.pieces
+			out = piece.toString() + out
+		end
+		out
+	end
 end
 
 class NotImplemented
@@ -65,7 +73,7 @@ class Attributes
 	end
 
 	public static parse = code => match code
-		case Node.T_END
+		case Node.T_LIST(_) | Node.T_END
 			this.make()
 		case Node.T_ATTRIBUTE(Attribute.constAttribute, @tail)
 			private out = this.parse tail
@@ -100,8 +108,10 @@ class Compiler
 		this.counter = Counter.new()
 	end
 
+	public static preprocess = code => Macro.listify(Macro.optimize(code))
+
 	public compile = func: outputFile
-		private code = Macro.listify(Macro.optimize(EH.parseFile(this.fileName)))
+		private code = preprocess(EH.parseFile(this.fileName))
 		private mainf = StringBuilder.new()
 		mainf << 'const char *get_filename() { return "' << this.fileName << '"; }\n'
 
@@ -176,6 +186,9 @@ class Compiler
 				case Node.T_ACCESS(@base, @accessor)
 					private base_name = this.doCompile(sb, base)
 					sb << assignment << base_name << '->get_property("' << accessor << '", context, ehi);\n'
+				case Node.T_CLASS_MEMBER(@attributes, @lvalue)
+					this.compile_set(sb, lvalue, "Null::make()", Attributes.parse attributes)
+					sb << assignment << "Null::make();\n"
 				# Constants
 				case Node.T_NULL
 					sb << assignment << "Null::make()"
@@ -183,7 +196,7 @@ class Compiler
 					sb << assignment << "context.object"
 				case Node.T_SCOPE
 					sb << assignment << "context.scope"
-				# Flow control
+				# Control flow
 				case Node.T_RET(@val)
 					private ret_name = this.doCompile(sb, val)
 					sb << assignment << ret_name << ";\n"
@@ -222,6 +235,31 @@ class Compiler
 					this.compile_elsifs(sb, var_name, condition, if_block, elsif_blocks, null)
 				case Node.T_IF_ELSE(@condition, @if_block, Node.T_LIST(@elsif_blocks), @else_block)
 					this.compile_elsifs(sb, var_name, condition, if_block, elsif_blocks, else_block)
+				case Node.T_MATCH(@match_var, Node.T_LIST(@cases))
+					private match_var_name = this.doCompile(sb, match_var)
+					sb << assignment << "Null::make();\n"
+					# for each match case, generate: ... code ... if(it matches) { ... more code ... } else {
+					# after the last one, generate a throw_MiscellaneousError followed by cases.length() closing braces
+					private cases_length = cases.length()
+					for cse in cases
+						match cse
+							case Node.T_CASE(@pattern, @body)
+								private match_bool = this.get_var_name "match_bool"
+								sb << "bool " << match_bool << " = true;\n"
+								# perform the match
+								this.compile_match(sb, match_var_name, match_bool, pattern)
+								# apply code
+								sb << "if(" << match_bool << ") {\n"
+								private body_name = this.doCompile(sb, body)
+								sb << var_name << " = " << body_name << ";\n"
+								sb << "} else {\n"
+						end
+					end
+					# throw error if nothing was matched
+					sb << 'throw_MiscellaneousError("No matching case in match statement", ehi);\n'
+					for cases_length
+						sb << "}\n"
+					end
 				# Boolean operators
 				case Node.T_AND(@left, @right)
 					private left_name = this.doCompile(sb, left)
@@ -251,16 +289,21 @@ class Compiler
 					private left_name = this.doCompile(sb, left)
 					private right_name = this.doCompile(sb, right)
 					sb << assignment << "eh_compiled::make_range(" << left_name << ", " << right_name << ", ehi)"
-				case Node.T_HASH_LITERAL(Node.T_LIST(@hash))
+				case Node.T_HASH_LITERAL(@contents)
 					sb << assignment << "Hash::make(ehi->get_parent());\n"
-					private hash_name = this.get_var_name "hash"
-					sb << "Hash::ehhash_t *" << hash_name << " = " << var_name << "->get<Hash>();\n"
-					for member in hash
-						match member
-							case Node.T_ARRAY_MEMBER(@key, @value)
-								private value_name = this.doCompile(sb, value)
-								sb << hash_name << '->set("' << key << '", ' << value_name << ");\n"
-						end
+					match contents
+						case Node.T_LIST(@hash)
+							private hash_name = this.get_var_name "hash"
+							sb << "Hash::ehhash_t *" << hash_name << " = " << var_name << "->get<Hash>();\n"
+							for member in hash
+								match member
+									case Node.T_ARRAY_MEMBER(@key, @value)
+										private value_name = this.doCompile(sb, value)
+										sb << hash_name << '->set("' << key << '", ' << value_name << ");\n"
+								end
+							end
+						case Node.T_END
+							# empty
 					end
 				case Node.T_LIST(@items) # Tuple
 					private member_names = []
@@ -284,7 +327,7 @@ class Compiler
 					sb << var_name << "), context, ehi)"
 				case _
 					printvar code
-					throw(MiscellaneousError.new("Cannot compile this expression"))
+					throw(NotImplemented.new("Cannot compile this expression"))
 			end
 		end
 		sb << ";\n"
@@ -341,6 +384,9 @@ class Compiler
 					sb << "if(eh_compiled::boolify(" << condition_name << ", context, ehi)) {\n"
 					private block_result = this.doCompile(sb, elsif_body)
 					sb << name << " = " << block_result << ";\n"
+				case _
+					printvar elsif_block
+					throw()
 			end
 		end
 		# print out else block, if present
@@ -400,11 +446,88 @@ class Compiler
 			this.compile_set(sb, lval, name, inner_attributes)
 		case Node.T_GROUPING(@lval)
 			this.compile_set(sb, lval, name, attributes)
-		case Node.T_COMMA(@left, @right)
-			throw(NotImplemented.new "Need to find a way to handle tuples gracefully")
+		case Node.T_LIST(@vars)
+			for i in vars.length()
+				# create scope
+				sb << "{\n"
+				sb << "ehval_p rvalue = ehi->call_method(" << name << ', "operator->", Integer::make('
+				sb << i << "), context);\n"
+				this.compile_set(sb, vars->i, "rvalue", attributes)
+				sb << "}\n"
+			end
 		case _
 			printvar lvalue
-			throw(MiscellaneousError.new "Cannot compile this lvalue")
+			throw(NotImplemented.new "Cannot compile this lvalue")
+	end
+
+	private compile_match = sb, match_var_name, match_bool, pattern => match pattern
+		case Node.T_ANYTHING
+			# do nothing, it's always true
+		case Node.T_GROUPING(@inner)
+			this.compile_match(sb, match_var_name, match_bool, inner)
+		case Node.T_MATCH_SET(@name)
+			sb << 'context.scope->set_member("' << name << '", ehmember_p(attributes_t::make_private(), '
+			sb << match_var_name << "));\n"
+		case Node.T_BINARY_OR(@left, @right)
+			this.compile_match(sb, match_var_name, match_bool, left)
+			# if that one did not succeed, try the other one
+			sb << "if(!" << match_bool << ") {\n"
+			sb << match_bool << " = true;\n"
+			this.compile_match(sb, match_var_name, match_bool, right)
+			sb << "}\n"
+		case Node.T_LIST(@members)
+			private members_size = members.length()
+			sb << "if(!" << match_var_name << "->is_a<Tuple>()) {\n"
+			sb << match_bool << " = false;\n"
+			sb << "} else {\n"
+			sb << "Tuple::t *tuple = " << match_var_name << "->get<Tuple>();\n"
+			sb << "if(tuple->size() != " << members_size << ") {\n"
+			sb << match_bool << " = false;\n"
+			sb << "} else {"
+			for i in members_size
+				sb << "if(" << match_bool << ") {\n"
+				sb << "ehval_p tuple_member = tuple->get(" << i << ");\n"
+				this.compile_match(sb, "tuple_member", match_bool, members->i)
+				sb << "}\n"
+			end
+			sb << "}\n}\n"
+		case Node.T_CALL(@base, @args)
+			private base_name = this.doCompile(sb, base)
+			# create scope
+			sb << "{\n"
+			sb << "if(!" << base_name << "->is_a<Enum_Instance>()) {\n"
+			sb << 'throw_TypeError("match case is not an Enum.Member", member, this);\n}\n'
+			sb << "const auto em = " << base_name << "->get<Enum_Instance>();\n"
+			sb << "if(em->members != nullptr) {\n"
+			sb << 'throw_MiscellaneousError("Invalid argument in Enum.Member match", this);\n}\n'
+			sb << "if(!" << match_var_name << "->is_a<Enum_Instance>()) {\n"
+			sb << match_bool << " = false;\n} else {\n"
+			sb << "const auto var_ei = " << match_var_name << "->get<Enum_Instance>();"
+			sb << "if(var_ei->members == nullptr || em->type_compare(var_ei) != 0) {"
+			sb << match_bool << " = false;\n} else {\n"
+			private args_size = match args
+				case Node.T_GROUPING(Node.T_LIST(@args_list)); args_list.length()
+				case Node.T_GROUPING(@arg); 1
+			end
+			sb << "if(em->nmembers != " << args_size << ") {\n"
+			sb << 'throw_MiscellaneousError("Invalid argument number in Enum.Member match", this);\n}\n'
+			match args
+				case Node.T_GROUPING(Node.T_LIST(@args_list))
+					for i in args_size
+						sb << "if(" << match_bool << ") {\n"
+						sb << "ehval_p ei_member = var_ei->get(" << i << ");\n"
+						this.compile_match(sb, "ei_member", match_bool, args_list->i)
+						sb << "}\n"
+					end
+				case Node.T_GROUPING(@arg)
+					sb << "ehval_p single_arg = var_ei->get(0);\n"
+					this.compile_match(sb, "single_arg", match_bool, arg)
+			end
+			sb << "}\n}\n}\n"
+		case _
+			private compared_name = this.doCompile(sb, pattern)
+			sb << "match_bool = ehi->call_method_typed<Bool>(" << compared_name << ', "operator==", '
+			sb << match_var_name << ", context)->get<Bool>();\n"
 	end
 
 	# get a unique variable name with the given identifying part

@@ -56,7 +56,7 @@ class Macro
 				Node.T_CALL_METHOD(optimize l, "operator==", optimize r)
 			case Node.T_ARROW(@l, @r)
 				Node.T_CALL_METHOD(optimize l, "operator->", optimize r)
-			case Node.T_EQ(@l, @r)
+			case Node.T_NE(@l, @r)
 				Node.T_CALL_METHOD(optimize l, "operator!=", optimize r)
 			case Node.T_GREATER(@l, @r)
 				Node.T_CALL_METHOD(optimize l, "operator>", optimize r)
@@ -113,19 +113,21 @@ class Macro
 
 		public hasNext = _ => this.l != Node.T_END
 
+		private map_if_node = node => if EH.equalType(node, Node)
+			node.map listify
+		else
+			node
+		end
+
 		public next = () => match this.l
 			case Node.T_COMMA(@left, @right)
 				this.l = right
-				if EH.equalType(left, Node)
-					left.map listify
-				else
-					left
-				end
+				map_if_node left
 			case Node.T_END
 				throw(EmptyIterator.new())
 			case @other
 				this.l = Node.T_END
-				other
+				map_if_node other
 		end
 
 		# trickery to get .length() to work
@@ -138,6 +140,8 @@ class Macro
 		match code
 			case Node.T_COMMA(_, _)
 				Node.T_LIST(Tuple.initialize(ListifyIterator.new code))
+			case Node.T_END
+				Node.T_LIST(Tuple.initialize(Nil))
 			case _
 				code.map listify
 		end

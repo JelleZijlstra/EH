@@ -19,5 +19,7 @@ end
 
 Tuple.sort = () => Tuple.new(this.toList().sort())
 
+Tuple.reverse = () => Tuple.new(this.toList().reverse())
+
 # For use in iterable: map tuple to a mutable array
 Tuple.empty = () => []

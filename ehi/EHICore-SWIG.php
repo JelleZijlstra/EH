@@ -52,6 +52,10 @@ if(extension_loaded("ehphp"))  {
 					'includenewlines' => true,
 					'autocompleter' => $this->getAutocompleter(),
 				));
+			} catch(EHException $e) {
+				echo "Exception occurred in getline: ";
+				echo $e;
+				return '';
 			} catch(StopException $e) {
 				// make StopException here equivalent to typing '$quit'
 				return "\$quit\n";

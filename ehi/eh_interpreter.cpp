@@ -547,7 +547,7 @@ ehval_p EHI::eh_op_enum(ehval_p *paras, const ehcontext_t &context) {
 
 	// insert variable
 	ehmember_p member = ehmember_t::make(attributes_t(), ret);
-	context.scope->get<Object>()->insert(name, member);
+	context.scope->set_member(name, member, context, this);
 	return ret;
 }
 ehval_p EHI::eh_op_class(ehval_p *paras, const ehcontext_t &context) {

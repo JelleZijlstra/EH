@@ -528,7 +528,7 @@ attributelist_inner:
 enum_list:
 	enum_member				{ $$ = $1; }
 	| enum_list ',' enum_member
-							{ $$ = ADD_NODE2(T_COMMA, $1, $3); }
+							{ $$ = ADD_NODE2(T_COMMA, $3, $1); }
 	;
 
 enum_member:

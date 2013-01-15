@@ -512,11 +512,11 @@ ehval_p EHI::eh_op_enum(ehval_p *paras, const ehcontext_t &context) {
 	ehobj_t *enum_obj = ret->get<Object>();
 
 	// extract enum members
-	for(ehval_p node = members_code; ; node = node->get<Enum_Instance>()->members[0]) {
+	for(ehval_p node = members_code; ; node = node->get<Enum_Instance>()->members[1]) {
 		ehval_p current_member;
 		bool is_last;
 		if(node->get<Enum_Instance>()->member_id == T_COMMA) {
-			current_member = node->get<Enum_Instance>()->members[1];
+			current_member = node->get<Enum_Instance>()->members[0];
 			is_last = false;
 		} else {
 			current_member = node;

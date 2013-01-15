@@ -401,11 +401,11 @@ std::string Node::decompile(int level) const {
 			out << "enum " << op->members[0]->get<String>() << "\n";
 			add_tabs(out, level + 1);
 			// decompile member list
-			for(ehval_p node = op->members[1]; ; node = node->get<Enum_Instance>()->members[0]) {
+			for(ehval_p node = op->members[1]; ; node = node->get<Enum_Instance>()->members[1]) {
 				ehval_p current_member;
 				bool is_last;
 				if(node->get<Enum_Instance>()->member_id == T_COMMA) {
-					current_member = node->get<Enum_Instance>()->members[1];
+					current_member = node->get<Enum_Instance>()->members[0];
 					is_last = false;
 				} else {
 					current_member = node;

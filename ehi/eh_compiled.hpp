@@ -1,6 +1,7 @@
 // Functionality to ease the duties of the EH compiler
 
 #include "eh.hpp"
+#include "std_lib/Binding.hpp"
 #include "std_lib/SuperClass.hpp"
 #include "std_lib/NameError.hpp"
 #include "std_lib/ConstError.hpp"
@@ -60,6 +61,18 @@ static inline ehval_p make_class(const char *name, class_f code, const ehcontext
 	code(ret, ehi);
 
 	return ret;
+}
+
+template<class T>
+typename T::type call_function_typed(ehval_p func, ehval_p args, const ehcontext_t &context, EHI *ehi) {
+	ehval_p ret = ehi->call_function(func, args, context);
+	if(!ret->is_a<T>()) {
+		std::ostringstream message;
+		message << "Expected function to return a value of type ";
+		message << ehval_t::name<T>();
+		throw_TypeError(strdup(message.str().c_str()), ret, ehi);
+	}
+	return ret->get<T>();
 }
 
 };

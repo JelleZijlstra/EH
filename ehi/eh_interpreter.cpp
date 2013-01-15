@@ -671,13 +671,10 @@ ehval_p EHI::eh_op_given(ehval_p *paras, const ehcontext_t &context) {
 		if(casevar->deep_is_a<Function>() || casevar->is_a<Binding>()) {
 			decider = call_function(casevar, switchvar, context);
 			if(!decider->is_a<Bool>()) {
-				throw_TypeError("Method in a switch case must return a Bool", decider, this);
+				throw_TypeError("Method in a given case must return a Bool", decider, this);
 			}
 		} else {
-			decider = call_method(switchvar, "operator==", casevar, context);
-			if(!decider->is_a<Bool>()) {
-				throw_TypeError("operator== does not return a bool", decider, this);
-			}
+			decider = call_method_typed<Bool>(switchvar, "operator==", casevar, context);
 		}
 		if(decider->get<Bool>()) {
 			return eh_execute(op->members[1], context);

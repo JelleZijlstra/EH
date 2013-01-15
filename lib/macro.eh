@@ -70,8 +70,6 @@ class Macro
 				Node.T_ASSIGN(optimize_lvalue(lvalue), optimize(rvalue))
 			case Node.T_FUNC(@args, @code)
 				Node.T_FUNC(optimize_lvalue(args), optimize(code))
-			case Node.T_CASE(@case_code, @code)
-				Node.T_CASE(case_code, optimize(code))
 			case Node.T_GROUPING(Node.T_COMMA(@left, @right))
 				Node.T_GROUPING(Node.T_COMMA(optimize left, optimize right))
 			case Node.T_GROUPING(@internal)
@@ -128,7 +126,8 @@ class Macro
 				optimize rhs
 			case Node.T_SEPARATOR(@lhs, ())
 				optimize lhs
-			case _; code.map optimize
+			case _
+				code.map optimize
 		end
 	else
 		code

@@ -739,7 +739,7 @@ bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 				}
 				const auto em = member->get<Enum_Instance>();
 				if(em->members != nullptr) {
-					throw_MiscellaneousError("Invalid argument in Enum match", this);
+					throw_MiscellaneousError("Invalid argument in Enum.Member match", this);
 				}
 
 				if(!var->is_a<Enum_Instance>()) {

@@ -157,6 +157,9 @@ class Compiler
 					sb << "Bool::make(" << code << ")"
 				case "Null"
 					sb << "Null::make()"
+				case _
+					printvar code
+					throw(NotImplemented.new "Cannot compile this kind of literal")
 			end
 		else
 			match code
@@ -338,6 +341,43 @@ class Compiler
 						end
 					end
 					sb << "}, ehi->get_parent())"
+				case Node.T_ENUM(@enum_name, Node.T_LIST(@members), @body)
+					private body_name = this.get_var_name "enum"
+					private inner_builder = StringBuilder.new()
+					this.functions = inner_builder::this.functions
+
+					inner_builder << "void " << body_name << "(const ehcontext_t &context, EHI *ehi) {\n"
+					inner_builder << "ehval_p ret;\n" # ignored
+					this.doCompile(inner_builder, body)
+					inner_builder << "}\n"
+
+					sb << assignment << 'Enum::make_enum_class("' << enum_name << '", context.scope, ehi->get_parent());\n{\n'
+					sb << "ehobj_t *enum_obj = " << var_name << "->get<Object>();\n"
+					for member in members
+						sb << 'enum_obj->add_enum_member("' << member->0 << '", {'
+						match member
+							case Node.T_NULLARY_ENUM(@name)
+								# ignore
+							case Node.T_ENUM_WITH_ARGUMENTS(@name, Node.T_LIST(@args))
+								private nargs = args.length()
+								for i in nargs
+									sb << '"' << args->i << '"'
+									if i < nargs - 1
+										sb << ", "
+									end
+								end
+							case Node.T_ENUM_WITH_ARGUMENTS(@name, @arg)
+								sb << '"' << arg << '"'
+							case _
+								printvar member
+						end
+						sb << '}, ehi->get_parent());\n'
+					end
+					# execute inner code
+					sb << body_name << "(" << var_name << ", ehi);\n"
+					sb << 'context.scope->set_member("' << enum_name << '", ehmember_p(attributes_t(), '
+					sb << var_name << "), context, ehi);\n"
+					sb << "}\n"
 				case Node.T_CLASS(@body)
 					this.compile_class(sb, var_name, "(anonymous class)", body)
 				case Node.T_NAMED_CLASS(@name, @body)
@@ -554,5 +594,5 @@ class Compiler
 end
 
 private co = Compiler.new(argv->1)
-#private co = Compiler.new("/Users/jellezijlstra/code/EH/lib/tmp/test4.eh")
+#private co = Compiler.new("/Users/jellezijlstra/code/EH/lib/tmp/test5.eh")
 co.compile "tmp/compile_test.cpp"

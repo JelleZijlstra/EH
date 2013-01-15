@@ -1,5 +1,23 @@
 #!/usr/bin/ehi
 # Compile an EH file into C++ code
+#
+# This compiler does not produce much of an improvement over the interpreter, since it works by hooking into the
+# same C++ methods that the interpreter calls to execute a program. Nevertheless, it may offer some performance
+# improvement.
+#
+# The compiler is still matching the following language features:
+# - switch and given
+# - break and continue
+# - try-catch
+#
+# There are some minor behavioral differences between the interpreter and this compiler:
+# - When multiple values in an array have the same key, the compiler chooses the last one and the interpreter the first one
+#   For example, the code "printvar [3 => 4, 3 => 5]" will evaluate differently.
+# - When a pattern match gives the wrong number of constructor arguments, the interpreter will match against the given
+#   arguments before throwing an error, while the compiler will immediately throw an error before performing any match.
+#   For example (asssuming A.B takes two arguments) "case A.B(@var1, @var2, @var3)" will set var1 and var2 in the
+#   interpreter, but not in the compiler.
+# Both of these only affect code that is poorly written anyway.
 
 include 'library.eh'
 

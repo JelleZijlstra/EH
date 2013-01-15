@@ -23,17 +23,43 @@ class Macro
 			Node.T_ARROW(optimize(base), optimize(accessor))
 		case Node.T_ACCESS(@base, @prop)
 			Node.T_ACCESS(optimize(base), prop)
-		case (Node.T_VARIABLE(_) | Node.T_ANYTHING | Node.T_NULL | Node.T_COMMA(_, _))
-			# ignore T_COMMA for now; not sure internal implementation is currently correct
+		case Node.T_VARIABLE(_) | Node.T_ANYTHING | Node.T_NULL
 			code
+		case Node.T_COMMA(@left, @right)
+			Node.T_COMMA(optimize_lvalue left, optimize_lvalue right)
 		case Node.T_CLASS_MEMBER(@attributes, @code)
 			Node.T_CLASS_MEMBER(attributes, optimize_lvalue(code))
-		case Node.T_GROUPING(Node.T_COMMA(_, _))
-			code
+		case Node.T_GROUPING(Node.T_COMMA(left, right))
+			Node.T_GROUPING(Node.T_COMMA(optimize_lvalue left, optimize_lvalue right))
 		case Node.T_GROUPING(@internal)
 			optimize_lvalue(internal)
 		case _
 			throw(MiscellaneousError.new "Invalid lvalue")
+	end
+
+	private optimize_match_cases = code => match code
+		case Node.T_END
+			Node.T_END
+		case Node.T_COMMA(Node.T_CASE(@pattern, @body), @rest)
+			Node.T_COMMA(Node.T_CASE(optimize_match_pattern pattern, optimize body), optimize_match_cases rest)
+		case _
+			printvar code
+			throw()
+	end
+
+	private optimize_match_pattern = code => match code
+		case Node.T_GROUPING(Node.T_COMMA(@left, @right))
+			Node.T_GROUPING(Node.T_COMMA(optimize_match_pattern left, optimize_match_pattern right))
+		case Node.T_MATCH_SET(_)
+			code
+		case Node.T_CALL(@base, Node.T_GROUPING(@args))
+			Node.T_CALL(optimize base, Node.T_GROUPING(optimize_match_pattern args))
+		case Node.T_CALL(_, _)
+			throw(MiscellaneousError.new("Invalid match pattern: " + code.decompile()))
+		case Node.T_COMMA(_, _) | Node.T_BINARY_OR(_, _) | Node.T_ANYTHING
+			code.map optimize_match_pattern
+		case _
+			optimize code
 	end
 
 	public optimize = code => if code.typeId() == Node.typeId()
@@ -94,6 +120,8 @@ class Macro
 				Node.T_CALL_METHOD(optimize arg, "operator~", null)
 			case Node.T_NOT(@arg)
 				Node.T_CALL_METHOD(optimize arg, "operator!", null)
+			case Node.T_MATCH(@match_var, @cases)
+				Node.T_MATCH(optimize match_var, optimize_match_cases cases)
 			case (Node.T_ANYTHING | Node.T_MATCH_SET(_))
 				throw(MiscellaneousError.new("Cannot use T_ANYTHING or T_MATCH_SET outside of match expression"))
 			case Node.T_SEPARATOR((), @rhs)

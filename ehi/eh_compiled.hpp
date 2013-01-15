@@ -4,6 +4,8 @@
 #include "std_lib/SuperClass.hpp"
 #include "std_lib/NameError.hpp"
 #include "std_lib/ConstError.hpp"
+#include "std_lib/MiscellaneousError.hpp"
+#include "std_lib/Enum.hpp"
 
 static const char *get_filename();
 ehval_p eh_main(EHI *ehi, const ehcontext_t &context);
@@ -64,7 +66,7 @@ static inline ehval_p make_class(const char *name, class_f code, const ehcontext
 
 int main(int argc, char *argv[]) {
 	EHInterpreter interpreter;
-	interpreter.eh_setarg(argc, argv);
+	interpreter.eh_setarg(argc + 1, argv - 1);
 	EHI ehi(end_is_end_e, &interpreter, interpreter.global_object, eh_getcwd(), get_filename());
 	try {
 		eh_main(&ehi, ehi.get_context());

@@ -138,7 +138,7 @@ class Compiler
 		output.close()
 
 		# compile the C++
-		shell("cd tmp && clang++ -O3 compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
+		shell("cd tmp && clang++ compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
 	end
 
 	private doCompile = func: sb, code
@@ -148,7 +148,7 @@ class Compiler
 			sb << assignment
 			match code.type()
 				case "String"
-					sb << 'String::make("' << code << '")'
+					sb << 'String::make("' << code.replace('\\', '\\\\').replace('"', '\\"').replace("\n", "\\n") << '")'
 				case "Integer"
 					sb << "Integer::make(" << code << ")"
 				case "Float"
@@ -289,22 +289,41 @@ class Compiler
 					private left_name = this.doCompile(sb, left)
 					private right_name = this.doCompile(sb, right)
 					sb << assignment << "eh_compiled::make_range(" << left_name << ", " << right_name << ", ehi)"
-				case Node.T_HASH_LITERAL(@contents)
+				case Node.T_HASH_LITERAL(Node.T_LIST(@hash))
 					sb << assignment << "Hash::make(ehi->get_parent());\n"
-					match contents
-						case Node.T_LIST(@hash)
-							private hash_name = this.get_var_name "hash"
-							sb << "Hash::ehhash_t *" << hash_name << " = " << var_name << "->get<Hash>();\n"
-							for member in hash
-								match member
-									case Node.T_ARRAY_MEMBER(@key, @value)
-										private value_name = this.doCompile(sb, value)
-										sb << hash_name << '->set("' << key << '", ' << value_name << ");\n"
-								end
-							end
-						case Node.T_END
-							# empty
+					sb << "{\nHash::ehhash_t *new_hash = " << var_name << "->get<Hash>();\n"
+					for member in hash
+						match member
+							case Node.T_ARRAY_MEMBER(@key, @value)
+								private value_name = this.doCompile(sb, value)
+								sb << 'new_hash->set("' << key << '", ' << value_name << ");\n"
+						end
 					end
+					sb << "}\n"
+				case Node.T_ARRAY_LITERAL(Node.T_LIST(@array))
+					# reverse, because the parser produces them in reverse order
+					private members = array.reverse()
+					sb << assignment << "Array::make(ehi->get_parent());\n"
+					sb << "{\nauto new_array = " << var_name << "->get<Array>();\n"
+					private index = 0
+					for member in members
+						match member
+							case Node.T_ARRAY_MEMBER_NO_KEY(@value)
+								private value_name = this.doCompile(sb, value)
+								sb << "new_array->int_indices[" << index << "] = " << value_name << ";\n"
+							case Node.T_ARRAY_MEMBER(@key, @value)
+								private key_name = this.doCompile(sb, key)
+								private value_name = this.doCompile(sb, value)
+								sb << "if(" << key_name << "->is_a<Integer>()) {\n"
+								sb << "new_array->int_indices[" << key_name << "->get<Integer>()] = " << value_name << ";\n"
+								sb << "} else if(" << key_name << "->is_a<String>()) {\n"
+								sb << "new_array->string_indices[" << key_name << "->get<String>()] = " << value_name << ";\n"
+								sb << "} else {\n"
+								sb << "throw_TypeError_Array_key(" << key_name << ", ehi);\n}\n"
+						end
+						index++
+					end
+					sb << "}\n"
 				case Node.T_LIST(@items) # Tuple
 					private member_names = []
 					private size = items.length()
@@ -467,7 +486,7 @@ class Compiler
 			this.compile_match(sb, match_var_name, match_bool, inner)
 		case Node.T_MATCH_SET(@name)
 			sb << 'context.scope->set_member("' << name << '", ehmember_p(attributes_t::make_private(), '
-			sb << match_var_name << "));\n"
+			sb << match_var_name << "), context, ehi);\n"
 		case Node.T_BINARY_OR(@left, @right)
 			this.compile_match(sb, match_var_name, match_bool, left)
 			# if that one did not succeed, try the other one
@@ -491,42 +510,42 @@ class Compiler
 				sb << "}\n"
 			end
 			sb << "}\n}\n"
-		case Node.T_CALL(@base, @args)
+		case Node.T_CALL(@base, Node.T_GROUPING(@args))
 			private base_name = this.doCompile(sb, base)
 			# create scope
 			sb << "{\n"
 			sb << "if(!" << base_name << "->is_a<Enum_Instance>()) {\n"
-			sb << 'throw_TypeError("match case is not an Enum.Member", member, this);\n}\n'
+			sb << 'throw_TypeError("match case is not an Enum.Member", ' << base_name << ", ehi);\n}\n"
 			sb << "const auto em = " << base_name << "->get<Enum_Instance>();\n"
 			sb << "if(em->members != nullptr) {\n"
-			sb << 'throw_MiscellaneousError("Invalid argument in Enum.Member match", this);\n}\n'
+			sb << 'throw_MiscellaneousError("Invalid argument in Enum.Member match", ehi);\n}\n'
 			sb << "if(!" << match_var_name << "->is_a<Enum_Instance>()) {\n"
 			sb << match_bool << " = false;\n} else {\n"
 			sb << "const auto var_ei = " << match_var_name << "->get<Enum_Instance>();"
 			sb << "if(var_ei->members == nullptr || em->type_compare(var_ei) != 0) {"
 			sb << match_bool << " = false;\n} else {\n"
 			private args_size = match args
-				case Node.T_GROUPING(Node.T_LIST(@args_list)); args_list.length()
-				case Node.T_GROUPING(@arg); 1
+				case Node.T_LIST(@args_list); args_list.length()
+				case _; 1
 			end
 			sb << "if(em->nmembers != " << args_size << ") {\n"
-			sb << 'throw_MiscellaneousError("Invalid argument number in Enum.Member match", this);\n}\n'
+			sb << 'throw_MiscellaneousError("Invalid argument number in Enum.Member match", ehi);\n}\n'
 			match args
-				case Node.T_GROUPING(Node.T_LIST(@args_list))
+				case Node.T_LIST(@args_list)
 					for i in args_size
 						sb << "if(" << match_bool << ") {\n"
 						sb << "ehval_p ei_member = var_ei->get(" << i << ");\n"
 						this.compile_match(sb, "ei_member", match_bool, args_list->i)
 						sb << "}\n"
 					end
-				case Node.T_GROUPING(@arg)
+				case _
 					sb << "ehval_p single_arg = var_ei->get(0);\n"
-					this.compile_match(sb, "single_arg", match_bool, arg)
+					this.compile_match(sb, "single_arg", match_bool, args)
 			end
 			sb << "}\n}\n}\n"
 		case _
 			private compared_name = this.doCompile(sb, pattern)
-			sb << "match_bool = ehi->call_method_typed<Bool>(" << compared_name << ', "operator==", '
+			sb << match_bool << " = ehi->call_method_typed<Bool>(" << compared_name << ', "operator==", '
 			sb << match_var_name << ", context)->get<Bool>();\n"
 	end
 

@@ -298,3 +298,4 @@ trace_stack.eh
 list_test.eh
 listify.eh
 const_class.eh
+bad_match.eh

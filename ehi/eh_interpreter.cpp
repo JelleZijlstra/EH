@@ -714,6 +714,7 @@ bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 				const int size = t->size();
 				int i = 0;
 				for(ehval_p arg_node = node; ; arg_node = arg_node->get<Enum_Instance>()->members[1], i++) {
+					// size does not match (pattern is too long)
 					if(i == size) {
 						return false;
 					}
@@ -723,6 +724,10 @@ bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 							return false;
 						}
 					} else {
+						// size does not match (pattern is too short)
+						if(i != size - 1) {
+							return false;
+						}
 						return match(arg_node, t->get(i), context);
 					}
 				}

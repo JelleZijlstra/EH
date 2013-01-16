@@ -13,6 +13,9 @@ ehval_p eh_main(EHI *ehi, const ehcontext_t &context);
 
 namespace eh_compiled {
 
+typedef void (*class_f)(const ehcontext_t &, EHI *);
+typedef void (*finally_f)(const ehcontext_t &, EHI *);
+
 static inline ehval_p make_closure(Function::compiled_method method, const ehcontext_t &context, EHI *ehi) {
 	ehval_p function_object = ehi->get_parent()->function_object;
 	ehobj_t *function_obj = new ehobj_t();
@@ -46,8 +49,6 @@ static inline ehval_p make_range(ehval_p l, ehval_p r, EHI *ehi) {
 static inline bool boolify(ehval_p val, const ehcontext_t &context, EHI *ehi) {
 	return ehi->toBool(val, context)->get<Bool>();
 }
-
-typedef void (*class_f)(const ehcontext_t &, EHI *);
 
 static inline ehval_p make_class(const char *name, class_f code, const ehcontext_t &context, EHI *ehi) {
 	EHInterpreter *parent = ehi->get_parent();

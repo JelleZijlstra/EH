@@ -8,7 +8,6 @@
 # The compiler is still matching the following language features:
 # - switch
 # - break and continue
-# - try-catch
 # - raw
 # - commands
 #
@@ -316,6 +315,27 @@ class Compiler
 					for cases_length
 						sb << "}\n"
 					end
+				# Exceptions
+				case Node.T_TRY(@try_block, Node.T_LIST(@catch_blocks))
+					sb << assignment << "Null::make();\n"
+					this.compile_try_catch(sb, try_block, catch_blocks, var_name)
+				case Node.T_TRY_FINALLY(@try_block, Node.T_LIST(@catch_blocks), @finally_block)
+					sb << assignment << "Null::make();\n"
+					# wrap finally block in a function, so we can call it twice
+					private finally_builder = StringBuilder.new()
+					private finally_name = this.get_var_name "finally_function"
+					finally_builder << "void " << finally_name << "(const ehcontext_t &context, EHI *ehi) {\n"
+					finally_builder << "ehval_p ret;\n"
+					this.doCompile(finally_builder, finally_block)
+					finally_builder << "}\n"
+					this.add_function finally_builder
+					sb << "try {\n"
+					this.compile_try_catch(sb, try_block, catch_blocks, var_name)
+					sb << "} catch(...) {\n"
+					sb << finally_name << "(context, ehi);\n"
+					sb << "throw;\n"
+					sb << "}\n"
+					sb << finally_name << "(context, ehi)"
 				# Boolean operators
 				case Node.T_AND(@left, @right)
 					private left_name = this.doCompile(sb, left)
@@ -397,7 +417,7 @@ class Compiler
 				case Node.T_ENUM(@enum_name, Node.T_LIST(@members), @body)
 					private body_name = this.get_var_name "enum"
 					private inner_builder = StringBuilder.new()
-					this.functions = inner_builder::this.functions
+					this.add_function inner_builder
 
 					inner_builder << "void " << body_name << "(const ehcontext_t &context, EHI *ehi) {\n"
 					inner_builder << "ehval_p ret;\n" # ignored
@@ -452,7 +472,7 @@ class Compiler
 	private compile_class = func: sb, var_name, class_name, body
 		private body_name = this.get_var_name "class"
 		private inner_builder = StringBuilder.new()
-		this.functions = inner_builder::this.functions
+		this.add_function inner_builder
 
 		inner_builder << "void " << body_name << "(const ehcontext_t &context, EHI *ehi) {\n"
 		inner_builder << "ehval_p ret;\n" # ignored
@@ -474,7 +494,7 @@ class Compiler
 		sb << "return ret;\n}\n"
 
 		# add function to list
-		this.functions = sb.toString()::this.functions
+		this.add_function sb
 
 		# return name of the C++ function created
 		func_name
@@ -642,8 +662,43 @@ class Compiler
 			sb << match_var_name << ", context)->get<Bool>();\n"
 	end
 
+	private compile_try_catch = func: sb, try_block, catch_blocks, var_name
+		private catches = catch_blocks.length()
+		if catches > 0
+			# only generate try-catch if there are actually catch blocks
+			sb << "try {\n"
+		end
+		private try_name = this.doCompile(sb, try_block)
+		sb << var_name << " = " << try_name << ";\n"
+		if catches > 0
+			sb << "} catch (eh_exception &e) {\n"
+			# insert exception into scope
+			sb << 'context.scope->set_member("exception", ehmember_p(attributes_t(), e.content), context, ehi);\n'
+			for block in catch_blocks
+				match block
+					case Node.T_CATCH(@body)
+						sb << "if(true) {\n"
+					case Node.T_CATCH_IF(@condition, @body)
+						private decider = this.doCompile(sb, condition)
+						sb << "if(eh_compiled::boolify(" << decider << ", context, ehi)) {\n"
+				end
+				private body_name = this.doCompile(sb, body)
+				sb << var_name << " = " << body_name << ";\n"
+				sb << "} else {\n"
+			end
+			# re-throw if it wasn't caught
+			sb << "throw;\n"
+			for catches + 1
+				# another one to end the catch block itself
+				sb << "}\n"
+			end
+		end
+	end
+
 	# get a unique variable name with the given identifying part
 	private get_var_name = id => "ehc_" + id + (this.counter.get_id id)
+
+	private add_function = f => (this.functions = f::this.functions)
 end
 
 private co = Compiler.new(argv->1)

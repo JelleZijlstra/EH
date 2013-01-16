@@ -60,7 +60,7 @@ private:
 public:
 	class data {
 	public:
-		short refcount;
+		int refcount;
 		short gc_data;
 
 		// get the next pointer from a free block. Havoc will result if this is called on an allocated block.
@@ -76,6 +76,9 @@ public:
 
 		void inc_rc() {
 			this->refcount++;
+			if(this->refcount == 0) {
+				std::cerr << "Refcount reached 0 after increase!" << std::endl;
+			}
 		}
 
 		void dec_rc() {

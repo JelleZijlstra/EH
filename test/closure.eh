@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # Assigning methods to variables
 class Foo
-	public bar: n
+	public bar = func: n
 		echo(n * n)
 		42
 	end

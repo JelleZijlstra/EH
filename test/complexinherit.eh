@@ -3,7 +3,7 @@ class A
 	private a = 1
 	class AA
 		private ap = 10
-		public aa:
+		public aa = func:
 			echo a
 		end
 	end
@@ -12,7 +12,7 @@ class B
 	private b = 2
 	class BB
 		private bp = 20
-		public bb:
+		public bb = func:
 			echo b
 		end
 	end
@@ -22,7 +22,7 @@ class C
 	class CC
 		private cp = 30
 		this.inherit(A.AA)
-		public cc:
+		public cc = func:
 			# If everything is working right, there is no a
 			try
 				echo a
@@ -40,7 +40,7 @@ class D
 		private dp = 40
 		this.inherit(B.BB)
 		this.inherit(C.CC)
-		public dd:
+		public dd = func:
 			# Expect 1
 			this.aa()
 			# Expect 2

@@ -1,11 +1,11 @@
 #!/usr/bin/ehi
 class Foo
 	private baz = 42
-	public bar:
+	public bar = func:
 		printvar this
 		ret this
 	end
-	public useprivate:
+	public useprivate = func:
 		ret this.baz
 	end
 end

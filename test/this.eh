@@ -2,11 +2,11 @@
 # Illustrate the use of this
 class Foo
 	private var = 1
-	private bar: n
+	private bar = func: n
 		echo('Private method ' + n)
 		echo('Private property var is: ' + this.var)
 	end
-	public baz: n
+	public baz = func: n
 		echo('Public method ' + n)
 		this.var = 2
 		this.bar n

@@ -2,7 +2,7 @@
 class Foo
 	public bar = 3
 
-	public baz: n
+	public baz = func: n
 		ret n + this.bar
 	end
 end

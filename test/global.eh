@@ -2,7 +2,7 @@
 # More tests for the global keyword
 class Foo
 	public bar
-	public baz: n
+	public baz = func: n
 		put(n.toString() + ' ')
 		echo myvar
 	end

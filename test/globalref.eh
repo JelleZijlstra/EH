@@ -3,7 +3,7 @@
 foo = 4
 class A
 	public foo = 3
-	public f:
+	public f = func:
 		echo foo
 		echo(global.foo)
 	end

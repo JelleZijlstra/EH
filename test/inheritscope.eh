@@ -3,7 +3,7 @@
 class A
 	a = 3
 	class B
-		public b:
+		public b = func:
 			echo a
 		end
 	end
@@ -15,7 +15,7 @@ class C
 		this.inherit(A.B)
 	end
 	o = D.new ()
-	
+
 	# Expect 3, because inherited methods retain their original parent scope
 	o.b ()
 end

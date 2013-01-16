@@ -77,7 +77,7 @@
 %token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS T_IF_ELSE T_NULLARY_ENUM T_ENUM_WITH_ARGUMENTS
 %token T_ARRAY_MEMBER_NO_KEY T_ANYTHING T_GROUPING T_ASSIGN T_ADD T_SUBTRACT T_MULTIPLY T_DIVIDE T_MODULO T_GREATER
 %token T_LESSER T_BINARY_AND T_BINARY_OR T_BINARY_XOR T_BINARY_COMPLEMENT T_NOT T_MATCH_SET T_COMMA T_ARRAY_LITERAL
-%token T_HASH_LITERAL T_CALL T_ACCESS T_LIST
+%token T_HASH_LITERAL T_CALL T_ACCESS T_LIST T_NAMED_ARGUMENT
 %token T_COMMAND T_SHORTPARA T_LONGPARA
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
@@ -87,6 +87,7 @@
 %right T_DOUBLEARROW
 %nonassoc T_ATTRIBUTE
 %right ','
+%nonassoc ':'
 %left T_AND T_OR T_XOR
 %left '|' '^' '&'
 %right T_CUSTOMOP
@@ -98,7 +99,7 @@
 %right '@'
 %nonassoc '~' '!' T_NEGATIVE
 %left T_RANGE T_ARROW '.'
-%right ':'
+%right T_CALL
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')'
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_SWITCH T_FUNC T_CLASS T_ENUM T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
@@ -192,6 +193,8 @@ expression:
 	| '!' expression		{ $$ = ADD_NODE1(T_NOT, $2); }
 	| '@' T_VARIABLE		{ $$ = eh_addnode(T_MATCH_SET, String::make($2)); }
 	| T_RAW expression		{ $$ = ADD_NODE1(T_RAW, $2); }
+	| T_VARIABLE ':' expression %prec ':'
+							{ $$ = eh_addnode(T_NAMED_ARGUMENT, String::make($1), NODE($3)); }
 	| expression T_PLUSPLUS	{
 								ehval_p lvalue = NODE($1);
 								$$ = eh_addnode(T_ASSIGN, lvalue, NODE(eh_addnode(T_ADD, lvalue, Integer::make(1))));
@@ -280,7 +283,7 @@ expression:
 							{ $$ = ADD_NODE2(T_LEFTSHIFT, $1, $3); }
 	| expression T_RIGHTSHIFT expression
 							{ $$ = ADD_NODE2(T_RIGHTSHIFT, $1, $3); }
-	| expression %prec ':' expression
+	| expression %prec T_CALL expression
 							{ $$ = ADD_NODE2(T_CALL, $1, $2); }
 	| '(' '$' command ')'	{ $$ = $3; }
 	| '[' arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $2); }
@@ -322,13 +325,6 @@ expression:
 							{ $$ = ADD_NODE3(T_FOR_IN, $2, $4, $6); }
 	| attributelist expression %prec T_ATTRIBUTE
 							{ $$ = ADD_NODE2(T_CLASS_MEMBER, $1, $2); }
-	| attributelist T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END
-							{
-								$$ = ADD_NODE2(T_ASSIGN,
-										ADD_NODE2(T_CLASS_MEMBER, $1, eh_addnode(T_VARIABLE, String::make($2))),
-										ADD_NODE2(T_FUNC, $4, $6)
-								);
-							}
 	;
 
 para_expr:

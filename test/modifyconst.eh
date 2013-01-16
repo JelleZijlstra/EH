@@ -5,7 +5,7 @@ include '../lib/exception.eh'
 class Foo
 	private const baz = 42
 	private const quuz = 42
-	public foo:
+	public foo = func:
 		baz = 43
 		this.quuz = 43
 	end

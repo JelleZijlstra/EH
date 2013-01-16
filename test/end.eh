@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # Illustrate the "end" keyword
 class Foo
-	public bar: n
+	public bar = func: n
 		echo n
 	end
 end

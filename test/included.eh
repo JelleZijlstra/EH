@@ -4,7 +4,7 @@ func libraryfunc: n
 	ret n
 end
 class Foo
-	public foo:
+	public foo = func:
 		echo 'This is a method belonging to a library class'
 	end
 end

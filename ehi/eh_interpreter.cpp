@@ -237,6 +237,8 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 					throw_TypeError("Range members must have the same type", operand2, this);
 				}
 				return Range::make(operand1, operand2, parent);
+			case T_NAMED_ARGUMENT:
+				throw_MiscellaneousError("Named arguments are not implemented yet", this);
 		/*
 		 * Binary operators
 		 */

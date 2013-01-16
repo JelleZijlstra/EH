@@ -2,7 +2,7 @@
 # Exploring oddities of EH syntax
 foo = 3
 class Foo
-	public foo:
+	public foo = func:
 		echo 'baz'
 	end
 end

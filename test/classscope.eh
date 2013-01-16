@@ -3,7 +3,7 @@
 class A
 	public foo = 3
 	class C
-		public bar:
+		public bar = func:
 			echo foo
 		end
 	end

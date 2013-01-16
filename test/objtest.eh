@@ -2,13 +2,13 @@
 # More tests for objects
 class Foo
 	public bar = 0
-	public set1:
+	public set1 = func:
 		this.bar = 1
 	end
-	public set2:
+	public set2 = func:
 		this.bar = 2
 	end
-	public useprop:
+	public useprop = func:
 		# Will use object property
 		echo(this.bar)
 	end

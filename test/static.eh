@@ -7,11 +7,11 @@ class Foo
 	public baz
 	public mah
 	const muh = 2
-	const meh: n
+	const meh = func: n
 		echo n
 	end
 
-	const toString:
+	const toString = func:
 		"@Foo " + bar + " " + baz + " " + mah + " " + muh
 	end
 end

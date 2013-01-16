@@ -7,7 +7,7 @@
 #
 # The compiler is still matching the following language features:
 # - switch
-# - break and continue
+# - multi-level break and continue
 # - raw
 # - commands
 #
@@ -127,7 +127,7 @@ class Compiler
 		this.counter = Counter.new()
 	end
 
-	public static preprocess = code => Macro.listify(Macro.optimize(code))
+	public static preprocess = code => Macro.listify(Macro.optimize(Macro.replace_include(code)))
 
 	public compile = func: outputFile
 		private code = preprocess(EH.parseFile(this.fileName))
@@ -157,7 +157,7 @@ class Compiler
 		output.close()
 
 		# compile the C++
-		shell("cd tmp && clang++ compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
+		shell("cd tmp && clang++ -O3 compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
 	end
 
 	private doCompile = func: sb, code
@@ -178,6 +178,7 @@ class Compiler
 					sb << "Null::make()"
 				case _
 					printvar code
+					echo(code->0.decompile())
 					throw(NotImplemented.new "Cannot compile this kind of literal")
 			end
 		else
@@ -223,6 +224,11 @@ class Compiler
 					private ret_name = this.doCompile(sb, val)
 					sb << assignment << ret_name << ";\n"
 					sb << "return " << ret_name
+				case Node.T_BREAK(1)
+					# only support break and continue for one level
+					sb << "ehval_p " << var_name << ";\nbreak"
+				case Node.T_CONTINUE(1)
+					sb << "ehval_p " << var_name << ";\ncontinue"
 				case Node.T_WHILE(@condition, @body)
 					sb << assignment << "Null::make();\n"
 					sb << "while(true) {\n"
@@ -486,15 +492,15 @@ class Compiler
 		private func_name = this.get_var_name "function"
 
 		private sb = StringBuilder.new()
+		# add function to list
+		this.add_function sb
+
 		sb << "ehval_p " << func_name << "(ehval_p obj, ehval_p args, EHI *ehi, const ehcontext_t &context) {\n"
 		sb << "ehval_p ret;\n"
 		this.compile_set(sb, args, "args", Attributes.make_private())
 
 		this.doCompile(sb, code)
 		sb << "return ret;\n}\n"
-
-		# add function to list
-		this.add_function sb
 
 		# return name of the C++ function created
 		func_name
@@ -580,11 +586,12 @@ class Compiler
 			this.compile_set(sb, lval, name, attributes)
 		case Node.T_LIST(@vars)
 			for i in vars.length()
+				private rvalue_name = this.get_var_name "rvalue"
 				# create scope
 				sb << "{\n"
-				sb << "ehval_p rvalue = ehi->call_method(" << name << ', "operator->", Integer::make('
+				sb << "ehval_p " << rvalue_name << " = ehi->call_method(" << name << ', "operator->", Integer::make('
 				sb << i << "), context);\n"
-				this.compile_set(sb, vars->i, "rvalue", attributes)
+				this.compile_set(sb, vars->i, rvalue_name, attributes)
 				sb << "}\n"
 			end
 		case _
@@ -634,8 +641,8 @@ class Compiler
 			sb << 'throw_MiscellaneousError("Invalid argument in Enum.Member match", ehi);\n}\n'
 			sb << "if(!" << match_var_name << "->is_a<Enum_Instance>()) {\n"
 			sb << match_bool << " = false;\n} else {\n"
-			sb << "const auto var_ei = " << match_var_name << "->get<Enum_Instance>();"
-			sb << "if(var_ei->members == nullptr || em->type_compare(var_ei) != 0) {"
+			sb << "const auto var_ei = " << match_var_name << "->get<Enum_Instance>();\n"
+			sb << "if(var_ei->members == nullptr || em->type_compare(var_ei) != 0) {\n"
 			sb << match_bool << " = false;\n} else {\n"
 			private args_size = match args
 				case Node.T_LIST(@args_list); args_list.length()

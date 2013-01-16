@@ -880,6 +880,13 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 			context.scope->set_member(name, new_member, context, this);
 			return rvalue;
 		}
+		case T_NAMED_ARGUMENT: {
+			const char *name = internal_paras[0]->get<String>();
+			ehval_p internal_rvalue = (rvalue->is_a<Null>()) ? eh_execute(internal_paras[1], context) : rvalue;
+			attributes_t attrs = (attributes == nullptr) ? attributes_t::make_private() : *attributes;
+			context.scope->set_member(name, ehmember_p(attrs, internal_rvalue), context, this);
+			return internal_rvalue;
+		}
 		case T_COMMA: {
 			ehval_p arg_node = lvalue;
 			for(int i = 0; true; i++) {
@@ -896,6 +903,30 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 				} else {
 					set(arg_node, internal_rvalue, attributes, context);
 					break;
+				}
+			}
+			return rvalue;
+		}
+		case T_MIXED_TUPLE: {
+			ehval_p arg_node = lvalue;
+			for(int i = 0; true; ) {
+				auto op = arg_node->get<Enum_Instance>();
+				ehval_p lvalue_node = (op->member_id == T_MIXED_TUPLE) ? op->members[0] : arg_node;
+				ehval_p internal_rvalue;
+				if(rvalue->is_a<Null>()) {
+					// it's null, do nothing
+				} else if(Node::is_a(lvalue_node) && lvalue_node->get<Enum_Instance>()->member_id == T_NAMED_ARGUMENT) {
+					ehval_p name = lvalue_node->get<Enum_Instance>()->members[0];
+					internal_rvalue = call_method(rvalue, "operator->", name, context);
+				} else {
+					internal_rvalue = call_method(rvalue, "operator->", Integer::make(i), context);
+					i++;
+				}
+				set(lvalue_node, internal_rvalue, attributes, context);
+				if(op->member_id != T_MIXED_TUPLE) {
+					break;
+				} else {
+					arg_node = op->members[1];
 				}
 			}
 			return rvalue;

@@ -299,3 +299,4 @@ list_test.eh
 listify.eh
 const_class.eh
 bad_match.eh
+named_args.eh

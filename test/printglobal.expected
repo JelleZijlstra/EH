@@ -249,8 +249,10 @@
 		T_LONGPARA <public,non-static,constant>: @enum constructor T_LONGPARA <Node>: parameter, parameter
 		T_MATCH <public,non-static,constant>: @enum constructor T_MATCH <Node>: parameter, parameter
 		T_MATCH_SET <public,non-static,constant>: @enum constructor T_MATCH_SET <Node>: parameter
+		T_MIXED_TUPLE <public,non-static,constant>: @enum constructor T_MIXED_TUPLE <Node>: parameter, parameter
 		T_MODULO <public,non-static,constant>: @enum constructor T_MODULO <Node>: parameter, parameter
 		T_MULTIPLY <public,non-static,constant>: @enum constructor T_MULTIPLY <Node>: parameter, parameter
+		T_NAMED_ARGUMENT <public,non-static,constant>: @enum constructor T_NAMED_ARGUMENT <Node>: parameter, parameter
 		T_NAMED_CLASS <public,non-static,constant>: @enum constructor T_NAMED_CLASS <Node>: parameter, parameter
 		T_NE <public,non-static,constant>: @enum constructor T_NE <Node>: parameter, parameter
 		T_NOT <public,non-static,constant>: @enum constructor T_NOT <Node>: parameter

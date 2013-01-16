@@ -1,0 +1,8 @@
+%%stdout%%
+first try
+@int 4
+1
+second try
+@int 3
+1
+%%stderr%%

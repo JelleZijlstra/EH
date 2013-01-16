@@ -77,7 +77,7 @@
 %token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS T_IF_ELSE T_NULLARY_ENUM T_ENUM_WITH_ARGUMENTS
 %token T_ARRAY_MEMBER_NO_KEY T_ANYTHING T_GROUPING T_ASSIGN T_ADD T_SUBTRACT T_MULTIPLY T_DIVIDE T_MODULO T_GREATER
 %token T_LESSER T_BINARY_AND T_BINARY_OR T_BINARY_XOR T_BINARY_COMPLEMENT T_NOT T_MATCH_SET T_COMMA T_ARRAY_LITERAL
-%token T_HASH_LITERAL T_CALL T_ACCESS T_LIST T_NAMED_ARGUMENT
+%token T_HASH_LITERAL T_CALL T_ACCESS T_LIST T_NAMED_ARGUMENT T_MIXED_TUPLE
 %token T_COMMAND T_SHORTPARA T_LONGPARA
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
@@ -240,7 +240,16 @@ expression:
 	| expression '.' T_VARIABLE
 							{ $$ = eh_addnode(T_ACCESS, NODE($1), String::make($3)); }
 	| expression ',' expression
-							{ $$ = ADD_NODE2(T_COMMA, $1, $3); }
+							{
+								// slight hack in order to be able to distinguish between normal and "mixed" tuples
+								auto left = $1;
+								auto right = $3;
+								if(left->member_id == T_NAMED_ARGUMENT || right->member_id == T_NAMED_ARGUMENT || right->member_id == T_MIXED_TUPLE) {
+									$$ = ADD_NODE2(T_MIXED_TUPLE, left, right);
+								} else {
+									$$ = ADD_NODE2(T_COMMA, left, right);
+								}
+							}
 	| expression T_EQ expression
 							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
 	| expression '>' expression

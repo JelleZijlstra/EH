@@ -341,10 +341,11 @@ public:
 		}
 
 		void dec_rc() {
-			this->content->dec_rc();
+			// first decrease strong refcount, in case the other one frees the object
 			if(is_strong) {
 				this->content->dec_strong_rc();
 			}
+			this->content->dec_rc();
 		}
 	public:
 		/*

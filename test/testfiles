@@ -305,3 +305,4 @@ tuple_wsk.eh
 named_tuple2.eh
 func_named_args.eh
 decompile_named.eh
+repeat.eh

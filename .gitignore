@@ -4,6 +4,7 @@
 *.dylib
 *.save
 *.output
+*.a
 # TeX files
 doc/*.aux
 doc/*.log

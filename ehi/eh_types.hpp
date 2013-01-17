@@ -430,10 +430,9 @@ inline ehval_p ehval_t::data() {
 }
 
 inline int ehval_t::naive_compare(const ehval_p &rhs) const {
-	// just compare pointer values (should "work" even if objects are not Object instances)
-	ehval_t *rhs_p = rhs.operator->();
-	const char *lhs_val = reinterpret_cast<const char *>(static_cast<const Object *>(this)->value);
-	const char *rhs_val = reinterpret_cast<const char *>(static_cast<const Object *>(rhs_p)->value);
+	// just compare pointer values
+	const char *lhs_val = reinterpret_cast<const char *>(this);
+	const char *rhs_val = reinterpret_cast<const char *>(rhs.operator->());
 	if(lhs_val < rhs_val) {
 		return -1;
 	} else if(lhs_val == rhs_val) {

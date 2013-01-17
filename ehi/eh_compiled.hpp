@@ -23,7 +23,7 @@ static inline ehval_p make_closure(Function::compiled_method method, const ehcon
 	function_obj->type_id = function_object->get<Object>()->type_id;
 	Function::t *f = new Function::t(Function::compiled_e);
 	f->compiled_pointer = method;
-	function_obj->object_data = Function::make(f);
+	function_obj->object_data = Function::make(f, ehi->get_parent());
 	function_obj->inherit(function_object);
 	function_obj->parent = context.scope;
 	return func;

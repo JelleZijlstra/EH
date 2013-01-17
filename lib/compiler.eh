@@ -158,7 +158,7 @@ class Compiler
 		output.close()
 
 		# compile the C++
-		shell("cd tmp && clang++ -O3 compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
+		shell("cd tmp && clang++ compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
 	end
 
 	private doCompile = func: sb, code

@@ -10,6 +10,7 @@
 # - multi-level break and continue
 # - raw
 # - commands
+# - named arguments
 #
 # There are some minor behavioral differences between the interpreter and this compiler:
 # - When multiple values in an array have the same key, the compiler chooses the last one and the interpreter the first one

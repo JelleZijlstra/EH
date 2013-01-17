@@ -281,6 +281,7 @@
 		execute <public,non-static,non-constant>: @function <library>: 
 	]
 	Null <public,non-static,constant>: @object <Null> [
+		compare <public,non-static,non-constant>: @function <library>: 
 		initialize <public,non-static,non-constant>: @function <library>: 
 		toBool <public,non-static,non-constant>: @function <library>: 
 		toString <public,non-static,non-constant>: @function <library>: 

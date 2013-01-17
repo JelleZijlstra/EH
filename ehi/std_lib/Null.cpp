@@ -46,5 +46,5 @@ EH_METHOD(Null, toBool) {
 EH_METHOD(Null, compare) {
 	ASSERT_OBJ_TYPE(Null, "Null.compare");
 	ASSERT_TYPE(args, Null, "Null.compare");
-	return true;
+	return Integer::make(0);
 }

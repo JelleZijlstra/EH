@@ -45,5 +45,5 @@ EH_METHOD(ArgumentError, initialize) {
 	exception_msg << message->get<String>() << " (method ";
 	exception_msg << method->get<String>() << "): ";
 	exception_msg << ehi->toString(value, ehi->global())->get<String>();
-	return static_cast<ehval_t *>(new Exception(strdup(exception_msg.str().c_str())));
+	return Exception::make(strdup(exception_msg.str().c_str()));
 }

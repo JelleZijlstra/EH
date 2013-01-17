@@ -9,7 +9,7 @@ public:
 	type value;
 
 	File() : value(nullptr) {}
-	~File() {}
+	virtual ~File() {}
 
 	virtual bool belongs_in_gc() const {
 		return false;

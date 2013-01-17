@@ -196,7 +196,7 @@ public:
 	 * constructor etcetera
 	 */
 	ehobj_t() : members(), object_data(), type_id(0), parent(), super() {}
-	~ehobj_t();
+	virtual ~ehobj_t();
 
 	// ehobj_t should never be handled directly
 	ehobj_t(const ehobj_t&) = delete;

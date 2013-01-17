@@ -115,6 +115,9 @@ public:
 			}
 		}
 		void dec_strong_rc() {
+			if(strong_refcount == 0) {
+				return;
+			}
 			this->strong_refcount--;
 		}
 
@@ -129,11 +132,15 @@ public:
 			return static_cast<bool>(this->gc_data & (1 << (15 - bit)));
 		}
 
+		bool is_self_freed() {
+			return this->get_next_pointer() == reinterpret_cast<block *>(self_freed);
+		}
+
 		bool is_allocated() const {
 			return this->refcount != 0;
 		}
 
-		bool has_strong_refs() const {
+		bool has_strong_refs() {
 			return strong_refcount > 0;
 		}
 
@@ -148,7 +155,7 @@ public:
 		}
 
 		// don't set the gc_data - it's set by garbage_collector code below
-		data() : refcount(1), strong_refcount(1) {}
+		data() : refcount(0), strong_refcount(0) {}
 
 		virtual ~data() {}
 
@@ -181,12 +188,12 @@ private:
 		}
 
 		bool is_self_freed() {
-			return this->get_next_pointer() == reinterpret_cast<block *>(self_freed);
+			return get_data()->is_self_freed();
 		}
 		bool is_allocated() const {
 			return this->get_data()->is_allocated();
 		}
-		bool has_strong_refs() const {
+		bool has_strong_refs() {
 			return this->get_data()->has_strong_refs();
 		}
 	};
@@ -243,8 +250,7 @@ private:
 		void dealloc(block *b) {
 #ifdef DEBUG_GC_MORE
 			std::cout << "Freeing block at " << b << std::endl;
-			std::cout << "Refcount: " << b->refcount << std::endl;
-			b->content.print();
+			//b->content.print();
 #endif /* DEBUG_GC_MORE */
 			b->get_data()->suicide();
 			b->set_next_pointer(this->first_free_block);
@@ -347,18 +353,13 @@ public:
 		pointer() : pointer(nullptr) {}
 		// my compiler apparently doesn't have std::nullptr_t
 		pointer(decltype(nullptr)) : pointer(T::null_object()) {}
-		pointer(const pointer &rhs) : content(rhs.content) {
-			assert(content != nullptr);
-			inc_rc();
-		}
+		pointer(const pointer &rhs) : pointer(rhs.content) {}
 		pointer(T *in) : content(in) {
 			assert(content != nullptr);
 			inc_rc();
 		}
 
-		pointer(const pointer<!is_strong> &rhs) : content(rhs.content) {
-			inc_rc();
-		}
+		pointer(const pointer<!is_strong> &rhs) : pointer(rhs.content) {}
 		/*
 		 * Overloading
 		 */
@@ -375,12 +376,12 @@ public:
 		pointer &operator=(const pointer &rhs) {
 			// decrease refcount for thing we're now referring to
 			if(this->content != nullptr) {
-				this->dec_rc();
+				dec_rc();
 			}
 			this->content = rhs.content;
 			// and increase it for what we're now referring to
 			if(this->content != nullptr) {
-				this->inc_rc();
+				inc_rc();
 			}
 			return *this;
 		}
@@ -424,7 +425,7 @@ public:
 		 */
 		~pointer() {
 			if(this->content != nullptr) {
-				this->dec_rc();
+				dec_rc();
 			}
 		}
 
@@ -432,7 +433,7 @@ public:
 	};
 
 	typedef pointer<true> strong_pointer;
-	typedef pointer<false> weak_pointer;
+	typedef pointer<true> weak_pointer;
 
 private:
 	/*

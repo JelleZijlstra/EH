@@ -27,7 +27,7 @@ public:
 		return static_cast<ehval_t *>(new String(string));
 	}
 
-	~String() {
+	virtual ~String() {
 		delete[] value;
 	}
 private:

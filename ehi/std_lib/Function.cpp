@@ -61,6 +61,10 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 	}
 }
 
+ehval_p Function::make(t *val, EHInterpreter *parent) {
+	return parent->allocate<Function>(val);
+}
+
 /*
  * @description "Decompiles" a function back into valid, executable EH code.
  * This is possible because the current interpreter works on an AST that

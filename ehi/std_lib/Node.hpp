@@ -57,7 +57,7 @@ public:
 
 	Node_Context(type val) : value(val) {}
 
-	~Node_Context() {
+	virtual ~Node_Context() {
 		delete value;
 	}
 

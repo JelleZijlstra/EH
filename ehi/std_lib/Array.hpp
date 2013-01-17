@@ -52,7 +52,7 @@ public:
 	typedef t *type;
 	type value;
 
-	~Array() {
+	virtual ~Array() {
 		delete value;
 	}
 
@@ -138,7 +138,7 @@ public:
 	typedef t *type;
 	type value;
 
-	~Array_Iterator() {
+	virtual ~Array_Iterator() {
 		delete value;
 	}
 

@@ -501,7 +501,7 @@ ehval_p EHI::eh_op_declareclosure(ehval_w *paras, const ehcontext_t &context) {
 	ehobj_t *function_object = ret->get<Object>();
 	function_object->parent = context.scope;
 	function_object->type_id = parent->function_object->get<Object>()->type_id;
-	function_object->object_data = Function::make(f);
+	function_object->object_data = Function::make(f, parent);
 	f->code = paras[1];
 	f->args = paras[0];
 	return ret;
@@ -1104,7 +1104,7 @@ ehval_p EHInterpreter::make_method(ehlibmethod_t in) {
 	function_obj->type_id = function_object->get<Object>()->type_id;
 	Function::t *f = new Function::t(Function::lib_e);
 	f->libmethod_pointer = in;
-	function_obj->object_data = Function::make(f);
+	function_obj->object_data = Function::make(f, this);
 	function_obj->inherit(this->function_object);
 	return func;
 }

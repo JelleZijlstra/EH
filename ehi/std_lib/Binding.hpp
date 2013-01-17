@@ -35,7 +35,7 @@ public:
 		value->method->printvar(set, level, ehi);
 	}
 
-	~Binding() {
+	virtual ~Binding() {
 		delete value;
 	}
 

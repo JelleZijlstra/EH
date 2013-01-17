@@ -24,7 +24,7 @@ public:
 
 	Range(t *c) : value(c) {}
 
-	~Range() {
+	virtual ~Range() {
 		delete value;
 	}
 
@@ -88,7 +88,7 @@ public:
 
 	Range_Iterator(type val) : value(val) {}
 
-	~Range_Iterator() {
+	virtual ~Range_Iterator() {
 		delete value;
 	}
 

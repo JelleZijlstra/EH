@@ -47,7 +47,7 @@ public:
 
 	Hash(type c) : value(c) {}
 
-	~Hash() {
+	virtual ~Hash() {
 		delete value;
 	}
 
@@ -117,7 +117,7 @@ public:
 	typedef t *type;
 	type value;
 
-	~Hash_Iterator() {
+	virtual ~Hash_Iterator() {
 		delete value;
 	}
 

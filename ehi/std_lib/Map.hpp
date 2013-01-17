@@ -47,7 +47,7 @@ public:
 	typedef t *type;
 	type value;
 
-	~Map() {
+	virtual ~Map() {
 		delete value;
 	}
 
@@ -103,7 +103,7 @@ public:
 
 	Map_Iterator(type val) : value(val) {}
 
-	~Map_Iterator() {
+	virtual ~Map_Iterator() {
 		delete value;
 	}
 

@@ -80,7 +80,7 @@ public:
 	typedef t *type;
 	t *value;
 
-	~Integer_Iterator() {
+	virtual ~Integer_Iterator() {
 		delete value;
 	}
 

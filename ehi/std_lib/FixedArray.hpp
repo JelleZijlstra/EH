@@ -46,7 +46,7 @@ public:
 
 	FixedArray(type val) : value(val) {}
 
-	~FixedArray() {
+	virtual ~FixedArray() {
 		delete value;
 	}
 

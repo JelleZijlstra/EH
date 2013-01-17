@@ -57,7 +57,7 @@ public:
 		return false;
 	}
 
-	~Enum() {
+	virtual ~Enum() {
 		delete value;
 	}
 

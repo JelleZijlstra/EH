@@ -90,9 +90,7 @@ public:
 
 	static ehval_p exec(ehval_p base_object, ehval_p function_object, ehval_p args, EHI *ehi);
 
-	static ehval_p make(t *val) {
-		return static_cast<ehval_t*>(new Function(val));
-	}
+	static ehval_p make(t *val, EHInterpreter *parent);
 };
 
 EH_METHOD(Function, operator_colon);

@@ -10,19 +10,6 @@
 
 int yyparse(void *);
 
-// Thread for the garbage collector. Before I actually start running this, I'll have to make sure the GC is thread-safe.
-void *gc_thread(void *arg) {
-	EHI *ehi = (EHI *)arg;
-	EHInterpreter *parent = ehi->get_parent();
-	while(1) {
-		bool do_stop = parent->gc.do_stop.get();
-		if(do_stop) {
-			pthread_exit(0);
-		}
-		parent->gc.do_collect({parent->global_object});
-	}
-}
-
 EHI::EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), interpreter_context(_context), code(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
 	yylex_init_extra(this, &scanner);
 }

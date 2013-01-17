@@ -10,7 +10,7 @@ public:
 
 	Node(int op, int nparas) : Enum_Instance::t(node_id, op, nparas, nullptr) {
 		if(nparas > 0) {
-			members = new ehval_p[nparas];
+			members = new ehval_w[nparas];
 		}
 	}
 

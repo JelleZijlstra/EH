@@ -12,7 +12,7 @@ EH_CLASS(Hash) {
 public:
 	class ehhash_t {
 	public:
-		typedef std::map<std::string, ehval_p> hash;
+		typedef std::map<std::string, ehval_w> hash;
 		hash members;
 		typedef hash::const_iterator iterator;
 

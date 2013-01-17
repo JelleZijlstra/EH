@@ -11,8 +11,8 @@ EH_CLASS(Range) {
 public:
 	class t {
 	public:
-		ehval_p min;
-		ehval_p max;
+		ehval_w min;
+		ehval_w max;
 
 		t(ehval_p _min, ehval_p _max) : min(_min), max(_max) {
 			assert(min->equal_type(max));

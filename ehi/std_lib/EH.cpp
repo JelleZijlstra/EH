@@ -34,7 +34,7 @@ EH_METHOD(EH, eval) {
  * @returns Null
  */
 EH_METHOD(EH, collectGarbage) {
-	ehi->get_parent()->gc.do_collect({ehi->global(), ehi->get_code()});
+	ehi->get_parent()->gc.do_collect();
 	return Null::make();
 }
 

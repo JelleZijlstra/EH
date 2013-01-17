@@ -80,9 +80,9 @@ public:
 
 		const unsigned int nmembers;
 
-		ehval_p *members;
+		ehval_w *members;
 
-		t(unsigned int type, unsigned int member, unsigned int n, ehval_p *args) : type_id(type), member_id(member), nmembers(n), members(args) {}
+		t(unsigned int type, unsigned int member, unsigned int n, ehval_w *args) : type_id(type), member_id(member), nmembers(n), members(args) {}
 
 		virtual ~t() {
 			delete[] members;

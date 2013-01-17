@@ -6,7 +6,7 @@ EH_INITIALIZER(GarbageCollector) {
 }
 
 EH_METHOD(GarbageCollector, run) {
-	ehi->get_parent()->gc.do_collect({ ehi->global(), ehi->get_code() });
+	ehi->get_parent()->gc.do_collect();
 	return nullptr;
 }
 EH_METHOD(GarbageCollector, stats) {

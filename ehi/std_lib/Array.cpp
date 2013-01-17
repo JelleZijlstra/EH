@@ -28,7 +28,7 @@ ehval_p Array::make(EHInterpreter *parent) {
 	return parent->allocate<Array>(new t());
 }
 
-ehval_p &Array::t::operator[](ehval_p index) {
+ehval_w &Array::t::operator[](ehval_p index) {
 	if(index->is_a<Integer>()) {
 		return int_indices[index->get<Integer>()];
 	} else if(index->is_a<String>()) {

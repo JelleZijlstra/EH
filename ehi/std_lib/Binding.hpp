@@ -8,8 +8,8 @@ EH_CLASS(Binding) {
 public:
 	class t {
 	public:
-		ehval_p object_data;
-		ehval_p method;
+		ehval_w object_data;
+		ehval_w method;
 
 		t(ehval_p _object_data, ehval_p _method) : object_data(_object_data),  method(_method) {}
 	};

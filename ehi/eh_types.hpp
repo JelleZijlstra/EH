@@ -10,7 +10,8 @@ typedef std::unordered_set<void *> printvar_set;
 
 class ehval_t : public garbage_collector<ehval_t>::data {
 public:
-	typedef garbage_collector<ehval_t>::pointer ehval_p;
+	typedef garbage_collector<ehval_t>::strong_pointer ehval_p;
+	typedef garbage_collector<ehval_t>::weak_pointer ehval_w;
 
 	// context
 	struct ehcontext_t {
@@ -30,7 +31,7 @@ public:
 		typedef refcount_ptr<ehmember_t> ehmember_p;
 
 		attributes_t attribute;
-		ehval_p value;
+		ehval_w value;
 
 		// destructor
 		~ehmember_t() {}
@@ -158,6 +159,7 @@ public:
 };
 
 typedef ehval_t::ehval_p ehval_p;
+typedef ehval_t::ehval_w ehval_w;
 
 typedef array_ptr<ehval_p> ehretval_a;
 
@@ -182,13 +184,13 @@ public:
 	 */
 	obj_map members;
 	// the object's state data
-	ehval_p object_data;
+	ehval_w object_data;
 	// the type
 	unsigned int type_id;
 	// for scoping
-	ehval_p parent;
+	ehval_w parent;
 	// inheritance
-	std::list<ehval_p> super;
+	std::list<ehval_w> super;
 
 	/*
 	 * constructor etcetera

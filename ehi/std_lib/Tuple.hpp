@@ -10,16 +10,20 @@ public:
 	class t {
 	protected:
 		const int _size;
-		ehretval_a content;
+		ehval_w *content;
 
 	public:
-		t(int size, ehval_p *in) : _size(size), content(size) {
+		t(int size, ehval_p *in) : t(size) {
 			for(int i = 0; i < size; i++) {
 				content[i] = in[i];
 			}
 		}
 
-		t(int size) : _size(size), content(size) {}
+		t(int size) : _size(size), content(new ehval_w[size]()) {}
+
+		~t() {
+			delete[] content;
+		}
 
 		int size() const {
 			return this->_size;

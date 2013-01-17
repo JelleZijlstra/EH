@@ -10,6 +10,7 @@
 #include "Null.hpp"
 
 #include <sstream>
+#include <memory>
 
 // Not nearly as generic as it should be - for that we'd probably need lambdas
 template<class S, class T>
@@ -179,16 +180,16 @@ EH_METHOD(Enum, operator_colon) {
 		throw_MiscellaneousError("Cannot instantiate existing Enum member", ehi);
 		return nullptr;
 	} else {
-		ehval_p *params;
+		ehval_w *params;
 		if(size > 1) {
 			ASSERT_NARGS(size, "Enum.operator()");
-			params = new ehval_p[size];
+			params = new ehval_w[size];
 			auto tuple = args->get<Tuple>();
 			for(int i = 0; i < size; i++) {
 				params[i] = tuple->get(i);
 			}
 		} else {
-			params = new ehval_p[1];
+			params = new ehval_w[1];
 			params[0] = args;
 		}
 
@@ -323,10 +324,16 @@ EH_METHOD(Enum, map) {
 	if(size == 0) {
 		return obj;
 	}
-	ehval_p *params = new ehval_p[size];
+	std::unique_ptr<ehval_p[]> params(new ehval_p[size]);
 	for(int i = 0; i < size; i++) {
 		params[i] = ehi->call_function(args, data->get(i), obj);
 	}
-	auto val = new Enum_Instance::t(data->type_id, data->member_id, size, params);
+	// convert to ehval_w only now
+	// if we do it before the call_function, GC may hit while this function is running and kill our ehval_ws
+	ehval_w *weak_params = new ehval_w[size];
+	for(int i = 0; i < size; i++) {
+		weak_params[i] = params[i];
+	}
+	auto val = new Enum_Instance::t(data->type_id, data->member_id, size, weak_params);
 	return Enum_Instance::make(val, ehi->get_parent());
 }

@@ -40,6 +40,11 @@
  * Types included in this GC should have a method belongs_in_gc that tells the
  * GC whether a particular object should be allocated within the GC-checked
  * part of memory or within the normal heap.
+ *
+ * New solution (January 2013): Add a concept of strong references (i.e.,
+ * references from the stack). These references prevent the GC from
+ * collecting the block. Thus, there must be two kinds of pointers: one
+ * strong, one weak.
  */
 #include <list>
 #include "concurrency.hpp"
@@ -53,6 +58,8 @@ private:
 	const static int pool_size = 512;
 	const static int self_freed = 1;
 
+	const static int assignmetns_between_runs = 4096;
+
 	/*
 	 * types
 	 */
@@ -61,6 +68,7 @@ public:
 	class data {
 	public:
 		int refcount;
+		unsigned short strong_refcount;
 		short gc_data;
 
 		// get the next pointer from a free block. Havoc will result if this is called on an allocated block.
@@ -78,6 +86,12 @@ public:
 			this->refcount++;
 			if(this->refcount == 0) {
 				std::cerr << "Refcount reached 0 after increase!" << std::endl;
+			}
+		}
+		void inc_strong_rc() {
+			this->strong_refcount++;
+			if(this->strong_refcount == 0) {
+				std::cerr << "Strong-refcount reached 0 after increase!" << std::endl;
 			}
 		}
 
@@ -100,6 +114,9 @@ public:
 				}
 			}
 		}
+		void dec_strong_rc() {
+			this->strong_refcount--;
+		}
 
 		// set bits, numbered from 0 to 15
 		void set_gc_bit(int bit) {
@@ -116,17 +133,22 @@ public:
 			return this->refcount != 0;
 		}
 
+		bool has_strong_refs() const {
+			return strong_refcount > 0;
+		}
+
 		void suicide() {
 			// needed to avoid bugs with the destructor indirectly
 			// leading to the refcount for this block being lowered
 			this->refcount = 0;
 			this->~data();
 			this->refcount = 0;
+			this->strong_refcount = 0;
 			this->gc_data = 0;
 		}
 
 		// don't set the gc_data - it's set by garbage_collector code below
-		data() : refcount(1) {}
+		data() : refcount(1), strong_refcount(1) {}
 
 		virtual ~data() {}
 
@@ -162,7 +184,10 @@ private:
 			return this->get_next_pointer() == reinterpret_cast<block *>(self_freed);
 		}
 		bool is_allocated() const {
-			return this->get_data()->refcount != 0;
+			return this->get_data()->is_allocated();
+		}
+		bool has_strong_refs() const {
+			return this->get_data()->has_strong_refs();
 		}
 	};
 
@@ -216,11 +241,11 @@ private:
 		}
 
 		void dealloc(block *b) {
-#ifdef DEBUG_GC
+#ifdef DEBUG_GC_MORE
 			std::cout << "Freeing block at " << b << std::endl;
 			std::cout << "Refcount: " << b->refcount << std::endl;
 			b->content.print();
-#endif /* DEBUG_GC */
+#endif /* DEBUG_GC_MORE */
 			b->get_data()->suicide();
 			b->set_next_pointer(this->first_free_block);
 			this->first_free_block = b;
@@ -228,18 +253,22 @@ private:
 		}
 
 		void harvest_self_freed(block *b) {
-#ifdef DEBUG_GC
+#ifdef DEBUG_GC_MORE
 			std::cout << "Harvesting block at " << b << std::endl;
-#endif /* DEBUG_GC */
+#endif /* DEBUG_GC_MORE */
 			assert(b->is_self_freed());
 			b->set_next_pointer(this->first_free_block);
 			this->first_free_block = b;
 			free_blocks++;
 		}
 
+		block *get_block(int i) {
+			return reinterpret_cast<block *>(&blocks[i * sizeof(block)]);
+		}
+
 		void sweep(int previous_bit, int new_bit) {
 			for(int i = 0; i < pool_size; i++) {
-				block *b = reinterpret_cast<block *>(&this->blocks[i * sizeof(block)]);
+				block *b = get_block(i);
 				if(b->is_allocated() && !b->get_data()->get_gc_bit(new_bit)) {
 					this->dealloc(b);
 				} else {
@@ -293,10 +322,24 @@ private:
 	garbage_collector operator=(const garbage_collector &);
 
 public:
+	template<bool is_strong>
 	class pointer {
 	private:
 		mutable T *content;
 
+		void inc_rc() {
+			this->content->inc_rc();
+			if(is_strong) {
+				this->content->inc_strong_rc();
+			}
+		}
+
+		void dec_rc() {
+			this->content->dec_rc();
+			if(is_strong) {
+				this->content->dec_strong_rc();
+			}
+		}
 	public:
 		/*
 		 * Constructors
@@ -306,11 +349,15 @@ public:
 		pointer(decltype(nullptr)) : pointer(T::null_object()) {}
 		pointer(const pointer &rhs) : content(rhs.content) {
 			assert(content != nullptr);
-			this->content->inc_rc();
+			inc_rc();
 		}
 		pointer(T *in) : content(in) {
 			assert(content != nullptr);
-			this->content->inc_rc();
+			inc_rc();
+		}
+
+		pointer(const pointer<!is_strong> &rhs) : content(rhs.content) {
+			inc_rc();
 		}
 		/*
 		 * Overloading
@@ -328,12 +375,12 @@ public:
 		pointer &operator=(const pointer &rhs) {
 			// decrease refcount for thing we're now referring to
 			if(this->content != nullptr) {
-				this->content->dec_rc();
+				this->dec_rc();
 			}
 			this->content = rhs.content;
 			// and increase it for what we're now referring to
 			if(this->content != nullptr) {
-				this->content->inc_rc();
+				this->inc_rc();
 			}
 			return *this;
 		}
@@ -368,24 +415,24 @@ public:
 			return this->compare(rhs) == 1;
 		}
 
+		bool null() const {
+			return this->content == nullptr;
+		}
+
 		/*
 		 * Destructor
 		 */
 		~pointer() {
 			if(this->content != nullptr) {
-				this->content->dec_rc();
+				this->dec_rc();
 			}
-		}
-
-		/*
-		 * Static methods
-		 */
-		bool null() const {
-			return this->content == nullptr;
 		}
 
 		friend class garbage_collector;
 	};
+
+	typedef pointer<true> strong_pointer;
+	typedef pointer<false> weak_pointer;
 
 private:
 	/*
@@ -398,6 +445,8 @@ private:
 	pool *current_pool;
 	// current bit used for marking by the GC
 	marking_bit current_bit;
+	// number of assignments made since last GC run
+	unsigned int assignments_since_last_run;
 
 	/*
 	 * private methods
@@ -423,6 +472,10 @@ private:
 		// first set GC bit, then tell GC that this has been allocated
 		d->set_gc_bit(this->current_bit.get());
 		d->set_gc_bit(this->current_bit.next());
+
+		// increment number of assignments
+		assignments_since_last_run++;
+		run_if_necessary();
 		return d;
 	}
 
@@ -441,7 +494,7 @@ private:
 	/*
 	 * Garbage collection.
 	 */
-	void do_mark(pointer root) {
+	void do_mark_with_root(weak_pointer root) {
 		int bit = this->current_bit.next();
 		// ignore already marked objects and objects that are not in GC
 		if(root == nullptr || !root->belongs_in_gc() || root->get_gc_bit(bit)) {
@@ -453,7 +506,18 @@ private:
 		// std::cout << "Size of children: " << children.size() << std::endl;
 		// std::cout << (typeid(root.operator*())).name() << std::endl;
  		for(auto &i : children) {
-			do_mark(i);
+			do_mark_with_root(i);
+		}
+	}
+
+	void do_mark() {
+		for(pool *p = first_pool; p != nullptr; p = p->next) {
+			for(int i = 0; i < pool_size; i++) {
+				auto b = p->get_block(i);
+				if(b->has_strong_refs()) {
+					do_mark_with_root(&b->content);
+				}
+			}
 		}
 	}
 
@@ -484,28 +548,31 @@ private:
 			}
 		}
 	}
-public:
-	// flag checked by the GC thread: if true, it stops
-	concurrent_object<bool> do_stop;
 
+	void run_if_necessary() {
+		if(assignments_since_last_run > assignmetns_between_runs) {
+			do_collect();
+		}
+	}
+public:
 	data *get_space() {
 		return real_allocate();
 	}
 
-	void do_collect(std::initializer_list<pointer> roots) {
+	void do_collect() {
 #ifdef DEBUG_GC
 		std::cout << "Starting GC run..." << std::endl;
 		print_stats();
 #endif /* DEBUG_GC */
-		for(auto &root : roots) {
-			this->do_mark(root);
-		}
-		this->current_bit.inc();
-		this->do_sweep();
+		do_mark();
+		current_bit.inc();
+		do_sweep();
 #ifdef DEBUG_GC
 		std::cout << "Done" << std::endl;
 		print_stats();
 #endif /* DEBUG_GC */
+		// reset
+		assignments_since_last_run = 0;
 	}
 
 	void print_stats() const {
@@ -520,7 +587,7 @@ public:
 	}
 
 	// constructors and destructors
-	garbage_collector() : first_pool(new pool), current_pool(first_pool), current_bit(), do_stop(false) {
+	garbage_collector() : first_pool(new pool), current_pool(first_pool), current_bit(), assignments_since_last_run(0) {
 		// otherwise our strategy won't work
 		assert(sizeof(T) >= sizeof(void *));
 	}

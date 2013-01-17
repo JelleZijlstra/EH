@@ -1,5 +1,5 @@
 CC = clang++
-CCBASICFLAGS = -ggdb -fPIC -c -std=c++11 -stdlib=libc++
+CCBASICFLAGS = -ggdb -fPIC -c -std=c++11 -stdlib=libc++ -DDEBUG_GC
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic -Wextra -Wno-unused-parameter
 LDFLAGS = -std=c++11 -stdlib=libc++
 LIBCLASSES = ArgumentError Array Attribute Binding Bool ConstError EH Enum Exception File Float Function GarbageCollector GlobalObject Hash Integer LoopError MiscellaneousError NameError Node Null Object Range String SuperClass SyntaxError Tuple TypeError UnknownCommandError EmptyIterator FixedArray Random Map VisibilityError

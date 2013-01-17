@@ -125,7 +125,7 @@ static void add_end(std::ostringstream &out, int levels) {
 	add_tabs(out, levels);
 	out << "end";
 }
-static void decompile_try_catch(std::ostringstream &out, ehval_p *paras, int level) {
+static void decompile_try_catch(std::ostringstream &out, ehval_w *paras, int level) {
 	out << "try\n";
 	add_tabs(out, level + 1);
 	out << paras[0]->decompile(level + 1);
@@ -147,7 +147,7 @@ static void decompile_try_catch(std::ostringstream &out, ehval_p *paras, int lev
 		}
 	}
 }
-static void decompile_match_like(std::ostringstream &out, const char *name, ehval_p *paras, int level) {
+static void decompile_match_like(std::ostringstream &out, const char *name, ehval_w *paras, int level) {
 	out << name << " " << paras[0]->decompile(level);
 	for(ehval_p node = paras[1]; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
 		out << "\n";
@@ -165,12 +165,12 @@ static void decompile_match_like(std::ostringstream &out, const char *name, ehva
 	}
 	add_end(out, level);
 }
-static void decompile_if(std::ostringstream &out, ehval_p *paras, int level) {
+static void decompile_if(std::ostringstream &out, ehval_w *paras, int level) {
 	out << "if " << paras[0]->decompile(level) << "\n";
 	add_tabs(out, level + 1);
 	out << paras[1]->decompile(level + 1);
 	for(Enum_Instance::t *iop = paras[2]->get<Enum_Instance>(); iop->member_id != T_END; iop = iop->members[1]->get<Enum_Instance>()) {
-		ehval_p *current_block = iop->members[0]->get<Enum_Instance>()->members;
+		ehval_w *current_block = iop->members[0]->get<Enum_Instance>()->members;
 		out << "\n";
 		add_tabs(out, level);
 		out << "elsif " << current_block[0]->decompile(level) << "\n";
@@ -423,7 +423,7 @@ std::string Node::decompile(int level) const {
 				if(current_member->get<Enum_Instance>()->member_id == T_ENUM_WITH_ARGUMENTS) {
 					out << "(";
 					for(ehval_p argument = current_member->get<Enum_Instance>()->members[1]; ; argument = argument->get<Enum_Instance>()->members[1]) {
-						ehval_p name = Node::is_a(argument) ? argument->get<Enum_Instance>()->members[0] : argument;
+						ehval_p name = Node::is_a(argument) ? ehval_p(argument->get<Enum_Instance>()->members[0]) : argument;
 						out << name->get<String>();
 						if(!Node::is_a(argument) || argument->get<Enum_Instance>()->member_id != T_COMMA) {
 							break;

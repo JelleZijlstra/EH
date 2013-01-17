@@ -15,10 +15,10 @@ public:
 	class t {
 	public:
 		// typedefs
-		typedef std::map<const int, ehval_p> int_map;
-		typedef std::map<const std::string, ehval_p> string_map;
-		typedef std::pair<const int, ehval_p>& int_pair;
-		typedef std::pair<const std::string, ehval_p>& string_pair;
+		typedef std::map<const int, ehval_w> int_map;
+		typedef std::map<const std::string, ehval_w> string_map;
+		typedef std::pair<const int, ehval_w>& int_pair;
+		typedef std::pair<const std::string, ehval_w>& string_pair;
 		typedef int_map::iterator int_iterator;
 		typedef string_map::iterator string_iterator;
 
@@ -45,7 +45,7 @@ public:
 		}
 
 		// methods
-		ehval_p &operator[](ehval_p index);
+		ehval_w &operator[](ehval_p index);
 		void insert_retval(ehval_p index, ehval_p value);
 		int compare(t *rhs, ehcontext_t context, EHI *ehi);
 	};
@@ -121,7 +121,7 @@ private:
 		bool has_next() const;
 		ehval_p next(EHI *ehi);
 		ehval_p peek(EHI *ehi) const;
-		ehval_p array;
+		ehval_w array;
 	private:
 		bool in_ints;
 		Array::t::string_iterator string_begin;

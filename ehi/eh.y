@@ -127,10 +127,6 @@ global_list:
 									ehval_p statement = NODE($1);
 									ehval_p ret = ehi->eh_execute(statement, ehi->get_context());
 									std::cout << "=> " << ehi->toString(ret, ehi->get_context())->get<String>() << std::endl;
-#if defined(DEBUG_GC) || defined(RUN_GC)
-									EHInterpreter *interpreter = ehi->get_parent();
-									interpreter->gc.do_collect(interpreter->global_object);
-#endif
 									if(ehi->get_returning()) {
 										return (ret->is_a<Integer>()) ? ret->get<Integer>() : 0;
 									}

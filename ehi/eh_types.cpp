@@ -246,7 +246,7 @@ bool ehobj_t::context_compare(const ehcontext_t &key, const class EHI *ehi) cons
 	} else if(key.object->is_a<Object>()) {
 		// this may fail when the key.object is not an Object (i.e., )
 		ehobj_t *key_obj = key.object->get<Object>();
-		return (type_id == key_obj->type_id) || this->context_compare(key_obj->parent, ehi);
+		return (type_id == key_obj->type_id) || this->context_compare(ehcontext_t(key_obj->parent, key_obj->parent), ehi);
 	} else {
 		const unsigned int key_id = ehi->get_parent()->repo.get_type_id(key.object);
 		return type_id == key_id;

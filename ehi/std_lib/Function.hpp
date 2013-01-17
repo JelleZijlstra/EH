@@ -86,6 +86,10 @@ public:
 		std::cout << std::endl;
 	}
 
+	virtual ~Function() {
+		delete value;
+	}
+
 	Function(type val) : value(val) {}
 
 	static ehval_p exec(ehval_p base_object, ehval_p function_object, ehval_p args, EHI *ehi);

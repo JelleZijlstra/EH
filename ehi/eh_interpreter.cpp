@@ -237,8 +237,10 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 					throw_TypeError("Range members must have the same type", operand2, this);
 				}
 				return Range::make(operand1, operand2, parent);
+			case T_MIXED_TUPLE:
+				return eh_op_mixed_tuple(node, context);
 			case T_NAMED_ARGUMENT:
-				throw_MiscellaneousError("Named arguments are not implemented yet", this);
+				throw_MiscellaneousError("Cannot use T_NAMED_ARGUMENT in expression", this);
 		/*
 		 * Binary operators
 		 */
@@ -580,6 +582,42 @@ ehval_p EHI::declare_class(const char *name, ehval_p code, const ehcontext_t &co
 
 	return ret;
 }
+ehval_p EHI::eh_op_mixed_tuple(ehval_p node, const ehcontext_t &context) {
+	int nargs = 0;
+	for(ehval_p tmp = node; ; tmp = tmp->get<Enum_Instance>()->members[1]) {
+		if(Node::is_a(tmp) && tmp->get<Enum_Instance>()->member_id == T_MIXED_TUPLE) {
+			// continue with next
+			auto op = tmp->get<Enum_Instance>();
+			// increment nargs unless it is a T_NAMED_ARGUMENT
+			if(!(Node::is_a(op->members[0]) && op->members[0]->get<Enum_Instance>()->member_id == T_NAMED_ARGUMENT)) {
+				nargs++;
+			}
+		} else {
+			// increment again if last member is not a T_NAMED_ARGUMENT
+			if(!(Node::is_a(tmp) && tmp->get<Enum_Instance>()->member_id == T_NAMED_ARGUMENT)) {
+				nargs++;
+			}
+			break;
+		}
+	}
+	auto twsk = new Tuple_WithStringKeys::t(nargs);
+	for(int i = 0; ; node = node->get<Enum_Instance>()->members[1]) {
+		bool is_last = !(Node::is_a(node) && node->get<Enum_Instance>()->member_id == T_MIXED_TUPLE);
+		ehval_p current_node = is_last ? node : node->get<Enum_Instance>()->members[0];
+		if(Node::is_a(current_node) && current_node->get<Enum_Instance>()->member_id == T_NAMED_ARGUMENT) {
+			auto op = current_node->get<Enum_Instance>();
+			twsk->set(op->members[0]->get<String>(), eh_execute(op->members[1], context));
+		} else {
+			twsk->set(i, eh_execute(current_node, context));
+			i++;
+		}
+		if(is_last) {
+			break;
+		}
+	}
+
+	return Tuple_WithStringKeys::make(twsk, parent);
+}
 ehval_p EHI::eh_op_tuple(ehval_p node, const ehcontext_t &context) {
 	int nargs = 1;
 	// first determine the size of the tuple
@@ -880,13 +918,6 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 			context.scope->set_member(name, new_member, context, this);
 			return rvalue;
 		}
-		case T_NAMED_ARGUMENT: {
-			const char *name = internal_paras[0]->get<String>();
-			ehval_p internal_rvalue = (rvalue->is_a<Null>()) ? eh_execute(internal_paras[1], context) : rvalue;
-			attributes_t attrs = (attributes == nullptr) ? attributes_t::make_private() : *attributes;
-			context.scope->set_member(name, ehmember_p(attrs, internal_rvalue), context, this);
-			return internal_rvalue;
-		}
 		case T_COMMA: {
 			ehval_p arg_node = lvalue;
 			for(int i = 0; true; i++) {
@@ -916,13 +947,22 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 				if(rvalue->is_a<Null>()) {
 					// it's null, do nothing
 				} else if(Node::is_a(lvalue_node) && lvalue_node->get<Enum_Instance>()->member_id == T_NAMED_ARGUMENT) {
-					ehval_p name = lvalue_node->get<Enum_Instance>()->members[0];
-					internal_rvalue = call_method(rvalue, "operator->", name, context);
+					auto op = lvalue_node->get<Enum_Instance>();
+					ehval_p name = op->members[0];
+
+					ehval_p internal_rvalue;
+					if(call_method_typed<Bool>(rvalue, "has", name, context)->get<Bool>()) {
+						internal_rvalue = call_method(rvalue, "operator->", name, context);
+					} else {
+						internal_rvalue = eh_execute(op->members[1], context);
+					}
+					attributes_t attrs = (attributes == nullptr) ? attributes_t::make_private() : *attributes;
+					context.scope->set_member(name->get<String>(), ehmember_p(attrs, internal_rvalue), context, this);
 				} else {
 					internal_rvalue = call_method(rvalue, "operator->", Integer::make(i), context);
 					i++;
+					set(lvalue_node, internal_rvalue, attributes, context);
 				}
-				set(lvalue_node, internal_rvalue, attributes, context);
 				if(op->member_id != T_MIXED_TUPLE) {
 					break;
 				} else {

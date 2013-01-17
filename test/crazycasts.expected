@@ -8,7 +8,7 @@ Unknown member toArray in object of type Integer: 42
 Unknown member toArray in object of type Bool: true
 @range [
 	@int 1
-@int 42
+	@int 42
 ]
 Unknown member toRange in object of type Integer: 42
 Unknown member toBool in object of type Array: [ 0 => 1, ]

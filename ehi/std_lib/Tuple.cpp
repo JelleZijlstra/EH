@@ -6,8 +6,11 @@ EH_INITIALIZER(Tuple) {
 	REGISTER_METHOD(Tuple, length);
 	REGISTER_METHOD(Tuple, toTuple);
 	REGISTER_METHOD(Tuple, getIterator);
-	REGISTER_CLASS(Tuple, Iterator);
 	REGISTER_METHOD(Tuple, compare);
+	REGISTER_METHOD(Tuple, has);
+
+	REGISTER_CLASS(Tuple, Iterator);
+	REGISTER_CLASS(Tuple, WithStringKeys);
 }
 
 ehval_p Tuple::make(int size, ehval_p *in, EHInterpreter *parent) {
@@ -35,13 +38,21 @@ EH_METHOD(Tuple, initialize) {
 	return Tuple::make(len, values, ehi->get_parent());
 }
 EH_METHOD(Tuple, operator_arrow) {
-	ASSERT_OBJ_TYPE(Tuple, "Tuple.operator->");
+	ASSERT_RESOURCE(Tuple, "Tuple.operator->");
 	args->assert_type<Integer>("Tuple.operator->", ehi);
 	int index = args->get<Integer>();
-	if(index < 0 || index >= obj->get<Tuple>()->size()) {
+	if(!data->is_in_range(index)) {
     	throw_ArgumentError_out_of_range("Tuple.operator->", args, ehi);
 	}
-  	return obj->get<Tuple>()->get(index);
+  	return data->get(index);
+}
+EH_METHOD(Tuple, has) {
+	ASSERT_RESOURCE(Tuple, "Tuple.has");
+	if(args->is_a<Integer>()) {
+		return Bool::make(data->is_in_range(args->get<Integer>()));
+	} else {
+		return Bool::make(false);
+	}
 }
 EH_METHOD(Tuple, length) {
   	ASSERT_NULL_AND_TYPE(Tuple, "Tuple.length");
@@ -77,10 +88,59 @@ EH_METHOD(Tuple, getIterator) {
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 
+ehval_p Tuple_WithStringKeys::make(type in, EHInterpreter *parent) {
+	return parent->allocate<Tuple_WithStringKeys>(in);
+}
+
+EH_INITIALIZER(Tuple_WithStringKeys) {
+	REGISTER_METHOD_RENAME(Tuple_WithStringKeys, operator_arrow, "operator->");
+	REGISTER_METHOD(Tuple_WithStringKeys, has);
+}
+
+/*
+ * @description Checks whether a given key is valid.
+ * @argument String or integer key
+ * @returns Bool
+ */
+EH_METHOD(Tuple_WithStringKeys, has) {
+	ASSERT_RESOURCE(Tuple_WithStringKeys, "Tuple.WithStringKeys.has");
+	if(args->is_a<Integer>()) {
+		return Bool::make(data->is_in_range(args->get<Integer>()));
+	} else if(args->is_a<String>()) {
+		return Bool::make(data->has(args->get<String>()));
+	} else {
+		return Bool::make(false);
+	}
+}
+
+/*
+ * @description Returns a value in the object given an integer or string key.
+ * @argument String or integer key
+ * @returns Value corresponding to the given key
+ */
+EH_METHOD(Tuple_WithStringKeys, operator_arrow) {
+	ASSERT_RESOURCE(Tuple_WithStringKeys, "Tuple.WithStringKeys.operator->");
+	if(args->is_a<Integer>()) {
+		const int index = args->get<Integer>();
+		if(index < 0 || index >= data->size()) {
+    		throw_ArgumentError_out_of_range("Tuple.WithStringKeys.operator->", args, ehi);
+		}
+		return data->get(index);
+	} else if(args->is_a<String>()) {
+		const std::string name = args->get<String>();
+		if(!data->has(name)) {
+			throw_ArgumentError("Invalid key", "Tuple.WithStringKeys.operator->", args, ehi);
+		}
+		return data->get_string(name);
+	} else {
+		throw_TypeError("Tuple.WithStringKeys key must be an Integer or String", args, ehi);
+		return nullptr;
+	}
+}
+
 ehval_p Tuple_Iterator::make(ehval_p tuple, EHInterpreter *parent) {
 	return parent->allocate<Tuple_Iterator>(new t(tuple));
 }
-
 
 bool Tuple_Iterator::t::has_next() {
 	Tuple::t *the_tuple = this->tuple->get<Tuple>();

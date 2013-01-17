@@ -1,0 +1,8 @@
+%%stdout%%
+@extended tuple <1> [
+	@int 3
+	"foo": @int 4
+]
+@int 3
+@int 4
+%%stderr%%

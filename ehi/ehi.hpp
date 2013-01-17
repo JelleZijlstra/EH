@@ -259,6 +259,7 @@ private:
 	ehval_p eh_op_try(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_try_finally(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_tuple(ehval_p node, const ehcontext_t &context);
+	ehval_p eh_op_mixed_tuple(ehval_p node, const ehcontext_t &context);
 	ehval_p eh_op_while(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_try_catch(ehval_p try_block, ehval_p catch_blocks, const ehcontext_t &context);
 	ehval_p eh_xtoarray(ehval_p in);
@@ -291,6 +292,11 @@ public:
 
 	int compare(ehval_p lhs, ehval_p rhs, const ehcontext_t &context) {
 		return call_method_typed<Integer>(lhs, "operator<=>", rhs, context)->get<Integer>();
+	}
+
+	void printvar(ehval_p val) {
+		printvar_set set;
+		val->printvar(set, 0, this);
 	}
 };
 

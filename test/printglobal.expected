@@ -357,8 +357,13 @@
 			initialize <public,non-static,non-constant>: @function <library>: 
 			next <public,non-static,non-constant>: @function <library>: 
 		]
+		WithStringKeys <public,non-static,non-constant>: @object <Tuple.WithStringKeys> [
+			has <public,non-static,non-constant>: @function <library>: 
+			operator-> <public,non-static,non-constant>: @function <library>: 
+		]
 		compare <public,non-static,non-constant>: @function <library>: 
 		getIterator <public,non-static,non-constant>: @function <library>: 
+		has <public,non-static,non-constant>: @function <library>: 
 		initialize <public,non-static,non-constant>: @function <library>: 
 		length <public,non-static,non-constant>: @function <library>: 
 		operator-> <public,non-static,non-constant>: @function <library>: 

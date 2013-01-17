@@ -229,6 +229,7 @@ std::string Node::decompile(int level) const {
 			out << op->members[0]->decompile(level) << " & " << op->members[1]->decompile(level);
 			break;
 		case T_COMMA:
+		case T_MIXED_TUPLE:
 			out << op->members[0]->decompile(level) << ", " << op->members[1]->decompile(level);
 			break;
 		case T_ACCESS:
@@ -245,6 +246,9 @@ std::string Node::decompile(int level) const {
 			break;
 		case T_BINARY_COMPLEMENT:
 			out << "~" << op->members[0]->decompile(level);
+			break;
+		case T_NAMED_ARGUMENT:
+			out << op->members[0]->get<String>() << ": " << op->members[1]->decompile(level);
 			break;
 		case T_VARIABLE:
 			out << op->members[0]->get<String>();

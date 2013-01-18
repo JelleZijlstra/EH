@@ -137,10 +137,10 @@ public:
 		}
 
 		bool is_allocated() const {
-			return this->refcount != 0;
+			return refcount != 0;
 		}
 
-		bool has_strong_refs() {
+		bool has_strong_refs() const {
 			return strong_refcount > 0;
 		}
 
@@ -191,10 +191,10 @@ private:
 			return get_data()->is_self_freed();
 		}
 		bool is_allocated() const {
-			return this->get_data()->is_allocated();
+			return get_data()->is_allocated();
 		}
-		bool has_strong_refs() {
-			return this->get_data()->has_strong_refs();
+		bool has_strong_refs() const {
+			return get_data()->has_strong_refs();
 		}
 	};
 
@@ -259,9 +259,9 @@ private:
 		}
 
 		void harvest_self_freed(block *b) {
-#ifdef DEBUG_GC_MORE
+#ifdef DEBUG_GC_MORE_X
 			std::cout << "Harvesting block at " << b << std::endl;
-#endif /* DEBUG_GC_MORE */
+#endif /* DEBUG_GC_MORE_X */
 			assert(b->is_self_freed());
 			b->set_next_pointer(this->first_free_block);
 			this->first_free_block = b;
@@ -295,37 +295,39 @@ private:
 
 	class marking_bit {
 	private:
+		const int SHORT_SIZE = sizeof(short) * 8;
+
 		int value;
 	public:
 		int get() const {
-			assert(this->value >= 0 && ((unsigned) this->value) < sizeof(short));
+			assert(this->value >= 0 && this->value < SHORT_SIZE);
 			return this->value;
 		}
 		void inc() {
 			this->value++;
-			if(this->value == sizeof(short)) {
+			if(this->value == SHORT_SIZE) {
 				this->value = 0;
 			}
 		}
 		int next() const {
-			return (this->value + 1) % sizeof(short);
+			return (this->value + 1) % SHORT_SIZE;
 		}
 		int prev() const {
 			if(this->value == 0) {
-				return sizeof(short) - 1;
+				return SHORT_SIZE - 1;
 			} else {
 				return this->value - 1;
 			}
 		}
 
-		marking_bit() : value(0) {}
+		constexpr marking_bit() : value(0) {}
 	};
 
 	/*
 	 * forbidden operations
 	 */
-	garbage_collector(const garbage_collector &);
-	garbage_collector operator=(const garbage_collector &);
+	garbage_collector(const garbage_collector &) = delete;
+	garbage_collector operator=(const garbage_collector &) = delete;
 
 public:
 	template<bool is_strong>

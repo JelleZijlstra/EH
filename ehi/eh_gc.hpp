@@ -58,7 +58,7 @@ private:
 	const static int pool_size = 512;
 	const static int self_freed = 1;
 
-	const static int assignmetns_between_runs = 4096;
+	const static int assignments_between_runs = 4096;
 
 	/*
 	 * types
@@ -552,7 +552,7 @@ private:
 	}
 
 	void run_if_necessary() {
-		if(assignments_since_last_run > assignmetns_between_runs) {
+		if(assignments_since_last_run > assignments_between_runs) {
 			do_collect();
 		}
 	}

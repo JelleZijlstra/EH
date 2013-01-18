@@ -8,7 +8,7 @@
 
 static void eh_usage(char *name) {
 	fprintf(stderr, "Usage: %s\n\t%s file [arguments]\n\t%s -i\n\t%s -r code\n", name, name, name, name);
-	exit(-1);
+	exit(1);
 }
 
 int main(int argc, char **argv) {
@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
 				ret = ehi.execute_string(argv[2]);
 			} catch(eh_exception &e) {
 				ehi.handle_uncaught(e);
-				return -1;
+				return 1;
 			}
 		} else {
 			if(!strcmp(argv[1], "-O")) {
@@ -49,12 +49,12 @@ int main(int argc, char **argv) {
 				ret = ehi.execute_named_file(argv[1]);
 			} catch(eh_exception &e) {
 				ehi.handle_uncaught(e);
-				return -1;
+				return 1;
 			}
 		}
 		//TODO: let scripts determine exit status
 		return 0;
 	} catch(...) {
-		return -1;
+		return 1;
 	}
 }

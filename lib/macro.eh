@@ -188,6 +188,10 @@ class Macro
 				Node.T_LIST(Tuple.initialize(ListifyIterator.new code))
 			case Node.T_MIXED_TUPLE(_, _)
 				ExtendedNode.T_MIXED_TUPLE_LIST(Tuple.initialize(ListifyIterator.new code))
+			case Node.T_ENUM(@name, Node.T_ENUM_WITH_ARGUMENTS(_, _), @enum_code)
+				Node.T_ENUM(name, Node.T_LIST(Tuple.initialize((code->1)::Nil)), enum_code)
+			case Node.T_ENUM(@name, Node.T_NULLARY_ENUM(_), @enum_code)
+				Node.T_ENUM(name, Node.T_LIST(Tuple.initialize((code->1)::Nil)), enum_code)
 			case Node.T_END
 				Node.T_LIST(Tuple.initialize(Nil))
 			case _

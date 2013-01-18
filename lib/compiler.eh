@@ -168,7 +168,7 @@ class Compiler
 			sb << assignment
 			match code.type()
 				case "String"
-					sb << 'String::make("' << code.replace('\\', '\\\\').replace('"', '\\"').replace("\n", "\\n") << '")'
+					sb << 'String::make(strdup("' << code.replace('\\', '\\\\').replace('"', '\\"').replace("\n", "\\n") << '"))'
 				case "Integer"
 					sb << "Integer::make(" << code << ")"
 				case "Float"
@@ -354,7 +354,7 @@ class Compiler
 				case Node.T_OR(@left, @right)
 					private left_name = this.doCompile(sb, left)
 					sb << assignment << "Bool::make(true);\n"
-					sb << "if(eh_compiled::boolify(" << left_name << ", context, ehi)) {\n"
+					sb << "if(!eh_compiled::boolify(" << left_name << ", context, ehi)) {\n"
 					private right_name = this.doCompile(sb, right)
 					sb << var_name << " = ehi->toBool(" << right_name << ", context);\n"
 					sb << "}\n"
@@ -608,17 +608,37 @@ class Compiler
 			this.compile_set(sb, lval, name, attributes)
 		case Node.T_LIST(@vars)
 			for i in vars.length()
-				private rvalue_name = this.get_var_name "rvalue"
-				# create scope
-				sb << "{\n"
-				sb << "ehval_p " << rvalue_name << " = ehi->call_method(" << name << ', "operator->", Integer::make('
-				sb << i << "), context);\n"
-				this.compile_set(sb, vars->i, rvalue_name, attributes)
-				sb << "}\n"
+				this.compile_set_list_member(sb, vars->i, i, name, attributes)
+			end
+		case ExtendedNode.T_MIXED_TUPLE_LIST(@vars)
+			private i = 0
+			for var in vars
+				match var
+					case Node.T_NAMED_ARGUMENT(@var_name, @dflt)
+						sb << "if(ehi->call_method(" << name << ', "has", "' << var_name << '", context)) {\n'
+						sb << "ehval_p na_var = ehi->call_method(" << name << ', "operator->", "' << var_name << '", context);\n'
+						sb << 'context.scope->set_member("' << var_name << '", ehmember_p('
+						if attributes == null
+							sb << "attributes_t::make_private()"
+						else
+							sb << attributes
+						end
+						sb << ", " << na_var << "), context, ehi);\n"
+					case _
+						this.compile_set_list_member(sb, var, i, name, attributes)
+						i++
+				end
 			end
 		case _
 			printvar lvalue
 			throw(NotImplemented.new "Cannot compile this lvalue")
+	end
+
+	private compile_set_list_member = func: sb, code, i, name, attributes
+		private rvalue_name = this.get_var_name "rvalue"
+		sb << "ehval_p " << rvalue_name << " = ehi->call_method(" << name << ', "operator->", Integer::make('
+		sb << i << "), context);\n"
+		this.compile_set(sb, code, rvalue_name, attributes)
 	end
 
 	private compile_match = sb, match_var_name, match_bool, pattern => match pattern

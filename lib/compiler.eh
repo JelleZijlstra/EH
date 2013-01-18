@@ -164,7 +164,7 @@ class Compiler
 	private doCompile = func: sb, code
 		private var_name = this.get_var_name "var"
 		private assignment = "ehval_p " + var_name + " = "
-		if code.typeId() != Node.typeId()
+		if !Node.isNode code
 			sb << assignment
 			match code.type()
 				case "String"
@@ -421,6 +421,27 @@ class Compiler
 						end
 					end
 					sb << "}, ehi->get_parent())"
+				case ExtendedNode.T_MIXED_TUPLE_LIST(@items)
+					private member_names = []
+					private size = items.countWithPredicate(elt => match elt
+						case Node.T_NAMED_ARGUMENT(_, _); true
+						case _; false
+					end)
+					private twsk_name = this.get_var_name "twsk"
+					sb << "auto " << twsk_name << " = new Tuple_WithStringKeys::t(" << size << ");\n"
+					sb << assignment << "Tuple_WithStringKeys::make(" << twsk_name << ", ehi->get_parent());\n"
+					private i = 0
+					for item in items
+						match item
+							case Node.T_NAMED_ARGUMENT(@name, @code)
+								private arg_name = this.doCompile(sb, code)
+								sb << twsk_name << '->set("' << name << '", ' << arg_name << ");\n"
+							case _
+								private arg_name = this.doCompile(sb, item)
+								sb << twsk_name << "->set(" << i << ", " << arg_name << ");\n"
+								i += 1
+						end
+					end
 				case Node.T_ENUM(@enum_name, Node.T_LIST(@members), @body)
 					private body_name = this.get_var_name "enum"
 					private inner_builder = StringBuilder.new()

@@ -2,6 +2,20 @@
 
 Node.Context.toString = () => "(context: " + this.getObject() + ", " + this.getScope() + ")"
 
+# Additional Node variants emitted by the optimizer and understood by the compiler
+enum ExtendedNode
+	T_MIXED_TUPLE_LIST(members)
+end
+
+Node.isNode = (func:
+	private node_t = Node.typeId()
+	private extended_t = ExtendedNode.typeId()
+	func: val
+		private type = val.typeId()
+		type == node_t || type == extended_t
+	end
+end)()
+
 class Macro
 	public decorate = func: f, (code, context)
 		private processedCode = f code
@@ -142,7 +156,7 @@ class Macro
 
 		public hasNext = _ => this.l != Node.T_END
 
-		private map_if_node = node => if EH.equalType(node, Node)
+		private static map_if_node = node => if EH.equalType(node, Node)
 			node.map listify
 		else
 			node
@@ -150,6 +164,9 @@ class Macro
 
 		public next = () => match this.l
 			case Node.T_COMMA(@left, @right)
+				this.l = right
+				map_if_node left
+			case Node.T_MIXED_TUPLE(@left, @right)
 				this.l = right
 				map_if_node left
 			case Node.T_END
@@ -169,6 +186,8 @@ class Macro
 		match code
 			case Node.T_COMMA(_, _)
 				Node.T_LIST(Tuple.initialize(ListifyIterator.new code))
+			case Node.T_MIXED_TUPLE(_, _)
+				ExtendedNode.T_MIXED_TUPLE_LIST(Tuple.initialize(ListifyIterator.new code))
 			case Node.T_END
 				Node.T_LIST(Tuple.initialize(Nil))
 			case _

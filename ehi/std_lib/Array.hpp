@@ -56,7 +56,7 @@ public:
 		delete value;
 	}
 
-	virtual bool belongs_in_gc() const {
+	virtual bool belongs_in_gc() const override {
 		return true;
 	}
 

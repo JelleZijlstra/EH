@@ -276,6 +276,8 @@ private:
 		return (infloat == static_cast<float>(operand->get<Integer>()));
 	}
 
+	void do_parse();
+
 public:
 	// conversion methods, guaranteed to return the type they're supposed to return
 #define CASTER(class_name) ehval_p to ## class_name(ehval_p in, const ehcontext_t &context) { \

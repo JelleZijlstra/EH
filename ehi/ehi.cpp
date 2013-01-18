@@ -58,16 +58,24 @@ ehval_p EHI::spawning_parse_string(const char *cmd, const ehcontext_t &context) 
 	return parser.execute_string(cmd);
 }
 
+void EHI::do_parse() {
+	parent->gc.stop_collecting();
+	// std::cout << "Turned off GC" << std::endl;
+	yyparse(scanner);
+	parent->gc.resume_collecting();
+	// std::cout << "Turned on GC" << std::endl;
+}
+
 void EHI::parse_file(FILE *infile) {
 	yy_buffer = yy_create_buffer(infile, YY_BUF_SIZE, scanner);
 	yy_switch_to_buffer(yy_buffer, scanner);
-	yyparse(scanner);
+	do_parse();
 }
 
 void EHI::parse_string(const char *cmd) {
 	yy_switch_to_buffer(yy_scan_string(cmd, scanner), scanner);
 	yyset_lineno(1, scanner);
-	yyparse(scanner);
+	do_parse();
 }
 
 ehval_p EHI::execute_code() {

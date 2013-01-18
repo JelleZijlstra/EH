@@ -434,7 +434,7 @@ public:
 	};
 
 	typedef pointer<true> strong_pointer;
-	typedef pointer<true> weak_pointer;
+	typedef pointer<false> weak_pointer;
 
 private:
 	/*
@@ -449,6 +449,7 @@ private:
 	marking_bit current_bit;
 	// number of assignments made since last GC run
 	unsigned int assignments_since_last_run;
+	bool do_not_collect;
 
 	/*
 	 * private methods
@@ -552,7 +553,7 @@ private:
 	}
 
 	void run_if_necessary() {
-		if(assignments_since_last_run > assignments_between_runs) {
+		if(!do_not_collect && assignments_since_last_run > assignments_between_runs) {
 			do_collect();
 		}
 	}
@@ -588,8 +589,16 @@ public:
 		std::cout << "Allocated blocks: " << allocated_blocks << std::endl;
 	}
 
+	void stop_collecting() {
+		do_not_collect = true;
+	}
+
+	void resume_collecting() {
+		do_not_collect = false;
+	}
+
 	// constructors and destructors
-	garbage_collector() : first_pool(new pool), current_pool(first_pool), current_bit(), assignments_since_last_run(0) {
+	garbage_collector() : first_pool(new pool), current_pool(first_pool), current_bit(), assignments_since_last_run(0), do_not_collect(false) {
 		// otherwise our strategy won't work
 		assert(sizeof(T) >= sizeof(void *));
 	}

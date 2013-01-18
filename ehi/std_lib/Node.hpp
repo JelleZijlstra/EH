@@ -14,6 +14,8 @@ public:
 		}
 	}
 
+	virtual ~Node() {}
+
 	virtual std::string decompile(int level) const override;
 
 	static ehval_p make(Node *val, EHInterpreter *parent) {

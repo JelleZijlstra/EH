@@ -39,6 +39,8 @@ public:
 		assert(false);
 		return "";
 	}
+
+	virtual ~Attribute() {}
 };
 
 #include "../eh_libclasses.hpp"

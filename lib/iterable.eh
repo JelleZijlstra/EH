@@ -122,6 +122,8 @@ class Iterable
 	const public min = () => this.reduceSingle (smallest, val => smallest > val)
 
 	const public clone = () => this.map(x => x)
+
+	const public countWithPredicate = f => this.foldLeft(0, (elt, accum => accum + if f elt; 1; else 0; end))
 end
 
 # Dynamic inheritance in iterable library classes

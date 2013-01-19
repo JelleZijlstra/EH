@@ -47,7 +47,7 @@
  * strong, one weak.
  */
 #include <list>
-#include "concurrency.hpp"
+#include <stack>
 
 template<class T>
 class garbage_collector {
@@ -532,24 +532,41 @@ private:
 	/*
 	 * Garbage collection.
 	 */
-	void do_mark_with_root(weak_pointer root) {
-		int bit = this->current_bit.next();
+	typedef std::stack<T *> pointer_set;
+
+	void handle_root(pointer_set &stack, T *root) {
+		int bit = current_bit.next();
 		// ignore already marked objects and objects that are not in GC
 		if(root == nullptr || !root->belongs_in_gc() || root->get_gc_bit(bit)) {
 			return;
 		}
+#ifdef DEBUG_GC_MORE_X
+		std::cout << "Marking with root: " << root << std::endl;
+#endif
 		root->set_gc_bit(bit);
 
 		auto children = root->children();
 		// std::cout << "Size of children: " << children.size() << std::endl;
 		// std::cout << (typeid(root.operator*())).name() << std::endl;
  		for(auto &i : children) {
-			do_mark_with_root(i);
+			if(i != nullptr && i->belongs_in_gc() && !i->get_gc_bit(bit)) {
+				stack.push(i.content);
+			}
+		}
+	}
+	void do_mark_with_root(T *root) {
+		int bit = current_bit.next();
+		if(root == nullptr || !root->belongs_in_gc() || root->get_gc_bit(bit)) {
+			return;
 		}
 
-		// assert that bits were set
-		for(auto &i : children) {
-			assert((!i->belongs_in_gc()) || i->get_gc_bit(bit));
+		pointer_set stack;
+		stack.push(root);
+
+		while(!stack.empty()) {
+			T *ptr = stack.top();
+			stack.pop();
+			handle_root(stack, ptr);
 		}
 	}
 

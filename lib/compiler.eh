@@ -19,7 +19,10 @@
 #   arguments before throwing an error, while the compiler will immediately throw an error before performing any match.
 #   For example (asssuming A.B takes two arguments) "case A.B(@var1, @var2, @var3)" will set var1 and var2 in the
 #   interpreter, but not in the compiler.
-# Both of these only affect code that is poorly written anyway.
+# - Return, break, and continue in unusual places (e.g., within class definitions or finally blocks) may be executed
+#   differently by the interpreter and compiler.
+# All of these only affect code that is poorly written anyway, and hopefully I'll be able to solve them with better
+# static analysis in the future.
 
 include 'library.eh'
 
@@ -128,10 +131,8 @@ class Compiler
 		this.counter = Counter.new()
 	end
 
-	public static preprocess = code => Macro.listify(Macro.optimize(Macro.replace_include(code)))
-
 	public compile = func: outputFile
-		private code = preprocess(EH.parseFile(this.fileName))
+		private code = Preprocessor.preprocess(EH.parseFile(this.fileName))
 		private mainf = StringBuilder.new()
 		mainf << 'const char *get_filename() { return "' << this.fileName << '"; }\n'
 
@@ -615,15 +616,20 @@ class Compiler
 			for var in vars
 				match var
 					case Node.T_NAMED_ARGUMENT(@var_name, @dflt)
-						sb << "if(ehi->call_method(" << name << ', "has", "' << var_name << '", context)) {\n'
-						sb << "ehval_p na_var = ehi->call_method(" << name << ', "operator->", "' << var_name << '", context);\n'
+						private na_var_name = this.get_var_name "na_var"
+						sb << "ehval_p " << na_var_name << ";\n"
+						sb << "if(ehi->call_method_typed<Bool>(" << name << ', "has", String::make(strdup("' << var_name << '")), context)->get<Bool>()) {\n'
+						sb << na_var_name << " = ehi->call_method(" << name << ', "operator->", String::make(strdup("' << var_name << '")), context);\n'
+						sb << "} else {\n"
+						private dflt_name = this.doCompile(sb, dflt)
+						sb << na_var_name << " = " << dflt_name << ";\n}\n"
 						sb << 'context.scope->set_member("' << var_name << '", ehmember_p('
 						if attributes == null
 							sb << "attributes_t::make_private()"
 						else
 							sb << attributes
 						end
-						sb << ", " << na_var << "), context, ehi);\n"
+						sb << ", " << na_var_name << "), context, ehi);\n"
 					case _
 						this.compile_set_list_member(sb, var, i, name, attributes)
 						i++
@@ -749,7 +755,3 @@ class Compiler
 
 	private add_function = f => (this.functions = f::this.functions)
 end
-
-private co = Compiler.new(argv->1)
-#private co = Compiler.new("/Users/jellezijlstra/code/EH/lib/tmp/test5.eh")
-co.compile "tmp/compile_test.cpp"

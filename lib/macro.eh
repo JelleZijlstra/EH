@@ -179,7 +179,18 @@ class Macro
 		# trickery to get .length() to work
 		this.inherit Iterable
 		public getIterator = () => this
-		public length = () => ListifyIterator.new(this.l).iterableLength()
+
+		# calculate length
+		private list_length = l => match l
+			case Node.T_COMMA(_, @right) | Node.T_MIXED_TUPLE(_, @right)
+				1 + list_length right
+			case Node.T_END
+				0
+			case _
+				1
+		end
+
+		public length = () => list_length(this.l)
 	end
 
 	public listify = code => if code.typeId() == Node.typeId()

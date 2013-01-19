@@ -36,8 +36,8 @@ public:
 
 		t(const std::string &_name) : nmembers(0), next_id(0), member_map(), name(_name) {}
 
-		unsigned int add_member(const std::string &name, const std::vector<std::string> &members, unsigned int id = 0) {
-			member_info member(name, members);
+		unsigned int add_member(const std::string &member_name, const std::vector<std::string> &members, unsigned int id = 0) {
+			member_info member(member_name, members);
 
 			if(id == 0) {
 				id = next_id;
@@ -80,9 +80,9 @@ public:
 
 		const unsigned int nmembers;
 
-		ehval_w *members;
+		ehval_p *members;
 
-		t(unsigned int type, unsigned int member, unsigned int n, ehval_w *args) : type_id(type), member_id(member), nmembers(n), members(args) {}
+		t(unsigned int type, unsigned int member, unsigned int n, ehval_p *args) : type_id(type), member_id(member), nmembers(n), members(args) {}
 
 		virtual ~t() {
 			delete[] members;
@@ -121,18 +121,19 @@ public:
 	typedef t *type;
 	type value;
 
-	virtual bool belongs_in_gc() const {
+	virtual bool belongs_in_gc() const override {
 		return true;
 	}
 
 	virtual std::list<ehval_p> children() const override {
 		std::list<ehval_p> out;
 		if(value->members != nullptr) {
-			const int size = value->nmembers;
-			for(int i = 0; i < size; i++) {
+			const unsigned int size = value->nmembers;
+			for(unsigned int i = 0; i < size; i++) {
 				out.push_back(value->get(i));
 			}
 		}
+		assert(out.size() == ((value->members == nullptr) ? 0 : value->nmembers));
 		return out;
 	}
 

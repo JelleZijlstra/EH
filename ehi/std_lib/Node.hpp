@@ -6,11 +6,11 @@
 
 class Node : public Enum_Instance::t {
 public:
-	const static int node_id = 6;
+	const static unsigned int node_id = 6;
 
-	Node(int op, int nparas) : Enum_Instance::t(node_id, op, nparas, nullptr) {
+	Node(unsigned int op, unsigned int nparas) : Enum_Instance::t(node_id, op, nparas, nullptr) {
 		if(nparas > 0) {
-			members = new ehval_w[nparas];
+			members = new ehval_p[nparas];
 		}
 	}
 
@@ -31,11 +31,11 @@ public:
 	}
 };
 
-Node *eh_addnode(int opcode);
-Node *eh_addnode(int opcode, ehval_p first);
-Node *eh_addnode(int opcode, ehval_p first, ehval_p second);
-Node *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third);
-Node *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval_p fourth);
+Node *eh_addnode(unsigned int opcode);
+Node *eh_addnode(unsigned int opcode, ehval_p first);
+Node *eh_addnode(unsigned int opcode, ehval_p first, ehval_p second);
+Node *eh_addnode(unsigned int opcode, ehval_p first, ehval_p second, ehval_p third);
+Node *eh_addnode(unsigned int opcode, ehval_p first, ehval_p second, ehval_p third, ehval_p fourth);
 
 #include "../eh_libclasses.hpp"
 

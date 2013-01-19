@@ -38,14 +38,14 @@ ehval_w &Array::t::operator[](ehval_p index) {
 		assert(false);
 	}
 }
-void Array::t::insert_retval(ehval_p index, ehval_p value) {
+void Array::t::insert_retval(ehval_p index, ehval_p val) {
 	// Inserts a member into an array.
-	(*this)[index] = value;
+	(*this)[index] = val;
 }
 
 int Array::t::compare(Array::t *rhs, ehcontext_t context, EHI *ehi) {
-	const int lhs_size = this->size();
-	const int rhs_size = rhs->size();
+	const size_t lhs_size = this->size();
+	const size_t rhs_size = rhs->size();
 	if(lhs_size != rhs_size) {
 		return intcmp(lhs_size, rhs_size);
 	}
@@ -133,7 +133,7 @@ EH_METHOD(Array, initialize) {
  */
 EH_METHOD(Array, length) {
 	ASSERT_NULL_AND_TYPE(Array, "Array.length");
-	return Integer::make(obj->get<Array>()->size());
+	return Integer::make(static_cast<int>(obj->get<Array>()->size()));
 }
 
 /*
@@ -200,10 +200,10 @@ EH_METHOD(Array, toArray) {
 EH_METHOD(Array, toTuple) {
 	ASSERT_NULL_AND_TYPE(Array, "Array.toTuple");
 	Array::t *arr = obj->get<Array>();
-	int length = arr->size();
+	unsigned int length = static_cast<unsigned int>(arr->size());
 	ehretval_a values(length);
 	// We'll say that output order is unspecified
-	int i = 0;
+	unsigned int i = 0;
 	for(auto &it : arr->int_indices) {
 		values[i++] = it.second;
 	}

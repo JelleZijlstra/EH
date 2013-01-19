@@ -107,7 +107,7 @@ EH_METHOD(Float, compare) {
  */
 EH_METHOD(Float, abs) {
 	ASSERT_NULL_AND_TYPE(Float, "Float.abs");
-	return Float::make(abs(obj->get<Float>()));
+	return Float::make(static_cast<Float::type>(abs(obj->get<Float>())));
 }
 
 /*
@@ -159,5 +159,5 @@ EH_METHOD(Float, toFloat) {
  */
 EH_METHOD(Float, sqrt) {
   ASSERT_NULL_AND_TYPE(Float, "Float.sqrt");
-  return Float::make(sqrt(obj->get<Float>()));
+  return Float::make(static_cast<Float::type>(sqrt(obj->get<Float>())));
 }

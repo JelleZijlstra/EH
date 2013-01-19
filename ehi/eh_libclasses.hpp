@@ -45,7 +45,8 @@ if(!obj->is_a<ehtype>()) { \
 // has to come after macro definitions for EH_METHOD and EXTERN_EHLC
 
 // Helpers
-static inline int intcmp(int lhs, int rhs) {
+template<class T>
+static inline int intcmp(T lhs, T rhs) {
 	if(lhs < rhs) {
 		return -1;
 	} else if(lhs == rhs) {

@@ -11,7 +11,11 @@ typedef std::unordered_set<void *> printvar_set;
 class ehval_t : public garbage_collector<ehval_t>::data {
 public:
 	typedef garbage_collector<ehval_t>::strong_pointer ehval_p;
+#ifdef DEBUG_GC
 	typedef garbage_collector<ehval_t>::weak_pointer ehval_w;
+#else
+	typedef garbage_collector<ehval_t>::strong_pointer ehval_w;
+#endif
 
 	// context
 	struct ehcontext_t {
@@ -31,7 +35,7 @@ public:
 		typedef refcount_ptr<ehmember_t> ehmember_p;
 
 		attributes_t attribute;
-		ehval_w value;
+		ehval_p value;
 
 		// destructor
 		~ehmember_t() {}
@@ -76,6 +80,7 @@ public:
 
 	template<class T>
 	typename T::type get() const {
+		static_assert(sizeof(T) <= sizeof(garbage_collector<ehval_t>::block), "Type derived from ehval_t must fit in GC");
 		assert(typeid(*this) == typeid(T));
 		// previous line established that this cast is safe
 		auto derived = static_cast<const T *>(this);
@@ -118,7 +123,7 @@ public:
 	template<class T>
 	bool inherited_is_a() const;
 
-	int get_type_id(const class EHInterpreter *parent);
+	unsigned int get_type_id(const class EHInterpreter *parent);
 
 	ehval_p data();
 
@@ -184,11 +189,11 @@ public:
 	 */
 	obj_map members;
 	// the object's state data
-	ehval_w object_data;
+	ehval_p object_data;
 	// the type
 	unsigned int type_id;
 	// for scoping
-	ehval_w parent;
+	ehval_p parent;
 	// inheritance
 	std::list<ehval_w> super;
 
@@ -208,13 +213,13 @@ public:
 	ehmember_p get_recursive(const char *name, const ehcontext_t context) const;
 	bool context_compare(const ehcontext_t &key, const EHI *ehi) const;
 
-	bool inherited_has(const std::string &key, const EHInterpreter *parent) const;
-	ehmember_p inherited_get(const std::string &key, const EHInterpreter *parent) const;
+	bool inherited_has(const std::string &key, const EHInterpreter *interpreter_parent) const;
+	ehmember_p inherited_get(const std::string &key, const EHInterpreter *interpreter_parent) const;
 	ehmember_p recursive_inherited_get(const std::string &key) const;
 
-	std::set<std::string> member_set(const EHInterpreter *parent) const;
+	std::set<std::string> member_set(const EHInterpreter *interpreter_parent) const;
 	ehobj_t *get_parent() const;
-	bool inherits(const ehval_p obj, const EHInterpreter *parent) const;
+	bool inherits(const ehval_p obj, const EHInterpreter *interpreter_parent) const;
 
 
 	// inline methods
@@ -253,12 +258,12 @@ public:
 
 	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHInterpreter *interpreter_parent);
 	void register_value(const std::string &name, ehval_p value, const attributes_t attributes);
-	int register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent);
-	void add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *parent, int member_id = 0);
-	int register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, EHInterpreter *interpreter_parent);
+	unsigned int register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent);
+	void add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *parent, unsigned int member_id = 0);
+	unsigned int register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, EHInterpreter *interpreter_parent);
 
 	template<class T>
-	int register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class = nullptr);
+	unsigned int register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class = nullptr);
 };
 
 EH_CLASS(Object) {
@@ -286,6 +291,7 @@ public:
 		for(auto &i : value->super) {
 			out.push_back(i);
 		}
+		assert(out.size() == value->members.size() + 2 + value->super.size());
 		return out;
 	}
 
@@ -315,14 +321,14 @@ private:
 		type_info(bool ii, const std::string &n, ehval_p to) : is_inbuilt(ii), name(n), type_object(to) {}
 	};
 
-	std::unordered_map<std::type_index, int> inbuilt_types;
+	std::unordered_map<std::type_index, unsigned int> inbuilt_types;
 
 	std::vector<type_info> types;
 
 public:
 	template<class T>
-	int register_inbuilt_class(ehval_p object) {
-		const int type_id = register_class(ehval_t::name<T>(), object, true);
+	unsigned int register_inbuilt_class(ehval_p object) {
+		const unsigned int type_id = static_cast<unsigned int>(register_class(ehval_t::name<T>(), object, true));
 		inbuilt_types[std::type_index(typeid(T))] = type_id;
 		return type_id;
 	}
@@ -333,16 +339,16 @@ public:
 	}
 
 	template<class T>
-	int get_primitive_id() const {
+	unsigned int get_primitive_id() const {
 		return inbuilt_types.at(std::type_index(typeid(T)));;
 	}
 
-	int get_type_id(const ehval_p obj) const {
+	unsigned int get_type_id(const ehval_p obj) const {
 		return inbuilt_types.at(std::type_index(typeid(*obj.operator->())));
 	}
 
-	int register_class(const std::string &name, const ehval_p value, const bool is_inbuilt = false) {
-		const int type_id = types.size();
+	unsigned int register_class(const std::string &name, const ehval_p value, const bool is_inbuilt = false) {
+		const unsigned int type_id = static_cast<unsigned int>(types.size());
 		types.push_back(type_info(is_inbuilt, name, value));
 		return type_id;
 	}
@@ -351,7 +357,7 @@ public:
 		if(obj->is_a<Object>()) {
 			return types.at(obj->get<Object>()->type_id).name;
 		} else {
-			const int type_id = inbuilt_types.at(obj->type_index());
+			const unsigned int type_id = inbuilt_types.at(obj->type_index());
 			return types.at(type_id).name;
 		}
 	}
@@ -359,12 +365,12 @@ public:
 		if(obj->is_a<Object>()) {
 			return types.at(obj->get<Object>()->type_id).type_object;
 		} else {
-			const int type_id = inbuilt_types.at(obj->type_index());
+			const unsigned int type_id = inbuilt_types.at(obj->type_index());
 			return types.at(type_id).type_object;
 		}
 	}
 
-	ehval_p get_object(const int type_id) const {
+	ehval_p get_object(const unsigned int type_id) const {
 		return types.at(type_id).type_object;
 	}
 

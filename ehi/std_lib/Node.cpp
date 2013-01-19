@@ -125,7 +125,7 @@ static void add_end(std::ostringstream &out, int levels) {
 	add_tabs(out, levels);
 	out << "end";
 }
-static void decompile_try_catch(std::ostringstream &out, ehval_w *paras, int level) {
+static void decompile_try_catch(std::ostringstream &out, ehval_p *paras, int level) {
 	out << "try\n";
 	add_tabs(out, level + 1);
 	out << paras[0]->decompile(level + 1);
@@ -147,7 +147,7 @@ static void decompile_try_catch(std::ostringstream &out, ehval_w *paras, int lev
 		}
 	}
 }
-static void decompile_match_like(std::ostringstream &out, const char *name, ehval_w *paras, int level) {
+static void decompile_match_like(std::ostringstream &out, const char *name, ehval_p *paras, int level) {
 	out << name << " " << paras[0]->decompile(level);
 	for(ehval_p node = paras[1]; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
 		out << "\n";
@@ -165,12 +165,12 @@ static void decompile_match_like(std::ostringstream &out, const char *name, ehva
 	}
 	add_end(out, level);
 }
-static void decompile_if(std::ostringstream &out, ehval_w *paras, int level) {
+static void decompile_if(std::ostringstream &out, ehval_p *paras, int level) {
 	out << "if " << paras[0]->decompile(level) << "\n";
 	add_tabs(out, level + 1);
 	out << paras[1]->decompile(level + 1);
 	for(Enum_Instance::t *iop = paras[2]->get<Enum_Instance>(); iop->member_id != T_END; iop = iop->members[1]->get<Enum_Instance>()) {
-		ehval_w *current_block = iop->members[0]->get<Enum_Instance>()->members;
+		ehval_p *current_block = iop->members[0]->get<Enum_Instance>()->members;
 		out << "\n";
 		add_tabs(out, level);
 		out << "elsif " << current_block[0]->decompile(level) << "\n";
@@ -536,28 +536,28 @@ std::string Node::decompile(int level) const {
 	return out.str();
 }
 
-Node *eh_addnode(int opcode) {
+Node *eh_addnode(unsigned int opcode) {
 	return new Node(opcode, 0);
 }
-Node *eh_addnode(int opcode, ehval_p first) {
+Node *eh_addnode(unsigned int opcode, ehval_p first) {
 	Node *op = new Node(opcode, 1);
 	op->members[0] = first;
 	return op;
 }
-Node *eh_addnode(int opcode, ehval_p first, ehval_p second) {
+Node *eh_addnode(unsigned int opcode, ehval_p first, ehval_p second) {
 	Node *op = new Node(opcode, 2);
 	op->members[0] = first;
 	op->members[1] = second;
 	return op;
 }
-Node *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third) {
+Node *eh_addnode(unsigned int opcode, ehval_p first, ehval_p second, ehval_p third) {
 	Node *op = new Node(opcode, 3);
 	op->members[0] = first;
 	op->members[1] = second;
 	op->members[2] = third;
 	return op;
 }
-Node *eh_addnode(int opcode, ehval_p first, ehval_p second, ehval_p third, ehval_p fourth) {
+Node *eh_addnode(unsigned int opcode, ehval_p first, ehval_p second, ehval_p third, ehval_p fourth) {
 	Node *op = new Node(opcode, 4);
 	op->members[0] = first;
 	op->members[1] = second;

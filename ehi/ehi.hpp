@@ -76,7 +76,7 @@ public:
 	ehval_p make_method(ehlibmethod_t in);
 
 	ehval_p instantiate(ehval_p obj);
-	ehval_p resource_instantiate(int type_id, ehval_p obj);
+	ehval_p resource_instantiate(unsigned int type_id, ehval_p obj);
 	// stuff for GC'ed ehretval_ts
 	template<class T>
 	ehval_p allocate(typename T::type val) {
@@ -179,10 +179,10 @@ public:
 		return parent->global_object;
 	}
 	ehval_p get_code() const {
-		return code;
+		return program_code;
 	}
 	void set_code(ehval_p c) {
-		code = c;
+		program_code = c;
 	}
 	const std::string &get_context_name() const {
 		return context_name;
@@ -214,7 +214,7 @@ private:
 	char *buffer;
 	EHInterpreter *parent;
 	ehcontext_t interpreter_context;
-	ehval_p code;
+	ehval_p program_code;
 
 	// number of loops we're currently in
 	int inloop;
@@ -238,36 +238,36 @@ private:
 	ehval_p eh_always_execute(ehval_p code, const ehcontext_t &context);
 	ehval_p eh_op_anonclass(ehval_p node, const ehcontext_t &context);
 	ehval_p eh_op_array(ehval_p node, const ehcontext_t &context);
-	ehval_p eh_op_colon(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_customop(ehval_w *paras, const ehcontext_t &context);
+	ehval_p eh_op_colon(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_customop(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_command(const char *name, ehval_p node, const ehcontext_t &context);
-	ehval_p eh_op_enum(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_class(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_named_class(ehval_w *paras, const ehcontext_t &context);
+	ehval_p eh_op_enum(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_class(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_named_class(ehval_p *paras, const ehcontext_t &context);
 	ehval_p declare_class(const char *name, ehval_p code, const ehcontext_t &context);
-	ehval_p eh_op_declareclosure(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_dot(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_match(ehval_w *paras, const ehcontext_t &context);
+	ehval_p eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_dot(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_match(ehval_p *paras, const ehcontext_t &context);
 	bool match(ehval_p node, ehval_p var, const ehcontext_t &context);
-	ehval_p eh_op_given(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_if(int token, ehval_w *paras, const ehcontext_t &context);
+	ehval_p eh_op_given(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_if(int token, ehval_p *paras, const ehcontext_t &context);
 	ehval_p do_for_loop(ehval_p iteree_block, ehval_p body_block, int op, ehval_p set_block, const ehcontext_t &context);
-	ehval_p eh_op_for(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_for_in(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_set(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_switch(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_try(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_try_finally(ehval_w *paras, const ehcontext_t &context);
+	ehval_p eh_op_for(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_for_in(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_set(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_switch(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_try(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_try_finally(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_tuple(ehval_p node, const ehcontext_t &context);
 	ehval_p eh_op_mixed_tuple(ehval_p node, const ehcontext_t &context);
-	ehval_p eh_op_while(ehval_w *paras, const ehcontext_t &context);
+	ehval_p eh_op_while(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_try_catch(ehval_p try_block, ehval_p catch_blocks, const ehcontext_t &context);
 	ehval_p eh_xtoarray(ehval_p in);
-	ehval_p perform_op(const char *name, int nargs, ehval_w *paras, const ehcontext_t &context);
+	ehval_p perform_op(const char *name, unsigned int nargs, ehval_p *paras, const ehcontext_t &context);
 	void array_insert(Array::t *array, ehval_p in, int place, const ehcontext_t &context);
-	void eh_op_break(ehval_w *paras, const ehcontext_t &context);
-	ehval_p eh_op_classmember(ehval_w *paras, const ehcontext_t &context);
-	void eh_op_continue(ehval_w *paras, const ehcontext_t &context);
+	void eh_op_break(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_classmember(ehval_p *paras, const ehcontext_t &context);
+	void eh_op_continue(ehval_p *paras, const ehcontext_t &context);
 
 	ehval_p promote(ehval_p in, const ehcontext_t &context);
 	bool eh_floatequals(float infloat, ehval_p operand2, const ehcontext_t &context) {
@@ -303,7 +303,7 @@ public:
 };
 
 template<class T>
-inline int ehobj_t::register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class) {
+inline unsigned int ehobj_t::register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class) {
 	ehobj_t *newclass;
 	ehval_p new_value;
 	if(the_class == nullptr) {
@@ -330,7 +330,7 @@ inline int ehobj_t::register_member_class(const ehobj_t::initializer init_func, 
 
 #include "std_lib/Null.hpp"
 
-inline int ehval_t::get_type_id(const EHInterpreter *parent) {
+inline unsigned int ehval_t::get_type_id(const EHInterpreter *parent) {
 	if(is_a<Object>()) {
 		return get<Object>()->type_id;
 	} else {

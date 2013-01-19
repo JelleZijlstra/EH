@@ -7,38 +7,53 @@
 
 EH_CLASS(Tuple) {
 public:
+	static ehval_p make(unsigned int size, ehval_p *in, EHInterpreter *parent);
+
+	static ehval_p create(std::initializer_list<ehval_p> members, EHInterpreter *parent) {
+		const unsigned int size = static_cast<unsigned int>(members.size());
+		ehretval_a arr(size);
+		unsigned int i = 0;
+		for(auto &it : members) {
+			arr[i] = it;
+			i++;
+		}
+		return make(size, arr, parent);
+	}
+
 	class t {
 	protected:
-		const int _size;
+		const unsigned int _size;
 		ehval_w *content;
 
-	public:
-		t(int size, ehval_p *in) : t(size) {
-			for(int i = 0; i < size; i++) {
+		t(unsigned int size, ehval_p *in) : t(size) {
+			for(unsigned int i = 0; i < size; i++) {
 				content[i] = in[i];
 			}
 		}
 
-		t(int size) : _size(size), content(new ehval_w[size]()) {}
+		t(unsigned int size) : _size(size), content(new ehval_w[size]()) {}
 
+	public:
 		~t() {
 			delete[] content;
 		}
 
-		int size() const {
+		unsigned int size() const {
 			return this->_size;
 		}
 
-		ehval_p get(int i) const {
+		ehval_p get(unsigned int i) const {
 			assert(is_in_range(i));
 			return this->content[i];
 		}
 
 		bool is_in_range(int i) const {
-			return i >= 0 && i < size();
+			return i >= 0 && i < static_cast<int>(size());
 		}
 
 		friend EH_METHOD(Tuple, initialize);
+
+		friend ehval_p Tuple::make(unsigned int size, ehval_p *in, EHInterpreter *parent);
 	};
 
 	typedef t* type;
@@ -50,9 +65,10 @@ public:
 
 	virtual std::list<ehval_p> children() const override {
 		std::list<ehval_p> out;
-		for(int i = 0, len = value->size(); i < len; ++i) {
+		for(unsigned int i = 0, len = value->size(); i < len; ++i) {
 			out.push_back(value->get(i));
 		}
+		assert(out.size() == value->size());
 		return out;
 	}
 
@@ -60,9 +76,9 @@ public:
 		void *ptr = static_cast<void *>(value);
 		if(set.count(ptr) == 0) {
 			set.insert(ptr);
-			const int size = value->size();
+			const unsigned int size = value->size();
 			std::cout << "@tuple <" << size << "> [" << std::endl;
-			for(int i = 0; i < size; i++) {
+			for(unsigned int i = 0; i < size; i++) {
 				add_tabs(std::cout, level + 1);
 				value->get(i)->printvar(set, level + 1, ehi);
 			}
@@ -77,19 +93,6 @@ public:
 
 	virtual ~Tuple() {
 		delete value;
-	}
-
-	static ehval_p make(int size, ehval_p *in, EHInterpreter *parent);
-
-	static ehval_p create(std::initializer_list<ehval_p> members, EHInterpreter *parent) {
-		const int size = members.size();
-		ehretval_a arr(size);
-		int i = 0;
-		for(auto &it : members) {
-			arr[i] = it;
-			i++;
-		}
-		return make(size, arr, parent);
 	}
 };
 
@@ -110,7 +113,7 @@ public:
 		std::unordered_map<std::string, ehval_p> string_keys;
 
 	public:
-		t(int size) : Tuple::t(size), string_keys() {}
+		t(unsigned int size) : Tuple::t(size), string_keys() {}
 
 		ehval_p get_string(const std::string &key) const {
 			return string_keys.at(key);
@@ -120,13 +123,13 @@ public:
 			return string_keys.count(key) != 0;
 		}
 
-		void set(const std::string &key, ehval_p value) {
-			string_keys[key] = value;
+		void set(const std::string &key, ehval_p val) {
+			string_keys[key] = val;
 		}
 
-		void set(int i, ehval_p value) {
+		void set(unsigned int i, ehval_p val) {
 			assert(i >= 0 && i < _size);
-			content[i] = value;
+			content[i] = val;
 		}
 
 		friend class Tuple_WithStringKeys;
@@ -147,12 +150,13 @@ public:
 
 	virtual std::list<ehval_p> children() const override {
 		std::list<ehval_p> out;
-		for(int i = 0, len = value->size(); i < len; i++) {
+		for(unsigned int i = 0, len = value->size(); i < len; i++) {
 			out.push_back(value->get(i));
 		}
 		for(auto &it : value->string_keys) {
 			out.push_back(it.second);
 		}
+		assert(out.size() == value->size() + value->string_keys.size());
 		return out;
 	}
 
@@ -160,9 +164,9 @@ public:
 		void *ptr = static_cast<void *>(value);
 		if(set.count(ptr) == 0) {
 			set.insert(ptr);
-			const int size = value->size();
+			const unsigned int size = value->size();
 			std::cout << "@extended tuple <" << size << "> [" << std::endl;
-			for(int i = 0; i < size; i++) {
+			for(unsigned int i = 0; i < size; i++) {
 				add_tabs(std::cout, level + 1);
 				value->get(i)->printvar(set, level + 1, ehi);
 			}
@@ -196,7 +200,7 @@ public:
 		ehval_p next();
 	private:
 		ehval_p tuple;
-		int position;
+		unsigned int position;
 		t(const t &);
 		t operator=(const t &);
 

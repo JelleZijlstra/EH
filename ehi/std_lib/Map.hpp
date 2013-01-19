@@ -16,7 +16,7 @@ EH_CLASS(Map) {
 public:
 	class t {
 	public:
-		typedef std::map<ehval_w, ehval_w> eh_map;
+		typedef std::map<ehval_p, ehval_p> eh_map;
 		typedef eh_map::iterator iterator;
 
 		size_t size() const {
@@ -25,8 +25,8 @@ public:
 		ehval_p get(ehval_p index) const {
 			return map.at(index);
 		}
-		void set(ehval_p index, ehval_p value) {
-			map[index] = value;
+		void set(ehval_p index, ehval_p val) {
+			map[index] = val;
 		}
 		bool has(ehval_p index) const {
 			return map.count(index);
@@ -63,6 +63,7 @@ public:
 			out.push_back(i.first);
 			out.push_back(i.second);
 		}
+		assert(out.size() == 2 * value->size());
 		return out;
 	}
 

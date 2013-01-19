@@ -10,10 +10,10 @@
 
 int yyparse(void *);
 
-EHI::EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), interpreter_context(_context), code(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
+EHI::EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), parent(_parent), interpreter_context(_context), program_code(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
 	yylex_init_extra(this, &scanner);
 }
-EHI::EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(nullptr), code(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
+EHI::EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), parent(nullptr), program_code(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
 	yylex_init_extra(this, &scanner);
 	parent = new EHInterpreter();
 	interpreter_context = parent->global_object;
@@ -81,9 +81,9 @@ void EHI::parse_string(const char *cmd) {
 ehval_p EHI::execute_code() {
 	const ehcontext_t context = get_context();
 	if(parent->optimize) {
-		code = optimize(code, context);
+		program_code = optimize(program_code, context);
 	}
-	return eh_execute(code, context);
+	return eh_execute(program_code, context);
 }
 
 ehval_p EHI::execute_file(FILE *infile) {

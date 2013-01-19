@@ -66,8 +66,8 @@ EH_METHOD(Object, isA) {
 }
 
 EH_METHOD(Object, operator_compare) {
-	int lhs_type = obj->get_type_id(ehi->get_parent());
-	int rhs_type = args->get_type_id(ehi->get_parent());
+	unsigned int lhs_type = obj->get_type_id(ehi->get_parent());
+	unsigned int rhs_type = args->get_type_id(ehi->get_parent());
 	int comparison = intcmp(lhs_type, rhs_type);
 	if(comparison != 0) {
 		return Integer::make(comparison);
@@ -119,7 +119,7 @@ EH_METHOD(Object, type) {
 	return String::make(strdup(name.c_str()));
 }
 EH_METHOD(Object, typeId) {
-	return Integer::make(obj->get_type_id(ehi->get_parent()));
+	return Integer::make(static_cast<Integer::type>(obj->get_type_id(ehi->get_parent())));
 }
 // return all members in the class
 EH_METHOD(Object, members) {

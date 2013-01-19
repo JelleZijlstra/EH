@@ -165,7 +165,7 @@ EH_METHOD(Integer, setBit) {
 	} else {
 		throw_TypeError("Second argument to Integer.setBit must be an Integer or Bool", value, ehi);
 	}
-	const unsigned int mask = (1 << (sizeof(int) * 8 - 1)) >> index;
+	const unsigned int mask = (1u << (sizeof(int) * 8 - 1)) >> index;
 	int out = obj->get<Integer>();
 	if(new_value) {
 		out |= mask;
@@ -204,7 +204,7 @@ EH_METHOD(Integer, toChar) {
 		throw_ArgumentError_out_of_range("Integer.toChar", obj, ehi);
 	}
 	char *out = new char[2];
-	out[0] = obj->get<Integer>();
+	out[0] = static_cast<char>(obj->get<Integer>());
 	out[1] = '\0';
 	return String::make(out);
 }

@@ -82,7 +82,7 @@ ehval_p ehval_t::get_underlying_object(const EHInterpreter *parent) {
 	} else if(is_a<SuperClass>()) {
 		return get<SuperClass>();
 	} else if(is_a<Enum_Instance>()) {
-		const int type_id = get<Enum_Instance>()->type_id;
+		const unsigned int type_id = get<Enum_Instance>()->type_id;
 		return parent->repo.get_object(type_id);
 	} else {
 		return parent->repo.get_object(this);
@@ -158,12 +158,12 @@ ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) c
 	}
 }
 
-bool ehobj_t::inherited_has(const std::string &key, const EHInterpreter *parent) const {
-	if(this->has(key) || parent->base_object->get<Object>()->has(key)) {
+bool ehobj_t::inherited_has(const std::string &key, const EHInterpreter *interpreter_parent) const {
+	if(this->has(key) || interpreter_parent->base_object->get<Object>()->has(key)) {
 		return true;
 	}
 	for(auto &i : super) {
-		if(i->get<Object>()->inherited_has(key, parent)) {
+		if(i->get<Object>()->inherited_has(key, interpreter_parent)) {
 			return true;
 		}
 	}
@@ -184,7 +184,7 @@ ehmember_p ehobj_t::recursive_inherited_get(const std::string &key) const {
 	return ehmember_p(nullptr);
 }
 
-ehmember_p ehobj_t::inherited_get(const std::string &key, const EHInterpreter *parent) const {
+ehmember_p ehobj_t::inherited_get(const std::string &key, const EHInterpreter *interpreter_parent) const {
 	if(this->has(key)) {
 		return this->get_known(key);
 	}
@@ -194,18 +194,18 @@ ehmember_p ehobj_t::inherited_get(const std::string &key, const EHInterpreter *p
 			return result;
 		}
 	}
-	if(parent->base_object->get<Object>()->has(key)) {
-		return parent->base_object->get<Object>()->get_known(key);
+	if(interpreter_parent->base_object->get<Object>()->has(key)) {
+		return interpreter_parent->base_object->get<Object>()->get_known(key);
 	}
 	return ehmember_p(nullptr);
 }
 
-bool ehobj_t::inherits(const ehval_p obj, const EHInterpreter *parent) const {
-	if(parent->base_object == obj) {
+bool ehobj_t::inherits(const ehval_p obj, const EHInterpreter *interpreter_parent) const {
+	if(interpreter_parent->base_object == obj) {
 		return true;
 	}
 	for(const auto &i : super) {
-		if(i == obj || i->get<Object>()->inherits(obj, parent)) {
+		if(i == obj || i->get<Object>()->inherits(obj, interpreter_parent)) {
 			return true;
 		}
 	}
@@ -220,7 +220,7 @@ ehobj_t *ehobj_t::get_parent() const {
 	}
 }
 
-std::set<std::string> ehobj_t::member_set(const EHInterpreter *parent) const {
+std::set<std::string> ehobj_t::member_set(const EHInterpreter *interpreter_parent) const {
 	std::set<std::string> out;
 	for(auto &i : this->members) {
 		out.insert(i.first);
@@ -229,8 +229,8 @@ std::set<std::string> ehobj_t::member_set(const EHInterpreter *parent) const {
 		auto member_set = super_class->get<Object>()->member_set(nullptr);
 		out.insert(member_set.begin(), member_set.end());
 	}
-	if(parent != nullptr) {
-		ehobj_t *base_object = parent->base_object->get<Object>();
+	if(interpreter_parent != nullptr) {
+		ehobj_t *base_object = interpreter_parent->base_object->get<Object>();
 		auto object_set = base_object->member_set(nullptr);
 		out.insert(object_set.begin(), object_set.end());
 	}
@@ -254,14 +254,14 @@ bool ehobj_t::context_compare(const ehcontext_t &key, const class EHI *ehi) cons
 }
 
 // non-const methods
-void ehobj_t::add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *interpreter_parent, int member_id) {
+void ehobj_t::add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *interpreter_parent, unsigned int member_id) {
 	auto e = object_data->get<Enum>();
 
 	// insert object into the Enum object
 	member_id = e->add_member(name, params, member_id);
 
 	// insert member into the class
-	auto ei = new Enum_Instance::t(type_id, member_id, params.size(), nullptr);
+	auto ei = new Enum_Instance::t(type_id, member_id, static_cast<unsigned int>(params.size()), nullptr);
 	auto ei_obj = Enum_Instance::make(ei, interpreter_parent);
 	ehmember_p member = ehmember_t::make(attributes_t::make_const(), ei_obj);
 	insert(name, member);
@@ -277,7 +277,7 @@ void ehobj_t::register_value(const std::string &name, ehval_p value, const attri
 	this->insert(name, member);
 }
 
-int ehobj_t::register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, EHInterpreter *interpreter_parent) {
+unsigned int ehobj_t::register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, EHInterpreter *interpreter_parent) {
 	ehobj_t *newclass = new ehobj_t();
 	ehval_p new_value = Object::make(newclass, interpreter_parent);
 
@@ -293,7 +293,7 @@ int ehobj_t::register_member_class(const char *name, const ehobj_t::initializer 
 	return newclass->type_id;
 }
 
-int ehobj_t::register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent) {
+unsigned int ehobj_t::register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent) {
 	const ehval_p ret = Enum::make_enum_class(name, interpreter_parent->global_object, interpreter_parent);
 	auto enum_obj = ret->get<Object>();
 

@@ -98,14 +98,14 @@ void make_string(char **, char *);
 ("//"|#).*	; /* Ignore comment */
 [;\n]		return T_SEPARATOR;
 "operator"([<>\-\+*/%=!~&^:|]+|\(\))	{
-				int len = strlen(yytext);
+				size_t len = strlen(yytext);
 				yylval_param->sValue = new char[len + 1];
 				strncpy(yylval_param->sValue, yytext, len);
 				yylval_param->sValue[len] = '\0';
 				return T_VARIABLE;
 			}
 [a-zA-Z][a-zA-Z0-9_]*	{
-				int len = strlen(yytext);
+				size_t len = strlen(yytext);
 				yylval_param->sValue = new char[len + 1];
 				strncpy(yylval_param->sValue, yytext, len);
 				yylval_param->sValue[len] = '\0';
@@ -136,7 +136,7 @@ void make_string(char **, char *);
 ">>="		return T_RIGHTSHIFTEQ;
 "<<="		return T_LEFTSHIFTEQ;
 [@=$+\-*/<>,:&\|^%~!\.][@=$+\-*/<>,:&\|^%~!\.]+ {
-				int len = strlen(yytext);
+				size_t len = strlen(yytext);
 				yylval_param->sValue = new char[len + 1];
 				strncpy(yylval_param->sValue, yytext, len);
 				yylval_param->sValue[len] = '\0';
@@ -170,10 +170,10 @@ void yyerror(void *scanner, const char *s) {
 
 void make_string(char **dest, char *src) {
 	src++;
-	int len = strlen(src) - 1;
+	size_t len = strlen(src) - 1;
 	char *deststr = new char[len + 1];
 	int dest_index = 0;
-	for(int i = 0; i < len; i++) {
+	for(unsigned int i = 0; i < len; i++) {
 		if(src[i] == '\\') {
 			if(i == len - 1) {
 				deststr[dest_index] = '\\';

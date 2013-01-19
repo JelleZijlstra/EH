@@ -97,17 +97,17 @@ private:
 	array_ptr operator=(const array_ptr&);
 public:
 	// Only provide this constructor, since others would be risky
-	array_ptr(int n) : pointer() {
+	array_ptr(unsigned int n) : pointer() {
 		if(n > 0) {
 			this->pointer = new T[n]();
 		}
 	}
 
-	T &operator[](int i) {
+	T &operator[](unsigned int i) {
 		return pointer[i];
 	}
 
-	T operator[](int i) const {
+	T operator[](unsigned int i) const {
 	  return pointer[i];
 	}
 

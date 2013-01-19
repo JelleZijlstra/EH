@@ -120,7 +120,7 @@ EH_METHOD(Hash, compare) {
 
 EH_METHOD(Hash, length) {
 	ASSERT_NULL_AND_TYPE(Hash, "Hash.length");
-	return Integer::make(obj->get<Hash>()->size());
+	return Integer::make(static_cast<Integer::type>(obj->get<Hash>()->size()));
 }
 
 EH_METHOD(Hash, getIterator) {

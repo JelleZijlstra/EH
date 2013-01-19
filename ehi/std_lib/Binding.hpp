@@ -8,8 +8,8 @@ EH_CLASS(Binding) {
 public:
 	class t {
 	public:
-		ehval_w object_data;
-		ehval_w method;
+		ehval_p object_data;
+		ehval_p method;
 
 		t(ehval_p _object_data, ehval_p _method) : object_data(_object_data),  method(_method) {}
 	};
@@ -24,7 +24,9 @@ public:
 	}
 
 	virtual std::list<ehval_p> children() const override {
-		return { value->object_data, value->method };
+		std::list<ehval_p> out { value->object_data, value->method };
+		assert(out.size() == 2);
+		return out;
 	}
 
 	virtual std::string decompile(int level) const override {

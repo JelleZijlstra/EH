@@ -22,7 +22,7 @@ ehval_p EHI::optimize(ehval_p node, ehcontext_t context) {
 	if(op == nullptr) {
 		return nullptr;
 	}
-	ehval_w *paras = op->members;
+	ehval_p *paras = op->members;
 	switch(op->member_id) {
 		case T_LITERAL:
 			return paras[0];
@@ -41,7 +41,7 @@ ehval_p EHI::optimize(ehval_p node, ehcontext_t context) {
 			ehval_p func = paras[0];
 			ehval_p args = optimize(paras[1], context);
 			if(func->is_a<Enum_Instance>() && func->get<Enum_Instance>()->member_id == T_ACCESS) {
-				ehval_w *inner_paras = func->get<Enum_Instance>()->members;
+				ehval_p *inner_paras = func->get<Enum_Instance>()->members;
 				ehval_p base = optimize(inner_paras[0], context);
 				ehval_p method = optimize(inner_paras[1], context);
 				return val(eh_addnode(T_CALL_METHOD, base, method, args));
@@ -56,9 +56,9 @@ ehval_p EHI::optimize(ehval_p node, ehcontext_t context) {
 			// don't optimize the lvalue
 			return val(eh_addnode(op->member_id, paras[0], optimize(paras[1], context)));
 		default: {
-			const int nparas = op->nmembers;
+			const unsigned int nparas = op->nmembers;
 			Node *out = new Node(op->member_id, nparas);
-			for(int i = 0; i < nparas; i++) {
+			for(unsigned int i = 0; i < nparas; i++) {
 				out->members[i] = optimize(paras[i], context);
 			}
 			return val(out);

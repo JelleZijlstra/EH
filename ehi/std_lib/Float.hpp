@@ -26,7 +26,8 @@ public:
 	}
 
 	virtual std::string decompile(int level) const override {
-		std::ostringstream out { value };
+		std::ostringstream out;
+		out << value;
 		return out.str();
 	}
 private:

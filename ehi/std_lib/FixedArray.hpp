@@ -14,17 +14,17 @@ public:
 			assert(index < size_);
 			return content[index];
 		}
-		void set(size_t index, ehval_p value) {
+		void set(size_t index, ehval_p val) {
 			assert(index < size_);
-			content[index] = value;
+			content[index] = val;
 		}
-		t(size_t size) : size_(size), content(new ehval_w[size]()) {}
+		t(size_t size) : size_(size), content(new ehval_p[size]()) {}
 		~t() {
 			delete[] content;
 		}
 	private:
 		const size_t size_;
-		ehval_w *content;
+		ehval_p *content;
 		t(const t&);
 		t operator=(const t&);
 	};
@@ -38,9 +38,10 @@ public:
 
 	virtual std::list<ehval_p> children() const override {
 		std::list<ehval_p> out;
-		for(int i = 0, len = value->size(); i < len; i++) {
+		for(unsigned int i = 0, len = value->size(); i < len; i++) {
 			out.push_back(value->get(i));
 		}
+		assert(out.size() == value->size());
 		return out;
 	}
 

@@ -25,8 +25,8 @@ public:
 	class t {
 	public:
 		functype_enum type;
-		ehval_w args;
-		ehval_w code;
+		ehval_p args;
+		ehval_p code;
 		union {
 			ehlibmethod_t libmethod_pointer;
 			compiled_method compiled_pointer;

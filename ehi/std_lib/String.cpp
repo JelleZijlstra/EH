@@ -64,7 +64,7 @@ EH_METHOD(String, compare) {
 }
 EH_METHOD(String, length) {
 	ASSERT_NULL_AND_TYPE(String, "String.length");
-	return Integer::make(strlen(obj->get<String>()));
+	return Integer::make(static_cast<Integer::type>(strlen(obj->get<String>())));
 }
 EH_METHOD(String, toString) {
 	ASSERT_NULL_AND_TYPE(String, "String.toString");
@@ -73,7 +73,7 @@ EH_METHOD(String, toString) {
 EH_METHOD(String, toInteger) {
 	ASSERT_NULL_AND_TYPE(String, "String.toInteger");
 	char *endptr;
-	ehval_p ret = Integer::make(strtol(obj->get<String>(), &endptr, 0));
+	ehval_p ret = Integer::make(static_cast<Integer::type>(strtol(obj->get<String>(), &endptr, 0)));
 	// If in == endptr, strtol read no digits and there was no conversion.
 	if(obj->get<String>() == endptr) {
 		throw_ArgumentError("Cannot convert String to Integer", "String.toInteger", obj, ehi);
@@ -106,7 +106,7 @@ EH_METHOD(String, toRange) {
 			throw_ArgumentError("Cannot convert String to Range", "String.toRange", obj, ehi);
 		}
 		if(isdigit(in[i])) {
-			min = strtol(&in[i], &ptr, 0);
+			min = static_cast<Integer::type>(strtol(&in[i], &ptr, 0));
 			break;
 		}
 	}
@@ -116,7 +116,7 @@ EH_METHOD(String, toRange) {
 			throw_ArgumentError("Cannot convert String to Range", "String.toRange", obj, ehi);
 		}
 		if(isdigit(ptr[i])) {
-			max = strtol(&ptr[i], nullptr, 0);
+			max = static_cast<Integer::type>(strtol(&ptr[i], nullptr, 0));
 			break;
 		}
 	}
@@ -156,7 +156,7 @@ EH_METHOD(String, trim) {
 	while(end_ptr > start_ptr && isspace(end_ptr[-1])) {
 		end_ptr--;
 	}
-	const size_t new_len = end_ptr - start_ptr;
+	const size_t new_len = static_cast<size_t>(end_ptr - start_ptr);
 	if(starting_len == new_len) {
 		// just return the existing string
 		return obj;

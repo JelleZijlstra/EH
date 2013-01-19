@@ -12,7 +12,7 @@ EH_CLASS(Hash) {
 public:
 	class ehhash_t {
 	public:
-		typedef std::map<std::string, ehval_w> hash;
+		typedef std::map<std::string, ehval_p> hash;
 		hash members;
 		typedef hash::const_iterator iterator;
 
@@ -21,8 +21,8 @@ public:
 		bool has(const char *key) const {
 			return members.count(key);
 		}
-		void set(const char *key, ehval_p value) {
-			members[key] = value;
+		void set(const char *key, ehval_p val) {
+			members[key] = val;
 		}
 		ehval_p get(const char *key) const {
 			return members.at(key);
@@ -60,6 +60,7 @@ public:
 		for(auto &i : value->members) {
 			out.push_back(i.second);
 		}
+		assert(out.size() == value->size());
 		return out;
 	}
 

@@ -63,8 +63,12 @@ private:
 	/*
 	 * types
 	 */
-	class block;
 public:
+	class block;
+
+	template<bool is_strong>
+	class pointer;
+
 	class data {
 	public:
 		int refcount;
@@ -118,7 +122,7 @@ public:
 			if(strong_refcount == 0) {
 				return;
 			}
-			this->strong_refcount--;
+			strong_refcount--;
 		}
 
 		// set bits, numbered from 0 to 15
@@ -129,7 +133,7 @@ public:
 			this->gc_data &= ~(1 << (15 - bit));
 		}
 		bool get_gc_bit(int bit) const {
-			return static_cast<bool>(this->gc_data & (1 << (15 - bit)));
+			return (gc_data & (1 << (15 - bit))) != 0;
 		}
 
 		bool is_self_freed() {
@@ -162,9 +166,30 @@ public:
 		virtual bool belongs_in_gc() const {
 			return false;
 		}
+
+		virtual std::list<pointer<true>> children() const =0;
+
+		bool has_child(data *child) {
+#ifdef DEBUG_GC_MORE_X
+			std::cout << "Checking has_child: " << this << std::endl;
+			std::cout << "Type: " << typeid(*this).name() << std::endl;
+#endif
+			auto kids = this->children();
+			for(auto &it : kids) {
+				if(it.content == child || it->has_child(child)) {
+#ifdef DEBUG_GC_MORE_X
+			std::cout << "Done checking: " << this << std::endl;
+#endif
+					return true;
+				}
+			}
+#ifdef DEBUG_GC_MORE_X
+			std::cout << "Done checking: " << this << std::endl;
+#endif
+			return false;
+		}
 	};
 
-private:
 	class block {
 	public:
 		T content;
@@ -198,6 +223,7 @@ private:
 		}
 	};
 
+private:
 	class pool {
 	private:
 		pool(const pool&) = delete;
@@ -224,7 +250,7 @@ private:
 		void flush() {
 			if(free_blocks < pool_size) {
 				// kill everything
-				for(int i = 0; i < pool_size; i++) {
+				for(unsigned int i = 0; i < pool_size; i++) {
 					block *b = (block *)&this->blocks[i * sizeof(block)];
 					if(b->is_allocated()) {
 						this->dealloc(b);
@@ -268,14 +294,21 @@ private:
 			free_blocks++;
 		}
 
-		block *get_block(int i) {
+		block *get_block(unsigned int i) {
 			return reinterpret_cast<block *>(&blocks[i * sizeof(block)]);
 		}
 
 		void sweep(int previous_bit, int new_bit) {
-			for(int i = 0; i < pool_size; i++) {
+			for(unsigned int i = 0; i < pool_size; i++) {
 				block *b = get_block(i);
+#ifdef DEBUG_GC_MORE_X
+				if(b->is_allocated() && !b->has_strong_refs()) {
+					std::cout << "Found allocated block without strong refs: " << b->get_data() << std::endl;
+				}
+#endif
 				if(b->is_allocated() && !b->get_data()->get_gc_bit(new_bit)) {
+					// if it is detected by the GC, it must be part of a cycle
+					//assert(b->get_data()->has_child(b->get_data()));
 					this->dealloc(b);
 				} else {
 					// unset old GC bits
@@ -513,11 +546,16 @@ private:
  		for(auto &i : children) {
 			do_mark_with_root(i);
 		}
+
+		// assert that bits were set
+		for(auto &i : children) {
+			assert((!i->belongs_in_gc()) || i->get_gc_bit(bit));
+		}
 	}
 
 	void do_mark() {
 		for(pool *p = first_pool; p != nullptr; p = p->next) {
-			for(int i = 0; i < pool_size; i++) {
+			for(unsigned int i = 0; i < pool_size; i++) {
 				auto b = p->get_block(i);
 				if(b->has_strong_refs()) {
 					do_mark_with_root(&b->content);

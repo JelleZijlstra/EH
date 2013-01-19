@@ -120,7 +120,7 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 		if(op == nullptr) {
 			return nullptr;
 		}
-		ehval_w *paras = op->members;
+		ehval_p *paras = op->members;
 		switch(op->member_id) {
 			case T_LITERAL:
 				return paras[0];
@@ -349,13 +349,13 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, const ehcontext_t &co
 		ehval_p node2 = node->get<Enum_Instance>()->members[0];
 		// every para_expr should have an op associated with it
 		if(Node::is_a(node2)) {
-			ehval_w *node_paras = node2->get<Enum_Instance>()->members;
+			ehval_p *node_paras = node2->get<Enum_Instance>()->members;
 			switch(node2->get<Enum_Instance>()->member_id) {
 				case T_SHORTPARA: {
 					// short paras: set each short-form option to the same thing
 					value_r = eh_execute(node_paras[1], context);
 					const char *shorts = node_paras[0]->get<String>();
-					for(int i = 0, len = strlen(shorts); i < len; i++) {
+					for(size_t i = 0, len = strlen(shorts); i < len; i++) {
 						char index[2];
 						index[0] = shorts[i];
 						index[1] = '\0';
@@ -391,13 +391,13 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, const ehcontext_t &co
 	returning = false;
 	return ret;
 }
-ehval_p EHI::eh_op_if(int token, ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_if(int token, ehval_p *paras, const ehcontext_t &context) {
 	if(this->toBool(eh_execute(paras[0], context), context)->get<Bool>()) {
 		return eh_execute(paras[1], context);
 	} else {
 		// loop through elsifs
 		for(Enum_Instance::t *iop = paras[2]->get<Enum_Instance>(); iop->member_id != T_END; iop = iop->members[1]->get<Enum_Instance>()) {
-			ehval_w *current_block = iop->members[0]->get<Enum_Instance>()->members;
+			ehval_p *current_block = iop->members[0]->get<Enum_Instance>()->members;
 			if(this->toBool(eh_execute(current_block[0], context), context)->get<Bool>()) {
 				return eh_execute(current_block[1], context);
 			}
@@ -410,7 +410,7 @@ ehval_p EHI::eh_op_if(int token, ehval_w *paras, const ehcontext_t &context) {
 		}
 	}
 }
-ehval_p EHI::eh_op_while(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_while(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p ret = nullptr;
 	inloop++;
 	breaking = 0;
@@ -441,13 +441,13 @@ ehval_p EHI::do_for_loop(ehval_p iteree_block, ehval_p body_block, int op, ehval
 	inloop--;
 	return iteree;
 }
-ehval_p EHI::eh_op_for(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_for(ehval_p *paras, const ehcontext_t &context) {
 	return do_for_loop(paras[0], paras[1], T_FOR, nullptr, context);
 }
-ehval_p EHI::eh_op_for_in(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_for_in(ehval_p *paras, const ehcontext_t &context) {
 	return do_for_loop(paras[1], paras[2], T_FOR_IN, paras[0], context);
 }
-void EHI::eh_op_break(ehval_w *paras, const ehcontext_t &context) {
+void EHI::eh_op_break(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p level_v = eh_execute(paras[0], context);
 	if(!level_v->is_a<Integer>()) {
 		throw_TypeError("break operator requires an Integer argument", level_v, this);
@@ -459,7 +459,7 @@ void EHI::eh_op_break(ehval_w *paras, const ehcontext_t &context) {
 	}
 	breaking = level;
 }
-void EHI::eh_op_continue(ehval_w *paras, const ehcontext_t &context) {
+void EHI::eh_op_continue(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p level_v = eh_execute(paras[0], context);
 	if(!level_v->is_a<Integer>()) {
 		throw_TypeError("continue operator requires an Integer argument", level_v, this);
@@ -488,14 +488,14 @@ ehval_p EHI::eh_op_anonclass(ehval_p node, const ehcontext_t &context) {
 	ehval_p ret = Hash::make(parent);
 	Hash::ehhash_t *new_hash = ret->get<Hash>();
 	for( ; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
-		ehval_w *myparas = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>()->members;
+		ehval_p *myparas = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>()->members;
 		// nodes here will always have the name in para 0 and value in para 1
 		ehval_p value = eh_execute(myparas[1], context);
 		new_hash->set(myparas[0]->get<String>(), value);
 	}
 	return ret;
 }
-ehval_p EHI::eh_op_declareclosure(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context) {
 	Function::t *f = new Function::t(Function::user_e);
 	ehval_p ret = parent->instantiate(parent->repo.get_primitive_class<Function>());
 	ehobj_t *function_object = ret->get<Object>();
@@ -506,7 +506,7 @@ ehval_p EHI::eh_op_declareclosure(ehval_w *paras, const ehcontext_t &context) {
 	f->args = paras[0];
 	return ret;
 }
-ehval_p EHI::eh_op_enum(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_enum(ehval_p *paras, const ehcontext_t &context) {
 	// unpack arguments
 	const char *name = paras[0]->get<String>();
 	ehval_p members_code = paras[1];
@@ -532,8 +532,8 @@ ehval_p EHI::eh_op_enum(ehval_w *paras, const ehcontext_t &context) {
 		std::vector<std::string> params(0);
 		if(current_member->get<Enum_Instance>()->member_id == T_ENUM_WITH_ARGUMENTS) {
 			for(ehval_p argument = current_member->get<Enum_Instance>()->members[1]; ; argument = argument->get<Enum_Instance>()->members[1]) {
-				const char *name = Node::is_a(argument) ? argument->get<Enum_Instance>()->members[0]->get<String>() : argument->get<String>();
-				params.push_back(name);
+				const char *param_name = Node::is_a(argument) ? argument->get<Enum_Instance>()->members[0]->get<String>() : argument->get<String>();
+				params.push_back(param_name);
 				if(!Node::is_a(argument) || argument->get<Enum_Instance>()->member_id != T_COMMA) {
 					break;
 				}
@@ -554,10 +554,10 @@ ehval_p EHI::eh_op_enum(ehval_w *paras, const ehcontext_t &context) {
 	context.scope->set_member(name, member, context, this);
 	return ret;
 }
-ehval_p EHI::eh_op_class(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_class(ehval_p *paras, const ehcontext_t &context) {
 	return declare_class("(anonymous class)", paras[0], context);
 }
-ehval_p EHI::eh_op_named_class(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_named_class(ehval_p *paras, const ehcontext_t &context) {
 	const char *name = paras[0]->get<String>();
 	ehval_p ret = declare_class(name, paras[1], context);
 	ehmember_p member = ehmember_t::make(attributes_t(), ret);
@@ -619,7 +619,7 @@ ehval_p EHI::eh_op_mixed_tuple(ehval_p node, const ehcontext_t &context) {
 	return Tuple_WithStringKeys::make(twsk, parent);
 }
 ehval_p EHI::eh_op_tuple(ehval_p node, const ehcontext_t &context) {
-	int nargs = 1;
+	unsigned int nargs = 1;
 	// first determine the size of the tuple
 	for(ehval_p tmp = node;
 		Node::is_a(tmp) && tmp->get<Enum_Instance>()->member_id == T_COMMA && tmp->get<Enum_Instance>()->member_id != T_END;
@@ -629,7 +629,7 @@ ehval_p EHI::eh_op_tuple(ehval_p node, const ehcontext_t &context) {
 
 	ehval_p arg_node = node;
 	// now, fill the output tuple
-	for(int i = 0; i < nargs; i++) {
+	for(unsigned int i = 0; i < nargs; i++) {
 		if(Node::is_a(arg_node) && arg_node->get<Enum_Instance>()->member_id == T_COMMA) {
 			new_args[i] = eh_execute(arg_node->get<Enum_Instance>()->members[0], context);
 			arg_node = arg_node->get<Enum_Instance>()->members[1];
@@ -641,13 +641,13 @@ ehval_p EHI::eh_op_tuple(ehval_p node, const ehcontext_t &context) {
 	}
 	return Tuple::make(nargs, new_args, parent);
 }
-ehval_p EHI::eh_op_classmember(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_classmember(ehval_p *paras, const ehcontext_t &context) {
 	// parse the attributes into an attributes_t
 	attributes_t attributes = parse_attributes(paras[0]);
 	// set the member
 	return set(paras[1], nullptr, &attributes, context);
 }
-ehval_p EHI::eh_op_switch(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_switch(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p ret;
 	// because we use continue, we'll pretend this is a loop
 	inloop++;
@@ -697,7 +697,7 @@ ehval_p EHI::eh_op_switch(ehval_w *paras, const ehcontext_t &context) {
 	}
 	return nullptr;
 }
-ehval_p EHI::eh_op_given(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_given(ehval_p *paras, const ehcontext_t &context) {
 	// switch variable
 	ehval_p switchvar = eh_execute(paras[0], context);
 	for(ehval_p node = paras[1]; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
@@ -755,9 +755,9 @@ bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 					if(i == size) {
 						return false;
 					}
-					Enum_Instance::t *op = arg_node->get<Enum_Instance>();
-					if(op->member_id == T_COMMA) {
-						if(!match(op->members[0], t->get(i), context)) {
+					Enum_Instance::t *inner_op = arg_node->get<Enum_Instance>();
+					if(inner_op->member_id == T_COMMA) {
+						if(!match(inner_op->members[0], t->get(i), context)) {
 							return false;
 						}
 					} else {
@@ -787,11 +787,11 @@ bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 				if(var_ei->members == nullptr || em->type_compare(var_ei) != 0) {
 					return false;
 				}
-				const int size = em->nmembers;
+				const unsigned int size = em->nmembers;
 				if(op->members[1]->get<Enum_Instance>()->member_id != T_GROUPING) {
 					throw_MiscellaneousError("Invalid argument in Enum.Member match", this);
 				}
-				int nargs = 1;
+				unsigned int nargs = 1;
 				ehval_p args = op->members[1]->get<Enum_Instance>()->members[0];
 				for(ehval_p tmp = args;
 					Node::is_a(tmp) && tmp->get<Enum_Instance>()->member_id == T_COMMA && tmp->get<Enum_Instance>()->member_id != T_END;
@@ -801,9 +801,9 @@ bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 					throw_MiscellaneousError("Invalid argument number in Enum.Member match", this);
 				}
 				ehval_p arg_node = args;
-				for(int i = 0; i < nargs; i++) {
+				for(unsigned int i = 0; i < nargs; i++) {
 					if(Node::is_a(arg_node) && arg_node->get<Enum_Instance>()->member_id == T_COMMA) {
-						ehval_w *paras = arg_node->get<Enum_Instance>()->members;
+						ehval_p *paras = arg_node->get<Enum_Instance>()->members;
 						if(!match(paras[0], var_ei->get(i), context)) {
 							return false;
 						}
@@ -830,7 +830,7 @@ bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 	}
 }
 
-ehval_p EHI::eh_op_match(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_match(ehval_p *paras, const ehcontext_t &context) {
 	// switch variable
 	ehval_p switchvar = eh_execute(paras[0], context);
 	for(ehval_p node = paras[1]; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
@@ -845,13 +845,13 @@ ehval_p EHI::eh_op_match(ehval_w *paras, const ehcontext_t &context) {
 	throw_MiscellaneousError("No matching case in match statement", this);
 	return nullptr;
 }
-ehval_p EHI::eh_op_customop(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_customop(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p lhs = eh_execute(paras[0], context);
 	ehval_p rhs = eh_execute(paras[2], context);
 	std::string op = paras[1]->get<String>();
 	return call_method(lhs, ("operator" + op).c_str(), rhs, context);
 }
-ehval_p EHI::eh_op_colon(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_colon(ehval_p *paras, const ehcontext_t &context) {
 	// parse arguments
 	ehval_p function = eh_execute(paras[0], context);
 	ehval_p args = eh_execute(paras[1], context);
@@ -866,12 +866,12 @@ ehval_p EHI::eh_op_dollar(ehval_p node, const ehcontext_t &context) {
 		return var->value;
 	}
 }
-ehval_p EHI::eh_op_set(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_set(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p rvalue = eh_execute(paras[1], context);
 	return set(paras[0], rvalue, nullptr, context);
 }
 ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const ehcontext_t &context) {
-	ehval_w *internal_paras = lvalue->get<Enum_Instance>()->members;
+	ehval_p *internal_paras = lvalue->get<Enum_Instance>()->members;
 	switch(lvalue->get<Enum_Instance>()->member_id) {
 		case T_ARROW: {
 			ehval_p args[2];
@@ -947,17 +947,17 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 				if(rvalue->is_a<Null>()) {
 					// it's null, do nothing
 				} else if(Node::is_a(lvalue_node) && lvalue_node->get<Enum_Instance>()->member_id == T_NAMED_ARGUMENT) {
-					auto op = lvalue_node->get<Enum_Instance>();
-					ehval_p name = op->members[0];
+					auto inner_op = lvalue_node->get<Enum_Instance>();
+					ehval_p name = inner_op->members[0];
 
-					ehval_p internal_rvalue;
+					ehval_p named_arg_rvalue;
 					if(call_method_typed<Bool>(rvalue, "has", name, context)->get<Bool>()) {
-						internal_rvalue = call_method(rvalue, "operator->", name, context);
+						named_arg_rvalue = call_method(rvalue, "operator->", name, context);
 					} else {
-						internal_rvalue = eh_execute(op->members[1], context);
+						named_arg_rvalue = eh_execute(inner_op->members[1], context);
 					}
 					attributes_t attrs = (attributes == nullptr) ? attributes_t::make_private() : *attributes;
-					context.scope->set_member(name->get<String>(), ehmember_p(attrs, internal_rvalue), context, this);
+					context.scope->set_member(name->get<String>(), ehmember_p(attrs, named_arg_rvalue), context, this);
 				} else {
 					internal_rvalue = call_method(rvalue, "operator->", Integer::make(i), context);
 					i++;
@@ -993,12 +993,12 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 	assert(false);
 	return nullptr;
 }
-ehval_p EHI::eh_op_dot(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_dot(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p base_var = eh_execute(paras[0], context);
 	const char *accessor = paras[1]->get<String>();
 	return base_var->get_property(accessor, context, this);
 }
-ehval_p EHI::eh_op_try_finally(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_try_finally(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p try_block = paras[0];
 	ehval_p catch_blocks = paras[1];
 	ehval_p finally_block = paras[2];
@@ -1012,7 +1012,7 @@ ehval_p EHI::eh_op_try_finally(ehval_w *paras, const ehcontext_t &context) {
 	eh_always_execute(finally_block, context);
 	return ret;
 }
-ehval_p EHI::eh_op_try(ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_try(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p try_block = paras[0];
 	ehval_p catch_blocks = paras[1];
 	return eh_try_catch(try_block, catch_blocks, context);
@@ -1061,14 +1061,14 @@ ehval_p EHI::eh_always_execute(ehval_p code, const ehcontext_t &context) {
 	return ret;
 }
 // Perform an arbitrary operation defined as a method taking a single argument
-ehval_p EHI::perform_op(const char *name, int nargs, ehval_w *paras, const ehcontext_t &context) {
+ehval_p EHI::perform_op(const char *name, unsigned int nargs, ehval_p *paras, const ehcontext_t &context) {
 	ehval_p base_var = eh_execute(paras[0], context);
 	ehval_p args = nullptr;
 	if(nargs == 1) {
 		args = eh_execute(paras[1], context);
 	} else if(nargs > 1) {
 		ehretval_a args_array(nargs);
-		for(int i = 0; i < nargs; i++) {
+		for(unsigned int i = 0; i < nargs; i++) {
 			args_array[i] = eh_execute(paras[i + 1], context);
 		}
 		args = Tuple::make(nargs, args_array, parent);
@@ -1121,7 +1121,7 @@ ehval_p EHInterpreter::instantiate(ehval_p obj) {
 	new_obj->inherit(to_instantiate);
 	return ret;
 }
-ehval_p EHInterpreter::resource_instantiate(int type_id, ehval_p obj) {
+ehval_p EHInterpreter::resource_instantiate(unsigned int type_id, ehval_p obj) {
 	ehval_p class_object = repo.get_object(type_id);
 
 	ehval_p ret = instantiate(class_object);

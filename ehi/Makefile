@@ -1,6 +1,6 @@
-CC = clang++
+CXX = clang++
 CCBASICFLAGS = -ggdb -fPIC -c -std=c++11 -stdlib=libc++
-CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic -Wextra -Wno-unused-parameter
+CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic -Wextra -Wno-c++98-compat -Wno-unused-parameter -Wno-weak-vtables -Wno-padded -Wno-unused-macros -Wno-float-equal
 LDFLAGS = -std=c++11 -stdlib=libc++
 LIBCLASSES = ArgumentError Array Attribute Binding Bool ConstError EH Enum Exception File Float Function GarbageCollector GlobalObject Hash Integer LoopError MiscellaneousError NameError Node Null Object Range String SuperClass SyntaxError Tuple TypeError UnknownCommandError EmptyIterator FixedArray Random Map VisibilityError
 SOURCES = eh.flex.cpp eh.bison.cpp eh_error.cpp ehi.cpp eh_types.cpp eh_files.cpp eh_optimize.cpp
@@ -19,25 +19,25 @@ EHI_TARGET = ehi
 all: ehi libeh ehphp
 
 eh_wrap.o: eh_wrap.cpp
-	$(CC) `php-config --includes` $(CCBASICFLAGS) $< -o $@
+	$(CXX) `php-config --includes` $(CCBASICFLAGS) $< -o $@
 
 eh.hpp: ehi.hpp eh.bison.hpp
 
 %.o: %.cpp eh.hpp
-	$(CC) $(CCFLAGS) $< -o $@
+	$(CXX) $(CCFLAGS) $< -o $@
 
 ehc: $(COMPILER_O)
-	$(CC) $(LDFLAGS) $(COMPILER_O) -o ehc
+	$(CXX) $(LDFLAGS) $(COMPILER_O) -o ehc
 
 ehi: $(EHI_O)
-	$(CC) $(LDFLAGS) $(EHI_O) -o $(EHI_TARGET)
+	$(CXX) $(LDFLAGS) $(EHI_O) -o $(EHI_TARGET)
 	sudo cp $(EHI_TARGET) /usr/bin/$(EHI_TARGET)
 
 libeh: $(LIBEH_O)
 	ar rvs libeh.a $(LIBEH_O)
 
 ehphp: $(EHPHP_O)
-	./make_ehphp.sh "$(CC)" "$(LDFLAGS) $(SYMBOLS)" "$(EHPHP_O)"
+	./make_ehphp.sh "$(CXX)" "$(LDFLAGS) $(SYMBOLS)" "$(EHPHP_O)"
 
 eh.bison.cpp eh.bison.hpp: eh.y
 	bison -v -y -d eh.y --output='eh.bison.cpp'

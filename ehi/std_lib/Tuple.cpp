@@ -13,7 +13,7 @@ EH_INITIALIZER(Tuple) {
 	REGISTER_CLASS(Tuple, WithStringKeys);
 }
 
-ehval_p Tuple::make(int size, ehval_p *in, EHInterpreter *parent) {
+ehval_p Tuple::make(unsigned int size, ehval_p *in, EHInterpreter *parent) {
 	return parent->allocate<Tuple>(new t(size, in));
 }
 
@@ -27,12 +27,16 @@ ehval_p Tuple::make(int size, ehval_p *in, EHInterpreter *parent) {
  */
 EH_METHOD(Tuple, initialize) {
 	ehval_p length = ehi->call_method_typed<Integer>(args, "length", nullptr, obj);
-	const int len = length->get<Integer>();
+	const int raw_length = length->get<Integer>();
+	if(raw_length < 0) {
+		throw_ArgumentError("Tuple cannot have negative length", "Tuple.initialize", args, ehi);
+	}
+	unsigned int len = static_cast<unsigned int>(raw_length);
 
 	ehretval_a values(len);
 
 	ehval_p iterator = ehi->call_method(args, "getIterator", nullptr, obj);
-	for(int i = 0; i < len; i++) {
+	for(unsigned int i = 0; i < len; i++) {
 		values[i] = ehi->call_method(iterator, "next", nullptr, obj);
 	}
 	return Tuple::make(len, values, ehi->get_parent());
@@ -56,7 +60,7 @@ EH_METHOD(Tuple, has) {
 }
 EH_METHOD(Tuple, length) {
   	ASSERT_NULL_AND_TYPE(Tuple, "Tuple.length");
-  	return Integer::make(obj->get<Tuple>()->size());
+  	return Integer::make(static_cast<Integer::type>(obj->get<Tuple>()->size()));
 }
 EH_METHOD(Tuple, toTuple) {
 	ASSERT_OBJ_TYPE(Tuple, "Tuple.toTuple");
@@ -122,7 +126,7 @@ EH_METHOD(Tuple_WithStringKeys, operator_arrow) {
 	ASSERT_RESOURCE(Tuple_WithStringKeys, "Tuple.WithStringKeys.operator->");
 	if(args->is_a<Integer>()) {
 		const int index = args->get<Integer>();
-		if(index < 0 || index >= data->size()) {
+		if(index < 0 || index >= static_cast<Integer::type>(data->size())) {
     		throw_ArgumentError_out_of_range("Tuple.WithStringKeys.operator->", args, ehi);
 		}
 		return data->get(index);

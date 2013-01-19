@@ -162,17 +162,17 @@ EH_METHOD(GlobalObject, pow) {
 	ehval_p lhs = args->get<Tuple>()->get(1);
 	if(rhs->is_a<Integer>()) {
 		if(lhs->is_a<Integer>()) {
-			return Integer::make(pow((float) rhs->get<Integer>(), (float) lhs->get<Integer>()));
+			return Integer::make(static_cast<Integer::type>(pow((float) rhs->get<Integer>(), (float) lhs->get<Integer>())));
 		} else if(lhs->is_a<Float>()) {
-			return Float::make(pow((float) rhs->get<Integer>(), lhs->get<Float>()));
+			return Float::make(static_cast<Float::type>(pow((float) rhs->get<Integer>(), lhs->get<Float>())));
 		} else {
 			throw_TypeError("Invalid type for argument to pow", lhs, ehi);
 		}
 	} else if(rhs->is_a<Float>()) {
 		if(lhs->is_a<Integer>()) {
-			return Float::make(pow(rhs->get<Float>(), (float) lhs->get<Integer>()));
+			return Float::make(static_cast<Float::type>(pow(rhs->get<Float>(), (float) lhs->get<Integer>())));
 		} else if(lhs->is_a<Float>()) {
-			return Float::make(pow(rhs->get<Float>(), lhs->get<Float>()));
+			return Float::make(static_cast<Float::type>(pow(rhs->get<Float>(), lhs->get<Float>())));
 		} else {
 			throw_TypeError("Invalid type for argument to pow", lhs, ehi);
 		}
@@ -184,7 +184,7 @@ EH_METHOD(GlobalObject, pow) {
 
 EH_METHOD(GlobalObject, log) {
 	ehval_p arg = ehi->toFloat(args, obj);
-	return Float::make(log(arg->get<Float>()));
+	return Float::make(static_cast<Float::type>(log(arg->get<Float>())));
 }
 
 EH_METHOD(GlobalObject, getinput) {

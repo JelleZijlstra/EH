@@ -68,6 +68,7 @@ public:
 		for(auto &i : value->string_indices) {
 			out.push_back(i.second);
 		}
+		assert(out.size() == value->size());
 		return out;
 	}
 

@@ -53,7 +53,7 @@ ehval_p Enum::make_enum_class(const char *name, ehval_p scope, EHInterpreter *pa
 	ehval_p enum_class_obj = Enum::make(name);
 
 	// register class
-	const int type_id = parent->repo.register_class(name, ret);
+	const unsigned int type_id = parent->repo.register_class(name, ret);
 
 	// inherit from Enum
 	enum_obj->inherit(parent->repo.get_primitive_class<Enum>());
@@ -97,10 +97,10 @@ void Enum_Instance::printvar(printvar_set &set, int level, EHI *ehi) {
 const std::string Enum::member_info::to_string() const {
 	std::ostringstream out;
 	out << name;
-	const int size = members.size();
+	const size_t size = members.size();
 	if(size > 0) {
 		out << "(";
-		for(int i = 0; i < size; i++) {
+		for(unsigned int i = 0; i < size; i++) {
 			out << members[i];
 			if(i < size - 1) {
 				out << ", ";
@@ -172,7 +172,7 @@ EH_METHOD(Enum, toString) {
 EH_METHOD(Enum, operator_colon) {
 	ASSERT_OBJ_TYPE(Enum_Instance, "Enum.operator()");
 	auto data = obj->get<Enum_Instance>();
-	const int size = data->nmembers;
+	const unsigned int size = data->nmembers;
 	if(size == 0) {
 		throw_MiscellaneousError("Cannot instantiate nullary Enum member", ehi);
 		return nullptr;
@@ -180,16 +180,16 @@ EH_METHOD(Enum, operator_colon) {
 		throw_MiscellaneousError("Cannot instantiate existing Enum member", ehi);
 		return nullptr;
 	} else {
-		ehval_w *params;
+		ehval_p *params;
 		if(size > 1) {
 			ASSERT_NARGS(size, "Enum.operator()");
-			params = new ehval_w[size];
+			params = new ehval_p[size]();
 			auto tuple = args->get<Tuple>();
-			for(int i = 0; i < size; i++) {
+			for(unsigned int i = 0; i < size; i++) {
 				params[i] = tuple->get(i);
 			}
 		} else {
-			params = new ehval_w[1];
+			params = new ehval_p[1]();
 			params[0] = args;
 		}
 
@@ -239,7 +239,7 @@ int Enum_Instance::t::compare(Enum_Instance::t *rhs, EHI *ehi, ehcontext_t conte
 		return 1;
 	} else {
 		// so they are at least instances of the same Enum.Member
-		for(int i = 0, size = nmembers; i < size; i++) {
+		for(unsigned int i = 0, size = nmembers; i < size; i++) {
 			const int arg_compare = ehi->compare(members[i], rhs->members[i], context);
 			if(arg_compare != 0) {
 				return arg_compare;
@@ -258,10 +258,10 @@ int Enum_Instance::t::compare(Enum_Instance::t *rhs, EHI *ehi, ehcontext_t conte
 EH_METHOD(Enum, typeId) {
 	if(obj->is_a<Object>()) {
 		ASSERT_OBJ_TYPE(Enum, "Enum.typeId");
-		return Integer::make(_obj->get<Object>()->type_id);
+		return Integer::make(static_cast<int>(_obj->get<Object>()->type_id));
 	} else {
 		ASSERT_RESOURCE(Enum_Instance, "Enum.typeId");
-		return Integer::make(data->type_id);
+		return Integer::make(static_cast<int>(data->type_id));
 	}
 }
 
@@ -307,7 +307,7 @@ EH_METHOD(Enum, operator_arrow) {
 	if(index < 0 || index >= static_cast<int>(data->nmembers)) {
 		throw_ArgumentError_out_of_range("Enum.operator->", args, ehi);
 	}
-	return data->get(index);
+	return data->get(static_cast<unsigned int>(index));
 }
 
 /*
@@ -319,19 +319,19 @@ EH_METHOD(Enum, map) {
 	if(data->is_constructor()) {
 		throw_MiscellaneousError("Cannot call Enum.map on constructor", ehi);
 	}
-	const int size = data->nmembers;
+	const unsigned int size = data->nmembers;
 	// mapping over nullary member doesn't do anything
 	if(size == 0) {
 		return obj;
 	}
-	std::unique_ptr<ehval_p[]> params(new ehval_p[size]);
-	for(int i = 0; i < size; i++) {
+	std::unique_ptr<ehval_p[]> params(new ehval_p[size]());
+	for(unsigned int i = 0; i < size; i++) {
 		params[i] = ehi->call_function(args, data->get(i), obj);
 	}
-	// convert to ehval_w only now
-	// if we do it before the call_function, GC may hit while this function is running and kill our ehval_ws
-	ehval_w *weak_params = new ehval_w[size];
-	for(int i = 0; i < size; i++) {
+	// convert to ehval_p only now
+	// if we do it before the call_function, GC may hit while this function is running and kill our ehval_ps
+	ehval_p *weak_params = new ehval_p[size]();
+	for(unsigned int i = 0; i < size; i++) {
 		weak_params[i] = params[i];
 	}
 	auto val = new Enum_Instance::t(data->type_id, data->member_id, size, weak_params);

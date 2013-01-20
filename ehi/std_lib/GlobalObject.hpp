@@ -33,6 +33,7 @@ EH_METHOD(GlobalObject, put);
 EH_METHOD(GlobalObject, handleUncaught);
 EH_METHOD(GlobalObject, workingDir);
 EH_METHOD(GlobalObject, shell);
+EH_METHOD(GlobalObject, exit);
 
 EH_INITIALIZER(GlobalObject);
 

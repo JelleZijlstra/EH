@@ -306,3 +306,4 @@ named_tuple2.eh
 func_named_args.eh
 decompile_named.eh
 repeat.eh
+exit.eh

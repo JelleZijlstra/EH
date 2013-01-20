@@ -1,0 +1,3 @@
+%%stdout%%
+Invalid type for argument to exit (expected Integer): Null
+%%stderr%%

@@ -113,6 +113,7 @@ EH_INITIALIZER(GlobalObject) {
 	REGISTER_METHOD(GlobalObject, handleUncaught);
 	REGISTER_METHOD(GlobalObject, workingDir);
 	REGISTER_METHOD(GlobalObject, shell);
+	REGISTER_METHOD(GlobalObject, exit);
 }
 
 EH_METHOD(GlobalObject, toString) {
@@ -230,4 +231,14 @@ EH_METHOD(GlobalObject, shell) {
 	args->assert_type<String>("shell", ehi);
 	std::string output = eh_shell_exec(args->get<String>());
 	return String::make(strdup(output.c_str()));
+}
+
+/*
+ * @description Exits the program.
+ * @argument Return code (this is currently ignored)
+ * @returns Never
+ */
+EH_METHOD(GlobalObject, exit) {
+	ASSERT_TYPE(args, Integer, "exit");
+	throw quit_exception();
 }

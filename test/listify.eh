@@ -1,8 +1,9 @@
 #!/usr/bin/ehi
 
 include '../lib/library.eh'
+include '../lib/preprocessor.eh'
 
-private process = code => echo(Macro.listify(code->0))
+private process = code => echo(Preprocessor.listify(code->0))
 
 private code = raw (1, 2, 3)
 

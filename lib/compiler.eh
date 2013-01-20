@@ -2,29 +2,6 @@
 
 include 'library.eh'
 
-# Lazily build a string. This still has bad performance, since the toString function builds all intermediate strings.
-# TODO: provide a native function that takes an iterator and builds a string from everything returned by that iterator.
-class StringBuilder
-	private pieces
-
-	public initialize = () => (this.pieces = Nil)
-
-	public operator<< = func: str
-		this.pieces = str::(this.pieces)
-		this
-	end
-
-	# implement this non-recursively until the compiler can optimize tail recursion
-	# elegant version: () => this.pieces.reduce("", (elt, rest => rest + elt))
-	public toString = func:
-		private out = ''
-		for piece in this.pieces
-			out = piece.toString() + out
-		end
-		out
-	end
-end
-
 class NotImplemented
 	this.inherit Exception
 end
@@ -63,7 +40,7 @@ class Attributes
 	public static make = () => this.new(false, false, false)
 
 	public toString = func:
-		private sb = StringBuilder.new()
+		private sb = String.Builder.new()
 		sb << "attributes_t("
 		sb << if this.is_private; "private_e"; else "public_e"; end << ", "
 		sb << if this.is_static; "static_e"; else "nonstatic_e"; end << ", "
@@ -117,10 +94,10 @@ class Compiler
 			echo "Generating code..."
 		end
 		private code = this.raw_code
-		private mainf = StringBuilder.new()
+		private mainf = String.Builder.new()
 		mainf << 'const char *get_filename() { return "' << this.fileName << '"; }\n'
 
-		private eh_mainf = StringBuilder.new()
+		private eh_mainf = String.Builder.new()
 		eh_mainf << "ehval_p eh_main(EHI *ehi, const ehcontext_t &context) {\nehval_p ret;\n"
 		this.doCompile(eh_mainf, code)
 		eh_mainf << "return ret;\n}\n"
@@ -129,7 +106,7 @@ class Compiler
 			echo "Combining generated code..."
 		end
 		# create full source file
-		private outputf = StringBuilder.new()
+		private outputf = String.Builder.new()
 		outputf << header
 		for f in this.functions
 			outputf << f
@@ -324,7 +301,7 @@ class Compiler
 				case Node.T_TRY_FINALLY(@try_block, Node.T_LIST(@catch_blocks), @finally_block)
 					sb << assignment << "Null::make();\n"
 					# wrap finally block in a function, so we can call it twice
-					private finally_builder = StringBuilder.new()
+					private finally_builder = String.Builder.new()
 					private finally_name = this.get_var_name "finally_function"
 					finally_builder << "void " << finally_name << "(const ehcontext_t &context, EHI *ehi) {\n"
 					finally_builder << "ehval_p ret;\n"
@@ -439,7 +416,7 @@ class Compiler
 					end
 				case Node.T_ENUM(@enum_name, Node.T_LIST(@members), @body)
 					private body_name = this.get_var_name "enum"
-					private inner_builder = StringBuilder.new()
+					private inner_builder = String.Builder.new()
 					this.add_function inner_builder
 
 					inner_builder << "void " << body_name << "(const ehcontext_t &context, EHI *ehi) {\n"
@@ -494,7 +471,7 @@ class Compiler
 
 	private compile_class = func: sb, var_name, class_name, body
 		private body_name = this.get_var_name "class"
-		private inner_builder = StringBuilder.new()
+		private inner_builder = String.Builder.new()
 		this.add_function inner_builder
 
 		inner_builder << "void " << body_name << "(const ehcontext_t &context, EHI *ehi) {\n"
@@ -508,7 +485,7 @@ class Compiler
 	private compile_function = func: args, code
 		private func_name = this.get_var_name "function"
 
-		private sb = StringBuilder.new()
+		private sb = String.Builder.new()
 		# add function to list
 		this.add_function sb
 

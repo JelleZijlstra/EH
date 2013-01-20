@@ -147,6 +147,65 @@ class Iterable
 		end
 		out
 	end
+
+	# Returns an iterable that returns the values in each iterator sequentially
+	const public static chain = iter => ChainedIterable.new iter
+end
+
+class ChainedIterable
+	this.inherit Iterable
+
+	private iterables
+
+	public initialize = this.iterables => ()
+
+	public getIterator = func:
+		private iter = this.iterables.getIterator()
+		if iter.hasNext()
+			Iterator.new iter
+		else
+			DummyIterator.new()
+		end
+	end
+
+	public empty = () => try
+		this.iterables.getIterator().next().empty()
+	catch
+		throw(Exception.new "Cannot instantiate empty object")
+	end
+
+	class Iterator
+		private outer_iter
+		private inner_obj
+		private inner_iter
+
+		public initialize = func: iter
+			this.outer_iter = iter
+			this.inner_obj = iter.next()
+			this.inner_iter = this.inner_obj.getIterator()
+		end
+
+		public hasNext = () => (this.inner_iter.hasNext() || this.outer_iter.hasNext())
+
+		public next = func:
+			# if one of them is empty, continue until we find a non-empty one
+			while !this.inner_iter.hasNext()
+				this.inner_obj = this.outer_iter.next()
+				this.inner_iter = this.inner_obj.getIterator()
+			end
+			this.inner_iter.next()
+		end
+	end
+end
+
+class DummyIterator
+	const public getIterator = () => this
+
+	const public hasNext = () => false
+
+	const public next = () => throw(EmptyIterator.new())
+
+	const public peek = () => throw(EmptyIterator.new())
 end
 
 # Dynamic inheritance in iterable library classes

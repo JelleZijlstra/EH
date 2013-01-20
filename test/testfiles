@@ -307,3 +307,4 @@ func_named_args.eh
 decompile_named.eh
 repeat.eh
 exit.eh
+chain.eh

@@ -55,17 +55,17 @@ struct attributes_t {
 	const_enum isconst : 1;
 
 	// convenience methods
-	static attributes_t make_const() {
+	constexpr static attributes_t make_const() {
 		return attributes_t(public_e, nonstatic_e, const_e);
 	}
-	static attributes_t make_static() {
+	constexpr static attributes_t make_static() {
 		return attributes_t(public_e, static_e, nonconst_e);
 	}
-	static attributes_t make_private() {
+	constexpr static attributes_t make_private() {
 		return attributes_t(private_e, nonstatic_e, nonconst_e);
 	}
 
-	attributes_t(visibility_enum v = public_e, static_enum s = nonstatic_e, const_enum c = nonconst_e) : visibility(v), isstatic(s), isconst(c) {}
+	constexpr attributes_t(visibility_enum v = public_e, static_enum s = nonstatic_e, const_enum c = nonconst_e) : visibility(v), isstatic(s), isconst(c) {}
 };
 
 #include "eh_types.hpp"

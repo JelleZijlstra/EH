@@ -29,5 +29,7 @@ EH_METHOD(File, finalize);
 EH_METHOD(File, readFile);
 EH_METHOD(File, isOpen);
 EH_METHOD(File, temporary);
+EH_METHOD(File, dirname);
+EH_METHOD(File, fullPath);
 
 EH_INITIALIZER(File);

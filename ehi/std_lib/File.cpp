@@ -20,6 +20,8 @@ EH_INITIALIZER(File) {
 	REGISTER_METHOD(File, readFile);
 	REGISTER_METHOD(File, isOpen);
 	REGISTER_METHOD(File, temporary);
+	REGISTER_METHOD(File, dirname);
+	REGISTER_METHOD(File, fullPath);
 }
 
 /*
@@ -186,4 +188,26 @@ EH_METHOD(File, temporary) {
 	ASSERT_TYPE(args, Null, "File.temporary");
 	const std::string name = eh_temp_file();
 	return String::make(strdup(name.c_str()));
+}
+
+/*
+ * @description Returns the directory associated with a file.
+ * @argument File name
+ * @returns Directory name
+ */
+EH_METHOD(File, dirname) {
+	ASSERT_TYPE(args, String, "File.dirname");
+	const std::string dir = eh_dirname(args->get<String>());
+	return String::make(strdup(dir.c_str()));
+}
+
+/*
+ * @description Returns the full path to a file.
+ * @argument File name
+ * @returns Full path
+ */
+EH_METHOD(File, fullPath) {
+	ASSERT_TYPE(args, String, "File.dirname");
+	const std::string path = eh_full_path(args->get<String>());
+	return String::make(strdup(path.c_str()));
 }

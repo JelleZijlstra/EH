@@ -61,7 +61,7 @@ private main = func: argc, argv
 	private args = ap.parse argv
 	private code = EH.parseFile(args->'input')
 
-	private preprocessed_code = Preprocessor.preprocess code
+	private preprocessed_code = Preprocessor.preprocess(code, args->'input')
 
 	if args->'output' == null
 		if argv->'to-cpp'

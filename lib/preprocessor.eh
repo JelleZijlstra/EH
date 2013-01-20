@@ -16,7 +16,7 @@ static Node.isNode = (func:
 end)()
 
 class Preprocessor
-	public static preprocess = code => listify(Macro.optimize(replace_include(code)))
+	public static preprocess = code, filename => listify(Macro.optimize(replace_include(code, File.fullPath filename)))
 
 	class ListifyIterator
 		private l
@@ -134,17 +134,18 @@ class Preprocessor
 		code
 	end
 
-	public replace_include = code => expression_map((code => match code
+	public replace_include = code, path => expression_map((code => match code
 		case Node.T_CALL(Node.T_VARIABLE("include"), Node.T_LITERAL(@file))
 			if file.isA String
 				# TODO: make the context update correctly
-				replace_include(EH.parseFile file)
+				private real_name = path + '/' + file
+				replace_include(EH.parseFile real_name, File.fullPath real_name)
 			else
-				Node.T_CALL("include", replace_include file)
+				Node.T_CALL("include", replace_include(file, path))
 			end
 		case null
 			null
 		case _
-			code.map replace_include
+			code.map(c => replace_include(c, path))
 	end), code)
 end

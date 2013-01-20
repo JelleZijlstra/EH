@@ -7,7 +7,7 @@ String.add = String.operator+
 
 String.toString = () => this
 
-String.replace = func: needle, replacement
+String.replaceCharacter = func: needle, replacement
 	private out = ''
 	for char in this
 		if char == needle

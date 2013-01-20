@@ -1,3 +1,5 @@
+#include <regex>
+
 #include "String.hpp"
 
 EH_INITIALIZER(String) {
@@ -14,6 +16,8 @@ EH_INITIALIZER(String) {
 	REGISTER_METHOD(String, charAtPosition);
 	REGISTER_METHOD(String, getIterator);
 	REGISTER_METHOD(String, trim);
+	REGISTER_METHOD(String, doesMatch);
+	REGISTER_METHOD(String, replace);
 	REGISTER_CLASS(String, Iterator);
 	REGISTER_CLASS(String, Builder);
 }
@@ -167,6 +171,52 @@ EH_METHOD(String, trim) {
 		new_str[new_len] = '\0';
 		return String::make(new_str);
 	}
+}
+
+
+/*
+ * Regex operations
+ */
+typedef std::match_results<const char*> match;
+
+const std::regex get_regex(ehval_p args, const char *method, EHI *ehi) {
+	ASSERT_TYPE(args, String, method);
+	const char *str = args->get<String>();
+	try {
+		return std::regex{str};
+	} catch(const std::regex_error &) {
+		throw_ArgumentError("Invalid regular expression", method, args, ehi);
+	}
+}
+
+/*
+ * @description Checks whether the string matches the given regular expression.
+ * @argument Regular expression
+ * @returns Bool
+ */
+EH_METHOD(String, doesMatch) {
+	ASSERT_RESOURCE(String, "String.doesMatch");
+	auto rgx = get_regex(args, "String.doesMatch", ehi);
+	std::string str{data};
+	return Bool::make(std::regex_search(str.begin(), str.end(), rgx));
+}
+
+/*
+ * @description Replaces a regex pattern in a string.
+ * @argument Tuple of size 2: regular expression and replacement pattern
+ * @returns Modified string
+ */
+EH_METHOD(String, replace) {
+	ASSERT_RESOURCE(String, "String.replace");
+	ASSERT_NARGS(2, "String.replace");
+	ehval_p pattern = args->get<Tuple>()->get(0);
+	auto rgx = get_regex(pattern, "String.replace", ehi);
+	ehval_p replacement = args->get<Tuple>()->get(1);
+	ASSERT_TYPE(replacement, String, "String.replace");
+	std::string str{data};
+	std::string repl{replacement->get<String>()};
+	std::string out = std::regex_replace(str, rgx, repl);
+	return String::make(strdup(out.c_str()));
 }
 
 EH_INITIALIZER(String_Iterator) {

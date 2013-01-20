@@ -7,7 +7,7 @@
 
 #include "ArgumentError.hpp"
 
-void throw_ArgumentError(const char *message, const char *method, ehval_p value, EHI *ehi) {
+void throw_ArgumentError(const char *message, const char *method, ehval_p value, EHI *ehi) [[noreturn]] {
 	ehval_p args[3];
 	args[0] = String::make(strdup(message));
 	args[1] = String::make(strdup(method));

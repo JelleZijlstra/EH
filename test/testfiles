@@ -309,3 +309,4 @@ repeat.eh
 exit.eh
 chain.eh
 string_builder.eh
+regex.eh

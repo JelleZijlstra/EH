@@ -140,7 +140,7 @@ class Compiler
 			sb << assignment
 			match code.type()
 				case "String"
-					sb << 'String::make(strdup("' << code.replace('\\', '\\\\').replace('"', '\\"').replace("\n", "\\n") << '"))'
+					sb << 'String::make(strdup("' << code.replaceCharacter('\\', '\\\\').replaceCharacter('"', '\\"').replaceCharacter("\n", "\\n") << '"))'
 				case "Integer"
 					sb << "Integer::make(" << code << ")"
 				case "Float"

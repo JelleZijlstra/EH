@@ -100,15 +100,18 @@ class Compiler
 	private functions = Nil
 	private counter
 
-	const private static header = '#include "../../ehi/eh_compiled.hpp"\n'
+	const private static header = '#include "' + workingDir() + '/../ehi/eh_compiled.hpp"\n'
 
-	public initialize = func: fileName
+	public initialize = func: fileName: throw(), code: throw()
 		this.fileName = fileName
 		this.counter = Counter.new()
+		this.raw_code = code
+		# not sure this is quite legal, but at least it may trick clang++ into actually compiling the file
+		this.output_file = File.temporary() + '.cpp'
 	end
 
-	public compile = func: outputFile
-		private code = Preprocessor.preprocess(EH.parseFile(this.fileName))
+	public compile = func:
+		private code = this.raw_code
 		private mainf = StringBuilder.new()
 		mainf << 'const char *get_filename() { return "' << this.fileName << '"; }\n'
 
@@ -127,15 +130,13 @@ class Compiler
 		outputf << mainf
 
 		# dirty work because EH's File and String handling is lacking
-		shell("rm " + outputFile)
+		private outputFile = this.output_file
 		shell("touch " + outputFile)
 		output = File.new outputFile
 		private cppcode = outputf.toString()
 		output.puts cppcode
 		output.close()
-
-		# compile the C++
-		shell("cd tmp && clang++ compile_test.cpp ../../ehi/libeh.a -std=c++11 -stdlib=libc++ -o eh_compiled")
+		outputFile
 	end
 
 	private doCompile = func: sb, code

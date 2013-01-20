@@ -20,3 +20,6 @@ const EH.parseFile = file => EH.parse(File.readFile file)
 const EH.equalType = lhs, rhs => lhs.typeId() == rhs.typeId()
 
 Object.equalObject = rhs => Object.toString.apply(this, ()) == Object.toString.apply(rhs, ())
+
+# Escape shell arguments
+EH.escapeShellArgument = string => "'" + string.replace("'", "\\'") + "'"

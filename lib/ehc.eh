@@ -40,7 +40,48 @@
 include 'library.eh'
 include 'preprocessor.eh'
 include 'compiler.eh'
+include 'argument_parser.eh'
 
-private co = Compiler.new(argv->1)
-#private co = Compiler.new("/Users/jellezijlstra/code/EH/lib/tmp/test5.eh")
-co.compile "tmp/compile_test.cpp"
+private replace_extension = func: file, extension
+	private len = file.length()
+	if len > 3 and file.slice(-3, max: null) == '.eh'
+		private base = file.slice(0, max: len - 3)
+		base + extension
+	else
+		file + '.ehc' + extension
+	end
+end
+
+private main = func: argc, argv
+	private ap = ArgumentParser.new("Compiler for the EH language", ( \
+		{name: "--output", synonyms: ['-o'], desc: "Output file to use", nargs: 1, dflt: null}, \
+		{name: "input", desc: "Input file"}, \
+		{name: "--to-cpp", synonyms: ['-c'], desc: "Output C++ code; do not compile to machine code", type: Bool, dflt: false} \
+	))
+	private args = ap.parse argv
+	private code = EH.parseFile(args->'input')
+
+	private preprocessed_code = Preprocessor.preprocess code
+
+	if args->'output' == null
+		if argv->'to-cpp'
+			args->'output' = replace_extension(args->'input', '.cpp')
+		else
+			args->'output' = replace_extension(args->'input', '')
+		end
+	end
+	args->'output' = EH.escapeShellArgument(args->'output')
+
+	private tmp_name = EH.escapeShellArgument(Compiler.new(fileName: args->'input', code: preprocessed_code).compile())
+
+	if argv->'to-cpp'
+		shell("mv " + tmp_name + " " + args->'output')
+	else
+		# invoke clang
+		private cmd = "clang++ " + tmp_name + " ../ehi/libeh.a -std=c++11 -stdlib=libc++ -o " + args->'output'
+		shell(cmd)
+		shell("rm " + tmp_name)
+	end
+end
+
+main(argc, argv)

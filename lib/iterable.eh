@@ -126,26 +126,32 @@ class Iterable
 	const public countWithPredicate = f => this.foldLeft(0, (elt, accum => accum + if f elt; 1; else 0; end))
 
 	const public slice = func: min, max: null
-		private out = this.empty()
-		private it = this.getIterator()
-
-		private i = 0
-		while i < min
-			it.next()
-			i++
-		end
-
-		if max == null
-			while it.hasNext()
-				out = out.append(it.next())
-			end
+		if min < 0
+			private reversed = this.reverse()
+			private part = reversed.slice(if max == null; 0; else -1 * max; end, max: -1 * min)
+			part.reverse()
 		else
-			while i < max
-				out = out.append(it.next())
+			private out = this.empty()
+			private it = this.getIterator()
+
+			private i = 0
+			while i < min
+				it.next()
 				i++
 			end
+
+			if max == null
+				while it.hasNext()
+					out = out.append(it.next())
+				end
+			else
+				while i < max
+					out = out.append(it.next())
+					i++
+				end
+			end
+			out
 		end
-		out
 	end
 
 	# Returns an iterable that returns the values in each iterator sequentially

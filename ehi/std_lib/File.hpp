@@ -28,5 +28,6 @@ EH_METHOD(File, close);
 EH_METHOD(File, finalize);
 EH_METHOD(File, readFile);
 EH_METHOD(File, isOpen);
+EH_METHOD(File, temporary);
 
 EH_INITIALIZER(File);

@@ -30,4 +30,6 @@ const std::string eh_dirname(const std::string &name);
 
 const std::string eh_shell_exec(const std::string &command);
 
+const std::string eh_temp_file();
+
 #endif /* EH_FILES_H_ */

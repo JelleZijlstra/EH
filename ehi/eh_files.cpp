@@ -38,6 +38,7 @@ public:
 	}
 };
 
+// Returns the current directory
 const std::string eh_getcwd() {
 	const char *cwd = getcwd(nullptr, 0);
 	const std::string out(cwd);
@@ -45,6 +46,7 @@ const std::string eh_getcwd() {
 	return out;
 }
 
+// Return the full path associated with a filename
 const std::string eh_full_path(const std::string &filename) {
 	char *tmp = strdup(filename.c_str());
 	const char *my_dirname = dirname(tmp);
@@ -56,6 +58,7 @@ const std::string eh_full_path(const std::string &filename) {
 	return out;
 }
 
+// Return the dirname from a file
 const std::string eh_dirname(const std::string &name) {
 	char *tmp = strdup(name.c_str());
 	std::string out(dirname(tmp));
@@ -63,6 +66,7 @@ const std::string eh_dirname(const std::string &name) {
 	return out;
 }
 
+// Executes a command in the shell
 const std::string eh_shell_exec(const std::string &command) {
 	FILE_p p = popen(command.c_str(), "r");
 	if(p.null()) {
@@ -75,4 +79,11 @@ const std::string eh_shell_exec(const std::string &command) {
 	}
 	std::cout.flush();
 	return output.str();
+}
+
+// Creates a temporary file and returns its name
+const std::string eh_temp_file() {
+	char buffer[L_tmpnam];
+	char *pointer = tmpnam(buffer);
+	return pointer;
 }

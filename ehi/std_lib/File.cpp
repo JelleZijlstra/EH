@@ -4,6 +4,7 @@
  * currently more restrictive.
  */
 #include "File.hpp"
+// #include "../eh_files.hpp"
 
 #include <string>
 #include <fstream>
@@ -19,6 +20,7 @@ EH_INITIALIZER(File) {
 	REGISTER_METHOD(File, finalize);
 	REGISTER_METHOD(File, readFile);
 	REGISTER_METHOD(File, isOpen);
+	REGISTER_METHOD(File, temporary);
 }
 
 /*
@@ -174,4 +176,15 @@ EH_METHOD(File, isOpen) {
 	args->assert_type<Null>("File.isOpen", ehi);
 	ASSERT_RESOURCE(File, "File.isOpen");
 	return Bool::make(data != nullptr);
+}
+
+/*
+ * @description Returns a temporary file suitable for use as a text file.
+ * @argument None
+ * @returns File name
+ */
+EH_METHOD(File, temporary) {
+	ASSERT_TYPE(args, Null, "File.temporary");
+	const std::string name = eh_temp_file();
+	return String::make(strdup(name.c_str()));
 }

@@ -16,7 +16,27 @@ static Node.isNode = (func:
 end)()
 
 class Preprocessor
-	public static preprocess = code, filename => listify(Macro.optimize(replace_include(code, File.fullPath filename)))
+	public static preprocess = func: code, filename, verbose: false
+		private path = File.fullPath filename
+		private pp = Preprocessor.new()
+
+		if verbose
+			echo "Calling replace_include..."
+		end
+		code = pp.replace_include(code, path)
+
+		if verbose
+			echo "Calling optimize..."
+		end
+		code = Macro.optimize code
+
+		if verbose
+			echo "Calling listify..."
+		end
+		listify code
+	end
+
+	public initialize = () => (this.included_files = {})
 
 	class ListifyIterator
 		private l
@@ -136,18 +156,25 @@ class Preprocessor
 		code
 	end
 
-	public replace_include = code, path => expression_map((code => match code
-		case Node.T_CALL(Node.T_VARIABLE("include"), Node.T_LITERAL(@file))
-			if file.isA String
-				# TODO: make the context update correctly
-				private real_name = path + '/' + file
-				replace_include(EH.parseFile real_name, File.fullPath real_name)
-			else
-				Node.T_CALL("include", replace_include(file, path))
-			end
-		case null
-			null
-		case _
-			code.map(c => replace_include(c, path))
-	end), code)
+	public included_files
+
+	public replace_include = func: code, path
+		private obj = this
+		expression_map((code => match code
+			case Node.T_CALL(Node.T_VARIABLE("include"), Node.T_LITERAL(@file))
+				if file.isA String
+					private real_name = path + '/' + file
+					if !obj.included_files.has real_name
+						obj.included_files->real_name = true
+						obj.replace_include(EH.parseFile real_name, File.fullPath real_name)
+					end
+				else
+					Node.T_CALL("include", obj.replace_include(file, path))
+				end
+			case null
+				null
+			case _
+				code.map(c => obj.replace_include(c, path))
+		end), code)
+	end
 end

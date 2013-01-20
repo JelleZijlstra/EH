@@ -56,15 +56,20 @@ private main = func: argc, argv
 	private ap = ArgumentParser.new("Compiler for the EH language", ( \
 		{name: "--output", synonyms: ['-o'], desc: "Output file to use", nargs: 1, dflt: null}, \
 		{name: "input", desc: "Input file"}, \
-		{name: "--to-cpp", synonyms: ['-c'], desc: "Output C++ code; do not compile to machine code", type: Bool, dflt: false} \
+		{name: "--to-cpp", synonyms: ['-c'], desc: "Output C++ code; do not compile to machine code", type: Bool, dflt: false}, \
+		{name: "--verbose", synonyms: ['-v'], desc: "Give verbose output", type: Bool, dflt: false} \
 	))
 	private args = ap.parse argv
+	private verbose = args->'verbose'
+	if verbose
+		echo "Parsing input file..."
+	end
 	private code = EH.parseFile(args->'input')
 
-	private preprocessed_code = Preprocessor.preprocess(code, args->'input')
+	private preprocessed_code = Preprocessor.preprocess(code, args->'input', verbose: args->'verbose')
 
 	if args->'output' == null
-		if argv->'to-cpp'
+		if args->'to-cpp'
 			args->'output' = replace_extension(args->'input', '.cpp')
 		else
 			args->'output' = replace_extension(args->'input', '')
@@ -72,13 +77,23 @@ private main = func: argc, argv
 	end
 	args->'output' = EH.escapeShellArgument(args->'output')
 
+	if verbose
+		echo "Generating code..."
+	end
 	private tmp_name = EH.escapeShellArgument(Compiler.new(fileName: args->'input', code: preprocessed_code).compile())
 
-	if argv->'to-cpp'
-		shell("mv " + tmp_name + " " + args->'output')
+	if args->'to-cpp'
+		private cmd = "mv " + tmp_name + " " + args->'output'
+		if verbose
+			echo cmd
+		end
+		shell cmd
 	else
 		# invoke clang
 		private cmd = "clang++ " + tmp_name + " ../ehi/libeh.a -std=c++11 -stdlib=libc++ -o " + args->'output'
+		if verbose
+			echo cmd
+		end
 		shell(cmd)
 		shell("rm " + tmp_name)
 	end

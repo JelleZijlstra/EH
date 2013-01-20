@@ -244,6 +244,7 @@ EH_INITIALIZER(Array_Iterator) {
 	REGISTER_METHOD(Array_Iterator, initialize);
 	REGISTER_METHOD(Array_Iterator, hasNext);
 	REGISTER_METHOD(Array_Iterator, next);
+	REGISTER_METHOD(Array_Iterator, peek);
 }
 
 ehval_p Array_Iterator::make(ehval_p array, EHInterpreter *parent) {

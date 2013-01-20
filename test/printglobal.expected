@@ -8,6 +8,7 @@
 			hasNext <public,non-static,non-constant>: @function <library>: 
 			initialize <public,non-static,non-constant>: @function <library>: 
 			next <public,non-static,non-constant>: @function <library>: 
+			peek <public,non-static,non-constant>: @function <library>: 
 		]
 		compare <public,non-static,non-constant>: @function <library>: 
 		getIterator <public,non-static,non-constant>: @function <library>: 

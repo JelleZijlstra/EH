@@ -99,18 +99,23 @@ class Compiler
 	private output
 	private functions = Nil
 	private counter
+	private verbose
 
 	const private static header = '#include "' + workingDir() + '/../ehi/eh_compiled.hpp"\n'
 
-	public initialize = func: fileName: throw(), code: throw()
+	public initialize = func: fileName: throw(), code: throw(), verbose: false
 		this.fileName = fileName
 		this.counter = Counter.new()
 		this.raw_code = code
+		this.verbose = verbose
 		# not sure this is quite legal, but at least it may trick clang++ into actually compiling the file
 		this.output_file = File.temporary() + '.cpp'
 	end
 
 	public compile = func:
+		if this.verbose
+			echo "Generating code..."
+		end
 		private code = this.raw_code
 		private mainf = StringBuilder.new()
 		mainf << 'const char *get_filename() { return "' << this.fileName << '"; }\n'
@@ -120,6 +125,9 @@ class Compiler
 		this.doCompile(eh_mainf, code)
 		eh_mainf << "return ret;\n}\n"
 
+		if this.verbose
+			echo "Combining generated code..."
+		end
 		# create full source file
 		private outputf = StringBuilder.new()
 		outputf << header
@@ -130,10 +138,19 @@ class Compiler
 		outputf << mainf
 
 		# dirty work because EH's File and String handling is lacking
+		if this.verbose
+			echo "Creating output file..."
+		end
 		private outputFile = this.output_file
 		shell("touch " + outputFile)
 		output = File.new outputFile
+		if this.verbose
+			echo "Converting generated code to string form..."
+		end
 		private cppcode = outputf.toString()
+		if this.verbose
+			echo "Writing generated code to output file..."
+		end
 		output.puts cppcode
 		output.close()
 		outputFile

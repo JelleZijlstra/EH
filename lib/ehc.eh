@@ -77,10 +77,7 @@ private main = func: argc, argv
 	end
 	args->'output' = EH.escapeShellArgument(args->'output')
 
-	if verbose
-		echo "Generating code..."
-	end
-	private tmp_name = EH.escapeShellArgument(Compiler.new(fileName: args->'input', code: preprocessed_code).compile())
+	private tmp_name = EH.escapeShellArgument(Compiler.new(fileName: args->'input', code: preprocessed_code, verbose: verbose).compile())
 
 	if args->'to-cpp'
 		private cmd = "mv " + tmp_name + " " + args->'output'

@@ -1,0 +1,7 @@
+%%stdout-regex%%
+42hello
+true3hey0x[a-f0-9]+
+@string builder "true3hey0x[a-f0-9]+"
+42hello
+42hellotrue3hey0x[a-f0-9]+
+%%stderr%%

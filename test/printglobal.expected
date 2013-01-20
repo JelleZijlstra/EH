@@ -76,7 +76,9 @@
 	]
 	File <public,non-static,constant>: @object <File> [
 		close <public,non-static,non-constant>: @function <library>: 
+		dirname <public,non-static,non-constant>: @function <library>: 
 		finalize <public,non-static,non-constant>: @function <library>: 
+		fullPath <public,non-static,non-constant>: @function <library>: 
 		getc <public,non-static,non-constant>: @function <library>: 
 		gets <public,non-static,non-constant>: @function <library>: 
 		initialize <public,non-static,non-constant>: @function <library>: 
@@ -328,6 +330,11 @@
 		toString <public,non-static,non-constant>: @function <library>: 
 	]
 	String <public,non-static,constant>: @object <String> [
+		Builder <public,non-static,non-constant>: @object <String.Builder> [
+			new <public,non-static,non-constant>: @function <library>: 
+			operator<< <public,non-static,non-constant>: @function <library>: 
+			toString <public,non-static,non-constant>: @function <library>: 
+		]
 		Iterator <public,non-static,non-constant>: @object <String.Iterator> [
 			hasNext <public,non-static,non-constant>: @function <library>: 
 			initialize <public,non-static,non-constant>: @function <library>: 

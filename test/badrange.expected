@@ -2,6 +2,11 @@
 @object <TypeError> [
 	message <public,non-static,non-constant>: @string "Range members must have the same type"
 	type <public,non-static,non-constant>: @object <String> [
+		Builder <public,non-static,non-constant>: @object <String.Builder> [
+			new <public,non-static,non-constant>: @function <library>: 
+			operator<< <public,non-static,non-constant>: @function <library>: 
+			toString <public,non-static,non-constant>: @function <library>: 
+		]
 		Iterator <public,non-static,non-constant>: @object <String.Iterator> [
 			hasNext <public,non-static,non-constant>: @function <library>: 
 			initialize <public,non-static,non-constant>: @function <library>: 

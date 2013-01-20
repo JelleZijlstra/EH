@@ -92,4 +92,51 @@ EH_METHOD(String_Iterator, peek);
 
 EH_INITIALIZER(String_Iterator);
 
+EH_CHILD_CLASS(String, Builder) {
+private:
+	class t {
+	private:
+		std::ostringstream strings;
+
+	public:
+		t() : strings() {}
+
+		void add_string(const char *item) {
+			strings << item;
+		}
+
+		const std::string get_string() {
+			return strings.str();
+		}
+	};
+
+public:
+	typedef t *type;
+	type value;
+
+	static ehval_p make() {
+		return static_cast<ehval_t *>(new String_Builder());
+	}
+
+	String_Builder() : value(new t()) {}
+
+	virtual bool belongs_in_gc() const {
+		return false;
+	}
+
+	virtual ~String_Builder() {
+		delete value;
+	}
+
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
+		std::cout << "@string builder \"" << value->get_string() << "\"" << std::endl;
+	}
+};
+
+EH_METHOD(String_Builder, new);
+EH_METHOD(String_Builder, operator_leftshift);
+EH_METHOD(String_Builder, toString);
+
+EH_INITIALIZER(String_Builder);
+
 #endif /* EH_STRING_H_ */

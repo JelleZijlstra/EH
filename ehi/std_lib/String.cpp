@@ -15,6 +15,7 @@ EH_INITIALIZER(String) {
 	REGISTER_METHOD(String, getIterator);
 	REGISTER_METHOD(String, trim);
 	REGISTER_CLASS(String, Iterator);
+	REGISTER_CLASS(String, Builder);
 }
 
 EH_METHOD(String, initialize) {
@@ -224,4 +225,41 @@ EH_METHOD(String_Iterator, peek) {
 	out[0] = data->peek();
 	out[1] = '\0';
 	return String::make(out);
+}
+
+
+EH_INITIALIZER(String_Builder) {
+	REGISTER_METHOD(String_Builder, new);
+	REGISTER_METHOD_RENAME(String_Builder, operator_leftshift, "operator<<");
+	REGISTER_METHOD(String_Builder, toString);
+}
+
+/*
+ * @description Creates a new String.Builder object
+ * @argument None
+ * @returns String.Builder
+ */
+EH_METHOD(String_Builder, new) {
+	return String_Builder::make();
+}
+
+/*
+ * @description Adds an item to the String.Builder
+ * @argument Any object
+ * @returns The String.Builder object
+ */
+EH_METHOD(String_Builder, operator_leftshift) {
+	ASSERT_RESOURCE(String_Builder, "String.Builder.operator<<");
+	data->add_string(ehi->toString(args, obj)->get<String>());
+	return obj;
+}
+
+/*
+ * @description Converts the buffer to a string
+ * @argument None
+ * @returns String
+ */
+EH_METHOD(String_Builder, toString) {
+	ASSERT_RESOURCE(String_Builder, "String.Builder.operator<<");
+	return String::make(strdup(data->get_string().c_str()));
 }

@@ -15,11 +15,13 @@
 		]
 		charAtPosition <public,non-static,non-constant>: @function <library>: 
 		compare <public,non-static,non-constant>: @function <library>: 
+		doesMatch <public,non-static,non-constant>: @function <library>: 
 		getIterator <public,non-static,non-constant>: @function <library>: 
 		initialize <public,non-static,non-constant>: @function <library>: 
 		length <public,non-static,non-constant>: @function <library>: 
 		operator+ <public,non-static,non-constant>: @function <library>: 
 		operator-> <public,non-static,non-constant>: @function <library>: 
+		replace <public,non-static,non-constant>: @function <library>: 
 		toBool <public,non-static,non-constant>: @function <library>: 
 		toFloat <public,non-static,non-constant>: @function <library>: 
 		toInteger <public,non-static,non-constant>: @function <library>: 

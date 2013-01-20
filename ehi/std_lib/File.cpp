@@ -4,7 +4,6 @@
  * currently more restrictive.
  */
 #include "File.hpp"
-// #include "../eh_files.hpp"
 
 #include <string>
 #include <fstream>

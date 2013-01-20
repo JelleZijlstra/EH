@@ -402,8 +402,8 @@ class Compiler
 				case ExtendedNode.T_MIXED_TUPLE_LIST(@items)
 					private member_names = []
 					private size = items.countWithPredicate(elt => match elt
-						case Node.T_NAMED_ARGUMENT(_, _); true
-						case _; false
+						case Node.T_NAMED_ARGUMENT(_, _); false
+						case _; true
 					end)
 					private twsk_name = this.get_var_name "twsk"
 					sb << "auto " << twsk_name << " = new Tuple_WithStringKeys::t(" << size << ");\n"

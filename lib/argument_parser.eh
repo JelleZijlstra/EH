@@ -139,6 +139,9 @@ class ArgumentParser
 	private next_positional = func:
 		private out = this.positional_args->(this.positional_index)
 		this.positional_index++
+		if this.positional_index > this.positional_args.length()
+			this.print_error("unrecognized positional argument")
+		end
 		out
 	end
 
@@ -190,6 +193,12 @@ class ArgumentParser
 		match arginfo->'nargs'
 			case 0
 				output = true
+			case 1
+				if this.argv_iterator.next_is_named_argument()
+					this.print_error("not enough values given for argument " + name + " (expected 1)")
+				else
+					output = this.argv_iterator.next()
+				end
 			case '+'
 				output = this.process_infinite_arguments()
 			case @nargs
@@ -200,12 +209,13 @@ class ArgumentParser
 
 	private process_finite_arguments = func: name, nargs, first: false
 		private output = if first; [first]; else []; end
-		private i = 1
+		private i = if first; 1; else 0; end
 		while i < nargs
 			if this.argv_iterator.next_is_named_argument()
 				this.print_error("not enough values given for argument " + name + " (expected " + nargs + ")")
 			end
 			output.append(this.argv_iterator.next())
+			i++
 		end
 		output
 	end

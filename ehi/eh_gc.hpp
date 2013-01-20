@@ -45,6 +45,10 @@
  * references from the stack). These references prevent the GC from
  * collecting the block. Thus, there must be two kinds of pointers: one
  * strong, one weak.
+ *
+ * However, this is currently not working yet (when I turn the feature on, ehi
+ * segfaults on relatively large programs), so the GC is not currently doing
+ * anything overly useful.
  */
 #include <list>
 #include <stack>

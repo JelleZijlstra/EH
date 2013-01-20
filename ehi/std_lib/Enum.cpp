@@ -209,7 +209,7 @@ EH_METHOD(Enum, operator_colon) {
 EH_METHOD(Enum, compare) {
 	if(obj->is_a<Object>()) {
 		ASSERT_OBJ_TYPE(Enum, "Enum.compare");
-		ASSERT_TYPE(args, Object, "Enum.compare");
+		args->assert_type<Object>("Enum.compare", ehi);
 		return Integer::make(intcmp(_obj->get<Object>()->type_id, args->get<Object>()->type_id));
 	} else {
 		ASSERT_TYPE(obj, Enum_Instance, "Enum.compare");

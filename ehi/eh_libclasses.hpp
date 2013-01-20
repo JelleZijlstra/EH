@@ -15,7 +15,10 @@
 
 #define EH_METHOD(classn, name) ehval_p ehlm_ ## classn ## _ ## name(ehval_p obj, ehval_p args, EHI *ehi)
 
-#define ASSERT_TYPE(operand, ehtype, method) operand->assert_type<ehtype>(method, ehi);
+#define ASSERT_TYPE(operand, ehtype, method) do {\
+ 	operand = operand->data(); \
+	operand->assert_type<ehtype>(method, ehi); \
+} while(0)
 
 #define ASSERT_NARGS(count, method) args->assert_type<Tuple>(method, ehi); \
 	if(args->get<Tuple>()->size() != count) { \

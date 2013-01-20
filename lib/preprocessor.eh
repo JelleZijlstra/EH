@@ -127,6 +127,8 @@ class Preprocessor
 				Node.T_FUNC(expression_map_lvalue(f, lvalue), f rvalue)
 			case Node.T_MATCH(@match_var, @patterns)
 				Node.T_MATCH(f match_var, expression_map_match(f, patterns))
+			case Node.T_FOR_IN(@iter_var, @iteree, @body)
+				Node.T_FOR_IN(expression_map_lvalue(f, iter_var), f iteree, f body)
 			case _
 				f code
 		end

@@ -134,6 +134,8 @@ class Macro
 				optimize rhs
 			case Node.T_SEPARATOR(@lhs, ())
 				optimize lhs
+			case Node.T_FOR_IN(@iter_var, @iteree, @body)
+				Node.T_FOR_IN(optimize_lvalue iter_var, optimize iteree, optimize body)
 			case _
 				code.map optimize
 		end

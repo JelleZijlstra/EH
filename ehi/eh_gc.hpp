@@ -176,22 +176,12 @@ public:
 		virtual std::list<pointer<true>> children() const =0;
 
 		bool has_child(data *child) {
-#ifdef DEBUG_GC_MORE_X
-			std::cout << "Checking has_child: " << this << std::endl;
-			std::cout << "Type: " << typeid(*this).name() << std::endl;
-#endif
 			auto kids = this->children();
 			for(auto &it : kids) {
 				if(it.content == child || it->has_child(child)) {
-#ifdef DEBUG_GC_MORE_X
-			std::cout << "Done checking: " << this << std::endl;
-#endif
 					return true;
 				}
 			}
-#ifdef DEBUG_GC_MORE_X
-			std::cout << "Done checking: " << this << std::endl;
-#endif
 			return false;
 		}
 	};
@@ -285,9 +275,6 @@ private:
 		}
 
 		void harvest_self_freed(block *b) {
-#ifdef DEBUG_GC_MORE_X
-			std::cout << "Harvesting block at " << b << std::endl;
-#endif /* DEBUG_GC_MORE_X */
 			assert(b->is_self_freed());
 			harvest(b);
 		}
@@ -305,11 +292,6 @@ private:
 		void sweep(int previous_bit, int new_bit) {
 			for(unsigned int i = 0; i < pool_size; i++) {
 				block *b = get_block(i);
-#ifdef DEBUG_GC_MORE_X
-				if(b->is_allocated() && !b->has_strong_refs()) {
-					std::cout << "Found allocated block without strong refs: " << b->get_data() << std::endl;
-				}
-#endif
 				if(b->is_allocated() && !b->get_data()->get_gc_bit(new_bit)) {
 					// if it is detected by the GC, it must be part of a cycle
 					//assert(b->get_data()->has_child(b->get_data()));
@@ -547,9 +529,6 @@ private:
 		if(root == nullptr || !root->belongs_in_gc() || root->get_gc_bit(bit)) {
 			return;
 		}
-#ifdef DEBUG_GC_MORE_X
-		std::cout << "Marking with root: " << root << std::endl;
-#endif
 		root->set_gc_bit(bit);
 
 		auto children = root->children();
@@ -569,7 +548,7 @@ private:
 		stack.push(root);
 
 		while(!stack.empty()) {
-#ifdef DEBUG_GC_MORE
+#ifdef DEBUG_GC
 			std::cout << stack.size() << std::endl;
 #endif
 			T *ptr = stack.top();

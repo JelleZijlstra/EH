@@ -280,14 +280,8 @@ private:
 		}
 
 		void dealloc(block *b) {
-#ifdef DEBUG_GC_MORE
-			std::cout << "Freeing block at " << b << std::endl;
-			//b->content.print();
-#endif /* DEBUG_GC_MORE */
 			b->get_data()->suicide();
-			b->set_next_pointer(this->first_free_block);
-			this->first_free_block = b;
-			free_blocks++;
+			harvest(b);
 		}
 
 		void harvest_self_freed(block *b) {
@@ -295,8 +289,12 @@ private:
 			std::cout << "Harvesting block at " << b << std::endl;
 #endif /* DEBUG_GC_MORE_X */
 			assert(b->is_self_freed());
-			b->set_next_pointer(this->first_free_block);
-			this->first_free_block = b;
+			harvest(b);
+		}
+
+		void harvest(block *b) {
+			b->set_next_pointer(first_free_block);
+			first_free_block = b;
 			free_blocks++;
 		}
 
@@ -315,17 +313,20 @@ private:
 				if(b->is_allocated() && !b->get_data()->get_gc_bit(new_bit)) {
 					// if it is detected by the GC, it must be part of a cycle
 					//assert(b->get_data()->has_child(b->get_data()));
-					this->dealloc(b);
+#ifdef DEBUG_GC
+					std::cout << "Freeing block at " << b << std::endl;
+#endif /* DEBUG_GC */
+					dealloc(b);
 				} else {
 					// unset old GC bits
 					b->get_data()->unset_gc_bit(previous_bit);
 					// assimilate self-freed blocks
 					if(!b->is_allocated() && b->is_self_freed()) {
-						this->harvest_self_freed(b);
+						harvest_self_freed(b);
 					}
 				}
 				// if pool is now empty, no need to continue sweep
-				if(this->empty()) {
+				if(empty()) {
 					break;
 				}
 			}
@@ -552,8 +553,6 @@ private:
 		root->set_gc_bit(bit);
 
 		auto children = root->children();
-		// std::cout << "Size of children: " << children.size() << std::endl;
-		// std::cout << (typeid(root.operator*())).name() << std::endl;
  		for(auto &i : children) {
 			if(i != nullptr && i->belongs_in_gc() && !i->get_gc_bit(bit)) {
 				stack.push(i.content);
@@ -570,6 +569,9 @@ private:
 		stack.push(root);
 
 		while(!stack.empty()) {
+#ifdef DEBUG_GC_MORE
+			std::cout << stack.size() << std::endl;
+#endif
 			T *ptr = stack.top();
 			stack.pop();
 			handle_root(stack, ptr);

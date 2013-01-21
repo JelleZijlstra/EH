@@ -502,11 +502,11 @@ ehval_p EHI::eh_op_anonclass(ehval_p node, const ehcontext_t &context) {
 	return ret;
 }
 ehval_p EHI::eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context) {
-	Function::t *f = new Function::t(Function::user_e);
 	ehval_p ret = parent->instantiate(parent->repo.get_primitive_class<Function>());
 	ehobj_t *function_object = ret->get<Object>();
 	function_object->parent = context.scope;
 	function_object->type_id = parent->function_object->get<Object>()->type_id;
+	Function::t *f = new Function::t(Function::user_e);
 	function_object->object_data = Function::make(f, parent);
 	f->code = paras[1];
 	f->args = paras[0];

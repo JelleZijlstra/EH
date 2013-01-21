@@ -60,7 +60,7 @@ public:
 #ifdef DEBUG_GC_MORE_X
 	typedef garbage_collector<ehval_t>::weak_pointer ehval_w;
 #else
-	typedef garbage_collector<ehval_t>::strong_pointer ehval_w;
+	typedef garbage_collector<ehval_t>::weak_pointer ehval_w;
 #endif
 
 	// context
@@ -81,7 +81,7 @@ public:
 		typedef refcount_ptr<ehmember_t> ehmember_p;
 
 		attributes_t attribute;
-		ehval_p value;
+		ehval_w value;
 
 		// destructor
 		~ehmember_t() {}
@@ -235,11 +235,11 @@ public:
 	 */
 	obj_map members;
 	// the object's state data
-	ehval_p object_data;
+	ehval_w object_data;
 	// the type
 	unsigned int type_id;
 	// for scoping
-	ehval_p parent;
+	ehval_w parent;
 	// inheritance
 	std::list<ehval_w> super;
 

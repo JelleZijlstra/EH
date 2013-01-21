@@ -18,13 +18,13 @@ public:
 			assert(index < size_);
 			content[index] = val;
 		}
-		t(size_t size) : size_(size), content(new ehval_p[size]()) {}
+		t(size_t size) : size_(size), content(new ehval_w[size]()) {}
 		~t() {
 			delete[] content;
 		}
 	private:
 		const size_t size_;
-		ehval_p *content;
+		ehval_w *content;
 		t(const t&);
 		t operator=(const t&);
 	};

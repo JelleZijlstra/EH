@@ -23,7 +23,7 @@ public:
 	class t {
 	protected:
 		const unsigned int _size;
-		ehval_w *content;
+		ehval_p *content;
 
 		t(unsigned int size, ehval_p *in) : t(size) {
 			for(unsigned int i = 0; i < size; i++) {
@@ -31,7 +31,7 @@ public:
 			}
 		}
 
-		t(unsigned int size) : _size(size), content(new ehval_w[size]()) {}
+		t(unsigned int size) : _size(size), content(new ehval_p[size]()) {}
 
 	public:
 		~t() {

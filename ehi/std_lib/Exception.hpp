@@ -1,10 +1,12 @@
 /*
  * Exception class
  */
+#include "std_lib_includes.hpp"
+
 #ifndef EH_EXCEPTION_H_
 #define EH_EXCEPTION_H_
 
-#include "std_lib_includes.hpp"
+void throw_error(const char *class_name, ehval_p args, EHI *ehi) [[noreturn]];
 
 EH_CLASS(Exception) {
 public:

@@ -43,6 +43,7 @@
 #include "VisibilityError.hpp"
 
 #include "../eh.bison.hpp"
+#include "../eh_files.hpp"
 
 #define GLOBAL_REGISTER_CLASS(name) obj->register_member_class<name>(ehinit_ ## name, #name, attributes_t::make_const(), parent)
 #define REGISTER_PURE_CLASS(name) obj->register_member_class(#name, ehinit_ ## name, attributes_t::make_const(), parent)

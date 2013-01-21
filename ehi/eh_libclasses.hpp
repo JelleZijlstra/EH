@@ -6,6 +6,8 @@
 #ifndef _EH_LIBCLASSES_H
 #define _EH_LIBCLASSES_H
 
+#include <exception>
+
 #define EH_INITIALIZER(name) void ehinit_ ## name (ehobj_t *obj, EHInterpreter *parent)
 #define REGISTER_METHOD(classn, name) obj->register_method(#name, &ehlm_ ## classn ## _ ## name, attributes_t(), parent)
 #define REGISTER_METHOD_RENAME(classn, name, user_name) obj->register_method(user_name, &ehlm_ ## classn ## _ ## name, attributes_t(), parent)
@@ -58,5 +60,9 @@ static inline int intcmp(T lhs, T rhs) {
 		return 1;
 	}
 }
+
+class quit_exception : public std::exception {
+};
+
 
 #endif /* _EH_LIBCLASSES_H */

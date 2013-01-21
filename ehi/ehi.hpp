@@ -1,12 +1,11 @@
 #ifndef EH_EHI_H_
 #define EH_EHI_H_
 /*
- * ehi.h
+ * ehi.hpp
  * Jelle Zijlstra, December 2011
  */
-#include "eh_error.hpp"
-#include "concurrency.hpp"
-#include "eh_files.hpp"
+#include <sstream>
+
 #include "std_lib/Function.hpp"
 #include "std_lib/Integer.hpp"
 #include "std_lib/String.hpp"
@@ -17,8 +16,6 @@
 #include "std_lib/TypeError.hpp"
 #include "std_lib/Hash.hpp"
 
-#include <sstream>
-
 /*
  * Flex and Bison
  */
@@ -28,8 +25,6 @@ typedef enum {
 	cli_no_prompt_e,
 	end_is_end_e
 } interactivity_enum;
-
-void *gc_thread(void *arg);
 
 class EHInterpreter {
 public:

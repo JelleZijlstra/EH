@@ -1,4 +1,5 @@
 #include "eh.hpp"
+#include "eh_files.hpp"
 #include "std_lib/ArgumentError.hpp"
 #include "std_lib/Attribute.hpp"
 #include "std_lib/Node.hpp"

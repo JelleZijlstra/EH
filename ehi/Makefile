@@ -3,7 +3,7 @@ CCBASICFLAGS = -ggdb -fPIC -c -std=c++11 -stdlib=libc++
 CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic -Wextra -Wno-c++98-compat -Wno-unused-parameter -Wno-weak-vtables -Wno-padded -Wno-unused-macros -Wno-float-equal
 LDFLAGS = -std=c++11 -stdlib=libc++
 LIBCLASSES = ArgumentError Array Attribute Binding Bool ConstError EH Enum Exception File Float Function GarbageCollector GlobalObject Hash Integer LoopError MiscellaneousError NameError Node Null Object Range String SuperClass SyntaxError Tuple TypeError UnknownCommandError EmptyIterator FixedArray Random Map VisibilityError
-SOURCES = eh.flex.cpp eh.bison.cpp eh_error.cpp ehi.cpp eh_types.cpp eh_files.cpp eh_optimize.cpp
+SOURCES = eh.flex.cpp eh.bison.cpp ehi.cpp eh_types.cpp eh_files.cpp eh_optimize.cpp
 INTERPRETER = $(SOURCES) eh_libcmds.cpp eh_interpreter.cpp $(patsubst %, std_lib/%.cpp, $(LIBCLASSES))
 LIBEH = $(INTERPRETER) eh_standalone.cpp
 LIBEH_O = $(LIBEH:.cpp=.o)

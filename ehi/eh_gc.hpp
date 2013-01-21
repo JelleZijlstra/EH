@@ -50,8 +50,10 @@
  * segfaults on relatively large programs), so the GC is not currently doing
  * anything overly useful.
  */
+#include <assert.h>
 #include <list>
 #include <stack>
+#include <iostream>
 
 template<class T>
 class garbage_collector {

@@ -1,6 +1,9 @@
+#include <map>
 #include <set>
-#include <vector>
+#include <typeindex>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 #define EH_CLASS(cname) class cname; \
 	template<> inline const char *ehval_t::name<cname>() { return #cname; } \

@@ -1,3 +1,5 @@
+#include <algorithm>
+
 template<class T>
 class refcount_ptr {
 private:

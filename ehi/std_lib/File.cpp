@@ -3,11 +3,12 @@
  * Class used for file I/O. The interface is similar to C's stdio.h, but
  * currently more restrictive.
  */
-#include "File.hpp"
-
 #include <string>
 #include <fstream>
 #include <sstream>
+
+#include "File.hpp"
+#include "../eh_files.hpp"
 
 EH_INITIALIZER(File) {
 	REGISTER_METHOD(File, initialize);

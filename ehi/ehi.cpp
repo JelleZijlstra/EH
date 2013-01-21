@@ -97,7 +97,9 @@ ehval_p EHI::execute_named_file(const char *name) {
 	if(infile == nullptr) {
 		throw_ArgumentError("Could not open input file", "EH core", String::make(strdup(name)), this);
 	}
-	return execute_file(infile);
+	ehval_p out = execute_file(infile);
+	fclose(infile);
+	return out;
 }
 
 ehval_p EHI::execute_string(const char *cmd) {

@@ -57,11 +57,7 @@ typedef std::unordered_set<void *> printvar_set;
 class ehval_t : public garbage_collector<ehval_t>::data {
 public:
 	typedef garbage_collector<ehval_t>::strong_pointer ehval_p;
-#ifdef DEBUG_GC_MORE_X
 	typedef garbage_collector<ehval_t>::weak_pointer ehval_w;
-#else
-	typedef garbage_collector<ehval_t>::weak_pointer ehval_w;
-#endif
 
 	// context
 	struct ehcontext_t {

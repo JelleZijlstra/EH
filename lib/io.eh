@@ -2,7 +2,16 @@
 # io.eh - IO functionalities
 
 class IO
-	const public stdin = File.new "/dev/stdin"
-	const public stdout = File.new "/dev/stdout"
-	const public stderr = File.new "/dev/stderr"
+	private descriptors = {}
+
+	private getter = name => (() => if this.descriptors.has name
+		this.descriptors->name
+	else
+		this.descriptors->name = File.new("/dev/" + name)
+		this.descriptors->name
+	end)
+
+	const public stdin = getter "stdin"
+	const public stdout = getter "stdout"
+	const public stderr = getter "stderr"
 end

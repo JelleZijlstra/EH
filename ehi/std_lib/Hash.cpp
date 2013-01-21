@@ -32,10 +32,14 @@ EH_METHOD(Hash, toArray) {
 }
 
 EH_METHOD(Hash, operator_arrow) {
-	ASSERT_OBJ_TYPE(Hash, "Hash.operator->");
+	ASSERT_RESOURCE(Hash, "Hash.operator->");
 	args->assert_type<String>("Hash.operator->", ehi);
-	Hash::ehhash_t *hash = obj->get<Hash>();
-	return hash->get(args->get<String>());
+	const char *key = args->get<String>();
+	if(data->has(key)) {
+		return data->get(key);
+	} else {
+		return Null::make();
+	}
 }
 
 EH_METHOD(Hash, operator_arrow_equals) {

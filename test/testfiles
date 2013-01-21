@@ -310,3 +310,4 @@ exit.eh
 chain.eh
 string_builder.eh
 regex.eh
+bad_hash_key.eh

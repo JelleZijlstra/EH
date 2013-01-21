@@ -4,6 +4,8 @@
  */
 #include "FixedArray.hpp"
 
+#include "ArgumentError.hpp"
+
 EH_INITIALIZER(FixedArray) {
 	REGISTER_METHOD(FixedArray, initialize);
 	REGISTER_METHOD_RENAME(FixedArray, operator_arrow, "operator->");

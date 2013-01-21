@@ -6,6 +6,9 @@
 
 #include "ConstError.hpp"
 
+#include "ArgumentError.hpp"
+#include "Exception.hpp"
+
 void throw_ConstError(ehval_p object, const char *name, EHI *ehi) {
 	ehval_p args[2] = {object, String::make(strdup(name))};
 	throw_error("ConstError", Tuple::make(2, args, ehi->get_parent()), ehi);

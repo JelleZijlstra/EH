@@ -8,6 +8,8 @@
 #include <sstream>
 
 #include "File.hpp"
+
+#include "ArgumentError.hpp"
 #include "../eh_files.hpp"
 
 EH_INITIALIZER(File) {

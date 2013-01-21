@@ -10,17 +10,23 @@
 #include "eh.hpp"
 #include "eh_libclasses.hpp"
 #include "eh_libcmds.hpp"
+
+#include "std_lib/Attribute.hpp"
 #include "std_lib/Binding.hpp"
 #include "std_lib/ConstError.hpp"
 #include "std_lib/Enum.hpp"
+#include "std_lib/Function.hpp"
 #include "std_lib/GlobalObject.hpp"
 #include "std_lib/LoopError.hpp"
 #include "std_lib/MiscellaneousError.hpp"
 #include "std_lib/NameError.hpp"
-#include "std_lib/SuperClass.hpp"
-#include "std_lib/VisibilityError.hpp"
-#include "std_lib/Attribute.hpp"
 #include "std_lib/Node.hpp"
+#include "std_lib/Range.hpp"
+#include "std_lib/SuperClass.hpp"
+#include "std_lib/Tuple.hpp"
+#include "std_lib/VisibilityError.hpp"
+
+// Needs to come after inclusion of Attribute
 #include "eh.bison.hpp"
 
 typedef struct ehcmd_listentry_t {

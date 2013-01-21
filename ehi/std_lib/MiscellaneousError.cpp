@@ -1,5 +1,7 @@
 #include "MiscellaneousError.hpp"
 
+#include "Exception.hpp"
+
 void throw_MiscellaneousError(const char *message, EHI *ehi) {
 	throw_error("MiscellaneousError", String::make(strdup(message)), ehi);
 }

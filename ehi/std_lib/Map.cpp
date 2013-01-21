@@ -1,5 +1,8 @@
 #include "Map.hpp"
 
+#include "ArgumentError.hpp"
+#include "EmptyIterator.hpp"
+
 EH_INITIALIZER(Map) {
 	REGISTER_METHOD(Map, initialize);
 	REGISTER_METHOD_RENAME(Map, operator_arrow, "operator->");

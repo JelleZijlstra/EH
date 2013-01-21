@@ -1,12 +1,17 @@
 // Functionality to ease the duties of the EH compiler
 
 #include "eh.hpp"
+#include "eh_files.hpp"
 #include "std_lib/Binding.hpp"
-#include "std_lib/SuperClass.hpp"
-#include "std_lib/NameError.hpp"
 #include "std_lib/ConstError.hpp"
-#include "std_lib/MiscellaneousError.hpp"
 #include "std_lib/Enum.hpp"
+#include "std_lib/Exception.hpp"
+#include "std_lib/Function.hpp"
+#include "std_lib/MiscellaneousError.hpp"
+#include "std_lib/NameError.hpp"
+#include "std_lib/Range.hpp"
+#include "std_lib/SuperClass.hpp"
+#include "std_lib/TypeError.hpp"
 
 static const char *get_filename();
 ehval_p eh_main(EHI *ehi, const ehcontext_t &context);

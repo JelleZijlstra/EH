@@ -1,5 +1,8 @@
 #include "Tuple.hpp"
 
+#include "ArgumentError.hpp"
+#include "EmptyIterator.hpp"
+
 EH_INITIALIZER(Tuple) {
 	REGISTER_METHOD(Tuple, initialize);
 	REGISTER_METHOD_RENAME(Tuple, operator_arrow, "operator->");

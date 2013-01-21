@@ -2,6 +2,8 @@
 
 #include "LoopError.hpp"
 
+#include "Exception.hpp"
+
 void throw_LoopError(const char *msg, int level, EHI *ehi) {
 	ehval_p args[2];
 	args[0] = String::make(strdup(msg));

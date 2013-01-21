@@ -6,6 +6,7 @@
 
 #include "std_lib_includes.hpp"
 #include "Node.hpp"
+#include "ArgumentError.hpp"
 #include "Attribute.hpp"
 #include "../eh.bison.hpp"
 

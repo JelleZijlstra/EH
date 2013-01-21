@@ -2,6 +2,9 @@
 
 #include "SyntaxError.hpp"
 
+#include "ArgumentError.hpp"
+#include "Exception.hpp"
+
 void throw_SyntaxError(const char *message, int line, EHI *ehi) {
 	ehval_p args[2];
 	args[0] = String::make(strdup(message));

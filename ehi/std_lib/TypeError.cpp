@@ -1,5 +1,7 @@
 #include "TypeError.hpp"
 
+#include "Exception.hpp"
+
 void throw_TypeError(const char *msg, ehval_p obj, EHI *ehi) {
 	ehval_p args[2];
 	args[0] = String::make(strdup(msg));

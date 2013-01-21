@@ -2,6 +2,9 @@
 #include <limits.h>
 
 #include "Integer.hpp"
+
+#include "ArgumentError.hpp"
+#include "EmptyIterator.hpp"
 #include "MiscellaneousError.hpp"
 
 EH_INITIALIZER(Integer) {

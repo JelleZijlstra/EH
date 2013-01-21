@@ -2,6 +2,9 @@
 
 #include "VisibilityError.hpp"
 
+#include "Exception.hpp"
+#include "ArgumentError.hpp"
+
 void throw_VisibilityError(ehval_p object, const char *name, EHI *ehi) {
 	ehval_p args[2];
 	args[0] = object;

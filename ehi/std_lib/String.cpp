@@ -2,6 +2,10 @@
 
 #include "String.hpp"
 
+#include "ArgumentError.hpp"
+#include "EmptyIterator.hpp"
+#include "Range.hpp"
+
 EH_INITIALIZER(String) {
 	REGISTER_METHOD(String, initialize);
 	REGISTER_METHOD_RENAME(String, operator_plus, "operator+");

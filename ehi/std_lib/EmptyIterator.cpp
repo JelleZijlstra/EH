@@ -2,9 +2,9 @@
  * EmptyIterator
  * Thrown when an iterator is depleted.
  */
-#include <sstream>
-
 #include "EmptyIterator.hpp"
+
+#include "Exception.hpp"
 
 void throw_EmptyIterator(EHI *ehi) {
 	throw_error("EmptyIterator", nullptr, ehi);

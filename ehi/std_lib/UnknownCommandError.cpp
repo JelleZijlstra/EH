@@ -1,5 +1,7 @@
 #include "UnknownCommandError.hpp"
 
+#include "Exception.hpp"
+
 void throw_UnknownCommandError(const char *msg, EHI *ehi) {
 	throw_error("UnknownCommandError", String::make(strdup(msg)), ehi);
 }

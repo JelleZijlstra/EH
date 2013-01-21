@@ -1,5 +1,8 @@
 #include "Range.hpp"
 
+#include "ArgumentError.hpp"
+#include "EmptyIterator.hpp"
+
 ehval_p Range::make(ehval_p min, ehval_p max, EHInterpreter *parent) {
 	t *r = new t(min, max);
 	return parent->allocate<Range>(r);

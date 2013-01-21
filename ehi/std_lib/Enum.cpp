@@ -6,6 +6,8 @@
 #include "std_lib_includes.hpp"
 
 #include "Enum.hpp"
+
+#include "ArgumentError.hpp"
 #include "MiscellaneousError.hpp"
 #include "Null.hpp"
 

@@ -1,5 +1,8 @@
 #include "Hash.hpp"
 
+#include "ArgumentError.hpp"
+#include "EmptyIterator.hpp"
+
 ehval_p Hash::make(EHInterpreter *parent) {
 	return parent->allocate<Hash>(new ehhash_t);
 }

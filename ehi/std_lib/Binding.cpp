@@ -5,6 +5,8 @@
  */
 
 #include "Binding.hpp"
+
+#include "Function.hpp"
 #include "MiscellaneousError.hpp"
 
 ehval_p Binding::make(ehval_p obj, ehval_p method, EHInterpreter *parent) {

@@ -2,6 +2,9 @@
 
 #include "NameError.hpp"
 
+#include "ArgumentError.hpp"
+#include "Exception.hpp"
+
 void throw_NameError(ehval_p object, const char *name, EHI *ehi) {
 	ehval_p args[2];
 	args[0] = object;

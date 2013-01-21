@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "ArgumentError.hpp"
+#include "Exception.hpp"
 
 void throw_ArgumentError(const char *message, const char *method, ehval_p value, EHI *ehi) [[noreturn]] {
 	ehval_p args[3];

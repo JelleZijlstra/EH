@@ -6,7 +6,6 @@
  */
 #include <sstream>
 
-#include "std_lib/Function.hpp"
 #include "std_lib/Integer.hpp"
 #include "std_lib/String.hpp"
 #include "std_lib/Float.hpp"

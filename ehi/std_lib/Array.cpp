@@ -11,6 +11,9 @@
  */
 #include "Array.hpp"
 
+#include "ArgumentError.hpp"
+#include "EmptyIterator.hpp"
+
 EH_INITIALIZER(Array) {
 	REGISTER_METHOD(Array, initialize);
 	REGISTER_METHOD(Array, has);

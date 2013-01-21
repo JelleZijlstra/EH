@@ -31,6 +31,8 @@
 #define ADD_NODE4(opcode, first, second, third, fourth) eh_addnode(opcode, NODE(first), NODE(second), NODE(third), NODE(fourth))
 #define ADD_COMPOUND(opcode, lval, rval, result) ehval_p lvalue = NODE(lval); result = eh_addnode(T_ASSIGN, lvalue, NODE(eh_addnode(opcode, lvalue, NODE(rval))))
 
+void yyerror(void *, const char *s);
+
 %}
 %pure-parser
 %parse-param { void *scanner }

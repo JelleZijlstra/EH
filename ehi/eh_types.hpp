@@ -6,6 +6,49 @@
 	template<> inline const char *ehval_t::name<cname>() { return #cname; } \
 	class cname : public ehval_t
 
+// attributes of class members
+enum visibility_enum {
+	public_e = 0,
+	private_e = 1
+};
+
+enum static_enum {
+	nonstatic_e = 0,
+	static_e = 1
+};
+
+enum const_enum {
+	nonconst_e = 0,
+	const_e = 1
+};
+
+// struct for class member attributes
+struct attributes_t {
+	visibility_enum visibility : 2;
+	static_enum isstatic : 1;
+	const_enum isconst : 1;
+
+	// convenience methods
+	constexpr static attributes_t make_const() {
+		return attributes_t(public_e, nonstatic_e, const_e);
+	}
+	constexpr static attributes_t make_static() {
+		return attributes_t(public_e, static_e, nonconst_e);
+	}
+	constexpr static attributes_t make_private() {
+		return attributes_t(private_e, nonstatic_e, nonconst_e);
+	}
+
+	constexpr attributes_t(visibility_enum v = public_e, static_enum s = nonstatic_e, const_enum c = nonconst_e) : visibility(v), isstatic(s), isconst(c) {}
+};
+
+template<class T>
+static void add_tabs(T &out, int levels) {
+	for(int i = 0; i < levels; i++) {
+		out << "\t";
+	}
+}
+
 typedef std::unordered_set<void *> printvar_set;
 
 class ehval_t : public garbage_collector<ehval_t>::data {

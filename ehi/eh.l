@@ -13,6 +13,7 @@
 #include "eh.bison.hpp"
 
 void make_string(char **, char *);
+void yyerror(void *, const char *s);
 %}
 %option yylineno
 %option reentrant

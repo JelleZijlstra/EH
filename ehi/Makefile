@@ -4,8 +4,6 @@ CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic -Wextra -Wno-c++98-compat -Wno-unused-
 LDFLAGS = -std=c++11 -stdlib=libc++
 LIBCLASSES = ArgumentError Array Attribute Binding Bool ConstError EH Enum Exception File Float Function GarbageCollector GlobalObject Hash Integer LoopError MiscellaneousError NameError Node Null Object Range String SuperClass SyntaxError Tuple TypeError UnknownCommandError EmptyIterator FixedArray Random Map VisibilityError
 SOURCES = eh.flex.cpp eh.bison.cpp eh_error.cpp ehi.cpp eh_types.cpp eh_files.cpp eh_optimize.cpp
-COMPILER = $(SOURCES) eh_compiler.cpp
-COMPILER_O = $(COMPILER:.cpp=.o)
 INTERPRETER = $(SOURCES) eh_libcmds.cpp eh_interpreter.cpp $(patsubst %, std_lib/%.cpp, $(LIBCLASSES))
 LIBEH = $(INTERPRETER) eh_standalone.cpp
 LIBEH_O = $(LIBEH:.cpp=.o)
@@ -25,9 +23,6 @@ eh.hpp: ehi.hpp eh.bison.hpp
 
 %.o: %.cpp eh.hpp
 	$(CXX) $(CCFLAGS) $< -o $@
-
-ehc: $(COMPILER_O)
-	$(CXX) $(LDFLAGS) $(COMPILER_O) -o ehc
 
 ehi: $(EHI_O)
 	$(CXX) $(LDFLAGS) $(EHI_O) -o $(EHI_TARGET)

@@ -20,6 +20,11 @@ EH_INITIALIZER(Hash) {
 	REGISTER_CLASS(Hash, Iterator);
 }
 
+/*
+ * @description Converts the Hash to an Array, preserving all string keys.
+ * @argument None
+ * @returns Array
+ */
 EH_METHOD(Hash, toArray) {
 	ASSERT_NULL_AND_TYPE(Hash, "Hash.toArray");
 	Hash::ehhash_t *hash = obj->get<Hash>();
@@ -31,6 +36,11 @@ EH_METHOD(Hash, toArray) {
 	return out;
 }
 
+/*
+ * @description Accesses an element in the hash. If the key does not exist, it returns null.
+ * @argument String
+ * @returns Value
+ */
 EH_METHOD(Hash, operator_arrow) {
 	ASSERT_RESOURCE(Hash, "Hash.operator->");
 	args->assert_type<String>("Hash.operator->", ehi);

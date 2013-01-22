@@ -61,10 +61,10 @@ private:
 	/*
 	 * constants
 	 */
-	const static int pool_size = 512;
+	const static unsigned int pool_size = 512;
 	const static int self_freed = 1;
 
-	const static int assignments_between_runs = 4096;
+	const static unsigned int assignments_between_runs = 4096;
 
 	/*
 	 * types
@@ -231,7 +231,7 @@ private:
 		// pointer to the first free block in the list
 		block *first_free_block;
 		// number of free blocks left
-		int free_blocks;
+		unsigned int free_blocks;
 
 		uint8_t blocks[pool_size * sizeof(block)];
 
@@ -623,8 +623,8 @@ public:
 	}
 
 	void print_stats() const {
-		int num_pools = 0;
-		int allocated_blocks = 0;
+		unsigned int num_pools = 0;
+		unsigned int allocated_blocks = 0;
 		for(pool *p = this->first_pool; p != nullptr; p = p->next) {
 			num_pools++;
 			allocated_blocks += (pool_size - p->free_blocks);

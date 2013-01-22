@@ -127,8 +127,8 @@ public:
 			string_keys[key] = val;
 		}
 
-		void set(unsigned int i, ehval_p val) {
-			assert(i >= 0 && i < _size);
+		void set(int i, ehval_p val) {
+			assert(i >= 0 && i < static_cast<int>(_size));
 			content[i] = val;
 		}
 

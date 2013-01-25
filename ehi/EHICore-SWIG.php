@@ -32,6 +32,7 @@ if(extension_loaded("ehphp"))  {
 			$this->fillThisPointer();
 			$cmd = "include '/Users/jellezijlstra/code/EH/lib/library.eh';";
 			$this->global_parse_string($cmd);
+			$this->initialize_eh();
 			$this->prompt = $name . '> ';
 			try {
 				$ret = $this->eh_interactive();
@@ -80,5 +81,9 @@ if(extension_loaded("ehphp"))  {
 		public function setvar($var, $value) {
 			return;
 		}
+
+		// initialization function called when creating the EH interface
+		// child classes should override to provide for specific initialization (e.g., library loading)
+		protected function initialize_eh() {}
 	}
 }

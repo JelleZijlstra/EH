@@ -17,7 +17,7 @@ ehi/eh.flex.cpp
 ehi/eh.flex.hpp
 ehi/eh_wrap.cpp
 ehi/eh_wrap.h
-ehi/ehc
+ehc/ehc
 ehi/ehi
 ehi/ehphp.php
 ehi/php_ehphp.h

@@ -1,6 +1,4 @@
 
-include 'library.eh'
-
 # Additional Node variants emitted by the optimizer and understood by the compiler
 enum ExtendedNode
 	T_MIXED_TUPLE_LIST(members)

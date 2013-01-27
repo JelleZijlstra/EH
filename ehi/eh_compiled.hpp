@@ -89,9 +89,11 @@ int main(int argc, char *argv[]) {
 	EHI ehi(end_is_end_e, &interpreter, interpreter.global_object, eh_getcwd(), get_filename());
 	try {
 		eh_main(&ehi, ehi.get_context());
-	} catch (eh_exception &e) {
+	} catch(eh_exception &e) {
 		ehi.handle_uncaught(e);
-		return -1;
+		return 1;
+	} catch(quit_exception &) {
+		return 1;
 	}
 	return 0;
 }

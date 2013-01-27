@@ -1,7 +1,5 @@
 # This is the code generation portion of the EH compiler.
 
-include 'library.eh'
-
 class NotImplemented
 	this.inherit Exception
 end

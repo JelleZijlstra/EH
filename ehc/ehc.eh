@@ -37,10 +37,10 @@
 # - compiler.eh generates C++ code from the AST emitted by the previous phases.
 # - clang++ compiles the generated C++ code and links it to libeh.a.
 
-include 'library.eh'
+include '../lib/library.eh'
 include 'preprocessor.eh'
 include 'compiler.eh'
-include 'argument_parser.eh'
+include '../lib/argument_parser.eh'
 
 private replace_extension = func: file, extension
 	private len = file.length()

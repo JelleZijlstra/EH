@@ -24,6 +24,7 @@
 #include "GlobalObject.hpp"
 #include "Hash.hpp"
 #include "Integer.hpp"
+#include "JSON.hpp"
 #include "LoopError.hpp"
 #include "MiscellaneousError.hpp"
 #include "NameError.hpp"
@@ -98,6 +99,7 @@ EH_INITIALIZER(GlobalObject) {
 	GLOBAL_REGISTER_CLASS(Map);
 	REGISTER_PURE_CLASS(VisibilityError);
 	REGISTER_PURE_CLASS(EH);
+	REGISTER_PURE_CLASS(JSON);
 
 	/*
 	 * Inititalize top-level methods.

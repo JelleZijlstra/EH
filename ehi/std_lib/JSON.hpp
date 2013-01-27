@@ -1,0 +1,3 @@
+EH_METHOD(JSON, parse);
+
+EH_INITIALIZER(JSON);

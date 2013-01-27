@@ -2,8 +2,9 @@ CXX = clang++
 CCBASICFLAGS = -ggdb -fPIC -c -std=c++11 -stdlib=libc++
 CCFLAGS = $(CCBASICFLAGS) -DNDEBUG_GC -Wall -pedantic -Wextra -Wno-c++98-compat -Wno-unused-parameter -Wno-weak-vtables -Wno-padded -Wno-unused-macros -Wno-float-equal
 LDFLAGS = -std=c++11 -stdlib=libc++
-LIBCLASSES = ArgumentError Array Attribute Binding Bool ConstError EH Enum Exception File Float Function GarbageCollector GlobalObject Hash Integer LoopError MiscellaneousError NameError Node Null Object Range String SuperClass SyntaxError Tuple TypeError UnknownCommandError EmptyIterator FixedArray Random Map VisibilityError
-SOURCES = eh.flex.cpp eh.bison.cpp ehi.cpp eh_types.cpp eh_files.cpp eh_optimize.cpp
+JSON = std_lib/json/
+LIBCLASSES = ArgumentError Array Attribute Binding Bool ConstError EH Enum Exception File Float Function GarbageCollector GlobalObject Hash Integer JSON LoopError MiscellaneousError NameError Node Null Object Range String SuperClass SyntaxError Tuple TypeError UnknownCommandError EmptyIterator FixedArray Random Map VisibilityError
+SOURCES = eh.flex.cpp eh.bison.cpp ehi.cpp eh_types.cpp eh_files.cpp eh_optimize.cpp $(JSON)eh_json.flex.cpp $(JSON)eh_json.bison.cpp
 INTERPRETER = $(SOURCES) eh_libcmds.cpp eh_interpreter.cpp $(patsubst %, std_lib/%.cpp, $(LIBCLASSES))
 LIBEH = $(INTERPRETER) eh_standalone.cpp
 LIBEH_O = $(LIBEH:.cpp=.o)
@@ -46,6 +47,12 @@ eh_wrap.cpp: eh.i
 	if [ `uname` = 'Darwin' ]; then sed -e "s/'\.PHP_SHLIB_SUFFIX/dylib'/" -e "s/function __construct/protected function __construct/" -i '.save' ehphp.php; fi
 	# And need to this to get dl to succeed on Linux
 	if [ `uname` = 'Linux' ]; then sed -e "s/zend_error_noreturn/zend_error/" -i'.save' eh_wrap.cpp; sed -e "s/function __construct/protected function __construct/" -i'.save' ehphp.php; fi
+
+$(JSON)eh_json.flex.cpp: $(JSON)json.l $(JSON)eh_json.bison.hpp
+	cd $(JSON) && flex --header-file=eh_json.flex.hpp json.l
+
+$(JSON)eh_json.bison.cpp $(JSON)eh_json.bison.hpp: $(JSON)json.y
+	cd $(JSON) && bison -v -y -d json.y --output='eh_json.bison.cpp'
 
 clean:
 	rm -f *.o ehphp.so ehphp.dylib ehi ehc eh.flex.cpp eh.bison.cpp eh.bison.hpp y.output eh_wrap.c ehphp.php ehphp.php.save eh_wrap.cpp php_ehphp.h eh_wrap.h std_lib/*.o

@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 
 include '../lib/library.eh'
-include '../lib/preprocessor.eh'
+include '../ehc/preprocessor.eh'
 
 private process = code => echo(Preprocessor.listify(code->0))
 

@@ -167,6 +167,9 @@
 		toInt <public,non-static,non-constant>: @function <library>: 
 		toString <public,non-static,non-constant>: @function <library>: 
 	]
+	JSON <public,non-static,constant>: @object <JSON> [
+		parse <public,non-static,non-constant>: @function <library>: 
+	]
 	LoopError <public,non-static,constant>: @object <LoopError> [
 		initialize <public,non-static,non-constant>: @function <library>: 
 	]

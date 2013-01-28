@@ -1,8 +1,7 @@
 /*
- * GlobalObject.cpp
- * Jelle Zijlstra, September 2012
+ * GlobalObject
  *
- * Contains methods of the global object (i.e., global functions)
+ * Contains methods of the global object (i.e., global functions).
  */
 
 #include <cmath>
@@ -119,14 +118,20 @@ EH_INITIALIZER(GlobalObject) {
 	REGISTER_METHOD(GlobalObject, exit);
 }
 
+/*
+ * @description Gives a string representation of the global object
+ * @argument None
+ * @returns String
+ */
 EH_METHOD(GlobalObject, toString) {
 	return String::make(strdup("(global execution context)"));
 }
 
 /*
- * printvar
+ * @description Gives a debugging representation of an object
+ * @argument Object to represent
+ * @returns Null
  */
-
 EH_METHOD(GlobalObject, printvar) {
 	printvar_set set;
 	args->printvar(set, 0, ehi);
@@ -135,7 +140,11 @@ EH_METHOD(GlobalObject, printvar) {
 }
 
 /*
- * Including files
+ * @description Include and execute a file. Largely equivalent to
+ * "EH.eval(File.readfile file)", but guards against including the same file
+ * twice and updates the current directory.
+ * @argument Name of file
+ * @returns Return value of the file
  */
 EH_METHOD(GlobalObject, include) {
 	args->assert_type<String>("include", ehi);
@@ -147,19 +156,16 @@ EH_METHOD(GlobalObject, include) {
 	} else {
 		full_path = ehi->get_working_dir() + "/" + filename;
 	}
-	// prevent including the same file more than once
-	std::set<std::string> &included = ehi->get_parent()->included_files;
-	if(included.count(full_path) > 0) {
-		return nullptr;
-	}
-	included.insert(full_path);
-
 	const std::string dirname = eh_dirname(full_path);
 	EHI parser(end_is_end_e, ehi->get_parent(), obj, dirname, filename);
 	return parser.execute_named_file(full_path.c_str());
 }
 
-// power
+/*
+ * @description Raises a number to a given power.
+ * @argument Tuple of size 2: base and exponent
+ * @returns Result of computation
+ */
 EH_METHOD(GlobalObject, pow) {
 	ASSERT_NARGS(2, "pow");
 	ehval_p rhs = args->get<Tuple>()->get(0);
@@ -186,11 +192,21 @@ EH_METHOD(GlobalObject, pow) {
 	return nullptr;
 }
 
+/*
+ * @description Returns the natural logarithm of a number.
+ * @argument Number
+ * @returns Logarithm
+ */
 EH_METHOD(GlobalObject, log) {
 	ehval_p arg = ehi->toFloat(args, obj);
 	return Float::make(static_cast<Float::type>(log(arg->get<Float>())));
 }
 
+/*
+ * @description Reads numeric input from stdin.
+ * @argument None
+ * @returns Integer
+ */
 EH_METHOD(GlobalObject, getinput) {
 	ASSERT_NULL("getinput");
 	// more accurately, getint
@@ -200,22 +216,45 @@ EH_METHOD(GlobalObject, getinput) {
 	return ret;
 }
 
+/*
+ * @description Throws an exception.
+ * @argument Object to throw
+ * @returns Never
+ */
 EH_METHOD(GlobalObject, throw) {
 	throw eh_exception(args);
 }
 
+/*
+ * @description Prints out a variable, followed by a newline. Calls toString
+ * on the variable if it is not already a string.
+ * @argument Variable to print
+ * @returns Null
+ */
 EH_METHOD(GlobalObject, echo) {
 	ehval_p str = ehi->toString(args, obj);
 	std::cout << str->get<String>() << std::endl;
 	return nullptr;
 }
 
+/*
+ * @description Similar to echo, but does not print a newline.
+ * @argument Anything
+ * @returns Null
+ */
 EH_METHOD(GlobalObject, put) {
 	ehval_p str = ehi->toString(args, obj);
 	std::cout << str->get<String>();
 	return nullptr;
 }
 
+/*
+ * @description Method that is called when an exception is not caught. By
+ * default, it prints a message to stderr including the type of the exception
+ * and the exception's message.
+ * @argument Exception that was thrown
+ * @returns N/A
+ */
 EH_METHOD(GlobalObject, handleUncaught) {
 	const std::string &type_string = ehi->get_parent()->repo.get_name(args);
 	// we're in global context now. Remember this object, because otherwise the string may be freed before we're done with it.
@@ -225,11 +264,22 @@ EH_METHOD(GlobalObject, handleUncaught) {
 	return nullptr;
 }
 
+/*
+ * @description Returns the current working directory. This is the directory
+ * that is used by include to resolve file names.
+ * @argument None
+ * @returns String
+ */
 EH_METHOD(GlobalObject, workingDir) {
 	ASSERT_NULL("workingDir");
 	return String::make(strdup(ehi->get_working_dir().c_str()));
 }
 
+/*
+ * @description Execute a command in the shell.
+ * @argument Shell command
+ * @returns Shell output
+ */
 EH_METHOD(GlobalObject, shell) {
 	args->assert_type<String>("shell", ehi);
 	std::string output = eh_shell_exec(args->get<String>());

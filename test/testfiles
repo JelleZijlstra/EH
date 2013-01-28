@@ -312,3 +312,4 @@ string_builder.eh
 regex.eh
 bad_hash_key.eh
 classcomp.eh
+GlobalObject.eh

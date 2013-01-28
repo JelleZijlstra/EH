@@ -1,0 +1,24 @@
+%%stdout%%
+null
+@int 3
+@array [
+]
+@hash [
+]
+@extended tuple <1> [
+	@int 3
+	"foo": @string "bar"
+]
+@object <(anonymous class)> [
+	bar <private,non-static,non-constant>: @int 3
+	baz <public,static,non-constant>: @int 5
+	foo <public,non-static,non-constant>: @int 4
+	quux <public,non-static,constant>: @int 6
+	spam <public,static,constant>: @function <user>: ()
+]
+3
+4::[]
+34::[]
+Oh no! I could not handle this exception
+%%stderr%%
+Exception occurred while handling uncaught exception

@@ -93,6 +93,14 @@ ehval_p EHI::execute_file(FILE *infile) {
 }
 
 ehval_p EHI::execute_named_file(const char *name) {
+	// prevent including the same file more than once
+	std::set<std::string> &included = parent->included_files;
+	if(included.count(name) > 0) {
+		return nullptr;
+	}
+	included.insert(name);
+
+	// after this check, actually execute the file
 	FILE *infile = fopen(name, "r");
 	if(infile == nullptr) {
 		throw_ArgumentError("Could not open input file", "EH core", String::make(strdup(name)), this);

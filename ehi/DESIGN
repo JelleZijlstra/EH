@@ -1,17 +1,6 @@
-OTHER THINGS TO DO
-- Add something to ehobj_t so we can distinguish between classes and instances, and make static methods only callable in classes. Known bugs associated with not distinguishing between classes and instances well:
-	- Float == 0.0 segfaults
-	- List.prototype.propertyDoesNotExist segfaults
+THINGS TO DO
+- Add something to ehobj_t so we can distinguish between classes and instances, and make static methods only callable in classes.
 - Do something about the private-in-inherited-class bug.
-
-RETHINKING ENUMS
-Enum creates a real class with its own type_id. Enum overloads new() to throw an exception.
-
-There is a separate Enum.Instance class holding:
-- enum id of this enum member
-- type id of the parent class
-- array of parameters
-
-Enum class holds information about each id - number of params.
-
-Overloads operator() to create a new Enum.Instance object if params == null and type_id takes arguments.
+- Fix the garbage collector, and get rid of reference counting altogether for ehval_w.
+- Get rid of ehmember_p and instead store ehmember_t directly in the object.
+- Get rid of object_data, since it no longer appears to be necessary.

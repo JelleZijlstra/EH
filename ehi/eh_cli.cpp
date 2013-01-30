@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 			interpreter.eh_setarg(argc, argv);
 			EHI ehi(end_is_end_e, &interpreter, interpreter.global_object, eh_full_path(argv[1]), argv[1]);
 			try {
-				std::string file_name = eh_full_path(argv[1]) + '/' + argv[1];
+				std::string file_name = eh_getcwd() + '/' + argv[1];
 				ret = ehi.execute_named_file(file_name.c_str());
 			} catch(eh_exception &e) {
 				ehi.handle_uncaught(e);

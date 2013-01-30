@@ -78,20 +78,31 @@ EH_METHOD(Integer, operator_divide) {
 	} else {
 		args = ehi->toInteger(args, obj);
 		int val = args->get<Integer>();
-		if(val == 0) {
-			throw_MiscellaneousError("Divide by zero in Integer.operator/", ehi);
+		switch(val) {
+			case 0:
+				throw_MiscellaneousError("Divide by zero in Integer.operator/", ehi);
+			case -1:
+				// Prevent unpleasant surprise from INT_MIN / -1
+				return Integer::make(-1 * obj->get<Integer>());
+			default:
+				return Integer::make(obj->get<Integer>() / val);
 		}
-		return Integer::make(obj->get<Integer>() / args->get<Integer>());
 	}
 }
 EH_METHOD(Integer, operator_modulo) {
 	ASSERT_OBJ_TYPE(Integer, "Integer.operator%");
 	ehval_p operand = ehi->toInteger(args, obj);
 	operand->assert_type<Integer>("Integer.operator%", ehi);
-	if(operand->get<Integer>() == 0) {
-		throw_MiscellaneousError("Divide by zero in Integer.operator%", ehi);
+	int operand_i = operand->get<Integer>();
+	switch(operand_i) {
+		case 0:
+			throw_MiscellaneousError("Divide by zero in Integer.operator%", ehi);
+		case -1:
+			// Prevent FPE when executing INT_MIN % -1
+			return Integer::make(0);
+		default:
+			return Integer::make(obj->get<Integer>() % operand_i);
 	}
-	return Integer::make(obj->get<Integer>() % operand->get<Integer>());
 }
 EH_METHOD(Integer, operator_and) {
   ASSERT_OBJ_TYPE(Integer, "Integer.operator&");

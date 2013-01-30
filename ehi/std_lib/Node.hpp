@@ -6,17 +6,15 @@
 
 class Node : public Enum_Instance::t {
 public:
-	const static unsigned int node_id = 6;
+	const static unsigned int node_type_id = 6;
 
-	Node(unsigned int op, unsigned int nparas) : Enum_Instance::t(node_id, op, nparas, nullptr) {
+	Node(unsigned int op, unsigned int nparas) : Enum_Instance::t(node_type_id, op, nparas, nullptr) {
 		if(nparas > 0) {
 			members = new ehval_p[nparas];
 		}
 	}
 
-	virtual ~Node() {}
-
-	virtual std::string decompile(int level) const override;
+	std::string decompile(int level) const;
 
 	static ehval_p make(Node *val, EHInterpreter *parent) {
 		if(val == nullptr) {
@@ -27,7 +25,7 @@ public:
 	}
 
 	static bool is_a(ehval_p obj) {
-		return obj->is_a<Enum_Instance>() && (obj->get<Enum_Instance>()->type_id == node_id);
+		return obj->is_a<Enum_Instance>() && (obj->get<Enum_Instance>()->type_id == node_type_id);
 	}
 };
 

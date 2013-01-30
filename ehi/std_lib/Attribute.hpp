@@ -4,7 +4,7 @@
 #include "Enum.hpp"
 
 // and accompanying enum used by the parser
-class Attribute : Enum_Instance::t {
+class Attribute : public Enum_Instance::t {
 public:
 	const static int attribute_type_id = 5;
 
@@ -29,7 +29,7 @@ public:
 		}
 	}
 
-	virtual std::string decompile(int level) const override {
+	std::string decompile(int level) const {
 		switch(member_id) {
 			case publica_e: return "public";
 			case privatea_e: return "private";
@@ -39,8 +39,6 @@ public:
 		assert(false);
 		return "";
 	}
-
-	virtual ~Attribute() {}
 };
 
 #include "../eh_libclasses.hpp"

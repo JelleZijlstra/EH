@@ -84,7 +84,7 @@ public:
 
 		t(unsigned int type, unsigned int member, unsigned int n, ehval_p *args) : type_id(type), member_id(member), nmembers(n), members(args) {}
 
-		virtual ~t() {
+		~t() {
 			delete[] members;
 		}
 
@@ -110,9 +110,7 @@ public:
 			return nmembers > 0 && members == nullptr;
 		}
 
-		virtual std::string decompile(int level) const {
-			return "";
-		}
+		const std::string decompile(int level) const;
 	private:
 		t(const t &) =delete;
 		t operator=(const t &) =delete;

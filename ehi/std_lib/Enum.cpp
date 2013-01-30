@@ -10,6 +10,8 @@
 #include "ArgumentError.hpp"
 #include "MiscellaneousError.hpp"
 #include "Null.hpp"
+#include "Node.hpp"
+#include "Attribute.hpp"
 
 #include <sstream>
 #include <memory>
@@ -93,6 +95,18 @@ void Enum_Instance::printvar(printvar_set &set, int level, EHI *ehi) {
 			std::cout << "]";
 		}
 		std::cout << std::endl;
+	}
+}
+
+const std::string Enum_Instance::t::decompile(int level) const {
+	// hack to allow decompiling Node and Attribute easily
+	switch(type_id) {
+		case Node::node_type_id:
+			return (static_cast<const Node *>(this))->decompile(level);
+		case Attribute::attribute_type_id:
+			return (static_cast<const Attribute *>(this))->decompile(level);
+		default:
+			return "";
 	}
 }
 

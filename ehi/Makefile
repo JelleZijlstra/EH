@@ -30,7 +30,7 @@ ehi: $(EHI_O)
 	sudo cp $(EHI_TARGET) /usr/bin/$(EHI_TARGET)
 
 libeh: $(LIBEH_O)
-	ar rvs libeh.a $(LIBEH_O)
+	ar rvs libeh.a $(LIBEH_O) >/dev/null
 
 ehphp: $(EHPHP_O)
 	./make_ehphp.sh "$(CXX)" "$(LDFLAGS) $(SYMBOLS)" "$(EHPHP_O)"

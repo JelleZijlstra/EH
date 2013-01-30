@@ -3,9 +3,9 @@
 
 #include "std_lib_includes.hpp"
 
-void throw_ArgumentError(const char *message, const char *method, ehval_p value, EHI *ehi) [[noreturn]];
+[[noreturn]] void throw_ArgumentError(const char *message, const char *method, ehval_p value, EHI *ehi);
 
-static inline void throw_ArgumentError_out_of_range(const char *method, ehval_p value, EHI *ehi) [[noreturn]] {
+[[noreturn]] static inline void throw_ArgumentError_out_of_range(const char *method, ehval_p value, EHI *ehi) {
 	throw_ArgumentError("Argument out of range", method, value, ehi);
 }
 

@@ -873,6 +873,28 @@ ehval_p EHI::eh_op_dollar(ehval_p node, const ehcontext_t &context) {
 	}
 }
 ehval_p EHI::eh_op_set(ehval_p *paras, const ehcontext_t &context) {
+	ehval_p lvalue = paras[0];
+	/*
+	 * Allow syntactic sugar for function definitions.
+	 * Placing this here is slightly hackish, but a solution placing it in
+	 * set() would entail evaluating the rvalue in set() itself (which
+	 * seems problematic when set() is called during a function instantiation)
+	 * and would allow weird syntax like foo x, bar = x * x, 3.
+	 */
+	auto ei = lvalue->get<Enum_Instance>();
+	if(ei->member_id == T_CALL) {
+		ehval_p closure_paras[2] = {ei->members[1], paras[1]};
+		ehval_p rvalue = eh_op_declareclosure(closure_paras, context);
+		return set(ei->members[0], rvalue, nullptr, context);
+	} else if(ei->member_id == T_CLASS_MEMBER) {
+		auto inner_ei = ei->members[1]->get<Enum_Instance>();
+		if(inner_ei->member_id == T_CALL) {
+			attributes_t new_attributes = parse_attributes(ei->members[0]);
+			ehval_p closure_paras[2] = {inner_ei->members[1], paras[1]};
+			ehval_p rvalue = eh_op_declareclosure(closure_paras, context);
+			return set(inner_ei->members[0], rvalue, &new_attributes, context);
+		}
+	}
 	ehval_p rvalue = eh_execute(paras[1], context);
 	return set(paras[0], rvalue, nullptr, context);
 }

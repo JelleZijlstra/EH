@@ -314,3 +314,4 @@ bad_hash_key.eh
 classcomp.eh
 GlobalObject.eh
 decompile_constructed.eh
+func_sugar.eh

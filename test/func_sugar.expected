@@ -1,0 +1,10 @@
+%%stdout%%
+@object <Foo> [
+	bar <public,non-static,non-constant>: @function <user>: z
+	baz <public,non-static,non-constant>: @function <user>: (a, b)
+	foo <public,static,non-constant>: @function <user>: x
+]
+@int 9
+@int 4
+@int 9
+%%stderr%%

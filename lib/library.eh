@@ -5,7 +5,6 @@
 
 # aliases
 Object.isAn = Object.isA
-Object.operator() = Object.new
 
 include 'array.eh'
 include 'tuple.eh'

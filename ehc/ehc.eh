@@ -57,7 +57,8 @@ private main = func: argc, argv
 		{name: "--output", synonyms: ['-o'], desc: "Output file to use", nargs: 1, dflt: null}, \
 		{name: "input", desc: "Input file"}, \
 		{name: "--to-cpp", synonyms: ['-c'], desc: "Output C++ code; do not compile to machine code", type: Bool, dflt: false}, \
-		{name: "--verbose", synonyms: ['-v'], desc: "Give verbose output", type: Bool, dflt: false} \
+		{name: "--verbose", synonyms: ['-v'], desc: "Give verbose output", type: Bool, dflt: false}, \
+		{name: "--optimize", synonyms: ['-O'], desc: "Turn on optimizations", type: Bool, dflt: false} \
 	))
 	private args = ap.parse argv
 	private verbose = args->'verbose'
@@ -87,7 +88,11 @@ private main = func: argc, argv
 		shell cmd
 	else
 		# invoke clang
-		private cmd = "clang++ " + tmp_name + " ../ehi/libeh.a -std=c++11 -stdlib=libc++ -o " + args->'output'
+		private cmd = "clang++ "
+		if args->'optimize'
+			cmd += "-O3 "
+		end
+		cmd += tmp_name + " ../ehi/libeh.a -std=c++11 -stdlib=libc++ -o " + args->'output'
 		if verbose
 			echo cmd
 		end

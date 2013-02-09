@@ -4,6 +4,8 @@ include '../lib/fixed_array_sort.eh'
 
 l = 0::3::2::1::Nil
 
+l = 20.toList()
+
 fa = FixedArray.mapFrom l
 fa.bubbleSort()
 assert (fa.isSorted(), "bubble sort doesn't work")
@@ -25,3 +27,6 @@ assert (fa.isSorted(), "quicksort doesn't work")
 fa = FixedArray.mapFrom l
 fa.bucketSort()
 assert (fa.isSorted(), "bucket sort doesn't work")
+fa = FixedArray.mapFrom l
+fa.stoogeSort()
+assert (fa.isSorted(), "stooge sort doesn't work")

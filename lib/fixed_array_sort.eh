@@ -27,6 +27,19 @@ FixedArray.inherit class
 		this
 	end
 
+	public stoogeSortIndexed(min, size) = if size < 3
+		if this->min > this->(min + 1)
+			this.swap(min, min + 1)
+		end
+	else
+		private new_size = (size * 2.0 / 3).round()
+		this.stoogeSortIndexed(min, new_size)
+		this.stoogeSortIndexed(min + (size / 3.0).round(), new_size)
+		this.stoogeSortIndexed(min, new_size)
+	end
+
+	public stoogeSort () = this.stoogeSortIndexed(0, this.size())
+
 	public bubbleSort = func:
 		private comparisons
 		while true

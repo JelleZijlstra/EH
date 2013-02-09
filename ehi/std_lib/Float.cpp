@@ -22,6 +22,7 @@ EH_INITIALIZER(Float) {
 	REGISTER_METHOD(Float, toBool);
 	REGISTER_METHOD(Float, toFloat);
 	REGISTER_METHOD(Float, sqrt);
+	REGISTER_METHOD(Float, round);
 }
 
 /*
@@ -160,4 +161,14 @@ EH_METHOD(Float, toFloat) {
 EH_METHOD(Float, sqrt) {
   ASSERT_NULL_AND_TYPE(Float, "Float.sqrt");
   return Float::make(static_cast<Float::type>(sqrt(obj->get<Float>())));
+}
+
+/*
+ * @description Rounds to the nearest integer.
+ * @argument None
+ * @returns Integer
+ */
+EH_METHOD(Float, round) {
+	ASSERT_NULL_AND_TYPE(Float, "Float.round");
+	return Integer::make(lround(obj->get<Float>()));
 }

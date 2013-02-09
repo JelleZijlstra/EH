@@ -52,3 +52,8 @@ assert(!0.0.toBool(), "0 is false")
 # @method sqrt
 assert(1.0.sqrt() == 1.0, "sqrt(1) = 1")
 assert(4.0.sqrt() == 2.0, "sqrt(4) = 2")
+
+# @method round
+assert(3.5.round() == 4, "3.5.round() = 4")
+assert(1.0.round() == 1, "1.0.round() = 1")
+

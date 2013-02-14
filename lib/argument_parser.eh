@@ -64,6 +64,8 @@ class ArgumentParser
 			if !this.output.has name
 				if arginfo.has 'default'
 					this.finish_processing(arginfo, arginfo->'default')
+				elsif arginfo.has 'nargs' and arginfo->'nargs' == '+'
+					this.finish_processing(arginfo, [])
 				else
 					this.print_error("required argument not provided: " + name)
 				end

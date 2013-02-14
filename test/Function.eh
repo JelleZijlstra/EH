@@ -21,3 +21,12 @@ private f2 = () => this.toString()
 assert(f2() == "(global execution context)", "executed in global context")
 private f2_bound = f2.bindTo 3
 assert(f2_bound() == '3', "executed in context of integer")
+
+# @method args
+assert(f.args() == Node.T_VARIABLE("x"), "argument is x")
+private f2 _ = 3
+assert(f2.args() == Node.T_ANYTHING, "argument is ignored")
+
+# @method code
+assert(f.code() == Node.T_MULTIPLY(Node.T_VARIABLE("x"), Node.T_VARIABLE("x")), "code is squaring")
+assert(f2.code() == Node.T_LITERAL(3), "body is just 3")

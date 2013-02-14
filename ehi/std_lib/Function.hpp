@@ -101,6 +101,8 @@ EH_METHOD(Function, operator_colon);
 EH_METHOD(Function, toString);
 EH_METHOD(Function, decompile);
 EH_METHOD(Function, bindTo);
+EH_METHOD(Function, args);
+EH_METHOD(Function, code);
 
 EH_INITIALIZER(Function);
 

@@ -8,6 +8,7 @@
 #include <sstream>
 
 #include "Function.hpp"
+#include "ArgumentError.hpp"
 #include "Binding.hpp"
 #include "MiscellaneousError.hpp"
 #include "SuperClass.hpp"
@@ -17,6 +18,8 @@ EH_INITIALIZER(Function) {
 	REGISTER_METHOD(Function, toString);
 	REGISTER_METHOD(Function, decompile);
 	REGISTER_METHOD(Function, bindTo);
+	REGISTER_METHOD(Function, args);
+	REGISTER_METHOD(Function, code);
 }
 
 /*
@@ -108,4 +111,32 @@ EH_METHOD(Function, toString) {
 EH_METHOD(Function, bindTo) {
 	ASSERT_OBJ_TYPE(Function, "Function.bindTo");
 	return Binding::make(args, _obj, ehi->get_parent());
+}
+
+/*
+ * @description Returns the arguments for this function as an AST fragment.
+ * @argument None
+ * @returns Node
+ */
+EH_METHOD(Function, args) {
+	ASSERT_RESOURCE(Function, "Function.args");
+	if(data->type == Function::user_e) {
+		return data->args;
+	} else {
+		throw_ArgumentError("Cannot give arguments for non-user function", "Function.args", obj, ehi);
+	}
+}
+
+/*
+ * @description Returns the code for this function as an AST fragment.
+ * @argument None
+ * @returns Node
+ */
+EH_METHOD(Function, code) {
+	ASSERT_RESOURCE(Function, "Function.code");
+	if(data->type == Function::user_e) {
+		return data->code;
+	} else {
+		throw_ArgumentError("Cannot give code for non-user function", "Function.code", obj, ehi);
+	}
 }

@@ -80,7 +80,7 @@ class TestCase
 		private tempFile = "tmp/" + this.name + ".tmp"
 		shell("touch " + tempFile)
 		File.new tempFile.puts expected
-		echo(shell("diff '" + tempFile + "' '" + outputFile + "'").trim())
+		put(shell("diff '" + tempFile + "' '" + outputFile + "'"))
 	end
 
 	private cleanUp() = shell("rm tmp/" + this.name + ".*")
@@ -113,4 +113,3 @@ if args->'file'.length() == 0
 else
 	args->'file'.each(_, v => TestCase.make v)
 end
-

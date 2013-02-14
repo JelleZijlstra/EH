@@ -22,10 +22,13 @@ mul4 = func: x; 2 * x; end
 # Short function syntax
 mul5 = x => 2 * x
 
+# Even shorter syntax
+mul6 x = 2 * x
+
 # Instead of using a function, we can simply use the method directly
-mul6 = 2.operator*
+mul7 = 2.operator*
 
 # Test that these functions all obey the specification
-funcs = (mul1, mul2, mul3, mul4, mul5, mul6)
-tester = f => assert(f 3 == 6)
+funcs = (mul1, mul2, mul3, mul4, mul5, mul6, mul7)
+tester f = assert(f 3 == 6)
 funcs.each tester

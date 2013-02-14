@@ -51,7 +51,7 @@ end
 </section>
 <section id="functions">
 <h2>Functions</h2>
-<p>Functions are central to EH. They can be defined either with the <tt>func</tt> keyword or the short-function syntax that uses the <tt>=&gt;</tt> token (e.g., <tt>x => x * x</tt>). The <tt>ret</tt> statement can be used to return a value, but if execution reaches the end of a function without encountering a <tt>ret</tt> statement, the result of the last expression evaluated is returned.</p>
+<p>Functions are central to EH. They can be defined either with the <tt>func</tt> keyword or the short-function syntax that uses the <tt>=&gt;</tt> token (e.g., <tt>x => x * x</tt>). Named function can also be defined with the syntax <tt>f x = x * x</tt>. The <tt>ret</tt> statement can be used to return a value, but if execution reaches the end of a function without encountering a <tt>ret</tt> statement, the result of the last expression evaluated is returned.</p>
 
 <p>Functions are called using the function call "operator", which is invoked simply by putting the function and its argument next to each other; <tt>fun arg</tt> calls the function <tt>fun</tt> with argument <tt>arg</tt>. All functions take exactly one argument. Functions that do not take input are simply passed null (then usually written <tt>()</tt>) as an argument, and when multiple arguments are necessary, they are put into a tuple (e.g., <tt>fun(a, b)</tt>).</p>
 
@@ -92,7 +92,7 @@ end
 </pre>
 
 <h3>Assignment</h3>
-<p>In addition to simple assigments (<tt>x = 3</tt>), EH supports compound assignment of the form <tt>x, y = y, x</tt>. This works by evaluating the right-hand side (in this case, into the tuple <tt>y, x</tt>) into a temporary variable (here called <tt>tmp_</tt>) and setting <tt>x = tmp_->0; y = tmp_->1</tt>. This syntax also supports more complicated forms like <tt>a, (b, c) = 1, (2, 3)</tt>. In addition, it is possible to ignore certain values by putting <tt>_</tt> instead of a variable name (e.g., <tt>a, (), c = (1, 2, 3)</tt>. If <tt>()</tt> (= null) is used instead of a variable name, the value is also ignored, but only if it is null; otherwise a MiscellaneousError is thrown. This is useful for functions that take no arguments.</p>
+<p>In addition to simple assigments (<tt>x = 3</tt>), EH supports compound assignment of the form <tt>x, y = y, x</tt>. This works by evaluating the right-hand side (in this case, into the tuple <tt>y, x</tt>) into a temporary variable (here called <tt>tmp_</tt>) and setting <tt>x = tmp_->0; y = tmp_->1</tt>. This syntax also supports more complicated forms like <tt>a, (b, c) = 1, (2, 3)</tt>. In addition, it is possible to ignore certain values by putting <tt>_</tt> instead of a variable name (e.g., <tt>a, _, c = 1, 2, 3</tt>. If <tt>()</tt> (= null) is used instead of a variable name, the value is also ignored, but only if it is null; otherwise a MiscellaneousError is thrown. This is useful for functions that take no arguments.</p>
 
 <p>The same syntax can be used for function arguments and for the variable in a <tt>for-in</tt> loop.</p>
 </section>

@@ -1,3 +1,3 @@
-%%stdout%%
-Usage: benchmark.eh [0-6]
+%%stdout-regex%%
+Usage: benchmark\.eh \[0-\d+\]
 %%stderr%%

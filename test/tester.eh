@@ -79,7 +79,9 @@ class TestCase
 		echo('Failed test for ' + name + "!")
 		private tempFile = "tmp/" + this.name + ".tmp"
 		shell("touch " + tempFile)
-		File.new tempFile.puts expected
+		private tf = File.new tempFile
+		tf.puts expected
+		tf.close()
 		put(shell("diff '" + tempFile + "' '" + outputFile + "'"))
 	end
 

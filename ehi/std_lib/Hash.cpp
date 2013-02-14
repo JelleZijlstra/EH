@@ -52,6 +52,11 @@ EH_METHOD(Hash, operator_arrow) {
 	}
 }
 
+/*
+ * @description Changes the hash to map the key _k_ to the new value _v_
+ * @argument Tuple of size two: _k_ and _v_
+ * @returns _v_
+ */
 EH_METHOD(Hash, operator_arrow_equals) {
 	ASSERT_NARGS_AND_TYPE(2, Hash, "Hash.operator->=");
 	ehval_p index = args->get<Tuple>()->get(0);
@@ -62,6 +67,11 @@ EH_METHOD(Hash, operator_arrow_equals) {
 	return value;
 }
 
+/*
+ * @description Checks whether a given key exists in the hash.
+ * @argument Key
+ * @returns Bool
+ */
 EH_METHOD(Hash, has) {
 	ASSERT_OBJ_TYPE(Hash, "Hash.has");
 	args->assert_type<String>("Hash.has", ehi);
@@ -69,6 +79,11 @@ EH_METHOD(Hash, has) {
 	return Bool::make(hash->has(args->get<String>()));
 }
 
+/*
+ * @description Removes a given key from the hash.
+ * @argument Key
+ * @returns The hash
+ */
 EH_METHOD(Hash, delete) {
 	ASSERT_OBJ_TYPE(Hash, "Hash.has");
 	args->assert_type<String>("Hash.has", ehi);
@@ -77,6 +92,11 @@ EH_METHOD(Hash, delete) {
 	return obj;
 }
 
+/*
+ * @description Returns an array of the keys of the hash.
+ * @argument None
+ * @returns Array
+ */
 EH_METHOD(Hash, keys) {
 	ASSERT_NULL_AND_TYPE(Hash, "Hash.toArray");
 	ehval_p out = Array::make(ehi->get_parent());
@@ -135,11 +155,21 @@ EH_METHOD(Hash, compare) {
 	return Integer::make(0);
 }
 
+/*
+ * @description Determine the size of the hash.
+ * @argument None
+ * @returns Integer
+ */
 EH_METHOD(Hash, length) {
 	ASSERT_NULL_AND_TYPE(Hash, "Hash.length");
 	return Integer::make(static_cast<Integer::type>(obj->get<Hash>()->size()));
 }
 
+/*
+ * @description Creates an iterator over the hash.
+ * @argument None
+ * @returns Iterator
+ */
 EH_METHOD(Hash, getIterator) {
 	ASSERT_NULL_AND_TYPE(Hash, "Hash.getIterator");
 	ehval_p class_member = obj->get_property("Iterator", obj, ehi);
@@ -170,15 +200,32 @@ ehval_p Hash_Iterator::t::next(EHI *ehi) {
 	return Tuple::make(2, tuple, ehi->get_parent());
 }
 
+/*
+ * @description Initializer.
+ * @argument Hash to iterate over.
+ * @returns N/A
+ */
 EH_METHOD(Hash_Iterator, initialize) {
 	args->assert_type<Hash>("Hash.Iterator.initialize", ehi);
 	return Hash_Iterator::make(args, ehi->get_parent());
 }
+
+/*
+ * @description Checks whether the iterator is already depleted.
+ * @argument None
+ * @returns Bool
+ */
 EH_METHOD(Hash_Iterator, hasNext) {
 	args->assert_type<Null>("Hash.Iterator.hasNext", ehi);
 	ASSERT_RESOURCE(Hash_Iterator, "Hash.Iterator.hasNext");
 	return Bool::make(data->has_next());
 }
+
+/*
+ * @description Returns the next element in the hash.
+ * @argument None
+ * @returns Tuple of the key and value
+ */
 EH_METHOD(Hash_Iterator, next) {
 	args->assert_type<Null>("Hash.Iterator.next", ehi);
 	ASSERT_RESOURCE(Hash_Iterator, "Hash.Iterator.next");

@@ -104,7 +104,7 @@ globalref.eh
 globref.eh
 greedy.eh
 handle_uncaught.eh
-hash.eh
+hash_test.eh
 ifexpr.eh
 implicitreturn.eh
 implicitreturn2.eh
@@ -316,3 +316,4 @@ GlobalObject.eh
 decompile_constructed.eh
 func_sugar.eh
 GarbageCollector.eh
+Hash.eh

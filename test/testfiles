@@ -315,3 +315,4 @@ classcomp.eh
 GlobalObject.eh
 decompile_constructed.eh
 func_sugar.eh
+GarbageCollector.eh

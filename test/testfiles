@@ -317,3 +317,4 @@ decompile_constructed.eh
 func_sugar.eh
 GarbageCollector.eh
 Hash.eh
+more_newlines.eh

@@ -186,7 +186,7 @@ expression:
 	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
 	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
 	| '_'					{ $$ = ADD_NODE0(T_ANYTHING); }
-	| '(' expression ')'	{ $$ = ADD_NODE1(T_GROUPING, $2); }
+	| '(' separators expression ')'	{ $$ = ADD_NODE1(T_GROUPING, $3); }
 	| '~' expression		{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
 	| '!' expression		{ $$ = ADD_NODE1(T_NOT, $2); }
 	| '@' T_VARIABLE		{ $$ = eh_addnode(T_MATCH_SET, String::make($2)); }
@@ -293,8 +293,8 @@ expression:
 	| expression %prec T_CALL expression
 							{ $$ = ADD_NODE2(T_CALL, $1, $2); }
 	| '(' '$' command ')'	{ $$ = $3; }
-	| '[' arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $2); }
-	| '{' anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $2); }
+	| '[' separators arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $3); }
+	| '{' separators anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $3); }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END
@@ -347,7 +347,7 @@ para_expr:
 	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
 	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
 	| '_'					{ $$ = ADD_NODE0(T_ANYTHING); }
-	| '(' expression ')'	{ $$ = ADD_NODE1(T_GROUPING, $2); }
+	| '(' separators expression ')'	{ $$ = ADD_NODE1(T_GROUPING, $3); }
 	| '~' para_expr			{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
 	| '!' para_expr			{ $$ = ADD_NODE1(T_NOT, $2); }
 	| para_expr T_ARROW para_expr
@@ -388,7 +388,7 @@ para_expr:
 							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
 	| para_expr T_RANGE para_expr
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
-	| '[' arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $2); }
+	| '[' separators arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $3); }
 	| T_CLASS T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_GIVEN expression T_SEPARATOR separators caselist T_END
@@ -396,7 +396,7 @@ para_expr:
 	| T_MATCH expression T_SEPARATOR separators caselist T_END
 							{ $$ = ADD_NODE2(T_MATCH, $2, $5); }
 	| '(' '$' command ')'	{ $$ = $3; }
-	| '{' anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $2); }
+	| '{' separators anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $3); }
 	;
 
 /* Commands */
@@ -513,7 +513,7 @@ acase:
 	;
 
 separators:
-	T_SEPARATOR separators	{ }
+	separators T_SEPARATOR	{ }
 	| /* NULL */			{ }
 
 /* Property declarations */

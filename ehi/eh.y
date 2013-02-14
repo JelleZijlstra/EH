@@ -453,15 +453,15 @@ catch_clause:
 
 /* Array literals */
 arraylist:
-	arraylist_i arraymember ','
+	arraylist_i arraymember ',' separators
 							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
-	| arraylist_i arraymember
+	| arraylist_i arraymember separators
 							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 arraylist_i:
-	arraylist_i arraymember ','
+	arraylist_i arraymember ',' separators
 							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
@@ -474,15 +474,15 @@ arraymember:
 
 /* Hash literals */
 anonclasslist:
-	anonclasslist_i anonclassmember ','
+	anonclasslist_i anonclassmember ',' separators
 							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
-	| anonclasslist_i anonclassmember
+	| anonclasslist_i anonclassmember separators
 							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 anonclasslist_i:
-	anonclasslist_i anonclassmember ','
+	anonclasslist_i anonclassmember ',' separators
 							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;

@@ -628,7 +628,7 @@ ehval_p EHI::eh_op_tuple(ehval_p node, const ehcontext_t &context) {
 	unsigned int nargs = 1;
 	// first determine the size of the tuple
 	for(ehval_p tmp = node;
-		Node::is_a(tmp) && tmp->get<Enum_Instance>()->member_id == T_COMMA && tmp->get<Enum_Instance>()->member_id != T_END;
+		Node::is_a(tmp) && tmp->get<Enum_Instance>()->member_id == T_COMMA;
 		tmp = tmp->get<Enum_Instance>()->members[1], nargs++
 	) {}
 	ehretval_a new_args(nargs);

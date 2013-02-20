@@ -1,0 +1,13 @@
+%%stdout%%
+64
+42
+false
+true
+false
+@tuple <2> [
+	@int 2
+	@int 1
+]
+2
+2::3::[]
+%%stderr%%

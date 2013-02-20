@@ -1,0 +1,13 @@
+%%stdout%%
+@tuple <4> [
+	@string "foo"
+	@int 3
+	@bool false
+	@array [
+	]
+]
+@tuple <2> [
+	@string "hello"
+	@string "goodbye"
+]
+%%stderr%%

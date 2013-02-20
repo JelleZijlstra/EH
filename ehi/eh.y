@@ -186,7 +186,7 @@ expression:
 	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
 	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
 	| '_'					{ $$ = ADD_NODE0(T_ANYTHING); }
-	| '(' separators expression ')'	{ $$ = ADD_NODE1(T_GROUPING, $3); }
+	| '(' separators expression separators ')'	{ $$ = ADD_NODE1(T_GROUPING, $3); }
 	| '~' expression		{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
 	| '!' expression		{ $$ = ADD_NODE1(T_NOT, $2); }
 	| '@' T_VARIABLE		{ $$ = eh_addnode(T_MATCH_SET, String::make($2)); }
@@ -237,11 +237,11 @@ expression:
 							{ $$ = ADD_NODE2(T_FUNC, $1, $3); }
 	| expression '.' T_VARIABLE
 							{ $$ = eh_addnode(T_ACCESS, NODE($1), String::make($3)); }
-	| expression ',' expression
+	| expression ',' separators expression
 							{
 								// slight hack in order to be able to distinguish between normal and "mixed" tuples
 								auto left = $1;
-								auto right = $3;
+								auto right = $4;
 								if(left->member_id == T_NAMED_ARGUMENT || right->member_id == T_NAMED_ARGUMENT || right->member_id == T_MIXED_TUPLE) {
 									$$ = ADD_NODE2(T_MIXED_TUPLE, left, right);
 								} else {
@@ -347,7 +347,7 @@ para_expr:
 	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
 	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
 	| '_'					{ $$ = ADD_NODE0(T_ANYTHING); }
-	| '(' separators expression ')'	{ $$ = ADD_NODE1(T_GROUPING, $3); }
+	| '(' separators expression separators ')'	{ $$ = ADD_NODE1(T_GROUPING, $3); }
 	| '~' para_expr			{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
 	| '!' para_expr			{ $$ = ADD_NODE1(T_NOT, $2); }
 	| para_expr T_ARROW para_expr

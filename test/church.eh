@@ -36,6 +36,8 @@ echo (cdecode ((cand ctrue) cfalse))
 echo (cdecode ((cor ctrue) cfalse))
 echo (cdecode (cnot ctrue))
 
+echo (decode (((cif ctrue) sixtyfour) answer))
+
 # Church pairs
 pair x = y => z => (z x) y
 fst p = p (x => y => x)

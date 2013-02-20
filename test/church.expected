@@ -4,6 +4,7 @@
 false
 true
 false
+64
 @tuple <2> [
 	@int 2
 	@int 1

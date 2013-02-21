@@ -6,6 +6,7 @@
  */
 %{
 #include "eh.hpp"
+
 ehval_p EHI::execute_cmd(const char *name, Array::t *paras) {
 	return nullptr;
 }
@@ -95,10 +96,9 @@ ehval_p zvaltoeh(zval *in, EHI *ehi) {
 		case IS_STRING:
 			// would be nice to use strndup with in->value.str.len, can't get it though
 			return String::make(strdup(in->value.str.val));
-		case IS_ARRAY: {
+		case IS_ARRAY:
 			// initialize array
 			return zvaltoeh_array(in->value.ht, ehi);
-		}
 		case IS_LONG:
 			return Integer::make(in->value.lval);
 		case IS_RESOURCE:
@@ -118,7 +118,7 @@ ehval_p zvaltoeh_array(HashTable *hash, EHI *ehi) {
 	for(Bucket *curr = hash->pListHead; curr != nullptr; curr = curr->pListNext) {
 		// apparently the pDataPtr actually points to the zval
 		// see Zend/zend_hash.h for definition of the Bucket. No idea
-		// what the pData actually points to.
+		// what the pData really points to.
 		value = zvaltoeh((zval *)curr->pDataPtr, ehi);
 		// determine index type and value
 		if(curr->nKeyLength == 0) {

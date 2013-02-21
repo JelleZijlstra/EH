@@ -322,3 +322,4 @@ nl_within_array.eh
 ackermann_match.eh
 comma_newline.eh
 church.eh
+intpow.eh

@@ -27,6 +27,6 @@ func bto10: input, base
 end
 
 # 42
-echo bto10("2a", 16)
+echo(bto10("2a", 16))
 # 44
-echo bto10("35", 13)
+echo(bto10("35", 13))

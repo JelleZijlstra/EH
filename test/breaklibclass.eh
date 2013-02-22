@@ -2,7 +2,7 @@
 # Try to break library classes; this previously segfaulted.
 var = Map.new ()
 funcv = var.has
-printvar funcv ()
+printvar(funcv())
 class Foo
 	public bar
 end

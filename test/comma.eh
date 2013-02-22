@@ -9,4 +9,4 @@ end
 # Expect 1
 printvar(giveargs(1, 2, 3) + 1)
 # Expect 0
-printvar giveargs(1, 2, 3 + 1)
+printvar(giveargs(1, 2, 3 + 1))

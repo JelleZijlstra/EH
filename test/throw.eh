@@ -20,5 +20,5 @@ trying = func: input
 	end
 end
 
-printvar trying 2
-printvar trying 3
+printvar(trying 2)
+printvar(trying 3)

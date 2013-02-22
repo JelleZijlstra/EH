@@ -21,6 +21,6 @@ else
 	input = getinput()
 end
 for i in input
-	echo mccarthy i
+	echo(mccarthy i)
 end
 ret 0

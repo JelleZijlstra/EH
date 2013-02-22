@@ -5,7 +5,7 @@ foo = func: n
 	ret n
 end
 bar = 3
-echo foo bar
+echo(foo bar)
 echo bar
 try
 	echo(foo(() &bar))

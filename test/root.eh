@@ -23,4 +23,4 @@ if argc == 2
 else
 	num = 27
 end
-echo sqrt num
+echo(sqrt num)

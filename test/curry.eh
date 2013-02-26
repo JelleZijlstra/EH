@@ -5,10 +5,10 @@ Array.reduce = func: f
 	func: start
 		out = start
 		for val in arr
-			out = f(out, val)
+			out = f out val
 			echo out
 		end
 		out
 	end
 end
-printvar ([1, 2].reduce (v, x => v + 1)) 0
+printvar ([1, 2].reduce (v => x => v + 1) 0)

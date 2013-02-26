@@ -323,3 +323,4 @@ ackermann_match.eh
 comma_newline.eh
 church.eh
 intpow.eh
+add_curry.eh

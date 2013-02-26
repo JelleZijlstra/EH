@@ -31,6 +31,8 @@
 #define ADD_NODE4(opcode, first, second, third, fourth) eh_addnode(opcode, NODE(first), NODE(second), NODE(third), NODE(fourth))
 #define ADD_COMPOUND(opcode, lval, rval, result) ehval_p lvalue = NODE(lval); result = eh_addnode(T_ASSIGN, lvalue, NODE(eh_addnode(opcode, lvalue, NODE(rval))))
 
+Node *fix_call(Node *lhs, Node *rhs, void *scanner);
+
 void yyerror(void *, const char *s);
 
 %}
@@ -291,7 +293,7 @@ expression:
 	| expression T_RIGHTSHIFT expression
 							{ $$ = ADD_NODE2(T_RIGHTSHIFT, $1, $3); }
 	| expression %prec T_CALL expression
-							{ $$ = ADD_NODE2(T_CALL, $1, $2); }
+							{ $$ = fix_call($1, $2, scanner); }
 	| '(' '$' command ')'	{ $$ = $3; }
 	| '[' separators arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $3); }
 	| '{' separators anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $3); }
@@ -546,3 +548,23 @@ enum_arg_list:
 							{ $$ = eh_addnode(T_COMMA, String::make($1), NODE($3)); }
 	;
 %%
+
+// add_to_chain of ((b, c), d) and a returns (((a, b), c), d)
+Node *add_to_chain(ehval_p chain, ehval_p elt, void *scanner) {
+	if(Node::is_a(chain) && chain->get<Enum_Instance>()->member_id == T_CALL) {
+		Node *left = add_to_chain(chain->get<Enum_Instance>()->members[0], elt, scanner);
+		return eh_addnode(T_CALL, NODE(left), chain->get<Enum_Instance>()->members[1]);
+	} else {
+		return eh_addnode(T_CALL, elt, chain);
+	}
+}
+
+// Move around a piece of AST so that function calls are left-associative rather than right-associative.
+// Change a, (b, c) into (a, b), c
+Node *fix_call(Node *lhs, Node *rhs, void *scanner) {
+	if(rhs->member_id == T_CALL) {
+		return add_to_chain(NODE(rhs), NODE(lhs), scanner);
+	} else {
+		return ADD_NODE2(T_CALL, lhs, rhs);
+	}
+}

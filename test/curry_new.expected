@@ -1,0 +1,4 @@
+%%stdout%%
+@function <user>: b
+@int 3
+%%stderr%%

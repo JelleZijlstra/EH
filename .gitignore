@@ -23,6 +23,7 @@ ehi/ehphp.php
 ehi/php_ehphp.h
 eh_json.flex.*
 eh_json.bison.*
+test/tester
 # Editor stuff
 *.sublime-*
 # Used for temporary files in tester

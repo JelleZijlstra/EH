@@ -324,3 +324,5 @@ comma_newline.eh
 church.eh
 intpow.eh
 add_curry.eh
+curry_new.eh
+quine.eh

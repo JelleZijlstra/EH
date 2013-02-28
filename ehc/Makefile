@@ -11,4 +11,4 @@ install: ehc
 ehc: ehc.eh
 	$(INTERPRETED_COMPILER) $(EHCFLAGS) $(SOURCE) -o $(TARGET)
 
-ehc.eh: compiler.eh preprocessor.eh
+ehc.eh: compiler.eh preprocessor.eh ../ehi/libeh.a

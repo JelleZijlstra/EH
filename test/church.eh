@@ -8,7 +8,10 @@ decode f = f (1.operator+) 0
 add m = n => f => x => m f (n f x)
 multiply m = n => f => m (n f)
 succ m = f => x => f (m f x)
+pred n = f => x => n (g => h => h (g f)) (u => x) (u => u)
+sub m = n => (n pred) m
 exp m = n => n m
+iszero n = n (x => false) true
 
 two = f => x => f (f x)
 three = succ two
@@ -20,6 +23,10 @@ sixtyfour = exp two six
 
 echo (decode sixtyfour)
 echo (decode answer)
+echo (decode (pred sixtyfour))
+echo (decode (sub sixtyfour answer))
+echo (iszero sixtyfour)
+echo (iszero (pred (pred two)))
 
 # Church booleans
 ctrue a = b => a

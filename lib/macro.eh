@@ -76,9 +76,9 @@ class Macro
 			case Node.T_NULL; null
 			# Special cases for function declarations
 			case Node.T_ASSIGN(Node.T_CALL(@fname, @args), @body)
-				Node.T_ASSIGN(optimize_lvalue fname, Node.T_FUNC(optimize_lvalue args, optimize body))
+				optimize(Node.T_ASSIGN(fname, Node.T_FUNC(args, body)))
 			case Node.T_ASSIGN(Node.T_CLASS_MEMBER(@attributes, Node.T_CALL(@fname, @args)), @body)
-				Node.T_ASSIGN(Node.T_CLASS_MEMBER(attributes, optimize_lvalue fname), Node.T_FUNC(optimize_lvalue args, optimize body))
+				optimize(Node.T_ASSIGN(Node.T_CLASS_MEMBER(attributes, fname), Node.T_FUNC(args, body)))
 			case Node.T_ASSIGN(@lvalue, @rvalue)
 				Node.T_ASSIGN(optimize_lvalue(lvalue), optimize(rvalue))
 			case Node.T_FUNC(@args, @code)

@@ -883,16 +883,16 @@ ehval_p EHI::eh_op_set(ehval_p *paras, const ehcontext_t &context) {
 	 */
 	auto ei = lvalue->get<Enum_Instance>();
 	if(ei->member_id == T_CALL) {
-		ehval_p closure_paras[2] = {ei->members[1], paras[1]};
-		ehval_p rvalue = eh_op_declareclosure(closure_paras, context);
-		return set(ei->members[0], rvalue, nullptr, context);
+		ehval_p rvalue = Node::make(eh_addnode(T_FUNC, ei->members[1], paras[1]), parent);
+		ehval_p op_paras[2] = {ei->members[0], rvalue};
+		return eh_op_set(op_paras, context);
 	} else if(ei->member_id == T_CLASS_MEMBER) {
 		auto inner_ei = ei->members[1]->get<Enum_Instance>();
 		if(inner_ei->member_id == T_CALL) {
-			attributes_t new_attributes = parse_attributes(ei->members[0]);
-			ehval_p closure_paras[2] = {inner_ei->members[1], paras[1]};
-			ehval_p rvalue = eh_op_declareclosure(closure_paras, context);
-			return set(inner_ei->members[0], rvalue, &new_attributes, context);
+			ehval_p new_lvalue = Node::make(eh_addnode(T_CLASS_MEMBER, ei->members[0], inner_ei->members[0]), parent);
+			ehval_p new_rvalue = Node::make(eh_addnode(T_FUNC, inner_ei->members[1], paras[1]), parent);
+			ehval_p op_paras[2] = {new_lvalue, new_rvalue};
+			return eh_op_set(op_paras, context);
 		}
 	}
 	ehval_p rvalue = eh_execute(paras[1], context);

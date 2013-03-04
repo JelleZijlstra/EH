@@ -1,6 +1,6 @@
 # Useful functions for EH macros
 
-Node.Context.toString = () => "(context: " + this.getObject() + ", " + this.getScope() + ")"
+Node.Context.toString() = "(context: " + this.getObject() + ", " + this.getScope() + ")"
 
 class Macro
 	public decorate = func: f, (code, context)
@@ -11,14 +11,14 @@ class Macro
 
 	private privateAttrs = Node.T_ATTRIBUTE(Attribute.privateAttribute, Node.T_END)
 
-	public privatize = code => match code
+	public privatize code = match code
 		case Node.T_ASSIGN(@lvalue, @rvalue)
 			Node.T_ASSIGN(Node.T_CLASS_MEMBER(privateAttrs, lvalue), rvalue)
 	end
 
-	public identity = code => code
+	public identity code = code
 
-	private optimize_lvalue = code => match code
+	private optimize_lvalue code = match code
 		case Node.T_ARROW(@base, @accessor)
 			Node.T_ARROW(optimize(base), optimize(accessor))
 		case Node.T_ACCESS(@base, @prop)
@@ -43,7 +43,7 @@ class Macro
 			throw(MiscellaneousError.new("Invalid lvalue: " + code))
 	end
 
-	private optimize_match_cases = code => match code
+	private optimize_match_cases code = match code
 		case Node.T_END
 			Node.T_END
 		case Node.T_COMMA(Node.T_CASE(@pattern, @body), @rest)
@@ -53,7 +53,7 @@ class Macro
 			throw()
 	end
 
-	private optimize_match_pattern = code => match code
+	private optimize_match_pattern code = match code
 		case Node.T_GROUPING(Node.T_COMMA(@left, @right))
 			Node.T_GROUPING(Node.T_COMMA(optimize_match_pattern left, optimize_match_pattern right))
 		case Node.T_GROUPING(@inner)
@@ -70,7 +70,7 @@ class Macro
 			optimize code
 	end
 
-	public optimize = code => if code.typeId() == Node.typeId()
+	public optimize code = if code.typeId() == Node.typeId()
 		match code
 			case Node.T_LITERAL(@val); val
 			case Node.T_NULL; null

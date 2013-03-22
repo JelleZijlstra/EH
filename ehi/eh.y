@@ -29,7 +29,8 @@
 #define ADD_NODE2(opcode, first, second) eh_addnode(opcode, NODE(first), NODE(second))
 #define ADD_NODE3(opcode, first, second, third) eh_addnode(opcode, NODE(first), NODE(second), NODE(third))
 #define ADD_NODE4(opcode, first, second, third, fourth) eh_addnode(opcode, NODE(first), NODE(second), NODE(third), NODE(fourth))
-#define ADD_COMPOUND(opcode, lval, rval, result) ehval_p lvalue = NODE(lval); result = eh_addnode(T_ASSIGN, lvalue, NODE(eh_addnode(opcode, lvalue, NODE(rval))))
+#define OPERATOR(name) (String::make(strdup(("operator" + std::string(name)).c_str())))
+#define OPERATOR_CALL(left, op, right) (eh_addnode(T_CALL_METHOD, NODE(left), OPERATOR(op), NODE(right)))
 
 Node *fix_call(Node *lhs, Node *rhs, void *scanner);
 
@@ -80,39 +81,25 @@ void yyerror(void *, const char *s);
 %token T_DOUBLEARROW
 %token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS T_IF_ELSE T_NULLARY_ENUM T_ENUM_WITH_ARGUMENTS
 %token T_ARRAY_MEMBER_NO_KEY T_ANYTHING T_GROUPING T_ASSIGN T_ADD T_SUBTRACT T_MULTIPLY T_DIVIDE T_MODULO T_GREATER
-%token T_LESSER T_BINARY_AND T_BINARY_OR T_BINARY_XOR T_BINARY_COMPLEMENT T_NOT T_MATCH_SET T_COMMA T_ARRAY_LITERAL
+%token T_BAR T_BINARY_COMPLEMENT T_NOT T_MATCH_SET T_COMMA T_ARRAY_LITERAL
 %token T_HASH_LITERAL T_CALL T_ACCESS T_LIST T_NAMED_ARGUMENT T_MIXED_TUPLE
 %token T_COMMAND T_SHORTPARA T_LONGPARA
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
-%token <sValue> T_CUSTOMOP
-%nonassoc T_RAW
-%right '=' T_PLUSEQ T_MINEQ T_MULTIPLYEQ T_DIVIDEEQ T_MODULOEQ T_ANDEQ T_OREQ T_XOREQ T_BINANDEQ T_BINOREQ T_BINXOREQ T_LEFTSHIFTEQ T_RIGHTSHIFTEQ
-%right T_DOUBLEARROW
-%nonassoc T_ATTRIBUTE
-%right ','
-%nonassoc ':'
-%left T_AND T_OR T_XOR
-%left '|' '^' '&'
-%right T_CUSTOMOP
-%left '>' '<' T_GE T_LE T_NE T_EQ T_COMPARE
-%left T_LEFTSHIFT T_RIGHTSHIFT
-%left '+' '-'
-%left '*' '/' '%'
-%nonassoc T_PLUSPLUS T_MINMIN
-%right '@'
-%nonassoc '~' '!' T_NEGATIVE
-%left T_RANGE T_ARROW '.'
-%right T_CALL
-%nonassoc '[' ']' '{' '}'
-%nonassoc '(' ')'
-%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_SWITCH T_FUNC T_CLASS T_ENUM T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
+%token <sValue> T_BAR_OP T_CARET_OP T_AMPERSAND_OP T_COMPARE_OP T_EQ_OP T_COMPOUND_ASSIGN T_COLON_OP T_PLUS_OP T_MULT_OP T_CUSTOM_OP T_SHIFT_OP
+%token T_OR T_SCOPE T_MINMIN T_XOR T_THIS T_RAW T_ARROW T_AND T_PLUSPLUS T_RANGE
 
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list
-%type<ehNode> para_expr catch_clauses catch_clause
+%type<ehNode> catch_clauses catch_clause
 %type<ehNode> elseif_clauses elseif_clause enum_list enum_member enum_arg_list
+%type<ehNode> assign_expression function_expression attribute_expression tuple_expression namedvar_expression
+%type<ehNode> boolean_expression bar_expression caret_expression ampersand_expression compare_expression
+%type<ehNode> colon_expression equals_expression plus_expression mult_expression shift_expression custom_op_expression
+%type<ehNode> incdec_expression unary_op_expression access_expression base_expression
 %type<sValue> bareword_or_string
+
+%start program
 %%
 program:
 	global_list				{
@@ -122,6 +109,7 @@ program:
 									ehi->set_code(code);
 								}
 							}
+	;
 
 global_list:
 	/* NULL */				{ $$ = nullptr; }
@@ -175,71 +163,39 @@ statement:
 	| T_BREAK T_SEPARATOR	{ $$ = eh_addnode(T_BREAK, Integer::make(1)); }
 	| T_BREAK expression T_SEPARATOR
 							{ $$ = ADD_NODE1(T_BREAK, $2); }
-		/* property declaration */
 	;
 
 expression:
-	T_INTEGER				{ $$ = eh_addnode(T_LITERAL, Integer::make($1)); }
-	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
-	| T_BOOL				{ $$ = eh_addnode(T_LITERAL, Bool::make($1)); }
-	| T_FLOAT				{ $$ = eh_addnode(T_LITERAL, Float::make($1)); }
-	| T_VARIABLE			{ $$ = eh_addnode(T_VARIABLE, String::make($1)); }
-	| T_STRING				{ $$ = eh_addnode(T_LITERAL, String::make($1)); }
-	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
-	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
-	| '_'					{ $$ = ADD_NODE0(T_ANYTHING); }
-	| '(' separators expression separators ')'	{ $$ = ADD_NODE1(T_GROUPING, $3); }
-	| '~' expression		{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
-	| '!' expression		{ $$ = ADD_NODE1(T_NOT, $2); }
-	| '@' T_VARIABLE		{ $$ = eh_addnode(T_MATCH_SET, String::make($2)); }
-	| T_RAW expression		{ $$ = ADD_NODE1(T_RAW, $2); }
-	| T_VARIABLE ':' expression %prec ':'
-							{ $$ = eh_addnode(T_NAMED_ARGUMENT, String::make($1), NODE($3)); }
-	| expression T_PLUSPLUS	{
-								ehval_p lvalue = NODE($1);
-								$$ = eh_addnode(T_ASSIGN, lvalue, NODE(eh_addnode(T_ADD, lvalue, Integer::make(1))));
-							}
-	| expression T_MINMIN	{
-								ehval_p lvalue = NODE($1);
-								$$ = eh_addnode(T_ASSIGN, lvalue, NODE(eh_addnode(T_SUBTRACT, lvalue, Integer::make(1))));
-							}
-	| expression T_CUSTOMOP expression
-							{ $$ = eh_addnode(T_CUSTOMOP, NODE($1), String::make($2), NODE($3)); }
-	| expression '=' expression
+	// T_RAW expression		{ $$ = ADD_NODE1(T_RAW, $2); }
+	assign_expression		{ $$ = $1; }
+	;
+
+assign_expression:
+	function_expression '=' assign_expression
 							{ $$ = ADD_NODE2(T_ASSIGN, $1, $3); }
-	| expression T_PLUSEQ expression
-							{ ADD_COMPOUND(T_ADD, $1, $3, $$); }
-	| expression T_MINEQ expression
-							{ ADD_COMPOUND(T_SUBTRACT, $1, $3, $$); }
-	| expression T_MULTIPLYEQ expression
-							{ ADD_COMPOUND(T_MULTIPLY, $1, $3, $$); }
-	| expression T_DIVIDEEQ expression
-							{ ADD_COMPOUND(T_DIVIDE, $1, $3, $$); }
-	| expression T_MODULOEQ expression
-							{ ADD_COMPOUND(T_MODULO, $1, $3, $$); }
-	| expression T_ANDEQ expression
-							{ ADD_COMPOUND(T_AND, $1, $3, $$); }
-	| expression T_OREQ expression
-							{ ADD_COMPOUND(T_OR, $1, $3, $$); }
-	| expression T_XOREQ expression
-							{ ADD_COMPOUND(T_XOR, $1, $3, $$); }
-	| expression T_BINANDEQ expression
-							{ ADD_COMPOUND(T_BINARY_AND, $1, $3, $$); }
-	| expression T_BINOREQ expression
-							{ ADD_COMPOUND(T_BINARY_OR, $1, $3, $$); }
-	| expression T_BINXOREQ expression
-							{ ADD_COMPOUND(T_BINARY_XOR, $1, $3, $$); }
-	| expression T_LEFTSHIFTEQ expression
-							{ ADD_COMPOUND(T_LEFTSHIFT, $1, $3, $$); }
-	| expression T_RIGHTSHIFTEQ expression
-							{ ADD_COMPOUND(T_RIGHTSHIFT, $1, $3, $$); }
-	| expression T_ARROW expression
-							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
-	| expression T_DOUBLEARROW expression
+	| function_expression T_COMPOUND_ASSIGN assign_expression
+							{
+								ehval_p lvalue = NODE($1);
+								ehval_p rvalue = NODE(eh_addnode(T_CALL_METHOD, lvalue, OPERATOR($2), NODE($3)));
+								$$ = eh_addnode(T_ASSIGN, lvalue, rvalue);
+							}
+	| function_expression	{ $$ = $1; }
+	;
+
+function_expression:
+	attribute_expression T_DOUBLEARROW function_expression
 							{ $$ = ADD_NODE2(T_FUNC, $1, $3); }
-	| expression '.' T_VARIABLE
-							{ $$ = eh_addnode(T_ACCESS, NODE($1), String::make($3)); }
-	| expression ',' separators expression
+	| attribute_expression	{ $$ = $1; }
+	;
+
+attribute_expression:
+	attributelist tuple_expression
+							{ $$ = ADD_NODE2(T_CLASS_MEMBER, $1, $2); }
+	| tuple_expression		{ $$ = $1; }
+	;
+
+tuple_expression:
+	namedvar_expression ',' separators tuple_expression
 							{
 								// slight hack in order to be able to distinguish between normal and "mixed" tuples
 								auto left = $1;
@@ -250,50 +206,137 @@ expression:
 									$$ = ADD_NODE2(T_COMMA, left, right);
 								}
 							}
-	| expression T_EQ expression
-							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
-	| expression '>' expression
-							{ $$ = ADD_NODE2(T_GREATER, $1, $3); }
-	| expression '<' expression
-							{ $$ = ADD_NODE2(T_LESSER, $1, $3); }
-	| expression T_GE expression
-							{ $$ = ADD_NODE2(T_GE, $1, $3); }
-	| expression T_LE expression
-							{ $$ = ADD_NODE2(T_LE, $1, $3); }
-	| expression T_NE expression
-							{ $$ = ADD_NODE2(T_NE, $1, $3); }
-	| expression T_COMPARE expression
-	            			{ $$ = ADD_NODE2(T_COMPARE, $1, $3); }
-	| expression '+' expression
-							{ $$ = ADD_NODE2(T_ADD, $1, $3); }
-	| expression '-' expression
-							{ $$ = ADD_NODE2(T_SUBTRACT, $1, $3); }
-	| expression '*' expression
-							{ $$ = ADD_NODE2(T_MULTIPLY, $1, $3); }
-	| expression '/' expression
-							{ $$ = ADD_NODE2(T_DIVIDE, $1, $3); }
-	| expression '%' expression
-							{ $$ = ADD_NODE2(T_MODULO, $1, $3); }
-	| expression '^' expression
-							{ $$ = ADD_NODE2(T_BINARY_XOR, $1, $3); }
-	| expression '|' expression
-							{ $$ = ADD_NODE2(T_BINARY_OR, $1, $3); }
-	| expression '&' expression
-							{ $$ = ADD_NODE2(T_BINARY_AND, $1, $3); }
-	| expression T_AND expression
+	| namedvar_expression	{ $$ = $1; }
+	;
+
+namedvar_expression:
+	T_VARIABLE ':' boolean_expression
+							{ $$ = eh_addnode(T_NAMED_ARGUMENT, String::make($1), NODE($3)); }
+	| boolean_expression	{ $$ = $1; }
+	;
+
+boolean_expression:
+	boolean_expression T_AND bar_expression
 							{ $$ = ADD_NODE2(T_AND, $1, $3); }
-	| expression T_OR expression
+	| boolean_expression T_OR bar_expression
 							{ $$ = ADD_NODE2(T_OR, $1, $3); }
-	| expression T_XOR expression
+	| boolean_expression T_XOR bar_expression
 							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
-	| expression T_RANGE expression
+	| bar_expression		{ $$ = $1; }
+	;
+
+bar_expression:
+	bar_expression T_BAR_OP caret_expression
+							{ $$ = OPERATOR_CALL($1, $2, $3); }
+	| bar_expression '|' caret_expression
+							{ $$ = ADD_NODE2(T_BAR, $1, $3); }
+	| caret_expression		{ $$ = $1; }
+	;
+
+caret_expression:
+	caret_expression T_CARET_OP ampersand_expression
+							{ $$ = OPERATOR_CALL($1, $2, $3); }
+	| ampersand_expression	{ $$ = $1; }
+	;
+
+ampersand_expression:
+	ampersand_expression T_AMPERSAND_OP compare_expression
+							{ $$ = OPERATOR_CALL($1, $2, $3); }
+	| compare_expression	{ $$ = $1; }
+	;
+
+compare_expression:
+	compare_expression T_COMPARE_OP equals_expression
+							{ $$ = OPERATOR_CALL($1, $2, $3); }
+	| equals_expression		{ $$ = $1; }
+	;
+
+equals_expression:
+	equals_expression T_EQ_OP colon_expression
+							{ $$ = OPERATOR_CALL($1, $2, $3); }
+	| colon_expression		{ $$ = $1; }
+	;
+
+colon_expression:
+	plus_expression T_COLON_OP colon_expression
+							{ $$ = OPERATOR_CALL($1, $2, $3); }
+	| plus_expression		{ $$ = $1; }
+	;
+
+plus_expression:
+	plus_expression T_PLUS_OP mult_expression
+							{ $$ = OPERATOR_CALL($1, $2, $3); }
+	| plus_expression '-' mult_expression
+							{ $$ = eh_addnode(T_CALL_METHOD, NODE($1), String::make(strdup("operator-")), NODE($3)); }
+	| mult_expression		{ $$ = $1; }
+	;
+
+mult_expression:
+	mult_expression T_MULT_OP shift_expression
+							{ $$ = OPERATOR_CALL($1, $2, $3); }
+	| shift_expression		{ $$ = $1; }
+	;
+
+shift_expression:
+	shift_expression T_SHIFT_OP custom_op_expression
+							{ $$ = OPERATOR_CALL($1, $2, $3); }
+	| custom_op_expression	{ $$ = $1; }
+	;
+
+custom_op_expression:
+	custom_op_expression T_CUSTOM_OP incdec_expression
+							{ $$ = OPERATOR_CALL($1, $2, $3); }
+	| incdec_expression		{ $$ = $1; }
+	;
+
+incdec_expression:
+	incdec_expression T_PLUSPLUS
+							{
+								ehval_p lvalue = NODE($1);
+								ehval_p rvalue = NODE(eh_addnode(T_CALL_METHOD, lvalue, String::make(strdup("operator+")), Integer::make(1)));
+								$$ = eh_addnode(T_ASSIGN, lvalue, rvalue);
+							}
+	| incdec_expression T_MINMIN
+							{
+								ehval_p lvalue = NODE($1);
+								ehval_p rvalue = NODE(eh_addnode(T_CALL_METHOD, lvalue, String::make(strdup("operator-")), Integer::make(1)));
+								$$ = eh_addnode(T_ASSIGN, lvalue, rvalue);
+							}
+	| access_expression		{ $$ = $1; }
+	;
+
+access_expression:
+	access_expression T_ARROW unary_op_expression
+							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
+	| access_expression '.' T_VARIABLE
+							{ $$ = eh_addnode(T_ACCESS, NODE($1), String::make($3)); }
+	| unary_op_expression T_RANGE unary_op_expression
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
-	| expression T_LEFTSHIFT expression
-							{ $$ = ADD_NODE2(T_LEFTSHIFT, $1, $3); }
-	| expression T_RIGHTSHIFT expression
-							{ $$ = ADD_NODE2(T_RIGHTSHIFT, $1, $3); }
-	| expression %prec T_CALL expression
-							{ $$ = fix_call($1, $2, scanner); }
+	| access_expression	unary_op_expression
+							{ $$ = ADD_NODE2(T_CALL, $1, $2); }
+	| unary_op_expression	{ $$ = $1; }
+	;
+
+unary_op_expression:
+	'~' unary_op_expression	{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
+	| '!' unary_op_expression
+							{ $$ = ADD_NODE1(T_NOT, $2); }
+	| T_RAW expression		{ $$ = ADD_NODE1(T_RAW, $2); }
+	| base_expression		{ $$ = $1; }
+	;
+
+base_expression:
+	T_INTEGER				{ $$ = eh_addnode(T_LITERAL, Integer::make($1)); }
+	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
+	| T_BOOL				{ $$ = eh_addnode(T_LITERAL, Bool::make($1)); }
+	| T_FLOAT				{ $$ = eh_addnode(T_LITERAL, Float::make($1)); }
+	| T_VARIABLE			{ $$ = eh_addnode(T_VARIABLE, String::make($1)); }
+	| T_STRING				{ $$ = eh_addnode(T_LITERAL, String::make($1)); }
+	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
+	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
+	| '_'					{ $$ = ADD_NODE0(T_ANYTHING); }
+	| '@' T_VARIABLE		{ $$ = eh_addnode(T_MATCH_SET, String::make($2)); }
+	| '(' separators expression separators ')'	{ $$ = ADD_NODE1(T_GROUPING, $3); }
 	| '(' '$' command ')'	{ $$ = $3; }
 	| '[' separators arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $3); }
 	| '{' separators anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $3); }
@@ -332,73 +375,6 @@ expression:
 							{ $$ = ADD_NODE2(T_FOR, $2, $4); }
 	| T_FOR expression T_IN expression T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE3(T_FOR_IN, $2, $4, $6); }
-	| attributelist expression %prec T_ATTRIBUTE
-							{ $$ = ADD_NODE2(T_CLASS_MEMBER, $1, $2); }
-	;
-
-para_expr:
-	/*
-	 * Expression used in command arguments and array and hash literal members. Disallows tuples and function calls.
-	 */
-	T_INTEGER				{ $$ = eh_addnode(T_LITERAL, Integer::make($1)); }
-	| T_NULL				{ $$ = ADD_NODE0(T_NULL); }
-	| T_BOOL				{ $$ = eh_addnode(T_LITERAL, Bool::make($1)); }
-	| T_FLOAT				{ $$ = eh_addnode(T_LITERAL, Float::make($1)); }
-	| T_VARIABLE			{ $$ = eh_addnode(T_VARIABLE, String::make($1)); }
-	| T_STRING				{ $$ = eh_addnode(T_LITERAL, String::make($1)); }
-	| T_THIS				{ $$ = ADD_NODE0(T_THIS); }
-	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
-	| '_'					{ $$ = ADD_NODE0(T_ANYTHING); }
-	| '(' separators expression separators ')'	{ $$ = ADD_NODE1(T_GROUPING, $3); }
-	| '~' para_expr			{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
-	| '!' para_expr			{ $$ = ADD_NODE1(T_NOT, $2); }
-	| para_expr T_ARROW para_expr
-							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
-	| para_expr '.' T_VARIABLE
-							{ $$ = eh_addnode(T_ACCESS, NODE($1), String::make($3)); }
-	| para_expr T_EQ para_expr
-							{ $$ = ADD_NODE2(T_EQ, $1, $3); }
-	| para_expr '<' para_expr
-							{ $$ = ADD_NODE2(T_LESSER, $1, $3); }
-	| para_expr T_GE para_expr
-							{ $$ = ADD_NODE2(T_GE, $1, $3); }
-	| para_expr T_LE para_expr
-							{ $$ = ADD_NODE2(T_LE, $1, $3); }
-	| para_expr T_NE para_expr
-							{ $$ = ADD_NODE2(T_NE, $1, $3); }
-	| para_expr T_COMPARE para_expr
-	            			{ $$ = ADD_NODE2(T_COMPARE, $1, $3); }
-	| para_expr '+' para_expr
-							{ $$ = ADD_NODE2(T_ADD, $1, $3); }
-	| para_expr '*' para_expr
-							{ $$ = ADD_NODE2(T_MULTIPLY, $1, $3); }
-	| para_expr '/' para_expr
-							{ $$ = ADD_NODE2(T_DIVIDE, $1, $3); }
-	| para_expr '%' para_expr
-							{ $$ = ADD_NODE2(T_MODULO, $1, $3); }
-	| para_expr '^' para_expr
-							{ $$ = ADD_NODE2(T_BINARY_XOR, $1, $3); }
-	| para_expr '|' para_expr
-							{ $$ = ADD_NODE2(T_BINARY_OR, $1, $3); }
-	| para_expr '&' para_expr
-							{ $$ = ADD_NODE2(T_BINARY_AND, $1, $3); }
-	| para_expr T_AND para_expr
-							{ $$ = ADD_NODE2(T_AND, $1, $3); }
-	| para_expr T_OR para_expr
-							{ $$ = ADD_NODE2(T_OR, $1, $3); }
-	| para_expr T_XOR para_expr
-							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
-	| para_expr T_RANGE para_expr
-							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
-	| '[' separators arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $3); }
-	| T_CLASS T_SEPARATOR statement_list T_END
-							{ $$ = ADD_NODE1(T_CLASS, $3); }
-	| T_GIVEN expression T_SEPARATOR separators caselist T_END
-							{ $$ = ADD_NODE2(T_GIVEN, $2, $5); }
-	| T_MATCH expression T_SEPARATOR separators caselist T_END
-							{ $$ = ADD_NODE2(T_MATCH, $2, $5); }
-	| '(' '$' command ')'	{ $$ = $3; }
-	| '{' separators anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $3); }
 	;
 
 /* Commands */
@@ -412,14 +388,14 @@ paralist:
 	;
 
 para:
-	para_expr				{ $$ = $1; }
-	| T_MINMIN bareword_or_string '=' para_expr
+	base_expression			{ $$ = $1; }
+	| T_MINMIN bareword_or_string '=' base_expression
 							{ $$ = eh_addnode(T_LONGPARA, String::make($2), NODE($4)); }
 	| T_MINMIN bareword_or_string
 							{ $$ = eh_addnode(T_LONGPARA, String::make($2), Bool::make(true)); }
 	| '-' bareword_or_string
 							{ $$ = eh_addnode(T_SHORTPARA, String::make($2), Bool::make(true)); }
-	| '-' bareword_or_string '=' para_expr
+	| '-' bareword_or_string '=' base_expression
 							{ $$ = eh_addnode(T_SHORTPARA, String::make($2), NODE($4)); }
 	;
 
@@ -469,9 +445,9 @@ arraylist_i:
 	;
 
 arraymember:
-	para_expr T_DOUBLEARROW para_expr
+	namedvar_expression T_DOUBLEARROW namedvar_expression
 							{ $$ = ADD_NODE2(T_ARRAY_MEMBER, $1, $3); }
-	| para_expr				{ $$ = ADD_NODE1(T_ARRAY_MEMBER_NO_KEY, $1); }
+	| namedvar_expression	{ $$ = ADD_NODE1(T_ARRAY_MEMBER_NO_KEY, $1); }
 	;
 
 /* Hash literals */
@@ -490,9 +466,9 @@ anonclasslist_i:
 	;
 
 anonclassmember:
-	T_VARIABLE ':' para_expr
+	T_VARIABLE ':' namedvar_expression
 							{ $$ = eh_addnode(T_ARRAY_MEMBER, String::make($1), NODE($3)); }
-	| T_STRING ':' para_expr
+	| T_STRING ':' namedvar_expression
 							{ $$ = eh_addnode(T_ARRAY_MEMBER, String::make($1), NODE($3)); }
 	;
 

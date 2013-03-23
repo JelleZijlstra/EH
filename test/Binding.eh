@@ -21,15 +21,15 @@ assert(b.decompile() == "func: f
 		f ()
 	end
 end", "decompiling a binding works just like decompiling a function")
-assert(3.operator+.decompile() == "(args) => (native code)", "Same goes for native functions")
+assert(3.operator+ .decompile() == "(args) => (native code)", "Same goes for native functions")
 
 # @method bindTo
-private bound = 3.operator+.bindTo 4
+private bound = 3.operator+ .bindTo 4
 assert(bound 3 == 7, "bound to 4")
 
 # @method toString
 assert(b.toString() == "f => (user code)", "works just like Function.toString")
-assert(3.operator+.toString() == "(args) => (native code)", "same")
+assert(3.operator+ .toString() == "(args) => (native code)", "same")
 
 # @method operator()
 assert(bound.operator() 7 == 11, "this is 4 inside the binding")
@@ -39,4 +39,4 @@ assert(3.operator+ 7 == 10, "and now it is 3")
 assert(bound.object() == 4, "object is 4")
 
 # @method method
-assert(bound.method() == Integer.operator+.method(), "Same method")
+assert(bound.method() == Integer.operator+ .method(), "Same method")

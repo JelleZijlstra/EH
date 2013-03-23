@@ -14,12 +14,23 @@
 
 void make_string(char **, char *);
 void yyerror(void *, const char *s);
+void copy_string(char **, char *);
+
+#define COPY_STRING() do { \
+	size_t len = strlen(yytext); \
+	yylval_param->sValue = new char[len + 1]; \
+	strncpy(yylval_param->sValue, yytext, len); \
+	yylval_param->sValue[len] = '\0'; \
+} while(0)
+
 %}
 %option yylineno
 %option reentrant
 %option bison-bridge
 %option outfile="eh.flex.cpp"
 %option extra-type="class EHI *"
+
+OPCHAR		[@=$+\-*/<>,:&\|^%~!\.]
 %%
 ['][^']*[']	{
 				make_string(&yylval_param->sValue, yytext);
@@ -50,6 +61,7 @@ void yyerror(void *, const char *s);
 "func"		return T_FUNC;
 "ret"		return T_RET;
 "null"		return T_NULL;
+"()"		return T_NULL;
 "class"		return T_CLASS;
 "switch"	return T_SWITCH;
 "given"		return T_GIVEN;
@@ -57,12 +69,6 @@ void yyerror(void *, const char *s);
 "end"		return T_END;
 "case"		return T_CASE;
 "default"	return T_DEFAULT;
-"&&"		return T_AND;
-"and"		return T_AND;
-"||"		return T_OR;
-"or"		return T_OR;
-"^^"		return T_XOR;
-"xor"		return T_XOR;
 "try"		return T_TRY;
 "catch"		return T_CATCH;
 "finally"	return T_FINALLY;
@@ -98,7 +104,17 @@ void yyerror(void *, const char *s);
 "--"		return T_MINMIN;
 ("//"|#).*	; /* Ignore comment */
 [;\n]		return T_SEPARATOR;
-"operator"([<>\-\+*/%=!~&^:|]+|\(\))	{
+"&&"		return T_AND;
+"and"		return T_AND;
+"||"		return T_OR;
+"or"		return T_OR;
+"^^"		return T_XOR;
+"xor"		return T_XOR;
+".."		return T_RANGE;
+"=>"		return T_DOUBLEARROW;
+"->"		return T_ARROW;
+("<<"|">>")	{ COPY_STRING(); return T_SHIFT_OP; }
+"operator"({OPCHAR}+|\(\))	{
 				size_t len = strlen(yytext);
 				yylval_param->sValue = new char[len + 1];
 				strncpy(yylval_param->sValue, yytext, len);
@@ -112,38 +128,28 @@ void yyerror(void *, const char *s);
 				yylval_param->sValue[len] = '\0';
 				return T_VARIABLE;
 			}
-".."		return T_RANGE;
-">="		return T_GE;
-"<="		return T_LE;
-"!="		return T_NE;
-"=="    	return T_EQ;
-"=>"		return T_DOUBLEARROW;
-"->"		return T_ARROW;
-"<=>"   	return T_COMPARE;
-"()"		return T_NULL;
-">>"		return T_RIGHTSHIFT;
-"<<"		return T_LEFTSHIFT;
-"+="		return T_PLUSEQ;
-"-="		return T_MINEQ;
-"*="		return T_MULTIPLYEQ;
-"/="		return T_DIVIDEEQ;
-"%="		return T_MODULOEQ;
-"&&="		return T_ANDEQ;
-"||="		return T_OREQ;
-"^^="		return T_XOREQ;
-"&="		return T_BINANDEQ;
-"|="		return T_BINOREQ;
-"^="		return T_BINXOREQ;
-">>="		return T_RIGHTSHIFTEQ;
-"<<="		return T_LEFTSHIFTEQ;
-[@=$+\-*/<>,:&\|^%~!\.][@=$+\-*/<>,:&\|^%~!\.]+ {
-				size_t len = strlen(yytext);
+[@$(),\-\|:\[\]~!{}\._=]	{
+				return *yytext; /* Single character tokens */
+			}
+(">="|"<=") { COPY_STRING(); return T_COMPARE_OP; }
+("!="|"==")	{ COPY_STRING(); return T_EQ_OP; }
+{OPCHAR}+"="	{
+				// Get rid of last character
+				size_t len = strlen(yytext) - 1;
 				yylval_param->sValue = new char[len + 1];
 				strncpy(yylval_param->sValue, yytext, len);
 				yylval_param->sValue[len] = '\0';
-				return T_CUSTOMOP;
+				return T_COMPOUND_ASSIGN;
 			}
-[@=$+\-*/<>(),:\[\]&\|^%~!{}\._]	return *yytext; /* Single character tokens */
+"|"{OPCHAR}+	{ COPY_STRING(); return T_BAR_OP; }
+"^"{OPCHAR}*	{ COPY_STRING(); return T_CARET_OP; }
+"&"{OPCHAR}*	{ COPY_STRING(); return T_AMPERSAND_OP; }
+[<>]{OPCHAR}*	{ COPY_STRING(); return T_COMPARE_OP; }
+[!=]{OPCHAR}*	{ COPY_STRING(); return T_EQ_OP; }
+":"{OPCHAR}+	{ COPY_STRING(); return T_COLON_OP; }
+[+-]{OPCHAR}*	{ COPY_STRING(); return T_PLUS_OP; }
+[*/%]{OPCHAR}*	{ COPY_STRING(); return T_MULT_OP; }
+{OPCHAR}+	{ COPY_STRING(); return T_CUSTOM_OP; }
 [ \t]+		; /* Ignore whitespace */
 .			{
 				char message[100];

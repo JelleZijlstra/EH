@@ -108,8 +108,8 @@ class Preprocessor
 			Node.T_CALL(f base, Node.T_GROUPING(expression_map_pattern(f, args)))
 		case Node.T_COMMA(@left, @right)
 			Node.T_COMMA(expression_map_pattern(f, left), expression_map_pattern(f, right))
-		case Node.T_BINARY_OR(@left, @right)
-			Node.T_BINARY_OR(expression_map_pattern(f, left), expression_map_pattern(f, right))
+		case Node.T_BAR(@left, @right)
+			Node.T_BAR(expression_map_pattern(f, left), expression_map_pattern(f, right))
 		case _
 			f code
 	end
@@ -162,7 +162,7 @@ class Preprocessor
 			case Node.T_CALL(Node.T_VARIABLE("include"), Node.T_LITERAL(@file))
 				if file.isA String
 					private real_name = path + '/' + file
-					if !obj.included_files.has real_name
+					if !(obj.included_files.has real_name)
 						obj.included_files->real_name = true
 						obj.replace_include(EH.parseFile real_name, File.fullPath real_name)
 					end

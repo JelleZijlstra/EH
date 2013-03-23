@@ -24,14 +24,14 @@ lengthChecker(numericArray, 2)
 lengthChecker(stringArray, 2)
 
 # @method has
-assert(!emptyArray.has "anything", "array is empty")
+assert(!(emptyArray.has "anything"), "array is empty")
 assert(numericArray.has 0, "key 0 should exist")
 assert(numericArray.has 1, "key 1 should exist")
-assert(!numericArray.has 2, "key 2 should not exist")
+assert(!(numericArray.has 2), "key 2 should not exist")
 assert(stringArray.has "foo", "key foo should exist")
 assert(stringArray.has 42, "key 42 should exist")
-assert(!stringArray.has 0, "key 0 should not exist")
-assert(!stringArray.has(1..5), "invalid key type")
+assert(!(stringArray.has 0), "key 0 should not exist")
+assert(!(stringArray.has(1..5)), "invalid key type")
 
 # @method operator->
 assert(emptyArray->3 == null, "key does not exist")

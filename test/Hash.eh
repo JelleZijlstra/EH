@@ -24,11 +24,11 @@ assert(h1->'baz' == 'quux_foo', "hash was changed again")
 
 # @method has
 assert(h1.has 'baz', "key exists")
-assert(!h1.has 'no such key', "key does not exist")
+assert(!(h1.has 'no such key'), "key does not exist")
 
 # @method delete
 assert(h1.delete 'new key' == h1, "delete should return itself")
-assert(!h1.has 'new key', "key was deleted")
+assert(!(h1.has 'new key'), "key was deleted")
 
 # @method keys
 assert(h1.keys() == ['baz', 'foo'], "these keys currently exist")
@@ -50,5 +50,5 @@ private hi = h1.getIterator()
 assert(hi.isA(Hash.Iterator), "hashes are iterated over by a Hash.Iterator")
 
 assert(hi.hasNext(), "hash has an element in it")
-assert(!{}.getIterator().hasNext(), "iterator is already depleted")
+assert(!({}.getIterator().hasNext()), "iterator is already depleted")
 

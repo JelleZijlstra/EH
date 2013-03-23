@@ -9,7 +9,7 @@ assert(f.operator() 3 == 9, "calling function.operator() directly")
 
 # @method decompile
 assert(f.decompile() == "func: x
-	x * x
+	x.operator*(x)
 end", "decompile never generates a short function literal")
 
 # @method toString
@@ -28,5 +28,5 @@ private f2 _ = 3
 assert(f2.args() == Node.T_ANYTHING, "argument is ignored")
 
 # @method code
-assert(f.code() == Node.T_MULTIPLY(Node.T_VARIABLE("x"), Node.T_VARIABLE("x")), "code is squaring")
+assert(f.code() == Node.T_CALL_METHOD(Node.T_VARIABLE("x"), "operator*", Node.T_VARIABLE("x")), "code is squaring")
 assert(f2.code() == Node.T_LITERAL(3), "body is just 3")

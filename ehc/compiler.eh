@@ -134,7 +134,7 @@ class Compiler
 	private doCompile = func: sb, code
 		private var_name = this.get_var_name "var"
 		private assignment = "ehval_p " + var_name + " = "
-		if !Node.isNode code
+		if !(Node.isNode code)
 			sb << assignment
 			match code.type()
 				case "String"
@@ -624,7 +624,7 @@ class Compiler
 		case Node.T_MATCH_SET(@name)
 			sb << 'context.scope->set_member("' << name << '", ehmember_p(attributes_t::make_private(), '
 			sb << match_var_name << "), context, ehi);\n"
-		case Node.T_BINARY_OR(@left, @right)
+		case Node.T_BAR(@left, @right)
 			this.compile_match(sb, match_var_name, match_bool, left)
 			# if that one did not succeed, try the other one
 			sb << "if(!" << match_bool << ") {\n"

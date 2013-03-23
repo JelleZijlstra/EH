@@ -57,9 +57,9 @@ assert(B.type() == "B", "type is B")
 assert(B.C.type() == "B", "type is B")
 
 # @method isConstructor
-assert(!A.B.isConstructor(), "Nullary member is not a constructor")
+assert(!(A.B.isConstructor()), "Nullary member is not a constructor")
 assert(A.C.isConstructor(), "is a constructor")
-assert(!A.C(3).isConstructor(), "not a constructor")
+assert(!(A.C(3).isConstructor()), "not a constructor")
 
 # @method operator->
 assertThrows((() => A.B->0), ArgumentError, "Cannot call operator-> on nullary")

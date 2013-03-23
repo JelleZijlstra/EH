@@ -47,7 +47,7 @@ assert(1.2.toInteger() == 1, "1.2 gets truncated to 1")
 
 # @method toBool
 assert(1.0.toBool(), "non-zero float is true")
-assert(!0.0.toBool(), "0 is false")
+assert(!(0.0.toBool()), "0 is false")
 
 # @method sqrt
 assert(1.0.sqrt() == 1.0, "sqrt(1) = 1")

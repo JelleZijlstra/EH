@@ -204,7 +204,6 @@
 			initialize <public,non-static,non-constant>: @function <library>: 
 		]
 		T_ACCESS <public,non-static,constant>: @enum constructor T_ACCESS <Node>: parameter, parameter
-		T_ADD <public,non-static,constant>: @enum constructor T_ADD <Node>: parameter, parameter
 		T_AND <public,non-static,constant>: @enum constructor T_AND <Node>: parameter, parameter
 		T_ANYTHING <public,non-static,constant>: @enum instance T_ANYTHING <Node> [
 		]
@@ -214,10 +213,8 @@
 		T_ARROW <public,non-static,constant>: @enum constructor T_ARROW <Node>: parameter, parameter
 		T_ASSIGN <public,non-static,constant>: @enum constructor T_ASSIGN <Node>: parameter, parameter
 		T_ATTRIBUTE <public,non-static,constant>: @enum constructor T_ATTRIBUTE <Node>: parameter, parameter
-		T_BINARY_AND <public,non-static,constant>: @enum constructor T_BINARY_AND <Node>: parameter, parameter
+		T_BAR <public,non-static,constant>: @enum constructor T_BAR <Node>: parameter, parameter
 		T_BINARY_COMPLEMENT <public,non-static,constant>: @enum constructor T_BINARY_COMPLEMENT <Node>: parameter
-		T_BINARY_OR <public,non-static,constant>: @enum constructor T_BINARY_OR <Node>: parameter, parameter
-		T_BINARY_XOR <public,non-static,constant>: @enum constructor T_BINARY_XOR <Node>: parameter, parameter
 		T_BREAK <public,non-static,constant>: @enum constructor T_BREAK <Node>: parameter
 		T_CALL <public,non-static,constant>: @enum constructor T_CALL <Node>: parameter, parameter
 		T_CALL_METHOD <public,non-static,constant>: @enum constructor T_CALL_METHOD <Node>: parameter, parameter, parameter
@@ -228,11 +225,8 @@
 		T_CLASS_MEMBER <public,non-static,constant>: @enum constructor T_CLASS_MEMBER <Node>: parameter, parameter
 		T_COMMA <public,non-static,constant>: @enum constructor T_COMMA <Node>: parameter, parameter
 		T_COMMAND <public,non-static,constant>: @enum constructor T_COMMAND <Node>: parameter, parameter
-		T_COMPARE <public,non-static,constant>: @enum constructor T_COMPARE <Node>: parameter, parameter
 		T_CONTINUE <public,non-static,constant>: @enum constructor T_CONTINUE <Node>: parameter
-		T_CUSTOMOP <public,non-static,constant>: @enum constructor T_CUSTOMOP <Node>: parameter, parameter, parameter
 		T_DEFAULT <public,non-static,constant>: @enum constructor T_DEFAULT <Node>: parameter
-		T_DIVIDE <public,non-static,constant>: @enum constructor T_DIVIDE <Node>: parameter, parameter
 		T_DOUBLEARROW <public,non-static,constant>: @enum constructor T_DOUBLEARROW <Node>: parameter, parameter
 		T_ELSE <public,non-static,constant>: @enum constructor T_ELSE <Node>: parameter, parameter
 		T_ELSIF <public,non-static,constant>: @enum constructor T_ELSIF <Node>: parameter, parameter
@@ -240,31 +234,22 @@
 		]
 		T_ENUM <public,non-static,constant>: @enum constructor T_ENUM <Node>: parameter, parameter, parameter
 		T_ENUM_WITH_ARGUMENTS <public,non-static,constant>: @enum constructor T_ENUM_WITH_ARGUMENTS <Node>: parameter, parameter
-		T_EQ <public,non-static,constant>: @enum constructor T_EQ <Node>: parameter, parameter
 		T_FOR <public,non-static,constant>: @enum constructor T_FOR <Node>: parameter, parameter
 		T_FOR_IN <public,non-static,constant>: @enum constructor T_FOR_IN <Node>: parameter, parameter, parameter
 		T_FUNC <public,non-static,constant>: @enum constructor T_FUNC <Node>: parameter, parameter
-		T_GE <public,non-static,constant>: @enum constructor T_GE <Node>: parameter, parameter
 		T_GIVEN <public,non-static,constant>: @enum constructor T_GIVEN <Node>: parameter, parameter
-		T_GREATER <public,non-static,constant>: @enum constructor T_GREATER <Node>: parameter, parameter
 		T_GROUPING <public,non-static,constant>: @enum constructor T_GROUPING <Node>: parameter
 		T_HASH_LITERAL <public,non-static,constant>: @enum constructor T_HASH_LITERAL <Node>: parameter
 		T_IF <public,non-static,constant>: @enum constructor T_IF <Node>: parameter, parameter, parameter
 		T_IF_ELSE <public,non-static,constant>: @enum constructor T_IF_ELSE <Node>: parameter, parameter, parameter, parameter
-		T_LE <public,non-static,constant>: @enum constructor T_LE <Node>: parameter, parameter
-		T_LEFTSHIFT <public,non-static,constant>: @enum constructor T_LEFTSHIFT <Node>: parameter, parameter
-		T_LESSER <public,non-static,constant>: @enum constructor T_LESSER <Node>: parameter, parameter
 		T_LIST <public,non-static,constant>: @enum constructor T_LIST <Node>: parameter
 		T_LITERAL <public,non-static,constant>: @enum constructor T_LITERAL <Node>: parameter
 		T_LONGPARA <public,non-static,constant>: @enum constructor T_LONGPARA <Node>: parameter, parameter
 		T_MATCH <public,non-static,constant>: @enum constructor T_MATCH <Node>: parameter, parameter
 		T_MATCH_SET <public,non-static,constant>: @enum constructor T_MATCH_SET <Node>: parameter
 		T_MIXED_TUPLE <public,non-static,constant>: @enum constructor T_MIXED_TUPLE <Node>: parameter, parameter
-		T_MODULO <public,non-static,constant>: @enum constructor T_MODULO <Node>: parameter, parameter
-		T_MULTIPLY <public,non-static,constant>: @enum constructor T_MULTIPLY <Node>: parameter, parameter
 		T_NAMED_ARGUMENT <public,non-static,constant>: @enum constructor T_NAMED_ARGUMENT <Node>: parameter, parameter
 		T_NAMED_CLASS <public,non-static,constant>: @enum constructor T_NAMED_CLASS <Node>: parameter, parameter
-		T_NE <public,non-static,constant>: @enum constructor T_NE <Node>: parameter, parameter
 		T_NOT <public,non-static,constant>: @enum constructor T_NOT <Node>: parameter
 		T_NULL <public,non-static,constant>: @enum instance T_NULL <Node> [
 		]
@@ -273,12 +258,10 @@
 		T_RANGE <public,non-static,constant>: @enum constructor T_RANGE <Node>: parameter, parameter
 		T_RAW <public,non-static,constant>: @enum constructor T_RAW <Node>: parameter
 		T_RET <public,non-static,constant>: @enum constructor T_RET <Node>: parameter
-		T_RIGHTSHIFT <public,non-static,constant>: @enum constructor T_RIGHTSHIFT <Node>: parameter, parameter
 		T_SCOPE <public,non-static,constant>: @enum instance T_SCOPE <Node> [
 		]
 		T_SEPARATOR <public,non-static,constant>: @enum constructor T_SEPARATOR <Node>: parameter, parameter
 		T_SHORTPARA <public,non-static,constant>: @enum constructor T_SHORTPARA <Node>: parameter, parameter
-		T_SUBTRACT <public,non-static,constant>: @enum constructor T_SUBTRACT <Node>: parameter, parameter
 		T_SWITCH <public,non-static,constant>: @enum constructor T_SWITCH <Node>: parameter, parameter
 		T_THIS <public,non-static,constant>: @enum instance T_THIS <Node> [
 		]

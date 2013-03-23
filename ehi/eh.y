@@ -88,6 +88,28 @@ void yyerror(void *, const char *s);
 %token <sValue> T_STRING
 %token <sValue> T_BAR_OP T_CARET_OP T_AMPERSAND_OP T_COMPARE_OP T_EQ_OP T_COMPOUND_ASSIGN T_COLON_OP T_PLUS_OP T_MULT_OP T_CUSTOM_OP T_SHIFT_OP
 %token T_OR T_SCOPE T_MINMIN T_XOR T_THIS T_RAW T_ARROW T_AND T_PLUSPLUS T_RANGE
+%right T_COMPOUND_ASSIGN '='
+%right T_DOUBLEARROW
+%nonassoc T_CLASS_MEMBER
+%right ','
+%nonassoc ':'
+%left T_AND T_OR T_XOR
+%left T_BAR_OP '|'
+%left T_CARET_OP
+%left T_AMPERSAND_OP
+%left T_COMPARE_OP
+%left T_EQ_OP
+%right T_COLON_OP
+%left T_SHIFT_OP
+%left T_PLUS_OP '-'
+%left T_MULT_OP
+%left T_CUSTOM_OP
+%nonassoc T_PLUSPLUS T_MINMIN
+%nonassoc '~' '!'
+%left T_RANGE T_ARROW '.'
+%nonassoc '[' ']' '{' '}'
+%nonassoc '(' ')'
+%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_SWITCH T_FUNC T_CLASS T_ENUM T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
 
 %type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list
@@ -166,7 +188,6 @@ statement:
 	;
 
 expression:
-	// T_RAW expression		{ $$ = ADD_NODE1(T_RAW, $2); }
 	assign_expression		{ $$ = $1; }
 	;
 
@@ -189,7 +210,7 @@ function_expression:
 	;
 
 attribute_expression:
-	attributelist tuple_expression
+	attributelist tuple_expression %prec T_CLASS_MEMBER
 							{ $$ = ADD_NODE2(T_CLASS_MEMBER, $1, $2); }
 	| tuple_expression		{ $$ = $1; }
 	;
@@ -210,7 +231,7 @@ tuple_expression:
 	;
 
 namedvar_expression:
-	T_VARIABLE ':' boolean_expression
+	T_VARIABLE ':' boolean_expression %prec ':'
 							{ $$ = eh_addnode(T_NAMED_ARGUMENT, String::make($1), NODE($3)); }
 	| boolean_expression	{ $$ = $1; }
 	;
@@ -321,7 +342,8 @@ unary_op_expression:
 	'~' unary_op_expression	{ $$ = ADD_NODE1(T_BINARY_COMPLEMENT, $2); }
 	| '!' unary_op_expression
 							{ $$ = ADD_NODE1(T_NOT, $2); }
-	| T_RAW expression		{ $$ = ADD_NODE1(T_RAW, $2); }
+	| T_RAW unary_op_expression
+							{ $$ = ADD_NODE1(T_RAW, $2); }
 	| base_expression		{ $$ = $1; }
 	;
 

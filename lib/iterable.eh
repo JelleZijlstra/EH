@@ -104,7 +104,7 @@ class Iterable
 
 	const public reduceSingle = func: f
 		const private it = this.getIterator()
-		if !it.hasNext()
+		if !(it.hasNext())
 			ret null
 		end
 		private out = it.next()
@@ -195,7 +195,7 @@ class ChainedIterable
 
 		public next = func:
 			# if one of them is empty, continue until we find a non-empty one
-			while !this.inner_iter.hasNext()
+			while !(this.inner_iter.hasNext())
 				this.inner_obj = this.outer_iter.next()
 				this.inner_iter = this.inner_obj.getIterator()
 			end

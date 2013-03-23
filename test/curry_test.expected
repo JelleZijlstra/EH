@@ -1,7 +1,7 @@
 %%stdout%%
 func: x
 	func: y
-		x + y
+		x.operator+(y)
 	end
 end
 7

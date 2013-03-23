@@ -143,8 +143,6 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				break;
 			case T_BINARY_COMPLEMENT: // bitwise negation
 			  return perform_op("operator~", 0, paras, context);
-			case T_NEGATIVE: // sign change
-			  return perform_op("operator-", 0, paras, context);
 			case T_NOT: // Boolean not
 			  return perform_op("operator!", 0, paras, context);
 		/*
@@ -207,9 +205,18 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				ehval_p arg = eh_execute(paras[2], context);
 				return call_method(obj, paras[1]->get<String>(), arg, context);
 			}
+			case T_BAR: {
+				ehval_p obj = eh_execute(paras[0], context);
+				ehval_p arg = eh_execute(paras[1], context);
+				return call_method(obj, "operator|", arg, context);
+			}
 			case T_RAW: {
 				ehretval_a args(2);
-				args[0] = paras[0];
+				if(Node::is_a(paras[0]) && paras[0]->get<Enum_Instance>()->member_id == T_GROUPING) {
+					args[0] = paras[0]->get<Enum_Instance>()->members[0];
+				} else {
+					args[0] = paras[0];
+				}
 				args[1] = Node_Context::make(context, parent);
 				return Tuple::make(2, args, parent);
 			}
@@ -254,40 +261,6 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				return eh_op_dot(paras, context);
 			case T_ARROW:
 				return perform_op("operator->", 1, paras, context);
-			case T_EQ:
-				return perform_op("operator==", 1, paras, context);
-			case T_NE:
-				return perform_op("operator!=", 1, paras, context);
-			case T_GREATER:
-				return perform_op("operator>", 1, paras, context);
-			case T_GE:
-				return perform_op("operator>=", 1, paras, context);
-			case T_LESSER:
-				return perform_op("operator<", 1, paras, context);
-			case T_LE:
-				return perform_op("operator<=", 1, paras, context);
-			case T_COMPARE:
-				return perform_op("operator<=>", 1, paras, context);
-			case T_ADD:
-				return perform_op("operator+", 1, paras, context);
-			case T_SUBTRACT:
-				return perform_op("operator-", 1, paras, context);
-			case T_MULTIPLY:
-				return perform_op("operator*", 1, paras, context);
-			case T_DIVIDE:
-				return perform_op("operator/", 1, paras, context);
-			case T_MODULO:
-				return perform_op("operator%", 1, paras, context);
-			case T_BINARY_AND:
-				return perform_op("operator&", 1, paras, context);
-			case T_BINARY_XOR:
-				return perform_op("operator^", 1, paras, context);
-			case T_BINARY_OR:
-				return perform_op("operator|", 1, paras, context);
-			case T_LEFTSHIFT:
-				return perform_op("operator<<", 1, paras, context);
-			case T_RIGHTSHIFT:
-				return perform_op("operator>>", 1, paras, context);
 			case T_GROUPING:
 				// this is to make nested tuples work
 				return eh_execute(paras[0], context);
@@ -313,8 +286,6 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				b1 = this->toBool(operand1, context)->get<Bool>();
 				b2 = this->toBool(operand2, context)->get<Bool>();
 				return Bool::make(b1 != b2);
-			case T_CUSTOMOP:
-				return eh_op_customop(paras, context);
 		/*
 		 * Variable manipulation
 		 */
@@ -746,7 +717,7 @@ bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 				context.scope->set_member(name, member, context, this);
 				return true;
 			}
-			case T_BINARY_OR: {
+			case T_BAR: {
 				return match(op->members[0], var, context) || match(op->members[1], var, context);
 			}
 			case T_COMMA: {

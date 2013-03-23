@@ -64,16 +64,6 @@ EH_INITIALIZER(Node) {
 	TOKEN(T_ANYTHING, 0);
 	TOKEN(T_GROUPING, 1);
 	TOKEN(T_ASSIGN, 2);
-	TOKEN(T_ADD, 2);
-	TOKEN(T_SUBTRACT, 2);
-	TOKEN(T_MULTIPLY, 2);
-	TOKEN(T_DIVIDE, 2);
-	TOKEN(T_MODULO, 2);
-	TOKEN(T_GREATER, 2);
-	TOKEN(T_LESSER, 2);
-	TOKEN(T_BINARY_AND, 2);
-	TOKEN(T_BINARY_OR, 2);
-	TOKEN(T_BINARY_XOR, 2);
 	TOKEN(T_BINARY_COMPLEMENT, 1);
 	TOKEN(T_NOT, 1);
 	TOKEN(T_MATCH_SET, 1);
@@ -86,17 +76,10 @@ EH_INITIALIZER(Node) {
 	TOKEN(T_SHORTPARA, 2);
 	TOKEN(T_LONGPARA, 2);
 	TOKEN(T_VARIABLE, 1);
-	TOKEN(T_CUSTOMOP, 3);
 	TOKEN(T_XOR, 2);
 	TOKEN(T_OR, 2);
 	TOKEN(T_AND, 2);
-	TOKEN(T_COMPARE, 2);
-	TOKEN(T_EQ, 2);
-	TOKEN(T_NE, 2);
-	TOKEN(T_LE, 2);
-	TOKEN(T_GE, 2);
-	TOKEN(T_RIGHTSHIFT, 2);
-	TOKEN(T_LEFTSHIFT, 2);
+	TOKEN(T_BAR, 2);
 	TOKEN(T_ARROW, 2);
 	TOKEN(T_RANGE, 2);
 	TOKEN(T_SCOPE, 0);
@@ -217,17 +200,8 @@ std::string Node::decompile(int level) const {
 		case T_GREATER:
 			out << op->members[0]->decompile(level) << " > " << op->members[1]->decompile(level);
 			break;
-		case T_LESSER:
-			out << op->members[0]->decompile(level) << " < " << op->members[1]->decompile(level);
-			break;
-		case T_BINARY_OR:
+		case T_BAR:
 			out << op->members[0]->decompile(level) << " | " << op->members[1]->decompile(level);
-			break;
-		case T_BINARY_XOR:
-			out << op->members[0]->decompile(level) << " ^ " << op->members[1]->decompile(level);
-			break;
-		case T_BINARY_AND:
-			out << op->members[0]->decompile(level) << " & " << op->members[1]->decompile(level);
 			break;
 		case T_COMMA:
 		case T_MIXED_TUPLE:
@@ -260,69 +234,9 @@ std::string Node::decompile(int level) const {
 		case T_RANGE:
 			out << op->members[0]->decompile(level) << " .. " << op->members[1]->decompile(level);
 			break;
-		case T_GE:
-			out << op->members[0]->decompile(level) << " >= " << op->members[1]->decompile(level);
-			break;
-		case T_LE:
-			out << op->members[0]->decompile(level) << " <= " << op->members[1]->decompile(level);
-			break;
-		case T_NE:
-			out << op->members[0]->decompile(level) << " != " << op->members[1]->decompile(level);
-			break;
-		case T_EQ:
-			out << op->members[0]->decompile(level) << " == " << op->members[1]->decompile(level);
-			break;
 		case T_ARROW:
 			// no space
 			out << op->members[0]->decompile(level) << "->" << op->members[1]->decompile(level);
-			break;
-		case T_COMPARE:
-			out << op->members[0]->decompile(level) << " <=> " << op->members[1]->decompile(level);
-			break;
-		case T_RIGHTSHIFT:
-			out << op->members[0]->decompile(level) << " >> " << op->members[1]->decompile(level);
-			break;
-		case T_LEFTSHIFT:
-			out << op->members[0]->decompile(level) << " << " << op->members[1]->decompile(level);
-			break;
-		case T_PLUSEQ:
-			out << op->members[0]->decompile(level) << " += " << op->members[1]->decompile(level);
-			break;
-		case T_MINEQ:
-			out << op->members[0]->decompile(level) << " -= " << op->members[1]->decompile(level);
-			break;
-		case T_MULTIPLYEQ:
-			out << op->members[0]->decompile(level) << " *= " << op->members[1]->decompile(level);
-			break;
-		case T_DIVIDEEQ:
-			out << op->members[0]->decompile(level) << " /= " << op->members[1]->decompile(level);
-			break;
-		case T_MODULOEQ:
-			out << op->members[0]->decompile(level) << " %= " << op->members[1]->decompile(level);
-			break;
-		case T_ANDEQ:
-			out << op->members[0]->decompile(level) << " &&= " << op->members[1]->decompile(level);
-			break;
-		case T_OREQ:
-			out << op->members[0]->decompile(level) << " ||= " << op->members[1]->decompile(level);
-			break;
-		case T_XOREQ:
-			out << op->members[0]->decompile(level) << " ^^= " << op->members[1]->decompile(level);
-			break;
-		case T_BINANDEQ:
-			out << op->members[0]->decompile(level) << " &= " << op->members[1]->decompile(level);
-			break;
-		case T_BINOREQ:
-			out << op->members[0]->decompile(level) << " |= " << op->members[1]->decompile(level);
-			break;
-		case T_BINXOREQ:
-			out << op->members[0]->decompile(level) << " ^= " << op->members[1]->decompile(level);
-			break;
-		case T_RIGHTSHIFTEQ:
-			out << op->members[0]->decompile(level) << " >>= " << op->members[1]->decompile(level);
-			break;
-		case T_LEFTSHIFTEQ:
-			out << op->members[0]->decompile(level) << " <<= " << op->members[1]->decompile(level);
 			break;
 		case T_AND:
 			out << op->members[0]->decompile(level) << " && " << op->members[1]->decompile(level);
@@ -332,11 +246,6 @@ std::string Node::decompile(int level) const {
 			break;
 		case T_XOR:
 			out << op->members[0]->decompile(level) << " ^^ " << op->members[1]->decompile(level);
-			break;
-		case T_CUSTOMOP:
-			out << op->members[0]->decompile(level) << " " <<
-				op->members[1]->get<String>() << " " <<
-				op->members[2]->decompile(level);
 			break;
 		case T_SEPARATOR: {
 			out << op->members[0]->decompile(level);

@@ -7,4 +7,4 @@ echo(List.map.decompile())
 
 echo(List.count.decompile())
 
-echo(List.operator->.decompile())
+echo(List.operator-> .decompile())

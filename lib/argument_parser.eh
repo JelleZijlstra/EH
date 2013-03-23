@@ -61,7 +61,7 @@ class ArgumentParser
 		# provide defaults
 		for _, arginfo in Iterable.chain(this.positional_args, this.short_args, this.long_args)
 			private name = arginfo->'canonical'
-			if !this.output.has name
+			if !(this.output.has name)
 				if arginfo.has 'default'
 					this.finish_processing(arginfo, arginfo->'default')
 				elsif arginfo.has 'nargs' and arginfo->'nargs' == '+'
@@ -107,7 +107,7 @@ class ArgumentParser
 
 		public peek = () => this.it.peek()->1
 
-		public next_is_named_argument = () => (!this.hasNext()) or Type.is_named_argument(this.peek())
+		public next_is_named_argument = () => (!(this.hasNext())) or Type.is_named_argument(this.peek())
 	end
 
 	enum Type
@@ -224,7 +224,7 @@ class ArgumentParser
 
 	private process_infinite_arguments = func: first
 		private output = if first; [first]; else []; end
-		while !this.argv_iterator.next_is_named_argument()
+		while !(this.argv_iterator.next_is_named_argument())
 			output.append(this.argv_iterator.next())
 		end
 		output
@@ -248,7 +248,7 @@ class ArgumentParser
 	end
 
 	private process_input_argument = func: argument
-		if !argument.has 'name'
+		if !(argument.has 'name')
 			throw(ParserException.new("Argument name must be given: " + argument))
 		end
 
@@ -262,7 +262,7 @@ class ArgumentParser
 		end
 
 		# nargs defaults to 1, but 0 if there is a default
-		if !argument.has 'nargs'
+		if !(argument.has 'nargs')
 			argument->'nargs' = if argument.has 'default'; 0; else 1; end
 		end
 

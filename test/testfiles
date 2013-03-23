@@ -328,3 +328,4 @@ curry_new.eh
 quine.eh
 curry_test.eh
 func_decl.eh
+haskell_emul.eh

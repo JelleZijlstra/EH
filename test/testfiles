@@ -330,3 +330,4 @@ curry_test.eh
 func_decl.eh
 haskell_emul.eh
 ehlex.eh
+rev_range.eh

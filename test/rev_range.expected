@@ -1,0 +1,13 @@
+%%stdout%%
+@enum instance Cons <List> [
+	head: @int 3
+	tail: @enum instance Cons <List> [
+		head: @int 2
+		tail: @enum instance Cons <List> [
+			head: @int 1
+			tail: @enum instance Nil <List> [
+			]
+		]
+	]
+]
+%%stderr%%

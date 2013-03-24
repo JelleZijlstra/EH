@@ -9,5 +9,6 @@ EH_METHOD(EH, eval);
 EH_METHOD(EH, contextName);
 EH_METHOD(EH, collectGarbage);
 EH_METHOD(EH, parse);
+EH_METHOD(EH, lex);
 
 #endif /* EH_EH_H_ */

@@ -4,12 +4,17 @@
  */
 
 #include "EH.hpp"
+#include "Attribute.hpp"
+#include "Node.hpp"
+#include "../eh.bison.hpp"
+#include "../eh.flex.hpp"
 
 EH_INITIALIZER(EH) {
 	REGISTER_METHOD(EH, eval);
 	REGISTER_METHOD(EH, collectGarbage);
 	REGISTER_METHOD(EH, contextName);
 	REGISTER_METHOD(EH, parse);
+	REGISTER_METHOD(EH, lex);
 }
 
 /*
@@ -59,4 +64,52 @@ EH_METHOD(EH, parse) {
 	EHI parser(end_is_end_e, ehi->get_parent(), ehi->get_context(), ehi->get_working_dir(), "(eval'd code)");
 	parser.parse_string(cmd);
 	return parser.get_code();
+}
+
+// defined in eh.y
+const char *get_token_name(int token);
+
+/*
+ * @description Lex a string into a sequence of EH lexer tokens.
+ * @argument String to lex
+ * @returns Array
+ */
+EH_METHOD(EH, lex) {
+	ASSERT_TYPE(args, String, "EH.lex");
+	const char *cmd = args->get<String>();
+
+	// initialize scanner
+	void *scanner = NULL;
+	EHI new_ehi(end_is_end_e, ehi->get_parent(), ehi->get_context(), ehi->get_working_dir(), "EH.lex");
+	yylex_init_extra(&new_ehi, &scanner);
+	yy_switch_to_buffer(yy_scan_string(cmd, scanner), scanner);
+	yyset_lineno(1, scanner);
+	YYSTYPE yylval;
+
+	// initialize output array
+	ehval_p out_val = Array::make(ehi->get_parent());
+	auto arr = out_val->get<Array>();
+	size_t index = 0;
+
+	// perform the lexing
+	const char *token_name;
+	while(true) {
+		int token = yylex(&yylval, scanner);
+		// symbolic tokens
+		if(token >= 256) {
+			token_name = get_token_name(token);
+		} else if(token == 0) {
+			// EOF
+			break;
+		} else {
+			char single_char[2];
+			single_char[0] = token;
+			single_char[1] = '\0';
+			token_name = single_char;
+		}
+		arr->insert_retval(Integer::make(index), String::make(strdup(token_name)));
+		index++;
+	}
+
+	return out_val;
 }

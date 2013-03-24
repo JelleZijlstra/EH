@@ -566,3 +566,8 @@ Node *fix_call(Node *lhs, Node *rhs, void *scanner) {
 		return ADD_NODE2(T_CALL, lhs, rhs);
 	}
 }
+
+const char *get_token_name(int token) {
+	return yytname[token - 255];
+}
+

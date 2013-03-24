@@ -78,13 +78,15 @@ enum List
 			l.sort().merge(r.sort())
 	end
 
-	const rev_append = rhs => match this
+	const rev_append rhs = match this
 		case Nil; rhs
 		case Cons(@hd, Nil); Cons(hd, rhs)
 		case Cons(@hd, @tl); tl.rev_append(Cons(hd, rhs))
 	end
 
-	const append = rhs => this.reverse().rev_append rhs
+	const concat rhs = this.reverse().rev_append rhs
+
+	const append rhs = this.concat(Cons(rhs, Nil))
 
 	# Count list members for which f elt returns true
 	const count = f => this.reduce(Nil, (base, val => given (f val)
@@ -111,9 +113,17 @@ enum List
 	end
 	const Iterator = Iterator
 
-	const getIterator = () => this.Iterator.new this
+	const getIterator() = this.Iterator.new this
 
-	const add = v => Cons(v, this)
+	const add v = Cons(v, this)
+
+	const static makeRandom n = if n == 0; Nil; else Random.rand()::(makeRandom (n - 1)); end
+
+	const isSorted() = match this
+		case Nil; true
+		case Cons(_, Nil); true
+		case Cons(@hd1, Cons(@hd2, @tl)); hd1 < hd2 and Cons(hd2, tl).isSorted()
+	end
 end
 
 # Constify it
@@ -121,7 +131,9 @@ const List = List
 
 const Nil = List.Nil
 const Cons = List.Cons
-Object.operator:: = rhs => Cons(this, rhs)
+Object.operator:: rhs = Cons(this, rhs)
 
 # Conversion methods
-Iterable.toList = () => this.reduce(Nil, Cons)
+Iterable.toList() = this.reduce(Nil, Cons)
+
+Range.empty() = Nil

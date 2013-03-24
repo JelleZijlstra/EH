@@ -12,4 +12,4 @@ Object.operator.* = func: g
 end
 
 # ++ is taken
-Object.operator+++ r = this.append r
+Object.operator+++ r = this.concat r

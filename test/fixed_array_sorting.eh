@@ -30,3 +30,6 @@ assert (fa.isSorted(), "bucket sort doesn't work")
 fa = FixedArray.mapFrom l
 fa.stoogeSort()
 assert (fa.isSorted(), "stooge sort doesn't work")
+fa = FixedArray.mapFrom l
+fa.heapSort()
+assert (fa.isSorted(), "heap sort doesn't work")

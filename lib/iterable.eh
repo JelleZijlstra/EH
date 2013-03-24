@@ -35,11 +35,11 @@ class Iterable
 		case false; collection
 	end))
 
-	public reverse = () => this.reduce(this.empty(), (elt, accum => accum.append elt))
+	public reverse() = this.reduce(this.empty(), (elt, accum => accum.append elt))
 
 	# default implementation of append just adds
 	# types that by default add to the front (i.e., List) should override this method
-	public append = elt => this.add elt
+	public append elt = this.add elt
 
 	# sorting implementation
 	const private split = it, l, r => given it.hasNext()

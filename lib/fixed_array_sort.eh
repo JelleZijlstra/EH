@@ -203,4 +203,40 @@ FixedArray.inherit class
 		end
 		this
 	end
+
+	private parent i = i / 2
+	private left i = 2 * i
+	private right i = 2 * i + 1
+
+	private max_heapify = func: i, heap_size
+		private l = left i
+		private r = right i
+		private largest = if l < heap_size and this->l > this->i
+			l
+		else
+			i
+		end
+		if r < heap_size and this->r > this->largest
+			largest = r
+		end
+		if largest != i
+			this.swap(i, largest)
+			this.max_heapify(largest, heap_size)
+		end
+	end
+
+	private build_max_heap size = for i in (0..(size/2)).reverse()
+		this.max_heapify(i, size)
+	end
+
+	public heapSort = func:
+		private heap_size = this.size()
+		this.build_max_heap heap_size
+		for i in (1..(heap_size - 1)).reverse()
+			this.swap(0, i)
+			heap_size -= 1
+			this.max_heapify(0, heap_size)
+		end
+		this
+	end
 end

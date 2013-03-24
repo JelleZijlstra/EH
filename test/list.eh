@@ -17,4 +17,4 @@ l2 = Cons(4, Cons(2, Cons(3, Cons(1, Nil))))
 
 echo(l2.sort().toString())
 
-echo(l2.append(Cons(1, Nil)).toString())
+echo(l2.concat(Cons(1, Nil)).toString())

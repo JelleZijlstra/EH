@@ -54,6 +54,7 @@
 		collectGarbage <public,non-static,non-constant>: @function <library>: 
 		contextName <public,non-static,non-constant>: @function <library>: 
 		eval <public,non-static,non-constant>: @function <library>: 
+		lex <public,non-static,non-constant>: @function <library>: 
 		parse <public,non-static,non-constant>: @function <library>: 
 	]
 	EmptyIterator <public,non-static,constant>: @object <EmptyIterator> [
@@ -211,6 +212,7 @@
 		T_ARRAY_MEMBER <public,non-static,constant>: @enum constructor T_ARRAY_MEMBER <Node>: parameter, parameter
 		T_ARRAY_MEMBER_NO_KEY <public,non-static,constant>: @enum constructor T_ARRAY_MEMBER_NO_KEY <Node>: parameter
 		T_ARROW <public,non-static,constant>: @enum constructor T_ARROW <Node>: parameter, parameter
+		T_AS <public,non-static,constant>: @enum constructor T_AS <Node>: parameter, parameter
 		T_ASSIGN <public,non-static,constant>: @enum constructor T_ASSIGN <Node>: parameter, parameter
 		T_ATTRIBUTE <public,non-static,constant>: @enum constructor T_ATTRIBUTE <Node>: parameter, parameter
 		T_BAR <public,non-static,constant>: @enum constructor T_BAR <Node>: parameter, parameter
@@ -268,6 +270,7 @@
 		T_TRY <public,non-static,constant>: @enum constructor T_TRY <Node>: parameter, parameter
 		T_TRY_FINALLY <public,non-static,constant>: @enum constructor T_TRY_FINALLY <Node>: parameter, parameter, parameter
 		T_VARIABLE <public,non-static,constant>: @enum constructor T_VARIABLE <Node>: parameter
+		T_WHEN <public,non-static,constant>: @enum constructor T_WHEN <Node>: parameter, parameter, parameter
 		T_WHILE <public,non-static,constant>: @enum constructor T_WHILE <Node>: parameter, parameter
 		T_XOR <public,non-static,constant>: @enum constructor T_XOR <Node>: parameter, parameter
 		decompile <public,non-static,non-constant>: @function <library>: 

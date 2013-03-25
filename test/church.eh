@@ -1,7 +1,5 @@
 #!/usr/bin/ehi
 
-include '../lib/library.eh'
-
 # Church numerals
 
 decode f = f (1.operator+) 0
@@ -60,6 +58,9 @@ isnil = fst
 cons h = t => pair cfalse (pair h t)
 head z = fst (snd z)
 tail z = snd (snd z)
+
+include '../lib/library.eh'
+
 ldecode l = if cdecode (isnil l)
 	Nil
 else

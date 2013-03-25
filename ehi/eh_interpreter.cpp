@@ -254,6 +254,8 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				return eh_op_mixed_tuple(node, context);
 			case T_NAMED_ARGUMENT:
 				throw_MiscellaneousError("Cannot use T_NAMED_ARGUMENT in expression", this);
+			case T_AS:
+				throw_MiscellaneousError("Cannot use T_AS in expression", this);
 		/*
 		 * Binary operators
 		 */
@@ -716,6 +718,16 @@ bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 				ehmember_p member = ehmember_t::make(attributes_t::make_private(), var);
 				context.scope->set_member(name, member, context, this);
 				return true;
+			}
+			case T_AS: {
+				if(match(op->members[0], var, context)) {
+					const char *name = op->members[1]->get<String>();
+					ehmember_p member = ehmember_t::make(attributes_t::make_private(), var);
+					context.scope->set_member(name, member, context, this);
+					return true;
+				} else {
+					return false;
+				}
 			}
 			case T_BAR: {
 				return match(op->members[0], var, context) || match(op->members[1], var, context);

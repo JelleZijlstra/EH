@@ -331,3 +331,4 @@ func_decl.eh
 haskell_emul.eh
 ehlex.eh
 rev_range.eh
+butlast.eh

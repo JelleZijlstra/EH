@@ -56,6 +56,7 @@ void yyerror(void *, const char *s);
 %token T_WHILE
 %token T_FOR
 %token T_AS
+%token T_WHEN
 %token T_IN
 %token T_GIVEN
 %token T_MATCH
@@ -323,6 +324,8 @@ incdec_expression:
 								ehval_p rvalue = NODE(eh_addnode(T_CALL_METHOD, lvalue, String::make(strdup("operator-")), Integer::make(1)));
 								$$ = eh_addnode(T_ASSIGN, lvalue, rvalue);
 							}
+	| access_expression T_AS T_VARIABLE
+							{ $$ = eh_addnode(T_AS, NODE($1), String::make($3)); }
 	| access_expression		{ $$ = $1; }
 	;
 

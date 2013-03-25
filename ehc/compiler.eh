@@ -624,6 +624,13 @@ class Compiler
 		case Node.T_MATCH_SET(@name)
 			sb << 'context.scope->set_member("' << name << '", ehmember_p(attributes_t::make_private(), '
 			sb << match_var_name << "), context, ehi);\n"
+		case Node.T_AS(@code, @name)
+			this.compile_match(sb, match_var_name, match_bool, code)
+			# if it succeeded, set the variable
+			sb << "if(" << match_bool << ") {\n"
+			sb << 'context.scope->set_member("' << name << '", ehmember_p(attributes_t::make_private(), '
+			sb << match_var_name << "), context, ehi);\n"
+			sb << "}\n"
 		case Node.T_BAR(@left, @right)
 			this.compile_match(sb, match_var_name, match_bool, left)
 			# if that one did not succeed, try the other one

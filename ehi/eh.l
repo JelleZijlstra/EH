@@ -76,6 +76,7 @@ OPCHAR		[@=$+\-*/<>,:&\|^%~!\.]
 "scope"		return T_SCOPE;
 "enum"		return T_ENUM;
 "raw"		return T_RAW;
+"when"		return T_WHEN;
 "public"	{
 				yylval_param->vValue = Attribute::publica_e;
 				return T_ATTRIBUTE;

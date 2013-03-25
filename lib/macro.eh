@@ -60,6 +60,8 @@ class Macro
 			optimize_match_pattern inner
 		case Node.T_MATCH_SET(_)
 			code
+		case Node.T_AS(@code, @name)
+			Node.T_AS(optimize_match_pattern code, name)
 		case Node.T_CALL(@base, Node.T_GROUPING(@args))
 			Node.T_CALL(optimize base, Node.T_GROUPING(optimize_match_pattern args))
 		case Node.T_CALL(_, _)
@@ -99,8 +101,8 @@ class Macro
 				Node.T_CALL_METHOD(optimize arg, "operator~", null)
 			case Node.T_NOT(@arg)
 				Node.T_CALL_METHOD(optimize arg, "operator!", null)
-			case (Node.T_ANYTHING | Node.T_MATCH_SET(_))
-				throw(MiscellaneousError.new("Cannot use T_ANYTHING or T_MATCH_SET outside of match expression: " + code))
+			case Node.T_ANYTHING | Node.T_MATCH_SET(_) | Node.T_AS(_, _)
+				throw(MiscellaneousError.new("Cannot use T_ANYTHING, T_AS, or T_MATCH_SET outside of match expression: " + code))
 			case Node.T_SEPARATOR((), @rhs)
 				optimize rhs
 			case Node.T_SEPARATOR(@lhs, ())

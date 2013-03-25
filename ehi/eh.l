@@ -23,29 +23,69 @@ void copy_string(char **, char *);
 	yylval_param->sValue[len] = '\0'; \
 } while(0)
 
+#define SCANNER yyget_extra(yyscanner)
+
 %}
 %option yylineno
 %option reentrant
 %option bison-bridge
 %option outfile="eh.flex.cpp"
 %option extra-type="class EHI *"
+%option stack
 
 OPCHAR		[@=$+\-*/<>,:&\|^%~!\.?]
+
+%x SQ_STRING
+%x DQ_STRING
 %%
-['][^']*[']	{
-				make_string(&yylval_param->sValue, yytext);
-				return T_STRING;
+	BEGIN(INITIAL);
+
+\"			{
+				BEGIN(DQ_STRING);
+				SCANNER->reset_string();
 			}
-["][^"]*["]	{
-				make_string(&yylval_param->sValue, yytext);
-				return T_STRING;
+<DQ_STRING>{
+	[^\\"]		SCANNER->add_to_string(yytext);
+	\\n			SCANNER->add_to_string('\n');
+	\\b			SCANNER->add_to_string('\b');
+	\\f			SCANNER->add_to_string('\f');
+	\\r			SCANNER->add_to_string('\r');
+	\\t			SCANNER->add_to_string('\t');
+	\\u[0-9a-f]{4} {
+					yyerror(yyscanner, "EH does not yet support Unicode escape sequences");
+				}
+	\\[\\"]		SCANNER->add_to_string(yytext[1]);
+	\\\/		SCANNER->add_to_string('/');
+	\\.			{
+					char message[100];
+					sprintf(message, "Unexpected escape character: %c", yytext[1]);
+					yyerror(yyscanner, message);
+				}
+	\"			{
+					yylval_param->sValue = SCANNER->get_string();
+					BEGIN(INITIAL);
+					return T_STRING;
+				}
+}
+\'			{
+				BEGIN(SQ_STRING);
+				SCANNER->reset_string();
 			}
+<SQ_STRING>{
+	\\[\\']		SCANNER->add_to_string(yytext[1]);
+	[^']		SCANNER->add_to_string(yytext);
+	\'			{
+					yylval_param->sValue = SCANNER->get_string();
+					BEGIN(INITIAL);
+					return T_STRING;
+				}
+}
 [\\]\n		/* Ignore escape */
 -?[0-9]*\.[0-9]+	{
 				yylval_param->fValue = strtof(yytext, nullptr);
 				return T_FLOAT;
 			}
--?[0-9]+		{
+-?[0-9]+	{
 				yylval_param->iValue = atoi(yytext);
 				return T_INTEGER;
 			}
@@ -174,43 +214,4 @@ int yywrap(yyscan_t scanner) {
 void yyerror(void *scanner, const char *s) {
 	EHI *ehi = yyget_extra(scanner);
 	throw_SyntaxError(s, yyget_lineno((yyscan_t)scanner), ehi);
-}
-
-void make_string(char **dest, char *src) {
-	src++;
-	size_t len = strlen(src) - 1;
-	char *deststr = new char[len + 1];
-	int dest_index = 0;
-	for(unsigned int i = 0; i < len; i++) {
-		if(src[i] == '\\') {
-			if(i == len - 1) {
-				deststr[dest_index] = '\\';
-			} else {
-				i++;
-				char c = src[i];
-				switch(c) {
-					case 'n':
-						deststr[dest_index] = '\n';
-						break;
-					case 'r':
-						deststr[dest_index] = '\b';
-						break;
-					case '0':
-						deststr[dest_index] = '\0';
-						break;
-					case 'b':
-						deststr[dest_index] = '\b';
-						break;
-					default:
-						deststr[dest_index] = c;
-						break;
-				}
-			}
-		} else {
-			deststr[dest_index] = src[i];
-		}
-		dest_index++;
-	}
-	deststr[dest_index] = '\0';
-	*dest = deststr;
 }

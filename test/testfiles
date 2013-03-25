@@ -333,3 +333,4 @@ ehlex.eh
 rev_range.eh
 butlast.eh
 merge.eh
+string_escapes.eh

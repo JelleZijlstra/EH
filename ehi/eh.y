@@ -149,7 +149,7 @@ global_list:
 							} global_list {
 								EHI *ehi = yyget_extra(scanner);
 								if(ehi->get_interactivity() == end_is_end_e) {
-									$$ = make_lines($1, $3, scanner);
+									$$ = ADD_NODE2(T_SEPARATOR, $1, $3);
 								}
 							}
 	;

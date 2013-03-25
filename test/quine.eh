@@ -1,1 +1,1 @@
-echo (EH.parse (File.readFile (argv->0)).decompile ());
+echo (EH.parse (File.readFile (argv->0)).decompile ())

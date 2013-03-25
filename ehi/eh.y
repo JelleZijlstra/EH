@@ -32,7 +32,7 @@
 #define OPERATOR(name) (String::make(strdup(("operator" + std::string(name)).c_str())))
 #define OPERATOR_CALL(left, op, right) (eh_addnode(T_CALL_METHOD, NODE(left), OPERATOR(op), NODE(right)))
 
-Node *fix_call(Node *lhs, Node *rhs, void *scanner);
+Node *make_lines(Node *l, Node *r, void *scanner);
 
 void yyerror(void *, const char *s);
 
@@ -149,7 +149,7 @@ global_list:
 							} global_list {
 								EHI *ehi = yyget_extra(scanner);
 								if(ehi->get_interactivity() == end_is_end_e) {
-									$$ = ADD_NODE2(T_SEPARATOR, $1, $3);
+									$$ = make_lines($1, $3, scanner);
 								}
 							}
 	;
@@ -157,16 +157,7 @@ global_list:
 statement_list:
 	/* NULL */				{ $$ = nullptr; }
 	| statement statement_list
-							{
-								// get rid of empty statements
-								if($1 == nullptr) {
-									$$ = $2;
-								} else if($2 == nullptr) {
-									$$ = $1;
-								} else {
-									$$ = ADD_NODE2(T_SEPARATOR, $1, $2);
-								}
-							}
+							{ $$ = make_lines($1, $2, scanner); }
 	;
 
 statement:
@@ -552,27 +543,17 @@ enum_arg_list:
 	;
 %%
 
-// add_to_chain of ((b, c), d) and a returns (((a, b), c), d)
-Node *add_to_chain(ehval_p chain, ehval_p elt, void *scanner) {
-	if(Node::is_a(chain) && chain->get<Enum_Instance>()->member_id == T_CALL) {
-		Node *left = add_to_chain(chain->get<Enum_Instance>()->members[0], elt, scanner);
-		return eh_addnode(T_CALL, NODE(left), chain->get<Enum_Instance>()->members[1]);
-	} else {
-		return eh_addnode(T_CALL, elt, chain);
-	}
-}
-
-// Move around a piece of AST so that function calls are left-associative rather than right-associative.
-// Change a, (b, c) into (a, b), c
-Node *fix_call(Node *lhs, Node *rhs, void *scanner) {
-	if(rhs->member_id == T_CALL) {
-		return add_to_chain(NODE(rhs), NODE(lhs), scanner);
-	} else {
-		return ADD_NODE2(T_CALL, lhs, rhs);
-	}
-}
-
 const char *get_token_name(int token) {
 	return yytname[token - 255];
 }
 
+Node *make_lines(Node *l, Node *r, void *scanner) {
+	// get rid of empty lines
+	if(l == nullptr) {
+		return r;
+	} else if(r == nullptr) {
+		return l;
+	} else {
+		return ADD_NODE2(T_SEPARATOR, l, r);
+	}
+}

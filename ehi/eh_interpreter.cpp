@@ -1152,7 +1152,7 @@ void EHI::array_insert(Array::t *array, ehval_p in, int place, const ehcontext_t
 	 * We'll assume we're always getting a correct ehval_p, referring to a
 	 * T_ARRAY_MEMBER token. If there is 1 parameter, that means it's a
 	 * non-labeled array member, which we'll give an integer array index; if
-	 * there are 2, we'll either use the integer array index or a hash of the
+	 * there are 2, we will either use the integer array index or a hash of the
 	 * string index.
 	 */
 	if(in->get<Enum_Instance>()->member_id == T_ARRAY_MEMBER_NO_KEY) {

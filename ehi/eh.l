@@ -30,7 +30,7 @@ void copy_string(char **, char *);
 %option outfile="eh.flex.cpp"
 %option extra-type="class EHI *"
 
-OPCHAR		[@=$+\-*/<>,:&\|^%~!\.]
+OPCHAR		[@=$+\-*/<>,:&\|^%~!\.?]
 %%
 ['][^']*[']	{
 				make_string(&yylval_param->sValue, yytext);

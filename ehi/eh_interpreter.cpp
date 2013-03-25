@@ -826,8 +826,12 @@ ehval_p EHI::eh_op_match(ehval_p *paras, const ehcontext_t &context) {
 		Enum_Instance::t *case_node = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>();
 		if(case_node->member_id == T_DEFAULT) {
 			throw_MiscellaneousError("Cannot use T_DEFAULT in match statement", this);
-		}
-		if(match(case_node->members[0], switchvar, context)) {
+		} else if(case_node->member_id == T_WHEN) {
+			bool does_match = match(case_node->members[0], switchvar, context);
+			if(does_match && this->toBool(eh_execute(case_node->members[1], context), context)->get<Bool>()) {
+				return eh_execute(case_node->members[2], context);
+			}
+		} else if(match(case_node->members[0], switchvar, context)) {
 			return eh_execute(case_node->members[1], context);
 		}
 	}

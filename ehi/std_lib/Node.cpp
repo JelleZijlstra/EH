@@ -88,6 +88,7 @@ EH_INITIALIZER(Node) {
 	TOKEN(T_NAMED_ARGUMENT, 2);
 	TOKEN(T_MIXED_TUPLE, 2);
 	TOKEN(T_AS, 2);
+	TOKEN(T_WHEN, 3);
 	TOKEN(T_LIST, 1); // used for the convenience of the compiler: gives a tuple of code blocks rather than the nasty T_COMMA stuff
 	REGISTER_CLASS(Node, Context);
 }

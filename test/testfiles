@@ -332,3 +332,4 @@ haskell_emul.eh
 ehlex.eh
 rev_range.eh
 butlast.eh
+merge.eh

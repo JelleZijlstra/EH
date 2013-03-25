@@ -285,6 +285,20 @@ class Compiler
 								private body_name = this.doCompile(sb, body)
 								sb << var_name << " = " << body_name << ";\n"
 								sb << "} else {\n"
+							case Node.T_WHEN(@pattern, @guard, @body)
+								private match_bool = this.get_var_name "match_bool"
+								sb << "bool " << match_bool << " = true;\n"
+								# perform the match
+								this.compile_match(sb, match_var_name, match_bool, pattern)
+								sb << "if(" << match_bool << ") {\n"
+								# apply guard
+								private guard_name = this.doCompile(sb, guard)
+								sb << match_bool << " = eh_compiled::boolify(" << guard_name << ", context, ehi);\n}\n"
+								# apply code
+								sb << "if(" << match_bool << ") {\n"
+								private body_name = this.doCompile(sb, body)
+								sb << var_name << " = " << body_name << ";\n"
+								sb << "} else {\n"
 						end
 					end
 					# throw error if nothing was matched

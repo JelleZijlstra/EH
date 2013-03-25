@@ -48,6 +48,8 @@ class Macro
 			Node.T_END
 		case Node.T_COMMA(Node.T_CASE(@pattern, @body), @rest)
 			Node.T_COMMA(Node.T_CASE(optimize_match_pattern pattern, optimize body), optimize_match_cases rest)
+		case Node.T_COMMA(Node.T_WHEN(@pattern, @guard, @body), @rest)
+			Node.T_COMMA(Node.T_WHEN(optimize_match_pattern pattern, optimize guard, optimize body), optimize_match_cases rest)
 		case _
 			printvar code
 			throw()

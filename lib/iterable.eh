@@ -154,6 +154,24 @@ class Iterable
 		end
 	end
 
+	const private static any_helper f it = if it.hasNext()
+		f(it.next()) || any_helper f it
+	else
+		false
+	end
+
+	const public any f = any_helper f (this.getIterator())
+
+	const private static all_helper f it = if it.hasNext()
+		f(it.next()) && all_helper f it
+	else
+		true
+	end
+
+	const public all f = all_helper f (this.getIterator())
+
+	const public containsMember elt = this.any (elt.operator==)
+
 	# Returns an iterable that returns the values in each iterator sequentially
 	const public static chain = iter => ChainedIterable.new iter
 end

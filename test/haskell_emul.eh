@@ -10,6 +10,15 @@ Object.operator.* = func: g
 	f = this
 	x => f $$ g x
 end
-
 # ++ is taken
 Object.operator+++ r = this.concat r
+
+
+# tests
+include '../lib/library.eh'
+
+private len x = x.length()
+private x2 x = x.map(elt => 2 * elt)
+private l = 1::3::Nil
+private mapl = len .* x2
+echo $$ mapl l

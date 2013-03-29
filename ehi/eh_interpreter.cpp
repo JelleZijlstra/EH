@@ -1104,10 +1104,11 @@ ehval_p EHI::call_method(ehval_p obj, const char *name, ehval_p args, const ehco
 ehval_p EHI::call_function(ehval_p function, ehval_p args, const ehcontext_t &context) {
 	// We special-case function calls on Function and Binding types; otherwise we'd end up in an infinite loop
 	if(function->is_a<Binding>()) {
+		// This one time, we call a library method directly. If you want to override Binding.operator_colon, too bad.
 		return ehlm_Binding_operator_colon(function, args, this);
 	} else if(function->deep_is_a<Function>()) {
-		// This one time, we call a library method directly. If you want to override Function.operator_colon, too bad.
-		return ehlm_Function_operator_colon(function, args, this);
+		// Avoid calling Function.operator(), so that we can preserve the object
+		return Function::exec(context.object, function, args, this);
 	} else {
 		return call_method(function, "operator()", args, context);
 	}

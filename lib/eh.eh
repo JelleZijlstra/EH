@@ -1,25 +1,20 @@
 # Enhancements to the EH module
 
 # Eval as an expression
-const EH.exprEval = func: expr
-	private obj = EH.eval("x = (" + expr + ");")
-	obj.x
-end
+const EH.exprEval expr = EH.eval("x = (" + expr + ");").x
 
 # Eval as either an expression or a statement
-const EH.universalEval = func: input
-	try
-		EH.eval input
-	catch
-		EH.exprEval input
-	end
+const EH.universalEval input = try
+	EH.eval input
+catch
+	EH.exprEval input
 end
 
-const EH.parseFile = file => EH.parse(File.readFile file)
+const EH.parseFile file = EH.parse(File.readFile file)
 
-const EH.equalType = lhs, rhs => lhs.typeId() == rhs.typeId()
+const EH.equalType(lhs, rhs) = lhs.typeId() == rhs.typeId()
 
-Object.equalObject = rhs => Object.toString.apply(this, ()) == Object.toString.apply(rhs, ())
+Object.equalObject rhs = Object.toString.apply(this, ()) == Object.toString.apply(rhs, ())
 
 # Escape shell arguments
-EH.escapeShellArgument = string => "'" + string.replaceCharacter("'", "\\'") + "'"
+EH.escapeShellArgument string = "'" + string.replaceCharacter("'", "\\'") + "'"

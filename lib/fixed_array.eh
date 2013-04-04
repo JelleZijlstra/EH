@@ -12,20 +12,18 @@ FixedArray.inherit class
 			this.size = fa.size()
 		end
 
-		public hasNext = () => this.current < this.size
+		public hasNext() = this.current < this.size
 
-		public next = func:
-			if this.current < this.size
-				private out = this.fa->(this.current)
-				this.current++
-				out
-			else
-				throw(EmptyIterator.new())
-			end
+		public next() = if this.current < this.size
+			private out = this.fa->(this.current)
+			this.current++
+			out
+		else
+			throw(EmptyIterator.new())
 		end
 	end
 
-	public getIterator = () => this.Iterator.new this
+	public getIterator() = this.Iterator.new this
 
 end
 

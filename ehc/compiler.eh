@@ -76,7 +76,7 @@ class Compiler
 	private counter
 	private verbose
 
-	const private static header = '#include "' + workingDir() + '/../ehi/eh_compiled.hpp"\n'
+	const private static header = '#include "' + workingDir() + "/../ehi/eh_compiled.hpp\"\n"
 
 	public initialize = func: fileName: throw(), code: throw(), verbose: false
 		this.fileName = fileName
@@ -93,7 +93,7 @@ class Compiler
 		end
 		private code = this.raw_code
 		private mainf = String.Builder.new()
-		mainf << 'const char *get_filename() { return "' << this.fileName << '"; }\n'
+		mainf << 'const char *get_filename() { return "' << this.fileName << "\"; }\n"
 
 		private eh_mainf = String.Builder.new()
 		eh_mainf << "ehval_p eh_main(EHI *ehi, const ehcontext_t &context) {\nehval_p ret;\n"
@@ -179,7 +179,7 @@ class Compiler
 					sb << assignment << val_name
 				case Node.T_ACCESS(@base, @accessor)
 					private base_name = this.doCompile(sb, base)
-					sb << assignment << base_name << '->get_property("' << accessor << '", context, ehi);\n'
+					sb << assignment << base_name << '->get_property("' << accessor << "\", context, ehi);\n"
 				case Node.T_CLASS_MEMBER(@attributes, @lvalue)
 					this.compile_set(sb, lvalue, "Null::make()", Attributes.parse attributes)
 					sb << assignment << "Null::make();\n"
@@ -212,9 +212,9 @@ class Compiler
 					private iteree_name = this.doCompile(sb, iteree)
 					private iterator_name = this.get_var_name "for_iterator"
 					sb << "ehval_p " << iterator_name << " = ehi->call_method(" << iteree_name
-					sb << ', "getIterator", nullptr, context);\n'
-					sb << "while(ehi->call_method_typed<Bool>(" << iterator_name << ', "hasNext", nullptr, context)->get<Bool>()) {\n'
-					sb << "ehi->call_method(" << iterator_name << ', "next", nullptr, context);\n'
+					sb << ", \"getIterator\", nullptr, context);\n"
+					sb << "while(ehi->call_method_typed<Bool>(" << iterator_name << ", \"hasNext\", nullptr, context)->get<Bool>()) {\n"
+					sb << "ehi->call_method(" << iterator_name << ", \"next\", nullptr, context);\n"
 					this.doCompile(sb, body)
 					sb << "}\n"
 					sb << assignment << iteree_name
@@ -222,10 +222,10 @@ class Compiler
 					private iteree_name = this.doCompile(sb, iteree)
 					private iterator_name = this.get_var_name "for_iterator"
 					sb << "ehval_p " << iterator_name << " = ehi->call_method(" << iteree_name
-					sb << ', "getIterator", nullptr, context);\n'
-					sb << "while(ehi->call_method_typed<Bool>(" << iterator_name << ', "hasNext", nullptr, context)->get<Bool>()) {\n'
+					sb << ", \"getIterator\", nullptr, context);\n"
+					sb << "while(ehi->call_method_typed<Bool>(" << iterator_name << ", \"hasNext\", nullptr, context)->get<Bool>()) {\n"
 					# name will not clash, because there won't be another one in this scope
-					sb << "ehval_p next = ehi->call_method(" << iterator_name << ', "next", nullptr, context);\n'
+					sb << "ehval_p next = ehi->call_method(" << iterator_name << ", \"next\", nullptr, context);\n"
 					this.compile_set(sb, inner_var_name, "next", Attributes.make_private())
 					this.doCompile(sb, body)
 					sb << "}\n"
@@ -263,7 +263,7 @@ class Compiler
 						end
 						sb << "} else {\n"
 					end
-					sb << 'throw_MiscellaneousError("No matching case in given statement", ehi);\n'
+					sb << "throw_MiscellaneousError(\"No matching case in given statement\", ehi);\n"
 					for cases_length
 						sb << "}\n"
 					end
@@ -302,7 +302,7 @@ class Compiler
 						end
 					end
 					# throw error if nothing was matched
-					sb << 'throw_MiscellaneousError("No matching case in match statement", ehi);\n'
+					sb << "throw_MiscellaneousError(\"No matching case in match statement\", ehi);\n"
 					for cases_length
 						sb << "}\n"
 					end
@@ -436,7 +436,7 @@ class Compiler
 					this.doCompile(inner_builder, body)
 					inner_builder << "}\n"
 
-					sb << assignment << 'Enum::make_enum_class("' << enum_name << '", context.scope, ehi->get_parent());\n{\n'
+					sb << assignment << 'Enum::make_enum_class("' << enum_name << "\", context.scope, ehi->get_parent());\n{\n"
 					sb << "ehobj_t *enum_obj = " << var_name << "->get<Object>();\n"
 					for member in members
 						sb << 'enum_obj->add_enum_member("' << member->0 << '", {'
@@ -456,7 +456,7 @@ class Compiler
 							case _
 								printvar member
 						end
-						sb << '}, ehi->get_parent());\n'
+						sb << "}, ehi->get_parent());\n"
 					end
 					# execute inner code
 					sb << body_name << "(" << var_name << ", ehi);\n"
@@ -549,7 +549,7 @@ class Compiler
 		case Node.T_NULL
 			# assert that rvalue is null
 			sb << "if(!" << name << "->is_a<Null>()) {\n"
-			sb << 'throw_MiscellaneousError("Non-null value assigned to null", ehi);\n}\n'
+			sb << "throw_MiscellaneousError(\"Non-null value assigned to null\", ehi);\n}\n"
 		case Node.T_ANYTHING
 			# ignore
 		case Node.T_ARROW(@base, @accessor)
@@ -573,10 +573,10 @@ class Compiler
 			if attributes == null
 				private member_name = this.get_var_name "member"
 				sb << "ehmember_p " << member_name << ' = context.scope->get<Object>()->get_recursive("'
-				sb << var_name << '", context);\n'
+				sb << var_name << "\", context);\n"
 				sb << "if(" << member_name << " != nullptr) {\n"
 				sb << "if(" << member_name << "->isconst()) {\n"
-				sb << 'throw_ConstError(context.scope, "' << var_name << '", ehi);\n}\n'
+				sb << 'throw_ConstError(context.scope, "' << var_name << "\", ehi);\n}\n"
 				sb << member_name << "->value = " << name << ";\n"
 				sb << "} else {\n"
 				sb << 'context.scope->set_member("' << var_name << '", ehmember_p(attributes_t(), '
@@ -601,8 +601,8 @@ class Compiler
 					case Node.T_NAMED_ARGUMENT(@var_name, @dflt)
 						private na_var_name = this.get_var_name "na_var"
 						sb << "ehval_p " << na_var_name << ";\n"
-						sb << "if(ehi->call_method_typed<Bool>(" << name << ', "has", String::make(strdup("' << var_name << '")), context)->get<Bool>()) {\n'
-						sb << na_var_name << " = ehi->call_method(" << name << ', "operator->", String::make(strdup("' << var_name << '")), context);\n'
+						sb << "if(ehi->call_method_typed<Bool>(" << name << ', "has", String::make(strdup("' << var_name << "\")), context)->get<Bool>()) {\n"
+						sb << na_var_name << " = ehi->call_method(" << name << ', "operator->", String::make(strdup("' << var_name << "\")), context);\n"
 						sb << "} else {\n"
 						private dflt_name = this.doCompile(sb, dflt)
 						sb << na_var_name << " = " << dflt_name << ";\n}\n"
@@ -676,7 +676,7 @@ class Compiler
 			sb << 'throw_TypeError("match case is not an Enum.Member", ' << base_name << ", ehi);\n}\n"
 			sb << "const auto em = " << base_name << "->get<Enum_Instance>();\n"
 			sb << "if(em->members != nullptr) {\n"
-			sb << 'throw_MiscellaneousError("Invalid argument in Enum.Member match", ehi);\n}\n'
+			sb << "throw_MiscellaneousError(\"Invalid argument in Enum.Member match\", ehi);\n}\n"
 			sb << "if(!" << match_var_name << "->is_a<Enum_Instance>()) {\n"
 			sb << match_bool << " = false;\n} else {\n"
 			sb << "const auto var_ei = " << match_var_name << "->get<Enum_Instance>();\n"
@@ -687,7 +687,7 @@ class Compiler
 				case _; 1
 			end
 			sb << "if(em->nmembers != " << args_size << ") {\n"
-			sb << 'throw_MiscellaneousError("Invalid argument number in Enum.Member match", ehi);\n}\n'
+			sb << "throw_MiscellaneousError(\"Invalid argument number in Enum.Member match\", ehi);\n}\n"
 			match args
 				case Node.T_LIST(@args_list)
 					for i in args_size
@@ -718,7 +718,7 @@ class Compiler
 		if catches > 0
 			sb << "} catch (eh_exception &e) {\n"
 			# insert exception into scope
-			sb << 'context.scope->set_member("exception", ehmember_p(attributes_t(), e.content), context, ehi);\n'
+			sb << "context.scope->set_member(\"exception\", ehmember_p(attributes_t(), e.content), context, ehi);\n"
 			for block in catch_blocks
 				match block
 					case Node.T_CATCH(@body)

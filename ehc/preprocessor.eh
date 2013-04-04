@@ -161,7 +161,11 @@ class Preprocessor
 		expression_map((code => match code
 			case Node.T_CALL(Node.T_VARIABLE("include"), Node.T_LITERAL(@file))
 				if file.isA String
-					private real_name = path + '/' + file
+					private real_name = if file->0 == '/'
+						file
+					else
+						path + '/' + file
+					end
 					if !(obj.included_files.has real_name)
 						obj.included_files->real_name = true
 						obj.replace_include(EH.parseFile real_name, File.fullPath real_name)

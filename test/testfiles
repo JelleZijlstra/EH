@@ -335,3 +335,4 @@ butlast.eh
 merge.eh
 string_escapes.eh
 any_all.eh
+matrix.eh

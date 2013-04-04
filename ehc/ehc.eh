@@ -92,7 +92,7 @@ private main = func: argc, argv
 		if args->'optimize'
 			cmd += "-O3 "
 		end
-		cmd += tmp_name + " ../ehi/libeh.a -std=c++11 -stdlib=libc++ -o " + args->'output'
+		cmd += tmp_name + " " + workingDir() + "/../ehi/libeh.a -std=c++11 -stdlib=libc++ -o " + args->'output'
 		if verbose
 			echo cmd
 		end

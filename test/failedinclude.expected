@@ -1,4 +1,4 @@
-%%stdout%%
-Could not open input file (method EH core): /Users/jellezijlstra/code/EH/test/thisfiledoesnotexist
+%%stdout-regex%%
+Could not open input file \(method EH core\): .*\/EH\/test\/thisfiledoesnotexist
 42
 %%stderr%%

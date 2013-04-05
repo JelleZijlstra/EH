@@ -30,7 +30,7 @@ if(extension_loaded("ehphp"))  {
 		public function setup_commandline($name, array $paras = array()) {
 			// set up if necessary
 			$this->fillThisPointer();
-			$cmd = "include '/Users/jellezijlstra/code/EH/lib/library.eh';";
+			$cmd = "include '" . __DIR__ . "/../lib/library.eh';";
 			$this->global_parse_string($cmd);
 			$this->initialize_eh();
 			$this->prompt = $name . '> ';

@@ -64,7 +64,7 @@ class TestCase {
 		$outputFile = 'tmp/' . $this->name . '.' . $stream;
 		$output = file_get_contents($outputFile);
 		if(isset($this->expected[$stream . '-regex'])) {
-            $regex = '/' . $this->expected[$stream . '-regex'] . '/u';
+			$regex = '/' . $this->expected[$stream . '-regex'] . '/u';
 			if(!preg_match($regex, $output)) {
 				$this->failTest($stream, $outputFile, $this->expected[$stream . '-regex']);
 			}

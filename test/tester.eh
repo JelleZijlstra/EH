@@ -18,9 +18,9 @@ class TestCase
 	public run = func:
 		echo('Testing file ' + this.name + '...')
 		shell(this.makeTestCommand())
-		this.testOutput 'stdout'
-		this.testOutput 'stderr'
+		private result = this.testOutput 'stdout' && this.testOutput 'stderr'
 		this.cleanUp()
+		result
 	end
 
 	private getExpected = func:
@@ -63,15 +63,24 @@ class TestCase
 		private output = File.readFile outputFile
 		private regex_stream = stream + '-regex'
 		if this.expected.has regex_stream
-			if !output.doesMatch(this.expected->regex_stream)
+			if !(output.doesMatch(this.expected->regex_stream))
 				this.failTest(stream, outputFile, this.expected->regex_stream)
+				false
+			else
+				true
 			end
 		elsif this.expected.has stream
 			if output != this.expected->stream
 				this.failTest(stream, outputFile, this.expected->stream)
+				false
+			else
+				true
 			end
 		elsif output != ''
 			this.failTest(stream, outputFile, '')
+			false
+		else
+			true
 		end
 	end
 
@@ -108,10 +117,16 @@ shell "mkdir -p tmp"
 
 if args->'file'.length() == 0
 	private testfiles = File.new "testfiles"
+	private total = 0
+	private passed = 0
 	while((private file = testfiles.gets()) != null)
-		TestCase.make(file.trim())
+		if TestCase.make(file.trim())
+			passed++
+		end
+		total++
 	end
 	testfiles.close()
+	echo("Passed " + passed + " of " + total + " tests (" + (passed * 100.0 / total).round() + "%)")
 else
 	args->'file'.each(_, v => TestCase.make v)
 end

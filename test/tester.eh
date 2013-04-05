@@ -3,6 +3,11 @@
 include '../lib/library.eh'
 include '../lib/argument_parser.eh'
 
+if !(String.isRegexAvailable())
+	echo(argv->0 + ": error: regex support is required for this script to run")
+	exit 1
+end
+
 class TestCase
 	public static executer
 	private name

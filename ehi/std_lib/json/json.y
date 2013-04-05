@@ -9,7 +9,7 @@
 
 #define YYERROR_VERBOSE
 
-void eh_json_error(void *scanner, const char *message) [[noreturn]];
+EH_NORETURN void eh_json_error(void *scanner, const char *message);
 %}
 %pure-parser
 %parse-param { void *scanner }

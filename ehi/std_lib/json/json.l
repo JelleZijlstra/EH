@@ -5,7 +5,7 @@
 
 #define SCANNER eh_json_get_extra(yyscanner)
 
-void eh_json_error(void *, const char *s) [[noreturn]];
+EH_NORETURN void eh_json_error(void *, const char *s);
 %}
 %option yylineno
 %option reentrant

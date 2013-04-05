@@ -64,5 +64,10 @@ static inline int intcmp(T lhs, T rhs) {
 class quit_exception : public std::exception {
 };
 
+#ifdef __clang__
+#define EH_NORETURN [[noreturn]]
+#else
+#define EH_NORETURN
+#endif
 
 #endif /* _EH_LIBCLASSES_H */

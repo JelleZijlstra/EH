@@ -8,7 +8,7 @@
 #include "ArgumentError.hpp"
 #include "Exception.hpp"
 
-[[noreturn]] void throw_ArgumentError(const char *message, const char *method, ehval_p value, EHI *ehi) {
+EH_NORETURN void throw_ArgumentError(const char *message, const char *method, ehval_p value, EHI *ehi) {
 	ehval_p args[3];
 	args[0] = String::make(strdup(message));
 	args[1] = String::make(strdup(method));

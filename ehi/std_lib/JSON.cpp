@@ -28,7 +28,7 @@ ehval_p json_scanner::parse(const char *str) {
 	return result;
 }
 
-[[noreturn]] void eh_json_error(void *scanner, const char *message) {
+EH_NORETURN void eh_json_error(void *scanner, const char *message) {
 	json_scanner *sc = eh_json_get_extra(scanner);
 	throw_SyntaxError(message, 0, sc->ehi);
 }

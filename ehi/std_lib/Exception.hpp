@@ -6,7 +6,7 @@
 #ifndef EH_EXCEPTION_H_
 #define EH_EXCEPTION_H_
 
-[[noreturn]] void throw_error(const char *class_name, ehval_p args, EHI *ehi);
+EH_NORETURN void throw_error(const char *class_name, ehval_p args, EHI *ehi);
 
 EH_CLASS(Exception) {
 public:

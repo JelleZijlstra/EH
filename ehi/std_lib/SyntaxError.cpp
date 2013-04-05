@@ -5,7 +5,7 @@
 #include "ArgumentError.hpp"
 #include "Exception.hpp"
 
-[[noreturn]] void throw_SyntaxError(const char *message, int line, EHI *ehi) {
+EH_NORETURN void throw_SyntaxError(const char *message, int line, EHI *ehi) {
 	ehval_p args[2];
 	args[0] = String::make(strdup(message));
 	args[1] = Integer::make(line);

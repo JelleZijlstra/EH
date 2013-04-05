@@ -82,6 +82,10 @@ public:
 		return (void *)this->pointer != rhs;
 	}
 
+    operator T&() const {
+        return this->pointer->content;
+    }
+
 	~refcount_ptr() {
 		if(this->pointer != nullptr) {
 			this->pointer->dec_rc();
@@ -105,17 +109,17 @@ public:
 		}
 	}
 
-	T &operator[](unsigned int i) {
-		return pointer[i];
-	}
+	//T &operator[](unsigned int i) {
+	//	return pointer[i];
+	//}
 
-	T operator[](unsigned int i) const {
-	  return pointer[i];
-	}
+	//T operator[](unsigned int i) const {
+	//  return pointer[i];
+	//}
 
 	operator T *() {
 		return pointer;
-	}
+    }
 
 	~array_ptr() {
 		// no need to check for nullptr - delete automatically ignores it

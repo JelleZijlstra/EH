@@ -9,7 +9,7 @@ class TestCase
 	private expected
 
 	public static make = func: file
-		private name = file.replace("\.eh$", "")
+		private name = file.replace('\.eh$', "")
 		TestCase.new name.run()
 	end
 

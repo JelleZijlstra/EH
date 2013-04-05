@@ -5,6 +5,7 @@
  * Jelle Zijlstra, December 2011
  */
 #include <sstream>
+#include <string.h>
 
 #include "std_lib/Integer.hpp"
 #include "std_lib/String.hpp"

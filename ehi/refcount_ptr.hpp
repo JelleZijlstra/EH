@@ -119,7 +119,7 @@ public:
 
 	operator T *() {
 		return pointer;
-    }
+	}
 
 	~array_ptr() {
 		// no need to check for nullptr - delete automatically ignores it

@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 
-include '/Users/jellezijlstra/code/EH/lib/library.eh'
+include '../lib/library.eh'
 
 class Matrix
 	private fa

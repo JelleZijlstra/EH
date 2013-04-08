@@ -1,12 +1,13 @@
 #!/usr/bin/ehi
 # For-in loops
 arr = [1, 2]
-for (k, v) in arr
-	printvar(k, v)
+for v in arr
+	printvar v
 end
 
 arr2 = []
-for (i, arr2->i) in arr
+for i in arr
+	arr2.push i
 	printvar arr2
 end
 

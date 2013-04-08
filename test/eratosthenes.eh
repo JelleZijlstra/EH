@@ -6,8 +6,8 @@ else
 	max = 128
 end
 sieve = []
-for i in max
-	sieve->(i + 1) = true
+for i in max + 1
+	sieve.push true
 end
 for i in (max / 2) - 1
 	for j in (max / (i + 2)) - 1

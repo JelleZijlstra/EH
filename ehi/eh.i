@@ -7,22 +7,22 @@
 %{
 #include "eh.hpp"
 
-ehval_p EHI::execute_cmd(const char *name, Array::t *paras) {
+ehval_p EHI::execute_cmd(const char *name, Map::t *paras) {
 	return nullptr;
 }
 char *EHI::eh_getline() {
-	execute_cmd("man", new Array::t());
+	execute_cmd("man", new Map::t(this));
 	return nullptr;
 }
 
-ehval_p zvaltoeh_array(HashTable *hash, EHI *ehi);
-zval *arrtozval(Array::t *paras, EHI *ehi);
+ehval_p zvaltoeh_map(HashTable *hash, EHI *ehi);
+zval *maptozval(Map::t *paras, EHI *ehi);
 zval *hashtozval(Hash::ehhash_t *hash, EHI *ehi);
 zval *tupletozval(Tuple::t *tuple, EHI *ehi);
 
 zval *ehtozval(ehval_p in, EHI *ehi) {
-	if(in->is_a<Array>()) {
-		return arrtozval(in->get<Array>(), ehi);
+	if(in->deep_is_a<Map>()) {
+		return maptozval(in->data()->get<Map>(), ehi);
 	} else if(in->is_a<Hash>()) {
 		return hashtozval(in->get<Hash>(), ehi);
 	} else if(in->is_a<Tuple>()) {
@@ -69,17 +69,18 @@ zval *tupletozval(Tuple::t *tuple, EHI *ehi) {
 	return arr;
 }
 
-zval *arrtozval(Array::t *paras, EHI *ehi) {
+zval *maptozval(Map::t *paras, EHI *ehi) {
 	zval *arr;
 	MAKE_STD_ZVAL(arr);
 
 	// initiate PHP array
 	array_init(arr);
-	for(auto &i : paras->int_indices) {
-		add_index_zval(arr, i.first, ehtozval(i.second, ehi));
-	}
-	for(auto &i : paras->string_indices) {
-		add_assoc_zval(arr, i.first.c_str(), ehtozval(i.second, ehi));
+	for(auto &i : paras->map) {
+		if(i.first->is_a<Integer>()) {
+			add_index_zval(arr, i.first->get<Integer>(), ehtozval(i.second, ehi));
+		} else if(i.first->is_a<String>()) {
+			add_assoc_zval(arr, i.first->get<String>(), ehtozval(i.second, ehi));
+		}
 	}
 	return arr;
 }
@@ -98,7 +99,7 @@ ehval_p zvaltoeh(zval *in, EHI *ehi) {
 			return String::make(strdup(in->value.str.val));
 		case IS_ARRAY:
 			// initialize array
-			return zvaltoeh_array(in->value.ht, ehi);
+			return zvaltoeh_map(in->value.ht, ehi);
 		case IS_LONG:
 			return Integer::make(in->value.lval);
 		case IS_RESOURCE:
@@ -110,9 +111,9 @@ ehval_p zvaltoeh(zval *in, EHI *ehi) {
 	return nullptr;
 }
 
-ehval_p zvaltoeh_array(HashTable *hash, EHI *ehi) {
-    ehval_p ret = Array::make(ehi->get_parent());
-    Array::t *retval = ret->get<Array>();
+ehval_p zvaltoeh_map(HashTable *hash, EHI *ehi) {
+    ehval_p ret = Map::make(ehi);
+    Map::t *retval = ret->get<Map>();
 	// variables for our new array
 	ehval_p index, value;
 	for(Bucket *curr = hash->pListHead; curr != nullptr; curr = curr->pListNext) {
@@ -123,10 +124,10 @@ ehval_p zvaltoeh_array(HashTable *hash, EHI *ehi) {
 		// determine index type and value
 		if(curr->nKeyLength == 0) {
 	    	// numeric index
-	    	retval->int_indices[curr->h] = value;
+	    	retval->set(Integer::make(curr->h), value);
 		} else {
 			// string index
-			retval->string_indices[curr->arKey] = value;
+			retval->set(String::make(strdup(curr->arKey)), value);
 		}
     }
     return ret;
@@ -140,8 +141,8 @@ ehval_p zvaltoeh_array(HashTable *hash, EHI *ehi) {
 	ZVAL_STRING($input, $1_name, 1);
 }
 // Typemap from EH array to PHP array
-%typemap(directorin) Array::t* {
-	*$input = *arrtozval($1, this);
+%typemap(directorin) Map::t* {
+	*$input = *maptozval($1, this);
 }
 %typemap(directorin) EHI* {
 	ZVAL_NULL($input);
@@ -161,7 +162,7 @@ public:
 	ehval_p global_parse_file(const char *name);
 	ehval_p global_parse_string(const char *cmd);
 
-	virtual ehval_p execute_cmd(const char *name, Array::t *paras);
+	virtual ehval_p execute_cmd(const char *name, Map::t *paras);
 	virtual char *eh_getline();
 	virtual ~EHI();
 };

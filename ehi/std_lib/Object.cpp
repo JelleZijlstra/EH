@@ -1,5 +1,6 @@
 #include <set>
 
+#include "Array.hpp"
 #include "Object.hpp"
 #include "SuperClass.hpp"
 
@@ -128,9 +129,8 @@ EH_METHOD(Object, members) {
 	std::set<std::string> members = obj->get<Object>()->member_set(ehi->get_parent());
 	ehval_p out = Array::make(ehi->get_parent());
 	Array::t *arr = out->get<Array>();
-	int index = 0;
-	for(std::set<std::string>::iterator i = members.begin(), end = members.end(); i != end; i++, index++) {
-		arr->int_indices[index] = String::make(strdup((*i).c_str()));
+	for(std::set<std::string>::iterator i = members.begin(), end = members.end(); i != end; i++) {
+		arr->append(String::make(strdup((*i).c_str())));
 	}
 	return out;
 }

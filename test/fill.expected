@@ -1,32 +1,32 @@
 %%stdout%%
 @array [
-	0 => @int 0
+	@int 0
 ]
 @array [
-	0 => @int 0
-	1 => @int 1
-	2 => @int 4
-	3 => @int 9
-	4 => @int 16
-	5 => @int 25
-	6 => @int 36
-	7 => @int 49
-	8 => @int 64
-	9 => @int 81
-	10 => @int 100
-	11 => @int 121
-	12 => @int 144
-	13 => @int 169
-	14 => @int 196
-	15 => @int 225
-	16 => @int 256
-	17 => @int 289
-	18 => @int 324
-	19 => @int 361
-	20 => @int 400
-	21 => @int 441
-	22 => @int 484
-	23 => @int 529
-	24 => @int 576
+	@int 0
+	@int 1
+	@int 4
+	@int 9
+	@int 16
+	@int 25
+	@int 36
+	@int 49
+	@int 64
+	@int 81
+	@int 100
+	@int 121
+	@int 144
+	@int 169
+	@int 196
+	@int 225
+	@int 256
+	@int 289
+	@int 324
+	@int 361
+	@int 400
+	@int 441
+	@int 484
+	@int 529
+	@int 576
 ]
 %%stderr%%

@@ -1,9 +1,9 @@
 %%stdout%%
 Map
 @array [
-	0 => @int 3
-	1 => @int 3
-	2 => @int 4
+	@int 3
+	@int 3
+	@int 4
 ]
 Reduce
 @int 3
@@ -13,6 +13,6 @@ bar
 quux
 Filter
 @array [
-	2 => @string "quux"
+	@string "quux"
 ]
 %%stderr%%

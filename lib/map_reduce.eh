@@ -11,11 +11,13 @@ class MapReduceJob
 		if this.reducer == null
 			throw "Reducer is null"
 		end
-		this.intermediates = []
-		for (key, value) in input
-			this.mapper(key, value)
+		this.intermediates = {}
+		private i = 0
+		for value in input
+			this.mapper(i, value)
+			i++
 		end
-		this.outputArray = []
+		this.outputArray = {}
 		for (key, values) in this.intermediates
 			this.reducer(key, values)
 		end
@@ -26,7 +28,7 @@ class MapReduceJob
 		if !(this.intermediates.has key)
 			this.intermediates->key = []
 		end
-		this.intermediates->key.append value
+		this.intermediates->key.push value
 	end
 
 	output = func: key, value

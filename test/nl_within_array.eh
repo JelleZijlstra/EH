@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 
 printvar [
-	'foo' => 'bar',
+	'bar',
 	3,
 	5,
 	'hello'

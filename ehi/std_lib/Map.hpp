@@ -10,13 +10,27 @@
  *	echo m->[]
  * will not print 42.
  */
+#include "../eh.hpp"
+
+#ifndef EH_MAP_H_
+#define EH_MAP_H_
+
 #include "std_lib_includes.hpp"
 
 EH_CLASS(Map) {
+	struct Comparator : std::binary_function<ehval_p, ehval_p, bool> {
+	private:
+		mutable EHI *ehi;
+	public:
+		Comparator(EHI *e) : ehi(e) {}
+
+		bool operator()(const ehval_p &l, const ehval_p &r) const;
+	};
+
 public:
 	class t {
 	public:
-		typedef std::map<ehval_p, ehval_p> eh_map;
+		typedef std::map<ehval_p, ehval_p, Comparator> eh_map;
 		typedef eh_map::iterator iterator;
 
 		size_t size() const {
@@ -25,13 +39,20 @@ public:
 		ehval_p get(ehval_p index) const {
 			return map.at(index);
 		}
+		ehval_p safe_get(ehval_p index) const {
+			if(has(index)) {
+				return get(index);
+			} else {
+				return nullptr;
+			}
+		}
 		void set(ehval_p index, ehval_p val) {
 			map[index] = val;
 		}
 		bool has(ehval_p index) const {
 			return map.count(index);
 		}
-		t() : map() {}
+		t(EHI *ehi);
 		~t() {}
 
 		eh_map map;
@@ -67,9 +88,26 @@ public:
 		return out;
 	}
 
-	static ehval_p make(EHInterpreter *parent) {
-		return parent->allocate<Map>(new t());
+	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
+		void *ptr = static_cast<void *>(value);
+		if(set.count(ptr) == 0) {
+			set.insert(ptr);
+			std::cout << "@map [" << std::endl;
+			for(auto &i : value->map) {
+				add_tabs(std::cout, level + 1);
+				i.first->printvar(set, level + 1, ehi);
+				add_tabs(std::cout, level + 1);
+				std::cout << " => ";
+				i.second->printvar(set, level + 1, ehi);
+			}
+			add_tabs(std::cout, level);
+			std::cout << "]" << std::endl;
+		} else {
+			std::cout << "(recursion)" << std::endl;
+		}
 	}
+
+	static ehval_p make(EHI *ehi);
 };
 EH_METHOD(Map, compare);
 EH_METHOD(Map, initialize);
@@ -116,9 +154,7 @@ public:
 		return { value->map };
 	}
 
-	static ehval_p make(ehval_p map, EHInterpreter *parent) {
-		return parent->allocate<Map_Iterator>(new t(map));
-	}
+	static ehval_p make(ehval_p map, EHInterpreter *parent);
 };
 EH_METHOD(Map_Iterator, initialize);
 EH_METHOD(Map_Iterator, hasNext);
@@ -126,3 +162,5 @@ EH_METHOD(Map_Iterator, next);
 EH_METHOD(Map_Iterator, peek);
 
 EH_INITIALIZER(Map_Iterator);
+
+#endif

@@ -14,8 +14,23 @@ EH_INITIALIZER(Map) {
 	REGISTER_CLASS(Map, Iterator);
 }
 
+ehval_p Map::make(EHI* ehi) {
+	return ehi->get_parent()->allocate<Map>(new t(ehi));
+}
+
+bool Map::Comparator::operator()(const ehval_p &l, const ehval_p &r) const {
+	return ehi->call_method_typed<Bool>(l, "operator<", r, l)->get<Bool>();
+}
+
+Map::t::t(EHI *ehi) : map(Comparator(ehi)) {}
+
+// Map::t::t(EHI *ehi) : map([ehi](const ehval_p &l, const ehval_p &r) {
+// 	return ehi->call_method_typed<Bool>(l, "operator<", r, l)->get<Bool>();
+// }) {}
+
+
 EH_METHOD(Map, initialize) {
-	return Map::make(ehi->get_parent());
+	return Map::make(ehi);
 }
 
 EH_METHOD(Map, operator_arrow) {
@@ -106,6 +121,10 @@ EH_INITIALIZER(Map_Iterator) {
 	REGISTER_METHOD(Map_Iterator, hasNext);
 	REGISTER_METHOD(Map_Iterator, next);
 	REGISTER_METHOD(Map_Iterator, peek);
+}
+
+ehval_p Map_Iterator::make(ehval_p map, EHInterpreter *parent) {
+	return parent->allocate<Map_Iterator>(new t(map));
 }
 
 Map_Iterator::t::t(ehval_p _map) : map(_map) {

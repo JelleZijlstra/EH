@@ -1,6 +1,7 @@
 #include "Range.hpp"
 
 #include "ArgumentError.hpp"
+#include "Array.hpp"
 #include "EmptyIterator.hpp"
 
 ehval_p Range::make(ehval_p min, ehval_p max, EHInterpreter *parent) {
@@ -61,10 +62,10 @@ EH_METHOD(Range, toString) {
 }
 EH_METHOD(Range, toArray) {
 	ASSERT_NULL_AND_TYPE(Range, "Range.toArray");
-	ehval_p out = Array::make(ehi->get_parent());
+	ehval_p out = Array::make(ehi->get_parent(), 2);
 	Array::t *arr = out->get<Array>();
-	arr->int_indices[0] = obj->get<Range>()->min;
-	arr->int_indices[1] = obj->get<Range>()->max;
+	arr->insert(0, obj->get<Range>()->min);
+	arr->insert(1, obj->get<Range>()->max);
 	return out;
 }
 EH_METHOD(Range, toRange) {

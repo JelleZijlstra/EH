@@ -11,6 +11,7 @@
 #include "eh_libclasses.hpp"
 #include "eh_libcmds.hpp"
 
+#include "std_lib/Array.hpp"
 #include "std_lib/Attribute.hpp"
 #include "std_lib/Binding.hpp"
 #include "std_lib/ConstError.hpp"
@@ -18,6 +19,7 @@
 #include "std_lib/Function.hpp"
 #include "std_lib/GlobalObject.hpp"
 #include "std_lib/LoopError.hpp"
+#include "std_lib/Map.hpp"
 #include "std_lib/MiscellaneousError.hpp"
 #include "std_lib/NameError.hpp"
 #include "std_lib/Node.hpp"
@@ -321,8 +323,8 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, const ehcontext_t &co
 	// count for simple parameters
 	int count = 0;
 	// we're making an array of parameters
-	ehval_p args = Array::make(parent);
-	Array::t *paras = args->get<Array>();
+	ehval_p args = Map::make(this);
+	Map::t *paras = args->get<Map>();
 	// loop through the paras given
 	for( ; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
 		ehval_p node2 = node->get<Enum_Instance>()->members[0];
@@ -338,26 +340,26 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, const ehcontext_t &co
 						char index[2];
 						index[0] = shorts[i];
 						index[1] = '\0';
-						paras->string_indices[index] = value_r;
+						paras->set(String::make(strdup(index)), value_r);
 					}
 					break;
 				}
 				case T_LONGPARA:
 					// long-form paras
-					paras->string_indices[node_paras[0]->get<String>()] = eh_execute(node_paras[1], context);
+					paras->set(node_paras[0], eh_execute(node_paras[1], context));
 					break;
 				default: // non-named parameters with an expression
-					paras->int_indices[count] = eh_execute(node2, context);
+					paras->set(Integer::make(count), eh_execute(node2, context));
 					count++;
 					break;
 			}
 		} else {
-			paras->int_indices[count] = eh_execute(node2, context);
+			paras->set(Integer::make(count), eh_execute(node2, context));
 			count++;
 		}
 	}
 	// insert indicator that this is an EH-PHP command
-	paras->string_indices["_ehphp"] = Bool::make(true);
+	paras->set(String::make(strdup("_ehphp")), Bool::make(true));
 	// get the command to execute
 	ehval_p libcmd = parent->get_command(name);
 	ehval_p ret;
@@ -451,15 +453,15 @@ void EHI::eh_op_continue(ehval_p *paras, const ehcontext_t &context) {
 	continuing = level;
 }
 ehval_p EHI::eh_op_array(ehval_p node, const ehcontext_t &context) {
-	ehval_p ret = Array::make(parent);
 	// need to count array members first, because they are reversed in our node.
 	// That's not necessary with functions (where the situation is analogous), because the reversals that happen when parsing the prototype argument list and parsing the argument list in a call cancel each other out.
 	int count = 0;
 	for(ehval_p node2 = node; node2->get<Enum_Instance>()->member_id != T_END; node2 = node2->get<Enum_Instance>()->members[1]) {
 		count++;
 	}
+	ehval_p ret = Array::make(parent, count);
 	for(ehval_p node2 = node; node2->get<Enum_Instance>()->member_id != T_END; node2 = node2->get<Enum_Instance>()->members[1]) {
-		array_insert(ret->get<Array>(), node2->get<Enum_Instance>()->members[0], --count, context);
+		ret->get<Array>()->insert(--count, eh_execute(node2->get<Enum_Instance>()->members[0], context));
 	}
 	return ret;
 }
@@ -1146,32 +1148,6 @@ ehval_p EHInterpreter::resource_instantiate(unsigned int type_id, ehval_p obj) {
 }
 
 /*
- * Arrays
- */
-void EHI::array_insert(Array::t *array, ehval_p in, int place, const ehcontext_t &context) {
-	/*
-	 * We'll assume we're always getting a correct ehval_p, referring to a
-	 * T_ARRAY_MEMBER token. If there is 1 parameter, that means it's a
-	 * non-labeled array member, which we'll give an integer array index; if
-	 * there are 2, we will either use the integer array index or a hash of the
-	 * string index.
-	 */
-	if(in->get<Enum_Instance>()->member_id == T_ARRAY_MEMBER_NO_KEY) {
-		// if there is no explicit key, simply use the place argument
-		array->int_indices[place] = eh_execute(in->get<Enum_Instance>()->members[0], context);
-	} else { // T_ARRAY_MEMBER
-		const ehval_p label = eh_execute(in->get<Enum_Instance>()->members[0], context);
-		ehval_p var = eh_execute(in->get<Enum_Instance>()->members[1], context);
-		if(label->is_a<Integer>()) {
-			array->int_indices[label->get<Integer>()] = var;
-		} else if(label->is_a<String>()) {
-			array->string_indices[label->get<String>()] = var;
-		} else {
-			throw_TypeError_Array_key(label, this);
-		}
-	}
-}
-/*
  * Command line arguments
  */
 void EHInterpreter::eh_setarg(int argc, char **argv) {
@@ -1183,11 +1159,11 @@ void EHInterpreter::eh_setarg(int argc, char **argv) {
 
 	// insert argv
 	ehmember_p argv_v;
-	argv_v->value = Array::make(this);
+	argv_v->value = Array::make(this, argc - 1);
 
 	// all members of argv are strings
 	for(int i = 1; i < argc; i++) {
-		argv_v->value->get<Array>()->int_indices[i - 1] = String::make(strdup(argv[i]));
+		argv_v->value->get<Array>()->v[i - 1] = String::make(strdup(argv[i]));
 	}
 	global_object->get<Object>()->insert("argv", argv_v);
 }

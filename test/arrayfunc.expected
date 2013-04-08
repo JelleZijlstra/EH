@@ -1,21 +1,21 @@
 %%stdout%%
 @array [
-	0 => @int 2
-	1 => @int 4
-	2 => @int 6
-	3 => @int 8
+	@int 2
+	@int 4
+	@int 6
+	@int 8
 ]
 @array [
-	0 => @string "f"
-	1 => @string "b"
-	2 => @string "b"
+	@string "f"
+	@string "b"
+	@string "b"
 ]
 @array [
-	0 => @bool true
-	1 => @bool false
+	@bool true
+	@bool false
 ]
 @array [
-	0 => @bool true
-	1 => @bool false
+	@bool true
+	@bool false
 ]
 %%stderr%%

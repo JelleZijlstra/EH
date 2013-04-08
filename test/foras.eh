@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # The for ... as operator
-arr = [ 'a' => 1, 'b' => 2, 3 => 'c' ]
-echo 'Array with value only'
+arr = { 'a': 1, 'b': 2, 'c': 'c'}
+echo 'Hash with value only'
 for _, value in arr
 	echo value
 end
@@ -11,7 +11,7 @@ for (key, value) in arr
 	echo value
 end
 echo 'Array not previously declared'
-for _, value in [1, 2, 3]
+for value in [1, 2, 3]
 	echo value
 end
 class Foo
@@ -21,6 +21,6 @@ class Foo
 end
 echo 'Object'
 
-for _, key in Foo.new().members()
+for key in Foo.new().members()
 	echo key
 end

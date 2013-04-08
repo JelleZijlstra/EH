@@ -4,7 +4,7 @@ class Vector
 	this.inherit Array
 
 	# necessary to ensure that the object_data of the resulting object is set; segfaults are likely without this
-	public initialize = () => []
+	public initialize() = []
 
 	private set = this.operator->=
 
@@ -27,6 +27,6 @@ end
 
 v = Vector.new ()
 printvar v
-v->0 = 42
+v.push 42
 printvar(v->0)
 printvar(v.length ())

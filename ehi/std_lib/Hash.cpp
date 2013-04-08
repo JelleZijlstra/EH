@@ -1,6 +1,7 @@
 #include "Hash.hpp"
 
 #include "ArgumentError.hpp"
+#include "Array.hpp"
 #include "EmptyIterator.hpp"
 
 ehval_p Hash::make(EHInterpreter *parent) {
@@ -21,7 +22,7 @@ EH_INITIALIZER(Hash) {
 }
 
 /*
- * @description Converts the Hash to an Array, preserving all string keys.
+ * @description Converts the Hash to an Array, destroying string keys.
  * @argument None
  * @returns Array
  */
@@ -31,7 +32,7 @@ EH_METHOD(Hash, toArray) {
 	ehval_p out = Array::make(ehi->get_parent());
 	Array::t *arr = out->get<Array>();
 	for(auto &i : hash->members) {
-		arr->string_indices[i.first] = i.second;
+		arr->append(i.second);
 	}
 	return out;
 }
@@ -101,9 +102,8 @@ EH_METHOD(Hash, keys) {
 	ASSERT_NULL_AND_TYPE(Hash, "Hash.toArray");
 	ehval_p out = Array::make(ehi->get_parent());
 	Array::t *arr = out->get<Array>();
-	int index = 0;
 	for(auto &i : obj->get<Hash>()->members) {
-		arr->int_indices[index++] = String::make(strdup(i.first.c_str()));
+		arr->append(String::make(strdup(i.first.c_str())));
 	}
 	return out;
 }

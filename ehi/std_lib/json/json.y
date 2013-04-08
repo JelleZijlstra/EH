@@ -45,8 +45,7 @@ value:
 	| '[' array_content value ']'
 	 				{
 	 					ehval_p array = $2;
-	 					int index = array->get<Array>()->size();
-	 					array->get<Array>()->int_indices[index] = $3;
+	 					array->get<Array>()->append($3);
 	 					$$ = array;
 	 				}
 ;;
@@ -65,8 +64,7 @@ array_content:
 	array_content value ','
 	 				{
 	 					ehval_p array = $1;
-	 					int index = array->get<Array>()->size();
-	 					array->get<Array>()->int_indices[index] = $2;
+	 					array->get<Array>()->append($2);
 	 					$$ = array;
 	 				}
 	| /* NULL */	{ $$ = Array::make(PARENT); }

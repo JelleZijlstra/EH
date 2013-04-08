@@ -3,7 +3,7 @@ include '../lib/library.eh'
 Array.fill = func: n, f
 	out = []
 	for i in 0..(n - 1)
-		out->i = f i
+		out.push(f i)
 	end
 	out
 end

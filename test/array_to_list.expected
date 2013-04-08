@@ -1,15 +1,9 @@
 %%stdout%%
-(foo, {})::(3, 4)::[]
+4::{}::[]
 @enum instance Cons <List> [
-	head: @tuple <2> [
-		@string "foo"
-		@hash [
-		]
-	]
+	head: @int 4
 	tail: @enum instance Cons <List> [
-		head: @tuple <2> [
-			@int 3
-			@int 4
+		head: @hash [
 		]
 		tail: @enum instance Nil <List> [
 		]

@@ -4,9 +4,9 @@
 	'hello': @string "world"
 ]
 @array [
-	'foo' => @string "bar"
-	'hello' => @string "world"
-	2 => @int 3
+	@string "bar"
+	@string "world"
+	@int 3
 ]
 2
 %%stderr%%

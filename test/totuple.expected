@@ -4,7 +4,7 @@
 	@int 2
 ]
 @tuple <2> [
-	@int 4
 	@bool true
+	@int 4
 ]
 %%stderr%%

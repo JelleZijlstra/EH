@@ -3,7 +3,7 @@
 static Array.fill = func: n, f
 	out = []
 	for i in n
-		out->i = f i
+		out.push(f i)
 	end
 	out
 end

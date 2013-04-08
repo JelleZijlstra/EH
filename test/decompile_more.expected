@@ -26,9 +26,9 @@ func: n
 end
 func: f
 	out = []
-	for (key, value) in this
-		if f (key, value)
-			out->key = value
+	for value in this
+		if f value
+			out.push value
 		end
 	end
 	out

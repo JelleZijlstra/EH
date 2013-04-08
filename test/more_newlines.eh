@@ -5,7 +5,7 @@ printvar {
 	foo: 'bar', 'hello': 'world'}
 
 printvar [
-	'foo' => 'bar', 'hello' => 'world', 3]
+	'bar', 'world', 3]
 
 echo (
 	1 + 1)

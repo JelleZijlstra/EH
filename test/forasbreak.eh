@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 # As much looping as possible
-for _, value in [1, 2, 3, 4, 5]
+for value in [1, 2, 3, 4, 5]
 	echo('before ' + value)
 	for i in value
 		echo i

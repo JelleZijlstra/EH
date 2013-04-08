@@ -9,7 +9,7 @@ private h1 = {foo: 'bar', baz: 'quux'}
 assert(h1.isA Hash, "non-empty hash literal")
 
 # @method toArray
-assert(h1.toArray() == ["foo" => "bar", "baz" => "quux"], "non-empty hash")
+assert(h1.toArray() == ["quux", "bar"], "non-empty hash")
 assert({}.toArray() == [], "empty hash")
 
 # @method operator->

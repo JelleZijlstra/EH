@@ -20,6 +20,7 @@ EH_INITIALIZER(Array) {
 	REGISTER_METHOD(Array, length);
 	REGISTER_METHOD_RENAME(Array, operator_arrow, "operator->");
 	REGISTER_METHOD_RENAME(Array, operator_arrow_equals, "operator->=");
+	REGISTER_METHOD(Array, push);
 	REGISTER_METHOD(Array, toArray);
 	REGISTER_METHOD(Array, toTuple);
 	REGISTER_METHOD(Array, compare);
@@ -27,23 +28,18 @@ EH_INITIALIZER(Array) {
 	REGISTER_CLASS(Array, Iterator);
 }
 
-ehval_p Array::make(EHInterpreter *parent) {
-	return parent->allocate<Array>(new t());
+ehval_p Array::make(EHInterpreter *parent, int size) {
+	return parent->allocate<Array>(new t(size));
 }
 
-ehval_w &Array::t::operator[](ehval_p index) {
-	if(index->is_a<Integer>()) {
-		return int_indices[index->get<Integer>()];
-	} else if(index->is_a<String>()) {
-		return string_indices[index->get<String>()];
-	} else {
-		// callers should make sure type is right
-		assert(false);
-	}
-}
-void Array::t::insert_retval(ehval_p index, ehval_p val) {
+void Array::t::insert(int index, ehval_p val) {
 	// Inserts a member into an array.
-	(*this)[index] = val;
+	assert(this->has(index));
+	this->v[index] = val;
+}
+
+void Array::t::append(ehval_p val) {
+	this->v.push_back(val);
 }
 
 int Array::t::compare(Array::t *rhs, ehcontext_t context, EHI *ehi) {
@@ -53,69 +49,11 @@ int Array::t::compare(Array::t *rhs, ehcontext_t context, EHI *ehi) {
 		return intcmp(lhs_size, rhs_size);
 	}
 	// compare integer keys
-	Array::t::int_iterator lhs_int_it = this->int_indices.begin();
-	Array::t::int_iterator rhs_int_it = rhs->int_indices.begin();
-	Array::t::int_iterator lhs_int_end = this->int_indices.end();
-	Array::t::int_iterator rhs_int_end = rhs->int_indices.end();
-	while(true) {
-		// check whether we've reached the end
-		if(lhs_int_it == lhs_int_end) {
-			if(rhs_int_it == rhs_int_end) {
-				break;
-			} else {
-				return -1;
-			}
-		} else if(rhs_int_it == rhs_int_end) {
-			return 1;
-		}
-
-		// compare current key
-		if(lhs_int_it->first != rhs_int_it->first) {
-			return intcmp(lhs_int_it->first, rhs_int_it->first);
-		}
-
-		// compare associated values
-		int comparison = ehi->compare(lhs_int_it->second, rhs_int_it->second, context);
+	for(size_t i = 0; i < lhs_size; i++) {
+		int comparison = ehi->compare(this->v[i], rhs->v[i], context);
 		if(comparison != 0) {
 			return comparison;
 		}
-
-		// continue iteration
-		lhs_int_it++;
-		rhs_int_it++;
-	}
-
-	// compare string keys
-	Array::t::string_iterator lhs_string_it = this->string_indices.begin();
-	Array::t::string_iterator rhs_string_it = rhs->string_indices.begin();
-	Array::t::string_iterator lhs_string_end = this->string_indices.end();
-	Array::t::string_iterator rhs_string_end = rhs->string_indices.end();
-	while(true) {
-		// check whether we've reached the end
-		if(lhs_string_it == lhs_string_end) {
-			if(rhs_string_it == rhs_string_end) {
-				break;
-			} else {
-				return -1;
-			}
-		} else if(rhs_string_it == rhs_string_end) {
-			return 1;
-		}
-
-		// compare current key
-		if(lhs_string_it->first != rhs_string_it->first) {
-			return lhs_string_it->first.compare(rhs_string_it->first);
-		}
-
-		// compare associated values
-		int comparison = ehi->compare(lhs_string_it->second, rhs_string_it->second, context);
-		if(comparison != 0) {
-			return comparison;
-		}
-
-		// continue iteration
-		lhs_string_it++;
-		rhs_string_it++;
 	}
 	return 0;
 }
@@ -146,24 +84,24 @@ EH_METHOD(Array, length) {
  */
 EH_METHOD(Array, has) {
 	ASSERT_OBJ_TYPE(Array, "Array.has");
-	return Bool::make(obj->get<Array>()->has(args));
+	ASSERT_TYPE(args, Integer, "Array.has");
+	return Bool::make(obj->get<Array>()->has(args->get<Integer>()));
 }
 
 /*
  * @description Access the element with the given key
  * @argument String or integer key.
- * @returns Value associated with the key, or null if key does not exist.
+ * @returns Value associated with the key; throws ArgumentError if key does not exist.
  */
 EH_METHOD(Array, operator_arrow) {
 	ASSERT_OBJ_TYPE(Array, "Array.operator->");
-	if(!args->is_a<Integer>() && !args->is_a<String>()) {
-		throw_TypeError("Invalid type for argument to Array.operator-> (expected String or Integer)", args, ehi);
-	}
+	ASSERT_TYPE(args, Integer, "Array.operator->");
+	const int index = args->get<Integer>();
 	Array::t *arr = obj->get<Array>();
-	if(arr->has(args)) {
-		return (*arr)[args];
+	if(arr->has(index)) {
+		return arr->v[index];
 	} else {
-		return nullptr;
+		throw_ArgumentError_out_of_range("Array.operator->", args, ehi);
 	}
 }
 
@@ -174,13 +112,27 @@ EH_METHOD(Array, operator_arrow) {
  */
 EH_METHOD(Array, operator_arrow_equals) {
 	ASSERT_NARGS_AND_TYPE(2, Array, "Array.operator->=");
-	ehval_p index = args->get<Tuple>()->get(0);
-	if(!index->is_a<Integer>() && !index->is_a<String>()) {
-		throw_TypeError("Invalid type for argument to Array.operator->= (expected String or Integer)", index, ehi);
+	ehval_p index_v = args->get<Tuple>()->get(0);
+	ASSERT_TYPE(index_v, Integer, "Array.operator->=");
+	int index = index_v->get<Integer>();
+	Array::t *data = obj->get<Array>();
+	if(!data->has(index)) {
+		throw_ArgumentError_out_of_range("Array.operator->=", index_v, ehi);
 	}
 	ehval_p rvalue = args->get<Tuple>()->get(1);
-	(*obj->get<Array>())[index] = rvalue;
+	data->v[index] = rvalue;
 	return rvalue;
+}
+
+/*
+ * @description Append a new value to the end of the array
+ * @argument Value to add
+ * @returns The array
+ */
+EH_METHOD(Array, push) {
+	ASSERT_OBJ_TYPE(Array, "Array.operator->");
+	obj->get<Array>()->append(args);
+	return obj;
 }
 
 /*
@@ -195,8 +147,6 @@ EH_METHOD(Array, toArray) {
 
 /*
  * @description Converts the array into a tuple of all values in the array.
- * The order in which the array elements appear in the output element is
- * unspecified.
  * @argument None
  * @returns Tuple of all values in the array.
  */
@@ -205,13 +155,8 @@ EH_METHOD(Array, toTuple) {
 	Array::t *arr = obj->get<Array>();
 	unsigned int length = static_cast<unsigned int>(arr->size());
 	ehretval_a values(length);
-	// We'll say that output order is unspecified
-	unsigned int i = 0;
-	for(auto &it : arr->int_indices) {
-		values[i++] = it.second;
-	}
-	for(auto &it : arr->string_indices) {
-		values[i++] = it.second;
+	for(int i = 0; i < (int) length; i++) {
+		values[i] = arr->v[i];
 	}
 	return Tuple::make(length, values, ehi->get_parent());
 }
@@ -254,49 +199,23 @@ ehval_p Array_Iterator::make(ehval_p array, EHInterpreter *parent) {
 	return parent->allocate<Array_Iterator>(new t(array));
 }
 
-Array_Iterator::t::t(ehval_p _array) : array(_array), in_ints(true) {
+Array_Iterator::t::t(ehval_p _array) : array(_array) {
 	Array::t *arr = array->get<Array>();
-	this->int_begin = arr->int_indices.begin();
-	this->int_end = arr->int_indices.end();
-	if(this->int_begin == this->int_end) {
-		this->in_ints = false;
-	}
-	this->string_begin = arr->string_indices.begin();
-	this->string_end = arr->string_indices.end();
+	this->it_begin = arr->v.begin();
+	this->it_end = arr->v.end();
 }
 bool Array_Iterator::t::has_next() const {
-	return !((this->in_ints == false || (this->int_begin == this->int_end)) && (this->string_begin == this->string_end));
+	return this->it_begin != this->it_end;
 }
 ehval_p Array_Iterator::t::next(EHI *ehi) {
 	assert(this->has_next());
-	ehval_p tuple[2];
-	if(this->in_ints) {
-		tuple[0] = Integer::make(this->int_begin->first);
-		tuple[1] = this->int_begin->second;
-		this->int_begin++;
-		if(this->int_begin == this->int_end) {
-			this->in_ints = false;
-		}
-	} else {
-		const char *key = this->string_begin->first.c_str();
-		tuple[0] = String::make(strdup(key));
-		tuple[1] = this->string_begin->second;
-		this->string_begin++;
-	}
-	return Tuple::make(2, tuple, ehi->get_parent());
+	ehval_p out = *(this->it_begin);
+	this->it_begin++;
+	return out;
 }
 ehval_p Array_Iterator::t::peek(EHI *ehi) const {
 	assert(this->has_next());
-	ehval_p tuple[2];
-	if(this->in_ints) {
-		tuple[0] = Integer::make(this->int_begin->first);
-		tuple[1] = this->int_begin->second;
-	} else {
-		const char *key = this->string_begin->first.c_str();
-		tuple[0] = String::make(strdup(key));
-		tuple[1] = this->string_begin->second;
-	}
-	return Tuple::make(2, tuple, ehi->get_parent());
+	return *(this->it_begin);
 }
 
 EH_METHOD(Array_Iterator, initialize) {

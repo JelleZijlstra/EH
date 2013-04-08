@@ -7,6 +7,8 @@
 #ifndef EH_ARRAY_H_
 #define EH_ARRAY_H_
 
+#include <vector>
+
 #include "String.hpp"
 #include "Integer.hpp"
 
@@ -15,38 +17,25 @@ public:
 	class t {
 	public:
 		// typedefs
-		typedef std::map<const int, ehval_w> int_map;
-		typedef std::map<const std::string, ehval_w> string_map;
-		typedef std::pair<const int, ehval_w>& int_pair;
-		typedef std::pair<const std::string, ehval_w>& string_pair;
-		typedef int_map::iterator int_iterator;
-		typedef string_map::iterator string_iterator;
+		typedef std::vector<ehval_p>::iterator iterator;
 
-		// properties
-		int_map int_indices;
-		string_map string_indices;
+		std::vector<ehval_p> v;
 
 		// constructor
-		t() : int_indices(), string_indices() {}
+		t(int n = 0) : v(n) {}
 
 		// inline methods
 		size_t size() const {
-			return this->int_indices.size() + this->string_indices.size();
+			return this->v.size();
 		}
 
-		bool has(ehval_p index) const {
-			if(index->is_a<Integer>()) {
-				return this->int_indices.count(index->get<Integer>());
-			} else if(index->is_a<String>()) {
-				return this->string_indices.count(index->get<String>());
-			} else {
-				return false;
-			}
+		bool has(int index) const {
+			return index >= 0 && index < (int) size();
 		}
 
 		// methods
-		ehval_w &operator[](ehval_p index);
-		void insert_retval(ehval_p index, ehval_p value);
+		void insert(int index, ehval_p value);
+		void append(ehval_p value);
 		int compare(t *rhs, ehcontext_t context, EHI *ehi);
 	};
 	typedef t *type;
@@ -62,11 +51,8 @@ public:
 
 	virtual std::list<ehval_p> children() const override {
 		std::list<ehval_p> out;
-		for(auto &i : value->int_indices) {
-			out.push_back(i.second);
-		}
-		for(auto &i : value->string_indices) {
-			out.push_back(i.second);
+		for(auto &i : value->v) {
+			out.push_back(i);
 		}
 		assert(out.size() == value->size());
 		return out;
@@ -77,15 +63,9 @@ public:
 		if(set.count(ptr) == 0) {
 			set.insert(ptr);
 			std::cout << "@array [" << std::endl;
-			for(auto &i : value->string_indices) {
+			for(auto &i : value->v) {
 				add_tabs(std::cout, level + 1);
-				std::cout << "'" << i.first << "' => ";
-				i.second->printvar(set, level + 1, ehi);
-			}
-			for(auto &i : value->int_indices) {
-				add_tabs(std::cout, level + 1);
-				std::cout << i.first << " => ";
-				i.second->printvar(set, level + 1, ehi);
+				i->printvar(set, level + 1, ehi);
 			}
 			add_tabs(std::cout, level);
 			std::cout << "]" << std::endl;
@@ -94,7 +74,7 @@ public:
 		}
 	}
 
-	static ehval_p make(EHInterpreter *parent);
+	static ehval_p make(EHInterpreter *parent, int size = 0);
 
 	Array(t *c) : value(c) {}
 };
@@ -110,6 +90,7 @@ EH_METHOD(Array, toArray);
 EH_METHOD(Array, toTuple);
 EH_METHOD(Array, compare);
 EH_METHOD(Array, getIterator);
+EH_METHOD(Array, push);
 
 EH_INITIALIZER(Array);
 
@@ -124,11 +105,8 @@ private:
 		ehval_p peek(EHI *ehi) const;
 		ehval_w array;
 	private:
-		bool in_ints;
-		Array::t::string_iterator string_begin;
-		Array::t::string_iterator string_end;
-		Array::t::int_iterator int_begin;
-		Array::t::int_iterator int_end;
+		Array::t::iterator it_begin;
+		Array::t::iterator it_end;
 		t(const t&);
 		t operator=(const t&);
 	};

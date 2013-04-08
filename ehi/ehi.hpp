@@ -12,7 +12,7 @@
 #include "std_lib/Float.hpp"
 #include "std_lib/Bool.hpp"
 #include "std_lib/GlobalObject.hpp"
-#include "std_lib/Array.hpp"
+#include "std_lib/Map.hpp"
 #include "std_lib/TypeError.hpp"
 #include "std_lib/Hash.hpp"
 
@@ -92,7 +92,7 @@ public:
 	ehval_p optimize(ehval_p node, const ehcontext_t context);
 
 	virtual char *eh_getline();
-	virtual ehval_p execute_cmd(const char *rawcmd, Array::t *paras);
+	virtual ehval_p execute_cmd(const char *rawcmd, Map::t *paras);
 
 	// simply parse a FILE or string
 	void parse_file(FILE *infile);
@@ -278,7 +278,6 @@ private:
 	ehval_p eh_try_catch(ehval_p try_block, ehval_p catch_blocks, const ehcontext_t &context);
 	ehval_p eh_xtoarray(ehval_p in);
 	ehval_p perform_op(const char *name, unsigned int nargs, ehval_p *paras, const ehcontext_t &context);
-	void array_insert(Array::t *array, ehval_p in, int place, const ehcontext_t &context);
 	void eh_op_break(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_classmember(ehval_p *paras, const ehcontext_t &context);
 	void eh_op_continue(ehval_p *paras, const ehcontext_t &context);

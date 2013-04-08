@@ -4,6 +4,7 @@
  */
 
 #include "EH.hpp"
+#include "Array.hpp"
 #include "Attribute.hpp"
 #include "Node.hpp"
 #include "../eh.bison.hpp"
@@ -107,7 +108,7 @@ EH_METHOD(EH, lex) {
 			single_char[1] = '\0';
 			token_name = single_char;
 		}
-		arr->insert_retval(Integer::make(index), String::make(strdup(token_name)));
+		arr->append(String::make(strdup(token_name)));
 		index++;
 	}
 

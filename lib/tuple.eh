@@ -17,9 +17,9 @@ Tuple.each = func: f
 	end
 end
 
-Tuple.sort = () => Tuple.new(this.toList().sort())
+Tuple.sort() = Tuple.new(this.toList().sort())
 
-Tuple.reverse = () => Tuple.new(this.toList().reverse())
+Tuple.reverse() = Tuple.new(this.toList().reverse())
 
 # For use in iterable: map tuple to a mutable array
-Tuple.empty = () => []
+Tuple.empty() = []

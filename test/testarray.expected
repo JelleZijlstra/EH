@@ -1,13 +1,13 @@
 %%stdout%%
 @array [
-	0 => @int 1
-	1 => @int 2
+	@int 1
+	@int 2
 ]
 @array [
-	0 => @int 1
+	@int 1
 ]
 @array [
-	0 => @int 1
+	@int 1
 ]
 %%stderr%%
 Uncaught exception of type SyntaxError: syntax error, unexpected $end, expecting T_SEPARATOR at line 1

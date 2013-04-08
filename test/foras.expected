@@ -1,15 +1,15 @@
 %%stdout%%
-Array with value only
-c
+Hash with value only
 1
 2
-Array with value and key
-3
 c
+Array with value and key
 a
 1
 b
 2
+c
+c
 Array not previously declared
 1
 2

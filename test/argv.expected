@@ -1,7 +1,7 @@
 %%stdout%%
 1
 @array [
-	0 => @string "argv.eh"
+	@string "argv.eh"
 ]
 @int 1
 I did not get two arguments

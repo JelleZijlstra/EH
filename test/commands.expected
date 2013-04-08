@@ -6,11 +6,11 @@ hello
 	command <public,non-static,non-constant>: @string "echo"
 ]
 @array [
-	0 => @string "echo"
-	1 => @string "put"
-	2 => @string "q"
-	3 => @string "quit"
-	4 => @string "say_hello"
+	@string "echo"
+	@string "put"
+	@string "q"
+	@string "quit"
+	@string "say_hello"
 ]
 42
 %%stderr%%

@@ -1,11 +1,11 @@
 %%stdout%%
 foo
-@array [
-	'test' => @string "foo"
+@hash [
+	'test': @string "foo"
 ]
-@array [
-	'baz' => @string "bah"
-	'foo' => @string "bar"
+@hash [
+	'baz': @string "bah"
+	'foo': @string "bar"
 ]
 2
 %%stderr%%

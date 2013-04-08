@@ -1,8 +1,8 @@
 # Array functions
 Array.map = func: f
 	out = []
-	for (key, value) in this
-		out->key = f value
+	for value in this
+		out.push(f value)
 	end
 	out
 end
@@ -15,37 +15,30 @@ Array.reduce = func: base, f
 	out
 end
 
-Array.each = func: f
-	for (key, value) in this
-		f(key, value)
-	end
+Array.each f = for value in this
+	f value
 end
 
 Array.filter = func: f
 	out = []
-	for (key, value) in this
-		if f(key, value)
-			out->key = value
+	for value in this
+		if f value
+			out.push value
 		end
 	end
 	out
 end
 
 Array.toString = func:
-	out = "[ "
-	for (key, value) in this
-		out = out + key + " => " + value + ", "
+	out = "["
+	for value in this
+		out += "" + value + ", "
 	end
 	out + "]"
 end
 
-Array.append = func: item
-	length = this.length()
-	this->length = item
-	this
-end
+Array.append = Array.add = Array.push
 
-Array.add = Array.append
 
 Array.empty = () => []
 

@@ -1,5 +1,7 @@
 #include <sstream>
 
+#include "../Array.hpp"
+
 class json_scanner {
 public:
 	void *inner_scanner;

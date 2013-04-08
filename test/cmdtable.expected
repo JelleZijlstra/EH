@@ -1,25 +1,41 @@
 %%stdout%%
-@array [
-	'_ehphp' => @bool true
-	'a' => @bool true
-	'b' => @bool true
-	'bam' => @array [
-		0 => @int 3
-		1 => @int 4
+@map [
+	@string "_ehphp"
+	 => @bool true
+	@string "a"
+	 => @bool true
+	@string "b"
+	 => @bool true
+	@string "bam"
+	 => @array [
+		@int 3
+		@int 4
 	]
-	'c' => @int 42
-	'd' => @bool true
-	'e' => @bool true
-	'f' => @int 42
-	'foo' => @string "bar"
-	'foox' => @string "barx"
-	'g' => @int 42
-	'h' => @int 42
-	'test' => @bool true
+	@string "c"
+	 => @int 42
+	@string "d"
+	 => @bool true
+	@string "e"
+	 => @bool true
+	@string "f"
+	 => @int 42
+	@string "foo"
+	 => @string "bar"
+	@string "foox"
+	 => @string "barx"
+	@string "g"
+	 => @int 42
+	@string "h"
+	 => @int 42
+	@string "test"
+	 => @bool true
 ]
-@array [
-	'_ehphp' => @bool true
-	0 => @string "foo"
-	1 => @string "bar"
+@map [
+	@int 0
+	 => @string "foo"
+	@int 1
+	 => @string "bar"
+	@string "_ehphp"
+	 => @bool true
 ]
 %%stderr%%

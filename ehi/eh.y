@@ -112,7 +112,7 @@ void yyerror(void *, const char *s);
 %nonassoc '(' ')'
 %nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_SWITCH T_FUNC T_CLASS T_ENUM T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
 
-%type<ehNode> statement expression statement_list parglist arraylist arraymember arraylist_i anonclasslist anonclassmember
+%type<ehNode> statement expression statement_list parglist arraylist arraylist_i anonclasslist anonclassmember
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list
 %type<ehNode> catch_clauses catch_clause
 %type<ehNode> elseif_clauses elseif_clause enum_list enum_member enum_arg_list
@@ -447,23 +447,17 @@ catch_clause:
 
 /* Array literals */
 arraylist:
-	arraylist_i arraymember ',' separators
+	arraylist_i namedvar_expression ',' separators
 							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
-	| arraylist_i arraymember separators
+	| arraylist_i namedvar_expression separators
 							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
 	;
 
 arraylist_i:
-	arraylist_i arraymember ',' separators
+	arraylist_i namedvar_expression ',' separators
 							{ $$ = ADD_NODE2(T_COMMA, $2, $1); }
 	| /* NULL */			{ $$ = ADD_NODE0(T_END); }
-	;
-
-arraymember:
-	namedvar_expression T_DOUBLEARROW namedvar_expression
-							{ $$ = ADD_NODE2(T_ARRAY_MEMBER, $1, $3); }
-	| namedvar_expression	{ $$ = ADD_NODE1(T_ARRAY_MEMBER_NO_KEY, $1); }
 	;
 
 /* Hash literals */

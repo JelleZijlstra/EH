@@ -1,5 +1,5 @@
 %%stdout%%
 %%stderr%%
-Uncaught exception of type NameError: Unknown member operator-> in object of type Null: 
+Uncaught exception of type ArgumentError: Argument out of range (method Array.operator->=): 0
  Stack trace:
 

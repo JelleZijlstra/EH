@@ -3,7 +3,7 @@
 f = func:
 	foo = []
 	for i in 5
-		foo->i = i
+		foo.push i
 	end
 	foo
 end

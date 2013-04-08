@@ -22,7 +22,7 @@ Hash.inherit Iterable
 Array.inherit Iterable
 [1, 2, 3].each printvar
 
-['foo' => 'bar', 'baz' => 'mah'].each func: k, v
+{'foo': 'bar', 'baz': 'mah'}.each func: k, v
 	echo('Key is ' + k)
 	echo('Value is ' + v)
 end

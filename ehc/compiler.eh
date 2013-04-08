@@ -374,32 +374,19 @@ class Compiler
 					sb << "{\nauto new_array = " << var_name << "->get<Array>();\n"
 					private index = 0
 					for member in members
-						match member
-							case Node.T_ARRAY_MEMBER_NO_KEY(@value)
-								private value_name = this.doCompile(sb, value)
-								sb << "new_array->int_indices[" << index << "] = " << value_name << ";\n"
-							case Node.T_ARRAY_MEMBER(@key, @value)
-								private key_name = this.doCompile(sb, key)
-								private value_name = this.doCompile(sb, value)
-								sb << "if(" << key_name << "->is_a<Integer>()) {\n"
-								sb << "new_array->int_indices[" << key_name << "->get<Integer>()] = " << value_name << ";\n"
-								sb << "} else if(" << key_name << "->is_a<String>()) {\n"
-								sb << "new_array->string_indices[" << key_name << "->get<String>()] = " << value_name << ";\n"
-								sb << "} else {\n"
-								sb << "throw_TypeError_Array_key(" << key_name << ", ehi);\n}\n"
-						end
-						index++
+						private value_name = this.doCompile(sb, member)
+						sb << "new_array->append(" << value_name << ");\n"
 					end
 					sb << "}\n"
 				case Node.T_LIST(@items) # Tuple
 					private member_names = []
 					private size = items.length()
 					for i in size
-						member_names->i = this.doCompile(sb, items->i)
+						member_names.push(this.doCompile(sb, items->i))
 					end
 					sb << assignment << "Tuple::create({"
-					for i, name in member_names
-						sb << name
+					for i in size
+						sb << (member_names->i)
 						if i < size - 1
 							sb << ", "
 						end

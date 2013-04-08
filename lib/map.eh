@@ -14,3 +14,5 @@ Map.mapFrom = func: pairs
 	end
 	map
 end
+
+Map.length = Map.size

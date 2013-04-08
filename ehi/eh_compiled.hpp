@@ -2,11 +2,13 @@
 
 #include "eh.hpp"
 #include "eh_files.hpp"
+#include "std_lib/Array.hpp"
 #include "std_lib/Binding.hpp"
 #include "std_lib/ConstError.hpp"
 #include "std_lib/Enum.hpp"
 #include "std_lib/Exception.hpp"
 #include "std_lib/Function.hpp"
+#include "std_lib/Map.hpp"
 #include "std_lib/MiscellaneousError.hpp"
 #include "std_lib/NameError.hpp"
 #include "std_lib/Range.hpp"

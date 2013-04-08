@@ -27,7 +27,8 @@ class ArgumentParser
 		this.raw_arguments = args
 
 		# set processed information
-		this.positional_args = []
+		this.positional_args = Map.new()
+		this.n_positional_args = 0
 		this.short_args = {}
 		this.long_args = {}
 
@@ -99,21 +100,21 @@ class ArgumentParser
 	class ArgumentsIterator
 		private it
 
-		public initialize = array => (this.it = array.getIterator())
+		public initialize array = (this.it = array.getIterator())
 
-		public hasNext = () => this.it.hasNext()
+		public hasNext() = this.it.hasNext()
 
-		public next = () => this.it.next()->1
+		public next() = this.it.next()
 
-		public peek = () => this.it.peek()->1
+		public peek() = this.it.peek()
 
-		public next_is_named_argument = () => (!(this.hasNext())) or Type.is_named_argument(this.peek())
+		public next_is_named_argument() = (!(this.hasNext())) or Type.is_named_argument(this.peek())
 	end
 
 	enum Type
 		Short, Long, Positional
 
-		public static from_name = name => if name->0 == '-'
+		public static from_name name = if name->0 == '-'
 			if name->1 == '-'
 				Type.Long
 			else
@@ -123,13 +124,13 @@ class ArgumentParser
 			Type.Positional
 		end
 
-		public process_name = name => match this
+		public process_name name = match this
 			case Short; name.slice(1, max: null)
 			case Long; name.slice(2, max: null)
 			case Positional; name
 		end
 
-		public static is_named_argument = arg => (arg.length() > 0 && arg->0 == '-')
+		public static is_named_argument arg = (arg.length() > 0 && arg->0 == '-')
 	end
 
 	# Private methods
@@ -282,7 +283,7 @@ class ArgumentParser
 
 		# process synonyms
 		if argument.has 'synonyms'
-			for _, synonym in argument->'synonyms'
+			for synonym in argument->'synonyms'
 				private syn_type = Type.from_name synonym
 				private syn_name = syn_type.process_name synonym
 				this.add_argument(syn_type, syn_name, argument)
@@ -296,6 +297,7 @@ class ArgumentParser
 		case Type.Long
 			this.long_args->name = argument
 		case Type.Positional
-			this.positional_args.append argument
+			this.positional_args->(this.n_positional_args) = argument
+			this.n_positional_args++
 	end
 end

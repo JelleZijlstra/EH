@@ -1,52 +1,35 @@
-The files in this directory provide a parser as well as a compiler and 
-interpreter for the EH scripting language. The parser provided here includes 
-numerous features not supported by the PHP-based interpreter and supports 
+The files in this directory provide a parser as well as a compiler and
+interpreter for the EH scripting language. The parser provided here includes
+numerous features not supported by the PHP-based interpreter and supports
 virtually all features found in that implementation. This interpreter has
 evolved considerably since the PHP implementation was created and implements a
 far more full-featured language.
 
-The following are some bugs and missing features still existing in the 
+The following are some bugs and missing features still existing in the
 interpreter:
-- When compiled with Clang++, exceptions thrown by eh_error don't get caught. 
-  Whether this is because I'm misusing exceptions or because of a Clang++ bug 
-  I'm not sure. The same or a similar issue arises with g++ 4.5. The exceptions 
+- When compiled with Clang++, exceptions thrown by eh_error don't get caught.
+  Whether this is because I'm misusing exceptions or because of a Clang++ bug
+  I'm not sure. The same or a similar issue arises with g++ 4.5. The exceptions
   are getting caught only with Apple's versions of g++ 4.0 and 4.2---did Apple
-  introduce some specific patches there to enable exception handling on Mac OS X 
+  introduce some specific patches there to enable exception handling on Mac OS X
   10.5? In fact, it also works with Clang++ 3.1, though not with 2.9.
-- Make ehretval_t objects fully read-only. Right now, the only code that changes 
-  an ehretval_t is in the constructor-like methods. In order to make the code
-  cleaner and fully eliminate post-constructor property access, I'll have to 
-  turn my smart pointer implementations into intrusive pointers, implemented
-  through inheritance.
-- Introduce enums.
 - Store some types of objects directly in ehval_p objects, instead of
   requiring a pointer.
 - Fix a GC bug that leads to some objects being prematurely freed (to reproduce,
-  compile with -DDEBUG_GC and run test/mythrow.eh). This is apparently to do 
-  with references to parent scopes not being followed by the GC, for reasons I 
+  compile with -DDEBUG_GC and run test/mythrow.eh). This is apparently to do
+  with references to parent scopes not being followed by the GC, for reasons I
   cannot discern.
 
-To compile the interpreter (ehi), write:
+To compile the interpreter (ehi), run:
 $ make ehi
-
-To use the compiler (ehc) instead, write:
-$ make ehc
 
 And for the ehphp PHP extension:
 $ make ehphp
 
-To compile and run a file called "compile.eh" with ehc:
-$ meh compile
-$ ./compile
-
-Other things to do:
-- Create a GeSHi spec for EH; see 
-  http://qbnz.com/highlighter/geshi-doc.html#language-file-example
-
 As of July 2012, the ehi interpreter is fully garbage collected using a
-combination of reference-counting smart pointers (refcount_ptr.h) and a 
-reachability-based garbage collector (eh_gc.h). I am aware of one remaining 
+combination of reference-counting smart pointers (refcount_ptr.h) and a
+reachability-based garbage collector (eh_gc.h). I am aware of one remaining
 source of memory leaks: when the parser encounters a parsing error, it fails to
-deallocate some structures used in parsing the rest of the line. I have not been 
-able to come up with a fix for this issue; however, the leaks are small and 
+deallocate some structures used in parsing the rest of the line. I have not been
+able to come up with a fix for this issue; however, the leaks are small and
 occur only with programs that have errors anyway.

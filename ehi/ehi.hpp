@@ -29,14 +29,6 @@ typedef enum {
 class EHInterpreter {
 public:
 	Hash::ehhash_t *cmdtable;
-
-private:
-	void eh_init(void);
-
-	// disallowed operations
-	EHInterpreter(const EHInterpreter&);
-	EHInterpreter operator=(const EHInterpreter&);
-public:
 	// our GC
 	garbage_collector<ehval_t> gc;
 	type_repository repo;
@@ -50,10 +42,16 @@ public:
 
 	bool optimize;
 
-	// for some reason I haven't been able to figure out, I get a compiler error
-	// inside glibc when I declare this as std::set<const std::string>.
 	std::set<std::string> included_files;
 
+private:
+	void eh_init(void);
+
+	// disallowed operations
+	EHInterpreter(const EHInterpreter&);
+	EHInterpreter operator=(const EHInterpreter&);
+
+public:
 	ehval_p get_primitive_class(ehval_p obj) {
 		return this->repo.get_object(obj);
 	}

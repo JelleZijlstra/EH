@@ -6,5 +6,4 @@ printvar ("foo",
 	[])
 
 printvar ('hello',
-	'goodbye'
-)
+	'goodbye')

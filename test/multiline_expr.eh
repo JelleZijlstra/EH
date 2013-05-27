@@ -11,10 +11,9 @@ enum List
 	Nil, Cons(head, tail)
 
 	const operator-> n = match this
-		case Cons(@hd, @tl); given n
+		case Cons(@hd, @tl); match n
 			case 0; hd
 			case 1; tl
-			default; throw(ArgumentError.new("Argument must be 0 or 1", "List.operator->", n))
 		end
 	end
 
@@ -22,19 +21,12 @@ enum List
 		private l
 
 		public initialize l = (this.l = l)
-
 		public hasNext() = this.l != Nil
-
 		public next() = (out, this.l = this.l; out)
 	end
-	const Iterator = Iterator
 
 	const getIterator() = this.Iterator.new this
 end
-
-const Nil = List.Nil
-const Cons = List.Cons
-Object.operator:: rhs = Cons(this, rhs)
 
 private l = List.Cons("first", List.Cons("second", List.Nil))
 

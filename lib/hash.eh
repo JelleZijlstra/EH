@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 # Assumes iterable.eh is also included
 
-Hash.toString = func:
+Hash.toString() = do
 	private it = this.getIterator()
 	out = '{'
 	while it.hasNext()
@@ -14,9 +14,9 @@ Hash.toString = func:
 	out + '}'
 end
 
-Hash.empty = () => {}
+Hash.empty() = {}
 
-Hash.add = func: pair
+Hash.add pair = do
 	this.operator->= pair
 	this
 end

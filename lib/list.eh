@@ -106,7 +106,7 @@ enum List
 
 		public hasNext = () => this.l != Nil
 
-		public next = func:
+		public next() = do
 			out, this.l = this.l
 			out
 		end

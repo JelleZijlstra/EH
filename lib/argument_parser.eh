@@ -21,7 +21,7 @@ class ArgumentParser
 	# - dflt/default: Default value (implies nargs: 1).
 	# - action: Callback function to execute after processing the argument.
 	# - desc: Description of the argument.
-	public initialize = func: desc, args
+	public initialize(desc, args) = do
 		# set raw information
 		this.description = desc
 		this.raw_arguments = args
@@ -45,7 +45,7 @@ class ArgumentParser
 	end
 
 	# Parse an array of arguments
-	public parse = func: argv
+	public parse argv = do
 		if argv == null
 			argv = global.argv
 		end
@@ -76,7 +76,7 @@ class ArgumentParser
 		this.output
 	end
 
-	public usage = func:
+	public usage() = do
 		echo(this.description)
 		# TODO: print more help information
 		exit 1
@@ -134,12 +134,12 @@ class ArgumentParser
 	end
 
 	# Private methods
-	private print_error = func: error
+	private print_error error = do
 		echo(this.program_name + ": error: " + error)
 		this.usage()
 	end
 
-	private next_positional = func:
+	private next_positional() = do
 		private out = this.positional_args->(this.positional_index)
 		this.positional_index++
 		if this.positional_index > this.positional_args.length()
@@ -148,23 +148,19 @@ class ArgumentParser
 		out
 	end
 
-	private get_short_arg = func: name
-		if this.short_args.has name
-			this.short_args->name
-		else
-			this.print_error("unrecognized short-form argument: " + name)
-		end
+	private get_short_arg name = if this.short_args.has name
+		this.short_args->name
+	else
+		this.print_error("unrecognized short-form argument: " + name)
 	end
 
-	private get_long_arg = func: name
-		if this.long_args.has name
-			this.long_args->name
-		else
-			this.print_error("unrecognized long-form argument: " + name)
-		end
+	private get_long_arg name = if this.long_args.has name
+		this.long_args->name
+	else
+		this.print_error("unrecognized long-form argument: " + name)
 	end
 
-	private process_argument = func: arg
+	private process_argument arg = do
 		private type = Type.from_name arg
 		match type
 			case Type.Long
@@ -190,7 +186,7 @@ class ArgumentParser
 		end
 	end
 
-	private process_named_argument = func: arginfo
+	private process_named_argument arginfo = do
 		private name = arginfo->'canonical'
 		private output
 		match arginfo->'nargs'
@@ -210,7 +206,7 @@ class ArgumentParser
 		this.finish_processing(arginfo, output)
 	end
 
-	private process_finite_arguments = func: name, nargs, first: false
+	private process_finite_arguments(name, nargs, first: false) = do
 		private output = if first; [first]; else []; end
 		private i = if first; 1; else 0; end
 		while i < nargs
@@ -223,7 +219,7 @@ class ArgumentParser
 		output
 	end
 
-	private process_infinite_arguments = func: first
+	private process_infinite_arguments first = do
 		private output = if first; [first]; else []; end
 		while !(this.argv_iterator.next_is_named_argument())
 			output.append(this.argv_iterator.next())
@@ -231,7 +227,7 @@ class ArgumentParser
 		output
 	end
 
-	private finish_processing = func: arginfo, output
+	private finish_processing(arginfo, output) = do
 		if arginfo.has 'type'
 			private type = arginfo->'type'
 			if output.isA type
@@ -248,7 +244,7 @@ class ArgumentParser
 		end
 	end
 
-	private process_input_argument = func: argument
+	private process_input_argument argument = do
 		if !(argument.has 'name')
 			throw(ParserException.new("Argument name must be given: " + argument))
 		end
@@ -291,7 +287,7 @@ class ArgumentParser
 		end
 	end
 
-	private add_argument = type, name, argument => match type
+	private add_argument(type, name, argument) = match type
 		case Type.Short
 			this.short_args->name = argument
 		case Type.Long

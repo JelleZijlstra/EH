@@ -133,5 +133,5 @@ if args->'file'.length() == 0
 	testfiles.close()
 	echo("Passed " + passed + " of " + total + " tests (" + (passed * 100.0 / total).round() + "%)")
 else
-	args->'file'.each(_, v => TestCase.make v)
+	args->'file'.each(TestCase.make)
 end

@@ -16,3 +16,8 @@ private f x = do
 end
 
 echo (f 5)
+
+y = do
+    42
+end
+echo y

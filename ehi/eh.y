@@ -115,7 +115,7 @@ void yyerror(void *, const char *s);
 
 %type<ehNode> statement expression statement_list parglist arraylist arraylist_i anonclasslist anonclassmember
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list
-%type<ehNode> catch_clauses catch_clause padded_expression_list expression_list
+%type<ehNode> catch_clauses catch_clause
 %type<ehNode> elseif_clauses elseif_clause enum_list enum_member enum_arg_list
 %type<ehNode> assign_expression function_expression attribute_expression tuple_expression namedvar_expression
 %type<ehNode> boolean_expression bar_expression caret_expression ampersand_expression compare_expression
@@ -165,17 +165,6 @@ statement:
 	T_SEPARATOR				{ $$ = nullptr; }
 	| expression T_SEPARATOR
 							{ $$ = $1; }
-	;
-
-padded_expression_list:
-	separators expression_list
-							{ $$ = $2; }
-	;
-
-expression_list:
-	expression				{ $$ = $1; }
-	| expression T_SEPARATOR separators expression_list
-							{ $$ = ADD_NODE2(T_SEPARATOR, $1, $4); }
 	;
 
 expression:
@@ -359,7 +348,7 @@ base_expression:
 	| T_SCOPE				{ $$ = ADD_NODE0(T_SCOPE); }
 	| '_'					{ $$ = ADD_NODE0(T_ANYTHING); }
 	| '@' T_VARIABLE		{ $$ = eh_addnode(T_MATCH_SET, String::make($2)); }
-	| '(' padded_expression_list ')'	{ $$ = ADD_NODE1(T_GROUPING, $2); }
+	| '(' separators expression separators ')'	{ $$ = ADD_NODE1(T_GROUPING, $3); }
 	| '[' separators arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $3); }
 	| '{' separators anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $3); }
 	| T_DO statement_list T_END

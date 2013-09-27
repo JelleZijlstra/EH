@@ -67,6 +67,7 @@ void yyerror(void *, const char *s);
 %token T_BREAK
 %token T_CONTINUE
 %token T_FUNC
+%token T_DO
 %token T_RET
 %token T_SEPARATOR
 %token T_NULL
@@ -110,7 +111,7 @@ void yyerror(void *, const char *s);
 %left T_RANGE T_ARROW '.'
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')'
-%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_SWITCH T_FUNC T_CLASS T_ENUM T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
+%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_SWITCH T_FUNC T_DO T_CLASS T_ENUM T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
 
 %type<ehNode> statement expression statement_list parglist arraylist arraylist_i anonclasslist anonclassmember
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list
@@ -361,6 +362,8 @@ base_expression:
 	| '(' padded_expression_list ')'	{ $$ = ADD_NODE1(T_GROUPING, $2); }
 	| '[' separators arraylist ']'		{ $$ = ADD_NODE1(T_ARRAY_LITERAL, $3); }
 	| '{' separators anonclasslist '}'	{ $$ = ADD_NODE1(T_HASH_LITERAL, $3); }
+	| T_DO statement_list T_END
+							{ $$ = $2; }
 	| T_FUNC ':' parglist T_SEPARATOR statement_list T_END
 							{ $$ = ADD_NODE2(T_FUNC, $3, $5); }
 	| T_FUNC T_VARIABLE ':' parglist T_SEPARATOR statement_list T_END

@@ -1,7 +1,7 @@
 # Generator class
 
 class Generator
-	private function
+	private f
 	private iteree
 
 	this.inherit Iterable
@@ -11,10 +11,10 @@ class Generator
 
 	public initialize = func: input, f
 		this.iteree = input.getIterator()
-		this.function = f
+		this.f = f
 	end
 
 	public hasNext() = this.iteree.hasNext()
 
-	public next() = this.function(this.iteree.next())
+	public next() = this.f(this.iteree.next())
 end

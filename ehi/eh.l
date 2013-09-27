@@ -95,11 +95,13 @@ OPCHAR		[@=$+\-*/<>,:&\|^%~!\.?]
 "for"		return T_FOR;
 "as"		return T_AS;
 "in"		return T_IN;
+"do"		return T_DO;
 "while"		return T_WHILE;
 "break"		return T_BREAK;
 "continue"	return T_CONTINUE;
 "func"		return T_FUNC;
 "ret"		return T_RET;
+"return"	return T_RET;
 "null"		return T_NULL;
 "()"		return T_NULL;
 "class"		return T_CLASS;

@@ -58,7 +58,7 @@ private main = func: argc, argv
 		{name: "input", desc: "Input file"},
 		{name: "--to-cpp", synonyms: ['-c'], desc: "Output C++ code; do not compile to machine code", type: Bool, dflt: false},
 		{name: "--verbose", synonyms: ['-v'], desc: "Give verbose output", type: Bool, dflt: false},
-		{name: "--optimize", synonyms: ['-O'], desc: "Turn on optimizations", type: Bool, dflt: false}
+		{name: "--optimize", synonyms: ['-O'], desc: "Turn on optimizations", type: Bool, dflt: false} \
 	))
 	private args = ap.parse argv
 	private verbose = args->'verbose'

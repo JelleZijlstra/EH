@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 
-if (x = 3; x == 3)
+if (do x = 3; x == 3; end)
 	echo x
 else
 	echo "impossible"
@@ -22,7 +22,7 @@ enum List
 
 		public initialize l = (this.l = l)
 		public hasNext() = this.l != Nil
-		public next() = (out, this.l = this.l; out)
+		public next() = do out, this.l = this.l; out; end
 	end
 
 	const getIterator() = this.Iterator.new this
@@ -39,7 +39,7 @@ class Nats
 
 	public getIterator() = this.new()
 	public initialize() = (this.n = 0)
-	public next() = (this.n += 1; this.n - 1)
+	public next() = do this.n += 1; this.n - 1; end
 	public hasNext() = true
 end
 

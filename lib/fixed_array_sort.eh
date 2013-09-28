@@ -1,13 +1,13 @@
 #!/usr/bin/ehi
 
 FixedArray.inherit class
-	private swap = func: i, j
+	private swap(i, j) = do
 		private tmp = this->j
 		this->j = this->i
 		this->i = tmp
 	end
 
-	public isSorted = func:
+	public isSorted() = do
 		for i in (this.size()) - 1
 			if this->i > this->(i + 1)
 				ret false
@@ -16,7 +16,7 @@ FixedArray.inherit class
 		true
 	end
 
-	public bogoSort = func:
+	public bogoSort() = do
 		private size = this.size()
 		while !(this.isSorted())
 			for i in 0..(size - 1)
@@ -40,9 +40,9 @@ FixedArray.inherit class
 			this.stoogeSortIndexed(min, new_size)
 	end
 
-	public stoogeSort () = this.stoogeSortIndexed(0, this.size())
+	public stoogeSort() = this.stoogeSortIndexed(0, this.size())
 
-	public bubbleSort = func:
+	public bubbleSort() = do
 		private comparisons
 		while true
 			comparisons = 0
@@ -59,11 +59,9 @@ FixedArray.inherit class
 		this
 	end
 
-	public insertionSort = func:
-		this.insertionSortIndexed(0, this.size())
-	end
+	public insertionSort() = this.insertionSortIndexed(0, this.size())
 
-	public insertionSortIndexed = func: min, size
+	public insertionSortIndexed(min, size) = do
 		for i in 1..(size - 1)
 			private to_insert = this->i
 			private j = i
@@ -76,7 +74,7 @@ FixedArray.inherit class
 		this
 	end
 
-	public selectionSort = func:
+	public selectionSort() = do
 		const size = this.size()
 		for i in size - 1
 			private smallest = i
@@ -92,7 +90,7 @@ FixedArray.inherit class
 		this
 	end
 
-	public combSort = func:
+	public combSort() = do
 		private const size = this.size()
 		private gap = size
 		while true
@@ -117,11 +115,9 @@ FixedArray.inherit class
 		this
 	end
 
-	public mergeSort = func:
-		this.mergeSortIndexed(0, this.size())
-	end
+	public mergeSort() = this.mergeSortIndexed(0, this.size())
 
-	private mergeSortIndexed = func: min, size
+	private mergeSortIndexed(min, size) = do
 		if size < 2
 			ret
 		end
@@ -150,11 +146,9 @@ FixedArray.inherit class
 		this
 	end
 
-	public quickSort = func:
-		this.quickSortIndexed(0, this.size())
-	end
+	public quickSort() = this.quickSortIndexed(0, this.size())
 
-	private quickSortIndexed = func: min, size
+	private quickSortIndexed(min, size) = do
 		if size < 2
 			ret
 		end
@@ -178,7 +172,7 @@ FixedArray.inherit class
 		this
 	end
 
-	public bucketSort = func:
+	public bucketSort() = do
 		const private size = this.size()
 		const private arraySize = size * 2
 		private sorter = FixedArray.new (arraySize + 1)
@@ -208,7 +202,7 @@ FixedArray.inherit class
 	private left i = 2 * i
 	private right i = 2 * i + 1
 
-	private max_heapify = func: i, heap_size
+	private max_heapify(i, heap_size) = do
 		private l = left i
 		private r = right i
 		private largest = if l < heap_size and this->l > this->i
@@ -229,7 +223,7 @@ FixedArray.inherit class
 		this.max_heapify(i, size)
 	end
 
-	public heapSort = func:
+	public heapSort() = do
 		private heap_size = this.size()
 		this.build_max_heap heap_size
 		for i in (1..(heap_size - 1)).reverse()

@@ -13,14 +13,14 @@ class TestCase
 	private name
 	private expected
 
-	public static make = func: file
+	public static make file = do
 		private name = file.replace('\.eh$', "")
 		TestCase.new name.run()
 	end
 
 	public initialize(this.name) = this.getExpected()
 
-	public run = func:
+	public run() = do
 		echo('Testing file ' + this.name + '...')
 		shell(this.makeTestCommand())
 		private result = this.testOutput 'stdout' && this.testOutput 'stderr'
@@ -28,7 +28,7 @@ class TestCase
 		result
 	end
 
-	private getExpected = func:
+	private getExpected() = do
 		private expected_f = File.new(this.name + '.expected')
 		if expected_f == false
 			throw(ArgumentError.new("Unable to open test output file for " + this.name))
@@ -52,7 +52,7 @@ class TestCase
 		expected_f.close()
 	end
 
-	private makeTestCommand = func:
+	private makeTestCommand() = do
 		private command = this.executer + ' ' + this.name + '.eh'
 		if this.expected.has 'arguments'
 			command += ' ' + this.expected->'arguments'.trim() + ' '
@@ -63,7 +63,7 @@ class TestCase
 		command
 	end
 
-	private testOutput = func: stream
+	private testOutput stream = do
 		private outputFile = 'tmp/' + this.name + '.' + stream
 		private output = File.readFile outputFile
 		private regex_stream = stream + '-regex'
@@ -89,7 +89,7 @@ class TestCase
 		end
 	end
 
-	private failTest = func: name, outputFile, expected
+	private failTest(name, outputFile, expected) = do
 		echo('Failed test for ' + name + "!")
 		private tempFile = "tmp/" + this.name + ".tmp"
 		shell("touch " + tempFile)
@@ -105,7 +105,7 @@ end
 private ap = ArgumentParser.new("Test case runner", (
 	{name: '--valgrind', desc: 'Whether to use Valgrind', type: Bool, dflt: false},
 	{name: '--optimize', synonyms: ['-O'], desc: "Whether to use the optimizing interpreter", type: Bool, dflt: false},
-	{name: 'file', desc: "File to test", nargs: '+'}
+	{name: 'file', desc: "File to test", nargs: '+'} \
 ))
 private args = ap.parse argv
 private executer = ''
@@ -133,5 +133,5 @@ if args->'file'.length() == 0
 	testfiles.close()
 	echo("Passed " + passed + " of " + total + " tests (" + (passed * 100.0 / total).round() + "%)")
 else
-	args->'file'.each(_, v => TestCase.make v)
+	args->'file'.each(TestCase.make)
 end

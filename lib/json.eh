@@ -1,14 +1,14 @@
 # JSON utilities
 
-JSON.parseFile = name => JSON.parse(File.readFile name)
+JSON.parseFile name = JSON.parse(File.readFile name)
 
 Integer.toJSON = Integer.toString
 
 Float.toJSON = Float.toString
 
-String.toJSON = () => '"' + this.replaceCharacter('\\', '\\\\').replace('"', '\\"') + '"'
+String.toJSON() = '"' + this.replaceCharacter('\\', '\\\\').replace('"', '\\"') + '"'
 
-Hash.toJSON = func:
+Hash.toJSON() = do
 	private sb = String.Builder.new()
 	sb << "{"
 	private it = this.getIterator()
@@ -23,7 +23,7 @@ Hash.toJSON = func:
 	sb.toString()
 end
 
-Iterable.toJSON = func:
+Iterable.toJSON() = do
 	private sb = String.Builder.new()
 	sb << "["
 	private it = this.getIterator()

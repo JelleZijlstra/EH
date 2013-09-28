@@ -1,5 +1,5 @@
 # Tuple functions
-Tuple.toString = func:
+Tuple.toString() = do
 	out = '('
 	len = this.length()
 	for i in len
@@ -11,7 +11,7 @@ Tuple.toString = func:
 	out + ')'
 end
 
-Tuple.each = func: f
+Tuple.each f = do
 	for i in this.length()
 		f(this->i)
 	end

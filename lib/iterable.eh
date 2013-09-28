@@ -2,7 +2,7 @@
 # Illustrate the use of iterators, as well as EH's flexibility
 
 class Iterable
-	public each = func: f
+	public each f = do
 		i = this.getIterator()
 		while i.hasNext()
 			f(i.next())
@@ -49,35 +49,33 @@ class Iterable
 		case false; l, r
 	end
 
-	const private merge = func: l, r
-		if !(l.hasNext())
-			given (r.hasNext())
-				case false; this
-				case true; this.add(r.next()).merge(l, r)
-			end
-		else
-			given (r.hasNext())
-				case false; (this.add(l.next())).merge(l, r)
-				case true
-					const private l_head = l.peek()
-					const private r_head = r.peek()
-					const private comparison = l_head <=> r_head
-					if comparison < 0
-						l.next()
-						(this.add l_head).merge(l, r)
-					elsif comparison == 0
-						l.next()
-						r.next()
-						((this.add l_head).add r_head).merge(l, r)
-					else
-						r.next()
-						(this.add r_head).merge(l, r)
-					end
-			end
+	const private merge(l, r) = if !(l.hasNext())
+		given (r.hasNext())
+			case false; this
+			case true; this.add(r.next()).merge(l, r)
+		end
+	else
+		given (r.hasNext())
+			case false; (this.add(l.next())).merge(l, r)
+			case true
+				const private l_head = l.peek()
+				const private r_head = r.peek()
+				const private comparison = l_head <=> r_head
+				if comparison < 0
+					l.next()
+					(this.add l_head).merge(l, r)
+				elsif comparison == 0
+					l.next()
+					r.next()
+					((this.add l_head).add r_head).merge(l, r)
+				else
+					r.next()
+					(this.add r_head).merge(l, r)
+				end
 		end
 	end
 
-	const sort = () => given (this.iterableLength())
+	const sort() = given (this.iterableLength())
 		case 0; this
 		case 1; this
 		default
@@ -87,7 +85,7 @@ class Iterable
 			this.empty().merge(l.getIterator(), r.getIterator())
 	end
 
-	const nth = func: n
+	const nth n = do
 		if n < 0
 			throw ArgumentError.new("Argument must be nonnegative", "Iterable.nth", n)
 		end
@@ -102,7 +100,7 @@ class Iterable
 		end
 	end
 
-	const public reduceSingle = func: f
+	const public reduceSingle f = do
 		const private it = this.getIterator()
 		if !(it.hasNext())
 			ret null
@@ -125,7 +123,7 @@ class Iterable
 
 	const public countWithPredicate = f => this.foldLeft(0, (elt, accum => accum + if f elt; 1; else 0; end))
 
-	const public slice = func: min, max: null
+	const public slice(min, max: null) = do
 		if min < 0
 			private reversed = this.reverse()
 			private part = reversed.slice(if max == null; 0; else -1 * max; end, max: -1 * min)
@@ -183,7 +181,7 @@ class ChainedIterable
 
 	public initialize = this.iterables => ()
 
-	public getIterator = func:
+	public getIterator() = do
 		private iter = this.iterables.getIterator()
 		if iter.hasNext()
 			Iterator.new iter
@@ -192,7 +190,7 @@ class ChainedIterable
 		end
 	end
 
-	public empty = () => try
+	public empty() = try
 		this.iterables.getIterator().next().empty()
 	catch
 		throw(Exception.new "Cannot instantiate empty object")
@@ -203,7 +201,7 @@ class ChainedIterable
 		private inner_obj
 		private inner_iter
 
-		public initialize = func: iter
+		public initialize iter = do
 			this.outer_iter = iter
 			this.inner_obj = iter.next()
 			this.inner_iter = this.inner_obj.getIterator()
@@ -211,7 +209,7 @@ class ChainedIterable
 
 		public hasNext = () => (this.inner_iter.hasNext() || this.outer_iter.hasNext())
 
-		public next = func:
+		public next() = do
 			# if one of them is empty, continue until we find a non-empty one
 			while !(this.inner_iter.hasNext())
 				this.inner_obj = this.outer_iter.next()

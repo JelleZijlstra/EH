@@ -337,3 +337,4 @@ string_escapes.eh
 any_all.eh
 matrix.eh
 multiline_expr.eh
+do.eh

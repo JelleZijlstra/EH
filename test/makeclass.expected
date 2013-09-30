@@ -1,0 +1,8 @@
+%%stdout%%
+@class Foo [
+]
+@class Foo [
+]
+@object <Foo> [
+]
+%%stderr%%

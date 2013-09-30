@@ -4,7 +4,7 @@
 #include "EmptyIterator.hpp"
 
 EH_INITIALIZER(Tuple) {
-	REGISTER_METHOD(Tuple, initialize);
+	REGISTER_CONSTRUCTOR(Tuple);
 	REGISTER_METHOD_RENAME(Tuple, operator_arrow, "operator->");
 	REGISTER_METHOD(Tuple, length);
 	REGISTER_METHOD(Tuple, toTuple);
@@ -28,11 +28,11 @@ ehval_p Tuple::make(unsigned int size, ehval_p *in, EHInterpreter *parent) {
  * @argument Object that should be converted to a tuple.
  * @returns N/A
  */
-EH_METHOD(Tuple, initialize) {
+EH_METHOD(Tuple, operator_colon) {
 	ehval_p length = ehi->call_method_typed<Integer>(args, "length", nullptr, obj);
 	const int raw_length = length->get<Integer>();
 	if(raw_length < 0) {
-		throw_ArgumentError("Tuple cannot have negative length", "Tuple.initialize", args, ehi);
+		throw_ArgumentError("Tuple cannot have negative length", "Tuple()", args, ehi);
 	}
 	unsigned int len = static_cast<unsigned int>(raw_length);
 
@@ -158,13 +158,13 @@ ehval_p Tuple_Iterator::t::next() {
 }
 
 EH_INITIALIZER(Tuple_Iterator) {
-	REGISTER_METHOD(Tuple_Iterator, initialize);
+	REGISTER_CONSTRUCTOR(Tuple_Iterator);
 	REGISTER_METHOD(Tuple_Iterator, hasNext);
 	REGISTER_METHOD(Tuple_Iterator, next);
 }
 
-EH_METHOD(Tuple_Iterator, initialize) {
-	args->assert_type<Tuple>("Tuple.Iterator.initialize", ehi);
+EH_METHOD(Tuple_Iterator, operator_colon) {
+	args->assert_type<Tuple>("Tuple.Iterator()", ehi);
 	return Tuple_Iterator::make(args, ehi->get_parent());
 }
 EH_METHOD(Tuple_Iterator, hasNext) {

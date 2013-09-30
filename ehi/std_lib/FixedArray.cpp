@@ -19,10 +19,10 @@ EH_INITIALIZER(FixedArray) {
  * @returns N/A
  */
 EH_METHOD(FixedArray, operator_colon) {
-	args->assert_type<Integer>("FixedArray.initialize", ehi);
+	args->assert_type<Integer>("FixedArray()", ehi);
 	const int size = args->get<Integer>();
 	if(size < 1) {
-		throw_ArgumentError("Size must be positive", "FixedArray.initialize", args, ehi);
+		throw_ArgumentError("Size must be positive", "FixedArray()", args, ehi);
 	}
 	return FixedArray::make(args->get<Integer>(), ehi->get_parent());
 }

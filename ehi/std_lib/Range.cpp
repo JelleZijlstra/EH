@@ -10,6 +10,7 @@ ehval_p Range::make(ehval_p min, ehval_p max, EHInterpreter *parent) {
 }
 
 EH_INITIALIZER(Range) {
+	REGISTER_CONSTRUCTOR(Range);
 	REGISTER_METHOD(Range, min);
 	REGISTER_METHOD(Range, max);
 	REGISTER_METHOD_RENAME(Range, operator_arrow, "operator->");
@@ -21,7 +22,7 @@ EH_INITIALIZER(Range) {
 	REGISTER_CLASS(Range, Iterator);
 }
 
-EH_METHOD(Range, initialize) {
+EH_METHOD(Range, operator_colon) {
 	return ehi->call_method_typed<Range>(args, "toRange", nullptr, obj);
 }
 EH_METHOD(Range, min) {
@@ -112,7 +113,7 @@ EH_METHOD(Range, getIterator) {
 }
 
 EH_INITIALIZER(Range_Iterator) {
-	REGISTER_METHOD(Range_Iterator, initialize);
+	REGISTER_CONSTRUCTOR(Range_Iterator);
 	REGISTER_METHOD(Range_Iterator, hasNext);
 	REGISTER_METHOD(Range_Iterator, next);
 }
@@ -133,8 +134,8 @@ ehval_p Range_Iterator::t::next(EHI *ehi) {
 	return out;
 }
 
-EH_METHOD(Range_Iterator, initialize) {
-	args->assert_type<Range>("Range.Iterator.initialize", ehi);
+EH_METHOD(Range_Iterator, operator_colon) {
+	args->assert_type<Range>("Range.Iterator()", ehi);
 	return Range_Iterator::make(args, ehi->get_parent());
 }
 EH_METHOD(Range_Iterator, hasNext) {

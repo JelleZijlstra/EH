@@ -505,7 +505,6 @@ EH_METHOD(Node_Context, operator_colon) {
 	auto t = args->get<Tuple>();
 	auto object = t->get(0);
 	auto scope = t->get(1);
-	scope->assert_type<Object>("Node.Context()", ehi);
 	return Node_Context::make(ehcontext_t(object, scope), ehi->get_parent());
 }
 

@@ -30,13 +30,13 @@ EH_INITIALIZER(ArgumentError) {
  * @returns N/A
  */
 EH_METHOD(ArgumentError, operator_colon) {
-	ASSERT_NARGS(3, "ArgumentError.initialize");
+	ASSERT_NARGS(3, "ArgumentError()");
 	ehval_p message = args->get<Tuple>()->get(0);
-	message->assert_type<String>("ArgumentError.initialize", ehi);
+	message->assert_type<String>("ArgumentError()", ehi);
 	obj->set_property("message", message, ehi->global(), ehi);
 
 	ehval_p method = args->get<Tuple>()->get(1);
-	method->assert_type<String>("ArgumentError.initialize", ehi);
+	method->assert_type<String>("ArgumentError()", ehi);
 	obj->set_property("method", method, ehi->global(), ehi);
 
 	ehval_p value = args->get<Tuple>()->get(2);

@@ -11,7 +11,6 @@
 #include "Attribute.hpp"
 #include "Binding.hpp"
 #include "Bool.hpp"
-#include "Class.hpp"
 #include "ConstError.hpp"
 #include "EH.hpp"
 #include "Enum.hpp"

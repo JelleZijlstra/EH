@@ -1,8 +1,83 @@
 #include <set>
 
 #include "Array.hpp"
+#include "Function.hpp"
 #include "Object.hpp"
 #include "SuperClass.hpp"
+
+/*
+ * ehobj_t
+ */
+
+void ehobj_t::register_static_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHInterpreter *interpreter_parent) {
+    ehval_p func = Function::make(new Function::t(method), interpreter_parent);
+    this->register_value(name, func, attributes);
+}
+
+void ehobj_t::register_value(const std::string &name, ehval_p value, const attributes_t attributes) {
+    ehmember_p member(attributes, value);
+    this->insert(name, member);
+}
+
+unsigned int ehobj_t::register_member_class(const char *name, const initializer init_func, const attributes_t attributes, EHInterpreter *interpreter_parent) {
+    ehclass_t *newclass = new ehclass_t();
+    ehval_p new_value = Class::make(newclass, interpreter_parent);
+
+    // register class
+    newclass->type_id = interpreter_parent->repo.register_class(name, new_value);
+
+    newclass->parent = interpreter_parent->global_object;
+
+    init_func(newclass, interpreter_parent);
+
+    ehmember_p member = ehmember_t::make(attributes, new_value);
+    this->insert(name, member);
+    return newclass->type_id;
+}
+
+/*
+ * Object
+ */
+ehval_p Object::make(ehobj_t *obj, EHInterpreter *parent) {
+    return parent->allocate<Object>(obj);
+}
+
+void Object::printvar(printvar_set &set, int level, EHI *ehi) {
+    void *ptr = static_cast<void *>(value);
+    if(set.count(ptr) == 0) {
+        set.insert(ptr);
+        const std::string name = ehi->get_parent()->repo.get_name(get_type_id(ehi->get_parent()));
+        std::cout << "@object <" << name << "> [" << std::endl;
+        for(auto &i : value->members) {
+            add_tabs(std::cout, level + 1);
+            std::cout << i.first << " <";
+            const attributes_t attribs = i.second->attribute;
+            std::cout << (attribs.visibility == public_e ? "public" : "private") << ",";
+            std::cout << (attribs.isconst == const_e ? "constant" : "non-constant") << ">: ";
+            i.second->value->printvar(set, level + 1, ehi);
+        }
+        add_tabs(std::cout, level);
+        std::cout << "]" << std::endl;
+    } else {
+        std::cout << "(recursion)" << std::endl;
+    }
+}
+
+void Object::set_member_directly(const char *name, ehmember_p member, ehcontext_t context, class EHI *ehi) {
+    value->insert(name, member);
+}
+
+ehmember_p Object::get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+    if(value->members.count(name) != 0) {
+        return value->members[name];
+    } else {
+        return nullptr;
+    }
+}
+
+/*
+ * User-visible methods
+ */
 
 EH_INITIALIZER(Object) {
 	REGISTER_METHOD(Object, initialize);
@@ -20,8 +95,6 @@ EH_INITIALIZER(Object) {
 	REGISTER_METHOD(Object, type);
 	REGISTER_METHOD(Object, typeId);
 	REGISTER_METHOD(Object, members);
-//	REGISTER_METHOD(Object, data);
-//	REGISTER_METHOD(Object, setData);
 }
 
 EH_METHOD(Object, initialize) {

@@ -31,7 +31,7 @@ public:
 	virtual ~Null() {}
 };
 
-EH_METHOD(Null, initialize);
+EH_METHOD(Null, operator_colon);
 EH_METHOD(Null, toString);
 EH_METHOD(Null, toBool);
 EH_METHOD(Null, compare);

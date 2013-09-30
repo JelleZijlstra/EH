@@ -13,18 +13,18 @@ EH_NORETURN void throw_SyntaxError(const char *message, int line, EHI *ehi) {
 }
 
 EH_INITIALIZER(SyntaxError) {
-	REGISTER_METHOD(SyntaxError, initialize);
+	REGISTER_CONSTRUCTOR(SyntaxError);
 	INHERIT_LIBRARY(Exception);
 }
 
-EH_METHOD(SyntaxError, initialize) {
-	ASSERT_NARGS(2, "SyntaxError.initialize");
+EH_METHOD(SyntaxError, operator_colon) {
+	ASSERT_NARGS(2, "SyntaxError()");
 	ehval_p message = args->get<Tuple>()->get(0);
-	message->assert_type<String>("SyntaxError.initialize", ehi);
+	message->assert_type<String>("SyntaxError()", ehi);
 	obj->set_property("errorMessage", message, ehi->global(), ehi);
 
 	ehval_p line = args->get<Tuple>()->get(1);
-	line->assert_type<Integer>("SyntaxError.initialize", ehi);
+	line->assert_type<Integer>("SyntaxError()", ehi);
 	obj->set_property("line", line, ehi->global(), ehi);
 
 	std::ostringstream exception_msg;

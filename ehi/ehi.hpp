@@ -311,6 +311,8 @@ public:
 	}
 };
 
+#include "std_lib/Class.hpp"
+
 template<class T>
 inline unsigned int ehobj_t::register_member_class(const initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class) {
 	ehclass_t *newclass;

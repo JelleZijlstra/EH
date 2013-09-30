@@ -17,11 +17,11 @@ EH_INITIALIZER(LoopError) {
 }
 
 EH_METHOD(LoopError, operator_colon) {
-	args->assert_type<Tuple>("LoopError.initialize", ehi);
+	args->assert_type<Tuple>("LoopError()", ehi);
 	ehval_p msg = args->get<Tuple>()->get(0);
-	msg->assert_type<String>("LoopError.initialize", ehi);
+	msg->assert_type<String>("LoopError()", ehi);
 	ehval_p level = args->get<Tuple>()->get(1);
-	level->assert_type<Integer>("LoopError.initialize", ehi);
+	level->assert_type<Integer>("LoopError()", ehi);
 	obj->set_property("message", msg, ehi->global(), ehi);
 	obj->set_property("level", level, ehi->global(), ehi);
 	std::ostringstream exception_msg;

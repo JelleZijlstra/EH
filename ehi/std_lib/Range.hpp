@@ -55,7 +55,7 @@ public:
 	static ehval_p make(ehval_p min, ehval_p max, EHInterpreter *parent);
 };
 
-EH_METHOD(Range, initialize);
+EH_METHOD(Range, operator_colon);
 EH_METHOD(Range, operator_arrow);
 EH_METHOD(Range, min);
 EH_METHOD(Range, max);
@@ -102,7 +102,7 @@ public:
 
 	static ehval_p make(ehval_p range, EHInterpreter *parent);
 };
-EH_METHOD(Range_Iterator, initialize);
+EH_METHOD(Range_Iterator, operator_colon);
 EH_METHOD(Range_Iterator, hasNext);
 EH_METHOD(Range_Iterator, next);
 

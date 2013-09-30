@@ -51,7 +51,7 @@ public:
 			return i >= 0 && i < static_cast<int>(size());
 		}
 
-		friend EH_METHOD(Tuple, initialize);
+		friend EH_METHOD(Tuple, operator_colon);
 
 		friend ehval_p Tuple::make(unsigned int size, ehval_p *in, EHInterpreter *parent);
 	};
@@ -96,7 +96,7 @@ public:
 	}
 };
 
-EH_METHOD(Tuple, initialize);
+EH_METHOD(Tuple, operator_colon);
 EH_METHOD(Tuple, operator_arrow);
 EH_METHOD(Tuple, length);
 EH_METHOD(Tuple, toTuple);
@@ -227,7 +227,7 @@ public:
 	static ehval_p make(ehval_p tuple, EHInterpreter *parent);
 };
 
-EH_METHOD(Tuple_Iterator, initialize);
+EH_METHOD(Tuple_Iterator, operator_colon);
 EH_METHOD(Tuple_Iterator, hasNext);
 EH_METHOD(Tuple_Iterator, next);
 

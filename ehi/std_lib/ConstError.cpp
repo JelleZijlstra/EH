@@ -26,10 +26,10 @@ EH_INITIALIZER(ConstError) {
  * @returns N/A
  */
 EH_METHOD(ConstError, operator_colon) {
-	ASSERT_NARGS(2, "ConstError.initialize");
+	ASSERT_NARGS(2, "ConstError()");
 	ehval_p object = args->get<Tuple>()->get(0);
 	ehval_p name = args->get<Tuple>()->get(1);
-	name->assert_type<String>("ConstError.initialize", ehi);
+	name->assert_type<String>("ConstError()", ehi);
 	obj->set_property("object", object, ehi->global(), ehi);
 	obj->set_property("name", name, ehi->global(), ehi);
 	std::ostringstream exception_msg;

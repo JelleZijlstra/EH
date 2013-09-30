@@ -3,7 +3,7 @@
 ehval_p Null::null_obj = new Null();
 
 EH_INITIALIZER(Null) {
-	REGISTER_METHOD(Null, initialize);
+	REGISTER_CONSTRUCTOR(Null);
 	REGISTER_METHOD(Null, toString);
 	REGISTER_METHOD(Null, toBool);
 	REGISTER_METHOD(Null, compare);
@@ -14,7 +14,7 @@ EH_INITIALIZER(Null) {
  * @argument None
  * @returns N/A
  */
-EH_METHOD(Null, initialize) {
+EH_METHOD(Null, operator_colon) {
 	return nullptr;
 }
 

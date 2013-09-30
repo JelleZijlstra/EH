@@ -23,6 +23,7 @@
 #include "std_lib/MiscellaneousError.hpp"
 #include "std_lib/NameError.hpp"
 #include "std_lib/Node.hpp"
+#include "std_lib/Object.hpp"
 #include "std_lib/Range.hpp"
 #include "std_lib/SuperClass.hpp"
 #include "std_lib/Tuple.hpp"
@@ -1033,7 +1034,12 @@ ehval_p EHI::eh_op_dot(ehval_p *paras, const ehcontext_t &context) {
 ehval_p EHI::eh_op_instance_access(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p base_var = eh_execute(paras[0], context);
 	const char *accessor = paras[1]->get<String>();
-	return base_var->get_instance_member(accessor, context, this)->value;
+	ehmember_p member = base_var->get_instance_member(accessor, context, this);
+	if(member.null()) {
+		throw_NameError(base_var, accessor, this);
+	} else {
+		return member->value;
+	}
 }
 ehval_p EHI::eh_op_try_finally(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p try_block = paras[0];

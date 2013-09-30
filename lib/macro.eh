@@ -1,11 +1,10 @@
 # Useful functions for EH macros
 
-Node.Context.toString() = "(context: " + this.getObject() + ", " + this.getScope() + ")"
+Node.Context##toString() = "(context: " + this.getObject() + ", " + this.getScope() + ")"
 
 class Macro
-	public decorate = func: f, (code, context)
+	public decorate(f, (code, context)) = do
 		private processedCode = f code
-		#echo processedCode
 		processedCode.execute context
 	end
 

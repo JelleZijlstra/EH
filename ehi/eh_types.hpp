@@ -243,6 +243,11 @@ public:
 		return std::list<ehval_w>();
 	}
 
+	virtual void inherit(ehval_p superclass) {
+		// should be defined whenever has_instance_members returns true
+		assert(has_instance_members());
+	}
+
 	// returns the parent scope of the current object
 	virtual ehval_p get_parent_scope() {
 		return nullptr;

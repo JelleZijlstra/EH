@@ -1,13 +1,13 @@
 #!/usr/bin/ehi
 
 # Functions used by Iterable
-String.empty() = ''
+String##empty() = ''
 
-String.add = String.operator+
+String##add = String.operator+
 
-String.toString() = this
+String##toString() = this
 
-String.replaceCharacter = func: needle, replacement
+String##replaceCharacter = func: needle, replacement
 	private out = ''
 	for char in this
 		if char == needle
@@ -20,4 +20,4 @@ String.replaceCharacter = func: needle, replacement
 end
 
 # test that the builtin EH regex does indeed work
-static String.isRegexAvailable() = "hello".doesMatch ""
+String.isRegexAvailable() = "hello".doesMatch ""

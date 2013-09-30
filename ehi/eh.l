@@ -145,7 +145,8 @@ OPCHAR		[@=$+\-*/<>,:&\|^%~!\.?]
 			}
 "++"		return T_PLUSPLUS;
 "--"		return T_MINMIN;
-("//"|#).*	; /* Ignore comment */
+"##"		return T_INSTANCE_ACCESS;
+("//"|#[^#]).*	; /* Ignore comment */
 [;\n]		return T_SEPARATOR;
 "&&"		return T_AND;
 "and"		return T_AND;

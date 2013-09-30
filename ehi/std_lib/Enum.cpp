@@ -46,6 +46,7 @@ EH_INITIALIZER(Enum_Instance) {
 	REGISTER_METHOD_RENAME(Enum_Instance, operator_arrow, "operator->");
 	REGISTER_METHOD(Enum_Instance, map);
 	REGISTER_METHOD(Enum_Instance, compare);
+	REGISTER_METHOD(Enum_Instance, toString);
 }
 
 void Enum::t::add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *interpreter_parent, unsigned int member_id) {
@@ -74,6 +75,9 @@ ehval_p Enum::make_enum_class(const char *name, ehval_p scope, EHInterpreter *pa
 	Enum::t *inner_obj = enum_obj->get<Enum>();
 	inner_obj->type_id = type_id;
 	inner_obj->parent = scope;
+
+	// so that members can access Enum_Instance methods
+	inner_obj->inherit(parent->repo.get_primitive_class<Enum_Instance>());
 	return enum_obj;
 }
 
@@ -207,6 +211,8 @@ EH_METHOD(Enum_Instance, operator_colon) {
 	ASSERT_OBJ_TYPE(Enum_Instance, "Enum.Instance.operator()");
 	auto data = obj->get<Enum_Instance>();
 	const unsigned int size = data->nmembers;
+	printvar_set set;
+	obj->printvar(set, 0, ehi);
 	if(size == 0) {
 		throw_MiscellaneousError("Cannot instantiate nullary Enum member", ehi);
 		return nullptr;

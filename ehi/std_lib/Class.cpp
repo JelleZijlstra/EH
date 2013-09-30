@@ -111,9 +111,12 @@ EH_METHOD(Class, operator_colon) {
 }
 
 EH_METHOD(Class, inherit) {
-    obj->assert_type<Class>("Class.inherit", ehi);
-    args->assert_type<Class>("Class.inherit", ehi);
-    obj->get<Class>()->inherit(args);
+    if(!obj->has_instance_members()) {
+        throw_TypeError("only objects with instance members can inherit other classes", obj, ehi);
+    } else if(!args->has_instance_members()) {
+        throw_TypeError("inherited class must have instance members", args, ehi);
+    }
+    obj->inherit(args);
     return SuperClass::make(args, ehi->get_parent());
 }
 

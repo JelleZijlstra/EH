@@ -67,6 +67,9 @@ public:
     virtual bool has_instance_members() const {
         return true;
     }
+    virtual void inherit(ehval_p cls) {
+        value->inherit(cls);
+    }
 };
 
 EH_METHOD(Class, new);

@@ -321,7 +321,7 @@ access_expression:
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| access_expression '.' T_VARIABLE
 							{ $$ = eh_addnode(T_ACCESS, NODE($1), String::make($3)); }
-	| access_expression ':' T_VARIABLE
+	| access_expression T_INSTANCE_ACCESS T_VARIABLE
 							{ $$ = eh_addnode(T_INSTANCE_ACCESS, NODE($1), String::make($3)); }
 	| unary_op_expression T_RANGE unary_op_expression
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }

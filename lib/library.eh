@@ -4,7 +4,7 @@
 #
 
 # aliases
-Object.isAn = Object.isA
+Object##isAn = Object##isA
 
 include 'array.eh'
 include 'tuple.eh'
@@ -24,6 +24,6 @@ include 'fixed_array.eh'
 include 'fixed_array_sort.eh'
 include 'generator.eh'
 include 'io.eh'
-include 'macro.eh'
+#include 'macro.eh'
 include 'function.eh'
 include 'json.eh'

@@ -152,6 +152,8 @@ public:
 
 	virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi);
 
+    virtual ehval_p get_parent_scope();
+
 	static ehval_p make(ehval_p parent, EHInterpreter *interpreter_parent);
 };
 
@@ -163,5 +165,7 @@ EH_METHOD(Function, args);
 EH_METHOD(Function, code);
 
 EH_INITIALIZER(Function);
+
+EH_INITIALIZER(Function_Scope);
 
 #endif /* EH_FUNCTION_H_ */

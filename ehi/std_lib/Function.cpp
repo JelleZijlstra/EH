@@ -21,6 +21,7 @@ EH_INITIALIZER(Function) {
 	REGISTER_METHOD(Function, bindTo);
 	REGISTER_METHOD(Function, args);
 	REGISTER_METHOD(Function, code);
+	REGISTER_CLASS(Function, Scope);
 }
 
 /*
@@ -155,6 +156,9 @@ ehmember_p Function_Scope::get_property_current_object(const char *name, ehconte
 	} else {
 		return nullptr;
 	}
+}
+ehval_p Function_Scope::get_parent_scope() {
+	return value->parent_scope;
 }
 
 ehval_p Function_Scope::make(ehval_p parent, EHInterpreter *interpreter_parent) {

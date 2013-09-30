@@ -82,11 +82,14 @@ EHInterpreter::EHInterpreter() : gc(), repo(), global_object(), function_object(
 	eh_init();
 }
 void EHInterpreter::eh_init(void) {
+	// global object is an Object, initially without a Class
 	ehobj_t *global_ehobj = new ehobj_t();
 	global_object = Object::make(global_ehobj, this);
 
 	// manually register GlobalObject in itself, run initializer
-	global_ehobj->register_member_class<GlobalObject>(ehinit_GlobalObject, "GlobalObject", attributes_t::make_const(), this, global_object);
+	unsigned int type_id = global_ehobj->register_member_class("GlobalObject", ehinit_GlobalObject, attributes_t::make_const(), this);
+	global_ehobj->cls = repo.get_object(type_id);
+	ehinstance_init_GlobalObject(global_ehobj, this);
 
 	// insert global command table
 	ehval_p ret = Hash::make(this);
@@ -97,7 +100,7 @@ void EHInterpreter::eh_init(void) {
 
 	// fill command table
 	for(int i = 0; libcmds[i].name != nullptr; i++) {
-		ehval_p cmd = make_method(libcmds[i].cmd);
+		ehval_p cmd = Function::make(new Function::t(libcmds[i].cmd), this);
 		insert_command(libcmds[i].name, cmd);
 	}
 	for(int i = 0; libredirs[i][0] != nullptr; i++) {
@@ -109,7 +112,6 @@ void EHInterpreter::eh_init(void) {
 void EHInterpreter::eh_exit(void) {
 	this->global_object->get<Object>()->members.erase("global");
 	this->gc.do_collect();
-	return;
 }
 EHInterpreter::~EHInterpreter() {
 	eh_exit();
@@ -136,13 +138,11 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				return nullptr;
 			case T_ANYTHING:
 				throw_MiscellaneousError("Cannot use _ in expression", this);
-				return nullptr;
 		/*
 		 * Unary operators
 		 */
-			case T_MATCH_SET: // type casting
+			case T_MATCH_SET:
 				throw_MiscellaneousError("Cannot use @ outside of match statement", this);
-				break;
 			case T_BINARY_COMPLEMENT: // bitwise negation
 			  return perform_op("operator~", 0, paras, context);
 			case T_NOT: // Boolean not
@@ -263,6 +263,8 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 		 */
 			case T_ACCESS:
 				return eh_op_dot(paras, context);
+			case T_INSTANCE_ACCESS:
+				return eh_op_instance_access(paras, context);
 			case T_ARROW:
 				return perform_op("operator->", 1, paras, context);
 			case T_GROUPING:
@@ -477,15 +479,11 @@ ehval_p EHI::eh_op_anonclass(ehval_p node, const ehcontext_t &context) {
 	return ret;
 }
 ehval_p EHI::eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context) {
-	ehval_p ret = parent->instantiate(parent->repo.get_primitive_class<Function>());
-	ehobj_t *function_object = ret->get<Object>();
-	function_object->parent = context.scope;
-	function_object->type_id = parent->function_object->get<Object>()->type_id;
 	Function::t *f = new Function::t(Function::user_e);
-	function_object->object_data = Function::make(f, parent);
 	f->code = paras[1];
 	f->args = paras[0];
-	return ret;
+	f->parent = context.scope;
+	return Function::make(f, parent);
 }
 ehval_p EHI::eh_op_enum(ehval_p *paras, const ehcontext_t &context) {
 	// unpack arguments
@@ -494,7 +492,7 @@ ehval_p EHI::eh_op_enum(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p code = paras[2];
 
 	ehval_p ret = Enum::make_enum_class(name, context.scope, parent);
-	ehobj_t *enum_obj = ret->get<Object>();
+	Enum::t *enum_obj = ret->get<Enum>();
 
 	// extract enum members
 	for(ehval_p node = members_code; ; node = node->get<Enum_Instance>()->members[1]) {
@@ -552,8 +550,8 @@ ehval_p EHI::eh_op_named_class(ehval_p *paras, const ehcontext_t &context) {
 }
 ehval_p EHI::declare_class(const char *name, ehval_p code, const ehcontext_t &context) {
 	// create the class object
-	ehobj_t *new_obj = new ehobj_t();
-	ehval_p ret = Object::make(new_obj, parent);
+	ehclass_t *new_obj = new ehclass_t();
+	ehval_p ret = Class::make(new_obj, parent);
 
 	new_obj->type_id = parent->repo.register_class(name, ret);
 	new_obj->parent = context.scope;
@@ -644,7 +642,7 @@ ehval_p EHI::eh_op_switch(ehval_p *paras, const ehcontext_t &context) {
 			ehval_p casevar = eh_execute(op->members[0], context);
 			ehval_p decider;
 			// try to call function
-			if(casevar->deep_is_a<Function>() || casevar->is_a<Binding>()) {
+			if(casevar->is_a<Function>() || casevar->is_a<Binding>()) {
 				decider = call_function(casevar, switchvar, context);
 				if(!decider->is_a<Bool>()) {
 					throw_TypeError("Method in a switch case must return a Bool", decider, this);
@@ -689,7 +687,7 @@ ehval_p EHI::eh_op_given(ehval_p *paras, const ehcontext_t &context) {
 		}
 		ehval_p casevar = eh_execute(op->members[0], context);
 		ehval_p decider;
-		if(casevar->deep_is_a<Function>() || casevar->is_a<Binding>()) {
+		if(casevar->is_a<Function>() || casevar->is_a<Binding>()) {
 			decider = call_function(casevar, switchvar, context);
 			if(!decider->is_a<Bool>()) {
 				throw_TypeError("Method in a given case must return a Bool", decider, this);
@@ -853,10 +851,9 @@ ehval_p EHI::eh_op_colon(ehval_p *paras, const ehcontext_t &context) {
 	return call_function(function, args, context);
 }
 ehval_p EHI::eh_op_dollar(ehval_p node, const ehcontext_t &context) {
-	ehmember_p var = context.scope->get<Object>()->get_recursive(node->get<String>(), context);
-	if(var == nullptr) {
+	ehmember_p var = context.scope->get_property_up_scope_chain(node->get<String>(), context, this);
+	if(var.null()) {
 		throw_NameError(context.scope, node->get<String>(), this);
-		return nullptr;
 	} else {
 		return var->value;
 	}
@@ -897,14 +894,21 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 			ehval_p base_var = eh_execute(internal_paras[0], context);
 			return call_method(base_var, "operator->=", Tuple::make(2, args, parent), context);
 		}
+		case T_INSTANCE_ACCESS: {
+			ehval_p base_var = eh_execute(internal_paras[0], context);
+			const char *accessor = internal_paras[1]->get<String>();
+			if(attributes == nullptr) {
+				base_var->set_instance_property(accessor, rvalue, context, this);
+			} else {
+				ehmember_p new_member = ehmember_t::make(*attributes, rvalue);
+				base_var->set_instance_member(accessor, new_member, context, this);
+			}
+			return rvalue;
+		}
 		case T_ACCESS: {
 			ehval_p base_var = eh_execute(internal_paras[0], context);
 			if(base_var->is_a<SuperClass>()) {
 				throw_TypeError("Cannot set member on parent class", base_var, this);
-			}
-			// This is hard, since we will, for once, need to modify in-place. For now, only support objects. Functions too, just for fun.
-			if(!base_var->is_a<Object>()) {
-				throw_TypeError("Cannot set member on primitive", base_var, this);
 			}
 			// accessor is guaranteed to be a string
 			const char *accessor = internal_paras[1]->get<String>();
@@ -918,10 +922,9 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 		}
 		case T_VARIABLE: {
 			const char *name = internal_paras[0]->get<String>();
-			attributes_t attributes_container = attributes_t();
 			if(attributes == nullptr) {
-				ehmember_p member = context.scope->get<Object>()->get_recursive(name, context);
-				if(member != nullptr) {
+				ehmember_p member = context.scope->get_property_up_scope_chain(name, context, this);
+				if(!member.null()) {
 					if(member->isconst()) {
 						// bug: if the const member is actually in a higher scope, this error message will be wrong
 						throw_ConstError(context.scope, name, this);
@@ -929,10 +932,22 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 					member->value = rvalue;
 					return rvalue;
 				}
-				attributes = &attributes_container;
 			}
-			ehmember_p new_member = ehmember_t::make(*attributes, rvalue);
-			context.scope->set_member(name, new_member, context, this);
+			attributes_t new_attributes = (attributes == nullptr) ? attributes_t() : *attributes;
+			ehmember_p new_member = ehmember_t::make(new_attributes, rvalue);
+			if(context.scope->has_instance_members()) {
+				if(new_member->isstatic()) {
+					// set on the class
+					attributes_t fixed_attributes(new_attributes.visibility, nonstatic_e, new_attributes.isconst);
+					ehmember_p fixed_member(fixed_attributes, rvalue);
+					context.scope->set_member(name, fixed_member, context, this);
+				} else {
+					// set on instance
+					context.scope->set_instance_member(name, new_member, context, this);
+				}
+			} else {
+				context.scope->set_member(name, new_member, context, this);
+			}
 			return rvalue;
 		}
 		case T_COMMA: {
@@ -1015,6 +1030,11 @@ ehval_p EHI::eh_op_dot(ehval_p *paras, const ehcontext_t &context) {
 	const char *accessor = paras[1]->get<String>();
 	return base_var->get_property(accessor, context, this);
 }
+ehval_p EHI::eh_op_instance_access(ehval_p *paras, const ehcontext_t &context) {
+	ehval_p base_var = eh_execute(paras[0], context);
+	const char *accessor = paras[1]->get<String>();
+	return base_var->get_instance_member(accessor, context, this)->value;
+}
 ehval_p EHI::eh_op_try_finally(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p try_block = paras[0];
 	ehval_p catch_blocks = paras[1];
@@ -1096,8 +1116,8 @@ ehval_p EHI::perform_op(const char *name, unsigned int nargs, ehval_p *paras, co
  * Functions
  */
 ehval_p EHI::call_method(ehval_p obj, const char *name, ehval_p args, const ehcontext_t &context) {
-	ehval_p func = obj->get_property_no_binding(name, context, this);
-	if(func->deep_is_a<Function>()) {
+	ehval_p func = obj->get_property_no_binding(name, context, this)->value;
+	if(func->is_a<Function>()) {
 		return Function::exec(obj, func, args, this);
 	} else {
 		return call_method(func, "operator()", args, context);
@@ -1108,43 +1128,12 @@ ehval_p EHI::call_function(ehval_p function, ehval_p args, const ehcontext_t &co
 	if(function->is_a<Binding>()) {
 		// This one time, we call a library method directly. If you want to override Binding.operator_colon, too bad.
 		return ehlm_Binding_operator_colon(function, args, this);
-	} else if(function->deep_is_a<Function>()) {
+	} else if(function->is_a<Function>()) {
 		// Avoid calling Function.operator(), so that we can preserve the object
 		return Function::exec(context.object, function, args, this);
 	} else {
 		return call_method(function, "operator()", args, context);
 	}
-}
-ehval_p EHInterpreter::make_method(ehlibmethod_t in) {
-	ehobj_t *function_obj = new ehobj_t();
-	ehval_p func = Object::make(function_obj, this);
-	function_obj->parent = nullptr;
-	function_obj->type_id = function_object->get<Object>()->type_id;
-	Function::t *f = new Function::t(Function::lib_e);
-	f->libmethod_pointer = in;
-	function_obj->object_data = Function::make(f, this);
-	function_obj->inherit(this->function_object);
-	return func;
-}
-/*
- * Classes
- */
-ehval_p EHInterpreter::instantiate(ehval_p obj) {
-	ehobj_t *new_obj = new ehobj_t();
-	ehval_p ret = Object::make(new_obj, this);
-	ehval_p to_instantiate = obj->get_underlying_object(this);
-	ehobj_t *old_obj = to_instantiate->get<Object>();
-	new_obj->type_id = old_obj->type_id;
-	new_obj->parent = old_obj->parent;
-	new_obj->inherit(to_instantiate);
-	return ret;
-}
-ehval_p EHInterpreter::resource_instantiate(unsigned int type_id, ehval_p obj) {
-	ehval_p class_object = repo.get_object(type_id);
-
-	ehval_p ret = instantiate(class_object);
-	ret->get<Object>()->object_data = obj;
-	return ret;
 }
 
 /*

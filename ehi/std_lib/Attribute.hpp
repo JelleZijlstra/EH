@@ -6,7 +6,7 @@
 // and accompanying enum used by the parser
 class Attribute : public Enum_Instance::t {
 public:
-	const static int attribute_type_id = 5;
+	const static int attribute_type_id = 6;
 
 	enum attribute_enum {
 		publica_e,
@@ -43,6 +43,6 @@ public:
 
 #include "../eh_libclasses.hpp"
 
-EH_INITIALIZER(Attribute);
+EH_ENUM_INITIALIZER(Attribute);
 
 #endif /* EH_ATTRIBUTE_H_ */

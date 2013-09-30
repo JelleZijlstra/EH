@@ -7,7 +7,7 @@
 #include "Range.hpp"
 
 EH_INITIALIZER(String) {
-	REGISTER_METHOD(String, initialize);
+	REGISTER_CONSTRUCTOR(String);
 	REGISTER_METHOD_RENAME(String, operator_plus, "operator+");
 	REGISTER_METHOD_RENAME(String, operator_arrow, "operator->");
 	REGISTER_METHOD(String, compare);
@@ -26,7 +26,7 @@ EH_INITIALIZER(String) {
 	REGISTER_CLASS(String, Builder);
 }
 
-EH_METHOD(String, initialize) {
+EH_METHOD(String, operator_colon) {
 	return ehi->toString(args, obj);
 }
 EH_METHOD(String, operator_plus) {
@@ -143,7 +143,7 @@ EH_METHOD(String, charAtPosition) {
 }
 EH_METHOD(String, getIterator) {
 	ASSERT_NULL_AND_TYPE(String, "String.getIterator");
-	ehval_p class_member = obj->get_property("Iterator", obj, ehi);
+	ehval_p class_member = obj->get_type_object(ehi->get_parent())->get_property("Iterator", obj, ehi);
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 
@@ -224,7 +224,7 @@ EH_METHOD(String, replace) {
 }
 
 EH_INITIALIZER(String_Iterator) {
-	REGISTER_METHOD(String_Iterator, initialize);
+	REGISTER_CONSTRUCTOR(String_Iterator);
 	REGISTER_METHOD(String_Iterator, hasNext);
 	REGISTER_METHOD(String_Iterator, next);
 	REGISTER_METHOD(String_Iterator, peek);
@@ -249,8 +249,8 @@ char String_Iterator::t::peek() const {
 	return content[this->position];
 }
 
-EH_METHOD(String_Iterator, initialize) {
-	args->assert_type<String>("String.Iterator.initialize", ehi);
+EH_METHOD(String_Iterator, operator_colon) {
+	args->assert_type<String>("String.Iterator()", ehi);
 	return String_Iterator::make(args, ehi->get_parent());
 }
 EH_METHOD(String_Iterator, hasNext) {
@@ -283,7 +283,7 @@ EH_METHOD(String_Iterator, peek) {
 
 
 EH_INITIALIZER(String_Builder) {
-	REGISTER_METHOD(String_Builder, new);
+	REGISTER_CONSTRUCTOR(String_Builder);
 	REGISTER_METHOD_RENAME(String_Builder, operator_leftshift, "operator<<");
 	REGISTER_METHOD(String_Builder, toString);
 }
@@ -293,7 +293,7 @@ EH_INITIALIZER(String_Builder) {
  * @argument None
  * @returns String.Builder
  */
-EH_METHOD(String_Builder, new) {
+EH_METHOD(String_Builder, operator_colon) {
 	return String_Builder::make();
 }
 

@@ -116,7 +116,6 @@ EH_METHOD(Hash, keys) {
 EH_METHOD(Hash, compare) {
 	ASSERT_OBJ_TYPE(Hash, "Hash.compare");
 	args->assert_type<Hash>("Hash.compare", ehi);
-	args = args->data();
 	Hash::ehhash_t *lhs = obj->get<Hash>();
 	Hash::ehhash_t *rhs = args->get<Hash>();
 
@@ -172,12 +171,12 @@ EH_METHOD(Hash, length) {
  */
 EH_METHOD(Hash, getIterator) {
 	ASSERT_NULL_AND_TYPE(Hash, "Hash.getIterator");
-	ehval_p class_member = obj->get_property("Iterator", obj, ehi);
+	ehval_p class_member = obj->get_type_object(ehi->get_parent())->get_property("Iterator", obj, ehi);
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 
 EH_INITIALIZER(Hash_Iterator) {
-	REGISTER_METHOD(Hash_Iterator, initialize);
+	REGISTER_CONSTRUCTOR(Hash_Iterator);
 	REGISTER_METHOD(Hash_Iterator, hasNext);
 	REGISTER_METHOD(Hash_Iterator, next);
 }
@@ -205,8 +204,8 @@ ehval_p Hash_Iterator::t::next(EHI *ehi) {
  * @argument Hash to iterate over.
  * @returns N/A
  */
-EH_METHOD(Hash_Iterator, initialize) {
-	args->assert_type<Hash>("Hash.Iterator.initialize", ehi);
+EH_METHOD(Hash_Iterator, operator_colon) {
+	args->assert_type<Hash>("Hash.Iterator()", ehi);
 	return Hash_Iterator::make(args, ehi->get_parent());
 }
 

@@ -71,7 +71,6 @@ EH_METHOD(Tuple, toTuple) {
 }
 EH_METHOD(Tuple, compare) {
 	ASSERT_OBJ_TYPE(Tuple, "Tuple.compare");
-	args = args->data();
 	args->assert_type<Tuple>("Tuple.compare", ehi);
 	Tuple::t *lhs = obj->get<Tuple>();
 	Tuple::t *rhs = args->get<Tuple>();
@@ -91,7 +90,7 @@ EH_METHOD(Tuple, compare) {
 }
 EH_METHOD(Tuple, getIterator) {
 	ASSERT_NULL_AND_TYPE(Tuple, "Tuple.getIterator");
-	ehval_p class_member = obj->get_property("Iterator", obj, ehi);
+	ehval_p class_member = obj->get_type_object(ehi->get_parent())->get_property("Iterator", obj, ehi);
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 

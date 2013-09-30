@@ -7,7 +7,7 @@
 #include "Bool.hpp"
 
 EH_INITIALIZER(Bool) {
-	REGISTER_METHOD(Bool, initialize);
+	REGISTER_CONSTRUCTOR(Bool);
 	REGISTER_METHOD(Bool, toString);
 	REGISTER_METHOD(Bool, toBool);
 	REGISTER_METHOD(Bool, toInteger);
@@ -20,7 +20,7 @@ EH_INITIALIZER(Bool) {
  * @argument Value to convert to a Bool.
  * @returns N/A
  */
-EH_METHOD(Bool, initialize) {
+EH_METHOD(Bool, operator_colon) {
 	return ehi->toBool(args, obj);
 }
 

@@ -5,8 +5,6 @@
 #include "SuperClass.hpp"
 
 EH_INITIALIZER(Object) {
-	REGISTER_METHOD(Object, new);
-	REGISTER_METHOD(Object, inherit);
 	REGISTER_METHOD(Object, initialize);
 	REGISTER_METHOD(Object, toString);
 	REGISTER_METHOD(Object, finalize);
@@ -26,16 +24,6 @@ EH_INITIALIZER(Object) {
 //	REGISTER_METHOD(Object, setData);
 }
 
-EH_METHOD(Object, new) {
-	ehval_p ret = ehi->get_parent()->instantiate(obj);
-	ret->get<Object>()->object_data = ehi->call_method(ret, "initialize", args, obj);
-	return ret;
-}
-EH_METHOD(Object, inherit) {
-	args->assert_type<Object>("Object.inherit", ehi);
-	obj->get<Object>()->inherit(args);
-	return SuperClass::make(args, ehi->get_parent());
-}
 EH_METHOD(Object, initialize) {
 	return nullptr;
 }
@@ -50,19 +38,13 @@ EH_METHOD(Object, finalize) {
 	return nullptr;
 }
 EH_METHOD(Object, isA) {
+	args->assert_type<Class>("Object.isA", ehi);
 	ehval_p _obj = obj;
-	obj = obj->get_underlying_object(ehi->get_parent());
-	if(!args->is_a<Object>()) {
-		args = ehi->get_parent()->repo.get_object(args);
-	}
-	type_repository &repo = ehi->get_parent()->repo;
-	ehval_p type_object = repo.get_object(obj);
+	ehval_p type_object = obj->get_type_object(ehi->get_parent());
 	if(type_object == args) {
 		return Bool::make(true);
-	} else if(obj->is_a<Object>()) {
-		return Bool::make(obj->get<Object>()->inherits(args, ehi->get_parent()));
 	} else {
-		return Bool::make(type_object->get<Object>()->inherits(args, ehi->get_parent()));
+		return Bool::make(type_object->get<Class>()->inherits(args, ehi->get_parent()));
 	}
 }
 
@@ -77,11 +59,11 @@ EH_METHOD(Object, operator_compare) {
 	}
 }
 EH_METHOD(Object, compare) {
-	ehval_p lhs = obj->data();
+	ehval_p lhs = obj;
 	if(lhs->is_a<Null>()) {
 		lhs = obj;
 	}
-	ehval_p rhs = args->data();
+	ehval_p rhs = args;
 	if(!lhs->equal_type(rhs)) {
 		throw_TypeError("Arguments to Object.compare must have the same type", rhs, ehi);
 	}
@@ -116,40 +98,22 @@ EH_METHOD(Object, operator_lte) {
 	return Bool::make(comparison <= 0);
 }
 EH_METHOD(Object, type) {
-	std::string name = ehi->get_parent()->repo.get_name(obj);
-	return String::make(strdup(name.c_str()));
+	unsigned int type_id = obj->get_type_id(ehi->get_parent());
+	return ehi->get_parent()->repo.get_object(type_id);
 }
 EH_METHOD(Object, typeId) {
 	return Integer::make(static_cast<Integer::type>(obj->get_type_id(ehi->get_parent())));
 }
 // return all members in the class
 EH_METHOD(Object, members) {
-	ehval_p reference_retainer = obj;
-	obj = obj->get_underlying_object(ehi->get_parent());
-	std::set<std::string> members = obj->get<Object>()->member_set(ehi->get_parent());
+	// TODO
+	// ehval_p reference_retainer = obj;
+	// obj = obj->get_underlying_object(ehi->get_parent());
+	// std::set<std::string> members = obj->get<Object>()->member_set(ehi->get_parent());
 	ehval_p out = Array::make(ehi->get_parent());
-	Array::t *arr = out->get<Array>();
-	for(std::set<std::string>::iterator i = members.begin(), end = members.end(); i != end; i++) {
-		arr->append(String::make(strdup((*i).c_str())));
-	}
+	// Array::t *arr = out->get<Array>();
+	// for(std::set<std::string>::iterator i = members.begin(), end = members.end(); i != end; i++) {
+	// 	arr->append(String::make(strdup((*i).c_str())));
+	// }
 	return out;
-}
-
-// TODO: make these private methods. I'm pretty sure you can crash ehi with these.
-EH_METHOD(Object, data) {
-	if(obj->is_a<Object>()) {
-		return obj->get<Object>()->object_data;
-	} else {
-		return obj;
-	}
-}
-
-EH_METHOD(Object, setData) {
-	// impossible to set object_data on primitive
-	if(!obj->is_a<Object>()) {
-		throw_TypeError("setData", obj, ehi);
-	}
-	obj->get<Object>()->object_data = args;
-	// enable chaining
-	return obj;
 }

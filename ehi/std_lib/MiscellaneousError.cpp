@@ -7,12 +7,12 @@ void throw_MiscellaneousError(const char *message, EHI *ehi) {
 }
 
 EH_INITIALIZER(MiscellaneousError) {
-	REGISTER_METHOD(MiscellaneousError, initialize);
+	REGISTER_CONSTRUCTOR(MiscellaneousError);
 	INHERIT_LIBRARY(Exception);
 }
 
-EH_METHOD(MiscellaneousError, initialize) {
-	args->assert_type<String>("MiscellaneousError.initialize", ehi);
+EH_METHOD(MiscellaneousError, operator_colon) {
+	args->assert_type<String>("MiscellaneousError()", ehi);
 	obj->set_property("message", args, ehi->global(), ehi);
 	return Exception::make(strdup(args->get<String>()));
 }

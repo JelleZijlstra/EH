@@ -34,7 +34,7 @@ private:
 	String(type c) : value(c) {}
 };
 
-EH_METHOD(String, initialize);
+EH_METHOD(String, operator_colon);
 EH_METHOD(String, length);
 EH_METHOD(String, operator_arrow);
 EH_METHOD(String, operator_plus);
@@ -87,7 +87,7 @@ public:
 
 	virtual ~String_Iterator() {}
 };
-EH_METHOD(String_Iterator, initialize);
+EH_METHOD(String_Iterator, operator_colon);
 EH_METHOD(String_Iterator, hasNext);
 EH_METHOD(String_Iterator, next);
 EH_METHOD(String_Iterator, peek);
@@ -135,7 +135,7 @@ public:
 	}
 };
 
-EH_METHOD(String_Builder, new);
+EH_METHOD(String_Builder, operator_colon);
 EH_METHOD(String_Builder, operator_leftshift);
 EH_METHOD(String_Builder, toString);
 

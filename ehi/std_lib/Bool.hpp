@@ -31,7 +31,7 @@ private:
 	Bool(bool b) : value(b) {}
 };
 
-EH_METHOD(Bool, initialize);
+EH_METHOD(Bool, operator_colon);
 EH_METHOD(Bool, compare);
 EH_METHOD(Bool, toString);
 EH_METHOD(Bool, toBool);

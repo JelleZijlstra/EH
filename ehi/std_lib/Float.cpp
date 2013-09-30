@@ -10,7 +10,7 @@
 #include "MiscellaneousError.hpp"
 
 EH_INITIALIZER(Float) {
-	REGISTER_METHOD(Float, initialize);
+	REGISTER_CONSTRUCTOR(Float);
 	REGISTER_METHOD_RENAME(Float, operator_plus, "operator+");
 	REGISTER_METHOD_RENAME(Float, operator_minus, "operator-");
 	REGISTER_METHOD_RENAME(Float, operator_times, "operator*");
@@ -30,7 +30,7 @@ EH_INITIALIZER(Float) {
  * @argument Object to cast to Float
  * @returns N/A
  */
-EH_METHOD(Float, initialize) {
+EH_METHOD(Float, operator_colon) {
 	return ehi->toFloat(args, obj);
 }
 

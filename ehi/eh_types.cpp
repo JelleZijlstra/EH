@@ -9,6 +9,8 @@
 #include "std_lib/Binding.hpp"
 #include "std_lib/Enum.hpp"
 #include "std_lib/Hash.hpp"
+#include "std_lib/MiscellaneousError.hpp"
+#include "std_lib/Null.hpp"
 #include "std_lib/Range.hpp"
 #include "std_lib/Tuple.hpp"
 #include "std_lib/SuperClass.hpp"
@@ -16,298 +18,158 @@
 #include "std_lib/VisibilityError.hpp"
 #include "std_lib/NameError.hpp"
 
-/*
- * ehval_t
- */
-ehmember_p ehval_t::set_property(const char *name, ehval_p value, ehcontext_t context, EHI *ehi) {
-	// caller should ensure object is actually an object
-	ehobj_t *obj = get<Object>();
-	// unbind bindings to myself
-	if(value->is_a<Binding>()) {
-		ehval_p obj_data = value->get<Binding>()->object_data;
-		if(obj_data->is_a<Object>() && obj == obj_data->get<Object>()) {
-			ehval_p reference_retainer = value;
-			value = value->get<Binding>()->method;
-		}
-	}
-	ehmember_p result = obj->inherited_get(name, ehi->get_parent());
-	if(result.null()) {
-		ehmember_p new_member;
-		new_member->value = value;
-		obj->insert(name, new_member);
-		return new_member;
-	} else if(result->attribute.isconst == const_e) {
-		throw_ConstError(this, name, ehi);
-	} else if(result->attribute.visibility == private_e && !obj->context_compare(context, ehi)) {
-		throw_VisibilityError(this, name, ehi);
-	} else if(result->attribute.isstatic == static_e) {
-		result->value = value;
-		return result;
-	} else {
-		// set in this object
-		ehmember_p new_member = ehmember_t::make(result->attribute, value);
-		obj->insert(name, new_member);
-		return new_member;
-	}
-	return result;
-}
-// insert an ehmember_p directly on this object, without worrying about inheritance
-ehmember_p ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
-	// caller should ensure object is actually an object
-	ehobj_t *obj = get<Object>();
-	// unbind bindings to myself
-	ehval_p value = member->value;
-	if(value->is_a<Binding>()) {
-		ehval_p obj_data = value->get<Binding>()->object_data;
-		if(obj_data->is_a<Object>() && obj == obj_data->get<Object>()) {
-			member->value = value->get<Binding>()->method;
-		}
-	}
-	if(obj->has(name)) {
-		ehmember_p the_member = obj->get_known(name);
-		if(the_member->attribute.isconst == const_e) {
-			throw_ConstError(this, name, ehi);
-		}
-		if(the_member->attribute.visibility == private_e && !obj->context_compare(context, ehi)) {
-			// pretend private members don't exist
-			throw_VisibilityError(this, name, ehi);
-		}
-	}
-	obj->insert(name, member);
-	return member;
-}
-ehval_p ehval_t::get_underlying_object(const EHInterpreter *parent) {
-	if(is_a<Object>()) {
-		return this;
-	} else if(is_a<SuperClass>()) {
-		return get<SuperClass>();
-	} else if(is_a<Enum_Instance>()) {
-		const unsigned int type_id = get<Enum_Instance>()->type_id;
-		return parent->repo.get_object(type_id);
-	} else {
-		return parent->repo.get_object(this);
+void check_static_attribute(const char *name, ehmember_p member, ehcontext_t context, EHI * ehi) {
+	if(member->isstatic()) {
+		throw_MiscellaneousError("static modifier is meaningless outside of class context", ehi);
 	}
 }
 
-// get a property of the given name, without creating a binding
-ehval_p ehval_t::get_property_no_binding(const char *name, ehcontext_t context, EHI *ehi) {
-	ehval_p object = get_underlying_object(ehi->get_parent());
-	ehobj_t *obj = object->get<Object>();
-	ehmember_p member = obj->inherited_get(name, ehi->get_parent());
+/*
+ * ehval_t
+ */
+unsigned int ehval_t::get_type_id(const class EHInterpreter *parent) {
+	return parent->repo.get_type_id(this);
+}
+ehval_p ehval_t::get_type_object(const class EHInterpreter *parent) {
+	const unsigned int type_id = get_type_id(parent);
+	return parent->repo.get_object(type_id);
+}
+
+void ehval_t::check_can_set_member(ehmember_p current_member, const char *name, ehcontext_t context, EHI *ehi) {
+    if(!current_member.null()) {
+        if(current_member->isconst()) {
+            throw_ConstError(this, name, ehi);
+        } else if(current_member->attribute.visibility == private_e && !can_access_private(context, ehi)) {
+            throw_VisibilityError(this, name, ehi);
+        }
+    }
+}
+
+void ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
+	check_static_attribute(name, member, context, ehi);
+    // unbind bindings to the current object (TODO: why is this needed?)
+    member->value = unbind_binding_to_self(member->value);
+    // if a property with this name already exists, confirm that it is not const or inaccessible
+    ehmember_p current_member = get_property_current_object(name, context, ehi);
+    check_can_set_member(current_member, name, context, ehi);
+    set_member_directly(name, member, context, ehi);
+}
+
+ehmember_p ehval_t::set_property(const char *name, ehval_p new_value, ehcontext_t context, class EHI *ehi) {
+    new_value = unbind_binding_to_self(new_value);
+	ehmember_p current_member = get_property_current_object(name, context, ehi);
+	if(current_member.null()) {
+		// now check the type object
+		ehval_p type = get_type_object(ehi->get_parent());
+		current_member = type->get_instance_member(name, context, ehi);
+	}
+	check_can_set_member(current_member, name, context, ehi);
+	attributes_t attributes = current_member.null() ? attributes_t() : current_member->attribute;
+    // set in this object
+    ehmember_p new_member = ehmember_t::make(attributes, new_value);
+    set_member_directly(name, new_member, context, ehi);
+    return new_member;
+}
+
+void ehval_t::set_member_directly(const char *name, ehmember_p value, ehcontext_t context, EHI *ehi) {
+	throw_TypeError("object does not allow member assignment", this, ehi);
+}
+
+void ehval_t::set_instance_member(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
+	check_static_attribute(name, member, context, ehi);
+    // if a property with this name already exists, confirm that it is not const or inaccessible
+    ehmember_p current_member = get_instance_member_current_object(name, context, ehi);
+    check_can_set_member(current_member, name, context, ehi);
+    set_instance_member_directly(name, member, context, ehi);
+}
+ehmember_p ehval_t::set_instance_property(const char *name, ehval_p new_value, ehcontext_t context, class EHI *ehi) {
+	ehmember_p current_member = get_instance_member(name, context, ehi);
+	check_can_set_member(current_member, name, context, ehi);
+	attributes_t attributes = current_member.null() ? attributes_t() : current_member->attribute;
+    // set in this object
+    ehmember_p new_member = ehmember_t::make(attributes, new_value);
+    set_instance_member_directly(name, new_member, context, ehi);
+    return new_member;
+}
+
+ehmember_p ehval_t::get_instance_member(const char *name, ehcontext_t context, class EHI *ehi, bool include_object) {
+    ehmember_p my_member = get_instance_member_current_object(name, context, ehi);
+    if(!my_member.null()) {
+        return my_member;
+    }
+    for(auto superclass : get_super_classes()) {
+        ehmember_p super_member = superclass->get_instance_member(name, context, ehi, false);
+        if(!super_member.null()) {
+            return super_member;
+        }
+    }
+    if(include_object) {
+        // TODO: does this need a check against this being Object?
+        ehval_p object_class = ehi->get_parent()->repo.get_primitive_class<Object>();
+        return object_class->get_instance_member(name, context, ehi, false);
+    }
+    return nullptr;
+}
+
+void ehval_t::set_instance_member_directly(const char *name, ehmember_p value, ehcontext_t context, EHI *ehi) {
+	throw_TypeError("object does not allow instance member assignment", this, ehi);
+}
+ehmember_p ehval_t::get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+	// by default, no properties on the actual object
+	return nullptr;
+}
+
+ehmember_p ehval_t::get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+	// by default, no properties on the actual object
+	return nullptr;
+}
+ehmember_p ehval_t::get_property_no_binding(const char *name, ehcontext_t context, EHI *ehi) {
+	ehmember_p member = get_property_current_object(name, context, ehi);
+	if(member.null()) {
+		// now check the type object
+		ehval_p type = get_type_object(ehi->get_parent());
+		member = type->get_instance_member(name, context, ehi);
+	}
 	if(member.null()) {
 		throw_NameError(this, name, ehi);
-	} else if(member->attribute.visibility == private_e && !obj->context_compare(context, ehi)) {
+	} else if(member->attribute.visibility == private_e && !can_access_private(context, ehi)) {
 		throw_VisibilityError(this, name, ehi);
+	} else {
+		return member;
 	}
-	return member->value;
 }
 // get a property of the given name from the base_var object, creating a binding if necessary
 ehval_p ehval_t::get_property(const char *name, ehcontext_t context, EHI *ehi) {
-	ehval_p out = get_property_no_binding(name, context, ehi);
-	if(out->deep_is_a<Function>()) {
+	ehval_p out = get_property_no_binding(name, context, ehi)->value;
+	if(out->is_a<Function>()) {
 		return Binding::make(this, out, ehi->get_parent());
 	} else {
 		return out;
 	}
 }
-
-/*
- * Object
- */
-ehval_p Object::make(ehobj_t *obj, EHInterpreter *parent) {
-	return parent->allocate<Object>(obj);
-}
-
-void Object::printvar(printvar_set &set, int level, EHI *ehi) {
-	if(this->deep_is_a<Function>()) {
-		value->object_data->printvar(set, level, ehi);
-	} else {
-		void *ptr = static_cast<void *>(value);
-		if(set.count(ptr) == 0) {
-			set.insert(ptr);
-			const std::string name = ehi->get_parent()->repo.get_name(this);
-			std::cout << "@object <" << name << "> [" << std::endl;
-			for(auto &i : value->members) {
-				add_tabs(std::cout, level + 1);
-				std::cout << i.first << " <";
-				const attributes_t attribs = i.second->attribute;
-				std::cout << (attribs.visibility == public_e ? "public" : "private") << ",";
-				std::cout << (attribs.isstatic == static_e ? "static" : "non-static") << ",";
-				std::cout << (attribs.isconst == const_e ? "constant" : "non-constant") << ">: ";
-				i.second->value->printvar(set, level + 1, ehi);
-			}
-			add_tabs(std::cout, level);
-			std::cout << "]" << std::endl;
-		} else {
-			std::cout << "(recursion)" << std::endl;
+ehmember_p ehval_t::get_property_up_scope_chain(const char *name, ehcontext_t context, class EHI *ehi) {
+	ehmember_p member = get_property_current_object(name, context, ehi);
+	if(member.null()) {
+		ehval_p parent = get_parent_scope();
+		if(!parent.null() && !parent->is_a<Null>()) {
+			member = parent->get_property_up_scope_chain(name, context, ehi);
 		}
 	}
+	return member;
 }
 
-/*
- * ehobj_t
- */
-// const methods
-ehmember_p ehobj_t::get_recursive(const char *name, const ehcontext_t context) const {
-	if(this->has(name)) {
-		return this->members.at(name);
-	} else if(this->parent != nullptr) {
-		return this->get_parent()->get_recursive(name, context);
-	} else {
-		return ehmember_p(nullptr);
-	}
+bool ehval_t::can_access_private(ehcontext_t context, EHI *ehi) {
+	// TODO: fix private again
+	return true;
 }
 
-bool ehobj_t::inherited_has(const std::string &key, const EHInterpreter *interpreter_parent) const {
-	if(this->has(key) || interpreter_parent->base_object->get<Object>()->has(key)) {
-		return true;
-	}
-	for(auto &i : super) {
-		if(i->get<Object>()->inherited_has(key, interpreter_parent)) {
-			return true;
-		}
-	}
-	return false;
-}
-
-// recursive version that does not check superclasses Object
-ehmember_p ehobj_t::recursive_inherited_get(const std::string &key) const {
-	if(this->has(key)) {
-		return this->get_known(key);
-	}
-	for(auto &i : super) {
-		ehmember_p result = i->get<Object>()->recursive_inherited_get(key);
-		if(!result.null()) {
-			return result;
-		}
-	}
-	return ehmember_p(nullptr);
-}
-
-ehmember_p ehobj_t::inherited_get(const std::string &key, const EHInterpreter *interpreter_parent) const {
-	if(this->has(key)) {
-		return this->get_known(key);
-	}
-	for(auto &i : super) {
-		ehmember_p result = i->get<Object>()->recursive_inherited_get(key);
-		if(!result.null()) {
-			return result;
-		}
-	}
-	if(interpreter_parent->base_object->get<Object>()->has(key)) {
-		return interpreter_parent->base_object->get<Object>()->get_known(key);
-	}
-	return ehmember_p(nullptr);
-}
-
-bool ehobj_t::inherits(const ehval_p obj, const EHInterpreter *interpreter_parent) const {
-	if(interpreter_parent->base_object == obj) {
-		return true;
-	}
-	for(const auto &i : super) {
-		if(i == obj || i->get<Object>()->inherits(obj, interpreter_parent)) {
-			return true;
-		}
-	}
-	return false;
-}
-
-ehobj_t *ehobj_t::get_parent() const {
-	if(this->parent.null()) {
-		return nullptr;
-	} else {
-		return this->parent->get<Object>();
-	}
-}
-
-std::set<std::string> ehobj_t::member_set(const EHInterpreter *interpreter_parent) const {
-	std::set<std::string> out;
-	for(auto &i : this->members) {
-		out.insert(i.first);
-	}
-	for(auto &super_class : super) {
-		auto member_set = super_class->get<Object>()->member_set(nullptr);
-		out.insert(member_set.begin(), member_set.end());
-	}
-	if(interpreter_parent != nullptr) {
-		ehobj_t *base_object = interpreter_parent->base_object->get<Object>();
-		auto object_set = base_object->member_set(nullptr);
-		out.insert(object_set.begin(), object_set.end());
-	}
-	return out;
-}
-
-bool ehobj_t::context_compare(const ehcontext_t &key, const class EHI *ehi) const {
-	// in global context, we never have access to private stuff
-	if(key.object->is_a<Null>()) {
-		return false;
-	} else if(key.scope->get<Object>() == this) {
-		return true;
-	} else if(key.object->is_a<Object>()) {
-		// this may fail when the key.object is not an Object (i.e., )
-		ehobj_t *key_obj = key.object->get<Object>();
-		return (type_id == key_obj->type_id) || this->context_compare(ehcontext_t(key_obj->parent, key_obj->parent), ehi);
-	} else {
-		const unsigned int key_id = ehi->get_parent()->repo.get_type_id(key.object);
-		return type_id == key_id;
-	}
-}
-
-// non-const methods
-void ehobj_t::add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *interpreter_parent, unsigned int member_id) {
-	auto e = object_data->get<Enum>();
-
-	// insert object into the Enum object
-	member_id = e->add_member(name, params, member_id);
-
-	// insert member into the class
-	auto ei = new Enum_Instance::t(type_id, member_id, static_cast<unsigned int>(params.size()), nullptr);
-	auto ei_obj = Enum_Instance::make(ei, interpreter_parent);
-	ehmember_p member = ehmember_t::make(attributes_t::make_const(), ei_obj);
-	insert(name, member);
-}
-
-void ehobj_t::register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHInterpreter *interpreter_parent) {
-	ehval_p func = interpreter_parent->make_method(method);
-	this->register_value(name, func, attributes);
-}
-
-void ehobj_t::register_value(const std::string &name, ehval_p value, const attributes_t attributes) {
-	ehmember_p member(attributes, value);
-	this->insert(name, member);
-}
-
-unsigned int ehobj_t::register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, EHInterpreter *interpreter_parent) {
-	ehobj_t *newclass = new ehobj_t();
-	ehval_p new_value = Object::make(newclass, interpreter_parent);
-
-	// register class
-	newclass->type_id = interpreter_parent->repo.register_class(name, new_value);
-
-	newclass->parent = interpreter_parent->global_object;
-
-	init_func(newclass, interpreter_parent);
-
-	ehmember_p member = ehmember_t::make(attributes, new_value);
-	this->insert(name, member);
-	return newclass->type_id;
-}
-
-unsigned int ehobj_t::register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent) {
-	const ehval_p ret = Enum::make_enum_class(name, interpreter_parent->global_object, interpreter_parent);
-	auto enum_obj = ret->get<Object>();
-
-	init_func(enum_obj, interpreter_parent);
-
-	ehmember_p member = ehmember_t::make(attributes, ret);
-	insert(name, member);
-
-	return enum_obj->type_id;
-}
-
-ehobj_t::~ehobj_t() {
-	// Commenting out for now until I figure out how to get it working.
-	//ehi->call_method_obj(this, "finalize", 0, nullptr, nullptr);
+ehval_p ehval_t::unbind_binding_to_self(ehval_p value) {
+    if(value->is_a<Binding>()) {
+        if(value->get<Binding>()->object_data == this) {
+            return value->get<Binding>()->method;
+        }
+    }
+	return value;
 }
 
 /*

@@ -7,8 +7,8 @@
 #include "GarbageCollector.hpp"
 
 EH_INITIALIZER(GarbageCollector) {
-	REGISTER_METHOD(GarbageCollector, run);
-	REGISTER_METHOD(GarbageCollector, stats);
+	REGISTER_STATIC_METHOD(GarbageCollector, run);
+	REGISTER_STATIC_METHOD(GarbageCollector, stats);
 }
 
 /*

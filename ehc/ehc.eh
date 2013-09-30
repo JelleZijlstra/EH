@@ -42,7 +42,7 @@ include 'preprocessor.eh'
 include 'compiler.eh'
 include '../lib/argument_parser.eh'
 
-private replace_extension = func: file, extension
+private replace_extension(file, extension) = do
 	private len = file.length()
 	if len > 3 and file.slice(-3, max: null) == '.eh'
 		private base = file.slice(0, max: len - 3)
@@ -52,13 +52,13 @@ private replace_extension = func: file, extension
 	end
 end
 
-private main = func: argc, argv
+private main(argc, argv) = do
 	private ap = ArgumentParser.new("Compiler for the EH language", (
 		{name: "--output", synonyms: ['-o'], desc: "Output file to use", nargs: 1, dflt: null},
 		{name: "input", desc: "Input file"},
 		{name: "--to-cpp", synonyms: ['-c'], desc: "Output C++ code; do not compile to machine code", type: Bool, dflt: false},
 		{name: "--verbose", synonyms: ['-v'], desc: "Give verbose output", type: Bool, dflt: false},
-		{name: "--optimize", synonyms: ['-O'], desc: "Turn on optimizations", type: Bool, dflt: false} \
+		{name: "--optimize", synonyms: ['-O'], desc: "Turn on optimizations", type: Bool, dflt: false}
 	))
 	private args = ap.parse argv
 	private verbose = args->'verbose'

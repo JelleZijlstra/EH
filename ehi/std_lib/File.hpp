@@ -5,11 +5,26 @@
 
 EH_CLASS(File) {
 public:
-	typedef FILE *type;
+    class t {
+    public:
+        FILE *fd;
+        bool open;
+
+        t() : fd(nullptr), open(false) {}
+
+        ~t() {
+            if(open) {
+                fclose(fd);
+            }
+        }
+    };
+	typedef t *type;
 	type value;
 
-	File() : value(nullptr) {}
-	virtual ~File() {}
+	File(type val) : value(val) {}
+	virtual ~File() {
+        delete value;
+    }
 
 	virtual bool belongs_in_gc() const {
 		return false;
@@ -19,7 +34,7 @@ private:
 	File operator=(const File&);
 };
 
-EH_METHOD(File, initialize);
+EH_METHOD(File, operator_colon);
 EH_METHOD(File, open);
 EH_METHOD(File, getc);
 EH_METHOD(File, gets);

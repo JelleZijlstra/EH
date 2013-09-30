@@ -3,6 +3,6 @@
 
 void throw_LoopError(const char *msg, int level, EHI *ehi);
 
-EH_METHOD(LoopError, initialize);
+EH_METHOD(LoopError, operator_colon);
 
 EH_INITIALIZER(LoopError);

@@ -21,8 +21,8 @@ zval *hashtozval(Hash::ehhash_t *hash, EHI *ehi);
 zval *tupletozval(Tuple::t *tuple, EHI *ehi);
 
 zval *ehtozval(ehval_p in, EHI *ehi) {
-	if(in->deep_is_a<Map>()) {
-		return maptozval(in->data()->get<Map>(), ehi);
+	if(in->is_a<Map>()) {
+		return maptozval(in->get<Map>(), ehi);
 	} else if(in->is_a<Hash>()) {
 		return hashtozval(in->get<Hash>(), ehi);
 	} else if(in->is_a<Tuple>()) {

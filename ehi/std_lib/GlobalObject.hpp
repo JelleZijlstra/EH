@@ -5,22 +5,6 @@
  */
 #include "std_lib_includes.hpp"
 
-EH_CLASS(GlobalObject) {
-public:
-	typedef void *type;
-	type value;
-
-	virtual bool belongs_in_gc() const {
-		return false;
-	}
-
-	GlobalObject() {}
-
-	static ehval_p make() {
-		return new GlobalObject();
-	}
-};
-
 EH_METHOD(GlobalObject, toString);
 EH_METHOD(GlobalObject, getinput);
 EH_METHOD(GlobalObject, printvar);
@@ -36,5 +20,6 @@ EH_METHOD(GlobalObject, shell);
 EH_METHOD(GlobalObject, exit);
 
 EH_INITIALIZER(GlobalObject);
+void ehinstance_init_GlobalObject(ehobj_t *obj, EHInterpreter *parent);
 
 #endif /* EH_GLOBAL_OBJECT_H_ */

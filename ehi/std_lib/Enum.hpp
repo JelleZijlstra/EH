@@ -5,6 +5,8 @@
 
 #include "../eh_libclasses.hpp"
 
+#define EH_ENUM_INITIALIZER(name) void ehinit_ ## name (Enum::t *cls, EHInterpreter *parent)
+
 EH_CLASS(Enum) {
 public:
 	class member_info {
@@ -19,35 +21,22 @@ public:
 		const std::string to_string() const;
 	};
 
-	class t {
-	private:
-		size_t nmembers;
-		unsigned int next_id;
-
+	class t : public ehclass_t {
 	public:
-		std::unordered_map<unsigned int, member_info> member_map;
+		size_t n_enum_members;
+
+		std::unordered_map<unsigned int, member_info> enum_members;
 		const std::string name;
 
 		const std::string to_string() const;
 
 		size_t size() const {
-			return nmembers;
+			return n_enum_members;
 		}
 
-		t(const std::string &_name) : nmembers(0), next_id(0), member_map(), name(_name) {}
+		t(const std::string &_name) : ehclass_t(), n_enum_members(0), enum_members(), name(_name) {}
 
-		unsigned int add_member(const std::string &member_name, const std::vector<std::string> &members, unsigned int id = 0) {
-			member_info member(member_name, members);
-
-			if(id == 0) {
-				id = next_id;
-			}
-			member_map[id] = member;
-
-			next_id = id + 1;
-			nmembers++;
-			return id;
-		}
+		void add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *interpreter_parent, unsigned int member_id = 0);
 	};
 
 	typedef t *type;
@@ -63,12 +52,49 @@ public:
 
 	Enum(type val) : value(val) {}
 
+    virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+    	if(value->has(name)) {
+    		return value->get_known(name);
+    	} else {
+    		return nullptr;
+    	}
+    }
+
+    virtual void set_member_directly(const char *name, ehmember_p new_value, ehcontext_t context, class EHI *ehi) {
+    	value->insert(name, new_value);
+    }
+
+    virtual ehval_p get_parent_scope() {
+    	return value->parent;
+    }
+
+    virtual ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+        return value->get_instance_member_current_object(name, context, ehi);
+    }
+
+    virtual const std::list<ehval_w> get_super_classes() {
+        return value->super;
+    }
+
 	static ehval_p make(const std::string name) {
 		return static_cast<ehval_t *>(new Enum(new t(name)));
 	}
 
+    virtual void set_instance_member_directly(const char *name, ehmember_p new_value, ehcontext_t context, class EHI *ehi) {
+        value->instance_members[name] = new_value;
+    }
+
+    virtual bool has_instance_members() const {
+        return true;
+    }
+
 	static ehval_p make_enum_class(const char *name, ehval_p scope, EHInterpreter *parent);
 };
+
+typedef void (*enum_initializer)(Enum::t *obj, EHInterpreter *parent);
+
+unsigned int register_enum_class(ehobj_t *cls, const enum_initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent);
+
 
 EH_CHILD_CLASS(Enum, Instance) {
 public:
@@ -98,12 +124,12 @@ public:
 		}
 
 		const ehval_p get_parent_enum(EHI *ehi) const {
-			return ehi->get_parent()->repo.get_object(type_id)->data();
+			return ehi->get_parent()->repo.get_object(type_id);
 		}
 
 		const Enum::member_info &get_member_info(EHI *ehi) const {
 			Enum::t *parent_enum = get_parent_enum(ehi)->get<Enum>();
-			return parent_enum->member_map[member_id];
+			return parent_enum->enum_members[member_id];
 		}
 
 		bool is_constructor() const {
@@ -152,21 +178,27 @@ public:
 	virtual std::string decompile(int level) const override {
 		return value->decompile(level);
 	}
+
+	virtual unsigned int get_type_id(const class EHInterpreter *parent) {
+		return value->type_id;
+	}
 private:
-	Enum_Instance(const Enum_Instance &) =delete;
-	Enum_Instance operator=(const Enum_Instance &) =delete;
+	Enum_Instance(const Enum_Instance &) = delete;
+	Enum_Instance operator=(const Enum_Instance &) = delete;
 };
 
 EH_INITIALIZER(Enum);
 
-EH_METHOD(Enum, new);
-EH_METHOD(Enum, toString);
 EH_METHOD(Enum, operator_colon);
-EH_METHOD(Enum, compare);
-EH_METHOD(Enum, typeId);
-EH_METHOD(Enum, type);
-EH_METHOD(Enum, isConstructor);
-EH_METHOD(Enum, operator_arrow);
-EH_METHOD(Enum, map);
+EH_METHOD(Enum, toString);
+
+EH_INITIALIZER(Enum_Instance);
+
+EH_METHOD(Enum_Instance, operator_colon);
+EH_METHOD(Enum_Instance, compare);
+EH_METHOD(Enum_Instance, isConstructor);
+EH_METHOD(Enum_Instance, operator_arrow);
+EH_METHOD(Enum_Instance, map);
+EH_METHOD(Enum_Instance, toString);
 
 #endif /* EH_ENUM_H_ */

@@ -14,11 +14,11 @@ ehval_p Binding::make(ehval_p obj, ehval_p method, EHInterpreter *parent) {
 }
 
 EH_INITIALIZER(Binding) {
+	REGISTER_STATIC_METHOD_RENAME(Binding, new, "operator()");
 	REGISTER_METHOD_RENAME(Binding, operator_colon, "operator()");
 	REGISTER_METHOD(Binding, toString);
 	REGISTER_METHOD(Binding, decompile);
 	REGISTER_METHOD(Binding, bindTo);
-	REGISTER_METHOD(Binding, new);
 	REGISTER_METHOD(Binding, method);
 	REGISTER_METHOD(Binding, object);
 }
@@ -30,7 +30,6 @@ EH_INITIALIZER(Binding) {
  */
 EH_METHOD(Binding, new) {
 	throw_MiscellaneousError("Creating a binding directly is not allowed", ehi);
-	return nullptr;
 }
 
 /*
@@ -40,7 +39,7 @@ EH_METHOD(Binding, new) {
  */
 EH_METHOD(Binding, decompile) {
 	ASSERT_OBJ_TYPE(Binding, "Binding.decompile");
-	std::string reduction = obj->get<Binding>()->method->data()->decompile(0);
+	std::string reduction = obj->get<Binding>()->method->decompile(0);
 	return String::make(strdup(reduction.c_str()));
 }
 

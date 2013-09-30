@@ -9,12 +9,12 @@
 EH_NORETURN void throw_error(const char *class_name, ehval_p args, EHI *ehi) {
 	ehval_p global_object = ehi->get_parent()->global_object;
 	ehval_p class_member = global_object->get_property(class_name, global_object, ehi);
-	ehval_p e = ehi->call_method(class_member, "new", args, global_object);
+	ehval_p e = ehi->call_method(class_member, "operator()", args, global_object);
 	throw eh_exception(e);
 }
 
 EH_INITIALIZER(Exception) {
-	REGISTER_METHOD(Exception, initialize);
+	REGISTER_CONSTRUCTOR(Exception);
 	REGISTER_METHOD(Exception, toString);
 }
 
@@ -23,8 +23,8 @@ EH_INITIALIZER(Exception) {
  * @argument Exception message
  * @returns N/A
  */
-EH_METHOD(Exception, initialize) {
-	args->assert_type<String>("Exception.initialize", ehi);
+EH_METHOD(Exception, operator_colon) {
+	args->assert_type<String>("Exception()", ehi);
 	return Exception::make(strdup(args->get<String>()));
 }
 
@@ -36,6 +36,6 @@ EH_METHOD(Exception, initialize) {
  */
 EH_METHOD(Exception, toString) {
 	args->assert_type<Null>("Exception.toString", ehi);
-	ASSERT_RESOURCE(Exception, "Exception.toString");
-	return String::make(strdup(data));
+	obj->assert_type<Exception>("Exception.toString", ehi);
+	return String::make(strdup(obj->get<Exception>()));
 }

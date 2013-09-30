@@ -34,7 +34,7 @@ private:
 	Integer(int i) : value(i) {}
 };
 
-EH_METHOD(Integer, initialize);
+EH_METHOD(Integer, operator_colon);
 EH_METHOD(Integer, operator_plus);
 EH_METHOD(Integer, operator_minus);
 EH_METHOD(Integer, operator_times);
@@ -94,7 +94,7 @@ public:
 	}
 };
 
-EH_METHOD(Integer_Iterator, initialize);
+EH_METHOD(Integer_Iterator, operator_colon);
 EH_METHOD(Integer_Iterator, hasNext);
 EH_METHOD(Integer_Iterator, next);
 

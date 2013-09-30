@@ -10,6 +10,7 @@
 #include "Function.hpp"
 #include "ArgumentError.hpp"
 #include "Binding.hpp"
+#include "ConstError.hpp"
 #include "MiscellaneousError.hpp"
 #include "SuperClass.hpp"
 
@@ -34,7 +35,7 @@ EH_METHOD(Function, operator_colon) {
 }
 
 ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p args, EHI *ehi) {
-	Function::t *f = function_object->data()->get<Function>();
+	Function::t *f = function_object->get<Function>();
 
 	if(base_object->is_a<SuperClass>()) {
 		base_object = base_object->get<SuperClass>();
@@ -44,20 +45,19 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 		case lib_e:
 			return f->libmethod_pointer(base_object, args, ehi);
 		case compiled_e: {
-			ehval_p newcontext = ehi->get_parent()->instantiate(function_object);
-			newcontext->get<Object>()->object_data = function_object->get<Object>()->object_data;
+			ehval_p newcontext = Function_Scope::make(f->parent, ehi->get_parent());
 			return f->compiled_pointer(base_object, args, ehi, ehcontext_t(base_object, newcontext));
 		}
 		case user_e: {
-			ehval_p newcontext = ehi->get_parent()->instantiate(function_object);
-			newcontext->get<Object>()->object_data = function_object->get<Object>()->object_data;
+			ehval_p newcontext = Function_Scope::make(f->parent, ehi->get_parent());
+			ehcontext_t context(base_object, newcontext);
 
 			// set arguments
 			attributes_t attributes(private_e, nonstatic_e, nonconst_e);
-			ehi->set(f->args, args, &attributes, ehcontext_t(base_object, newcontext));
+			ehi->set(f->args, args, &attributes, context);
 
 			// execute the function
-			ehval_p ret = ehi->eh_execute(f->code, ehcontext_t(base_object, newcontext));
+			ehval_p ret = ehi->eh_execute(f->code, context);
 			ehi->not_returning();
 			return ret;
 		}
@@ -139,4 +139,24 @@ EH_METHOD(Function, code) {
 	} else {
 		throw_ArgumentError("Cannot give code for non-user function", "Function.code", obj, ehi);
 	}
+}
+
+EH_INITIALIZER(Function_Scope) {
+	// no methods
+}
+
+void Function_Scope::set_member_directly(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
+    // if a property with this name already exists, confirm that it is not const or inaccessible
+    value->insert(name, member);
+}
+ehmember_p Function_Scope::get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+	if(value->has(name)) {
+		return value->get(name);
+	} else {
+		return nullptr;
+	}
+}
+
+ehval_p Function_Scope::make(ehval_p parent, EHInterpreter *interpreter_parent) {
+	return interpreter_parent->allocate<Function_Scope>(new t(parent));
 }

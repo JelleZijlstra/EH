@@ -31,8 +31,11 @@ public:
 			ehlibmethod_t libmethod_pointer;
 			compiled_method compiled_pointer;
 		};
+		ehval_p parent;
 
 		t(functype_enum _type = user_e) : type(_type), args(nullptr), code(nullptr), libmethod_pointer(nullptr) {}
+
+		t(ehlibmethod_t pointer) : type(lib_e), args(), code(), libmethod_pointer(pointer) {}
 
 		~t() {}
 
@@ -95,6 +98,61 @@ public:
 	static ehval_p exec(ehval_p base_object, ehval_p function_object, ehval_p args, EHI *ehi);
 
 	static ehval_p make(t *val, EHInterpreter *parent);
+};
+
+EH_CHILD_CLASS(Function, Scope) {
+public:
+	class t {
+	public:
+		obj_map members;
+		ehval_p parent_scope;
+
+		t(ehval_p parent) : members(), parent_scope(parent) {}
+
+		bool has(const std::string &key) {
+			return members.count(key) != 0;
+		}
+
+		void insert(const std::string &key, ehmember_p value) {
+			members[key] = value;
+		}
+
+		ehmember_p get(const std::string &key) {
+			return members.at(key);
+		}
+	};
+
+	typedef t *type;
+	type value;
+
+	Function_Scope(type val) : value(val) {}
+
+	virtual ~Function_Scope() {
+		delete value;
+	}
+
+	virtual bool belongs_in_gc() const override {
+		return true;
+	}
+
+	virtual std::list<ehval_p> children() const override {
+		std::list<ehval_p> out;
+		for(auto &pair : value->members) {
+			out.push_back(pair.second->value);
+		}
+		out.push_back(value->parent_scope);
+		return out;
+	}
+
+	virtual bool can_access_private(ehcontext_t context, class EHI *ehi) override {
+		return ehval_p(this) == context.scope;
+	}
+
+	virtual void set_member_directly(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
+
+	virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi);
+
+	static ehval_p make(ehval_p parent, EHInterpreter *interpreter_parent);
 };
 
 EH_METHOD(Function, operator_colon);

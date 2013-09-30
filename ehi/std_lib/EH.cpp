@@ -6,16 +6,17 @@
 #include "EH.hpp"
 #include "Array.hpp"
 #include "Attribute.hpp"
+#include "Function.hpp"
 #include "Node.hpp"
 #include "../eh.bison.hpp"
 #include "../eh.flex.hpp"
 
 EH_INITIALIZER(EH) {
-	REGISTER_METHOD(EH, eval);
-	REGISTER_METHOD(EH, collectGarbage);
-	REGISTER_METHOD(EH, contextName);
-	REGISTER_METHOD(EH, parse);
-	REGISTER_METHOD(EH, lex);
+	REGISTER_STATIC_METHOD(EH, eval);
+	REGISTER_STATIC_METHOD(EH, collectGarbage);
+	REGISTER_STATIC_METHOD(EH, contextName);
+	REGISTER_STATIC_METHOD(EH, parse);
+	REGISTER_STATIC_METHOD(EH, lex);
 }
 
 /*
@@ -25,10 +26,7 @@ EH_INITIALIZER(EH) {
  */
 EH_METHOD(EH, eval) {
 	ehval_p arg = ehi->toString(args, obj);
-	ehobj_t *scope_obj = new ehobj_t();
-	ehval_p scope = Object::make(scope_obj, ehi->get_parent());
-	scope_obj->type_id = 1; // Object
-	scope_obj->parent = ehi->global();
+	ehval_p scope = Function_Scope::make(ehi->global(), ehi->get_parent());
 	ehi->spawning_parse_string(arg->get<String>(), scope);
 	return scope;
 }

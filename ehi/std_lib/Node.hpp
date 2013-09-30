@@ -6,7 +6,7 @@
 
 class Node : public Enum_Instance::t {
 public:
-	const static unsigned int node_type_id = 6;
+	const static unsigned int node_type_id = 7;
 
 	Node(unsigned int op, unsigned int nparas) : Enum_Instance::t(node_type_id, op, nparas, nullptr) {
 		if(nparas > 0) {
@@ -37,7 +37,7 @@ Node *eh_addnode(unsigned int opcode, ehval_p first, ehval_p second, ehval_p thi
 
 #include "../eh_libclasses.hpp"
 
-EH_INITIALIZER(Node);
+EH_ENUM_INITIALIZER(Node);
 
 EH_METHOD(Node, execute);
 EH_METHOD(Node, decompile);
@@ -70,7 +70,7 @@ public:
 
 EH_INITIALIZER(Node_Context);
 
-EH_METHOD(Node_Context, initialize);
+EH_METHOD(Node_Context, operator_colon);
 EH_METHOD(Node_Context, getObject);
 EH_METHOD(Node_Context, getScope);
 

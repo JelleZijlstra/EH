@@ -34,7 +34,7 @@ private:
 	Float(float f) : value(f) {}
 };
 
-EH_METHOD(Float, initialize);
+EH_METHOD(Float, operator_colon);
 EH_METHOD(Float, operator_plus);
 EH_METHOD(Float, operator_minus);
 EH_METHOD(Float, operator_times);

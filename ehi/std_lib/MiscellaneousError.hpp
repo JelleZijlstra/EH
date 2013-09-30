@@ -1,7 +1,7 @@
 #include "std_lib_includes.hpp"
 
-void throw_MiscellaneousError(const char *message, EHI *ehi);
+EH_NORETURN void throw_MiscellaneousError(const char *message, EHI *ehi);
 
-EH_METHOD(MiscellaneousError, initialize);
+EH_METHOD(MiscellaneousError, operator_colon);
 
 EH_INITIALIZER(MiscellaneousError);

@@ -8,7 +8,7 @@
 #include "MiscellaneousError.hpp"
 
 EH_INITIALIZER(Integer) {
-	REGISTER_METHOD(Integer, initialize);
+	REGISTER_CONSTRUCTOR(Integer);
 	REGISTER_METHOD_RENAME(Integer, operator_plus, "operator+");
 	REGISTER_METHOD_RENAME(Integer, operator_minus, "operator-");
 	REGISTER_METHOD_RENAME(Integer, operator_times, "operator*");
@@ -36,7 +36,7 @@ EH_INITIALIZER(Integer) {
 	REGISTER_CLASS(Integer, Iterator);
 }
 
-EH_METHOD(Integer, initialize) {
+EH_METHOD(Integer, operator_colon) {
 	return ehi->toInteger(args, obj);
 }
 EH_METHOD(Integer, operator_plus) {
@@ -228,8 +228,7 @@ EH_METHOD(Integer, sqrt) {
 }
 EH_METHOD(Integer, getIterator) {
 	ASSERT_NULL_AND_TYPE(Integer, "Integer.getIterator");
-	ehval_p class_obj = ehi->get_parent()->repo.get_object(obj);
-	ehval_p iterator = class_obj->get_property("Iterator", obj, ehi);
+	ehval_p iterator = obj->get_type_object(ehi->get_parent())->get_property("Iterator", obj, ehi);
 	return ehi->call_method(iterator, "new", obj, obj);
 }
 
@@ -240,8 +239,8 @@ int Integer_Iterator::t::next() {
 	assert(has_next());
 	return this->current++;
 }
-EH_METHOD(Integer_Iterator, initialize) {
-	args->assert_type<Integer>("Integer,Iterator.initialize", ehi);
+EH_METHOD(Integer_Iterator, operator_colon) {
+	args->assert_type<Integer>("Integer.Iterator()", ehi);
 	return Integer_Iterator::make(args->get<Integer>());
 }
 EH_METHOD(Integer_Iterator, hasNext) {
@@ -258,7 +257,7 @@ EH_METHOD(Integer_Iterator, next) {
 	return Integer::make(data->next());
 }
 EH_INITIALIZER(Integer_Iterator) {
-	REGISTER_METHOD(Integer_Iterator, initialize);
+	REGISTER_CONSTRUCTOR(Integer_Iterator);
 	REGISTER_METHOD(Integer_Iterator, hasNext);
 	REGISTER_METHOD(Integer_Iterator, next);
 }

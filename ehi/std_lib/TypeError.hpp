@@ -3,14 +3,14 @@
 #ifndef EH_TYPE_ERROR_H_
 #define EH_TYPE_ERROR_H_
 
-void throw_TypeError(const char *msg, ehval_p obj, class EHI *ehi);
+[[noreturn]] void throw_TypeError(const char *msg, ehval_p obj, class EHI *ehi);
 
 // common variants
 static inline void throw_TypeError_Array_key(ehval_p obj, EHI *ehi) {
 	throw_TypeError("Array key must be a String or Integer", obj, ehi);
 }
 
-EH_METHOD(TypeError, initialize);
+EH_METHOD(TypeError, operator_colon);
 
 EH_INITIALIZER(TypeError);
 

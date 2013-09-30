@@ -12,11 +12,11 @@ void throw_LoopError(const char *msg, int level, EHI *ehi) {
 }
 
 EH_INITIALIZER(LoopError) {
-	REGISTER_METHOD(LoopError, initialize);
+	REGISTER_CONSTRUCTOR(LoopError);
 	INHERIT_LIBRARY(Exception);
 }
 
-EH_METHOD(LoopError, initialize) {
+EH_METHOD(LoopError, operator_colon) {
 	args->assert_type<Tuple>("LoopError.initialize", ehi);
 	ehval_p msg = args->get<Tuple>()->get(0);
 	msg->assert_type<String>("LoopError.initialize", ehi);

@@ -55,7 +55,7 @@ public:
 		return parent->allocate<FixedArray>(new t(size));
 	}
 };
-EH_METHOD(FixedArray, initialize);
+EH_METHOD(FixedArray, operator_colon);
 EH_METHOD(FixedArray, operator_arrow);
 EH_METHOD(FixedArray, operator_arrow_equals);
 EH_METHOD(FixedArray, size);

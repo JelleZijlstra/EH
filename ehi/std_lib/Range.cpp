@@ -107,7 +107,7 @@ EH_METHOD(Range, compare) {
 
 EH_METHOD(Range, getIterator) {
 	ASSERT_NULL_AND_TYPE(Range, "Range.getIterator");
-	ehval_p class_member = obj->get_property("Iterator", obj, ehi);
+	ehval_p class_member = obj->get_type_object(ehi->get_parent())->get_property("Iterator", obj, ehi);
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 

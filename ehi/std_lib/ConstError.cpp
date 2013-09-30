@@ -15,7 +15,7 @@ void throw_ConstError(ehval_p object, const char *name, EHI *ehi) {
 }
 
 EH_INITIALIZER(ConstError) {
-	REGISTER_METHOD(ConstError, initialize);
+	REGISTER_CONSTRUCTOR(ConstError);
 	INHERIT_LIBRARY(Exception);
 }
 
@@ -25,7 +25,7 @@ EH_INITIALIZER(ConstError) {
  * @argument Tuple of 2: object owning the property and name of the property
  * @returns N/A
  */
-EH_METHOD(ConstError, initialize) {
+EH_METHOD(ConstError, operator_colon) {
 	ASSERT_NARGS(2, "ConstError.initialize");
 	ehval_p object = args->get<Tuple>()->get(0);
 	ehval_p name = args->get<Tuple>()->get(1);
@@ -33,7 +33,7 @@ EH_METHOD(ConstError, initialize) {
 	obj->set_property("object", object, ehi->global(), ehi);
 	obj->set_property("name", name, ehi->global(), ehi);
 	std::ostringstream exception_msg;
-	const std::string type_name = ehi->get_parent()->repo.get_name(object);
+	const std::string type_name = ehi->get_parent()->repo.get_name(object->get_type_id(ehi->get_parent()));
 	exception_msg << "Cannot set constant member " << name->get<String>() << " in object of type " << type_name;
 	exception_msg << ": " << ehi->toString(object, ehi->global())->get<String>();
 	return Exception::make(strdup(exception_msg.str().c_str()));

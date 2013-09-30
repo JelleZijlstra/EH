@@ -5,9 +5,11 @@
 #include <unordered_set>
 #include <vector>
 
-#define EH_CLASS(cname) class cname; \
+#define EH_CLASS_INHERIT(cname, inherited) class cname; \
 	template<> inline const char *ehval_t::name<cname>() { return #cname; } \
-	class cname : public ehval_t
+	class cname : public inherited
+
+#define EH_CLASS(cname) EH_CLASS_INHERIT(cname, ehval_t)
 
 // attributes of class members
 enum visibility_enum {
@@ -93,6 +95,9 @@ public:
 		bool isconst() const {
 			return this->attribute.isconst == const_e;
 		}
+		bool isprivate() const {
+			return this->attribute.visibility == private_e;
+		}
 
 		static ehmember_p make(attributes_t attribute, ehval_p value) {
 			ehmember_p out(attribute, value);
@@ -146,15 +151,6 @@ public:
 	}
 
 	template<class T>
-	typename T::type get_deep();
-
-	template<class T>
-	typename T::type assert_deep(const char *method, class EHI *ehi);
-
-	template<class T>
-	bool deep_is_a() const;
-
-	template<class T>
 	static inline const char *name() {
 		// should never happen; classes will provide specializations
 		throw;
@@ -165,10 +161,11 @@ public:
 	template<class T>
 	bool inherited_is_a() const;
 
-	unsigned int get_type_id(const class EHInterpreter *parent);
+	virtual unsigned int get_type_id(const class EHInterpreter *parent);
 
-	ehval_p data();
-
+	/*
+	 * Comparison
+	 */
 	bool operator<(const ehval_p &rhs) const {
 		return compare(rhs) == -1;
 	}
@@ -198,11 +195,77 @@ public:
 	// Compare two ehval_ps (guaranteed to be of the same type)
 	int naive_compare(const ehval_p &rhs) const;
 
-	ehmember_p set_member(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
-	ehval_p get_property(const char *name, ehcontext_t context, class EHI *ehi);
-	ehval_p get_property_no_binding(const char *name, ehcontext_t context, class EHI *ehi);
+	void check_can_set_member(ehmember_p current_member, const char *name, ehcontext_t context, class EHI *ehi);
+	/*
+	 * Property access
+	 */
+
+	// set this member directly on the current object, without worrying about inheritance
+	void set_member(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
+
+	// set this property on this object, first looking for the property among inherited scopes
 	ehmember_p set_property(const char *name, ehval_p value, ehcontext_t context, class EHI *ehi);
-	ehval_p get_underlying_object(const class EHInterpreter *parent);
+
+	// set this member directly on the current object, without worrying about inheritance
+	void set_instance_member(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
+
+	// set this property on this object, first looking for the property among inherited scopes
+	ehmember_p set_instance_property(const char *name, ehval_p value, ehcontext_t context, class EHI *ehi);
+
+	// get the property of this name, creating a Binding for methods if necessary
+	ehval_p get_property(const char *name, ehcontext_t context, class EHI *ehi);
+
+	// same, but does not create a Binding
+	ehmember_p get_property_no_binding(const char *name, ehcontext_t context, class EHI *ehi);
+
+	// similar, but looks up the scope chain
+	ehmember_p get_property_up_scope_chain(const char *name, ehcontext_t context, class EHI *ehi);
+
+	// get a member on a class's prototype
+    virtual ehmember_p get_instance_member(const char *name, ehcontext_t context, class EHI *ehi, bool include_object = true);
+
+	// get the property of this name, only looking at the current object
+	virtual ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi);
+
+	// get the underlying type object for this value
+	virtual ehval_p get_type_object(const class EHInterpreter *parent);
+
+	// get the property of this name, only looking at the current object
+	virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi);
+
+	// set this member directly, with no further checks
+	virtual void set_member_directly(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
+
+	// set this member directly, with no further checks
+	virtual void set_instance_member_directly(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
+
+	virtual const std::list<ehval_w> get_super_classes() {
+		return std::list<ehval_w>();
+	}
+
+	// returns the parent scope of the current object
+	virtual ehval_p get_parent_scope() {
+		return nullptr;
+	}
+
+	// visibility
+	virtual bool can_access_private(ehcontext_t context, class EHI *ehi);
+
+	/*
+	 * Permissions
+	 */
+	virtual bool has_instance_members() const {
+		return false;
+	}
+	virtual bool can_create_property() {
+		return false;
+	}
+	virtual bool can_set_property() {
+		return false;
+	}
+
+protected:
+	ehval_p unbind_binding_to_self(ehval_p value);
 };
 
 typedef ehval_t::ehval_p ehval_p;
@@ -217,208 +280,6 @@ typedef ehval_p (*ehlibmethod_t)(ehval_p, ehval_p, class EHI *);
 
 typedef ehmember_t::ehmember_p ehmember_p;
 
-// EH object
-class ehobj_t {
-public:
-	/*
-	 * typedefs
-	 */
-	typedef std::map<const std::string, ehmember_p> obj_map;
-	typedef void (*initializer)(ehobj_t *obj, EHInterpreter *parent);
-
-	/*
-	 * properties
-	 */
-	obj_map members;
-	// the object's state data
-	ehval_w object_data;
-	// the type
-	unsigned int type_id;
-	// for scoping
-	ehval_w parent;
-	// inheritance
-	std::list<ehval_w> super;
-
-	/*
-	 * constructor etcetera
-	 */
-	ehobj_t() : members(), object_data(), type_id(0), parent(), super() {}
-	virtual ~ehobj_t();
-
-	// ehobj_t should never be handled directly
-	ehobj_t(const ehobj_t&) = delete;
-	ehobj_t operator=(const ehobj_t&) = delete;
-
-	/*
-	 * const methods
-	 */
-	ehmember_p get_recursive(const char *name, const ehcontext_t context) const;
-	bool context_compare(const ehcontext_t &key, const EHI *ehi) const;
-
-	bool inherited_has(const std::string &key, const EHInterpreter *interpreter_parent) const;
-	ehmember_p inherited_get(const std::string &key, const EHInterpreter *interpreter_parent) const;
-	ehmember_p recursive_inherited_get(const std::string &key) const;
-
-	std::set<std::string> member_set(const EHInterpreter *interpreter_parent) const;
-	ehobj_t *get_parent() const;
-	bool inherits(const ehval_p obj, const EHInterpreter *interpreter_parent) const;
-
-
-	// inline methods
-	size_t size() const {
-		return members.size();
-	}
-
-	ehmember_p get_known(const std::string &key) const {
-		assert(this->has(key));
-		return members.at(key);
-	}
-
-	bool has(const std::string &key) const {
-		return members.count(key);
-	}
-
-	bool has(const char *key) const {
-		return has(std::string(key));
-	}
-
-	/*
-	 * non-const methods
-	 */
-
-	void insert(const std::string &name, ehmember_p value) {
-		members[name] = value;
-	}
-	void insert(const char *name, ehmember_p value) {
-		const std::string str(name);
-		this->insert(str, value);
-	}
-
-	void inherit(ehval_p superclass) {
-		super.push_front(superclass);
-	}
-
-	void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHInterpreter *interpreter_parent);
-	void register_value(const std::string &name, ehval_p value, const attributes_t attributes);
-	unsigned int register_enum_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent);
-	void add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *parent, unsigned int member_id = 0);
-	unsigned int register_member_class(const char *name, const ehobj_t::initializer init_func, const attributes_t attributes, EHInterpreter *interpreter_parent);
-
-	template<class T>
-	unsigned int register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class = nullptr);
-};
-
-EH_CLASS(Object) {
-public:
-	typedef ehobj_t *const type;
-	type value;
-
-	Object(ehobj_t *val) : value(val) {}
-
-	virtual ~Object() {
-		delete value;
-	}
-
-	virtual bool belongs_in_gc() const {
-		return true;
-	}
-
-	virtual std::list<ehval_p> children() const override {
-		std::list<ehval_p> out;
-		for(auto &kv : value->members) {
-			out.push_back(kv.second->value);
-		}
-		out.push_back(value->parent);
-		out.push_back(value->object_data);
-		for(auto &i : value->super) {
-			out.push_back(i);
-		}
-		assert(out.size() == value->members.size() + 2 + value->super.size());
-		return out;
-	}
-
-	virtual void printvar(printvar_set &set, int level, EHI *ehi) override;
-
-	static ehval_p make(ehobj_t *obj, EHInterpreter *parent);
-
-	template<class T>
-	bool inherits() const {
-		for(const auto &i : value->super) {
-			if(i->inherited_is_a<T>()) {
-				return true;
-			}
-		}
-		return false;
-	}
-};
-
-class type_repository {
-private:
-	class type_info {
-	public:
-		const bool is_inbuilt;
-		const std::string name;
-		ehval_p type_object;
-
-		type_info(bool ii, const std::string &n, ehval_p to) : is_inbuilt(ii), name(n), type_object(to) {}
-	};
-
-	std::unordered_map<std::type_index, unsigned int> inbuilt_types;
-
-	std::vector<type_info> types;
-
-public:
-	template<class T>
-	unsigned int register_inbuilt_class(ehval_p object) {
-		const unsigned int type_id = static_cast<unsigned int>(register_class(ehval_t::name<T>(), object, true));
-		inbuilt_types[std::type_index(typeid(T))] = type_id;
-		return type_id;
-	}
-
-	template<class T>
-	ehval_p get_primitive_class() const {
-		return types.at(get_primitive_id<T>()).type_object;
-	}
-
-	template<class T>
-	unsigned int get_primitive_id() const {
-		return inbuilt_types.at(std::type_index(typeid(T)));;
-	}
-
-	unsigned int get_type_id(const ehval_p obj) const {
-		return inbuilt_types.at(std::type_index(typeid(*obj.operator->())));
-	}
-
-	unsigned int register_class(const std::string &name, const ehval_p value, const bool is_inbuilt = false) {
-		const unsigned int type_id = static_cast<unsigned int>(types.size());
-		types.push_back(type_info(is_inbuilt, name, value));
-		return type_id;
-	}
-
-	const std::string &get_name(const ehval_p obj) const {
-		if(obj->is_a<Object>()) {
-			return types.at(obj->get<Object>()->type_id).name;
-		} else {
-			const unsigned int type_id = inbuilt_types.at(obj->type_index());
-			return types.at(type_id).name;
-		}
-	}
-	ehval_p get_object(const ehval_p obj) const {
-		if(obj->is_a<Object>()) {
-			return types.at(obj->get<Object>()->type_id).type_object;
-		} else {
-			const unsigned int type_id = inbuilt_types.at(obj->type_index());
-			return types.at(type_id).type_object;
-		}
-	}
-
-	ehval_p get_object(const unsigned int type_id) const {
-		return types.at(type_id).type_object;
-	}
-
-	type_repository() : inbuilt_types(), types() {}
-};
-
 class eh_exception : public std::exception {
 public:
 	ehval_p content;
@@ -427,55 +288,6 @@ public:
 
 	virtual ~eh_exception() throw();
 };
-
-template<class T>
-inline typename T::type ehval_t::get_deep() {
-	ehval_t *me = this;
-	if(typeid(*this) == typeid(Object)) {
-		me = get<Object>()->object_data.operator->();
-	}
-	return me->get<T>();
-}
-
-template<class T>
-inline typename T::type ehval_t::assert_deep(const char *method, class EHI *ehi) {
-	ehval_t *me = this;
-	if(typeid(*me) == typeid(Object)) {
-		me = get<Object>()->object_data.operator->();
-	}
-	me->assert_type<T>(method, ehi);
-	return me;
-}
-
-template<class T>
-inline bool ehval_t::deep_is_a() const {
-	if(this->is_a<Object>()) {
-		ehval_t *me = get<Object>()->object_data.operator->();
-		return me->is_a<T>();
-	} else {
-		return this->is_a<T>();
-	}
-}
-
-template<class T>
-inline bool ehval_t::inherited_is_a() const {
-	if(is_a<T>()) {
-		return true;
-	} else if(is_a<Object>()) {
-		auto obj = static_cast<const Object *>(this);
-		return obj->inherits<T>();
-	} else {
-		return false;
-	}
-}
-
-inline ehval_p ehval_t::data() {
-	if(this->is_a<Object>()) {
-		return get<Object>()->object_data;
-	} else {
-		return this;
-	}
-}
 
 inline int ehval_t::naive_compare(const ehval_p &rhs) const {
 	// just compare pointer values

@@ -4,7 +4,7 @@
 #include "EmptyIterator.hpp"
 
 EH_INITIALIZER(Map) {
-	REGISTER_METHOD(Map, initialize);
+	REGISTER_CONSTRUCTOR(Map);
 	REGISTER_METHOD_RENAME(Map, operator_arrow, "operator->");
 	REGISTER_METHOD_RENAME(Map, operator_arrow_equals, "operator->=");
 	REGISTER_METHOD(Map, has);
@@ -29,7 +29,8 @@ Map::t::t(EHI *ehi) : map(Comparator(ehi)) {}
 // }) {}
 
 
-EH_METHOD(Map, initialize) {
+EH_METHOD(Map, operator_colon) {
+	args->assert_type<Null>("Map()", ehi);
 	return Map::make(ehi);
 }
 
@@ -65,8 +66,7 @@ EH_METHOD(Map, has) {
 
 EH_METHOD(Map, getIterator) {
 	ASSERT_OBJ_TYPE(Map, "Map.getIterator");
-	ehval_p map_class = ehi->get_parent()->repo.get_object(obj);
-	ehval_p class_member = map_class->get_property("Iterator", obj, ehi);
+	ehval_p class_member = obj->get_type_object(ehi->get_parent())->get_property("Iterator", obj, ehi);
 	return ehi->call_method(class_member, "new", obj, obj);
 }
 
@@ -117,7 +117,7 @@ EH_METHOD(Map, compare) {
 }
 
 EH_INITIALIZER(Map_Iterator) {
-	REGISTER_METHOD(Map_Iterator, initialize);
+	REGISTER_CONSTRUCTOR(Map_Iterator);
 	REGISTER_METHOD(Map_Iterator, hasNext);
 	REGISTER_METHOD(Map_Iterator, next);
 	REGISTER_METHOD(Map_Iterator, peek);
@@ -148,8 +148,8 @@ ehval_p Map_Iterator::t::peek(EHI *ehi) const {
 	return Tuple::make(2, tuple, ehi->get_parent());
 }
 
-EH_METHOD(Map_Iterator, initialize) {
-	ASSERT_TYPE(args, Map, "Map.Iterator.initialize");
+EH_METHOD(Map_Iterator, operator_colon) {
+	ASSERT_TYPE(args, Map, "Map.Iterator()");
 	return Map_Iterator::make(args, ehi->get_parent());
 }
 EH_METHOD(Map_Iterator, hasNext) {

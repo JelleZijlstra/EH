@@ -11,6 +11,7 @@
 #include "Attribute.hpp"
 #include "Binding.hpp"
 #include "Bool.hpp"
+#include "Class.hpp"
 #include "ConstError.hpp"
 #include "EH.hpp"
 #include "Enum.hpp"
@@ -47,18 +48,25 @@
 
 #define GLOBAL_REGISTER_CLASS(name) obj->register_member_class<name>(ehinit_ ## name, #name, attributes_t::make_const(), parent)
 #define REGISTER_PURE_CLASS(name) obj->register_member_class(#name, ehinit_ ## name, attributes_t::make_const(), parent)
-#define REGISTER_ENUM_CLASS(name) obj->register_enum_class(ehinit_ ## name, #name, attributes_t::make_const(), parent)
+#define REGISTER_ENUM_CLASS(name) register_enum_class(obj, ehinit_ ## name, #name, attributes_t::make_const(), parent)
 
 EH_INITIALIZER(GlobalObject) {
+	cls->parent = nullptr;
+	// do nothing; everything is on the global instance
+}
+
+void ehinstance_init_GlobalObject(ehobj_t *obj, EHInterpreter *parent) {
 	/*
 	 * Initialization of base classes.
 	 */
-	parent->base_object = Object::make(new ehobj_t(), parent);
-	parent->function_object = Object::make(new ehobj_t(), parent);
+	parent->class_object = Class::make(new ehclass_t(), parent);
+	parent->base_object = Class::make(new ehclass_t(), parent);
+	parent->function_object = Class::make(new ehclass_t(), parent);
 	// Must be the first class registered
 	obj->register_member_class<Object>(ehinit_Object, "Object", attributes_t::make_const(), parent, parent->base_object);
 	// Must be registered before any methods are registered
 	obj->register_member_class<Function>(ehinit_Function, "Function", attributes_t::make_const(), parent, parent->function_object);
+	obj->register_member_class<Class>(ehinit_Class, "Class", attributes_t::make_const(), parent, parent->class_object);
 
 	// insert reference to global object
 	ehmember_p global = ehmember_t::make(attributes_t::make_const(), parent->global_object);
@@ -103,19 +111,20 @@ EH_INITIALIZER(GlobalObject) {
 	/*
 	 * Inititalize top-level methods.
 	 */
-	REGISTER_METHOD(GlobalObject, toString);
-	REGISTER_METHOD(GlobalObject, getinput);
-	REGISTER_METHOD(GlobalObject, printvar);
-	REGISTER_METHOD(GlobalObject, include);
-	REGISTER_METHOD(GlobalObject, pow);
-	REGISTER_METHOD(GlobalObject, log);
-	REGISTER_METHOD(GlobalObject, throw);
-	REGISTER_METHOD(GlobalObject, echo);
-	REGISTER_METHOD(GlobalObject, put);
-	REGISTER_METHOD(GlobalObject, handleUncaught);
-	REGISTER_METHOD(GlobalObject, workingDir);
-	REGISTER_METHOD(GlobalObject, shell);
-	REGISTER_METHOD(GlobalObject, exit);
+	ehobj_t *cls = obj;
+	REGISTER_STATIC_METHOD(GlobalObject, toString);
+	REGISTER_STATIC_METHOD(GlobalObject, getinput);
+	REGISTER_STATIC_METHOD(GlobalObject, printvar);
+	REGISTER_STATIC_METHOD(GlobalObject, include);
+	REGISTER_STATIC_METHOD(GlobalObject, pow);
+	REGISTER_STATIC_METHOD(GlobalObject, log);
+	REGISTER_STATIC_METHOD(GlobalObject, throw);
+	REGISTER_STATIC_METHOD(GlobalObject, echo);
+	REGISTER_STATIC_METHOD(GlobalObject, put);
+	REGISTER_STATIC_METHOD(GlobalObject, handleUncaught);
+	REGISTER_STATIC_METHOD(GlobalObject, workingDir);
+	REGISTER_STATIC_METHOD(GlobalObject, shell);
+	REGISTER_STATIC_METHOD(GlobalObject, exit);
 }
 
 /*
@@ -256,7 +265,8 @@ EH_METHOD(GlobalObject, put) {
  * @returns N/A
  */
 EH_METHOD(GlobalObject, handleUncaught) {
-	const std::string &type_string = ehi->get_parent()->repo.get_name(args);
+	const unsigned int type_id = args->get_type_id(ehi->get_parent());
+	const std::string &type_string = ehi->get_parent()->repo.get_name(type_id);
 	// we're in global context now. Remember this object, because otherwise the string may be freed before we're done with it.
 	ehval_p stringval = ehi->toString(args, ehi->global());
 	const char *msg = stringval->get<String>();

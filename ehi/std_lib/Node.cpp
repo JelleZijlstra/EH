@@ -10,7 +10,7 @@
 #include "Attribute.hpp"
 #include "../eh.bison.hpp"
 
-#define TOKEN(name, nparas) obj->add_enum_member(#name, vec ## nparas, parent, name)
+#define TOKEN(name, nparas) cls->add_enum_member(#name, vec ## nparas, parent, name)
 
 /*
  * The following tokens are not listed here, since they do not appear in the generated AST:
@@ -23,7 +23,7 @@ const std::vector<std::string> vec2 = {"parameter", "parameter"};
 const std::vector<std::string> vec3 = {"parameter", "parameter", "parameter"};
 const std::vector<std::string> vec4 = {"parameter", "parameter", "parameter", "parameter"};
 
-EH_INITIALIZER(Node) {
+EH_ENUM_INITIALIZER(Node) {
 	REGISTER_METHOD(Node, execute);
 	REGISTER_METHOD(Node, decompile);
 	TOKEN(T_IF, 3);
@@ -95,7 +95,6 @@ EH_INITIALIZER(Node) {
 
 EH_METHOD(Node, execute) {
 	ASSERT_OBJ_TYPE(Enum_Instance, "Node.execute");
-	args = args->data();
 	ASSERT_TYPE(args, Node_Context, "Node.execute");
 	return ehi->eh_execute(obj, *args->get<Node_Context>());
 }
@@ -479,7 +478,7 @@ Node *eh_addnode(unsigned int opcode, ehval_p first, ehval_p second, ehval_p thi
 }
 
 EH_INITIALIZER(Node_Context) {
-	REGISTER_METHOD(Node_Context, initialize);
+	REGISTER_METHOD(Node_Context, operator_colon);
 	REGISTER_METHOD(Node_Context, getObject);
 	REGISTER_METHOD(Node_Context, getScope);
 }
@@ -501,13 +500,12 @@ void Node_Context::printvar(printvar_set &set, int level, class EHI *ehi) {
 	}
 }
 
-
-EH_METHOD(Node_Context, initialize) {
-	ASSERT_NARGS(2, "Node.Context.initialize");
+EH_METHOD(Node_Context, operator_colon) {
+	ASSERT_NARGS(2, "Node.Context()");
 	auto t = args->get<Tuple>();
 	auto object = t->get(0);
 	auto scope = t->get(1);
-	scope->assert_type<Object>("Node.Context.initialize", ehi);
+	scope->assert_type<Object>("Node.Context()", ehi);
 	return Node_Context::make(ehcontext_t(object, scope), ehi->get_parent());
 }
 

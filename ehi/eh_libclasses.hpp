@@ -8,17 +8,20 @@
 
 #include <exception>
 
-#define EH_INITIALIZER(name) void ehinit_ ## name (ehobj_t *obj, EHInterpreter *parent)
-#define REGISTER_METHOD(classn, name) obj->register_method(#name, &ehlm_ ## classn ## _ ## name, attributes_t(), parent)
-#define REGISTER_METHOD_RENAME(classn, name, user_name) obj->register_method(user_name, &ehlm_ ## classn ## _ ## name, attributes_t(), parent)
-#define REGISTER_CLASS(classn, name) obj->register_member_class<classn ## _ ## name>(ehinit_ ## classn ##_ ## name, #name, attributes_t(), parent)
-#define REGISTER_CONSTANT(classn, name, value) obj->register_value(#name, value, attributes_t(public_e, static_e, const_e))
-#define INHERIT_LIBRARY(classname) 	obj->inherit(parent->global_object->get<Object>()->get_known(#classname)->value)
+#define EH_INITIALIZER(name) void ehinit_ ## name (ehclass_t *cls, EHInterpreter *parent)
+#define EH_INSTANCE_INITIALIZER(name) void ehinit_ ## name (ehclass_t *obj, EHInterpreter *parent)
+#define REGISTER_METHOD(classn, name) cls->register_method(#name, &ehlm_ ## classn ## _ ## name, attributes_t(), parent)
+#define REGISTER_METHOD_RENAME(classn, name, user_name) cls->register_method(user_name, &ehlm_ ## classn ## _ ## name, attributes_t(), parent)
+#define REGISTER_STATIC_METHOD(classn, name) cls->register_static_method(#name, &ehlm_ ## classn ## _ ## name, attributes_t(), parent)
+#define REGISTER_STATIC_METHOD_RENAME(classn, name, user_name) cls->register_static_method(user_name, &ehlm_ ## classn ## _ ## name, attributes_t(), parent)
+#define REGISTER_CONSTRUCTOR(classn) REGISTER_STATIC_METHOD_RENAME(classn, operator_colon, "operator()")
+#define REGISTER_CLASS(classn, name) cls->register_member_class<classn ## _ ## name>(ehinit_ ## classn ##_ ## name, #name, attributes_t(), parent)
+#define REGISTER_CONSTANT(classn, name, value) cls->register_value(#name, value, attributes_t(public_e, static_e, const_e))
+#define INHERIT_LIBRARY(classname) 	cls->inherit(parent->global_object->get<Object>()->get_known(#classname)->value)
 
 #define EH_METHOD(classn, name) ehval_p ehlm_ ## classn ## _ ## name(ehval_p obj, ehval_p args, EHI *ehi)
 
 #define ASSERT_TYPE(operand, ehtype, method) do {\
- 	operand = operand->data(); \
 	operand->assert_type<ehtype>(method, ehi); \
 } while(0)
 
@@ -28,7 +31,6 @@
 	}
 
 #define ASSERT_OBJ_TYPE(ehtype, method) ehval_p _obj = obj; \
-obj = obj->data(); \
 if(!obj->is_a<ehtype>()) { \
 	throw_TypeError("Invalid base object for " #method, obj, ehi); \
 }

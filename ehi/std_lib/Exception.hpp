@@ -31,7 +31,7 @@ private:
 	Exception operator=(const Exception&);
 };
 EH_METHOD(Exception, toString);
-EH_METHOD(Exception, initialize);
+EH_METHOD(Exception, operator_colon);
 
 EH_INITIALIZER(Exception);
 

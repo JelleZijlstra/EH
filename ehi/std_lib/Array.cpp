@@ -15,7 +15,7 @@
 #include "EmptyIterator.hpp"
 
 EH_INITIALIZER(Array) {
-	REGISTER_METHOD(Array, initialize);
+	REGISTER_CONSTRUCTOR(Array);
 	REGISTER_METHOD(Array, has);
 	REGISTER_METHOD(Array, length);
 	REGISTER_METHOD_RENAME(Array, operator_arrow, "operator->");
@@ -63,8 +63,12 @@ int Array::t::compare(Array::t *rhs, ehcontext_t context, EHI *ehi) {
  * @argument Anything with a toArray method.
  * @returns Array.
  */
-EH_METHOD(Array, initialize) {
-	return ehi->call_method_typed<Array>(args, "toArray", nullptr, obj);
+EH_METHOD(Array, operator_colon) {
+	if(args.null()) {
+		return Array::make(ehi->get_parent());
+	} else {
+		return ehi->call_method_typed<Array>(args, "toArray", nullptr, obj);
+	}
 }
 
 /*
@@ -169,8 +173,8 @@ EH_METHOD(Array, toTuple) {
  */
 EH_METHOD(Array, getIterator) {
 	ASSERT_NULL_AND_TYPE(Array, "Array.getIterator");
-	ehval_p class_member = obj->get_property("Iterator", obj, ehi);
-	return ehi->call_method(class_member, "new", obj, obj);
+	ehval_p class_member = obj->get_type_object(ehi->get_parent())->get_property("Iterator", obj, ehi);
+	return ehi->call_method(class_member, "operator()", obj, obj);
 }
 
 /*
@@ -182,14 +186,13 @@ EH_METHOD(Array, getIterator) {
 EH_METHOD(Array, compare) {
 	ASSERT_OBJ_TYPE(Array, "Array.compare");
 	args->assert_type<Array>("Array.compare", ehi);
-	args = args->data();
 	Array::t *lhs = obj->get<Array>();
 	Array::t *rhs = args->get<Array>();
 	return Integer::make(lhs->compare(rhs, obj, ehi));
 }
 
 EH_INITIALIZER(Array_Iterator) {
-	REGISTER_METHOD(Array_Iterator, initialize);
+	REGISTER_CONSTRUCTOR(Array_Iterator);
 	REGISTER_METHOD(Array_Iterator, hasNext);
 	REGISTER_METHOD(Array_Iterator, next);
 	REGISTER_METHOD(Array_Iterator, peek);
@@ -218,8 +221,8 @@ ehval_p Array_Iterator::t::peek(EHI *ehi) const {
 	return *(this->it_begin);
 }
 
-EH_METHOD(Array_Iterator, initialize) {
-	args->assert_type<Array>("Array.Iterator.initialize", ehi);
+EH_METHOD(Array_Iterator, operator_colon) {
+	args->assert_type<Array>("Array.Iterator.operator()", ehi);
 	return Array_Iterator::make(args, ehi->get_parent());
 }
 EH_METHOD(Array_Iterator, hasNext) {

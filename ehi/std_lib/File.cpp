@@ -13,18 +13,18 @@
 #include "../eh_files.hpp"
 
 EH_INITIALIZER(File) {
-	REGISTER_METHOD(File, initialize);
+	REGISTER_STATIC_METHOD_RENAME(File, operator_colon, "operator()");
 	REGISTER_METHOD(File, open);
 	REGISTER_METHOD(File, getc);
 	REGISTER_METHOD(File, gets);
 	REGISTER_METHOD(File, puts);
 	REGISTER_METHOD(File, close);
 	REGISTER_METHOD(File, finalize);
-	REGISTER_METHOD(File, readFile);
 	REGISTER_METHOD(File, isOpen);
-	REGISTER_METHOD(File, temporary);
-	REGISTER_METHOD(File, dirname);
-	REGISTER_METHOD(File, fullPath);
+	REGISTER_STATIC_METHOD(File, readFile);
+	REGISTER_STATIC_METHOD(File, temporary);
+	REGISTER_STATIC_METHOD(File, dirname);
+	REGISTER_STATIC_METHOD(File, fullPath);
 }
 
 /*
@@ -33,8 +33,8 @@ EH_INITIALIZER(File) {
  * @argument String or none
  * @returns N/A
  */
-EH_METHOD(File, initialize) {
-	ehval_p new_obj = static_cast<ehval_t *>(new File());
+EH_METHOD(File, operator_colon) {
+	ehval_p new_obj = static_cast<ehval_t *>(new File(new File::t()));
 	if(!args->is_a<Null>()) {
 		ehlm_File_open(new_obj, args, ehi);
 	}
@@ -47,13 +47,13 @@ EH_METHOD(File, initialize) {
  * @returns True on success, false on failure
  */
 EH_METHOD(File, open) {
+	obj->assert_type<File>("File.open", ehi);
 	args->assert_type<String>("File.open", ehi);
-	ASSERT_RESOURCE(File, "File.open");
-	File *f = static_cast<File *>(obj.operator->());
+	auto data = obj->get<File>();
 	// close any open file
-	if(data != nullptr) {
-		fclose(data);
-		f->value = nullptr;
+	if(data->open) {
+		fclose(data->fd);
+		data->open = false;
 	}
 
 	// and open the new one
@@ -61,7 +61,8 @@ EH_METHOD(File, open) {
 	if(mfile == nullptr) {
 		return Bool::make(false);
 	}
-	f->value = mfile;
+	data->fd = mfile;
+	data->open = true;
 	return Bool::make(true);
 }
 
@@ -72,12 +73,13 @@ EH_METHOD(File, open) {
  */
 EH_METHOD(File, getc) {
 	args->assert_type<Null>("File.getc", ehi);
-	ASSERT_RESOURCE(File, "File.getc");
+	obj->assert_type<File>("File.getc", ehi);
+	auto data = obj->get<File>();
 
-	if(data == nullptr) {
+	if(!data->open) {
 		return nullptr;
 	}
-	int c = fgetc(data);
+	int c = fgetc(data->fd);
 	if(c == EOF) {
 		return nullptr;
 	}
@@ -94,14 +96,15 @@ EH_METHOD(File, getc) {
  */
 EH_METHOD(File, gets) {
 	args->assert_type<Null>("File.gets", ehi);
-	ASSERT_RESOURCE(File, "File.gets");
-	if(data == nullptr) {
+	obj->assert_type<File>("File.getc", ehi);
+	auto data = obj->get<File>();
+	if(!data->open) {
 		return nullptr;
 	}
 
 	char *out = new char[512];
 
-	char *ptr = fgets(out, 511, data);
+	char *ptr = fgets(out, 511, data->fd);
 	if(ptr == nullptr) {
 		delete[] out;
 		return nullptr;
@@ -116,12 +119,13 @@ EH_METHOD(File, gets) {
  */
 EH_METHOD(File, puts) {
 	args->assert_type<String>("File.puts", ehi);
-	ASSERT_RESOURCE(File, "File.puts");
-	if(data == nullptr) {
+	obj->assert_type<File>("File.getc", ehi);
+	auto data = obj->get<File>();
+	if(!data->open) {
 		return nullptr;
 	}
 
-	int count = fputs(args->get<String>(), data);
+	int count = fputs(args->get<String>(), data->fd);
 	return Bool::make(count != EOF);
 }
 
@@ -151,13 +155,12 @@ EH_METHOD(File, readFile) {
  */
 EH_METHOD(File, close) {
 	args->assert_type<Null>("File.close", ehi);
-	File *f = static_cast<File *>(obj->data().operator->());
-	ASSERT_RESOURCE(File, "File.close");
-	if(data == nullptr) {
-		return nullptr;
+	obj->assert_type<File>("File.getc", ehi);
+	auto data = obj->get<File>();
+	if(data->open) {
+		fclose(data->fd);
+		data->open = false;
 	}
-	fclose(data);
-	f->value = nullptr;
 	return nullptr;
 }
 
@@ -178,8 +181,9 @@ EH_METHOD(File, finalize) {
  */
 EH_METHOD(File, isOpen) {
 	args->assert_type<Null>("File.isOpen", ehi);
-	ASSERT_RESOURCE(File, "File.isOpen");
-	return Bool::make(data != nullptr);
+	obj->assert_type<File>("File.getc", ehi);
+	auto data = obj->get<File>();
+	return Bool::make(data->open);
 }
 
 /*

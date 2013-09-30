@@ -81,7 +81,7 @@ public:
 
 #include "std_lib_includes.hpp"
 
-EH_METHOD(Array, initialize);
+EH_METHOD(Array, operator_colon);
 EH_METHOD(Array, length);
 EH_METHOD(Array, has);
 EH_METHOD(Array, operator_arrow);
@@ -131,7 +131,7 @@ public:
 
 	static ehval_p make(ehval_p array, EHInterpreter *parent);
 };
-EH_METHOD(Array_Iterator, initialize);
+EH_METHOD(Array_Iterator, operator_colon);
 EH_METHOD(Array_Iterator, hasNext);
 EH_METHOD(Array_Iterator, next);
 EH_METHOD(Array_Iterator, peek);

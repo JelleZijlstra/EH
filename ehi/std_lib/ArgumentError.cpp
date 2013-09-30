@@ -18,7 +18,7 @@ EH_NORETURN void throw_ArgumentError(const char *message, const char *method, eh
 }
 
 EH_INITIALIZER(ArgumentError) {
-	REGISTER_METHOD(ArgumentError, initialize);
+	REGISTER_STATIC_METHOD_RENAME(ArgumentError, operator_colon, "operator()");
 	INHERIT_LIBRARY(Exception);
 }
 
@@ -29,7 +29,7 @@ EH_INITIALIZER(ArgumentError) {
  * that triggered the exception.
  * @returns N/A
  */
-EH_METHOD(ArgumentError, initialize) {
+EH_METHOD(ArgumentError, operator_colon) {
 	ASSERT_NARGS(3, "ArgumentError.initialize");
 	ehval_p message = args->get<Tuple>()->get(0);
 	message->assert_type<String>("ArgumentError.initialize", ehi);

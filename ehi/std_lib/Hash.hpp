@@ -132,7 +132,7 @@ public:
 
 	static ehval_p make(ehval_p hash, EHInterpreter *parent);
 };
-EH_METHOD(Hash_Iterator, initialize);
+EH_METHOD(Hash_Iterator, operator_colon);
 EH_METHOD(Hash_Iterator, hasNext);
 EH_METHOD(Hash_Iterator, next);
 

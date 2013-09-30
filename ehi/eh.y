@@ -84,7 +84,7 @@ void yyerror(void *, const char *s);
 %token T_CALL_METHOD T_TRY_FINALLY T_CATCH_IF T_FOR_IN T_NAMED_CLASS T_IF_ELSE T_NULLARY_ENUM T_ENUM_WITH_ARGUMENTS
 %token T_ARRAY_MEMBER_NO_KEY T_ANYTHING T_GROUPING T_ASSIGN T_ADD T_SUBTRACT T_MULTIPLY T_DIVIDE T_MODULO T_GREATER
 %token T_BAR T_BINARY_COMPLEMENT T_NOT T_MATCH_SET T_COMMA T_ARRAY_LITERAL
-%token T_HASH_LITERAL T_CALL T_ACCESS T_LIST T_NAMED_ARGUMENT T_MIXED_TUPLE
+%token T_HASH_LITERAL T_CALL T_ACCESS T_LIST T_NAMED_ARGUMENT T_MIXED_TUPLE T_INSTANCE_ACCESS
 %token T_COMMAND T_SHORTPARA T_LONGPARA
 %token <sValue> T_VARIABLE
 %token <sValue> T_STRING
@@ -321,6 +321,8 @@ access_expression:
 							{ $$ = ADD_NODE2(T_ARROW, $1, $3); }
 	| access_expression '.' T_VARIABLE
 							{ $$ = eh_addnode(T_ACCESS, NODE($1), String::make($3)); }
+	| access_expression ':' T_VARIABLE
+							{ $$ = eh_addnode(T_INSTANCE_ACCESS, NODE($1), String::make($3)); }
 	| unary_op_expression T_RANGE unary_op_expression
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
 	| access_expression	unary_op_expression

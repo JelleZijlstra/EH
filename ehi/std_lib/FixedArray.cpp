@@ -7,7 +7,7 @@
 #include "ArgumentError.hpp"
 
 EH_INITIALIZER(FixedArray) {
-	REGISTER_METHOD(FixedArray, initialize);
+	REGISTER_CONSTRUCTOR(FixedArray);
 	REGISTER_METHOD_RENAME(FixedArray, operator_arrow, "operator->");
 	REGISTER_METHOD_RENAME(FixedArray, operator_arrow_equals, "operator->=");
 	REGISTER_METHOD(FixedArray, size);
@@ -18,7 +18,7 @@ EH_INITIALIZER(FixedArray) {
  * @argument Size of new array
  * @returns N/A
  */
-EH_METHOD(FixedArray, initialize) {
+EH_METHOD(FixedArray, operator_colon) {
 	args->assert_type<Integer>("FixedArray.initialize", ehi);
 	const int size = args->get<Integer>();
 	if(size < 1) {

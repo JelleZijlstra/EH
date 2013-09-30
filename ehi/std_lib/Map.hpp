@@ -109,8 +109,8 @@ public:
 
 	static ehval_p make(EHI *ehi);
 };
+EH_METHOD(Map, operator_colon);
 EH_METHOD(Map, compare);
-EH_METHOD(Map, initialize);
 EH_METHOD(Map, operator_arrow);
 EH_METHOD(Map, operator_arrow_equals);
 EH_METHOD(Map, has);
@@ -156,7 +156,7 @@ public:
 
 	static ehval_p make(ehval_p map, EHInterpreter *parent);
 };
-EH_METHOD(Map_Iterator, initialize);
+EH_METHOD(Map_Iterator, operator_colon);
 EH_METHOD(Map_Iterator, hasNext);
 EH_METHOD(Map_Iterator, next);
 EH_METHOD(Map_Iterator, peek);

@@ -35,6 +35,7 @@ public:
 	ehval_p global_object;
 	ehval_p function_object;
 	ehval_p base_object;
+	ehval_p class_object;
 
 	int enum_id;
 	int enum_member_id;
@@ -52,10 +53,6 @@ private:
 	EHInterpreter operator=(const EHInterpreter&);
 
 public:
-	ehval_p get_primitive_class(ehval_p obj) {
-		return this->repo.get_object(obj);
-	}
-
 	void eh_setarg(int argc, char **argv);
 	EHInterpreter();
 	void eh_exit(void);
@@ -259,6 +256,7 @@ private:
 	ehval_p declare_class(const char *name, ehval_p code, const ehcontext_t &context);
 	ehval_p eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_dot(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_instance_access(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_match(ehval_p *paras, const ehcontext_t &context);
 	bool match(ehval_p node, ehval_p var, const ehcontext_t &context);
 	ehval_p eh_op_given(ehval_p *paras, const ehcontext_t &context);
@@ -314,24 +312,20 @@ public:
 };
 
 template<class T>
-inline unsigned int ehobj_t::register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class) {
-	ehobj_t *newclass;
+inline unsigned int ehobj_t::register_member_class(const initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class) {
+	ehclass_t *newclass;
 	ehval_p new_value;
 	if(the_class == nullptr) {
-		newclass = new ehobj_t();
-		new_value = Object::make(newclass, interpreter_parent);
+		newclass = new ehclass_t();
+		new_value = Class::make(newclass, interpreter_parent);
 	} else {
-		newclass = the_class->get<Object>();
+		newclass = the_class->get<Class>();
 		new_value = the_class;
 	}
 
 	// register class
 	newclass->type_id = interpreter_parent->repo.register_inbuilt_class<T>(new_value);
 
-	// inherit from Object, except in Object itself
-	if(typeid(T) != typeid(GlobalObject)) {
-		newclass->parent = interpreter_parent->global_object;
-	}
 	init_func(newclass, interpreter_parent);
 	// inherit from Object, except in Object itself
 	ehmember_p member = ehmember_t::make(attributes, new_value);
@@ -340,14 +334,6 @@ inline unsigned int ehobj_t::register_member_class(const ehobj_t::initializer in
 }
 
 #include "std_lib/Null.hpp"
-
-inline unsigned int ehval_t::get_type_id(const EHInterpreter *parent) {
-	if(is_a<Object>()) {
-		return get<Object>()->type_id;
-	} else {
-		return parent->repo.get_type_id(this);
-	}
-}
 
 inline ehval_p ehval_t::null_object() {
 	return Null::make();

@@ -5,6 +5,7 @@
  * Exception or classes deriving from it.
  */
 #include "Exception.hpp"
+#include "Class.hpp"
 
 EH_NORETURN void throw_error(const char *class_name, ehval_p args, EHI *ehi) {
 	ehval_p global_object = ehi->get_parent()->global_object;
@@ -14,8 +15,9 @@ EH_NORETURN void throw_error(const char *class_name, ehval_p args, EHI *ehi) {
 }
 
 EH_INITIALIZER(Exception) {
-	REGISTER_CONSTRUCTOR(Exception);
+	REGISTER_METHOD(Exception, initialize);
 	REGISTER_METHOD(Exception, toString);
+	INHERIT_LIBRARY(Class);
 }
 
 /*
@@ -23,9 +25,11 @@ EH_INITIALIZER(Exception) {
  * @argument Exception message
  * @returns N/A
  */
-EH_METHOD(Exception, operator_colon) {
+EH_METHOD(Exception, initialize) {
 	args->assert_type<String>("Exception()", ehi);
-	return Exception::make(strdup(args->get<String>()));
+	ehmember_p member(attributes_t::make_const(), args);
+	obj->set_member("message", member, obj, ehi);
+	return nullptr;
 }
 
 /*
@@ -36,6 +40,9 @@ EH_METHOD(Exception, operator_colon) {
  */
 EH_METHOD(Exception, toString) {
 	args->assert_type<Null>("Exception.toString", ehi);
-	obj->assert_type<Exception>("Exception.toString", ehi);
-	return String::make(strdup(obj->get<Exception>()));
+	// get exception type
+	const unsigned int type_id = obj->get_type_id(ehi->get_parent());
+	const std::string type_name = ehi->get_parent()->repo.get_name(type_id);
+	const char *msg = ehi->toString(obj->get_property_no_binding("message", obj, ehi)->value, obj)->get<String>();
+	return String::make(strdup(("<" + type_name + ": " + msg + ">").c_str()));
 }

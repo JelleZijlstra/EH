@@ -9,6 +9,5 @@ printvar o
 printvar(o.b())
 printvar o
 
-# We can also use to.new clone objects
-p = o.new()
+p = o.clone()
 printvar p

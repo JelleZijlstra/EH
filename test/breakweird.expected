@@ -1,3 +1,3 @@
 %%stdout%%
 %%stderr%%
-Uncaught exception of type TypeError: break operator requires an Integer argument: Array
+Uncaught exception of type TypeError: <TypeError: break operator requires an Integer argument: Array>

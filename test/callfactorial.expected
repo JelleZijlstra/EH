@@ -1,5 +1,5 @@
 %%stdout%%
-Invalid argument (method factorial): 0
+<ArgumentError: Invalid argument (method factorial): 0>
 1
 2
 6

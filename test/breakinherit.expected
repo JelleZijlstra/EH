@@ -2,15 +2,13 @@
 Too bad, that did not work
 @object <A> [
 ]
-@object <A> [
-	A <public,non-static,non-constant>: @object <A> [
-		b <public,non-static,non-constant>: null
+@class A [
+	A <public,non-constant>: @class A [
 	]
-	a <public,non-static,non-constant>: @object <A> [
-	]
-	exception <public,non-static,non-constant>: @object <NameError> [
-		name <public,non-static,non-constant>: @string "A"
-		object <public,non-static,non-constant>: (recursion)
+	exception <public,non-constant>: @object <NameError> [
+		message <public,non-constant>: @string "Unknown member A in object of type Class: (class <A>)"
+		name <public,non-constant>: @string "A"
+		object <public,non-constant>: (recursion)
 	]
 ]
 %%stderr%%

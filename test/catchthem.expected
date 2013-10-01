@@ -1,5 +1,6 @@
 %%stdout%%
 @object <UnknownCommandError> [
-	command <public,non-static,non-constant>: @string "print"
+	command <public,non-constant>: @string "print"
+	message <public,non-constant>: @string "Unknown command: print"
 ]
 %%stderr%%

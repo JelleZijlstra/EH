@@ -27,7 +27,9 @@ public:
     }
 
     virtual unsigned int get_type_id(const class EHInterpreter *parent) override {
-        return value->type_id;
+        // type of a Class instance is Class
+        // TODO: metaclasses? Some other smartness?
+        return parent->repo.get_primitive_id<Class>();
     }
 
     virtual ~Class() {
@@ -75,6 +77,7 @@ public:
 EH_METHOD(Class, new);
 EH_METHOD(Class, operator_colon);
 EH_METHOD(Class, inherit);
+EH_METHOD(Class, toString);
 
 EH_INITIALIZER(Class);
 

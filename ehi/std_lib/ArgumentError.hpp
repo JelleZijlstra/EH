@@ -9,7 +9,7 @@ EH_NORETURN static inline void throw_ArgumentError_out_of_range(const char *meth
 	throw_ArgumentError("Argument out of range", method, value, ehi);
 }
 
-EH_METHOD(ArgumentError, operator_colon);
+EH_METHOD(ArgumentError, initialize);
 
 EH_INITIALIZER(ArgumentError);
 

@@ -85,9 +85,9 @@ void Class::set_member_directly(const char *name, ehmember_p member, ehcontext_t
 ehval_p Class::make(ehclass_t *obj, EHInterpreter *parent) {
     ehval_p out = parent->allocate<Class>(obj);
     // dirty trick: inherit from Class unless it's not set yet
-    if(!parent->class_object.null() && !parent->class_object->is_a<Null>()) {
-        obj->inherit(parent->class_object);
-    }
+    // if(!parent->class_object.null() && !parent->class_object->is_a<Null>()) {
+    //     obj->inherit(parent->class_object);
+    // }
     return out;
 }
 
@@ -99,6 +99,7 @@ EH_INITIALIZER(Class) {
     REGISTER_METHOD(Class, inherit);
     REGISTER_METHOD_RENAME(Class, operator_colon, "operator()");
     REGISTER_METHOD(Class, new);
+    REGISTER_METHOD(Class, toString);
 }
 
 EH_METHOD(Class, operator_colon) {
@@ -122,4 +123,11 @@ EH_METHOD(Class, inherit) {
 
 EH_METHOD(Class, new) {
     return ehi->call_method(obj, "operator()", args, obj);
+}
+
+EH_METHOD(Class, toString) {
+    obj->assert_type<Class>("Class.toString", ehi);
+    const unsigned int type_id = obj->get<Class>()->type_id;
+    const std::string name = ehi->get_parent()->repo.get_name(type_id);
+    return String::make(strdup(("(class <" + name + ">)").c_str()));
 }

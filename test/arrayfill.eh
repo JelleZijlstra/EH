@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 # Probably a useful library routine
-static Array.fill = func: n, f
+Array.fill(n, f) = do
 	out = []
 	for i in n
 		out.push(f i)

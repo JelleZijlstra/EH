@@ -11,8 +11,8 @@ void throw_EmptyIterator(EHI *ehi) {
 }
 
 EH_INITIALIZER(EmptyIterator) {
-	REGISTER_METHOD(EmptyIterator, operator_colon);
-	INHERIT_LIBRARY(Exception);
+	REGISTER_METHOD(EmptyIterator, initialize);
+	INHERIT_PURE_CLASS(Exception);
 }
 
 /*
@@ -20,6 +20,7 @@ EH_INITIALIZER(EmptyIterator) {
  * @argument None
  * @returns N/A
  */
-EH_METHOD(EmptyIterator, operator_colon) {
-	return Exception::make(strdup("Empty iterator"));
+EH_METHOD(EmptyIterator, initialize) {
+	obj->set_property("message", String::make(strdup("Empty iterator")), ehi->global(), ehi);
+	return nullptr;
 }

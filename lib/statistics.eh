@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 
-Iterable.numericSum() = this.reduce(0, (x, y => x + y))
+Iterable##numericSum() = this.reduce(0, (x, y => x + y))
 
 class Statistics
 	const public static sd list = do

@@ -233,9 +233,9 @@ class ArgumentParser
 			if output.isA type
 				# ignore
 			elsif output.isA String or output.isA Bool
-				output = type.new output
+				output = type output
 			else
-				output = output.map(val => type.new val)
+				output = output.map type
 			end
 		end
 		this.output->(arginfo->'canonical') = output

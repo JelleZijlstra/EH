@@ -1,5 +1,5 @@
 
-Map.toString = func:
+Map##toString() = do
 	out = "{"
 	for key, value in this
 		out += key.toString() + ": " + value + ", "
@@ -7,7 +7,7 @@ Map.toString = func:
 	out + "}"
 end
 
-Map.mapFrom = func: pairs
+Map##mapFrom pairs = do
 	map = Map.new()
 	for key, value in pairs
 		map->key = value
@@ -15,4 +15,4 @@ Map.mapFrom = func: pairs
 	map
 end
 
-Map.length = Map.size
+Map##length = Map##size

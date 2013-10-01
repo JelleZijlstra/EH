@@ -1,5 +1,5 @@
 # Array functions
-Array.map = func: f
+Array##map f = do
 	out = []
 	for value in this
 		out.push(f value)
@@ -7,7 +7,7 @@ Array.map = func: f
 	out
 end
 
-Array.reduce = func: base, f
+Array##reduce(base, f) = do
 	out = base
 	for value in this
 		out = f(value, out)
@@ -15,11 +15,11 @@ Array.reduce = func: base, f
 	out
 end
 
-Array.each f = for value in this
+Array##each f = for value in this
 	f value
 end
 
-Array.filter = func: f
+Array##filter f = do
 	out = []
 	for value in this
 		if f value
@@ -29,7 +29,7 @@ Array.filter = func: f
 	out
 end
 
-Array.toString = func:
+Array##toString() = do
 	out = "["
 	for value in this
 		out += "" + value + ", "
@@ -37,8 +37,6 @@ Array.toString = func:
 	out + "]"
 end
 
-Array.append = Array.add = Array.push
+Array##append = Array##add = Array##push
 
-
-Array.empty = () => []
-
+Array.empty() = []

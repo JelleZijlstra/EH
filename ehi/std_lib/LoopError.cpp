@@ -12,19 +12,20 @@ void throw_LoopError(const char *msg, int level, EHI *ehi) {
 }
 
 EH_INITIALIZER(LoopError) {
-	REGISTER_CONSTRUCTOR(LoopError);
-	INHERIT_LIBRARY(Exception);
+	REGISTER_METHOD(LoopError, initialize);
+	INHERIT_PURE_CLASS(Exception);
 }
 
-EH_METHOD(LoopError, operator_colon) {
+EH_METHOD(LoopError, initialize) {
 	args->assert_type<Tuple>("LoopError()", ehi);
 	ehval_p msg = args->get<Tuple>()->get(0);
 	msg->assert_type<String>("LoopError()", ehi);
 	ehval_p level = args->get<Tuple>()->get(1);
 	level->assert_type<Integer>("LoopError()", ehi);
-	obj->set_property("message", msg, ehi->global(), ehi);
+	obj->set_property("error", msg, ehi->global(), ehi);
 	obj->set_property("level", level, ehi->global(), ehi);
 	std::ostringstream exception_msg;
 	exception_msg << "Cannot " << msg->get<String>() << " " << level->get<Integer>() << " levels";
-	return Exception::make(strdup(exception_msg.str().c_str()));
+	obj->set_property("message", String::make(strdup(exception_msg.str().c_str())), ehi->global(), ehi);
+	return nullptr;
 }

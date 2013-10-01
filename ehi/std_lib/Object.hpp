@@ -35,9 +35,7 @@ public:
 
     static ehval_p make(ehobj_t *obj, EHInterpreter *parent);
 
-    unsigned int get_type_id(const class EHInterpreter *parent) override {
-        return value->cls->get_type_id(parent);
-    }
+    unsigned int get_type_id(const class EHInterpreter *parent) override;
 
     virtual ehval_p get_type_object(const EHInterpreter *parent) override {
         return value->cls;
@@ -63,8 +61,7 @@ EH_METHOD(Object, operator_lte);
 EH_METHOD(Object, type);
 EH_METHOD(Object, typeId);
 EH_METHOD(Object, members);
-EH_METHOD(Object, data);
-EH_METHOD(Object, setData);
+EH_METHOD(Object, clone);
 
 EH_INITIALIZER(Object);
 

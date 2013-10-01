@@ -3,6 +3,6 @@
 
 [[noreturn]] void throw_VisibilityError(ehval_p object, const char *name, EHI *ehi);
 
-EH_METHOD(VisibilityError, operator_colon);
+EH_METHOD(VisibilityError, initialize);
 
 EH_INITIALIZER(VisibilityError);

@@ -53,7 +53,7 @@ class TestCase
 	end
 
 	private makeTestCommand() = do
-		private command = this.executer + ' ' + this.name + '.eh'
+		private command = executer + ' ' + this.name + '.eh'
 		if this.expected.has 'arguments'
 			command += ' ' + this.expected->'arguments'.trim() + ' '
 		end

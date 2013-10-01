@@ -38,6 +38,7 @@ EH_INITIALIZER(Enum) {
 	REGISTER_METHOD_RENAME(Enum, operator_colon, "operator()");
 	REGISTER_METHOD_RENAME(Enum, operator_colon, "new");
 	REGISTER_CLASS(Enum, Instance);
+	INHERIT_LIBRARY(Class);
 }
 
 EH_INITIALIZER(Enum_Instance) {
@@ -211,8 +212,6 @@ EH_METHOD(Enum_Instance, operator_colon) {
 	ASSERT_OBJ_TYPE(Enum_Instance, "Enum.Instance.operator()");
 	auto data = obj->get<Enum_Instance>();
 	const unsigned int size = data->nmembers;
-	printvar_set set;
-	obj->printvar(set, 0, ehi);
 	if(size == 0) {
 		throw_MiscellaneousError("Cannot instantiate nullary Enum member", ehi);
 		return nullptr;

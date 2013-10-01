@@ -10,11 +10,11 @@ void throw_TypeError(const char *msg, ehval_p obj, EHI *ehi) {
 }
 
 EH_INITIALIZER(TypeError) {
-	REGISTER_CONSTRUCTOR(TypeError);
-	INHERIT_LIBRARY(Exception);
+	REGISTER_METHOD(TypeError, initialize);
+	INHERIT_PURE_CLASS(Exception);
 }
 
-EH_METHOD(TypeError, operator_colon) {
+EH_METHOD(TypeError, initialize) {
 	args->assert_type<Tuple>("TypeError()", ehi);
 
 	ehval_p msg = args->get<Tuple>()->get(0);
@@ -27,5 +27,6 @@ EH_METHOD(TypeError, operator_colon) {
 	ehval_p type_obj = ehi->get_parent()->repo.get_object(type_id);
 	obj->set_property("type", type_obj, ehi->global(), ehi);
 	std::string exception_msg = std::string(msg->get<String>()) + ": " + type_str;
-	return Exception::make(strdup(exception_msg.c_str()));
+	obj->set_property("message", String::make(strdup(exception_msg.c_str())), ehi->global(), ehi);
+	return nullptr;
 }

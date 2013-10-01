@@ -13,11 +13,11 @@ void throw_NameError(ehval_p object, const char *name, EHI *ehi) {
 }
 
 EH_INITIALIZER(NameError) {
-	REGISTER_CONSTRUCTOR(NameError);
-	INHERIT_LIBRARY(Exception);
+	REGISTER_METHOD(NameError, initialize);
+	INHERIT_PURE_CLASS(Exception);
 }
 
-EH_METHOD(NameError, operator_colon) {
+EH_METHOD(NameError, initialize) {
 	ASSERT_NARGS(2, "NameError()");
 	ehval_p object = args->get<Tuple>()->get(0);
 	ehval_p name = args->get<Tuple>()->get(1);
@@ -28,5 +28,6 @@ EH_METHOD(NameError, operator_colon) {
 	const unsigned int type_id = object->get_type_id(ehi->get_parent());
 	exception_msg << "Unknown member " << name->get<String>() << " in object of type " << ehi->get_parent()->repo.get_name(type_id);
 	exception_msg << ": " << ehi->toString(object, ehi->global())->get<String>();
-	return Exception::make(strdup(exception_msg.str().c_str()));
+	obj->set_property("message", String::make(strdup(exception_msg.str().c_str())), ehi->global(), ehi);
+	return nullptr;
 }

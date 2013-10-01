@@ -9,7 +9,7 @@ class Iterable
 		end
 	end
 
-	private reduceHelper = it, b, f => given it.hasNext()
+	private static reduceHelper = it, b, f => given it.hasNext()
 		case true; f(it.next(), reduceHelper(it, b, f))
 		case false; b
 	end
@@ -18,7 +18,7 @@ class Iterable
 
 	public iterableLength = () => this.reduce(0, (v, b => b + 1))
 
-	private foldLeftHelper = it, base, f => given (it.hasNext())
+	private static foldLeftHelper = it, base, f => given (it.hasNext())
 		case true
 			base = f(it.next(), base)
 			foldLeftHelper(it, base, f)
@@ -28,21 +28,21 @@ class Iterable
 
 	public foldLeft = base, f => foldLeftHelper(this.getIterator(), base, f)
 
-	public map = f => this.foldLeft(this.empty(), (v, collection => collection.add(f v)))
+	public map = f => this.foldLeft(this.type().empty(), (v, collection => collection.add(f v)))
 
-	public filter = f => this.foldLeft(this.empty(), (v, collection => given f v
+	public filter = f => this.foldLeft(this.type().empty(), (v, collection => given f v
 		case true; collection.add v
 		case false; collection
 	end))
 
-	public reverse() = this.reduce(this.empty(), (elt, accum => accum.append elt))
+	public reverse() = this.reduce(this.type().empty(), (elt, accum => accum.append elt))
 
 	# default implementation of append just adds
 	# types that by default add to the front (i.e., List) should override this method
 	public append elt = this.add elt
 
 	# sorting implementation
-	const private split = it, l, r => given it.hasNext()
+	const private static split = it, l, r => given it.hasNext()
 		case true
 			val = it.next()
 			split(it, r, l.add val)
@@ -79,10 +79,10 @@ class Iterable
 		case 0; this
 		case 1; this
 		default
-			private l, r = split(this.getIterator(), this.empty(), this.empty())
+			private l, r = split(this.getIterator(), this.type().empty(), this.type().empty())
 			l = l.sort()
 			r = r.sort()
-			this.empty().merge(l.getIterator(), r.getIterator())
+			this.type().empty().merge(l.getIterator(), r.getIterator())
 	end
 
 	const nth n = do
@@ -129,7 +129,7 @@ class Iterable
 			private part = reversed.slice(if max == null; 0; else -1 * max; end, max: -1 * min)
 			part.reverse()
 		else
-			private out = this.empty()
+			private out = this.type().empty()
 			private it = this.getIterator()
 
 			private i = 0
@@ -190,8 +190,8 @@ class ChainedIterable
 		end
 	end
 
-	public empty() = try
-		this.iterables.getIterator().next().empty()
+	public static empty() = try
+		this.iterables.getIterator().next().type().empty()
 	catch
 		throw(Exception.new "Cannot instantiate empty object")
 	end

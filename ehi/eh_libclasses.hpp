@@ -17,7 +17,9 @@
 #define REGISTER_CONSTRUCTOR(classn) REGISTER_STATIC_METHOD_RENAME(classn, operator_colon, "operator()")
 #define REGISTER_CLASS(classn, name) cls->register_member_class<classn ## _ ## name>(ehinit_ ## classn ##_ ## name, #name, attributes_t(), parent)
 #define REGISTER_CONSTANT(classn, name, value) cls->register_value(#name, value, attributes_t(public_e, static_e, const_e))
-#define INHERIT_LIBRARY(classname) 	cls->inherit(parent->repo.get_primitive_class<classname>())
+#define INHERIT_LIBRARY(classname) cls->inherit(parent->repo.get_primitive_class<classname>())
+// terrible
+#define INHERIT_PURE_CLASS(classname) cls->inherit(parent->global_object->get<Object>()->members[#classname]->value)
 
 #define EH_METHOD(classn, name) ehval_p ehlm_ ## classn ## _ ## name(ehval_p obj, ehval_p args, EHI *ehi)
 

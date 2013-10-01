@@ -1,5 +1,5 @@
 # Tuple functions
-Tuple.toString() = do
+Tuple##toString() = do
 	out = '('
 	len = this.length()
 	for i in len
@@ -11,15 +11,15 @@ Tuple.toString() = do
 	out + ')'
 end
 
-Tuple.each f = do
+Tuple##each f = do
 	for i in this.length()
 		f(this->i)
 	end
 end
 
-Tuple.sort() = Tuple.new(this.toList().sort())
+Tuple##sort() = Tuple(this.toList().sort())
 
-Tuple.reverse() = Tuple.new(this.toList().reverse())
+Tuple##reverse() = Tuple(this.toList().reverse())
 
 # For use in iterable: map tuple to a mutable array
 Tuple.empty() = []

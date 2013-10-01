@@ -1,7 +1,7 @@
 %%stdout-regex%%
-0x[a-f\d]{6,12}
+\(class <GarbageCollector>\)
 
 0x[a-f\d]{6,12}
 
 %%stderr%%
-Uncaught exception of type TypeError: Invalid base object for "String.length": Null
+Uncaught exception of type NameError: <NameError: Unknown member length in object of type Class: (class <String>)>

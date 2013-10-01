@@ -17,7 +17,7 @@ class StringSet
 			f key
 		end
 	end
-	
+
 	public remove = elt => (this.hash.delete elt)
 
 	public union = func: other
@@ -32,7 +32,7 @@ class StringSet
 			end
 		end
 	end
-	
+
 	public toString = func:
 		private it = this.hash.getIterator()
 		out = '{'

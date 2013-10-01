@@ -1,4 +1,4 @@
 %%stdout%%
-Invalid base object for "Hash.has": Null
+<NameError: Unknown member has in object of type Class: (class <Hash>)>
 %%stderr%%
-Uncaught exception of type TypeError: Invalid base object for "String.length": Null
+Uncaught exception of type TypeError: <TypeError: Invalid base object for "String.length": Integer>

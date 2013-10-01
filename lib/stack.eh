@@ -4,13 +4,13 @@ class Stack
 	private arr
 
 	public initialize = () => (this.arr = [])
-	
+
 	public push = func: input
 		this.arr->n = input
 		this.n++
 		null
 	end
-	
+
 	public pop = func:
 		if this.n == 0
 			throw "Stack empty"
@@ -18,6 +18,6 @@ class Stack
 		this.n--
 		this.arr->(this.n)
 	end
-	
+
 	public size = () => this.n
 end

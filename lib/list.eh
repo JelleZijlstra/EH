@@ -131,9 +131,9 @@ const List = List
 
 const Nil = List.Nil
 const Cons = List.Cons
-Object.operator:: rhs = Cons(this, rhs)
+Object##operator:: rhs = Cons(this, rhs)
 
 # Conversion methods
-Iterable.toList() = this.reduce(Nil, Cons)
+Iterable##toList() = this.reduce(Nil, Cons)
 
 Range.empty() = Nil

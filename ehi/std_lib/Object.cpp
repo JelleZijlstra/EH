@@ -75,6 +75,10 @@ ehmember_p Object::get_property_current_object(const char *name, ehcontext_t con
     }
 }
 
+unsigned int Object::get_type_id(const class EHInterpreter *parent) {
+	return value->cls->get<Class>()->type_id;
+}
+
 /*
  * User-visible methods
  */
@@ -95,6 +99,7 @@ EH_INITIALIZER(Object) {
 	REGISTER_METHOD(Object, type);
 	REGISTER_METHOD(Object, typeId);
 	REGISTER_METHOD(Object, members);
+	REGISTER_METHOD(Object, clone);
 }
 
 EH_METHOD(Object, initialize) {
@@ -189,4 +194,13 @@ EH_METHOD(Object, members) {
 	// 	arr->append(String::make(strdup((*i).c_str())));
 	// }
 	return out;
+}
+EH_METHOD(Object, clone) {
+	obj->assert_type<Object>("Object.clone", ehi);
+	ehobj_t *new_obj = new ehobj_t();
+	new_obj->cls = obj->get<Object>()->cls;
+	for(auto &pair : obj->get<Object>()->members) {
+		new_obj->members[pair.first] = pair.second;
+	}
+	return Object::make(new_obj, ehi->get_parent());
 }

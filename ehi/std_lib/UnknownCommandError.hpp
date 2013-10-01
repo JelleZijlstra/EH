@@ -2,6 +2,6 @@
 
 void throw_UnknownCommandError(const char *msg, EHI *ehi);
 
-EH_METHOD(UnknownCommandError, operator_colon);
+EH_METHOD(UnknownCommandError, initialize);
 
 EH_INITIALIZER(UnknownCommandError);

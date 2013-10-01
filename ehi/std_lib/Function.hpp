@@ -166,6 +166,8 @@ EH_METHOD(Function, code);
 
 EH_INITIALIZER(Function);
 
+EH_METHOD(Function_Scope, toString);
+
 EH_INITIALIZER(Function_Scope);
 
 #endif /* EH_FUNCTION_H_ */

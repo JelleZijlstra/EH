@@ -143,7 +143,7 @@ EH_METHOD(Function, code) {
 }
 
 EH_INITIALIZER(Function_Scope) {
-	// no methods
+	REGISTER_METHOD(Function_Scope, toString);
 }
 
 void Function_Scope::set_member_directly(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
@@ -163,4 +163,8 @@ ehval_p Function_Scope::get_parent_scope() {
 
 ehval_p Function_Scope::make(ehval_p parent, EHInterpreter *interpreter_parent) {
 	return interpreter_parent->allocate<Function_Scope>(new t(parent));
+}
+
+EH_METHOD(Function_Scope, toString) {
+	return String::make(strdup("(function scope)"));
 }

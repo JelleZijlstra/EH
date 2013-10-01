@@ -10,7 +10,7 @@ static inline void throw_TypeError_Array_key(ehval_p obj, EHI *ehi) {
 	throw_TypeError("Array key must be a String or Integer", obj, ehi);
 }
 
-EH_METHOD(TypeError, operator_colon);
+EH_METHOD(TypeError, initialize);
 
 EH_INITIALIZER(TypeError);
 

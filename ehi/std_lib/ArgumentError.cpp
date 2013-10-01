@@ -18,8 +18,8 @@ EH_NORETURN void throw_ArgumentError(const char *message, const char *method, eh
 }
 
 EH_INITIALIZER(ArgumentError) {
-	REGISTER_STATIC_METHOD_RENAME(ArgumentError, operator_colon, "operator()");
-	INHERIT_LIBRARY(Exception);
+	REGISTER_METHOD(ArgumentError, initialize);
+	INHERIT_PURE_CLASS(Exception);
 }
 
 /*
@@ -29,11 +29,11 @@ EH_INITIALIZER(ArgumentError) {
  * that triggered the exception.
  * @returns N/A
  */
-EH_METHOD(ArgumentError, operator_colon) {
+EH_METHOD(ArgumentError, initialize) {
 	ASSERT_NARGS(3, "ArgumentError()");
 	ehval_p message = args->get<Tuple>()->get(0);
 	message->assert_type<String>("ArgumentError()", ehi);
-	obj->set_property("message", message, ehi->global(), ehi);
+	obj->set_property("error", message, ehi->global(), ehi);
 
 	ehval_p method = args->get<Tuple>()->get(1);
 	method->assert_type<String>("ArgumentError()", ehi);
@@ -46,5 +46,6 @@ EH_METHOD(ArgumentError, operator_colon) {
 	exception_msg << message->get<String>() << " (method ";
 	exception_msg << method->get<String>() << "): ";
 	exception_msg << ehi->toString(value, ehi->global())->get<String>();
-	return Exception::make(strdup(exception_msg.str().c_str()));
+	obj->set_property("message", String::make(strdup(exception_msg.str().c_str())), ehi->global(), ehi);
+	return nullptr;
 }

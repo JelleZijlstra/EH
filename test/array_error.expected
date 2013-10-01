@@ -1,3 +1,3 @@
 %%stdout%%
-Invalid base object for "Array.has": Null
+<NameError: Unknown member has in object of type Class: (class <Array>)>
 %%stderr%%

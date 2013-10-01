@@ -2,6 +2,6 @@
 
 EH_NORETURN void throw_MiscellaneousError(const char *message, EHI *ehi);
 
-EH_METHOD(MiscellaneousError, operator_colon);
+EH_METHOD(MiscellaneousError, initialize);
 
 EH_INITIALIZER(MiscellaneousError);

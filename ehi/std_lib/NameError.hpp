@@ -3,6 +3,6 @@
 
 [[noreturn]] void throw_NameError(ehval_p object, const char *name, EHI *ehi);
 
-EH_METHOD(NameError, operator_colon);
+EH_METHOD(NameError, initialize);
 
 EH_INITIALIZER(NameError);

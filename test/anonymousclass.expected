@@ -3,8 +3,9 @@
 ]
 @int 4
 @object <(anonymous class)> [
-	a <private,non-static,non-constant>: @int 4
+	a <private,non-constant>: @int 4
 ]
 @object <(anonymous class)> [
+	a <private,non-constant>: @int 4
 ]
 %%stderr%%

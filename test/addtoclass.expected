@@ -4,6 +4,6 @@
 @object <Foo> [
 ]
 @object <Foo> [
-	meh <public,non-static,non-constant>: @int 4
+	meh <public,non-constant>: @int 4
 ]
 %%stderr%%

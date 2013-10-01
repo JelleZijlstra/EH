@@ -2,14 +2,14 @@
 
 JSON.parseFile name = JSON.parse(File.readFile name)
 
-Integer.toJSON = Integer.toString
+Integer##toJSON = Integer##toString
 
-Float.toJSON = Float.toString
+Float##toJSON = Float##toString
 
-String.toJSON() = '"' + this.replaceCharacter('\\', '\\\\').replace('"', '\\"') + '"'
+String##toJSON() = '"' + this.replaceCharacter('\\', '\\\\').replace('"', '\\"') + '"'
 
-Hash.toJSON() = do
-	private sb = String.Builder.new()
+Hash##toJSON() = do
+	private sb = String.Builder()
 	sb << "{"
 	private it = this.getIterator()
 	while it.hasNext()
@@ -20,11 +20,11 @@ Hash.toJSON() = do
 		end
 	end
 	sb << "}"
-	sb.toString()
+	sb##toString()
 end
 
-Iterable.toJSON() = do
-	private sb = String.Builder.new()
+Iterable##toJSON() = do
+	private sb = String.Builder()
 	sb << "["
 	private it = this.getIterator()
 	while it.hasNext()
@@ -34,5 +34,5 @@ Iterable.toJSON() = do
 		end
 	end
 	sb << "]"
-	sb.toString()
+	sb##toString()
 end

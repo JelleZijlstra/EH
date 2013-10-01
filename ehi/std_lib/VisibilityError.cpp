@@ -13,11 +13,11 @@ void throw_VisibilityError(ehval_p object, const char *name, EHI *ehi) {
 }
 
 EH_INITIALIZER(VisibilityError) {
-	REGISTER_CONSTRUCTOR(VisibilityError);
-	INHERIT_LIBRARY(Exception);
+	REGISTER_METHOD(VisibilityError, initialize);
+	INHERIT_PURE_CLASS(Exception);
 }
 
-EH_METHOD(VisibilityError, operator_colon) {
+EH_METHOD(VisibilityError, initialize) {
 	ASSERT_NARGS(2, "VisibilityError()");
 	ehval_p object = args->get<Tuple>()->get(0);
 	ehval_p name = args->get<Tuple>()->get(1);
@@ -28,5 +28,6 @@ EH_METHOD(VisibilityError, operator_colon) {
 	const unsigned int type_id = obj->get_type_id(ehi->get_parent());
 	exception_msg << "Cannot access private member " << name->get<String>() << " in object of type " << ehi->get_parent()->repo.get_name(type_id);
 	exception_msg << ": " << ehi->toString(object, ehi->global())->get<String>();
-	return Exception::make(strdup(exception_msg.str().c_str()));
+	obj->set_property("message", String::make(strdup(exception_msg.str().c_str())), ehi->global(), ehi);
+	return nullptr;
 }

@@ -29,7 +29,7 @@ end
 
 FixedArray.inherit Iterable
 
-FixedArray.toString = func:
+FixedArray##toString() = do
 	private out = '['
 	const size = this.size()
 	for i in size
@@ -41,7 +41,7 @@ FixedArray.toString = func:
 	out + ']'
 end
 
-FixedArray.mapFrom = func: input
+FixedArray##mapFrom input = do
 	private const size = input.length()
 	private const out = FixedArray.new size
 	private index = 0
@@ -52,7 +52,7 @@ FixedArray.mapFrom = func: input
 	out
 end
 
-FixedArray.fill = func: size, f
+FixedArray##fill(size, f) = do
 	out = FixedArray.new size
 	for i in size
 		out->i = f i
@@ -60,7 +60,7 @@ FixedArray.fill = func: size, f
 	out
 end
 
-FixedArray.reverse = func:
+FixedArray##reverse() = do
 	private size = this.size()
 	private out = FixedArray.new size
 	for i in size

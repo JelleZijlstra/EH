@@ -5,7 +5,7 @@
 
 void throw_EmptyIterator(EHI *ehi);
 
-EH_METHOD(EmptyIterator, operator_colon);
+EH_METHOD(EmptyIterator, initialize);
 
 EH_INITIALIZER(EmptyIterator);
 

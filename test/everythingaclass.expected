@@ -1,6 +1,6 @@
 %%stdout%%
 3
-Cannot set constant member foo in object of type Function: () => (user code)
+<ConstError: Cannot set constant member foo in object of type Function.Scope: (function scope)>
 3
 5
 @object <Bar> [

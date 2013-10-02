@@ -10,7 +10,7 @@ bar = Foo.new ()
 # true
 echo(bar.isA Foo)
 # error
-echo(bar.isA ())
+rescue(bar.isA)
 # error
 rescue(() => echo(pow 3))
 # error

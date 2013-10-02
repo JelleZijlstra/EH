@@ -121,9 +121,7 @@ public:
 		return "";
 	}
 
-	virtual void printvar(printvar_set &set, int level, class EHI *ehi) {
-		std::cout << "@other object" << std::endl;
-	}
+	virtual void printvar(printvar_set &set, int level, class EHI *ehi);
 
 	template<class T>
 	typename T::type get() const {
@@ -157,11 +155,6 @@ public:
 	}
 
 	static ehval_p null_object();
-
-	template<class T>
-	bool inherited_is_a() const;
-
-	virtual unsigned int get_type_id(const class EHInterpreter *parent);
 
 	/*
 	 * Comparison
@@ -230,6 +223,8 @@ public:
 	// get the underlying type object for this value
 	virtual ehval_p get_type_object(const class EHInterpreter *parent);
 
+	virtual unsigned int get_type_id(const class EHInterpreter *parent);
+
 	// get the property of this name, only looking at the current object
 	virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi);
 
@@ -245,8 +240,18 @@ public:
 
 	virtual void inherit(ehval_p superclass) {
 		// should be defined whenever has_instance_members returns true
-		assert(has_instance_members());
+		assert(!has_instance_members());
 	}
+
+	virtual bool inherits(ehval_p superclass) {
+		return false;
+	}
+
+    virtual std::set<std::string> member_set(const EHInterpreter *interpreter_parent);
+
+    virtual std::set<std::string> instance_member_set(const EHInterpreter *interpreter_parent) {
+    	return {};
+    }
 
 	// returns the parent scope of the current object
 	virtual ehval_p get_parent_scope() {

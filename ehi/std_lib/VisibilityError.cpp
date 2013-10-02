@@ -25,7 +25,7 @@ EH_METHOD(VisibilityError, initialize) {
 	obj->set_property("object", object, ehi->global(), ehi);
 	obj->set_property("name", name, ehi->global(), ehi);
 	std::ostringstream exception_msg;
-	const unsigned int type_id = obj->get_type_id(ehi->get_parent());
+	const unsigned int type_id = object->get_type_id(ehi->get_parent());
 	exception_msg << "Cannot access private member " << name->get<String>() << " in object of type " << ehi->get_parent()->repo.get_name(type_id);
 	exception_msg << ": " << ehi->toString(object, ehi->global())->get<String>();
 	obj->set_property("message", String::make(strdup(exception_msg.str().c_str())), ehi->global(), ehi);

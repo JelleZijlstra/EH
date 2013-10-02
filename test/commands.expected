@@ -3,7 +3,8 @@
 3
 hello
 @object <UnknownCommandError> [
-	command <public,non-static,non-constant>: @string "echo"
+	command <public,non-constant>: @string "echo"
+	message <public,non-constant>: @string "Unknown command: echo"
 ]
 @array [
 	@string "echo"

@@ -1,5 +1,4 @@
 %%stdout%%
-@object <File> [
-]
+@value <File>
 bar
 %%stderr%%

@@ -1,7 +1,7 @@
 %%stdout%%
-Unknown member operator->= in object of type String: foo
+<NameError: Unknown member operator->= in object of type String: foo>
 @string "foo"
 @int 3
-Argument out of range (method String.operator->): 3
+<ArgumentError: Argument out of range (method String.operator->): 3>
 %%stderr%%
-Uncaught exception of type NameError: Unknown member operator-> in object of type Integer: 3
+Uncaught exception of type NameError: <NameError: Unknown member operator-> in object of type Integer: 3>

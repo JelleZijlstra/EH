@@ -77,7 +77,7 @@ class Matrix
 		(is_odd, lt, rt, lb, rb)
 	end
 
-	public combine = func: is_odd, lt, rt, lb, rb
+	public static combine(is_odd, lt, rt, lb, rb) = do
 		private half_size = lt.get_size()
 		private size = if is_odd; half_size * 2 - 1; else half_size * 2; end
 		Matrix.new(size, f: (i, j => match (i / half_size, j / half_size)

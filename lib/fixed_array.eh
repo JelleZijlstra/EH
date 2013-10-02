@@ -41,7 +41,7 @@ FixedArray##toString() = do
 	out + ']'
 end
 
-FixedArray##mapFrom input = do
+FixedArray.mapFrom input = do
 	private const size = input.length()
 	private const out = FixedArray.new size
 	private index = 0
@@ -52,7 +52,7 @@ FixedArray##mapFrom input = do
 	out
 end
 
-FixedArray##fill(size, f) = do
+FixedArray.fill(size, f) = do
 	out = FixedArray.new size
 	for i in size
 		out->i = f i

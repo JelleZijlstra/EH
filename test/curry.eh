@@ -1,8 +1,8 @@
 #!/usr/bin/ehi
 # Currying is possible, though not as elegantly as in OCaml
-Array.reduce = func: f
+Array##reduce f = do
 	arr = this
-	func: start
+	start => do
 		out = start
 		for val in arr
 			out = f out val

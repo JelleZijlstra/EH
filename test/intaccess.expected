@@ -41,4 +41,4 @@ String access:
 3: t
 String modification:
 %%stderr%%
-Uncaught exception of type NameError: Unknown member operator->= in object of type String: test
+Uncaught exception of type NameError: <NameError: Unknown member operator->= in object of type String: test>

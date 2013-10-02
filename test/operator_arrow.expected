@@ -1,8 +1,8 @@
 %%stdout%%
-Invalid type for argument to Array.operator->= (expected Integer): Float
-Invalid type for argument to Array.operator-> (expected Integer): Range
-Invalid type for argument to Hash.operator->= (expected String): Integer
-Invalid type for argument to Hash.operator-> (expected String): Integer
-Unknown member operator->= in object of type Tuple: (1, 2)
-Invalid type for argument to Tuple.operator-> (expected Integer): String
+<TypeError: Invalid type for argument to Array.operator->= (expected Integer): Float>
+<TypeError: Invalid type for argument to Array.operator-> (expected Integer): Range>
+<TypeError: Invalid type for argument to Hash.operator->= (expected String): Integer>
+<TypeError: Invalid type for argument to Hash.operator-> (expected String): Integer>
+<NameError: Unknown member operator->= in object of type Tuple: (1, 2)>
+<TypeError: Invalid type for argument to Tuple.operator-> (expected Integer): String>
 %%stderr%%

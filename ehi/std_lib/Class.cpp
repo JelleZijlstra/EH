@@ -12,15 +12,9 @@ void ehclass_t::inherit(ehval_p superclass) {
     super.push_front(superclass);
 }
 
-bool ehclass_t::inherits(ehval_p superclass, EHInterpreter *interpreter_parent) {
-    if(!superclass->is_a<Class>()) {
-        return false;
-    }
-    if(superclass == interpreter_parent->base_object) {
-        return true;
-    }
-    for(auto &i : super) {
-        if(i == superclass || i->get<Class>()->inherits(superclass, interpreter_parent)) {
+bool ehclass_t::inherits(ehval_p superclass) {
+    for(ehval_p cls : super) {
+        if(cls == superclass || cls->inherits(superclass)) {
             return true;
         }
     }
@@ -82,6 +76,19 @@ void Class::set_member_directly(const char *name, ehmember_p member, ehcontext_t
     value->insert(name, member);
 }
 
+bool Class::can_access_private(ehcontext_t context, class EHI *ehi) {
+    if(context.object == this || context.object->inherits(this)) {
+        return true;
+    } else {
+        ehval_p type_object = context.object->get_type_object(ehi->get_parent());
+        if(type_object == this || type_object->inherits(this)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
 ehval_p Class::make(ehclass_t *obj, EHInterpreter *parent) {
     ehval_p out = parent->allocate<Class>(obj);
     // dirty trick: inherit from Class unless it's not set yet
@@ -89,6 +96,19 @@ ehval_p Class::make(ehclass_t *obj, EHInterpreter *parent) {
     //     obj->inherit(parent->class_object);
     // }
     return out;
+}
+
+
+std::set<std::string> Class::instance_member_set(const EHInterpreter *interpreter_parent) {
+    std::set<std::string> members;
+    for(auto &pair : value->members) {
+        members.insert(pair.first);
+    }
+    for(ehval_p superclass : value->super) {
+        auto superset = superclass->instance_member_set(interpreter_parent);
+        members.insert(superset.begin(), superset.end());
+    }
+    return members;
 }
 
 /*

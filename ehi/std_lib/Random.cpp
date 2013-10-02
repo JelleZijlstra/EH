@@ -3,8 +3,8 @@
 #include "Random.hpp"
 
 EH_INITIALIZER(Random) {
-	REGISTER_METHOD(Random, srand);
-	REGISTER_METHOD(Random, rand);
+	REGISTER_STATIC_METHOD(Random, srand);
+	REGISTER_STATIC_METHOD(Random, rand);
 	REGISTER_CONSTANT(Random, max, Integer::make(RAND_MAX));
 }
 

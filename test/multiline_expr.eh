@@ -25,7 +25,7 @@ enum List
 		public next() = do out, this.l = this.l; out; end
 	end
 
-	const getIterator() = this.Iterator.new this
+	const getIterator() = Iterator this
 end
 
 private l = List.Cons("first", List.Cons("second", List.Nil))
@@ -37,13 +37,13 @@ end
 class Nats
 	private n
 
-	public getIterator() = this.new()
+	public getIterator() = this.type().new()
 	public initialize() = (this.n = 0)
 	public next() = do this.n += 1; this.n - 1; end
 	public hasNext() = true
 end
 
-for i in Nats.new()
+for i in Nats()
 	echo i
 	# some further grammar-twiddling would be required to get rid of the
 	# parentheses around "break"

@@ -1,28 +1,24 @@
 #!/usr/bin/ehi
 class A
-	private a = 1
+	private static a = 1
 	class AA
 		private ap = 10
-		public aa = func:
-			echo a
-		end
+		public aa() = echo a
 	end
 end
 class B
-	private b = 2
+	private static b = 2
 	class BB
 		private bp = 20
-		public bb = func:
-			echo b
-		end
+		public bb() = echo b
 	end
 end
 class C
-	private c = 3
+	private static c = 3
 	class CC
 		private cp = 30
 		this.inherit(A.AA)
-		public cc = func:
+		public cc() = do
 			# If everything is working right, there is no a
 			try
 				echo a
@@ -35,12 +31,12 @@ class C
 end
 
 class D
-	private d = 4
+	private static d = 4
 	class DD
 		private dp = 40
 		this.inherit(B.BB)
 		this.inherit(C.CC)
-		public dd = func:
+		public dd() = do
 			# Expect 1
 			this.aa()
 			# Expect 2
@@ -58,5 +54,5 @@ class D
 		end
 	end
 end
-o = D.new().DD
+o = D.DD()
 o.dd()

@@ -3,14 +3,14 @@
 	@int 1
 	@int 42
 ]
-Unknown member toArray in object of type String: string
-Unknown member toArray in object of type Integer: 42
-Unknown member toArray in object of type Bool: true
+<NameError: Unknown member toArray in object of type String: string>
+<NameError: Unknown member toArray in object of type Integer: 42>
+<NameError: Unknown member toArray in object of type Bool: true>
 @range [
 	@int 1
 	@int 42
 ]
-Unknown member toRange in object of type Integer: 42
-Unknown member toBool in object of type Array: [1, ]
-Unknown member toBool in object of type Array: []
+<NameError: Unknown member toRange in object of type Integer: 42>
+<NameError: Unknown member toBool in object of type Array: [1, ]>
+<NameError: Unknown member toBool in object of type Array: []>
 %%stderr%%

@@ -1,6 +1,26 @@
 %%stdout%%
-@string "String"
-@string "Integer"
-@string "Bool"
-@string "Range"
+@class String [
+	Builder <public,non-constant>: @class String.Builder [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	Iterator <public,non-constant>: @class String.Iterator [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	operator() <public,non-constant>: @function <library>: 
+]
+@class Integer [
+	Iterator <public,non-constant>: @class Integer.Iterator [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	operator() <public,non-constant>: @function <library>: 
+]
+@class Bool [
+	operator() <public,non-constant>: @function <library>: 
+]
+@class Range [
+	Iterator <public,non-constant>: @class Range.Iterator [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	operator() <public,non-constant>: @function <library>: 
+]
 %%stderr%%

@@ -79,6 +79,15 @@ unsigned int Object::get_type_id(const class EHInterpreter *parent) {
 	return value->cls->get<Class>()->type_id;
 }
 
+std::set<std::string> Object::member_set(const EHInterpreter *interpreter_parent) {
+	auto members = get_type_object(interpreter_parent)->instance_member_set(interpreter_parent);
+	for(auto &pair : value->members) {
+		members.insert(pair.first);
+	}
+	return members;
+}
+
+
 /*
  * User-visible methods
  */
@@ -117,12 +126,12 @@ EH_METHOD(Object, finalize) {
 }
 EH_METHOD(Object, isA) {
 	args->assert_type<Class>("Object.isA", ehi);
-	ehval_p _obj = obj;
 	ehval_p type_object = obj->get_type_object(ehi->get_parent());
-	if(type_object == args) {
+	// everything inherits Object
+	if(type_object == args || type_object == ehi->get_parent()->base_object) {
 		return Bool::make(true);
 	} else {
-		return Bool::make(type_object->get<Class>()->inherits(args, ehi->get_parent()));
+		return Bool::make(type_object->inherits(args));
 	}
 }
 
@@ -137,15 +146,10 @@ EH_METHOD(Object, operator_compare) {
 	}
 }
 EH_METHOD(Object, compare) {
-	ehval_p lhs = obj;
-	if(lhs->is_a<Null>()) {
-		lhs = obj;
+	if(!obj->equal_type(args)) {
+		throw_TypeError("Arguments to Object.compare must have the same type", args, ehi);
 	}
-	ehval_p rhs = args;
-	if(!lhs->equal_type(rhs)) {
-		throw_TypeError("Arguments to Object.compare must have the same type", rhs, ehi);
-	}
-	return Integer::make(lhs->naive_compare(rhs));
+	return Integer::make(obj->naive_compare(args));
 }
 #define CALL_COMPARE() \
 	ehval_p comparison_p = ehi->call_method_typed<Integer>(obj, "operator<=>", args, obj); \
@@ -184,15 +188,12 @@ EH_METHOD(Object, typeId) {
 }
 // return all members in the class
 EH_METHOD(Object, members) {
-	// TODO
-	// ehval_p reference_retainer = obj;
-	// obj = obj->get_underlying_object(ehi->get_parent());
-	// std::set<std::string> members = obj->get<Object>()->member_set(ehi->get_parent());
+	std::set<std::string> members = obj->member_set(ehi->get_parent());
 	ehval_p out = Array::make(ehi->get_parent());
-	// Array::t *arr = out->get<Array>();
-	// for(std::set<std::string>::iterator i = members.begin(), end = members.end(); i != end; i++) {
-	// 	arr->append(String::make(strdup((*i).c_str())));
-	// }
+	Array::t *arr = out->get<Array>();
+	for(std::set<std::string>::iterator i = members.begin(), end = members.end(); i != end; i++) {
+		arr->append(String::make(strdup((*i).c_str())));
+	}
 	return out;
 }
 EH_METHOD(Object, clone) {

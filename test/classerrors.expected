@@ -1,4 +1,4 @@
 %%stdout%%
-Cannot set constant member foo in object of type Foo: @Foo
+<ConstError: Cannot set constant member foo in object of type Class: (class <Foo>)>
 10
 %%stderr%%

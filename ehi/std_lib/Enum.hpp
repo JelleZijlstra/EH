@@ -84,11 +84,14 @@ public:
         value->instance_members[name] = new_value;
     }
 
-    virtual bool has_instance_members() const {
+    virtual bool has_instance_members() const override {
         return true;
     }
-    virtual void inherit(ehval_p cls) {
+    virtual void inherit(ehval_p cls) override {
         value->inherit(cls);
+    }
+    virtual bool inherits(ehval_p superclass) override {
+        return value->inherits(superclass);
     }
 
 	static ehval_p make_enum_class(const char *name, ehval_p scope, EHInterpreter *parent);

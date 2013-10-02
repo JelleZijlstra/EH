@@ -1,5 +1,4 @@
 %%stdout%%
-@object <Integer> [
-]
+@int 3
 @int 0
 %%stderr%%

@@ -1,5 +1,4 @@
 %%stdout%%
-Unknown member x in object of type Function: () => (user code)
-@int 3
-@int 3
+<NameError: Unknown member x in object of type Function.Scope: (function scope)>
 %%stderr%%
+Uncaught exception of type TypeError: <TypeError: object does not allow member assignment: Function>

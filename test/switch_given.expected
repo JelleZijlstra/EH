@@ -5,4 +5,4 @@ foo = 3
 foo isn't 4
 foo is divisible by 3
 %%stderr%%
-Uncaught exception of type MiscellaneousError: No matching case in given statement
+Uncaught exception of type MiscellaneousError: <MiscellaneousError: No matching case in given statement>

@@ -2,7 +2,7 @@
 # More tests for the global keyword
 class Foo
 	public bar
-	public baz = func: n
+	public static baz n = do
 		put(n.toString() + ' ')
 		echo myvar
 	end
@@ -15,7 +15,7 @@ newvar = Foo.baz
 newvar 19
 put(19.toString())
 echo(19.toString())
-func unknownglobal:
+unknownglobal() = do
 	printvar nosuchvar
 end
 unknownglobal ()

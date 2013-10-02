@@ -66,12 +66,20 @@ public:
     virtual const std::list<ehval_w> get_super_classes() {
         return value->super;
     }
-    virtual bool has_instance_members() const {
+    virtual bool has_instance_members() const override {
         return true;
     }
-    virtual void inherit(ehval_p cls) {
+    virtual void inherit(ehval_p cls) override {
         value->inherit(cls);
     }
+
+    virtual bool inherits(ehval_p superclass) override {
+        return value->inherits(superclass);
+    }
+
+    virtual bool can_access_private(ehcontext_t context, class EHI *ehi) override;
+
+    virtual std::set<std::string> instance_member_set(const EHInterpreter *interpreter_parent) override;
 };
 
 EH_METHOD(Class, new);

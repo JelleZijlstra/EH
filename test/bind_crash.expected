@@ -1,3 +1,3 @@
 %%stdout%%
 %%stderr%%
-Uncaught exception of type TypeError: Invalid base object for "File.gets": FixedArray
+Uncaught exception of type TypeError: <TypeError: Invalid type for argument to File.getc (expected File): FixedArray>

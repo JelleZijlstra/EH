@@ -2,8 +2,8 @@
 # Demonstrate the global variable, a reference to the global scope.
 foo = 4
 class A
-	public foo = 3
-	public f = func:
+	public static foo = 3
+	public static f() = do
 		echo foo
 		echo(global.foo)
 	end

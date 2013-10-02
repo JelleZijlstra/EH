@@ -42,6 +42,13 @@ void ehval_t::check_can_set_member(ehmember_p current_member, const char *name, 
     }
 }
 
+void ehval_t::printvar(printvar_set &set, int level, class EHI *ehi) {
+	const unsigned int type_id = get_type_id(ehi->get_parent());
+	auto name = ehi->get_parent()->repo.get_name(type_id);
+	std::cout << "@value <" << name << ">" << std::endl;
+}
+
+
 void ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
 	check_static_attribute(name, member, context, ehi);
     // unbind bindings to the current object (TODO: why is this needed?)
@@ -157,7 +164,11 @@ ehmember_p ehval_t::get_property_up_scope_chain(const char *name, ehcontext_t co
 
 bool ehval_t::can_access_private(ehcontext_t context, EHI *ehi) {
 	// TODO: fix private again
-	return true;
+	return (context.scope == this) || (context.object == this) || get_type_object(ehi->get_parent())->can_access_private(context, ehi);
+}
+
+std::set<std::string> ehval_t::member_set(const EHInterpreter *interpreter_parent) {
+	return get_type_object(interpreter_parent)->instance_member_set(interpreter_parent);
 }
 
 ehval_p ehval_t::unbind_binding_to_self(ehval_p value) {

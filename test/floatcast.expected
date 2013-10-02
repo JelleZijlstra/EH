@@ -1,6 +1,6 @@
 %%stdout%%
 @float 3
-Unknown member toFloat in object of type Bool: true
+<NameError: Unknown member toFloat in object of type Bool: true>
 @int 3
 @bool true
 @bool true

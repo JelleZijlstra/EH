@@ -1,5 +1,5 @@
 %%stdout%%
-@function <user>: n
+@value <Function.Scope>
 @int 42
 %%stderr%%
-Uncaught exception of type VisibilityError: Cannot access private member foo in object of type Function: n => (user code)
+Uncaught exception of type VisibilityError: <VisibilityError: Cannot access private member foo in object of type Function.Scope: (function scope)>

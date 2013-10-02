@@ -5,13 +5,13 @@ class Foo
 	end
 
 	try
-		for i in 5
+		for static i in 5
 			const foo = i
 		end
 	catch
 		echo(exception.toString())
 	end
-	public mah = 0
+	public static mah = 0
 	for i in 10
 		mah++
 	end

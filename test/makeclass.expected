@@ -1,7 +1,7 @@
 %%stdout%%
 @class Foo [
 ]
-@class Foo [
+@class Class [
 ]
 @object <Foo> [
 ]

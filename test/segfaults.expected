@@ -1,15 +1,15 @@
 %%stdout%%
 Test 1
-Argument out of range (method String.operator->): 2010
+<ArgumentError: Argument out of range (method String.operator->): 2010>
 Test 2
-Unknown member data in object of type Function: () => (user code)
-Unknown member data in object of type Function: () => (user code)
+<NameError: Unknown member data in object of type Function.Scope: (function scope)>
+<NameError: Unknown member data in object of type Function.Scope: (function scope)>
 Test 3
-Unknown member data in object of type Function: () => (user code)
+<NameError: Unknown member data in object of type Function.Scope: (function scope)>
 Test 4
-Unknown member data in object of type Function: () => (user code)
+<NameError: Unknown member data in object of type Function.Scope: (function scope)>
 Test 5
-Unknown member data in object of type Function: () => (user code)
+<NameError: Unknown member data in object of type Function.Scope: (function scope)>
 Test 6
-Argument out of range (method String.operator->): 2010
+<ArgumentError: Argument out of range (method String.operator->): 2010>
 %%stderr%%

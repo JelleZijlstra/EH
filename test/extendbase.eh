@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 echo "Map"
-Array.map = func: f
+Array##map f = do
 	out = []
 	for value in this
 		out.push(f value)
@@ -13,7 +13,7 @@ f x = x.length()
 printvar (arr.map f)
 
 echo "Reduce"
-Array.reduce = func: f, base
+Array##reduce(f, base) = do
 	out = base
 	for value in this
 		out = f(out, value)
@@ -25,16 +25,14 @@ f(counter, value) = counter + 1
 printvar (arr.reduce(f, 0))
 
 echo "Iterate"
-Array.each = func: f
-	for value in this
-		f value
-	end
+Array##each f = for value in this
+	f value
 end
 
-arr.each(value => echo value)
+arr.each echo
 
 echo "Filter"
-Array.filter = func: f
+Array##filter f = do
 	out = []
 	for value in this
 		if f value

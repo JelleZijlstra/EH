@@ -42,26 +42,6 @@ public:
 
     template<class T>
     unsigned int register_member_class(const ehobj_t::initializer init_func, const char *name, const attributes_t attributes, EHInterpreter *interpreter_parent, ehval_p the_class = nullptr);
-
-    ///////
-
-    /*
-     * const methods
-     */
-    std::set<std::string> member_set(const EHInterpreter *interpreter_parent) const;
-
-    // bool has(const char *key) const {
-    //     return has(std::string(key));
-    // }
-
-    /*
-     * non-const methods
-     */
-
-    // void insert(const char *name, ehmember_p value) {
-    //     const std::string str(name);
-    //     this->insert(str, value);
-    // }
 };
 
 // EH class
@@ -81,7 +61,7 @@ public:
 
     void inherit(ehval_p superclass);
 
-    bool inherits(ehval_p superclass, EHInterpreter *parent);
+    bool inherits(ehval_p superclass);
 
     void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHInterpreter *interpreter_parent);
 };

@@ -2,8 +2,8 @@
 
 
 
-Unknown member toInteger in object of type Null: 
-Unknown member ban in object of type Function: () => (user code)
+<NameError: Unknown member toInteger in object of type Null: >
+<NameError: Unknown member ban in object of type Function.Scope: (function scope)>
 @array [
 	@string "foo"
 	null

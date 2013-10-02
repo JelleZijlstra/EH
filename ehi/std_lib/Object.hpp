@@ -35,7 +35,7 @@ public:
 
     static ehval_p make(ehobj_t *obj, EHInterpreter *parent);
 
-    unsigned int get_type_id(const class EHInterpreter *parent) override;
+    virtual unsigned int get_type_id(const class EHInterpreter *parent) override;
 
     virtual ehval_p get_type_object(const EHInterpreter *parent) override {
         return value->cls;
@@ -44,6 +44,12 @@ public:
     virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi);
 
     virtual void set_member_directly(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
+
+    virtual bool inherits(ehval_p superclass) override {
+        return value->cls->inherits(superclass);
+    }
+
+    virtual std::set<std::string> member_set(const EHInterpreter *interpreter_parent) override;
 };
 
 EH_METHOD(Object, initialize);

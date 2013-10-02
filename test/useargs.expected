@@ -2,6 +2,6 @@
 4
 4
 3
-Unknown member operator& in object of type Null: 
+<NameError: Unknown member operator& in object of type Null: >
 3
 %%stderr%%

@@ -10,4 +10,4 @@
 	@int 1
 ]
 %%stderr%%
-Uncaught exception of type SyntaxError: syntax error, unexpected $end, expecting T_SEPARATOR at line 1
+Uncaught exception of type SyntaxError: <SyntaxError: syntax error, unexpected $end, expecting T_SEPARATOR at line 1>

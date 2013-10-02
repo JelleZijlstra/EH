@@ -1,6 +1,25 @@
 %%stdout%%
-@string "Integer"
-@string "Array"
-@string "String"
-@string "Foo"
+@class Integer [
+	Iterator <public,non-constant>: @class Integer.Iterator [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	operator() <public,non-constant>: @function <library>: 
+]
+@class Array [
+	Iterator <public,non-constant>: @class Array.Iterator [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	operator() <public,non-constant>: @function <library>: 
+]
+@class String [
+	Builder <public,non-constant>: @class String.Builder [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	Iterator <public,non-constant>: @class String.Iterator [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	operator() <public,non-constant>: @function <library>: 
+]
+@class Foo [
+]
 %%stderr%%

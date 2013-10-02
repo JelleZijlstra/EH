@@ -1,5 +1,5 @@
 %%stdout%%
-NameError
+(class <NameError>)
 true
 true
 %%stderr%%

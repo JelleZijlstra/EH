@@ -1,6 +1,6 @@
 %%stdout%%
-@object <B> [
-	o <public,non-static,non-constant>: @object <A> [
+@class B [
+	o <public,non-constant>: @object <A> [
 	]
 ]
 %%stderr%%

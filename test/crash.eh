@@ -3,7 +3,7 @@
 # This crashes for some reason
 GC = GarbageCollector
 
-this.inherit String
+this.type().inherit String
 GC.stats()
 try
 	length 0

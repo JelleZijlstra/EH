@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 
 class A
-	public foo = 3
+	public static foo = 3
 	class C
 		public bar = func:
 			echo foo
@@ -10,7 +10,7 @@ class A
 end
 
 class B
-	public foo = 4
-	o = A.C.new ()
+	public static foo = 4
+	static o = A.C.new ()
 	o.bar ()
 end

@@ -5,4 +5,4 @@
 	]
 ]
 %%stderr%%
-Uncaught exception of type NameError: Unknown member l in object of type Enum.Instance: 1::[]
+Uncaught exception of type NameError: <NameError: Unknown member l in object of type List: 1::[]>

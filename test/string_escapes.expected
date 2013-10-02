@@ -10,6 +10,6 @@ bar"
 @string "foo\bar"
 @string "foo"bar"
 @string "foobar"
-Unexpected escape character: x at line 1
-EH does not yet support Unicode escape sequences at line 1
+<SyntaxError: Unexpected escape character: x at line 1>
+<SyntaxError: EH does not yet support Unicode escape sequences at line 1>
 %%stderr%%

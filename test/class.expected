@@ -7,6 +7,6 @@ meh
 @function <user>: n
 42
 Calling a private method
-Cannot access private member mah in object of type Foo: @Foo (@Foo (3, ), )
+<VisibilityError: Cannot access private member mah in object of type Foo: @Foo (@Foo (3, ), )>
 2
 %%stderr%%

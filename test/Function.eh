@@ -27,8 +27,6 @@ assert(f.args() == Node.T_VARIABLE("x"), "argument is x")
 private f2 _ = 3
 assert(f2.args() == Node.T_ANYTHING, "argument is ignored")
 
-echo 'hey'
-
 # @method code
 assert(f.code() == Node.T_CALL_METHOD(Node.T_VARIABLE("x"), "operator*", Node.T_VARIABLE("x")), "code is squaring")
 assert(f2.code() == Node.T_LITERAL(3), "body is just 3")

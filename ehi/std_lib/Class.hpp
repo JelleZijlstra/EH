@@ -11,19 +11,7 @@ public:
     Class(type val) : value(val) {}
 
     virtual std::list<ehval_p> children() const override {
-        std::list<ehval_p> out;
-        for(auto &kv : value->members) {
-            out.push_back(kv.second->value);
-        }
-        for(auto &kv : value->instance_members) {
-            out.push_back(kv.second->value);
-        }
-        out.push_back(value->parent);
-        for(auto &i : value->super) {
-            out.push_back(i);
-        }
-        assert(out.size() == value->members.size() + value->instance_members.size() + 1 + value->super.size());
-        return out;
+        return value->children();
     }
 
     virtual unsigned int get_type_id(const class EHInterpreter *parent) override {

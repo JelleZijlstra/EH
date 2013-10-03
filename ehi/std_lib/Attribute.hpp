@@ -6,7 +6,7 @@
 // and accompanying enum used by the parser
 class Attribute : public Enum_Instance::t {
 public:
-	const static int attribute_type_id = 6;
+	const static int attribute_type_id = 7;
 
 	enum attribute_enum {
 		publica_e,

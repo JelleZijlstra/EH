@@ -74,8 +74,8 @@ void ehinstance_init_GlobalObject(ehobj_t *obj, EHInterpreter *parent) {
 	 * Initialize top-level classes.
 	 */
 	GLOBAL_REGISTER_CLASS(Enum);
-	REGISTER_ENUM_CLASS(Attribute); // 5
-	REGISTER_ENUM_CLASS(Node); // 6
+	REGISTER_ENUM_CLASS(Attribute); // 7
+	REGISTER_ENUM_CLASS(Node); // 8
 	GLOBAL_REGISTER_CLASS(Binding);
 	GLOBAL_REGISTER_CLASS(File);
 	GLOBAL_REGISTER_CLASS(Integer);

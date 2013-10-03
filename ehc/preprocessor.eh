@@ -5,7 +5,7 @@ enum ExtendedNode
 end
 
 Node.isNode = (() => do
-	private node_t = Node.typeId()
+	private node_t = Node.T_END.typeId()
 	private extended_t = ExtendedNode.typeId()
 	val => do
 		private type = val.typeId()
@@ -41,7 +41,7 @@ class Preprocessor
 
 		public initialize = l => (this.l = l)
 
-		public hasNext = _ => this.l != Node.T_END
+		public hasNext() = this.l != Node.T_END
 
 		private static map_if_node = node => if EH.equalType(node, Node)
 			node.map listify
@@ -57,7 +57,7 @@ class Preprocessor
 				this.l = right
 				map_if_node left
 			case Node.T_END
-				throw(EmptyIterator.new())
+				throw(EmptyIterator())
 			case @other
 				this.l = Node.T_END
 				map_if_node other
@@ -68,7 +68,7 @@ class Preprocessor
 		public getIterator = () => this
 
 		# calculate length
-		private list_length l = match l
+		private static list_length l = match l
 			case Node.T_COMMA(_, @right) | Node.T_MIXED_TUPLE(_, @right)
 				1 + list_length right
 			case Node.T_END
@@ -77,21 +77,21 @@ class Preprocessor
 				1
 		end
 
-		public length = () => list_length(this.l)
+		public length() = list_length(this.l)
 	end
 
-	public static listify code = if code.typeId() == Node.typeId()
+	public static listify code = if Node.isNode code
 		match code
 			case Node.T_COMMA(_, _)
-				Node.T_LIST(Tuple.initialize(ListifyIterator.new code))
+				Node.T_LIST(Tuple(ListifyIterator.new code))
 			case Node.T_MIXED_TUPLE(_, _)
-				ExtendedNode.T_MIXED_TUPLE_LIST(Tuple.initialize(ListifyIterator.new code))
+				ExtendedNode.T_MIXED_TUPLE_LIST(Tuple(ListifyIterator.new code))
 			case Node.T_ENUM(@name, Node.T_ENUM_WITH_ARGUMENTS(_, _), @enum_code)
-				Node.T_ENUM(name, Node.T_LIST(Tuple.initialize((code->1)::Nil)), enum_code)
+				Node.T_ENUM(name, Node.T_LIST(Tuple((code->1)::Nil)), enum_code)
 			case Node.T_ENUM(@name, Node.T_NULLARY_ENUM(_), @enum_code)
-				Node.T_ENUM(name, Node.T_LIST(Tuple.initialize((code->1)::Nil)), enum_code)
+				Node.T_ENUM(name, Node.T_LIST(Tuple((code->1)::Nil)), enum_code)
 			case Node.T_END
-				Node.T_LIST(Tuple.initialize(Nil))
+				Node.T_LIST(Tuple(Nil))
 			case _
 				code.map listify
 		end

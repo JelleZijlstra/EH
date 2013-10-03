@@ -3,7 +3,7 @@
 include '../lib/library.eh'
 
 class Foo
-	Macro.decorate(Macro.privatize, raw(toString = () => "Foo"))
+	Macro.decorate(Macro.privatize, raw(bar = () => "Foo"))
 end
 
-printvar Foo
+rescue(() => echo(Foo().bar))

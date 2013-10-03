@@ -479,7 +479,7 @@ Node *eh_addnode(unsigned int opcode, ehval_p first, ehval_p second, ehval_p thi
 }
 
 EH_INITIALIZER(Node_Context) {
-	REGISTER_METHOD(Node_Context, operator_colon);
+	REGISTER_CONSTRUCTOR(Node_Context);
 	REGISTER_METHOD(Node_Context, getObject);
 	REGISTER_METHOD(Node_Context, getScope);
 }

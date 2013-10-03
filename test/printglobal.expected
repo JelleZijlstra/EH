@@ -95,6 +95,7 @@
 	]
 	Node <public,constant>: @class Node [
 		Context <public,non-constant>: @class Node.Context [
+			operator() <public,non-constant>: @function <library>: 
 		]
 		T_ACCESS <public,constant>: @enum constructor T_ACCESS <Node>: parameter, parameter
 		T_AND <public,constant>: @enum constructor T_AND <Node>: parameter, parameter

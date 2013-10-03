@@ -6,7 +6,7 @@
 
 class Node : public Enum_Instance::t {
 public:
-	const static unsigned int node_type_id = 7;
+	const static unsigned int node_type_id = 8;
 
 	Node(unsigned int op, unsigned int nparas) : Enum_Instance::t(node_type_id, op, nparas, nullptr) {
 		if(nparas > 0) {

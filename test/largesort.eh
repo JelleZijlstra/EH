@@ -22,10 +22,7 @@ while size <= max
 
 		echo name
 
-		#echo f.decompile()
-		#echo fa
 		(f.bindTo fa)()
-		#echo fa
 		assert(fa.isSorted(), "this sort doesn't work")
 	end
 	size += step

@@ -1,5 +1,3 @@
-%%stdout%%
-@object <Foo> [
-	toString <private,non-static,non-constant>: @function <user>: ()
-]
+%%stdout-regex%%
+<VisibilityError: Cannot access private member bar in object of type Foo: 0x[a-f\d]+>
 %%stderr%%

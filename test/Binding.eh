@@ -39,4 +39,4 @@ assert(3.operator+ 7 == 10, "and now it is 3")
 assert(bound.object() == 4, "object is 4")
 
 # @method method
-assert(bound.method() == Integer.operator+ .method(), "Same method")
+assert(bound.method() == Integer##operator+ , "Same method")

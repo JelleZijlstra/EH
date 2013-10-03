@@ -54,6 +54,23 @@ void ehclass_t::printvar(printvar_set &set, int level, EHI *ehi) {
     }
 }
 
+std::list<ehval_p> ehclass_t::children() const {
+    std::list<ehval_p> out;
+    for(auto &kv : members) {
+        out.push_back(kv.second->value);
+    }
+    for(auto &kv : instance_members) {
+        out.push_back(kv.second->value);
+    }
+    out.push_back(parent);
+    for(auto &i : super) {
+        out.push_back(i);
+    }
+    assert(out.size() == members.size() + instance_members.size() + 1 + super.size());
+    return out;
+}
+
+
 /*
  * Class
  */

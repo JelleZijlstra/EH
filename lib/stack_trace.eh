@@ -71,7 +71,7 @@
 	# overwrite include so that it applies stack tracing to included code
 	private realInclude = global.include
 
-	private context = Node.Context.new(this, this)
+	private context = Node.Context(this, this)
 
 	global.include = func: name
 		if name->0 != '/'
@@ -82,18 +82,19 @@
 		stacked.execute context
 	end
 
-	# overwrite Exception.new so that it sets the stack in an exception
-	Exception.new = func: args
-		private e = (Object.new.bindTo this) args
+	# overwrite Exception.operator() so that it sets the stack in an exception
+	Exception.operator() args = do
+		private e = (Class.operator().bindTo this) args
 		e.stack = global.EH.stack.clone()
 		e
 	end
 
 	# overwrite Exception.toString
-	private realToString = Exception.toString
+	private realToString = Exception##toString
 
-	Exception.toString = func:
+	Exception##toString = func:
 		private data = (realToString.bindTo this)()
+		echo this
 		data + "\n Stack trace:\n" + stringifyStack(this.stack)
 	end
 

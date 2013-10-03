@@ -17,7 +17,6 @@ EH_NORETURN void throw_error(const char *class_name, ehval_p args, EHI *ehi) {
 EH_INITIALIZER(Exception) {
 	REGISTER_METHOD(Exception, initialize);
 	REGISTER_METHOD(Exception, toString);
-	INHERIT_LIBRARY(Class);
 }
 
 /*

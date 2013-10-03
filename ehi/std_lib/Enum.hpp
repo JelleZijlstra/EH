@@ -97,6 +97,10 @@ public:
     	return value->printvar(set, level, ehi);
     }
 
+    virtual std::list<ehval_p> children() const override {
+        return value->children();
+    }
+
 	static ehval_p make_enum_class(const char *name, ehval_p scope, EHInterpreter *parent);
 };
 

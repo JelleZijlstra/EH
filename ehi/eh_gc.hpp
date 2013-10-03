@@ -607,6 +607,8 @@ public:
 	}
 
 	void do_collect() {
+		// turn it off for now
+		return;
 #ifdef DEBUG_GC
 		std::cout << "Starting GC run..." << std::endl;
 		print_stats();

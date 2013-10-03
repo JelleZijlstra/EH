@@ -149,7 +149,6 @@ FixedArray.inherit class
 	public quickSort() = this.quickSortIndexed(0, this.size())
 
 	private quickSortIndexed(min, size) = do
-		echo("qsort", min, size)
 		if size < 2
 			ret
 		end
@@ -199,9 +198,9 @@ FixedArray.inherit class
 		this
 	end
 
-	private parent i = i / 2
-	private left i = 2 * i
-	private right i = 2 * i + 1
+	private static parent i = i / 2
+	private static left i = 2 * i
+	private static right i = 2 * i + 1
 
 	private max_heapify(i, heap_size) = do
 		private l = left i

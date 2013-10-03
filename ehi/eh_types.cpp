@@ -107,7 +107,6 @@ ehmember_p ehval_t::get_instance_member(const char *name, ehcontext_t context, c
         }
     }
     if(include_object) {
-        // TODO: does this need a check against this being Object?
         ehval_p object_class = ehi->get_parent()->repo.get_primitive_class<Object>();
         return object_class->get_instance_member(name, context, ehi, false);
     }

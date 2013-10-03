@@ -84,7 +84,6 @@ ehval_p Class::get_parent_scope() {
 }
 
 ehmember_p Class::get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
-    // TODO: maybe this should check the instance_members too?
     if(value->members.count(name) != 0) {
         return value->members[name];
     }

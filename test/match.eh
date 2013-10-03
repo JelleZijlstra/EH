@@ -15,11 +15,11 @@ enum List
 	end
 
 	# Enable pretty-printing List objects
-	public toString = () => this.reduce((elt, b => elt.toString() + "::" + b), "Nil")
+	public toString() = this.reduce((elt, b => elt.toString() + "::" + b), "Nil")
 end
 
 # Define custom operator for construction of List objects
-Object.operator:: = rhs => List.Cons(this, rhs)
+Object##operator:: rhs = List.Cons(this, rhs)
 
 l = 3::4::(List.Nil)
 

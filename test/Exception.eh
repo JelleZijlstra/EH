@@ -8,4 +8,4 @@ private e = Exception.new("hello")
 assert(e.isA Exception)
 
 # @method toString
-assert(e.toString() == "hello", "message should appear in toString")
+assert(e.toString() == "<Exception: hello>", "message should appear in toString")

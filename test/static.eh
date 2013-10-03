@@ -7,23 +7,22 @@ class Foo
 	public baz
 	public mah
 	const muh = 2
-	const meh = func: n
+	const meh n = do
 		echo n
 	end
 
-	const toString = func:
+	const toString() = do
 		"@Foo " + bar + " " + baz + " " + mah + " " + muh
 	end
 end
-foo = Foo.new ()
+foo = Foo()
 printvar foo
-# Because bar is static, this will also modify bar as it appears in foo
 Foo.bar = 2
-echo(foo.bar)
-# ... And this will change bar as it appears in the class
-foo.bar = 3
 echo(Foo.bar)
-# Should both generate an error
+# ... And this will not work
+rescue(() => (foo.bar = 3))
+echo(Foo.bar)
 rescue(() => (Foo.muh = 42))
+# Should generate an error
 rescue(() => (foo.muh = 42))
 echo(Foo.muh)

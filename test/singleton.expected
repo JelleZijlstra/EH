@@ -2,4 +2,4 @@
 @object <Singleton> [
 ]
 %%stderr%%
-Uncaught exception of type VisibilityError: Cannot access private member new in object of type Singleton: @Singleton
+Uncaught exception of type VisibilityError: <VisibilityError: Cannot access private member operator() in object of type Class: (class <Singleton>)>

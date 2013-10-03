@@ -1,6 +1,5 @@
 %%stdout%%
-@object <Foo> [
-	bar <private,non-static,non-constant>: @int 42
-	baz <private,non-static,non-constant>: @int 3
+@class Foo [
+	baz <private,non-constant>: @int 3
 ]
 %%stderr%%

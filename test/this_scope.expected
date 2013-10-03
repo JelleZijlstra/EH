@@ -1,10 +1,10 @@
 %%stdout%%
-GlobalObject
-GlobalObject
-A
-A
-GlobalObject
-Function
-A
-Function
+(class <GlobalObject>)
+(class <GlobalObject>)
+(class <Class>)
+(class <Class>)
+(class <GlobalObject>)
+(class <Function.Scope>)
+(class <Class>)
+(class <Function.Scope>)
 %%stderr%%

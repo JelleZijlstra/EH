@@ -33,7 +33,6 @@
 #include "Random.hpp"
 #include "Range.hpp"
 #include "String.hpp"
-#include "SuperClass.hpp"
 #include "SyntaxError.hpp"
 #include "Tuple.hpp"
 #include "TypeError.hpp"
@@ -88,7 +87,6 @@ void ehinstance_init_GlobalObject(ehobj_t *obj, EHInterpreter *parent) {
 	GLOBAL_REGISTER_CLASS(Range);
 	GLOBAL_REGISTER_CLASS(Hash);
 	GLOBAL_REGISTER_CLASS(Tuple);
-	GLOBAL_REGISTER_CLASS(SuperClass);
 	REGISTER_PURE_CLASS(Exception);
 	REGISTER_PURE_CLASS(UnknownCommandError);
 	REGISTER_PURE_CLASS(TypeError);

@@ -2,8 +2,7 @@
 @object <Foo> [
 ]
 2
-3
-Cannot set constant member muh in object of type Foo: @Foo 3   2
-Cannot set constant member muh in object of type Foo: @Foo 3   2
 2
+<NameError: Unknown member baz in object of type Function.Scope: (function scope)>
+42
 %%stderr%%

@@ -1,6 +1,6 @@
 %%stdout%%
-@object <Foo> [
-	a <public,non-static,constant>: @int 3
+@class Foo [
+	a <public,constant>: @int 3
 ]
-%%stderr-regex%%
-Uncaught exception of type ConstError: Cannot set constant member a in object of type Foo: 0x[a-f0-9]+
+%%stderr%%
+Uncaught exception of type ConstError: <ConstError: Cannot set constant member a in object of type Class: (class <Foo>)>

@@ -37,6 +37,8 @@ EH_INITIALIZER(Enum) {
 	REGISTER_METHOD(Enum, toString);
 	REGISTER_METHOD_RENAME(Enum, operator_colon, "operator()");
 	REGISTER_METHOD_RENAME(Enum, operator_colon, "new");
+	REGISTER_STATIC_METHOD_RENAME(Enum, operator_colon, "operator()");
+	REGISTER_STATIC_METHOD_RENAME(Enum, operator_colon, "new");
 	REGISTER_CLASS(Enum, Instance);
 	INHERIT_LIBRARY(Class);
 }

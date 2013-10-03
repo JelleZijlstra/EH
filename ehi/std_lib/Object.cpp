@@ -3,7 +3,6 @@
 #include "Array.hpp"
 #include "Function.hpp"
 #include "Object.hpp"
-#include "SuperClass.hpp"
 
 /*
  * ehobj_t
@@ -84,6 +83,10 @@ std::set<std::string> Object::member_set(const EHInterpreter *interpreter_parent
 	for(auto &pair : value->members) {
 		members.insert(pair.first);
 	}
+	// always add Object members
+	for(auto &pair : interpreter_parent->base_object->get<Class>()->instance_members) {
+		members.insert(pair.first);
+	}
 	return members;
 }
 
@@ -128,7 +131,7 @@ EH_METHOD(Object, isA) {
 	args->assert_type<Class>("Object.isA", ehi);
 	ehval_p type_object = obj->get_type_object(ehi->get_parent());
 	// everything inherits Object
-	if(type_object == args || type_object == ehi->get_parent()->base_object) {
+	if(type_object == args || args == ehi->get_parent()->base_object) {
 		return Bool::make(true);
 	} else {
 		return Bool::make(type_object->inherits(args));

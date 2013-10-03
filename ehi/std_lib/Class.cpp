@@ -1,7 +1,6 @@
 #include "std_lib_includes.hpp"
 #include "Function.hpp"
 #include "Object.hpp"
-#include "SuperClass.hpp"
 
 /*
  * ehclass_t
@@ -35,16 +34,12 @@ void ehclass_t::register_method(const std::string &name, const ehlibmethod_t met
     instance_members[name] = member;
 }
 
-/*
- * Class
- */
-
-void Class::printvar(printvar_set &set, int level, EHI *ehi) {
-    void *ptr = static_cast<void *>(value);
+void ehclass_t::printvar(printvar_set &set, int level, EHI *ehi) {
+    void *ptr = static_cast<void *>(this);
     if(set.count(ptr) == 0) {
         set.insert(ptr);
-        std::cout << "@class " << ehi->get_parent()->repo.get_name(value->type_id) << " [" << std::endl;
-        for(auto &i : value->members) {
+        std::cout << "@class " << ehi->get_parent()->repo.get_name(type_id) << " [" << std::endl;
+        for(auto &i : members) {
             add_tabs(std::cout, level + 1);
             std::cout << i.first << " <";
             const attributes_t attribs = i.second->attribute;
@@ -57,6 +52,14 @@ void Class::printvar(printvar_set &set, int level, EHI *ehi) {
     } else {
         std::cout << "(recursion)" << std::endl;
     }
+}
+
+/*
+ * Class
+ */
+
+void Class::printvar(printvar_set &set, int level, EHI *ehi) {
+    value->printvar(set, level, ehi);
 }
 
 ehval_p Class::get_parent_scope() {
@@ -101,7 +104,7 @@ ehval_p Class::make(ehclass_t *obj, EHInterpreter *parent) {
 
 std::set<std::string> Class::instance_member_set(const EHInterpreter *interpreter_parent) {
     std::set<std::string> members;
-    for(auto &pair : value->members) {
+    for(auto &pair : value->instance_members) {
         members.insert(pair.first);
     }
     for(ehval_p superclass : value->super) {
@@ -118,7 +121,7 @@ std::set<std::string> Class::instance_member_set(const EHInterpreter *interprete
 EH_INITIALIZER(Class) {
     REGISTER_METHOD(Class, inherit);
     REGISTER_METHOD_RENAME(Class, operator_colon, "operator()");
-    REGISTER_METHOD(Class, new);
+    REGISTER_METHOD_RENAME(Class, operator_colon, "new");
     REGISTER_METHOD(Class, toString);
 }
 
@@ -138,7 +141,7 @@ EH_METHOD(Class, inherit) {
         throw_TypeError("inherited class must have instance members", args, ehi);
     }
     obj->inherit(args);
-    return SuperClass::make(args, ehi->get_parent());
+    return nullptr;
 }
 
 EH_METHOD(Class, new) {

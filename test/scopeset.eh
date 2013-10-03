@@ -14,8 +14,7 @@ class B
 		echo "There is no a"
 	end
 
-	# In a previous version of the program, "a" would access different variables in the next two lines
-	a = "value from B"
+	static a = "value from B"
 	echo a
 	echo(A.a)
 end

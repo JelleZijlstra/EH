@@ -93,6 +93,9 @@ public:
     virtual bool inherits(ehval_p superclass) override {
         return value->inherits(superclass);
     }
+    virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
+    	return value->printvar(set, level, ehi);
+    }
 
 	static ehval_p make_enum_class(const char *name, ehval_p scope, EHInterpreter *parent);
 };

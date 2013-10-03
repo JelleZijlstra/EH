@@ -4,9 +4,9 @@ Enum class
 enum List
 	Nil, Cons(head, tail)
 end
-@object <List> [
-	Cons <public,non-static,constant>: @enum constructor Cons <List>: head, tail
-	Nil <public,non-static,constant>: @enum instance Nil <List> [
+@class List [
+	Cons <public,constant>: @enum constructor Cons <List>: head, tail
+	Nil <public,constant>: @enum instance Nil <List> [
 	]
 ]
 Enum nullary member

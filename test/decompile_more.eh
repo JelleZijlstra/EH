@@ -2,36 +2,36 @@
 # Try some other features that should be decompilable
 include '../lib/library.eh'
 
-echo(Tuple.toString.decompile())
+echo(Tuple##toString.decompile())
 
-echo(Iterable.nth.decompile())
+echo(Iterable##nth.decompile())
 
-echo(Array.filter.decompile())
+echo(Array##filter.decompile())
 
-f = () => [1, 2, 3], {foo: 'bar'}
+f() = [1, 2, 3], {foo: 'bar'}
 echo(f.decompile())
 
-echo(StringSet.toString.decompile())
+echo(StringSet##toString.decompile())
 
 echo(Statistics.sd.decompile())
 
 echo(Statistics.median.decompile())
 
-f = func:
+f() = do
 	class Foo
 		public foo = () => 42
 	end
 end
 echo(f.decompile())
 
-f = func:
+f() = do
 	$test --foo=3 --bar -adf -kjkl={foo: 'baz'}
 end
 echo(f.decompile())
 
 echo(rescue.decompile())
 
-f = func:
+f() = do
 	try
 		echo 42
 	catch if "the world" == "coming to an end"

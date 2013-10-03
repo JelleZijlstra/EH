@@ -13,5 +13,5 @@ assertThrows(thrower, EmptyIterator, "iterator should be depleted")
 try
 	thrower()
 catch if exception.isA EmptyIterator
-	assert(exception.toString() == 'Empty iterator')
+	assert(exception.toString() == '<EmptyIterator: Empty iterator>')
 end

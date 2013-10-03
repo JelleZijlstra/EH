@@ -10,7 +10,6 @@
 #include "std_lib/MiscellaneousError.hpp"
 #include "std_lib/Null.hpp"
 #include "std_lib/Object.hpp"
-#include "std_lib/SuperClass.hpp"
 #include "std_lib/ConstError.hpp"
 #include "std_lib/VisibilityError.hpp"
 #include "std_lib/NameError.hpp"

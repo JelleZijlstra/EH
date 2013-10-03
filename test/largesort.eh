@@ -10,9 +10,9 @@ catch
 	0
 end)
 
-const sortFunctions = ("bucket sort", FixedArray.bucketSort)::("mergesort", FixedArray.mergeSort)::("quicksort", FixedArray.quickSort)::Nil
+const sortFunctions = ("bucket sort", FixedArray##bucketSort)::("mergesort", FixedArray##mergeSort)::("quicksort", FixedArray##quickSort)::Nil
 
-const fillFunction = i => Random.rand()
+const fillFunction i = Random.rand()
 
 private size = min
 # here a standard for loop would indeed have been useful

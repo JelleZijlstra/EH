@@ -1,8 +1,8 @@
 #!/usr/bin/ehi
 # Test private scope (mostly because I'm curious what the behavior is)
-a = func:
+a() = do
 	private x = 3
-	ret func:
+	() => do
 		printvar x
 	end
 end
@@ -11,10 +11,10 @@ echo 'Variant 1'
 
 echo 'Variant 2'
 class A
-	private x = 3
-	y = func:
+	private static x = 3
+	static y() = do
 		printvar x
-		ret class
+		class
 			printvar x
 		end
 	end

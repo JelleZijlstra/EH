@@ -1,28 +1,27 @@
 #!/usr/bin/ehi
-# Inheriting from builtin types
+# Inheriting from builtin types doesn't actually work, so we have to cheat
 class Vector
-	this.inherit Array
+	private arr
 
 	# necessary to ensure that the object_data of the resulting object is set; segfaults are likely without this
-	public initialize() = []
+	public initialize() = (this.arr = [])
 
-	private set = this.operator->=
-
-	public operator->= = func: index, value
+	public operator->= (index, value) = do
 		if !(index.isA Integer)
 			throw "Invalid type for argument 0 to Vector.operator->="
 		end
-		this.set(index, value)
+		this.arr->index = value
 	end
 
-	private get = this.operator->
-
-	public operator-> = func: index
+	public operator-> index = do
 		if !(index.isA Integer)
 			throw "Invalid type for argument 0 to Vector.operator->"
 		end
-		this.get index
+		this.arr->index
 	end
+
+	public length() = this.arr.length()
+	public push v = this.arr.push v
 end
 
 v = Vector.new ()

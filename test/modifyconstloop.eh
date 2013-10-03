@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 class Foo
-	const a = 3
+	const static a = 3
 end
 printvar Foo
 for i in 1

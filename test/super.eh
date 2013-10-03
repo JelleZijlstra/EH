@@ -2,24 +2,24 @@
 # Illustrate the use of explicit superclasses
 
 class Foo
-	private super = this.inherit Object
-	public toString = func: 
-		"the address of this object is " + super.toString()
+	this.inherit Object
+	public toString() = do
+		"the address of this object is " + Object##toString.bindTo(this)()
 	end
-	public fooMethod = func:
+	public fooMethod() = do
 		echo 'this is a Foo method'
 	end
 end
 
-f = Foo.new()
+f = Foo()
 echo f
 
 class Bar
-	private foo = this.inherit Foo
-	public fooMethod = func:
+	this.inherit Foo
+	public fooMethod() = do
 		echo 'this is a Bar method'
-		foo.fooMethod()
+		Foo##fooMethod.bindTo(this)()
 	end
 end
-b = Bar.new()
+b = Bar()
 b.fooMethod()

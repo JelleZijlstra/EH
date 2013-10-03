@@ -3,6 +3,6 @@ printvar(3.isA Integer)
 printvar(4.isA Bool)
 class Foo
 end
-f = Foo.new()
+f = Foo()
 printvar(f.isA Foo)
-printvar(Foo.new().isA f)
+printvar(Foo().isA Foo)

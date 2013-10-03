@@ -25,7 +25,6 @@
 #include "std_lib/Node.hpp"
 #include "std_lib/Object.hpp"
 #include "std_lib/Range.hpp"
-#include "std_lib/SuperClass.hpp"
 #include "std_lib/Tuple.hpp"
 #include "std_lib/VisibilityError.hpp"
 
@@ -908,9 +907,6 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 		}
 		case T_ACCESS: {
 			ehval_p base_var = eh_execute(internal_paras[0], context);
-			if(base_var->is_a<SuperClass>()) {
-				throw_TypeError("Cannot set member on parent class", base_var, this);
-			}
 			// accessor is guaranteed to be a string
 			const char *accessor = internal_paras[1]->get<String>();
 			if(attributes == nullptr) {

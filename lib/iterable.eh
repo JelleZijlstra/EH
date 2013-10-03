@@ -171,7 +171,7 @@ class Iterable
 	const public containsMember elt = this.any (elt.operator==)
 
 	# Returns an iterable that returns the values in each iterator sequentially
-	const public static chain = iter => ChainedIterable.new iter
+	const public static chain iter = ChainedIterable iter
 end
 
 class ChainedIterable
@@ -183,17 +183,21 @@ class ChainedIterable
 
 	public getIterator() = do
 		private iter = this.iterables.getIterator()
+		printvar(this.iterables)
+		printvar(this.iterables.type())
+		printvar iter
+		printvar(iter.hasNext())
 		if iter.hasNext()
-			Iterator.new iter
+			Iterator iter
 		else
-			DummyIterator.new()
+			DummyIterator()
 		end
 	end
 
 	public static empty() = try
 		this.iterables.getIterator().next().type().empty()
 	catch
-		throw(Exception.new "Cannot instantiate empty object")
+		throw(Exception "Cannot instantiate empty object")
 	end
 
 	class Iterator

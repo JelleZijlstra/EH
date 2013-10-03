@@ -1,4 +1,4 @@
 %%stdout%%
-Foo instance
+(class <Foo>)
 Foo instance
 %%stderr%%

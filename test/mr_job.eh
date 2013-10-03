@@ -14,4 +14,4 @@ class WordCounter
 end
 
 arr = [['hello', 'world'], ['goodbye', 'world']]
-echo (WordCounter.run arr)
+echo (WordCounter().run arr)

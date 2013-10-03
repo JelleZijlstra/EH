@@ -1,5 +1,7 @@
 %%stdout%%
 @object <Vector> [
+	arr <private,non-constant>: @array [
+	]
 ]
 @int 42
 @int 1

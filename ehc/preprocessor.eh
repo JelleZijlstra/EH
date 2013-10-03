@@ -4,17 +4,17 @@ enum ExtendedNode
 	T_MIXED_TUPLE_LIST(members)
 end
 
-static Node.isNode = (func:
+Node.isNode = (() => do
 	private node_t = Node.typeId()
 	private extended_t = ExtendedNode.typeId()
-	func: val
+	val => do
 		private type = val.typeId()
 		type == node_t || type == extended_t
 	end
 end)()
 
 class Preprocessor
-	public static preprocess = func: code, filename, verbose: false
+	public static preprocess(code, filename, verbose: false) = do
 		private path = File.fullPath filename
 		private pp = Preprocessor.new()
 
@@ -34,7 +34,7 @@ class Preprocessor
 		listify code
 	end
 
-	public initialize = () => (this.included_files = {})
+	public initialize() = (this.included_files = {})
 
 	class ListifyIterator
 		private l
@@ -49,7 +49,7 @@ class Preprocessor
 			node
 		end
 
-		public next = () => match this.l
+		public next() = match this.l
 			case Node.T_COMMA(@left, @right)
 				this.l = right
 				map_if_node left
@@ -68,7 +68,7 @@ class Preprocessor
 		public getIterator = () => this
 
 		# calculate length
-		private list_length = l => match l
+		private list_length l = match l
 			case Node.T_COMMA(_, @right) | Node.T_MIXED_TUPLE(_, @right)
 				1 + list_length right
 			case Node.T_END
@@ -80,7 +80,7 @@ class Preprocessor
 		public length = () => list_length(this.l)
 	end
 
-	public listify = code => if code.typeId() == Node.typeId()
+	public static listify code = if code.typeId() == Node.typeId()
 		match code
 			case Node.T_COMMA(_, _)
 				Node.T_LIST(Tuple.initialize(ListifyIterator.new code))
@@ -156,7 +156,7 @@ class Preprocessor
 
 	public included_files
 
-	public replace_include = func: code, path
+	public replace_include(code, path) = do
 		private obj = this
 		expression_map((code => match code
 			case Node.T_CALL(Node.T_VARIABLE("include"), Node.T_LITERAL(@file))

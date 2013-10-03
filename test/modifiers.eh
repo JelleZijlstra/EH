@@ -8,10 +8,10 @@ catch
 end
 
 class A
-	private a = 1
+	private static a = 1
 	static b = 2
-	const c = 3
-	public d = 4
+	const static c = 3
+	public static d = 4
 end
 
 private myA = A.new()

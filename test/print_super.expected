@@ -1,7 +1,5 @@
-%%stdout-regex%%
-@parent class
-0x[a-f\d]+
-@object <Foo> \[
-\]
+%%stdout%%
+null
+
 %%stderr%%
-Uncaught exception of type TypeError: Cannot set member on parent class: SuperClass
+Uncaught exception of type NameError: <NameError: Unknown member operator() in object of type Null: >

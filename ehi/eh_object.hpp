@@ -63,5 +63,7 @@ public:
 
     bool inherits(ehval_p superclass);
 
+    void printvar(printvar_set &set, int level, EHI *ehi);
+
     void register_method(const std::string &name, const ehlibmethod_t method, const attributes_t attributes, EHInterpreter *interpreter_parent);
 };

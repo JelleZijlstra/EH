@@ -51,7 +51,7 @@ public:
 	}
 
 	virtual std::list<ehval_p> children() const override {
-		return { value->args, value->code };
+		return { value->args, value->code, value->parent };
 	}
 
 	virtual std::string decompile(int level) const override {

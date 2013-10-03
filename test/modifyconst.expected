@@ -1,7 +1,7 @@
-%%stdout%%
-@object <Foo> [
-]
-<ConstError: Cannot set constant member quuz in object of type Foo: 0x7ff9d1005bb4>
-@object <Foo> [
-]
+%%stdout-regex%%
+@object <Foo> \[
+\]
+<ConstError: Cannot set constant member quuz in object of type Foo: 0x[a-f\d]+>
+@object <Foo> \[
+\]
 %%stderr%%

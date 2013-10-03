@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 
 class A
-	f = func:
+	static f() = do
 		private x = 3
 		() => x
 	end

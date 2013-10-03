@@ -1,5 +1,5 @@
 %%stdout%%
 null
 
-false
 %%stderr%%
+Uncaught exception of type TypeError: <TypeError: Invalid type for argument to Object.isA (expected Class): Null>

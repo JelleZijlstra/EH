@@ -6,7 +6,7 @@ FixedArray.inherit class
 		private current
 		private size
 
-		public initialize = func: fa
+		public initialize fa = do
 			this.fa = fa
 			this.current = 0
 			this.size = fa.size()
@@ -23,7 +23,7 @@ FixedArray.inherit class
 		end
 	end
 
-	public getIterator() = this.Iterator.new this
+	public getIterator() = Iterator this
 
 end
 

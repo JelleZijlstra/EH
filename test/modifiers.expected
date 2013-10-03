@@ -1,7 +1,7 @@
-%%stdout-regex%%
-Cannot access private member a in object of type A: 0x[a-f0-9]+
-5
-Cannot set constant member c in object of type A: 0x[a-f0-9]+
+%%stdout%%
+<VisibilityError: Cannot access private member a in object of type Class: (class <A>)>
+2
+<ConstError: Cannot set constant member c in object of type Class: (class <A>)>
 4
-Unknown member e in object of type A: 0x[a-f0-9]+
+<NameError: Unknown member e in object of type Class: (class <A>)>
 %%stderr%%

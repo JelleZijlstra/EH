@@ -15,7 +15,7 @@ class BrainInterpreter
 
 	private input = File.new "/dev/stdin"
 
-	public initialize = func: program
+	public initialize program = do
 		this.data = FixedArray.fill(30000, (_ => 0))
 		this.dataptr = 0
 		this.program = program
@@ -23,7 +23,7 @@ class BrainInterpreter
 		this.rip = 0
 	end
 
-	public run = func:
+	public run() = do
 		while true
 			given this.program->(this.rip)
 				case '>'
@@ -56,7 +56,7 @@ class BrainInterpreter
 		end
 	end
 
-	public findOpeningBracket = func:
+	public findOpeningBracket() = do
 		private out = this.rip
 		private depth = 0
 		while out >= 0
@@ -70,10 +70,10 @@ class BrainInterpreter
 			end
 			out -= 1
 		end
-		throw(BrainException.new "Could not find matching opening bracket")
+		throw(BrainException "Could not find matching opening bracket")
 	end
 
-	public findClosingBracket = func:
+	public findClosingBracket() = do
 		private out = this.rip
 		private depth = 0
 		while out < this.programLength
@@ -87,16 +87,16 @@ class BrainInterpreter
 			end
 			out += 1
 		end
-		throw(BrainException.new "Could not find matching closing bracket")
+		throw(BrainException "Could not find matching closing bracket")
 	end
 
-	public runWithFile = func: file
-		bi = BrainInterpreter.new(File.readFile file)
+	public static runWithFile file = do
+		bi = BrainInterpreter(File.readFile file)
 		bi.run()
 	end
 
-	public runWithString = func: str
-		bi = BrainInterpreter.new str
+	public static runWithString str = do
+		bi = BrainInterpreter str
 		bi.run()
 	end
 end

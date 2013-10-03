@@ -6,19 +6,19 @@ end
 
 class Bar
 	private super = this.inherit Foo
-	public printIt = func:
-		printvar super
-		echo super
+	public printIt() = do
+		printvar(this.super)
+		echo(this.super)
 	end
-	public assignIt = func:
-		super.toString = () => "Nana"
+	public assignIt() = do
+		this.super.toString() = "Nana"
 	end
-	public cloneIt = func:
-		printvar(super.new())
+	public cloneIt() = do
+		printvar(this.super())
 	end
 end
 
-b = Bar.new()
+b = Bar()
 b.printIt()
 b.cloneIt()
 b.assignIt()

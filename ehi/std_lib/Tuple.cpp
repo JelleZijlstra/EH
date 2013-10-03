@@ -91,7 +91,7 @@ EH_METHOD(Tuple, compare) {
 EH_METHOD(Tuple, getIterator) {
 	ASSERT_NULL_AND_TYPE(Tuple, "Tuple.getIterator");
 	ehval_p class_member = obj->get_type_object(ehi->get_parent())->get_property("Iterator", obj, ehi);
-	return ehi->call_method(class_member, "new", obj, obj);
+	return ehi->call_method(class_member, "operator()", obj, obj);
 }
 
 ehval_p Tuple_WithStringKeys::make(type in, EHInterpreter *parent) {

@@ -149,6 +149,7 @@ FixedArray.inherit class
 	public quickSort() = this.quickSortIndexed(0, this.size())
 
 	private quickSortIndexed(min, size) = do
+		echo("qsort", min, size)
 		if size < 2
 			ret
 		end

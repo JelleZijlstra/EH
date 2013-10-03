@@ -1,13 +1,13 @@
 #!/usr/bin/ehi
 class Foo
 	private bar
-	
+
 	# this, remarkably, works
-	public setBar = this.bar => echo bar
-	
-	public getBar = () => this.bar
+	public setBar(this.bar) = echo(this.bar)
+
+	public getBar() = this.bar
 end
 
-f = Foo.new()
+f = Foo()
 f.setBar 42
 echo(f.getBar())

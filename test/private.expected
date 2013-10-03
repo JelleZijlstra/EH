@@ -3,7 +3,7 @@
 3
 3
 4
-Unknown member baz in object of type Bar: @Bar 3
+<NameError: Unknown member baz in object of type Class: (class <Bar>)>
 5
 5
 %%stderr%%

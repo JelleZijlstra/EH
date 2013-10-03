@@ -2,8 +2,8 @@
 foo = 2
 baz = 4
 class Bar
-	private foo = 3
-	public tryIt = func:
+	private static foo = 3
+	public static tryIt() = do
 		# 3
 		echo foo
 		# 3
@@ -23,7 +23,7 @@ class Bar
 		echo baz
 	end
 
-	const toString = () => "@Bar " + foo
+	const toString() = "@Bar " + foo
 end
 # 2
 echo foo

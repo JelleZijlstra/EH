@@ -12,7 +12,6 @@
 #include "std_lib/MiscellaneousError.hpp"
 #include "std_lib/NameError.hpp"
 #include "std_lib/Range.hpp"
-#include "std_lib/SuperClass.hpp"
 #include "std_lib/TypeError.hpp"
 
 static const char *get_filename();

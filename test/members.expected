@@ -1,21 +1,8 @@
 %%stdout%%
 @array [
-	@string "compare"
-	@string "finalize"
 	@string "inherit"
-	@string "initialize"
-	@string "isA"
-	@string "members"
 	@string "new"
-	@string "operator!="
-	@string "operator<"
-	@string "operator<="
-	@string "operator<=>"
-	@string "operator=="
-	@string "operator>"
-	@string "operator>="
+	@string "operator()"
 	@string "toString"
-	@string "type"
-	@string "typeId"
 ]
 %%stderr%%

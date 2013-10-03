@@ -2,7 +2,7 @@
 
 include '../lib/library.eh'
 
-Integer.times = f => for this
+Integer##times f = for this
 	f()
 end
 
@@ -10,10 +10,10 @@ private b = 3.times
 
 assert(b.isA Binding, "Variable is saved into a binding")
 assert(3.times.isA Binding, "accessing a function through a property automatically creates a binding")
-assert(Integer.times.isA Binding, "it is also a binding on the class object")
+assert(!(Integer##times.isA Binding), "it is not a binding on the class object")
 
 # @method new
-assertThrows((() => Binding.new()), MiscellaneousError, "Cannot create a binding directly")
+assertThrows(Binding.new, MiscellaneousError, "Cannot create a binding directly")
 
 # @method decompile
 assert(b.decompile() == "func: f

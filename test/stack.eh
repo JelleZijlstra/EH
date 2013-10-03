@@ -5,16 +5,16 @@ class Stack
 
 	public initialize() = (this.s = [])
 
-	public push = func: input
-		if this.s.length() <= n
+	public push input = do
+		if this.s.length() <= this.n
 			this.s.push input
 		else
-			this.s->n = input
+			this.s->this.n = input
 		end
 		this.n = this.n + 1
 	end
 
-	public pop = func:
+	public pop() = do
 		printvar(this.s)
 		if this.n == 0
 			throw "Stack empty"

@@ -1,6 +1,6 @@
 #!/usr/bin/ehi
 class Foo
-	public foo = func:
+	public static foo() = do
 		for i in 3
 			private j = i
 			echo j

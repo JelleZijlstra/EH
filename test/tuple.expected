@@ -1,11 +1,18 @@
 %%stdout%%
-@object <Tuple> [
+@tuple <3> [
+	@int 1
+	@string "true"
+	@bool false
 ]
 @int 3
 @bool true
 @int 1
 @string "true"
 @bool false
-@object <Tuple> [
+@tuple <3> [
+	@bool false
+	@array [
+	]
+	@int 42
 ]
 %%stderr%%

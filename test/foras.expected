@@ -17,14 +17,13 @@ Array not previously declared
 Object
 bar
 baz
+clone
 compare
 finalize
-inherit
 initialize
 isA
 mah
 members
-new
 operator!=
 operator<
 operator<=

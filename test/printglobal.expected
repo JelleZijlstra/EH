@@ -1,411 +1,234 @@
 %%stdout%%
 @object <GlobalObject> [
-	ArgumentError <public,non-static,constant>: @object <ArgumentError> [
-		initialize <public,non-static,non-constant>: @function <library>: 
+	ArgumentError <public,constant>: @class ArgumentError [
 	]
-	Array <public,non-static,constant>: @object <Array> [
-		Iterator <public,non-static,non-constant>: @object <Array.Iterator> [
-			hasNext <public,non-static,non-constant>: @function <library>: 
-			initialize <public,non-static,non-constant>: @function <library>: 
-			next <public,non-static,non-constant>: @function <library>: 
-			peek <public,non-static,non-constant>: @function <library>: 
+	Array <public,constant>: @class Array [
+		Iterator <public,non-constant>: @class Array.Iterator [
+			operator() <public,non-constant>: @function <library>: 
 		]
-		compare <public,non-static,non-constant>: @function <library>: 
-		getIterator <public,non-static,non-constant>: @function <library>: 
-		has <public,non-static,non-constant>: @function <library>: 
-		initialize <public,non-static,non-constant>: @function <library>: 
-		length <public,non-static,non-constant>: @function <library>: 
-		operator-> <public,non-static,non-constant>: @function <library>: 
-		operator->= <public,non-static,non-constant>: @function <library>: 
-		push <public,non-static,non-constant>: @function <library>: 
-		toArray <public,non-static,non-constant>: @function <library>: 
-		toTuple <public,non-static,non-constant>: @function <library>: 
+		operator() <public,non-constant>: @function <library>: 
 	]
-	Attribute <public,non-static,constant>: @object <Attribute> [
-		constAttribute <public,non-static,constant>: @enum instance constAttribute <Attribute> [
+	Attribute <public,constant>: @class Attribute [
+		constAttribute <public,constant>: @enum instance constAttribute <Attribute> [
 		]
-		privateAttribute <public,non-static,constant>: @enum instance privateAttribute <Attribute> [
+		privateAttribute <public,constant>: @enum instance privateAttribute <Attribute> [
 		]
-		publicAttribute <public,non-static,constant>: @enum instance publicAttribute <Attribute> [
+		publicAttribute <public,constant>: @enum instance privateAttribute <Attribute> [
 		]
-		staticAttribute <public,non-static,constant>: @enum instance staticAttribute <Attribute> [
+		staticAttribute <public,constant>: @enum instance staticAttribute <Attribute> [
 		]
 	]
-	Binding <public,non-static,constant>: @object <Binding> [
-		bindTo <public,non-static,non-constant>: @function <library>: 
-		decompile <public,non-static,non-constant>: @function <library>: 
-		method <public,non-static,non-constant>: @function <library>: 
-		new <public,non-static,non-constant>: @function <library>: 
-		object <public,non-static,non-constant>: @function <library>: 
-		operator() <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
+	Binding <public,constant>: @class Binding [
+		operator() <public,non-constant>: @function <library>: 
 	]
-	Bool <public,non-static,constant>: @object <Bool> [
-		compare <public,non-static,non-constant>: @function <library>: 
-		initialize <public,non-static,non-constant>: @function <library>: 
-		operator! <public,non-static,non-constant>: @function <library>: 
-		toBool <public,non-static,non-constant>: @function <library>: 
-		toInteger <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
+	Bool <public,constant>: @class Bool [
+		operator() <public,non-constant>: @function <library>: 
 	]
-	ConstError <public,non-static,constant>: @object <ConstError> [
-		initialize <public,non-static,non-constant>: @function <library>: 
+	Class <public,constant>: @class Class [
 	]
-	EH <public,non-static,constant>: @object <EH> [
-		collectGarbage <public,non-static,non-constant>: @function <library>: 
-		contextName <public,non-static,non-constant>: @function <library>: 
-		eval <public,non-static,non-constant>: @function <library>: 
-		lex <public,non-static,non-constant>: @function <library>: 
-		parse <public,non-static,non-constant>: @function <library>: 
+	ConstError <public,constant>: @class ConstError [
 	]
-	EmptyIterator <public,non-static,constant>: @object <EmptyIterator> [
-		initialize <public,non-static,non-constant>: @function <library>: 
+	EH <public,constant>: @class EH [
+		collectGarbage <public,non-constant>: @function <library>: 
+		contextName <public,non-constant>: @function <library>: 
+		eval <public,non-constant>: @function <library>: 
+		lex <public,non-constant>: @function <library>: 
+		parse <public,non-constant>: @function <library>: 
 	]
-	Enum <public,non-static,constant>: @object <Enum> [
-		compare <public,non-static,non-constant>: @function <library>: 
-		isConstructor <public,non-static,non-constant>: @function <library>: 
-		map <public,non-static,non-constant>: @function <library>: 
-		new <public,non-static,non-constant>: @function <library>: 
-		operator() <public,non-static,non-constant>: @function <library>: 
-		operator-> <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
-		type <public,non-static,non-constant>: @function <library>: 
-		typeId <public,non-static,non-constant>: @function <library>: 
+	EmptyIterator <public,constant>: @class EmptyIterator [
 	]
-	Exception <public,non-static,constant>: @object <Exception> [
-		initialize <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
-	]
-	File <public,non-static,constant>: @object <File> [
-		close <public,non-static,non-constant>: @function <library>: 
-		dirname <public,non-static,non-constant>: @function <library>: 
-		finalize <public,non-static,non-constant>: @function <library>: 
-		fullPath <public,non-static,non-constant>: @function <library>: 
-		getc <public,non-static,non-constant>: @function <library>: 
-		gets <public,non-static,non-constant>: @function <library>: 
-		initialize <public,non-static,non-constant>: @function <library>: 
-		isOpen <public,non-static,non-constant>: @function <library>: 
-		open <public,non-static,non-constant>: @function <library>: 
-		puts <public,non-static,non-constant>: @function <library>: 
-		readFile <public,non-static,non-constant>: @function <library>: 
-		temporary <public,non-static,non-constant>: @function <library>: 
-	]
-	FixedArray <public,non-static,constant>: @object <FixedArray> [
-		initialize <public,non-static,non-constant>: @function <library>: 
-		operator-> <public,non-static,non-constant>: @function <library>: 
-		operator->= <public,non-static,non-constant>: @function <library>: 
-		size <public,non-static,non-constant>: @function <library>: 
-	]
-	Float <public,non-static,constant>: @object <Float> [
-		abs <public,non-static,non-constant>: @function <library>: 
-		compare <public,non-static,non-constant>: @function <library>: 
-		initialize <public,non-static,non-constant>: @function <library>: 
-		operator* <public,non-static,non-constant>: @function <library>: 
-		operator+ <public,non-static,non-constant>: @function <library>: 
-		operator- <public,non-static,non-constant>: @function <library>: 
-		operator/ <public,non-static,non-constant>: @function <library>: 
-		round <public,non-static,non-constant>: @function <library>: 
-		sqrt <public,non-static,non-constant>: @function <library>: 
-		toBool <public,non-static,non-constant>: @function <library>: 
-		toFloat <public,non-static,non-constant>: @function <library>: 
-		toInteger <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
-	]
-	Function <public,non-static,constant>: @object <Function> [
-		args <public,non-static,non-constant>: @function <library>: 
-		bindTo <public,non-static,non-constant>: @function <library>: 
-		code <public,non-static,non-constant>: @function <library>: 
-		decompile <public,non-static,non-constant>: @function <library>: 
-		operator() <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
-	]
-	GarbageCollector <public,non-static,constant>: @object <GarbageCollector> [
-		run <public,non-static,non-constant>: @function <library>: 
-		stats <public,non-static,non-constant>: @function <library>: 
-	]
-	GlobalObject <public,non-static,constant>: (recursion)
-	Hash <public,non-static,constant>: @object <Hash> [
-		Iterator <public,non-static,non-constant>: @object <Hash.Iterator> [
-			hasNext <public,non-static,non-constant>: @function <library>: 
-			initialize <public,non-static,non-constant>: @function <library>: 
-			next <public,non-static,non-constant>: @function <library>: 
+	Enum <public,constant>: @class Enum [
+		Instance <public,non-constant>: @class Enum.Instance [
 		]
-		compare <public,non-static,non-constant>: @function <library>: 
-		delete <public,non-static,non-constant>: @function <library>: 
-		getIterator <public,non-static,non-constant>: @function <library>: 
-		has <public,non-static,non-constant>: @function <library>: 
-		keys <public,non-static,non-constant>: @function <library>: 
-		length <public,non-static,non-constant>: @function <library>: 
-		operator-> <public,non-static,non-constant>: @function <library>: 
-		operator->= <public,non-static,non-constant>: @function <library>: 
-		toArray <public,non-static,non-constant>: @function <library>: 
 	]
-	Integer <public,non-static,constant>: @object <Integer> [
-		Iterator <public,non-static,non-constant>: @object <Integer.Iterator> [
-			hasNext <public,non-static,non-constant>: @function <library>: 
-			initialize <public,non-static,non-constant>: @function <library>: 
-			next <public,non-static,non-constant>: @function <library>: 
+	Exception <public,constant>: @class Exception [
+	]
+	File <public,constant>: @class File [
+		dirname <public,non-constant>: @function <library>: 
+		fullPath <public,non-constant>: @function <library>: 
+		operator() <public,non-constant>: @function <library>: 
+		readFile <public,non-constant>: @function <library>: 
+		temporary <public,non-constant>: @function <library>: 
+	]
+	FixedArray <public,constant>: @class FixedArray [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	Float <public,constant>: @class Float [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	Function <public,constant>: @class Function [
+		Scope <public,non-constant>: @class Function.Scope [
 		]
-		abs <public,non-static,non-constant>: @function <library>: 
-		compare <public,non-static,non-constant>: @function <library>: 
-		getBit <public,non-static,non-constant>: @function <library>: 
-		getIterator <public,non-static,non-constant>: @function <library>: 
-		initialize <public,non-static,non-constant>: @function <library>: 
-		length <public,non-static,non-constant>: @function <library>: 
-		operator% <public,non-static,non-constant>: @function <library>: 
-		operator& <public,non-static,non-constant>: @function <library>: 
-		operator* <public,non-static,non-constant>: @function <library>: 
-		operator+ <public,non-static,non-constant>: @function <library>: 
-		operator- <public,non-static,non-constant>: @function <library>: 
-		operator/ <public,non-static,non-constant>: @function <library>: 
-		operator<< <public,non-static,non-constant>: @function <library>: 
-		operator>> <public,non-static,non-constant>: @function <library>: 
-		operator^ <public,non-static,non-constant>: @function <library>: 
-		operator_uminus <public,non-static,non-constant>: @function <library>: 
-		operator| <public,non-static,non-constant>: @function <library>: 
-		operator~ <public,non-static,non-constant>: @function <library>: 
-		setBit <public,non-static,non-constant>: @function <library>: 
-		sqrt <public,non-static,non-constant>: @function <library>: 
-		toBool <public,non-static,non-constant>: @function <library>: 
-		toChar <public,non-static,non-constant>: @function <library>: 
-		toFloat <public,non-static,non-constant>: @function <library>: 
-		toInt <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
 	]
-	JSON <public,non-static,constant>: @object <JSON> [
-		parse <public,non-static,non-constant>: @function <library>: 
+	GarbageCollector <public,constant>: @class GarbageCollector [
+		run <public,non-constant>: @function <library>: 
+		stats <public,non-constant>: @function <library>: 
 	]
-	LoopError <public,non-static,constant>: @object <LoopError> [
-		initialize <public,non-static,non-constant>: @function <library>: 
+	GlobalObject <public,constant>: @class GlobalObject [
 	]
-	Map <public,non-static,constant>: @object <Map> [
-		Iterator <public,non-static,non-constant>: @object <Map.Iterator> [
-			hasNext <public,non-static,non-constant>: @function <library>: 
-			initialize <public,non-static,non-constant>: @function <library>: 
-			next <public,non-static,non-constant>: @function <library>: 
-			peek <public,non-static,non-constant>: @function <library>: 
+	Hash <public,constant>: @class Hash [
+		Iterator <public,non-constant>: @class Hash.Iterator [
+			operator() <public,non-constant>: @function <library>: 
 		]
-		compare <public,non-static,non-constant>: @function <library>: 
-		getIterator <public,non-static,non-constant>: @function <library>: 
-		has <public,non-static,non-constant>: @function <library>: 
-		initialize <public,non-static,non-constant>: @function <library>: 
-		operator-> <public,non-static,non-constant>: @function <library>: 
-		operator->= <public,non-static,non-constant>: @function <library>: 
-		size <public,non-static,non-constant>: @function <library>: 
 	]
-	MiscellaneousError <public,non-static,constant>: @object <MiscellaneousError> [
-		initialize <public,non-static,non-constant>: @function <library>: 
-	]
-	NameError <public,non-static,constant>: @object <NameError> [
-		initialize <public,non-static,non-constant>: @function <library>: 
-	]
-	Node <public,non-static,constant>: @object <Node> [
-		Context <public,non-static,non-constant>: @object <Node.Context> [
-			getObject <public,non-static,non-constant>: @function <library>: 
-			getScope <public,non-static,non-constant>: @function <library>: 
-			initialize <public,non-static,non-constant>: @function <library>: 
+	Integer <public,constant>: @class Integer [
+		Iterator <public,non-constant>: @class Integer.Iterator [
+			operator() <public,non-constant>: @function <library>: 
 		]
-		T_ACCESS <public,non-static,constant>: @enum constructor T_ACCESS <Node>: parameter, parameter
-		T_AND <public,non-static,constant>: @enum constructor T_AND <Node>: parameter, parameter
-		T_ANYTHING <public,non-static,constant>: @enum instance T_ANYTHING <Node> [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	JSON <public,constant>: @class JSON [
+	]
+	LoopError <public,constant>: @class LoopError [
+	]
+	Map <public,constant>: @class Map [
+		Iterator <public,non-constant>: @class Map.Iterator [
+			operator() <public,non-constant>: @function <library>: 
 		]
-		T_ARRAY_LITERAL <public,non-static,constant>: @enum constructor T_ARRAY_LITERAL <Node>: parameter
-		T_ARRAY_MEMBER <public,non-static,constant>: @enum constructor T_ARRAY_MEMBER <Node>: parameter, parameter
-		T_ARRAY_MEMBER_NO_KEY <public,non-static,constant>: @enum constructor T_ARRAY_MEMBER_NO_KEY <Node>: parameter
-		T_ARROW <public,non-static,constant>: @enum constructor T_ARROW <Node>: parameter, parameter
-		T_AS <public,non-static,constant>: @enum constructor T_AS <Node>: parameter, parameter
-		T_ASSIGN <public,non-static,constant>: @enum constructor T_ASSIGN <Node>: parameter, parameter
-		T_ATTRIBUTE <public,non-static,constant>: @enum constructor T_ATTRIBUTE <Node>: parameter, parameter
-		T_BAR <public,non-static,constant>: @enum constructor T_BAR <Node>: parameter, parameter
-		T_BINARY_COMPLEMENT <public,non-static,constant>: @enum constructor T_BINARY_COMPLEMENT <Node>: parameter
-		T_BREAK <public,non-static,constant>: @enum constructor T_BREAK <Node>: parameter
-		T_CALL <public,non-static,constant>: @enum constructor T_CALL <Node>: parameter, parameter
-		T_CALL_METHOD <public,non-static,constant>: @enum constructor T_CALL_METHOD <Node>: parameter, parameter, parameter
-		T_CASE <public,non-static,constant>: @enum constructor T_CASE <Node>: parameter, parameter
-		T_CATCH <public,non-static,constant>: @enum constructor T_CATCH <Node>: parameter
-		T_CATCH_IF <public,non-static,constant>: @enum constructor T_CATCH_IF <Node>: parameter, parameter
-		T_CLASS <public,non-static,constant>: @enum constructor T_CLASS <Node>: parameter
-		T_CLASS_MEMBER <public,non-static,constant>: @enum constructor T_CLASS_MEMBER <Node>: parameter, parameter
-		T_COMMA <public,non-static,constant>: @enum constructor T_COMMA <Node>: parameter, parameter
-		T_COMMAND <public,non-static,constant>: @enum constructor T_COMMAND <Node>: parameter, parameter
-		T_CONTINUE <public,non-static,constant>: @enum constructor T_CONTINUE <Node>: parameter
-		T_DEFAULT <public,non-static,constant>: @enum constructor T_DEFAULT <Node>: parameter
-		T_DOUBLEARROW <public,non-static,constant>: @enum constructor T_DOUBLEARROW <Node>: parameter, parameter
-		T_ELSE <public,non-static,constant>: @enum constructor T_ELSE <Node>: parameter, parameter
-		T_ELSIF <public,non-static,constant>: @enum constructor T_ELSIF <Node>: parameter, parameter
-		T_END <public,non-static,constant>: @enum instance T_END <Node> [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	MiscellaneousError <public,constant>: @class MiscellaneousError [
+	]
+	NameError <public,constant>: @class NameError [
+	]
+	Node <public,constant>: @class Node [
+		Context <public,non-constant>: @class Node.Context [
 		]
-		T_ENUM <public,non-static,constant>: @enum constructor T_ENUM <Node>: parameter, parameter, parameter
-		T_ENUM_WITH_ARGUMENTS <public,non-static,constant>: @enum constructor T_ENUM_WITH_ARGUMENTS <Node>: parameter, parameter
-		T_FOR <public,non-static,constant>: @enum constructor T_FOR <Node>: parameter, parameter
-		T_FOR_IN <public,non-static,constant>: @enum constructor T_FOR_IN <Node>: parameter, parameter, parameter
-		T_FUNC <public,non-static,constant>: @enum constructor T_FUNC <Node>: parameter, parameter
-		T_GIVEN <public,non-static,constant>: @enum constructor T_GIVEN <Node>: parameter, parameter
-		T_GROUPING <public,non-static,constant>: @enum constructor T_GROUPING <Node>: parameter
-		T_HASH_LITERAL <public,non-static,constant>: @enum constructor T_HASH_LITERAL <Node>: parameter
-		T_IF <public,non-static,constant>: @enum constructor T_IF <Node>: parameter, parameter, parameter
-		T_IF_ELSE <public,non-static,constant>: @enum constructor T_IF_ELSE <Node>: parameter, parameter, parameter, parameter
-		T_LIST <public,non-static,constant>: @enum constructor T_LIST <Node>: parameter
-		T_LITERAL <public,non-static,constant>: @enum constructor T_LITERAL <Node>: parameter
-		T_LONGPARA <public,non-static,constant>: @enum constructor T_LONGPARA <Node>: parameter, parameter
-		T_MATCH <public,non-static,constant>: @enum constructor T_MATCH <Node>: parameter, parameter
-		T_MATCH_SET <public,non-static,constant>: @enum constructor T_MATCH_SET <Node>: parameter
-		T_MIXED_TUPLE <public,non-static,constant>: @enum constructor T_MIXED_TUPLE <Node>: parameter, parameter
-		T_NAMED_ARGUMENT <public,non-static,constant>: @enum constructor T_NAMED_ARGUMENT <Node>: parameter, parameter
-		T_NAMED_CLASS <public,non-static,constant>: @enum constructor T_NAMED_CLASS <Node>: parameter, parameter
-		T_NOT <public,non-static,constant>: @enum constructor T_NOT <Node>: parameter
-		T_NULL <public,non-static,constant>: @enum instance T_NULL <Node> [
+		T_ACCESS <public,constant>: @enum constructor T_ACCESS <Node>: parameter, parameter
+		T_AND <public,constant>: @enum constructor T_AND <Node>: parameter, parameter
+		T_ANYTHING <public,constant>: @enum instance T_ANYTHING <Node> [
 		]
-		T_NULLARY_ENUM <public,non-static,constant>: @enum constructor T_NULLARY_ENUM <Node>: parameter
-		T_OR <public,non-static,constant>: @enum constructor T_OR <Node>: parameter, parameter
-		T_RANGE <public,non-static,constant>: @enum constructor T_RANGE <Node>: parameter, parameter
-		T_RAW <public,non-static,constant>: @enum constructor T_RAW <Node>: parameter
-		T_RET <public,non-static,constant>: @enum constructor T_RET <Node>: parameter
-		T_SCOPE <public,non-static,constant>: @enum instance T_SCOPE <Node> [
+		T_ARRAY_LITERAL <public,constant>: @enum constructor T_ARRAY_LITERAL <Node>: parameter
+		T_ARRAY_MEMBER <public,constant>: @enum constructor T_ARRAY_MEMBER <Node>: parameter, parameter
+		T_ARRAY_MEMBER_NO_KEY <public,constant>: @enum constructor T_ARRAY_MEMBER_NO_KEY <Node>: parameter
+		T_ARROW <public,constant>: @enum constructor T_ARROW <Node>: parameter, parameter
+		T_AS <public,constant>: @enum constructor T_AS <Node>: parameter, parameter
+		T_ASSIGN <public,constant>: @enum constructor T_ASSIGN <Node>: parameter, parameter
+		T_ATTRIBUTE <public,constant>: @enum constructor T_ATTRIBUTE <Node>: parameter, parameter
+		T_BAR <public,constant>: @enum constructor T_BAR <Node>: parameter, parameter
+		T_BINARY_COMPLEMENT <public,constant>: @enum constructor T_BINARY_COMPLEMENT <Node>: parameter
+		T_BREAK <public,constant>: @enum constructor T_BREAK <Node>: parameter
+		T_CALL <public,constant>: @enum constructor T_CALL <Node>: parameter, parameter
+		T_CALL_METHOD <public,constant>: @enum constructor T_CALL_METHOD <Node>: parameter, parameter, parameter
+		T_CASE <public,constant>: @enum constructor T_CASE <Node>: parameter, parameter
+		T_CATCH <public,constant>: @enum constructor T_CATCH <Node>: parameter
+		T_CATCH_IF <public,constant>: @enum constructor T_CATCH_IF <Node>: parameter, parameter
+		T_CLASS <public,constant>: @enum constructor T_CLASS <Node>: parameter
+		T_CLASS_MEMBER <public,constant>: @enum constructor T_CLASS_MEMBER <Node>: parameter, parameter
+		T_COMMA <public,constant>: @enum constructor T_COMMA <Node>: parameter, parameter
+		T_COMMAND <public,constant>: @enum constructor T_COMMAND <Node>: parameter, parameter
+		T_CONTINUE <public,constant>: @enum constructor T_CONTINUE <Node>: parameter
+		T_DEFAULT <public,constant>: @enum constructor T_DEFAULT <Node>: parameter
+		T_DOUBLEARROW <public,constant>: @enum constructor T_DOUBLEARROW <Node>: parameter, parameter
+		T_ELSE <public,constant>: @enum constructor T_ELSE <Node>: parameter, parameter
+		T_ELSIF <public,constant>: @enum constructor T_ELSIF <Node>: parameter, parameter
+		T_END <public,constant>: @enum instance T_END <Node> [
 		]
-		T_SEPARATOR <public,non-static,constant>: @enum constructor T_SEPARATOR <Node>: parameter, parameter
-		T_SHORTPARA <public,non-static,constant>: @enum constructor T_SHORTPARA <Node>: parameter, parameter
-		T_SWITCH <public,non-static,constant>: @enum constructor T_SWITCH <Node>: parameter, parameter
-		T_THIS <public,non-static,constant>: @enum instance T_THIS <Node> [
+		T_ENUM <public,constant>: @enum constructor T_ENUM <Node>: parameter, parameter, parameter
+		T_ENUM_WITH_ARGUMENTS <public,constant>: @enum constructor T_ENUM_WITH_ARGUMENTS <Node>: parameter, parameter
+		T_FOR <public,constant>: @enum constructor T_FOR <Node>: parameter, parameter
+		T_FOR_IN <public,constant>: @enum constructor T_FOR_IN <Node>: parameter, parameter, parameter
+		T_FUNC <public,constant>: @enum constructor T_FUNC <Node>: parameter, parameter
+		T_GIVEN <public,constant>: @enum constructor T_GIVEN <Node>: parameter, parameter
+		T_GROUPING <public,constant>: @enum constructor T_GROUPING <Node>: parameter
+		T_HASH_LITERAL <public,constant>: @enum constructor T_HASH_LITERAL <Node>: parameter
+		T_IF <public,constant>: @enum constructor T_IF <Node>: parameter, parameter, parameter
+		T_IF_ELSE <public,constant>: @enum constructor T_IF_ELSE <Node>: parameter, parameter, parameter, parameter
+		T_INSTANCE_ACCESS <public,constant>: @enum constructor T_INSTANCE_ACCESS <Node>: parameter, parameter
+		T_LIST <public,constant>: @enum constructor T_LIST <Node>: parameter
+		T_LITERAL <public,constant>: @enum constructor T_LITERAL <Node>: parameter
+		T_LONGPARA <public,constant>: @enum constructor T_LONGPARA <Node>: parameter, parameter
+		T_MATCH <public,constant>: @enum constructor T_MATCH <Node>: parameter, parameter
+		T_MATCH_SET <public,constant>: @enum constructor T_MATCH_SET <Node>: parameter
+		T_MIXED_TUPLE <public,constant>: @enum constructor T_MIXED_TUPLE <Node>: parameter, parameter
+		T_NAMED_ARGUMENT <public,constant>: @enum constructor T_NAMED_ARGUMENT <Node>: parameter, parameter
+		T_NAMED_CLASS <public,constant>: @enum constructor T_NAMED_CLASS <Node>: parameter, parameter
+		T_NOT <public,constant>: @enum constructor T_NOT <Node>: parameter
+		T_NULL <public,constant>: @enum instance T_NULL <Node> [
 		]
-		T_TRY <public,non-static,constant>: @enum constructor T_TRY <Node>: parameter, parameter
-		T_TRY_FINALLY <public,non-static,constant>: @enum constructor T_TRY_FINALLY <Node>: parameter, parameter, parameter
-		T_VARIABLE <public,non-static,constant>: @enum constructor T_VARIABLE <Node>: parameter
-		T_WHEN <public,non-static,constant>: @enum constructor T_WHEN <Node>: parameter, parameter, parameter
-		T_WHILE <public,non-static,constant>: @enum constructor T_WHILE <Node>: parameter, parameter
-		T_XOR <public,non-static,constant>: @enum constructor T_XOR <Node>: parameter, parameter
-		decompile <public,non-static,non-constant>: @function <library>: 
-		execute <public,non-static,non-constant>: @function <library>: 
-	]
-	Null <public,non-static,constant>: @object <Null> [
-		compare <public,non-static,non-constant>: @function <library>: 
-		initialize <public,non-static,non-constant>: @function <library>: 
-		toBool <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
-	]
-	Object <public,non-static,constant>: @object <Object> [
-		compare <public,non-static,non-constant>: @function <library>: 
-		finalize <public,non-static,non-constant>: @function <library>: 
-		inherit <public,non-static,non-constant>: @function <library>: 
-		initialize <public,non-static,non-constant>: @function <library>: 
-		isA <public,non-static,non-constant>: @function <library>: 
-		members <public,non-static,non-constant>: @function <library>: 
-		new <public,non-static,non-constant>: @function <library>: 
-		operator!= <public,non-static,non-constant>: @function <library>: 
-		operator< <public,non-static,non-constant>: @function <library>: 
-		operator<= <public,non-static,non-constant>: @function <library>: 
-		operator<=> <public,non-static,non-constant>: @function <library>: 
-		operator== <public,non-static,non-constant>: @function <library>: 
-		operator> <public,non-static,non-constant>: @function <library>: 
-		operator>= <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
-		type <public,non-static,non-constant>: @function <library>: 
-		typeId <public,non-static,non-constant>: @function <library>: 
-	]
-	Random <public,non-static,constant>: @object <Random> [
-		max <public,static,constant>: @int 2147483647
-		rand <public,non-static,non-constant>: @function <library>: 
-		srand <public,non-static,non-constant>: @function <library>: 
-	]
-	Range <public,non-static,constant>: @object <Range> [
-		Iterator <public,non-static,non-constant>: @object <Range.Iterator> [
-			hasNext <public,non-static,non-constant>: @function <library>: 
-			initialize <public,non-static,non-constant>: @function <library>: 
-			next <public,non-static,non-constant>: @function <library>: 
+		T_NULLARY_ENUM <public,constant>: @enum constructor T_NULLARY_ENUM <Node>: parameter
+		T_OR <public,constant>: @enum constructor T_OR <Node>: parameter, parameter
+		T_RANGE <public,constant>: @enum constructor T_RANGE <Node>: parameter, parameter
+		T_RAW <public,constant>: @enum constructor T_RAW <Node>: parameter
+		T_RET <public,constant>: @enum constructor T_RET <Node>: parameter
+		T_SCOPE <public,constant>: @enum instance T_SCOPE <Node> [
 		]
-		compare <public,non-static,non-constant>: @function <library>: 
-		getIterator <public,non-static,non-constant>: @function <library>: 
-		max <public,non-static,non-constant>: @function <library>: 
-		min <public,non-static,non-constant>: @function <library>: 
-		operator-> <public,non-static,non-constant>: @function <library>: 
-		toArray <public,non-static,non-constant>: @function <library>: 
-		toRange <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
-	]
-	String <public,non-static,constant>: @object <String> [
-		Builder <public,non-static,non-constant>: @object <String.Builder> [
-			new <public,non-static,non-constant>: @function <library>: 
-			operator<< <public,non-static,non-constant>: @function <library>: 
-			toString <public,non-static,non-constant>: @function <library>: 
+		T_SEPARATOR <public,constant>: @enum constructor T_SEPARATOR <Node>: parameter, parameter
+		T_SHORTPARA <public,constant>: @enum constructor T_SHORTPARA <Node>: parameter, parameter
+		T_SWITCH <public,constant>: @enum constructor T_SWITCH <Node>: parameter, parameter
+		T_THIS <public,constant>: @enum instance T_THIS <Node> [
 		]
-		Iterator <public,non-static,non-constant>: @object <String.Iterator> [
-			hasNext <public,non-static,non-constant>: @function <library>: 
-			initialize <public,non-static,non-constant>: @function <library>: 
-			next <public,non-static,non-constant>: @function <library>: 
-			peek <public,non-static,non-constant>: @function <library>: 
+		T_TRY <public,constant>: @enum constructor T_TRY <Node>: parameter, parameter
+		T_TRY_FINALLY <public,constant>: @enum constructor T_TRY_FINALLY <Node>: parameter, parameter, parameter
+		T_VARIABLE <public,constant>: @enum constructor T_VARIABLE <Node>: parameter
+		T_WHEN <public,constant>: @enum constructor T_WHEN <Node>: parameter, parameter, parameter
+		T_WHILE <public,constant>: @enum constructor T_WHILE <Node>: parameter, parameter
+		T_XOR <public,constant>: @enum constructor T_XOR <Node>: parameter, parameter
+	]
+	Null <public,constant>: @class Null [
+		operator() <public,non-constant>: @function <library>: 
+	]
+	Object <public,constant>: @class Object [
+	]
+	Random <public,constant>: @class Random [
+		max <public,constant>: @int 2147483647
+		rand <public,non-constant>: @function <library>: 
+		srand <public,non-constant>: @function <library>: 
+	]
+	Range <public,constant>: @class Range [
+		Iterator <public,non-constant>: @class Range.Iterator [
+			operator() <public,non-constant>: @function <library>: 
 		]
-		charAtPosition <public,non-static,non-constant>: @function <library>: 
-		compare <public,non-static,non-constant>: @function <library>: 
-		doesMatch <public,non-static,non-constant>: @function <library>: 
-		getIterator <public,non-static,non-constant>: @function <library>: 
-		initialize <public,non-static,non-constant>: @function <library>: 
-		length <public,non-static,non-constant>: @function <library>: 
-		operator+ <public,non-static,non-constant>: @function <library>: 
-		operator-> <public,non-static,non-constant>: @function <library>: 
-		replace <public,non-static,non-constant>: @function <library>: 
-		toBool <public,non-static,non-constant>: @function <library>: 
-		toFloat <public,non-static,non-constant>: @function <library>: 
-		toInteger <public,non-static,non-constant>: @function <library>: 
-		toRange <public,non-static,non-constant>: @function <library>: 
-		toString <public,non-static,non-constant>: @function <library>: 
-		trim <public,non-static,non-constant>: @function <library>: 
+		operator() <public,non-constant>: @function <library>: 
 	]
-	SuperClass <public,non-static,constant>: @object <SuperClass> [
-		toString <public,non-static,non-constant>: @function <library>: 
-	]
-	SyntaxError <public,non-static,constant>: @object <SyntaxError> [
-		initialize <public,non-static,non-constant>: @function <library>: 
-	]
-	Tuple <public,non-static,constant>: @object <Tuple> [
-		Iterator <public,non-static,non-constant>: @object <Tuple.Iterator> [
-			hasNext <public,non-static,non-constant>: @function <library>: 
-			initialize <public,non-static,non-constant>: @function <library>: 
-			next <public,non-static,non-constant>: @function <library>: 
+	String <public,constant>: @class String [
+		Builder <public,non-constant>: @class String.Builder [
+			operator() <public,non-constant>: @function <library>: 
 		]
-		WithStringKeys <public,non-static,non-constant>: @object <Tuple.WithStringKeys> [
-			has <public,non-static,non-constant>: @function <library>: 
-			operator-> <public,non-static,non-constant>: @function <library>: 
+		Iterator <public,non-constant>: @class String.Iterator [
+			operator() <public,non-constant>: @function <library>: 
 		]
-		compare <public,non-static,non-constant>: @function <library>: 
-		getIterator <public,non-static,non-constant>: @function <library>: 
-		has <public,non-static,non-constant>: @function <library>: 
-		initialize <public,non-static,non-constant>: @function <library>: 
-		length <public,non-static,non-constant>: @function <library>: 
-		operator-> <public,non-static,non-constant>: @function <library>: 
-		toTuple <public,non-static,non-constant>: @function <library>: 
+		operator() <public,non-constant>: @function <library>: 
 	]
-	TypeError <public,non-static,constant>: @object <TypeError> [
-		initialize <public,non-static,non-constant>: @function <library>: 
+	SyntaxError <public,constant>: @class SyntaxError [
 	]
-	UnknownCommandError <public,non-static,constant>: @object <UnknownCommandError> [
-		initialize <public,non-static,non-constant>: @function <library>: 
+	Tuple <public,constant>: @class Tuple [
+		Iterator <public,non-constant>: @class Tuple.Iterator [
+			operator() <public,non-constant>: @function <library>: 
+		]
+		WithStringKeys <public,non-constant>: @class Tuple.WithStringKeys [
+		]
+		operator() <public,non-constant>: @function <library>: 
 	]
-	VisibilityError <public,non-static,constant>: @object <VisibilityError> [
-		initialize <public,non-static,non-constant>: @function <library>: 
+	TypeError <public,constant>: @class TypeError [
 	]
-	argc <public,non-static,non-constant>: @int 1
-	argv <public,non-static,non-constant>: @array [
+	UnknownCommandError <public,constant>: @class UnknownCommandError [
+	]
+	VisibilityError <public,constant>: @class VisibilityError [
+	]
+	argc <public,non-constant>: @int 1
+	argv <public,non-constant>: @array [
 		@string "printglobal.eh"
 	]
-	commands <public,non-static,constant>: @hash [
+	commands <public,constant>: @hash [
 		'echo': @function <library>: 
 		'put': @function <library>: 
 		'q': @function <library>: 
 		'quit': @function <library>: 
 	]
-	echo <public,non-static,non-constant>: @function <library>: 
-	exit <public,non-static,non-constant>: @function <library>: 
-	getinput <public,non-static,non-constant>: @function <library>: 
-	global <public,non-static,constant>: (recursion)
-	handleUncaught <public,non-static,non-constant>: @function <library>: 
-	include <public,non-static,non-constant>: @function <library>: 
-	log <public,non-static,non-constant>: @function <library>: 
-	pow <public,non-static,non-constant>: @function <library>: 
-	printvar <public,non-static,non-constant>: @function <library>: 
-	put <public,non-static,non-constant>: @function <library>: 
-	shell <public,non-static,non-constant>: @function <library>: 
-	throw <public,non-static,non-constant>: @function <library>: 
-	toString <public,non-static,non-constant>: @function <library>: 
-	workingDir <public,non-static,non-constant>: @function <library>: 
+	echo <public,non-constant>: @function <library>: 
+	exit <public,non-constant>: @function <library>: 
+	getinput <public,non-constant>: @function <library>: 
+	global <public,constant>: (recursion)
+	handleUncaught <public,non-constant>: @function <library>: 
+	include <public,non-constant>: @function <library>: 
+	log <public,non-constant>: @function <library>: 
+	pow <public,non-constant>: @function <library>: 
+	printvar <public,non-constant>: @function <library>: 
+	put <public,non-constant>: @function <library>: 
+	shell <public,non-constant>: @function <library>: 
+	throw <public,non-constant>: @function <library>: 
+	toString <public,non-constant>: @function <library>: 
+	workingDir <public,non-constant>: @function <library>: 
 ]
 %%stderr%%

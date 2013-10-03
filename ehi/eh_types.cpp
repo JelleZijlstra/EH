@@ -92,6 +92,15 @@ ehmember_p ehval_t::set_instance_property(const char *name, ehval_p new_value, e
     return new_member;
 }
 
+ehval_p ehval_t::get_instance_member_throwing(const char *name, ehcontext_t context, class EHI *ehi) {
+	ehmember_p member = get_instance_member(name, context, ehi);
+	if(member.null()) {
+		throw_NameError(this, name, ehi);
+	} else {
+		return member->value;
+	}
+}
+
 ehmember_p ehval_t::get_instance_member(const char *name, ehcontext_t context, class EHI *ehi, bool include_object) {
     ehmember_p my_member = get_instance_member_current_object(name, context, ehi);
     if(!my_member.null()) {

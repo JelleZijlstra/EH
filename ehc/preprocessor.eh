@@ -43,7 +43,7 @@ class Preprocessor
 
 		public hasNext() = this.l != Node.T_END
 
-		private static map_if_node = node => if EH.equalType(node, Node)
+		private static map_if_node node = if Node.isNode node
 			node.map listify
 		else
 			node
@@ -99,7 +99,7 @@ class Preprocessor
 		code
 	end
 
-	private expression_map_pattern = f, code => match code
+	private static expression_map_pattern = f, code => match code
 		case Node.T_GROUPING(@inner)
 			Node.T_GROUPING(expression_map_pattern(f, inner))
 		case Node.T_MATCH_SET(_) | Node.T_ANYTHING
@@ -114,14 +114,14 @@ class Preprocessor
 			f code
 	end
 
-	private expression_map_match = f, code => match code
+	private static expression_map_match = f, code => match code
 		case Node.T_END
 			Node.T_END
 		case Node.T_COMMA(Node.T_CASE(@pattern, @body), @rest)
 			Node.T_COMMA(Node.T_CASE(expression_map_pattern(f, pattern), f body), expression_map_match(f, rest))
 	end
 
-	private expression_map_lvalue = f, code => match code
+	private static expression_map_lvalue = f, code => match code
 		case Node.T_ARROW(@base, @accessor)
 			Node.T_ARROW(f base, f accessor)
 		case Node.T_ACCESS(@base, @property)
@@ -137,7 +137,7 @@ class Preprocessor
 	end
 
 	# calls f on all pieces of code in code that are actual executable expressions (not part of lvalues or match statements)
-	public expression_map = f, code => if EH.equalType(code, Node)
+	public static expression_map(f, code) = if Node.isNode code
 		match code
 			case Node.T_ASSIGN(@lvalue, @rvalue)
 				Node.T_ASSIGN(expression_map_lvalue(f, lvalue), f rvalue)

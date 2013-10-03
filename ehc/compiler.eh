@@ -137,15 +137,15 @@ class Compiler
 		if !(Node.isNode code)
 			sb << assignment
 			match code.type()
-				case "String"
+				case String
 					sb << 'String::make(strdup("' << code.replaceCharacter('\\', '\\\\').replaceCharacter('"', '\\"').replaceCharacter("\n", "\\n") << '"))'
-				case "Integer"
+				case Integer
 					sb << "Integer::make(" << code << ")"
-				case "Float"
+				case Float
 					sb << "Float::make(" << code << ")"
-				case "Bool"
+				case Bool
 					sb << "Bool::make(" << code << ")"
-				case "Null"
+				case Null
 					sb << "Null::make()"
 				case _
 					printvar code
@@ -180,6 +180,9 @@ class Compiler
 				case Node.T_ACCESS(@base, @accessor)
 					private base_name = this.doCompile(sb, base)
 					sb << assignment << base_name << '->get_property("' << accessor << "\", context, ehi);\n"
+				case Node.T_INSTANCE_ACCESS(@base, @accessor)
+					private base_name = this.doCompile(sb, base)
+					sb << assignment << base_name << '->get_instance_member_throwing("' << accessor << "\", context, ehi);\n"
 				case Node.T_CLASS_MEMBER(@attributes, @lvalue)
 					this.compile_set(sb, lvalue, "Null::make()", Attributes.parse attributes)
 					sb << assignment << "Null::make();\n"

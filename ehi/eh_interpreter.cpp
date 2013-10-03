@@ -1030,12 +1030,7 @@ ehval_p EHI::eh_op_dot(ehval_p *paras, const ehcontext_t &context) {
 ehval_p EHI::eh_op_instance_access(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p base_var = eh_execute(paras[0], context);
 	const char *accessor = paras[1]->get<String>();
-	ehmember_p member = base_var->get_instance_member(accessor, context, this);
-	if(member.null()) {
-		throw_NameError(base_var, accessor, this);
-	} else {
-		return member->value;
-	}
+	return base_var->get_instance_member_throwing(accessor, context, this);
 }
 ehval_p EHI::eh_op_try_finally(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p try_block = paras[0];

@@ -214,6 +214,9 @@ public:
 	// similar, but looks up the scope chain
 	ehmember_p get_property_up_scope_chain(const char *name, ehcontext_t context, class EHI *ehi);
 
+	// get a member on a class's prototype, throwing a NameError if it's not found
+    ehval_p get_instance_member_throwing(const char *name, ehcontext_t context, class EHI *ehi);
+
 	// get a member on a class's prototype
     virtual ehmember_p get_instance_member(const char *name, ehcontext_t context, class EHI *ehi, bool include_object = true);
 

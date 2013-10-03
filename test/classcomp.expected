@@ -1,3 +1,6 @@
 %%stdout%%
+false
+false
+false
+false
 %%stderr%%
-Uncaught exception of type TypeError: Invalid type for argument to Bool.compare (expected Bool): Null

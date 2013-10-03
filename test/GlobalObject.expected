@@ -9,12 +9,9 @@ null
 	@int 3
 	"foo": @string "bar"
 ]
-@object <(anonymous class)> [
-	bar <private,non-static,non-constant>: @int 3
-	baz <public,static,non-constant>: @int 5
-	foo <public,non-static,non-constant>: @int 4
-	quux <public,non-static,constant>: @int 6
-	spam <public,static,constant>: @function <user>: ()
+@class (anonymous class) [
+	baz <public,non-constant>: @int 5
+	spam <public,constant>: @function <user>: ()
 ]
 3
 4::[]

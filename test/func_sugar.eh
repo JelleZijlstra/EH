@@ -3,9 +3,9 @@
 class Foo
 	static public foo x = x * x
 
-	public bar z = z + z
+	static public bar z = z + z
 
-	public baz(a, b) = a + b
+	static public baz(a, b) = a + b
 end
 
 printvar Foo

@@ -40,6 +40,8 @@
 	Enum <public,constant>: @class Enum [
 		Instance <public,non-constant>: @class Enum.Instance [
 		]
+		new <public,non-constant>: @function <library>: 
+		operator() <public,non-constant>: @function <library>: 
 	]
 	Exception <public,constant>: @class Exception [
 	]

@@ -183,10 +183,6 @@ class ChainedIterable
 
 	public getIterator() = do
 		private iter = this.iterables.getIterator()
-		printvar(this.iterables)
-		printvar(this.iterables.type())
-		printvar iter
-		printvar(iter.hasNext())
 		if iter.hasNext()
 			Iterator iter
 		else
@@ -194,11 +190,7 @@ class ChainedIterable
 		end
 	end
 
-	public static empty() = try
-		this.iterables.getIterator().next().type().empty()
-	catch
-		throw(Exception "Cannot instantiate empty object")
-	end
+	public static empty() = []
 
 	class Iterator
 		private outer_iter

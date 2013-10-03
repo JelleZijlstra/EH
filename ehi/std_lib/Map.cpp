@@ -67,7 +67,7 @@ EH_METHOD(Map, has) {
 EH_METHOD(Map, getIterator) {
 	ASSERT_OBJ_TYPE(Map, "Map.getIterator");
 	ehval_p class_member = obj->get_type_object(ehi->get_parent())->get_property("Iterator", obj, ehi);
-	return ehi->call_method(class_member, "new", obj, obj);
+	return ehi->call_method(class_member, "operator()", obj, obj);
 }
 
 /*

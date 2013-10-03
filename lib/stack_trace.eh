@@ -94,7 +94,6 @@
 
 	Exception##toString = func:
 		private data = (realToString.bindTo this)()
-		echo this
 		data + "\n Stack trace:\n" + stringifyStack(this.stack)
 	end
 

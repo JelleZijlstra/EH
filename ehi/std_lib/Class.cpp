@@ -87,9 +87,14 @@ ehmember_p Class::get_property_current_object(const char *name, ehcontext_t cont
     // TODO: maybe this should check the instance_members too?
     if(value->members.count(name) != 0) {
         return value->members[name];
-    } else {
-        return nullptr;
     }
+    for(ehval_p superclass : value->super) {
+        ehmember_p member = superclass->get_property_current_object(name, context, ehi);
+        if(!member.null()) {
+            return member;
+        }
+    }
+    return nullptr;
 }
 
 void Class::set_member_directly(const char *name, ehmember_p member, ehcontext_t context, class EHI *ehi) {

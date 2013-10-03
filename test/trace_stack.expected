@@ -1,5 +1,5 @@
 %%stdout%%
 %%stderr%%
-Uncaught exception of type ArgumentError: Argument out of range (method Array.operator->=): 0
+Uncaught exception of type ArgumentError: <ArgumentError: Argument out of range (method Array.operator->): 1>
  Stack trace:
 

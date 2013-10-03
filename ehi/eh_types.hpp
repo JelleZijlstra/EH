@@ -273,9 +273,6 @@ public:
 	virtual bool can_set_property() {
 		return false;
 	}
-
-protected:
-	ehval_p unbind_binding_to_self(ehval_p value);
 };
 
 typedef ehval_t::ehval_p ehval_p;

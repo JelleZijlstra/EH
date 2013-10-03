@@ -50,8 +50,6 @@ void ehval_t::printvar(printvar_set &set, int level, class EHI *ehi) {
 
 void ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
 	check_static_attribute(name, member, context, ehi);
-    // unbind bindings to the current object (TODO: why is this needed?)
-    member->value = unbind_binding_to_self(member->value);
     // if a property with this name already exists, confirm that it is not const or inaccessible
     ehmember_p current_member = get_property_current_object(name, context, ehi);
     check_can_set_member(current_member, name, context, ehi);
@@ -59,7 +57,6 @@ void ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t contex
 }
 
 ehmember_p ehval_t::set_property(const char *name, ehval_p new_value, ehcontext_t context, class EHI *ehi) {
-    new_value = unbind_binding_to_self(new_value);
 	ehmember_p current_member = get_property_current_object(name, context, ehi);
 	if(current_member.null()) {
 		// now check the type object
@@ -161,21 +158,11 @@ ehmember_p ehval_t::get_property_up_scope_chain(const char *name, ehcontext_t co
 }
 
 bool ehval_t::can_access_private(ehcontext_t context, EHI *ehi) {
-	// TODO: fix private again
 	return (context.scope == this) || (context.object == this) || get_type_object(ehi->get_parent())->can_access_private(context, ehi);
 }
 
 std::set<std::string> ehval_t::member_set(const EHInterpreter *interpreter_parent) {
 	return get_type_object(interpreter_parent)->instance_member_set(interpreter_parent);
-}
-
-ehval_p ehval_t::unbind_binding_to_self(ehval_p value) {
-    if(value->is_a<Binding>()) {
-        if(value->get<Binding>()->object_data == this) {
-            return value->get<Binding>()->method;
-        }
-    }
-	return value;
 }
 
 /*

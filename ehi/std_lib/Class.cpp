@@ -121,7 +121,7 @@ std::set<std::string> Class::instance_member_set(const EHInterpreter *interprete
 EH_INITIALIZER(Class) {
     REGISTER_METHOD(Class, inherit);
     REGISTER_METHOD_RENAME(Class, operator_colon, "operator()");
-    REGISTER_METHOD_RENAME(Class, operator_colon, "new");
+    REGISTER_METHOD_RENAME(Class, new);
     REGISTER_METHOD(Class, toString);
 }
 

@@ -699,8 +699,9 @@ ehval_p EHI::eh_op_given(ehval_p *paras, const ehcontext_t &context) {
 			return eh_execute(op->members[1], context);
 		}
 	}
-	throw_MiscellaneousError("No matching case in given statement", this);
-	return nullptr;
+	std::string switchvar_str = toString(switchvar, context)->get<String>();
+	const char *msg = strdup(("No matching case in given statement: " + switchvar_str).c_str());
+	throw_MiscellaneousError(msg, this);
 }
 
 bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
@@ -835,8 +836,9 @@ ehval_p EHI::eh_op_match(ehval_p *paras, const ehcontext_t &context) {
 			return eh_execute(case_node->members[1], context);
 		}
 	}
-	throw_MiscellaneousError("No matching case in match statement", this);
-	return nullptr;
+	std::string switchvar_str = toString(switchvar, context)->get<String>();
+	const char *msg = strdup(("No matching case in given statement: " + switchvar_str).c_str());
+	throw_MiscellaneousError(msg, this);
 }
 ehval_p EHI::eh_op_customop(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p lhs = eh_execute(paras[0], context);
@@ -919,33 +921,7 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 		}
 		case T_VARIABLE: {
 			const char *name = internal_paras[0]->get<String>();
-			if(attributes == nullptr) {
-				ehmember_p member = context.scope->get_property_up_scope_chain(name, context, this);
-				if(!member.null()) {
-					if(member->isconst()) {
-						// bug: if the const member is actually in a higher scope, this error message will be wrong
-						throw_ConstError(context.scope, name, this);
-					}
-					member->value = rvalue;
-					return rvalue;
-				}
-			}
-			attributes_t new_attributes = (attributes == nullptr) ? attributes_t() : *attributes;
-			ehmember_p new_member = ehmember_t::make(new_attributes, rvalue);
-			if(context.scope->has_instance_members()) {
-				if(new_member->isstatic()) {
-					// set on the class
-					attributes_t fixed_attributes(new_attributes.visibility, nonstatic_e, new_attributes.isconst);
-					ehmember_p fixed_member(fixed_attributes, rvalue);
-					context.scope->set_member(name, fixed_member, context, this);
-				} else {
-					// set on instance
-					context.scope->set_instance_member(name, new_member, context, this);
-				}
-			} else {
-				context.scope->set_member(name, new_member, context, this);
-			}
-			return rvalue;
+			return set_bare_variable(name, rvalue, context, attributes);
 		}
 		case T_COMMA: {
 			ehval_p arg_node = lvalue;

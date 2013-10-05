@@ -56,7 +56,7 @@ void Enum::t::add_enum_member(const char *name, const std::vector<std::string> &
 	member_info member(name, params);
 
 	if(member_id == 0) {
-		member_id = n_enum_members + 1;
+		member_id = n_enum_members;
 	}
 	enum_members[member_id] = member;
 	n_enum_members++;

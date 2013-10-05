@@ -340,3 +340,4 @@ multiline_expr.eh
 do.eh
 makeclass.eh
 classinherit.eh
+optimize.eh

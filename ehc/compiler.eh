@@ -46,7 +46,7 @@ class Attributes
 		sb.toString()
 	end
 
-	public static parse = code => match code
+	public static parse code = match code
 		case Node.T_LIST(_) | Node.T_END
 			this.make()
 		case Node.T_ATTRIBUTE(Attribute.constAttribute, @tail)
@@ -252,7 +252,7 @@ class Compiler
 								# use an indicator variable that is set by the code to decide whether the case matches
 								private does_match = this.get_var_name "given_does_match"
 								sb << "bool " << does_match << " = true;\n"
-								sb << "if(" << case_var_name << "->deep_is_a<Function>() || " << case_var_name
+								sb << "if(" << case_var_name << "->is_a<Function>() || " << case_var_name
 								sb << "->is_a<Binding>()) {\n"
 								sb << does_match << " = eh_compiled::call_function_typed<Bool>(" << case_var_name
 								sb << ", " << given_var_name << ", context, ehi);\n"
@@ -427,7 +427,7 @@ class Compiler
 					inner_builder << "}\n"
 
 					sb << assignment << 'Enum::make_enum_class("' << enum_name << "\", context.scope, ehi->get_parent());\n{\n"
-					sb << "ehobj_t *enum_obj = " << var_name << "->get<Object>();\n"
+					sb << "Enum::t *enum_obj = " << var_name << "->get<Enum>();\n"
 					for member in members
 						sb << 'enum_obj->add_enum_member("' << member->0 << '", {'
 						match member
@@ -535,7 +535,7 @@ class Compiler
 		end
 	end
 
-	private compile_set = sb, lvalue, name, attributes => match lvalue
+	private compile_set(sb, lvalue, name, attributes) = match lvalue
 		case Node.T_NULL
 			# assert that rvalue is null
 			sb << "if(!" << name << "->is_a<Null>()) {\n"
@@ -549,31 +549,27 @@ class Compiler
 			sb << accessor_name << ", " << name << "}, ehi->get_parent()), context);\n"
 		case Node.T_ACCESS(@base, @accessor)
 			private base_name = this.doCompile(sb, base)
-			sb << "if(" << base_name << "->is_a<SuperClass>()) {\n"
-			sb << 'throw_TypeError("Cannot set member on parent class", ' << base_name << ", ehi);\n}\n"
-			sb << "if(!" << base_name << "->is_a<Object>()) {\n"
-			sb << 'throw_TypeError("Cannot set member on primitive", ' << base_name << ", ehi);\n}\n"
 			if attributes == null
 				sb << base_name << '->set_property("' << accessor << '", ' << name << ", context, ehi);\n"
 			else
 				sb << base_name << '->set_member("' << accessor << '", ehmember_p('
 				sb << attributes << ", " << name << "), context, ehi);\n"
 			end
+		case Node.T_INSTANCE_ACCESS(@base, @accessor)
+			private base_name = this.doCompile(sb, base)
+			if attributes == null
+				sb << base_name << '->set_instance_property("' << accessor << '", ' << name << ", context, ehi);\n"
+			else
+				sb << base_name << '->set_instance_member("' << accessor << '", ehmember_p('
+				sb << attributes << ", " << name << "), context, ehi);\n"
+			end
 		case Node.T_VARIABLE(@var_name)
 			if attributes == null
-				private member_name = this.get_var_name "member"
-				sb << "ehmember_p " << member_name << ' = context.scope->get<Object>()->get_recursive("'
-				sb << var_name << "\", context);\n"
-				sb << "if(" << member_name << " != nullptr) {\n"
-				sb << "if(" << member_name << "->isconst()) {\n"
-				sb << 'throw_ConstError(context.scope, "' << var_name << "\", ehi);\n}\n"
-				sb << member_name << "->value = " << name << ";\n"
-				sb << "} else {\n"
-				sb << 'context.scope->set_member("' << var_name << '", ehmember_p(attributes_t(), '
-				sb << name << "), context, ehi);\n}\n"
+				sb << "ehi->set_bare_variable(\"" << var_name << "\", " << name << ", context, nullptr);\n"
 			else
-				sb << 'context.scope->set_member("' << var_name << '", ehmember_p(' << attributes << ", "
-				sb << name << "), context, ehi);\n"
+				private attributes_name = this.get_var_name "attributes"
+				sb << "attributes_t " << attributes_name << " = " << attributes << ";\n"
+				sb << "ehi->set_bare_variable(\"" << var_name << "\", " << name << ", context, &" << attributes_name << ");\n"
 			end
 		case Node.T_CLASS_MEMBER(@attributes_code, @lval)
 			private inner_attributes = Attributes.parse attributes_code

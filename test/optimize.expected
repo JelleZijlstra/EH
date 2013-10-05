@@ -1,0 +1,32 @@
+%%stdout%%
+@enum instance T_ASSIGN <Node> [
+	parameter: @enum instance T_CALL <Node> [
+		parameter: @enum instance T_INSTANCE_ACCESS <Node> [
+			parameter: @enum instance T_VARIABLE <Node> [
+				parameter: @string "Array"
+			]
+			parameter: @string "map"
+		]
+		parameter: @enum instance T_VARIABLE <Node> [
+			parameter: @string "f"
+		]
+	]
+	parameter: @enum instance T_LITERAL <Node> [
+		parameter: @int 42
+	]
+]
+@enum instance T_ASSIGN <Node> [
+	parameter: @enum instance T_INSTANCE_ACCESS <Node> [
+		parameter: @enum instance T_VARIABLE <Node> [
+			parameter: @string "Array"
+		]
+		parameter: @string "map"
+	]
+	parameter: @enum instance T_FUNC <Node> [
+		parameter: @enum instance T_VARIABLE <Node> [
+			parameter: @string "f"
+		]
+		parameter: @int 42
+	]
+]
+%%stderr%%

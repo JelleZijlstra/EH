@@ -2,6 +2,7 @@
 #include "eh_files.hpp"
 #include "std_lib/ArgumentError.hpp"
 #include "std_lib/Attribute.hpp"
+#include "std_lib/ConstError.hpp"
 #include "std_lib/Node.hpp"
 #include "std_lib/String.hpp"
 #include "eh.bison.hpp"
@@ -114,4 +115,32 @@ ehval_p EHI::execute_string(const char *cmd) {
 	parse_string(cmd);
 	return execute_code();
 }
-
+ehval_p EHI::set_bare_variable(const char *name, ehval_p rvalue, ehcontext_t context, attributes_t *attributes) {
+	if(attributes == nullptr) {
+		ehmember_p member = context.scope->get_property_up_scope_chain(name, context, this);
+		if(!member.null()) {
+			if(member->isconst()) {
+				// bug: if the const member is actually in a higher scope, this error message will be wrong
+				throw_ConstError(context.scope, name, this);
+			}
+			member->value = rvalue;
+			return rvalue;
+		}
+	}
+	attributes_t new_attributes = (attributes == nullptr) ? attributes_t() : *attributes;
+	ehmember_p new_member = ehmember_t::make(new_attributes, rvalue);
+	if(context.scope->has_instance_members()) {
+		if(new_member->isstatic()) {
+			// set on the class
+			attributes_t fixed_attributes(new_attributes.visibility, nonstatic_e, new_attributes.isconst);
+			ehmember_p fixed_member(fixed_attributes, rvalue);
+			context.scope->set_member(name, fixed_member, context, this);
+		} else {
+			// set on instance
+			context.scope->set_instance_member(name, new_member, context, this);
+		}
+	} else {
+		context.scope->set_member(name, new_member, context, this);
+	}
+	return rvalue;
+}

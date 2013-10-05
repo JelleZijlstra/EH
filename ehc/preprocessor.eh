@@ -6,7 +6,7 @@ end
 
 Node.isNode = (() => do
 	private node_t = Node.T_END.typeId()
-	private extended_t = ExtendedNode.typeId()
+	private extended_t = ExtendedNode.T_MIXED_TUPLE_LIST.typeId()
 	val => do
 		private type = val.typeId()
 		type == node_t || type == extended_t

@@ -145,6 +145,7 @@ public:
 	}
 
 	ehval_p set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const ehcontext_t &context);
+	ehval_p set_bare_variable(const char *name, ehval_p rvalue, ehcontext_t context, attributes_t *attributes);
 	void handle_uncaught(eh_exception &e);
 
 	/*

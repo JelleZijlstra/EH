@@ -22,6 +22,8 @@ class Macro
 			Node.T_ARROW(optimize(base), optimize(accessor))
 		case Node.T_ACCESS(@base, @prop)
 			Node.T_ACCESS(optimize(base), prop)
+		case Node.T_INSTANCE_ACCESS(@base, @prop)
+			Node.T_INSTANCE_ACCESS(optimize(base), prop)
 		case Node.T_VARIABLE(_) | Node.T_ANYTHING | Node.T_NULL
 			code
 		case Node.T_COMMA(@left, @right)
@@ -73,7 +75,7 @@ class Macro
 			optimize code
 	end
 
-	public static optimize code = if code.typeId() == Node.typeId()
+	public static optimize code = if code.typeId() == Node.T_END.typeId()
 		match code
 			case Node.T_LITERAL(@val); val
 			case Node.T_NULL; null

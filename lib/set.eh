@@ -1,6 +1,6 @@
 class BinaryTreeSet
 	# A tree consists of Nodes with a value in the middle and either null or a Node at the left and right
-	class Node
+	class BTNode
 		private n
 
 		const initialize = l, val, r => (this.n = [l, val, r])
@@ -60,8 +60,8 @@ class BinaryTreeSet
 
 	private base = null
 
-	const add = elt => given this.base
-		case null; this.base = Node.new(null, elt, null); null
+	const add elt = given this.base
+		case null; this.base = BTNode.new(null, elt, null); null
 		default; this.base.insert elt; null
 	end
 
@@ -75,9 +75,9 @@ class BinaryTreeSet
 		default; this.base.reduce(firstVal, f)
 	end
 
-	const toString = () => '{' + this.reduce("", func: accum, val 
+	const toString() = '{' + this.reduce("", func: accum, val
 		val.toString() + ', ' + accum
 	end) + '}'
 
-	const debug = () => this.base.toString()
+	const debug() = this.base.toString()
 end

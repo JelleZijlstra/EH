@@ -43,7 +43,7 @@ public:
 	type value;
 
 	virtual bool belongs_in_gc() const {
-		return false;
+		return true;
 	}
 
 	virtual ~Enum() {
@@ -76,8 +76,8 @@ public:
         return value->super;
     }
 
-	static ehval_p make(const std::string name) {
-		return static_cast<ehval_t *>(new Enum(new t(name)));
+	static ehval_p make(const std::string name, EHInterpreter *parent) {
+		return parent->allocate<Enum>(new t(name));
 	}
 
     virtual void set_instance_member_directly(const char *name, ehmember_p new_value, ehcontext_t context, class EHI *ehi) {

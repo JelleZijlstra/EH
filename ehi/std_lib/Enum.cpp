@@ -70,7 +70,7 @@ void Enum::t::add_enum_member(const char *name, const std::vector<std::string> &
 
 ehval_p Enum::make_enum_class(const char *name, ehval_p scope, EHInterpreter *parent) {
 	// create enum object
-	ehval_p enum_obj = Enum::make(name);
+	ehval_p enum_obj = Enum::make(name, parent);
 
 	// register class
 	const unsigned int type_id = parent->repo.register_class(name, enum_obj);

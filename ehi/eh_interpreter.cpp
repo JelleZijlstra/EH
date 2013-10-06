@@ -82,6 +82,8 @@ EHInterpreter::EHInterpreter() : gc(), repo(), global_object(), function_object(
 	eh_init();
 }
 void EHInterpreter::eh_init(void) {
+	// turn off GC during initialization
+	gc.stop_collecting();
 	// global object is an Object, initially without a Class
 	ehobj_t *global_ehobj = new ehobj_t();
 	global_object = Object::make(global_ehobj, this);
@@ -106,7 +108,7 @@ void EHInterpreter::eh_init(void) {
 	for(int i = 0; libredirs[i][0] != nullptr; i++) {
 		redirect_command(libredirs[i][0], libredirs[i][1]);
 	}
-
+	gc.resume_collecting();
 	gc.do_collect();
 }
 void EHInterpreter::eh_exit(void) {

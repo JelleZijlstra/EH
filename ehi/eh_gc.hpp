@@ -548,9 +548,6 @@ private:
 		stack.push(root);
 
 		while(!stack.empty()) {
-#ifdef DEBUG_GC
-			std::cout << stack.size() << std::endl;
-#endif
 			T *ptr = stack.top();
 			stack.pop();
 			handle_root(stack, ptr);
@@ -586,6 +583,9 @@ private:
 				if(p == this->current_pool) {
 					this->find_current_pool();
 				}
+#ifdef DEBUG_GC
+				std::cout << "Deleting pool: " << p << std::endl;
+#endif
 				delete p;
 				if(prev == nullptr) {
 					p = this->first_pool;
@@ -607,8 +607,6 @@ public:
 	}
 
 	void do_collect() {
-		// turn it off for now
-		return;
 #ifdef DEBUG_GC
 		std::cout << "Starting GC run..." << std::endl;
 		print_stats();

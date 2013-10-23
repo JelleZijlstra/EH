@@ -13,7 +13,7 @@
 		]
 		privateAttribute <public,constant>: @enum instance privateAttribute <Attribute> [
 		]
-		publicAttribute <public,constant>: @enum instance privateAttribute <Attribute> [
+		publicAttribute <public,constant>: @enum instance publicAttribute <Attribute> [
 		]
 		staticAttribute <public,constant>: @enum instance staticAttribute <Attribute> [
 		]

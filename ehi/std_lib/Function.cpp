@@ -38,14 +38,18 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 	Function::t *f = function_object->get<Function>();
 
 	switch(f->type) {
-		case lib_e:
+		case lib_e: {
+			ehstack_entry_t stk(function_object->get_name(), nullptr, ehi->stack);
 			return f->libmethod_pointer(base_object, args, ehi);
+		}
 		case compiled_e: {
 			ehval_p newcontext = Function_Scope::make(f->parent, ehi->get_parent());
+			ehstack_entry_t stk(function_object->get_name(), newcontext, ehi->stack);
 			return f->compiled_pointer(base_object, args, ehi, ehcontext_t(base_object, newcontext));
 		}
 		case user_e: {
 			ehval_p newcontext = Function_Scope::make(f->parent, ehi->get_parent());
+			ehstack_entry_t stk(function_object->get_name(), newcontext, ehi->stack);
 			ehcontext_t context(base_object, newcontext);
 
 			// set arguments

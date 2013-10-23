@@ -47,6 +47,19 @@ void ehval_t::printvar(printvar_set &set, int level, class EHI *ehi) {
 	std::cout << "@value <" << name << ">" << std::endl;
 }
 
+const std::string ehval_t::get_name() const {
+	return "";
+}
+
+const std::string ehval_t::get_full_name() {
+	ehval_p parent = get_parent_scope();
+	if(parent.null()) {
+		return get_name();
+	} else {
+		return parent->get_full_name() + "." + get_name();
+	}
+}
+
 
 void ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
 	check_static_attribute(name, member, context, ehi);

@@ -8,7 +8,7 @@ class BinaryTreeSet
 		const insert = func: val
 			private const insertHelper = func: node, val
 				if node == null
-					Node.new(null, val, null)
+					BTNode(null, val, null)
 				else
 					node.insert val
 					node
@@ -61,7 +61,7 @@ class BinaryTreeSet
 	private base = null
 
 	const add elt = given this.base
-		case null; this.base = BTNode.new(null, elt, null); null
+		case null; this.base = BTNode(null, elt, null); null
 		default; this.base.insert elt; null
 	end
 

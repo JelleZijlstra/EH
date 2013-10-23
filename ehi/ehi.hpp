@@ -76,6 +76,28 @@ public:
 	}
 };
 
+class ehstack_entry_t;
+
+typedef std::stack<class ehstack_entry_t *, std::vector<class ehstack_entry_t *>> ehstack_t;
+
+// execution stack
+class ehstack_entry_t {
+public:
+	const std::string name;
+	ehval_p scope_object;
+	ehstack_t &stack;
+
+	ehstack_entry_t(const std::string &nm, ehval_p scope, ehstack_t &stk) : name(nm), scope_object(scope), stack(stk) {
+		stack.push(this);
+	}
+
+	~ehstack_entry_t() {
+		stack.pop();
+	}
+
+	std::string to_string();
+};
+
 /*
  * The EH parser
  */
@@ -209,6 +231,9 @@ public:
 	char *get_string() const {
 		return strdup(str_str.str().c_str());
 	}
+
+	ehstack_t stack;
+
 private:
 
 	/*

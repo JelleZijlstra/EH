@@ -217,6 +217,9 @@ public:
 	// get a member on a class's prototype, throwing a NameError if it's not found
     ehval_p get_instance_member_throwing(const char *name, ehcontext_t context, class EHI *ehi);
 
+    // get the fully qualified name of an object
+    const std::string get_full_name();
+
 	// get a member on a class's prototype
     virtual ehmember_p get_instance_member(const char *name, ehcontext_t context, class EHI *ehi, bool include_object = true);
 
@@ -236,6 +239,9 @@ public:
 
 	// set this member directly, with no further checks
 	virtual void set_instance_member_directly(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
+
+	// get the name of the current object (useful mostly for classes, functions, and similar)
+	virtual const std::string get_name() const;
 
 	virtual const std::list<ehval_w> get_super_classes() {
 		return std::list<ehval_w>();

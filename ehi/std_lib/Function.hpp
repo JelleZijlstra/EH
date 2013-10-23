@@ -32,6 +32,7 @@ public:
 			compiled_method compiled_pointer;
 		};
 		ehval_p parent;
+		std::string name;
 
 		t(functype_enum _type = user_e) : type(_type), args(nullptr), code(nullptr), libmethod_pointer(nullptr) {}
 

@@ -14,11 +14,13 @@ class TestCase
 	private expected
 
 	public static make file = do
-		private name = file.replace('\.eh$', "")
-		TestCase.new name.run()
+		TestCase.new file.run()
 	end
 
-	public initialize(this.name) = this.getExpected()
+	public initialize(this.name) = do
+		this.short_name = this.name.replace('\\.[a-z]+$', '')
+		this.getExpected()
+	end
 
 	public run() = do
 		echo('Testing file ' + this.name + '...')
@@ -29,7 +31,7 @@ class TestCase
 	end
 
 	private getExpected() = do
-		private expected_f = File.new(this.name + '.expected')
+		private expected_f = File.new(this.short_name + '.expected')
 		if expected_f == false
 			throw(ArgumentError.new("Unable to open test output file for " + this.name))
 		end
@@ -53,18 +55,18 @@ class TestCase
 	end
 
 	private makeTestCommand() = do
-		private command = executer + ' ' + this.name + '.eh'
+		private command = executer + ' ' + this.name
 		if this.expected.has 'arguments'
 			command += ' ' + this.expected->'arguments'.trim() + ' '
 		end
-		private stdoutFile = 'tmp/' + this.name + '.stdout'
-		private stderrFile = 'tmp/' + this.name + '.stderr'
+		private stdoutFile = 'tmp/' + this.short_name + '.stdout'
+		private stderrFile = 'tmp/' + this.short_name + '.stderr'
 		command += ' > ' + stdoutFile + ' 2> ' + stderrFile
 		command
 	end
 
 	private testOutput stream = do
-		private outputFile = 'tmp/' + this.name + '.' + stream
+		private outputFile = 'tmp/' + this.short_name + '.' + stream
 		private output = File.readFile outputFile
 		private regex_stream = stream + '-regex'
 		if this.expected.has regex_stream
@@ -91,7 +93,7 @@ class TestCase
 
 	private failTest(name, outputFile, expected) = do
 		echo('Failed test for ' + name + "!")
-		private tempFile = "tmp/" + this.name + ".tmp"
+		private tempFile = "tmp/" + this.short_name + ".tmp"
 		shell("touch " + tempFile)
 		private tf = File.new tempFile
 		tf.puts expected
@@ -99,7 +101,7 @@ class TestCase
 		put(shell("diff '" + tempFile + "' '" + outputFile + "'"))
 	end
 
-	private cleanUp() = shell("rm tmp/" + this.name + ".*")
+	private cleanUp() = shell("rm tmp/" + this.short_name + ".*")
 end
 
 private ap = ArgumentParser.new("Test case runner", (
@@ -131,7 +133,8 @@ if args->'file'.length() == 0
 		total++
 	end
 	testfiles.close()
-	echo("Passed " + passed + " of " + total + " tests (" + (passed * 100.0 / total).round() + "%)")
+	pct = if total == 0; 100; else (passed * 100.0 / total).round(); end
+	echo("Passed " + passed + " of " + total + " tests (" + pct + "%)")
 else
 	args->'file'.each(TestCase.make)
 end

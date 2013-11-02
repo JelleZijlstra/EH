@@ -19,7 +19,6 @@ fi
 for infile in $@; do
 	[[ $infile = '--replace' ]] && continue
 	name=$(echo $infile | sed -e s/\\.[a-z]*//)
-	echo $name
 	stderr=tmp/$name.stderr
 	stdout=tmp/$name.stdout
 	$EXECUTER $infile > $stdout 2> $stderr

@@ -2,8 +2,11 @@
 # Add a file to the EH test suite
 
 # Find the executer
-executer=/usr/bin/ehi
-if [ -z "$executer" ]; then
+if [[ "$EXECUTER" == "" ]]; then
+	EXECUTER=/usr/bin/ehi
+fi
+
+if [ -z "$EXECUTER" ]; then
 	echo 'Invalid executer'
 	exit
 fi
@@ -15,10 +18,11 @@ fi
 
 for infile in $@; do
 	[[ $infile = '--replace' ]] && continue
-	name=${infile/.eh/}
+	name=$(echo $infile | sed -e s/\\.[a-z]*//)
+	echo $name
 	stderr=tmp/$name.stderr
 	stdout=tmp/$name.stdout
-	$executer $infile > $stdout 2> $stderr
+	$EXECUTER $infile > $stdout 2> $stderr
 	exp=$name.expected
 	echo '%%stdout%%' > $exp
 	cat $stdout >> $exp

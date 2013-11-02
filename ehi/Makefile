@@ -11,7 +11,7 @@ CCBASICFLAGS := $(CCBASICFLAGS) -stdlib=libc++
 LDFLAGS := $(LDFLAGS) -stdlib=libc++
 endif
 
-CCFLAGS = $(CCBASICFLAGS) -DDEBUG_GC -Wall -pedantic -Wextra -Wno-c++98-compat -Wno-unused-parameter -Wno-weak-vtables -Wno-padded -Wno-unused-macros -Wno-float-equal
+CCFLAGS = $(CCBASICFLAGS) -Wall -pedantic -Wextra -Wno-c++98-compat -Wno-unused-parameter -Wno-weak-vtables -Wno-padded -Wno-unused-macros -Wno-float-equal
 JSON = std_lib/json/
 LIBCLASSES = ArgumentError Array Attribute Binding Bool Class ConstError EH Enum Exception File Float Function GarbageCollector GlobalObject Hash Integer JSON LoopError MiscellaneousError NameError Node Null Object Range String SyntaxError Tuple TypeError UnknownCommandError EmptyIterator FixedArray Random Map VisibilityError
 SOURCES = eh.flex.cpp eh.bison.cpp ehi.cpp eh_types.cpp eh_files.cpp eh_optimize.cpp $(JSON)eh_json.flex.cpp $(JSON)eh_json.bison.cpp

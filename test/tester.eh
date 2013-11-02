@@ -107,7 +107,7 @@ end
 private ap = ArgumentParser.new("Test case runner", (
 	{name: '--valgrind', desc: 'Whether to use Valgrind', type: Bool, dflt: false},
 	{name: '--optimize', synonyms: ['-O'], desc: "Whether to use the optimizing interpreter", type: Bool, dflt: false},
-	{name: '--program', synonyms: ['-p'], desc: "Program to run tests on", type: String, dflt: "/usr/bin/ehi"},
+	{name: '--program', synonyms: ['-p'], desc: "Program to run tests on", type: String, dflt: "/usr/bin/ehi", nargs: 1},
 	{name: 'file', desc: "File to test", nargs: '+'}
 ))
 private args = ap.parse argv

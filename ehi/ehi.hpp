@@ -26,6 +26,30 @@ typedef enum {
 	end_is_end_e
 } interactivity_enum;
 
+class ehstack_entry_t;
+
+typedef std::vector<class ehstack_entry_t *> ehstack_t;
+
+// execution stack
+class ehstack_entry_t {
+public:
+	const std::string name;
+	ehval_p scope_object;
+	ehstack_t &stack;
+
+	ehstack_entry_t(const std::string &nm, ehval_p scope, ehstack_t &stk) : name(nm), scope_object(scope), stack(stk) {
+		stack.push_back(this);
+	}
+
+	~ehstack_entry_t() {
+		stack.pop_back();
+	}
+
+	const std::string to_string() const {
+		return name;
+	}
+};
+
 class EHInterpreter {
 public:
 	Hash::ehhash_t *cmdtable;
@@ -36,6 +60,8 @@ public:
 	ehval_p function_object;
 	ehval_p base_object;
 	ehval_p class_object;
+
+	ehstack_t stack;
 
 	int enum_id;
 	int enum_member_id;
@@ -74,28 +100,6 @@ public:
 		T *obj = new(place) T(val);
 		return obj;
 	}
-};
-
-class ehstack_entry_t;
-
-typedef std::stack<class ehstack_entry_t *, std::vector<class ehstack_entry_t *>> ehstack_t;
-
-// execution stack
-class ehstack_entry_t {
-public:
-	const std::string name;
-	ehval_p scope_object;
-	ehstack_t &stack;
-
-	ehstack_entry_t(const std::string &nm, ehval_p scope, ehstack_t &stk) : name(nm), scope_object(scope), stack(stk) {
-		stack.push(this);
-	}
-
-	~ehstack_entry_t() {
-		stack.pop();
-	}
-
-	std::string to_string();
 };
 
 /*
@@ -232,8 +236,6 @@ public:
 		return strdup(str_str.str().c_str());
 	}
 
-	ehstack_t stack;
-
 private:
 
 	/*
@@ -250,6 +252,7 @@ private:
 	EHInterpreter *parent;
 	ehcontext_t interpreter_context;
 	ehval_p program_code;
+	ehstack_entry_t stack_entry;
 
 	// number of loops we're currently in
 	int inloop;
@@ -344,7 +347,7 @@ inline unsigned int ehobj_t::register_member_class(const initializer init_func, 
 	ehclass_t *newclass;
 	ehval_p new_value;
 	if(the_class == nullptr) {
-		newclass = new ehclass_t();
+		newclass = new ehclass_t(name);
 		new_value = Class::make(newclass, interpreter_parent);
 	} else {
 		newclass = the_class->get<Class>();

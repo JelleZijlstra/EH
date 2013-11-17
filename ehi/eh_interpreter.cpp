@@ -552,7 +552,7 @@ ehval_p EHI::eh_op_named_class(ehval_p *paras, const ehcontext_t &context) {
 }
 ehval_p EHI::declare_class(const char *name, ehval_p code, const ehcontext_t &context) {
 	// create the class object
-	ehclass_t *new_obj = new ehclass_t();
+	ehclass_t *new_obj = new ehclass_t(name);
 	ehval_p ret = Class::make(new_obj, parent);
 
 	new_obj->type_id = parent->repo.register_class(name, ret);

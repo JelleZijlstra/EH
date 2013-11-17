@@ -73,6 +73,10 @@ public:
 		}
 	}
 
+	virtual const std::string get_name() const override {
+		return value->name;
+	}
+
 	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
 		std::cout << "@function <";
 		switch(value->type) {

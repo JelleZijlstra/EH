@@ -53,7 +53,7 @@ const std::string ehval_t::get_name() const {
 
 const std::string ehval_t::get_full_name() {
 	ehval_p parent = get_parent_scope();
-	if(parent.null()) {
+	if(parent.null() || parent == this) {
 		return get_name();
 	} else {
 		return parent->get_full_name() + "." + get_name();

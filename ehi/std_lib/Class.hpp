@@ -51,6 +51,10 @@ public:
         return value->get_instance_member_current_object(name, context, ehi);
     }
 
+    virtual const std::string get_name() const override {
+        return value->name;
+    }
+
     virtual const std::list<ehval_w> get_super_classes() {
         return value->super;
     }

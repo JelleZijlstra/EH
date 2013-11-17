@@ -57,9 +57,9 @@ void ehinstance_init_GlobalObject(ehobj_t *obj, EHInterpreter *parent) {
 	/*
 	 * Initialization of base classes.
 	 */
-	parent->class_object = Class::make(new ehclass_t(), parent);
-	parent->base_object = Class::make(new ehclass_t(), parent);
-	parent->function_object = Class::make(new ehclass_t(), parent);
+	parent->class_object = Class::make(new ehclass_t("Class"), parent);
+	parent->base_object = Class::make(new ehclass_t("Object"), parent);
+	parent->function_object = Class::make(new ehclass_t("Function"), parent);
 	// Must be the first class registered
 	obj->register_member_class<Object>(ehinit_Object, "Object", attributes_t::make_const(), parent, parent->base_object);
 	// Must be registered before any methods are registered

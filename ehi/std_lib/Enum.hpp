@@ -34,7 +34,7 @@ public:
 			return n_enum_members;
 		}
 
-		t(const std::string &_name) : ehclass_t(), n_enum_members(0), enum_members(), name(_name) {}
+		t(const std::string &_name) : ehclass_t(_name), n_enum_members(0), enum_members(), name(_name) {}
 
 		void add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *interpreter_parent, unsigned int member_id = 0);
 	};
@@ -87,14 +87,21 @@ public:
     virtual bool has_instance_members() const override {
         return true;
     }
+
     virtual void inherit(ehval_p cls) override {
         value->inherit(cls);
     }
+
     virtual bool inherits(ehval_p superclass) override {
         return value->inherits(superclass);
     }
+
     virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
     	return value->printvar(set, level, ehi);
+    }
+
+    virtual const std::string get_name() const override {
+        return value->name;
     }
 
     virtual std::list<ehval_p> children() const override {

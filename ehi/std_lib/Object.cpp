@@ -19,7 +19,7 @@ void ehobj_t::register_value(const std::string &name, ehval_p value, const attri
 }
 
 unsigned int ehobj_t::register_member_class(const char *name, const initializer init_func, const attributes_t attributes, EHInterpreter *interpreter_parent) {
-    ehclass_t *newclass = new ehclass_t();
+    ehclass_t *newclass = new ehclass_t(name);
     ehval_p new_value = Class::make(newclass, interpreter_parent);
 
     // register class

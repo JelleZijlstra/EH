@@ -17,6 +17,7 @@ EH_INITIALIZER(EH) {
 	REGISTER_STATIC_METHOD(EH, contextName);
 	REGISTER_STATIC_METHOD(EH, parse);
 	REGISTER_STATIC_METHOD(EH, lex);
+	REGISTER_STATIC_METHOD(EH, printStack);
 }
 
 /*
@@ -112,3 +113,17 @@ EH_METHOD(EH, lex) {
 
 	return out_val;
 }
+
+/*
+ * @description Print the current EH stack
+ * @argument None
+ * @returns Null
+ */
+EH_METHOD(EH, printStack) {
+	ASSERT_TYPE(args, Null, "EH.printStack");
+	for(auto &entry : ehi->get_parent()->stack) {
+		std::cout << "- " << entry->name << std::endl;
+	}
+	return nullptr;
+}
+

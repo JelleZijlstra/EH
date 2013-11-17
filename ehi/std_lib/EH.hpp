@@ -10,5 +10,6 @@ EH_METHOD(EH, contextName);
 EH_METHOD(EH, collectGarbage);
 EH_METHOD(EH, parse);
 EH_METHOD(EH, lex);
+EH_METHOD(EH, printStack);
 
 #endif /* EH_EH_H_ */

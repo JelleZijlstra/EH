@@ -53,9 +53,10 @@ public:
     ehval_w parent;
     // inherited classes. Invariant: all must be instances of Class
     std::list<ehval_w> super;
+    std::string name;
 
     // constructor
-    ehclass_t() : ehobj_t(), instance_members(), type_id(0), parent(), super() {}
+    ehclass_t(const std::string &_name) : ehobj_t(), instance_members(), type_id(0), parent(), super(), name(_name) {}
 
     ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi);
 

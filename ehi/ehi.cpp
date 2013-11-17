@@ -12,13 +12,11 @@
 
 int yyparse(void *);
 
-EHI::EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), str_str(), parent(_parent), interpreter_context(_context), program_code(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
+EHI::EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), str_str(), parent(_parent), interpreter_context(_context), program_code(nullptr), stack_entry(name, nullptr, _parent->stack), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
 	yylex_init_extra(this, &scanner);
 }
-EHI::EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), str_str(), parent(nullptr), program_code(nullptr), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
+EHI::EHI() : scanner(), interactivity(cli_prompt_e), yy_buffer(), buffer(), str_str(), parent(new EHInterpreter()), interpreter_context(parent->global_object), program_code(nullptr), stack_entry("(none)", nullptr, parent->stack), inloop(0), breaking(0), continuing(0), returning(false), working_dir(eh_getcwd()), context_name("(none)") {
 	yylex_init_extra(this, &scanner);
-	parent = new EHInterpreter();
-	interpreter_context = parent->global_object;
 }
 EHI::~EHI() {
 	yylex_destroy(scanner);

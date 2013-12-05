@@ -92,7 +92,7 @@
 	# overwrite Exception.toString
 	private realToString = Exception##toString
 
-	Exception##toString = func:
+	Exception##toString() = do
 		private data = (realToString.bindTo this)()
 		data + "\n Stack trace:\n" + stringifyStack(this.stack)
 	end

@@ -79,7 +79,7 @@ public:
 		typedef refcount_ptr<ehmember_t> ehmember_p;
 
 		attributes_t attribute;
-		ehval_w value;
+		ehval_p value;
 
 		// destructor
 		~ehmember_t() {}

@@ -74,6 +74,7 @@ void yyerror(void *, const char *s);
 %token T_ENUM
 %token T_CLASS
 %token T_CLASS_MEMBER
+%token T_YIELD
 %token T_LITERAL
 %token T_TRY
 %token T_CATCH
@@ -327,6 +328,8 @@ access_expression:
 							{ $$ = ADD_NODE2(T_RANGE, $1, $3); }
 	| access_expression	unary_op_expression
 							{ $$ = ADD_NODE2(T_CALL, $1, $2); }
+	| T_YIELD unary_op_expression
+							{ $$ = ADD_NODE1(T_YIELD, $2); }
 	| unary_op_expression	{ $$ = $1; }
 	;
 

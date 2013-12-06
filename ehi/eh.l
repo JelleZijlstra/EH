@@ -119,6 +119,7 @@ OPCHAR		[@=$+\-*/<>,:&\|^%~!\.?]
 "enum"		return T_ENUM;
 "raw"		return T_RAW;
 "when"		return T_WHEN;
+"yield"		return T_YIELD;
 "public"	{
 				yylval_param->vValue = Attribute::publica_e;
 				return T_ATTRIBUTE;

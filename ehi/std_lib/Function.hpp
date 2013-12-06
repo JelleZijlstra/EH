@@ -25,6 +25,7 @@ public:
 	class t {
 	public:
 		functype_enum type;
+		bool is_generator;
 		ehval_p args;
 		ehval_p code;
 		union {
@@ -34,9 +35,9 @@ public:
 		ehval_p parent;
 		std::string name;
 
-		t(functype_enum _type = user_e) : type(_type), args(nullptr), code(nullptr), libmethod_pointer(nullptr) {}
+		t(functype_enum _type = user_e) : type(_type), is_generator(false), args(nullptr), code(nullptr), libmethod_pointer(nullptr) {}
 
-		t(ehlibmethod_t pointer) : type(lib_e), args(), code(), libmethod_pointer(pointer) {}
+		t(ehlibmethod_t pointer) : type(lib_e), is_generator(false), args(), code(), libmethod_pointer(pointer) {}
 
 		~t() {}
 
@@ -78,7 +79,11 @@ public:
 	}
 
 	virtual void printvar(printvar_set &set, int level, EHI *ehi) override {
-		std::cout << "@function <";
+		if(value->is_generator) {
+			std::cout << "@generator <";
+		} else {
+			std::cout << "@function <";
+		}
 		switch(value->type) {
 			case user_e:
 				std::cout << "user>: ";

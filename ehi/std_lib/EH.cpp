@@ -121,7 +121,7 @@ EH_METHOD(EH, lex) {
  */
 EH_METHOD(EH, printStack) {
 	ASSERT_TYPE(args, Null, "EH.printStack");
-	for(auto &entry : ehi->get_parent()->stack) {
+	for(auto &entry : ehi->get_stack()) {
 		std::cout << "- " << entry->name << std::endl;
 	}
 	return nullptr;

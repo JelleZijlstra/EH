@@ -61,8 +61,6 @@ public:
 	ehval_p base_object;
 	ehval_p class_object;
 
-	ehstack_t stack;
-
 	int enum_id;
 	int enum_member_id;
 	int enum_instance_id;
@@ -207,6 +205,9 @@ public:
 	const std::string &get_working_dir() const {
 		return working_dir;
 	}
+	ehstack_t &get_stack() {
+		return stack;
+	}
 
 	/*
 	 * Constructors and destructors.
@@ -252,6 +253,7 @@ private:
 	EHInterpreter *parent;
 	ehcontext_t interpreter_context;
 	ehval_p program_code;
+	ehstack_t stack;
 	ehstack_entry_t stack_entry;
 
 	// number of loops we're currently in
@@ -300,6 +302,7 @@ private:
 	ehval_p eh_op_tuple(ehval_p node, const ehcontext_t &context);
 	ehval_p eh_op_mixed_tuple(ehval_p node, const ehcontext_t &context);
 	ehval_p eh_op_while(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_yield(ehval_p para, const ehcontext_t &context);
 	ehval_p eh_try_catch(ehval_p try_block, ehval_p catch_blocks, const ehcontext_t &context);
 	ehval_p eh_xtoarray(ehval_p in);
 	ehval_p perform_op(const char *name, unsigned int nargs, ehval_p *paras, const ehcontext_t &context);

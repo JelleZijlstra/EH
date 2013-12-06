@@ -193,6 +193,8 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				ret = eh_execute(paras[0], context);
 				returning = true;
 				break;
+			case T_YIELD:
+				return eh_op_yield(paras[0], context);
 			case T_BREAK: // break out of a loop
 				eh_op_break(paras, context);
 				break;
@@ -431,6 +433,14 @@ ehval_p EHI::eh_op_for(ehval_p *paras, const ehcontext_t &context) {
 }
 ehval_p EHI::eh_op_for_in(ehval_p *paras, const ehcontext_t &context) {
 	return do_for_loop(paras[1], paras[2], T_FOR_IN, paras[0], context);
+}
+ehval_p EHI::eh_op_yield(ehval_p para, const ehcontext_t &context) {
+	ehval_p top_of_stack = stack.back()->scope_object;
+	if(!top_of_stack->is_a<Generator>()) {
+		throw_TypeError("attempted yield outside a generator", top_of_stack, this);
+	}
+	ehval_p argument = eh_execute(para, context);
+	return top_of_stack->get<Generator>()->do_yield(argument);
 }
 void EHI::eh_op_break(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p level_v = eh_execute(paras[0], context);

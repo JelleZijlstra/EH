@@ -106,7 +106,9 @@ enum List
 
 		public hasNext = () => this.l != Nil
 
-		public next() = do
+		public next() = if this.l == Nil
+			throw(EmptyIterator())
+		else
 			out, this.l = this.l
 			out
 		end

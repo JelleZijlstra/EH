@@ -38,12 +38,12 @@
 	class MatchChecker
 		private f
 
-		public initialize = f => (this.f = f)
+		public initialize f = (this.f = f)
 
-		public operator== = rhs => this.f rhs
+		public operator== rhs = this.f rhs
 	end
 
-	private isNotNode = MatchChecker.new(n => n.typeId() != Node.typeId())
+	private isNotNode = MatchChecker(n => n.typeId() != Node.typeId())
 
 	# repeated code sections
 	private ehStack = Node.T_ACCESS(Node.T_VARIABLE("EH"), "stack")
@@ -51,7 +51,7 @@
 	private retAssign = Node.T_CLASS_MEMBER(Node.T_ATTRIBUTE(Attribute.privateAttribute, Node.T_END), Node.T_VARIABLE("_ret"))
 
 	# process a piece of code to apply stack tracing
-	private applyStack = code => match code
+	private applyStack code = match code
 		case isNotNode
 			code
 		case Node.T_CALL(@f, @arg)
@@ -73,7 +73,7 @@
 
 	private context = Node.Context(this, this)
 
-	global.include = func: name
+	global.include name = do
 		if name->0 != '/'
 			name = global.workingDir() + "/" + name
 		end
@@ -88,6 +88,8 @@
 		e.stack = global.EH.stack.clone()
 		e
 	end
+	# otherwise we get a stack overflow as the clone operation performs a for loop, which throws EmptyIterator
+	EmptyIterator.operator() args = (Class.operator().bindTo this) args
 
 	# overwrite Exception.toString
 	private realToString = Exception##toString

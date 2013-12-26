@@ -21,8 +21,12 @@ enum List
 		private l
 
 		public initialize l = (this.l = l)
-		public hasNext() = this.l != Nil
-		public next() = do out, this.l = this.l; out; end
+		public next() = if this.l == Nil
+			throw(EmptyIterator())
+		else
+			out, this.l = this.l
+			out
+		end
 	end
 
 	const getIterator() = Iterator this

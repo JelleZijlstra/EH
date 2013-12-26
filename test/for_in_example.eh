@@ -5,30 +5,32 @@
 class ExampleIterable
 	private n
 
-	public initialize = n => (this.n = n)
+	public initialize n = (this.n = n)
 
-	public getIterator = () => Iterator.new(this.n)
+	public getIterator() = Iterator(this.n)
 
 	class Iterator
 		private n
 		private i = 0
 
-		public initialize = func: n
+		public initialize n = do
 			this.n = n
 			this.i = 0
 		end
 
-		public hasNext = () => (this.i < this.n)
+		public hasNext() = (this.i < this.n)
 
-		public next = func:
+		public next() = if this.hasNext()
 			private out = this.i
 			this.i += 1
 			out
+		else
+			throw(EmptyIterator())
 		end
 	end
 end
 
-private ei = ExampleIterable.new 3
+private ei = ExampleIterable 3
 
 # Use a for-in loop to iterate over an ExampleIterable
 for i in ei
@@ -40,7 +42,7 @@ private it_ = ei.getIterator()
 while true
 	private hasNext_ = it_.hasNext()
 	if !(hasNext_.isA Bool)
-		throw(TypeError.new("hasNext does not return a bool", hasNext_.typeId()))
+		throw(TypeError("hasNext does not return a bool", hasNext_.typeId()))
 	end
 	if hasNext_ == false
 		break

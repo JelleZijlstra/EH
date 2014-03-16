@@ -45,3 +45,11 @@ EH_METHOD(Exception, toString) {
 	const char *msg = ehi->toString(obj->get_property_no_binding("message", obj, ehi)->value, obj)->get<String>();
 	return String::make(strdup(("<" + type_name + ": " + msg + ">").c_str()));
 }
+
+EH_NORETURN void throw_CompileError(const char *message, EHI *ehi) {
+	ehval_p args = String::make(strdup(message));
+	throw_error("CompileError", args, ehi);
+}
+
+EH_INITIALIZER(CompileError) {}
+

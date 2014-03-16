@@ -13,4 +13,8 @@ EH_METHOD(Exception, initialize);
 
 EH_INITIALIZER(Exception);
 
+EH_NORETURN void throw_CompileError(const char *message, EHI *ehi);
+
+EH_INITIALIZER(CompileError);
+
 #endif /* EH_EXCEPTION_H_ */

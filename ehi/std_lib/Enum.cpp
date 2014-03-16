@@ -50,6 +50,7 @@ EH_INITIALIZER(Enum_Instance) {
 	REGISTER_METHOD(Enum_Instance, map);
 	REGISTER_METHOD(Enum_Instance, compare);
 	REGISTER_METHOD(Enum_Instance, toString);
+	REGISTER_METHOD(Enum_Instance, numericValue);
 }
 
 void Enum::t::add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *interpreter_parent, unsigned int member_id) {
@@ -341,4 +342,10 @@ EH_METHOD(Enum_Instance, map) {
 	}
 	auto val = new Enum_Instance::t(data->type_id, data->member_id, size, weak_params);
 	return Enum_Instance::make(val, ehi->get_parent());
+}
+
+EH_METHOD(Enum_Instance, numericValue) {
+	obj->assert_type<Enum_Instance>("Enum.Instance.numericValue", ehi);
+	auto data = obj->get<Enum_Instance>();
+	return Integer::make(data->member_id);
 }

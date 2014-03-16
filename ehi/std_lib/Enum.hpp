@@ -220,5 +220,6 @@ EH_METHOD(Enum_Instance, isConstructor);
 EH_METHOD(Enum_Instance, operator_arrow);
 EH_METHOD(Enum_Instance, map);
 EH_METHOD(Enum_Instance, toString);
+EH_METHOD(Enum_Instance, numericValue);
 
 #endif /* EH_ENUM_H_ */

@@ -3,6 +3,15 @@
 include '../lib/library.eh'
 include '../lib/argument_parser.eh'
 
+private verbose = false
+
+private execute command = do
+	if verbose
+		echo command
+	end
+	shell command
+end
+
 if !(String.isRegexAvailable())
 	echo(argv->0 + ": error: regex support is required for this script to run")
 	exit 1
@@ -24,7 +33,7 @@ class TestCase
 
 	public run() = do
 		echo('Testing file ' + this.name + '...')
-		shell(this.makeTestCommand())
+		execute(this.makeTestCommand())
 		private result = this.testOutput 'stdout' && this.testOutput 'stderr'
 		this.cleanUp()
 		result
@@ -94,11 +103,11 @@ class TestCase
 	private failTest(name, outputFile, expected) = do
 		echo('Failed test for ' + name + "!")
 		private tempFile = "tmp/" + this.short_name + ".tmp"
-		shell("touch " + tempFile)
+		execute("touch " + tempFile)
 		private tf = File.new tempFile
 		tf.puts expected
 		tf.close()
-		put(shell("diff '" + tempFile + "' '" + outputFile + "'"))
+		put(execute("diff '" + tempFile + "' '" + outputFile + "'"))
 	end
 
 	private cleanUp() = shell("rm tmp/" + this.short_name + ".*")
@@ -106,6 +115,7 @@ end
 
 private ap = ArgumentParser.new("Test case runner", (
 	{name: '--valgrind', desc: 'Whether to use Valgrind', type: Bool, dflt: false},
+	{name: '--verbose', desc: 'Be verbose', type: Bool, dflt: false},
 	{name: '--optimize', synonyms: ['-O'], desc: "Whether to use the optimizing interpreter", type: Bool, dflt: false},
 	{name: '--program', synonyms: ['-p'], desc: "Program to run tests on", type: String, dflt: "/usr/bin/ehi", nargs: 1},
 	{name: 'file', desc: "File to test", nargs: '+'}
@@ -118,9 +128,10 @@ end
 if args->'optimize'
 	executer += ' -O'
 end
+verbose = args->'verbose'
 TestCase.executer = executer
 
-shell "mkdir -p tmp"
+execute "mkdir -p tmp"
 
 if args->'file'.length() == 0
 	private testfiles = File.new "testfiles"

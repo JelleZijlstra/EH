@@ -58,6 +58,8 @@ EH_METHOD(ByteArray, operator_arrow);
 EH_METHOD(ByteArray, operator_arrow_equals);
 EH_METHOD(ByteArray, length);
 EH_METHOD(ByteArray, resize);
+EH_METHOD(ByteArray, getInteger);
+EH_METHOD(ByteArray, setInteger);
 
 EH_INITIALIZER(ByteArray);
 

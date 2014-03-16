@@ -11,6 +11,7 @@
 #include "Attribute.hpp"
 #include "Binding.hpp"
 #include "Bool.hpp"
+#include "ByteArray.hpp"
 #include "ConstError.hpp"
 #include "EH.hpp"
 #include "Enum.hpp"
@@ -87,6 +88,7 @@ void ehinstance_init_GlobalObject(ehobj_t *obj, EHInterpreter *parent) {
 	GLOBAL_REGISTER_CLASS(Range);
 	GLOBAL_REGISTER_CLASS(Hash);
 	GLOBAL_REGISTER_CLASS(Tuple);
+	GLOBAL_REGISTER_CLASS(ByteArray);
 	REGISTER_PURE_CLASS(Exception);
 	REGISTER_PURE_CLASS(UnknownCommandError);
 	REGISTER_PURE_CLASS(TypeError);

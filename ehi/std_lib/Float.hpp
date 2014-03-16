@@ -47,6 +47,7 @@ EH_METHOD(Float, toBool);
 EH_METHOD(Float, toFloat);
 EH_METHOD(Float, sqrt);
 EH_METHOD(Float, round);
+EH_METHOD(Float, toBytes);
 
 EH_INITIALIZER(Float);
 

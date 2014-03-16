@@ -57,3 +57,10 @@ assert(4.0.sqrt() == 2.0, "sqrt(4) = 2")
 assert(3.5.round() == 4, "3.5.round() = 4")
 assert(1.0.round() == 1, "1.0.round() = 1")
 
+# @method toBytes
+private zero_ba = ByteArray 4
+zero_ba->0 = 0
+zero_ba->1 = 0
+zero_ba->2 = 0
+zero_ba->3 = 0
+assert(0.0.toBytes() == zero_ba)

@@ -6,6 +6,7 @@
  */
 #include <cmath>
 
+#include "ByteArray.hpp"
 #include "Float.hpp"
 #include "MiscellaneousError.hpp"
 
@@ -23,6 +24,7 @@ EH_INITIALIZER(Float) {
 	REGISTER_METHOD(Float, toFloat);
 	REGISTER_METHOD(Float, sqrt);
 	REGISTER_METHOD(Float, round);
+	REGISTER_METHOD(Float, toBytes);
 }
 
 /*
@@ -172,3 +174,21 @@ EH_METHOD(Float, round) {
 	ASSERT_NULL_AND_TYPE(Float, "Float.round");
 	return Integer::make(lround(obj->get<Float>()));
 }
+
+/*
+ * @description Returns a byte representation of a float. Useful only for
+ * applications representing floats within a binary stream.
+ * @argument None
+ * @returns ByteArray
+ */
+EH_METHOD(Float, toBytes) {
+	ASSERT_NULL_AND_TYPE(Float, "Float.round");
+	// TODO: change this when we switch the internal representation of EH Floats to a double
+	auto float_size = sizeof(float);
+	ehval_p ba_obj = ByteArray::make(float_size);
+	auto ba = ba_obj->get<ByteArray>();
+	auto input = obj->get<Float>();
+	memcpy(ba->content, &input, float_size);
+	return ba_obj;
+}
+

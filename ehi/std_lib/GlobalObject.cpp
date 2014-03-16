@@ -21,6 +21,7 @@
 #include "Float.hpp"
 #include "Function.hpp"
 #include "GarbageCollector.hpp"
+#include "Generator.hpp"
 #include "GlobalObject.hpp"
 #include "Hash.hpp"
 #include "Integer.hpp"
@@ -74,7 +75,7 @@ void ehinstance_init_GlobalObject(ehobj_t *obj, EHInterpreter *parent) {
 	/*
 	 * Initialize top-level classes.
 	 */
-	GLOBAL_REGISTER_CLASS(Enum);
+	parent->type_ids.Enum = GLOBAL_REGISTER_CLASS(Enum);
 	REGISTER_ENUM_CLASS(Attribute); // 7
 	REGISTER_ENUM_CLASS(Node); // 8
 	GLOBAL_REGISTER_CLASS(Binding);
@@ -88,6 +89,7 @@ void ehinstance_init_GlobalObject(ehobj_t *obj, EHInterpreter *parent) {
 	GLOBAL_REGISTER_CLASS(Range);
 	GLOBAL_REGISTER_CLASS(Hash);
 	GLOBAL_REGISTER_CLASS(Tuple);
+	GLOBAL_REGISTER_CLASS(Generator);
 	GLOBAL_REGISTER_CLASS(ByteArray);
 	REGISTER_PURE_CLASS(Exception);
 	REGISTER_PURE_CLASS(UnknownCommandError);
@@ -99,7 +101,8 @@ void ehinstance_init_GlobalObject(ehobj_t *obj, EHInterpreter *parent) {
 	REGISTER_PURE_CLASS(SyntaxError);
 	REGISTER_PURE_CLASS(MiscellaneousError);
 	REGISTER_PURE_CLASS(GarbageCollector);
-	REGISTER_PURE_CLASS(EmptyIterator);
+	parent->type_ids.EmptyIterator = REGISTER_PURE_CLASS(EmptyIterator);
+	parent->type_ids.GeneratorExit = REGISTER_PURE_CLASS(GeneratorExit);
 	GLOBAL_REGISTER_CLASS(FixedArray);
 	REGISTER_PURE_CLASS(Random);
 	GLOBAL_REGISTER_CLASS(Map);

@@ -259,7 +259,7 @@ public:
     virtual std::set<std::string> member_set(const EHInterpreter *interpreter_parent);
 
     virtual std::set<std::string> instance_member_set(const EHInterpreter *interpreter_parent) {
-    	return {};
+    	return std::set<std::string>{};
     }
 
 	// returns the parent scope of the current object

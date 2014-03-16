@@ -5,6 +5,7 @@
  * Jelle Zijlstra, December 2011
  */
 #include <sstream>
+#include <condition_variable>
 #include <string.h>
 
 #include "std_lib/Integer.hpp"
@@ -50,6 +51,26 @@ public:
 	}
 };
 
+struct generator_info {
+	enum message_enum {
+		value_e,
+		exception_e,
+		exit_e,
+	};
+	std::mutex mutex;
+	std::condition_variable cv;
+
+	bool in_master;
+	message_enum current_message_type;
+	ehval_p current_message;
+
+	generator_info() : mutex(), cv(), in_master(true), current_message_type(value_e), current_message() {}
+
+	void send(message_enum type, ehval_p message);
+	void wait(bool is_master);
+	void init();
+};
+
 class EHInterpreter {
 public:
 	Hash::ehhash_t *cmdtable;
@@ -61,9 +82,13 @@ public:
 	ehval_p base_object;
 	ehval_p class_object;
 
-	int enum_id;
-	int enum_member_id;
-	int enum_instance_id;
+	struct {
+		unsigned int EmptyIterator;
+		unsigned int GeneratorExit;
+		unsigned int Enum;
+		unsigned int Enum_Member;
+		unsigned int Enum_Instance;
+	} type_ids;
 
 	bool optimize;
 
@@ -109,6 +134,7 @@ public:
 	ehval_p eh_execute(ehval_p node, const ehcontext_t context);
 
 	ehval_p optimize(ehval_p node, const ehcontext_t context);
+	ehval_p optimize(ehval_p node, ehcontext_t context, bool &is_generator);
 
 	virtual char *eh_getline();
 	virtual ehval_p execute_cmd(const char *rawcmd, Map::t *paras);
@@ -237,6 +263,8 @@ public:
 		return strdup(str_str.str().c_str());
 	}
 
+	generator_info generator_info;
+
 private:
 
 	/*
@@ -285,7 +313,7 @@ private:
 	ehval_p eh_op_class(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_named_class(ehval_p *paras, const ehcontext_t &context);
 	ehval_p declare_class(const char *name, ehval_p code, const ehcontext_t &context);
-	ehval_p eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context);
+	ehval_p eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context, bool is_generator);
 	ehval_p eh_op_dot(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_instance_access(ehval_p *paras, const ehcontext_t &context);
 	ehval_p eh_op_match(ehval_p *paras, const ehcontext_t &context);

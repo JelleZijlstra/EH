@@ -11,6 +11,7 @@
 #include "ArgumentError.hpp"
 #include "Binding.hpp"
 #include "ConstError.hpp"
+#include "Generator.hpp"
 #include "MiscellaneousError.hpp"
 
 EH_INITIALIZER(Function) {
@@ -50,7 +51,7 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 		case user_e: {
 			ehval_p newcontext = Function_Scope::make(f->parent, ehi->get_parent());
 			if(f->is_generator) {
-				return Generator::make(function_object, newcontext);
+				return Generator::make(base_object, function_object, args, newcontext, ehi);
 			} else {
 				ehstack_entry_t stk(function_object->get_full_name(), newcontext, ehi->get_stack());
 				ehcontext_t context(base_object, newcontext);

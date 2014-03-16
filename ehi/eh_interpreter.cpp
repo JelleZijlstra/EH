@@ -17,6 +17,7 @@
 #include "std_lib/ConstError.hpp"
 #include "std_lib/Enum.hpp"
 #include "std_lib/Function.hpp"
+#include "std_lib/Generator.hpp"
 #include "std_lib/GlobalObject.hpp"
 #include "std_lib/LoopError.hpp"
 #include "std_lib/Map.hpp"
@@ -234,7 +235,9 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 		 * Object definitions
 		 */
 			case T_FUNC: // function definition
-				return eh_op_declareclosure(paras, context);
+				return eh_op_declareclosure(paras, context, false);
+			case T_GENERATOR:
+				return eh_op_declareclosure(paras, context, true);
 			case T_NAMED_CLASS: // named class declaration
 				return eh_op_named_class(paras, context);
 			case T_CLASS: // anonymous class declaration
@@ -413,11 +416,17 @@ ehval_p EHI::do_for_loop(ehval_p iteree_block, ehval_p body_block, int op, ehval
 	ehval_p iterator = call_method(iteree, "getIterator", nullptr, context);
 	inloop++;
 	while(true) {
-		ehval_p has_next = call_method_typed<Bool>(iterator, "hasNext", nullptr, context);
-		if(!has_next->get<Bool>()) {
-			break;
+		ehval_p next;
+		try {
+			next = call_method(iterator, "next", nullptr, context);
+		} catch(eh_exception &e) {
+            const unsigned int type_id = e.content->get_type_id(get_parent());
+            if(type_id == get_parent()->type_ids.EmptyIterator) {
+            	break;
+            } else {
+            	throw;
+            }
 		}
-		ehval_p next = call_method(iterator, "next", nullptr, context);
 		if(op == T_FOR_IN) {
 			attributes_t attributes = attributes_t(private_e, nonstatic_e, nonconst_e);
 			set(set_block, next, &attributes, context);
@@ -440,7 +449,7 @@ ehval_p EHI::eh_op_yield(ehval_p para, const ehcontext_t &context) {
 		throw_TypeError("attempted yield outside a generator", top_of_stack, this);
 	}
 	ehval_p argument = eh_execute(para, context);
-	return top_of_stack->get<Generator>()->do_yield(argument);
+	return top_of_stack->get<Generator>()->yield(argument);
 }
 void EHI::eh_op_break(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p level_v = eh_execute(paras[0], context);
@@ -490,11 +499,12 @@ ehval_p EHI::eh_op_anonclass(ehval_p node, const ehcontext_t &context) {
 	}
 	return ret;
 }
-ehval_p EHI::eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context) {
+ehval_p EHI::eh_op_declareclosure(ehval_p *paras, const ehcontext_t &context, bool is_generator) {
 	Function::t *f = new Function::t(Function::user_e);
 	f->code = paras[1];
 	f->args = paras[0];
 	f->parent = context.scope;
+	f->is_generator = is_generator;
 	return Function::make(f, parent);
 }
 ehval_p EHI::eh_op_enum(ehval_p *paras, const ehcontext_t &context) {

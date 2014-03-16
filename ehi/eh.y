@@ -67,6 +67,7 @@ void yyerror(void *, const char *s);
 %token T_BREAK
 %token T_CONTINUE
 %token T_FUNC
+%token T_GENERATOR
 %token T_DO
 %token T_RET
 %token T_SEPARATOR

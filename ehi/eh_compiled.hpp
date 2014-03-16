@@ -51,7 +51,7 @@ static inline ehval_p get_variable(const char *name, const ehcontext_t &context,
 
 static inline ehval_p make_class(const char *name, class_f code, const ehcontext_t &context, EHI *ehi) {
 	EHInterpreter *parent = ehi->get_parent();
-	ehclass_t *new_obj = new ehclass_t();
+	ehclass_t *new_obj = new ehclass_t(name);
 	ehval_p ret = Class::make(new_obj, parent);
 
 	new_obj->type_id = parent->repo.register_class(name, ret);

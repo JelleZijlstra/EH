@@ -1,6 +1,6 @@
 # Generator class
 
-class Generator
+class MappingGenerator
 	private f
 	private iteree
 

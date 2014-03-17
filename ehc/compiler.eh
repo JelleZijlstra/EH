@@ -76,7 +76,7 @@ class Compiler
 	private counter
 	private verbose
 
-	const private static header = '#include "' + workingDir() + "/../ehi/eh_compiled.hpp\"\n"
+	const private static header = '#include "' + workingDir() + "/../ehi/eh_compiled_main.hpp\"\n"
 
 	public initialize = func: fileName: throw(), code: throw(), verbose: false
 		this.fileName = fileName

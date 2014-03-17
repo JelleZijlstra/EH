@@ -110,6 +110,7 @@ void ehinstance_init_GlobalObject(ehobj_t *obj, EHInterpreter *parent) {
 	REGISTER_PURE_CLASS(EH);
 	REGISTER_PURE_CLASS(JSON);
 	REGISTER_PURE_CLASS(CompileError);
+	REGISTER_PURE_CLASS(RuntimeError);
 
 	/*
 	 * Inititalize top-level methods.

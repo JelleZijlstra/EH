@@ -17,4 +17,8 @@ EH_NORETURN void throw_CompileError(const char *message, EHI *ehi);
 
 EH_INITIALIZER(CompileError);
 
+EH_NORETURN void throw_RuntimeError(const char *message, EHI *ehi);
+
+EH_INITIALIZER(RuntimeError);
+
 #endif /* EH_EXCEPTION_H_ */

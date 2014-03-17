@@ -53,3 +53,9 @@ EH_NORETURN void throw_CompileError(const char *message, EHI *ehi) {
 
 EH_INITIALIZER(CompileError) {}
 
+EH_NORETURN void throw_RuntimeError(const char *message, EHI *ehi) {
+	ehval_p args = String::make(strdup(message));
+	throw_error("RuntimeError", args, ehi);
+}
+
+EH_INITIALIZER(RuntimeError) {}

@@ -8,6 +8,7 @@
 EH_CLASS(Tuple) {
 public:
 	static ehval_p make(unsigned int size, ehval_p *in, EHInterpreter *parent);
+	static ehval_p make(unsigned int size, EHI *ehi);
 
 	static ehval_p create(std::initializer_list<ehval_p> members, EHInterpreter *parent) {
 		const unsigned int size = static_cast<unsigned int>(members.size());
@@ -47,6 +48,10 @@ public:
 			return this->content[i];
 		}
 
+		void set(unsigned int i, ehval_p value) {
+			content[i] = value;
+		}
+
 		bool is_in_range(int i) const {
 			return i >= 0 && i < static_cast<int>(size());
 		}
@@ -54,6 +59,7 @@ public:
 		friend EH_METHOD(Tuple, operator_colon);
 
 		friend ehval_p Tuple::make(unsigned int size, ehval_p *in, EHInterpreter *parent);
+		friend ehval_p Tuple::make(unsigned int size, EHI *ehi);
 	};
 
 	typedef t* type;

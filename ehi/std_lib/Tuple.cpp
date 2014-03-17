@@ -20,6 +20,11 @@ ehval_p Tuple::make(unsigned int size, ehval_p *in, EHInterpreter *parent) {
 	return parent->allocate<Tuple>(new t(size, in));
 }
 
+ehval_p Tuple::make(unsigned int size, EHI *ehi) {
+	return ehi->get_parent()->allocate<Tuple>(new t(size));
+}
+
+
 /*
  * @description Initializer. Converts an arbitrary object to a tuple by the
  * following algorithm: call the object's .length() method; allocate a tuple of

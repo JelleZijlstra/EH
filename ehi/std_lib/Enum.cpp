@@ -35,6 +35,7 @@ void join(S &stream, const T &container, const std::string separator) {
 
 EH_INITIALIZER(Enum) {
 	REGISTER_METHOD(Enum, toString);
+	REGISTER_METHOD(Enum, ofNumeric);
 	REGISTER_METHOD_RENAME(Enum, operator_colon, "operator()");
 	REGISTER_METHOD_RENAME(Enum, operator_colon, "new");
 	REGISTER_STATIC_METHOD_RENAME(Enum, operator_colon, "operator()");
@@ -183,6 +184,17 @@ EH_METHOD(Enum, toString) {
 	// then it must be an enum class object
 	obj->assert_type<Enum>("Enum.toString", ehi);
 	return String::make(strdup(obj->get<Enum>()->to_string().c_str()));
+}
+
+EH_METHOD(Enum, ofNumeric) {
+	obj->assert_type<Enum>("Enum.ofNumeric", ehi);
+	args->assert_type<Integer>("Enum.ofNumeric", ehi);
+	int index = args->get<Integer>();
+	if(index < 0 || size_t(index) >= obj->get<Enum>()->n_enum_members) {
+		throw_ArgumentError_out_of_range("Enum.ofNumeric", args, ehi);
+	}
+	auto mi = obj->get<Enum>()->enum_members[index];
+	return obj->get<Enum>()->get_known(mi.name)->value;
 }
 
 EH_METHOD(Enum_Instance, toString) {

@@ -211,6 +211,7 @@ EH_INITIALIZER(Enum);
 
 EH_METHOD(Enum, operator_colon);
 EH_METHOD(Enum, toString);
+EH_METHOD(Enum, ofNumeric);
 
 EH_INITIALIZER(Enum_Instance);
 

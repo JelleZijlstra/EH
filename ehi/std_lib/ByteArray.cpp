@@ -94,7 +94,7 @@ EH_METHOD(ByteArray, setInteger) {
         throw_ArgumentError_out_of_range("ByteArray.setInteger", index_v, ehi);
     }
     ehval_p rvalue = args->get<Tuple>()->get(1);
-    ASSERT_TYPE(rvalue, Integer, "ByteArray.operator->=");
+    ASSERT_TYPE(rvalue, Integer, "ByteArray.setInteger");
     int value = rvalue->get<Integer>();
     memcpy(&ba->content[index], &value, 4);
     return rvalue;

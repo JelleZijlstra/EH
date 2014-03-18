@@ -50,7 +50,7 @@ public:
         return "<bytearray>";
     }
 private:
-    ByteArray(uint8_t f) : value(new eh_byte_array(f)) {}
+    ByteArray(int f) : value(new eh_byte_array(f)) {}
 };
 
 EH_METHOD(ByteArray, operator_colon);

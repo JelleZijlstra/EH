@@ -11,5 +11,6 @@ EH_METHOD(EH, collectGarbage);
 EH_METHOD(EH, parse);
 EH_METHOD(EH, lex);
 EH_METHOD(EH, printStack);
+EH_METHOD(EH, executeBytecode);
 
 #endif /* EH_EH_H_ */

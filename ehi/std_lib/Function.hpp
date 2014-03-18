@@ -17,10 +17,16 @@ public:
 	enum functype_enum {
 		user_e,
 		lib_e,
-		compiled_e
+		compiled_e,
+		bytecode_e
 	};
 
 	typedef ehval_p (*compiled_method)(ehval_p, ehval_p, class EHI *, const ehcontext_t &context);
+
+	struct bytecode_data {
+		code_object *code_object;
+		uint32_t offset;
+	};
 
 	class t {
 	public:
@@ -29,8 +35,9 @@ public:
 		ehval_p args;
 		ehval_p code;
 		union {
-			ehlibmethod_t libmethod_pointer;
-			compiled_method compiled_pointer;
+			ehlibmethod_t libmethod_pointer; // for lib_e
+			compiled_method compiled_pointer; // for compiled_e
+			bytecode_data bytecode; // for bytecode_e
 		};
 		ehval_p parent;
 		std::string name;
@@ -94,6 +101,9 @@ public:
 				break;
 			case compiled_e:
 				std::cout << "compiled>: ";
+				break;
+			case bytecode_e:
+				std::cout << "bytecode>: ";
 				break;
 		}
 		std::cout << std::endl;

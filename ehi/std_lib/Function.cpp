@@ -66,6 +66,12 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 				return ret;
 			}
 		}
+		case bytecode_e: {
+			ehval_p newcontext = Function_Scope::make(f->parent, ehi->get_parent());
+			ehstack_entry_t stk(function_object->get_full_name(), newcontext, ehi->get_stack());
+			eh_frame_t frame(eh_frame_t::function_e, f->bytecode.code_object, f->bytecode.offset, newcontext, args);
+			return eh_execute_frame(&frame, ehi);
+		}
 	}
 }
 

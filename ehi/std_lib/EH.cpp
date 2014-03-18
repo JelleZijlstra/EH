@@ -4,10 +4,13 @@
  */
 
 #include "EH.hpp"
+#include "ArgumentError.hpp"
 #include "Array.hpp"
 #include "Attribute.hpp"
+#include "ByteArray.hpp"
 #include "Function.hpp"
 #include "Node.hpp"
+#include "../eh_vm.hpp"
 #include "../eh.bison.hpp"
 #include "../eh.flex.hpp"
 
@@ -18,6 +21,7 @@ EH_INITIALIZER(EH) {
 	REGISTER_STATIC_METHOD(EH, parse);
 	REGISTER_STATIC_METHOD(EH, lex);
 	REGISTER_STATIC_METHOD(EH, printStack);
+	REGISTER_STATIC_METHOD(EH, executeBytecode);
 }
 
 /*
@@ -127,3 +131,20 @@ EH_METHOD(EH, printStack) {
 	return nullptr;
 }
 
+/*
+ * @description Executes a blob of bytecode
+ * @argument ByteArray containing valid EH code object
+ * @returns Null
+ */
+EH_METHOD(EH, executeBytecode) {
+	ASSERT_TYPE(args, ByteArray, "EH.executeBytecode");
+	auto ba = args->get<ByteArray>();
+	size_t ba_size = ba->size;
+	size_t header_size = static_cast<code_object_header *>(static_cast<void *>(ba->content))->size;
+	if(ba_size != header_size) {
+		throw_ArgumentError("bytecode has incorrect size", "EH.executeBytecode", args, ehi);
+	}
+
+	eh_execute_bytecode(ba->content, ehi);
+	return nullptr;
+}

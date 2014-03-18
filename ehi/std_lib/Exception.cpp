@@ -51,11 +51,15 @@ EH_NORETURN void throw_CompileError(const char *message, EHI *ehi) {
 	throw_error("CompileError", args, ehi);
 }
 
-EH_INITIALIZER(CompileError) {}
+EH_INITIALIZER(CompileError) {
+	INHERIT_PURE_CLASS(Exception);
+}
 
 EH_NORETURN void throw_RuntimeError(const char *message, EHI *ehi) {
 	ehval_p args = String::make(strdup(message));
 	throw_error("RuntimeError", args, ehi);
 }
 
-EH_INITIALIZER(RuntimeError) {}
+EH_INITIALIZER(RuntimeError) {
+	INHERIT_PURE_CLASS(Exception);
+}

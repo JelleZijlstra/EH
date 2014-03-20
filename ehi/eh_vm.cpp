@@ -27,6 +27,11 @@
 // Needs to come after inclusion of Attribute
 #include "eh.bison.hpp"
 
+static void dump(ehval_p object, EHI *ehi) {
+    printvar_set s;
+    object->printvar(s, 0, ehi);
+}
+
 code_object::code_object(uint8_t *data_) : data(data_) {
     header = static_cast<code_object_header *>(static_cast<void *>(data));
 }
@@ -111,7 +116,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 break;
             }
             case MOVE:
-                registers[3] = registers[2];
+                registers[current_op[3]] = registers[current_op[2]];
                 break;
             case LOAD: {
                 // TODO fix memory leak. Does unique_ptr work with new[]?
@@ -186,6 +191,12 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
             case LOAD_NULL:
                 registers[current_op[2]] = Null::make();
                 break;
+            case LOAD_THIS:
+                registers[current_op[2]] = context.object;
+                break;
+            case LOAD_SCOPE:
+                registers[current_op[2]] = context.scope;
+                break;
             case CREATE_TUPLE: {
                 uint16_t size = get_bytes<uint16_t>(current_op, 2);
                 registers[2] = Tuple::make(size, ehi);
@@ -232,26 +243,29 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
             }
             case LOAD_CLASS: {
                 uint32_t target = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
-                EHInterpreter *parent = ehi->get_parent();
-                ehclass_t *new_obj = new ehclass_t("");
-                ehval_p ret = Class::make(new_obj, parent);
-
-                // TODO: named class
-                new_obj->type_id = parent->repo.register_class("", ret);
-                new_obj->parent = context.scope;
 
                 // execute the code within the class
-                eh_frame_t nested_frame(eh_frame_t::class_e, frame->co, target, ret);
-                eh_execute_frame(&nested_frame, ehi);
-                registers[0] = ret;
+                eh_frame_t nested_frame(eh_frame_t::class_e, frame->co, target, context);
+                registers[0] = eh_execute_frame(&nested_frame, ehi);
+                break;
+            }
+            case CLASS_INIT: {
+                char *name = load_string(code, current_op);
+                EHInterpreter *parent = ehi->get_parent();
+                ehclass_t *new_obj = new ehclass_t(name);
+                ehval_p ret = Class::make(new_obj, parent);
+
+                new_obj->type_id = parent->repo.register_class(name, ret);
+                new_obj->parent = context.scope;
+                frame->context = context = ret;
                 break;
             }
             case LOAD_ENUM: {
                 uint32_t target = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
+
                 // execute the code within the enum
                 eh_frame_t nested_frame(eh_frame_t::enum_e, frame->co, target, context);
-                eh_execute_frame(&nested_frame, ehi);
-                // NB: the code within the enum frame should leave r1 to ultimately contain the enum
+                registers[0] = eh_execute_frame(&nested_frame, ehi);
                 break;
             }
             case ENUM_INIT: {
@@ -259,10 +273,6 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 // not actually used at the moment
                 // uint16_t size = get_bytes<uint16_t>(current_op, 2);
                 ehval_p ret = Enum::make_enum_class(strdup(name), context.scope, ehi->get_parent());
-                // NB: this introduces a small change in semantics; in the previous implementation the
-                // enum class is only set as a variable after it is defined. Should not normally matter,
-                // but ideally the contradiction should be resolved one way or the other.
-                context.scope->set_member(strdup(name), ehmember_p(attributes_t(), ret), context, ehi);
 
                 // overwrite the frame's context to be the enum class
                 frame->context = context = ret;
@@ -284,14 +294,16 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
             }
             case ASSERT_NULL: {
                 ehval_p val = registers[current_op[2]];
-                if(!val.null()) {
-                    throw_RuntimeError("Expected a non-null value", ehi);
+                if(!val->is_a<Null>()) {
+                    throw_RuntimeError("Expected a null value", ehi);
                 }
                 break;
             }
             case RETURN:
-            case HALT:
                 return registers[0];
+            case HALT:
+                // HALT returns the context object; this makes classes and enums work
+                return context.object;
             default:
                 throw_RuntimeError("Unrecognized opcode", ehi);
         }

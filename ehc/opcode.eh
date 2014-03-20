@@ -11,6 +11,13 @@ const CODE_OBJECT_HEADER_SIZE = 20
 const SIZEOF_OFFSET = 4
 const SIZEOF_OPCODE = 8
 
+ByteArray##wrappedSetInteger(loc, value) = do
+    if !(value.isA Integer)
+        throw(Exception(String value + " is not an integer"))
+    end
+    this.setInteger(loc, value)
+end
+
 enum Opcode
     JUMP(target), # unconditionally jumps to position target in the current code object
     JUMP_TRUE(target), # jumps to target if the current value in #0 is true
@@ -33,6 +40,8 @@ enum Opcode
     LOAD_TRUE(n), # load this value into register n
     LOAD_FALSE(n),
     LOAD_NULL(n),
+    LOAD_THIS(n),
+    LOAD_SCOPE(n),
     CREATE_TUPLE(n), # creates an empty tuple of size n and puts it in #2
     SET_TUPLE(n), # sets value n in a tuple literal in #2 to the value in #0
     CREATE_ARRAY(n), # creates an empty array of size n and puts it in #2
@@ -42,6 +51,7 @@ enum Opcode
     CREATE_RANGE, # creates a range object out of the objects in #0 (right end) and #1 (left end) and puts it in #2
     CREATE_FUNCTION(target), # creates a function object with code starting at target and puts it in #0
     LOAD_CLASS(target), # loads the class defined starting at target into #0. This will create a special frame terminated by an END_CLASS instruction
+    CLASS_INIT(name), # sets the name of the class
     LOAD_ENUM(target), # loads an enum defined at target into #0
     ENUM_INIT(n, name), # sets the number of elements in the enum to n and the name to name. Enum size is limited to 65535 and each member can have up to 255 arguments.
     SET_ENUM_MEMBER(size, n, name), # sets enum member n to a member with name and size as given
@@ -53,15 +63,42 @@ enum Opcode
 end
 
 enum CAttributes
-    Null, Set(is_private, is_const)
+    Null, Set(is_private, is_static, is_const)
 
     public toInteger() = match this
         case Null
             0
-        case Set(@is_private, @is_const)
+        case Set(@is_private, _, @is_const)
             (is_private.toInteger() << 2) | (is_const.toInteger() << 1) | 1
     end
+
+    public static parse attributes = do
+        private parse_rec attributes = match attributes
+            case Node.T_LIST(_) | Node.T_END
+                [false, false, false]
+            case Node.T_ATTRIBUTE(Attribute.constAttribute, @tail)
+                private out = parse_rec tail
+                out->2 = true
+                out
+            case Node.T_ATTRIBUTE(Attribute.staticAttribute, @tail)
+                private out = parse_rec tail
+                out->1 = true
+                out
+            case Node.T_ATTRIBUTE(Attribute.publicAttribute, @tail)
+                private out = parse_rec tail
+                out->0 = false
+                out
+            case Node.T_ATTRIBUTE(Attribute.privateAttribute, @tail)
+                private out = parse_rec tail
+                out->0 = true
+                out
+        end
+        private lst = parse_rec attributes
+        Set(lst->0, lst->1, lst->2)
+    end
 end
+
+
 
 # round_up_to_multiple 15 4 = 16, 16 4 = 16
 round_up_to_multiple m n = do
@@ -145,14 +182,14 @@ class CodeObject
         ba->1 = 'H'.charAtPosition 0
         ba->2 = 0
         ba->3 = 0
-        ba.setInteger(4, size)
-        ba.setInteger(8, CODE_OBJECT_HEADER_SIZE)
-        ba.setInteger(12, code_offset)
-        ba.setInteger(16, entry_point)
+        ba.wrappedSetInteger(4, size)
+        ba.wrappedSetInteger(8, CODE_OBJECT_HEADER_SIZE)
+        ba.wrappedSetInteger(12, code_offset)
+        ba.wrappedSetInteger(16, entry_point)
 
         # write the string registry
         for string, index in this.string_registry
-            ba.setInteger(index, string.length())
+            ba.wrappedSetInteger(index, string.length())
             content_index = index + SIZEOF_OFFSET
             for i in string.length()
                 ba->(content_index + i) = string.charAtPosition i
@@ -182,18 +219,18 @@ class CodeObject
             ba->offset = opcode.numericValue()
             match opcode
                 case Opcode.JUMP(@target) | Opcode.JUMP_TRUE(@target) | Opcode.JUMP_FALSE(@target) | Opcode.CREATE_FUNCTION(@target) | Opcode.LOAD_CLASS(@target) | Opcode.LOAD_ENUM(@target)
-                    ba.setInteger(offset + SIZEOF_OFFSET, target.get_location())
-                case Opcode.MOVE(register_a, register_b)
+                    ba.wrappedSetInteger(offset + SIZEOF_OFFSET, target.get_location())
+                case Opcode.MOVE(@register_a, @register_b)
                     # offset + 1 is unused
                     ba->(offset + 2) = register_a
                     ba->(offset + 3) = register_b
-                case Opcode.LOAD(@name) | Opcode.LOAD_PROPERTY(@name) | Opcode.LOAD_INSTANCE_PROPERTY(@name) | Opcode.CALL_METHOD(@name) | Opcode.LOAD_STRING(@name) | Opcode.LOAD_INTEGER(@name)
-                    ba.setInteger(offset + SIZEOF_OFFSET, name)
+                case Opcode.LOAD(@name) | Opcode.LOAD_PROPERTY(@name) | Opcode.LOAD_INSTANCE_PROPERTY(@name) | Opcode.CALL_METHOD(@name) | Opcode.LOAD_STRING(@name) | Opcode.LOAD_INTEGER(@name) | Opcode.CLASS_INIT(@name)
+                    ba.wrappedSetInteger(offset + SIZEOF_OFFSET, name)
                 case Opcode.SET(@attributes, @name) | Opcode.SET_PROPERTY(@attributes, @name) | Opcode.SET_INSTANCE_PROPERTY(@attributes, @name)
                     # TODO: implement an attributes class that can be represented in bytecode
                     ba->(offset + 2) = attributes.toInteger()
-                    ba.setInteger(offset + SIZEOF_OFFSET, name)
-                case Opcode.PUSH(@register) | Opcode.POP(@register) | Opcode.LOAD_TRUE(@register) | Opcode.LOAD_FALSE(@register) | Opcode.LOAD_NULL(@register) | Opcode.ASSERT_NULL(@register)
+                    ba.wrappedSetInteger(offset + SIZEOF_OFFSET, name)
+                case Opcode.PUSH(@register) | Opcode.POP(@register) | Opcode.LOAD_TRUE(@register) | Opcode.LOAD_FALSE(@register) | Opcode.LOAD_NULL(@register) | Opcode.ASSERT_NULL(@register) | Opcode.LOAD_THIS(@register) | Opcode.LOAD_SCOPE(@register)
                     ba->(offset + 2) = register
                 case Opcode.CALL | Opcode.RETURN | Opcode.CREATE_RANGE | Opcode.HALT
                     ()
@@ -207,18 +244,18 @@ class CodeObject
                     ba->(offset + 2), ba->(offset + 3) = this.bytes_of_short n
                 case Opcode.ENUM_INIT(@n, @name)
                     ba->(offset + 2), ba->(offset + 3) = this.bytes_of_short n
-                    ba.setInteger(offset + SIZEOF_OFFSET, name)
+                    ba.wrappedSetInteger(offset + SIZEOF_OFFSET, name)
                 case Opcode.SET_ENUM_MEMBER(@m, @n, @name) | Opcode.SET_ENUM_ARGUMENT(@m, @n, @name)
                     ba->(offset + 1) = m
                     ba->(offset + 2), ba->(offset + 3) = this.bytes_of_short n
-                    ba.setInteger(offset + SIZEOF_OFFSET, name)
+                    ba.wrappedSetInteger(offset + SIZEOF_OFFSET, name)
             end
             offset += SIZEOF_OPCODE
         end
         offset
     end
 
-    private bytes_of_short short = do
+    private bytes_of_short n = do
         assert (n < 65536) "Cannot create literal with 65536 or more elements"
         private last_byte = n & 127
         private first_byte = (n >> 8) & 127
@@ -350,23 +387,22 @@ private compile_rec code co = do
             compile_rec val co
         case Node.T_ACCESS(@base, @accessor)
             compile_rec base co
+            co.append(Opcode.MOVE(0, 1))
             co.append(Opcode.LOAD_PROPERTY(co.register_string accessor))
         case Node.T_INSTANCE_ACCESS(@base, @accessor)
             compile_rec base co
+            co.append(Opcode.MOVE(0, 1))
             co.append(Opcode.LOAD_INSTANCE_PROPERTY(co.register_string accessor))
         case Node.T_CLASS_MEMBER(@attributes, @lvalue)
-            # TODO
-            # this.compile_set(sb, lvalue, "Null::make()", Attributes.parse attributes)
-            # sb << assignment << "Null::make();\n"
+            co.append(Opcode.LOAD_NULL 0)
+            compile_set lvalue co (CAttributes.parse attributes)
         # Constants
         case Node.T_NULL
             co.append(Opcode.LOAD_NULL 0)
         case Node.T_THIS
-            # TODO
-            # sb << assignment << "context.object"
+            co.append(Opcode.LOAD_THIS 0)
         case Node.T_SCOPE
-            # TODO
-            # sb << assignment << "context.scope"
+            co.append(Opcode.LOAD_SCOPE 0)
         # Control flow
         case Node.T_RET(@val)
             compile_rec val co
@@ -413,9 +449,9 @@ private compile_rec code co = do
             sb << "}\n"
             sb << assignment << iteree_name
         case Node.T_IF(@condition, @if_block, Node.T_LIST(@elsif_blocks))
-            this.compile_elsifs(sb, var_name, condition, if_block, elsif_blocks, null)
+            compile_elsifs condition if_block elsif_blocks () co
         case Node.T_IF_ELSE(@condition, @if_block, Node.T_LIST(@elsif_blocks), @else_block)
-            this.compile_elsifs(sb, var_name, condition, if_block, elsif_blocks, else_block)
+            compile_elsifs condition if_block elsif_blocks else_block co
         case Node.T_GIVEN(@given_var, Node.T_LIST(@cases))
             private given_var_name = this.doCompile(sb, given_var)
             private cases_length = cases.length()
@@ -531,7 +567,7 @@ private compile_rec code co = do
             sb << assignment << "Bool::make(" << left_name << "_bool != " << right_name << "_bool);\n"
         # Literals
         case Node.T_FUNC(@args, @code)
-            label, nco = co.register_function()
+            private label, nco = co.register_function()
             compile_set args nco (CAttributes.Null)
             compile_rec code nco
             nco.append(Opcode.RETURN)
@@ -544,17 +580,22 @@ private compile_rec code co = do
             co.append(Opcode.CREATE_RANGE)
             co.append(Opcode.MOVE(2, 0))
         case Node.T_HASH_LITERAL(Node.T_LIST(@hash))
-
-            sb << assignment << "Hash::make(ehi->get_parent());\n"
-            sb << "{\nHash::ehhash_t *new_hash = " << var_name << "->get<Hash>();\n"
+            private size = hash.length()
+            co.append(Opcode.CREATE_MAP size)
+            i = 0
             for member in hash
                 match member
                     case Node.T_ARRAY_MEMBER(@key, @value)
-                        private value_name = this.doCompile(sb, value)
-                        sb << 'new_hash->set("' << key << '", ' << value_name << ");\n"
+                        co.append(Opcode.PUSH 2)
+                        compile_rec value co
+                        co.append(Opcode.MOVE(0, 1))
+                        co.append(Opcode.LOAD_STRING(co.register_string key))
+                        co.append(Opcode.POP 2)
+                        co.append(Opcode.SET_MAP i)
                 end
+                i += 1
             end
-            sb << "}\n"
+            co.append(Opcode.MOVE(2, 0))
         case Node.T_ARRAY_LITERAL(Node.T_LIST(@array))
             # reverse, because the parser produces them in reverse order
             private members = array.reverse()
@@ -599,52 +640,75 @@ private compile_rec code co = do
                 end
             end
         case Node.T_ENUM(@enum_name, Node.T_LIST(@members), @body)
-            private body_name = this.get_var_name "enum"
-            private inner_builder = String.Builder.new()
-            this.add_function inner_builder
+            private label, nco = co.register_function()
+            private name_id = co.register_string enum_name
 
-            inner_builder << "void " << body_name << "(const ehcontext_t &context, EHI *ehi) {\n"
-            inner_builder << "ehval_p ret;\n" # ignored
-            this.doCompile(inner_builder, body)
-            inner_builder << "}\n"
+            co.append(Opcode.LOAD_ENUM label)
+            co.append(Opcode.SET(CAttributes.Null, name_id))
 
-            sb << assignment << 'Enum::make_enum_class("' << enum_name << "\", context.scope, ehi->get_parent());\n{\n"
-            sb << "Enum::t *enum_obj = " << var_name << "->get<Enum>();\n"
+            nco.append(Opcode.ENUM_INIT(members.length(), name_id))
+            private i = 0
+            # TODO: add an equivalent to Python's enumerate()
             for member in members
-                sb << 'enum_obj->add_enum_member("' << member->0 << '", {'
                 match member
                     case Node.T_NULLARY_ENUM(@name)
-                        # ignore
+                        nco.append(Opcode.SET_ENUM_MEMBER(0, i, co.register_string name))
                     case Node.T_ENUM_WITH_ARGUMENTS(@name, Node.T_LIST(@args))
-                        private nargs = args.length()
-                        for i in nargs
-                            sb << '"' << args->i << '"'
-                            if i < nargs - 1
-                                sb << ", "
-                            end
+                        nco.append(Opcode.SET_ENUM_MEMBER(args.length(), i, co.register_string name))
+                        private j = 0
+                        for arg in args
+                            nco.append(Opcode.SET_ENUM_ARGUMENT(j, i, co.register_string arg))
+                            j += 1
                         end
                     case Node.T_ENUM_WITH_ARGUMENTS(@name, @arg)
-                        sb << '"' << arg << '"'
-                    case _
-                        printvar member
+                        nco.append(Opcode.SET_ENUM_MEMBER(1, i, co.register_string name))
+                        nco.append(Opcode.SET_ENUM_ARGUMENT(0, i, co.register_string arg))
                 end
-                sb << "}, ehi->get_parent());\n"
+                i += 1
             end
-            # execute inner code
-            sb << body_name << "(" << var_name << ", ehi);\n"
-            sb << 'context.scope->set_member("' << enum_name << '", ehmember_p(attributes_t(), '
-            sb << var_name << "), context, ehi);\n"
-            sb << "}\n"
+            compile_rec body nco
+            nco.append(Opcode.HALT)
         case Node.T_CLASS(@body)
-            this.compile_class(sb, var_name, "(anonymous class)", body)
+            compile_class body (co.register_string "(anonymous class)") co
         case Node.T_NAMED_CLASS(@name, @body)
-            this.compile_class(sb, var_name, name, body)
-            sb << 'context.scope->set_member("' << name << '", ehmember_p(attributes_t(), '
-            sb << var_name << "), context, ehi)"
-        case _
-            printvar code
-            throw(NotImplemented.new("Cannot compile this expression"))
+            name_id = co.register_string name
+            compile_class body name_id co
+            co.append(Opcode.SET(CAttributes.Null, name_id))
     end
+end
+
+private compile_elsifs condition if_block elsif_blocks else_block co = do
+    compile_rec condition co
+    private next_block = Label()
+    private bottom = Label()
+    co.append(Opcode.JUMP_FALSE next_block)
+    compile_rec if_block co
+    co.append(Opcode.JUMP bottom)
+    co.append(Opcode.LABEL next_block)
+
+    for elsif_block in elsif_blocks
+        match elsif_block
+            case Node.T_ELSIF(@elsif_condition, @elsif_body)
+                next_block = Label()
+                compile_rec elsif_condition co
+                co.append(Opcode.JUMP_FALSE next_block)
+                compile_rec elsif_body co
+                co.append(Opcode.JUMP bottom)
+                co.append(Opcode.LABEL next_block)
+        end
+    end
+    if else_block != null
+        compile_rec else_block co
+    end
+
+    co.append(Opcode.LABEL bottom)
+end
+
+private compile_class body name_id co = do
+    private label, nco = co.register_function()
+    co.append(Opcode.CLASS_INIT name_id)
+    compile_rec body co
+    co.append(Opcode.HALT)
 end
 
 # compiles a set-expression lvalue, assuming the rvalue is in #0
@@ -680,10 +744,9 @@ private compile_set code co attributes = match code
     case Node.T_VARIABLE(@name)
         co.append(Opcode.SET(attributes, co.register_string name))
     case Node.T_CLASS_MEMBER(@attributes_code, @lval)
-        private inner_attributes = Attributes.parse attributes_code
-        this.compile_set(sb, lval, name, inner_attributes)
+        compile_set lval co (CAttributes.parse attributes_code)
     case Node.T_GROUPING(@lval)
-        compile_set lval co
+        compile_set lval co attributes
     case Node.T_LIST(@vars)
         for i in vars.length()
             this.compile_set_list_member(sb, vars->i, i, name, attributes)

@@ -78,6 +78,7 @@ EH_METHOD(Class, new);
 EH_METHOD(Class, operator_colon);
 EH_METHOD(Class, inherit);
 EH_METHOD(Class, toString);
+EH_METHOD(Class, typeId);
 
 EH_INITIALIZER(Class);
 

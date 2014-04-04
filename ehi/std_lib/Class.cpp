@@ -144,6 +144,7 @@ EH_INITIALIZER(Class) {
     REGISTER_METHOD_RENAME(Class, operator_colon, "operator()");
     REGISTER_METHOD(Class, new);
     REGISTER_METHOD(Class, toString);
+    REGISTER_METHOD(Class, typeId);
 }
 
 EH_METHOD(Class, operator_colon) {
@@ -174,4 +175,9 @@ EH_METHOD(Class, toString) {
     const unsigned int type_id = obj->get<Class>()->type_id;
     const std::string name = ehi->get_parent()->repo.get_name(type_id);
     return String::make(strdup(("(class <" + name + ">)").c_str()));
+}
+
+EH_METHOD(Class, typeId) {
+    obj->assert_type<Class>("Class.toString", ehi);
+    return Integer::make(obj->get<Class>()->type_id);
 }

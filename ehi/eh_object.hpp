@@ -12,7 +12,7 @@ public:
     obj_map members;
     ehval_w cls;
 
-    ehobj_t() : members(), cls() {}
+    ehobj_t() : members(), cls(nullptr) {}
     virtual ~ehobj_t() {}
 
     ehobj_t(const ehobj_t&) = delete;
@@ -56,7 +56,7 @@ public:
     std::string name;
 
     // constructor
-    ehclass_t(const std::string &_name) : ehobj_t(), instance_members(), type_id(0), parent(), super(), name(_name) {}
+    ehclass_t(const std::string &_name) : ehobj_t(), instance_members(), type_id(0), parent(nullptr), super(), name(_name) {}
 
     ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi);
 

@@ -64,7 +64,7 @@ struct generator_info {
 	message_enum current_message_type;
 	ehval_p current_message;
 
-	generator_info() : mutex(), cv(), in_master(true), current_message_type(value_e), current_message() {}
+	generator_info() : mutex(), cv(), in_master(true), current_message_type(value_e), current_message(nullptr) {}
 
 	void send(message_enum type, ehval_p message);
 	void wait(bool is_master);

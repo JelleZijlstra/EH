@@ -371,19 +371,27 @@ public:
 			}
 			this->content->dec_rc();
 		}
+
+		// used to represent an error value; private constructor to force use of the make_error static method
+		explicit pointer(bool fake) : content(nullptr) {}
 	public:
 		/*
 		 * Constructors
 		 */
-		pointer() : pointer(nullptr) {}
+		pointer() : content(T::null_object().content) {}
 		// my compiler apparently doesn't have std::nullptr_t
-		pointer(decltype(nullptr)) : pointer(T::null_object()) {}
+		pointer(decltype(nullptr)) : content(T::null_object().content) {}
 		pointer(const pointer &rhs) : pointer(rhs.content) {}
 		pointer(T *in, bool do_inc_rc=true) : content(in) {
 			assert(content != nullptr);
 			if(do_inc_rc) {
 				inc_rc();
 			}
+		}
+
+		// used to store an exceptional value
+		static pointer<is_strong> make_error() {
+			return pointer(true);
 		}
 
 		pointer(const pointer<!is_strong> &rhs) : pointer(rhs.content) {}
@@ -419,9 +427,9 @@ public:
 		int compare(const pointer &rhs) const {
 			if(this->content == rhs.content) {
 				return 0;
-			} else if(this->null()) {
+			} else if(this->is_error()) {
 				return -1;
-			} else if(rhs.null()) {
+			} else if(rhs.is_error()) {
 				return 1;
 			} else {
 				return this->content->compare(rhs);
@@ -443,7 +451,7 @@ public:
 			return this->compare(rhs) == 1;
 		}
 
-		bool null() const {
+		bool is_error() const {
 			return this->content == nullptr;
 		}
 

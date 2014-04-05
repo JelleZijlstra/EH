@@ -64,7 +64,7 @@ int Array::t::compare(Array::t *rhs, ehcontext_t context, EHI *ehi) {
  * @returns Array.
  */
 EH_METHOD(Array, operator_colon) {
-	if(args.null()) {
+	if(args->is_a<Null>()) {
 		return Array::make(ehi->get_parent());
 	} else {
 		return ehi->call_method_typed<Array>(args, "toArray", nullptr, obj);

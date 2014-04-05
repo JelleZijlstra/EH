@@ -53,7 +53,7 @@ const std::string ehval_t::get_name() const {
 
 const std::string ehval_t::get_full_name() {
 	ehval_p parent = get_parent_scope();
-	if(parent.null() || parent == this) {
+	if(parent == this) {
 		return get_name();
 	} else {
 		return parent->get_full_name() + "." + get_name();
@@ -172,7 +172,7 @@ ehmember_p ehval_t::get_property_up_scope_chain(const char *name, ehcontext_t co
 	ehmember_p member = get_property_current_object(name, context, ehi);
 	if(member.null()) {
 		ehval_p parent = get_parent_scope();
-		if(!parent.null() && !parent->is_a<Null>()) {
+		if(!parent->is_a<Null>()) {
 			member = parent->get_property_up_scope_chain(name, context, ehi);
 		}
 	}

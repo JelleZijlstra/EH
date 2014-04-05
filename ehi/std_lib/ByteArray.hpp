@@ -60,6 +60,7 @@ EH_METHOD(ByteArray, length);
 EH_METHOD(ByteArray, resize);
 EH_METHOD(ByteArray, getInteger);
 EH_METHOD(ByteArray, setInteger);
+EH_METHOD(ByteArray, operator_equals);
 
 EH_INITIALIZER(ByteArray);
 

@@ -13,6 +13,7 @@ EH_INITIALIZER(ByteArray) {
     REGISTER_METHOD_RENAME(ByteArray, operator_arrow_equals, "operator->=");
     REGISTER_METHOD(ByteArray, getInteger);
     REGISTER_METHOD(ByteArray, setInteger);
+    REGISTER_METHOD_RENAME(ByteArray, operator_equals, "operator==");
 }
 
 EH_METHOD(ByteArray, operator_colon) {
@@ -98,4 +99,20 @@ EH_METHOD(ByteArray, setInteger) {
     int value = rvalue->get<Integer>();
     memcpy(&ba->content[index], &value, 4);
     return rvalue;
+}
+
+EH_METHOD(ByteArray, operator_equals) {
+    ASSERT_OBJ_TYPE(ByteArray, "ByteArray.operator==");
+    ASSERT_TYPE(args, ByteArray, "ByteArray.operator==");
+    auto ba1 = obj->get<ByteArray>();
+    auto ba2 = args->get<ByteArray>();
+    if(ba1->size != ba2->size) {
+        return Bool::make(false);
+    }
+    for(size_t i = 0; i < ba1->size; i++) {
+        if(ba1->content[i] != ba2->content[i]) {
+            return Bool::make(false);
+        }
+    }
+    return Bool::make(true);
 }

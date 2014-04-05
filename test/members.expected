@@ -4,5 +4,6 @@
 	@string "new"
 	@string "operator()"
 	@string "toString"
+	@string "typeId"
 ]
 %%stderr%%

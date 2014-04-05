@@ -1,11 +1,11 @@
 %%stdout%%
 func: ()
 	enum A
-		D(e), C(a, b), B
+		B, C(a, b), D(e)
 		()
 	end
 	enum B
-		D(a, b), C
+		C, D(a, b)
 		private f = func: ()
 			42
 		end

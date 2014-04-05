@@ -3,5 +3,5 @@
 This is a library function
 42
 This is a method belonging to a library class
-%%stderr%%
-Uncaught exception of type ArgumentError: <ArgumentError: Could not open input file (method EH core): /Users/jellezijlstra/code/EH/test/nosuchthing>
+%%stderr-regex%%
+Uncaught exception of type ArgumentError: <ArgumentError: Could not open input file \(method EH core\): .*/test/nosuchthing>

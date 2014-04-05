@@ -24,7 +24,12 @@
 	Bool <public,constant>: @class Bool [
 		operator() <public,non-constant>: @function <library>: 
 	]
+	ByteArray <public,constant>: @class ByteArray [
+		operator() <public,non-constant>: @function <library>: 
+	]
 	Class <public,constant>: @class Class [
+	]
+	CompileError <public,constant>: @class CompileError [
 	]
 	ConstError <public,constant>: @class ConstError [
 	]
@@ -32,6 +37,7 @@
 		collectGarbage <public,non-constant>: @function <library>: 
 		contextName <public,non-constant>: @function <library>: 
 		eval <public,non-constant>: @function <library>: 
+		executeBytecode <public,non-constant>: @function <library>: 
 		lex <public,non-constant>: @function <library>: 
 		parse <public,non-constant>: @function <library>: 
 		printStack <public,non-constant>: @function <library>: 
@@ -66,6 +72,10 @@
 	GarbageCollector <public,constant>: @class GarbageCollector [
 		run <public,non-constant>: @function <library>: 
 		stats <public,non-constant>: @function <library>: 
+	]
+	Generator <public,constant>: @class Generator [
+	]
+	GeneratorExit <public,constant>: @class GeneratorExit [
 	]
 	GlobalObject <public,constant>: @class GlobalObject [
 	]
@@ -184,6 +194,8 @@
 			operator() <public,non-constant>: @function <library>: 
 		]
 		operator() <public,non-constant>: @function <library>: 
+	]
+	RuntimeError <public,constant>: @class RuntimeError [
 	]
 	String <public,constant>: @class String [
 		Builder <public,non-constant>: @class String.Builder [

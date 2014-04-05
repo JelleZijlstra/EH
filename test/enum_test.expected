@@ -2,7 +2,7 @@
 Testing echo, then printvar
 Enum class
 enum List
-	Nil, Cons(head, tail)
+	Cons(head, tail), Nil
 end
 @class List [
 	Cons <public,constant>: @enum constructor Cons <List>: head, tail

@@ -20,7 +20,7 @@ assertThrows(A.new, TypeError, "It doesn't work with an instance either")
 
 # @method toString
 assert(A.toString() == "enum A
-	B, C(D), E(F, G)
+	E(F, G), C(D), B
 end", "It's like decompile")
 assert(B.toString() == "enum B
 	C
@@ -40,7 +40,7 @@ assert(instance->1 == 4, "Second argument")
 assert(Enum < A, "Enum was defined first")
 # assert(A < B, "A was defined first")
 # assert(B > A.B, "All A comes first")
-assert(A.B > A.C, "B was defined first")
+assert(A.B < A.C, "B was defined first")
 assert(A.C < A.C(3), "Constructors come first")
 assert(A.C(3) < A.C(4), "Arguments are compared")
 

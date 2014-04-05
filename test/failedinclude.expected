@@ -1,4 +1,4 @@
-%%stdout%%
-<ArgumentError: Could not open input file (method EH core): /Users/jellezijlstra/code/EH/test/thisfiledoesnotexist>
+%%stdout-regex%%
+<ArgumentError: Could not open input file \(method EH core\): .*/test/thisfiledoesnotexist>
 42
 %%stderr%%

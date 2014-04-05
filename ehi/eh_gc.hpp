@@ -379,9 +379,11 @@ public:
 		// my compiler apparently doesn't have std::nullptr_t
 		pointer(decltype(nullptr)) : pointer(T::null_object()) {}
 		pointer(const pointer &rhs) : pointer(rhs.content) {}
-		pointer(T *in) : content(in) {
+		pointer(T *in, bool do_inc_rc=true) : content(in) {
 			assert(content != nullptr);
-			inc_rc();
+			if(do_inc_rc) {
+				inc_rc();
+			}
 		}
 
 		pointer(const pointer<!is_strong> &rhs) : pointer(rhs.content) {}

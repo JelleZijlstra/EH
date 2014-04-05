@@ -21,6 +21,7 @@ enum eh_opcode_t {
     JUMP,
     JUMP_TRUE,
     JUMP_FALSE,
+    JUMP_EQUAL,
     MOVE,
     LOAD,
     SET,
@@ -43,6 +44,7 @@ enum eh_opcode_t {
     LOAD_SCOPE,
     CREATE_TUPLE,
     SET_TUPLE,
+    GET_TUPLE,
     CREATE_ARRAY,
     SET_ARRAY,
     CREATE_MAP,
@@ -55,8 +57,13 @@ enum eh_opcode_t {
     ENUM_INIT,
     SET_ENUM_MEMBER,
     SET_ENUM_ARGUMENT,
+    GET_ENUM_ARGUMENT,
     HALT,
-    ASSERT_NULL
+    THROW_EXCEPTION,
+    LOAD_RAW_INTEGER,
+    GET_RAW_TYPE,
+    RAW_TUPLE_SIZE,
+    MATCH_ENUM_INSTANCE,
 };
 
 struct code_object_header {
@@ -75,10 +82,10 @@ static_assert(CODE_OBJECT_HEADER_SIZE == sizeof(code_object_header), "needs to b
 
 class code_object {
 public:
-    uint8_t *data;
-    code_object_header *header;
+    const uint8_t *data;
+    const code_object_header *header;
 
-    code_object(uint8_t *);
+    code_object(const uint8_t *);
     ~code_object();
 
     void validate_header(EHI *ehi);
@@ -99,7 +106,7 @@ public:
     eh_frame_t(type typ_, code_object *co_, uint32_t current_offset_, ehcontext_t context_, ehval_p argument_ = nullptr) : typ(typ_), co(co_), current_offset(current_offset_), context(context_), argument(argument_) {}
 };
 
-void eh_execute_bytecode(uint8_t *data, EHI *ehi);
+void eh_execute_bytecode(const uint8_t *data, EHI *ehi);
 ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi);
 
 #endif /* EH_VM_H_ */

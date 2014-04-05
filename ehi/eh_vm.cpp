@@ -27,13 +27,91 @@
 // Needs to come after inclusion of Attribute
 #include "eh.bison.hpp"
 
+// a tagged union for register values
+// integer if LSB == 1, pointer if LSB == 0
+class register_value {
+private:
+    union {
+        long integer_value;
+        void *pointer_value;
+    };
+    static_assert(sizeof(long) == sizeof(void *), "value must be the size of a single pointer");
+
+    // dec_rc's the pointer if there is one
+    void destruct_pointer() {
+        if(this->is_pointer()) {
+            // rely on destructor
+            ehval_p to_destruct = ehval_p(static_cast<ehval_t *>(this->pointer_value), false);
+        }
+    }
+
+    // disallowed operations
+    register_value(const register_value&);
+    register_value operator=(const register_value&);
+
+public:
+    // integer_value(1) == 0
+    register_value() : integer_value(1) {
+        assert(this->is_integer());
+        assert(!this->is_pointer());
+    }
+
+    ~register_value() {
+        this->destruct_pointer();
+    }
+
+    bool is_pointer() {
+        return ((~(this->integer_value)) & 1) == 1;
+    }
+
+    ehval_p get_pointer() {
+        assert(this->is_pointer());
+        return ehval_p(static_cast<ehval_t *>(this->pointer_value));
+    }
+
+    void set_pointer(ehval_p new_value) {
+        this->destruct_pointer();
+        // we're keeping a reference around
+        new_value->inc_rc();
+        this->pointer_value = static_cast<void *>(new_value.operator->());
+        assert(this->is_pointer());
+    }
+
+    bool is_integer() {
+        return (this->integer_value & 1) == 1;
+    }
+
+    long get_integer() {
+        assert(this->is_integer());
+        return this->integer_value >> 1;
+    }
+
+    void set_integer(long new_value) {
+        this->destruct_pointer();
+        this->integer_value = (new_value << 1) | 1;
+        assert(this->is_integer());
+    }
+
+    void move(const register_value &other) {
+        this->destruct_pointer();
+        this->integer_value = other.integer_value;
+        if(this->is_pointer()) {
+            this->get_pointer()->inc_rc();
+        }
+    }
+
+    bool equal(const register_value &other) {
+        return this->integer_value == other.integer_value;
+    }
+};
+
 static void dump(ehval_p object, EHI *ehi) {
     printvar_set s;
     object->printvar(s, 0, ehi);
 }
 
-code_object::code_object(uint8_t *data_) : data(data_) {
-    header = static_cast<code_object_header *>(static_cast<void *>(data));
+code_object::code_object(const uint8_t *data_) : data(data_) {
+    header = static_cast<const code_object_header *>(static_cast<const void *>(data));
 }
 
 code_object::~code_object() {
@@ -60,7 +138,7 @@ void code_object::validate_header(EHI *ehi) {
     }
 }
 
-void eh_execute_bytecode(uint8_t *data, EHI *ehi) {
+void eh_execute_bytecode(const uint8_t *data, EHI *ehi) {
     code_object co(data);
     co.validate_header(ehi);
 
@@ -72,16 +150,16 @@ void eh_execute_bytecode(uint8_t *data, EHI *ehi) {
 }
 
 template<class T>
-T get_bytes(uint8_t *data, size_t offset) {
+T get_bytes(const uint8_t *const data, size_t offset) {
     T val;
     memcpy(&val, &data[offset], sizeof(T));
     return val;
 }
 
-static char *load_string(uint8_t *code, uint8_t *current_op) {
+static char *load_string(const uint8_t *const code, const uint8_t *const current_op) {
     uint32_t string_offset = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
     uint32_t len = get_bytes<uint32_t>(code, string_offset);
-    uint8_t *bytes = &code[string_offset + SIZEOF_OFFSET];
+    const uint8_t *const bytes = &code[string_offset + SIZEOF_OFFSET];
     char *str = new char[len + 1];
     memcpy(str, bytes, len);
     str[len] = '\0';
@@ -89,51 +167,56 @@ static char *load_string(uint8_t *code, uint8_t *current_op) {
 }
 
 ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
-    uint8_t *const code = frame->co->data;
+    const uint8_t *const code = frame->co->data;
     ehcontext_t context = frame->context;
-    register ehval_p registers[4];
-    registers[0] = frame->argument;
+    register register_value registers[4];
+    registers[0].set_pointer(frame->argument);
     std::vector<ehval_p> stack;
     while(true) {
-        uint8_t *current_op = &code[frame->current_offset];
+        const uint8_t *const current_op = &code[frame->current_offset];
         frame->current_offset += SIZEOF_OPCODE;
         switch(current_op[0]) {
             case JUMP:
                 frame->current_offset = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
                 break;
             case JUMP_TRUE: {
-                bool val = eh_compiled::boolify(registers[0], context, ehi);
+                bool val = eh_compiled::boolify(registers[0].get_pointer(), context, ehi);
                 if(val) {
                     frame->current_offset = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
                 }
                 break;
             }
             case JUMP_FALSE: {
-                bool val = eh_compiled::boolify(registers[0], context, ehi);
+                bool val = eh_compiled::boolify(registers[0].get_pointer(), context, ehi);
                 if(!val) {
                     frame->current_offset = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
                 }
                 break;
             }
+            case JUMP_EQUAL:
+                if(registers[current_op[2]].equal(registers[current_op[3]])) {
+                    frame->current_offset = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
+                }
+                break;
             case MOVE:
-                registers[current_op[3]] = registers[current_op[2]];
+                registers[current_op[3]].move(registers[current_op[2]]);
                 break;
             case LOAD: {
                 // TODO fix memory leak. Does unique_ptr work with new[]?
                 char *name = load_string(code, current_op);
-                registers[0] = eh_compiled::get_variable(name, context, ehi);
+                registers[0].set_pointer(eh_compiled::get_variable(name, context, ehi));
                 break;
             }
             case SET: {
                 uint8_t attr = current_op[2];
                 char *name = load_string(code, current_op);
                 if(attr == 0) {
-                    ehi->set_bare_variable(name, registers[0], context, nullptr);
+                    ehi->set_bare_variable(name, registers[0].get_pointer(), context, nullptr);
                 } else {
                     visibility_enum v = (attr & 4) ? private_e : public_e;
                     const_enum c = (attr & 2) ? const_e : nonconst_e;
                     attributes_t attributes(v, nonstatic_e, c);
-                    ehi->set_bare_variable(name, registers[0], context, &attributes);
+                    ehi->set_bare_variable(name, registers[0].get_pointer(), context, &attributes);
                 }
                 break;
             }
@@ -142,94 +225,98 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 // TODO (fix attributes)
                 break;
             case PUSH:
-                stack.push_back(registers[current_op[2]]);
+                stack.push_back(registers[current_op[2]].get_pointer());
                 break;
             case POP:
                 // TODO: does vector have a special operation for this? pop_back returns void
-                registers[current_op[2]] = stack.at(stack.size() - 1);
+                registers[current_op[2]].set_pointer(stack.at(stack.size() - 1));
                 stack.pop_back();
                 break;
             case CALL: {
-                auto tmp = ehi->call_function(registers[1], registers[0], context);
-                registers[0] = tmp;
+                auto tmp = ehi->call_function(registers[1].get_pointer(), registers[0].get_pointer(), context);
+                registers[0].set_pointer(tmp);
                 break;
             }
             case LOAD_PROPERTY: {
                 char *name = load_string(code, current_op);
-                registers[0] = registers[1]->get_property(name, context, ehi);
+                registers[0].set_pointer(registers[1].get_pointer()->get_property(name, context, ehi));
                 break;
             }
             case LOAD_INSTANCE_PROPERTY: {
                 char *name = load_string(code, current_op);
-                registers[0] = registers[1]->get_instance_member_throwing(name, context, ehi);
+                registers[0].set_pointer(registers[1].get_pointer()->get_instance_member_throwing(name, context, ehi));
                 break;
             }
             case CALL_METHOD: {
                 char *name = load_string(code, current_op);
-                registers[0] = ehi->call_method(registers[1], name, registers[0], context);
+                registers[0].set_pointer(ehi->call_method(registers[1].get_pointer(), name, registers[0].get_pointer(), context));
                 break;
             }
             case LOAD_STRING: {
                 char *value = load_string(code, current_op);
-                registers[0] = String::make(strdup(value));
+                registers[0].set_pointer(String::make(strdup(value)));
                 break;
             }
             case LOAD_INTEGER: {
-                registers[0] = Integer::make(get_bytes<uint32_t>(current_op, SIZEOF_OFFSET));
+                registers[0].set_pointer(Integer::make(get_bytes<uint32_t>(current_op, SIZEOF_OFFSET)));
                 break;
             }
             case LOAD_FLOAT: {
-                registers[0] = Float::make(get_bytes<float>(current_op, SIZEOF_OFFSET));
+                registers[0].set_pointer(Float::make(get_bytes<float>(current_op, SIZEOF_OFFSET)));
                 break;
             }
             case LOAD_TRUE:
-                registers[current_op[2]] = Bool::make(true);
+                registers[current_op[2]].set_pointer(Bool::make(true));
                 break;
             case LOAD_FALSE:
-                registers[current_op[2]] = Bool::make(false);
+                registers[current_op[2]].set_pointer(Bool::make(false));
                 break;
             case LOAD_NULL:
-                registers[current_op[2]] = Null::make();
+                registers[current_op[2]].set_pointer(Null::make());
                 break;
             case LOAD_THIS:
-                registers[current_op[2]] = context.object;
+                registers[current_op[2]].set_pointer(context.object);
                 break;
             case LOAD_SCOPE:
-                registers[current_op[2]] = context.scope;
+                registers[current_op[2]].set_pointer(context.scope);
                 break;
             case CREATE_TUPLE: {
                 uint16_t size = get_bytes<uint16_t>(current_op, 2);
-                registers[2] = Tuple::make(size, ehi);
+                registers[2].set_pointer(Tuple::make(size, ehi));
                 break;
             }
             case SET_TUPLE: {
                 uint16_t index = get_bytes<uint16_t>(current_op, 2);
-                registers[2]->get<Tuple>()->set(index, registers[0]);
+                registers[2].get_pointer()->get<Tuple>()->set(index, registers[0].get_pointer());
                 break;
+            }
+            case GET_TUPLE: {
+                uint32_t index = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
+                registers[current_op[3]].set_pointer(registers[current_op[2]].get_pointer()->get<Tuple>()->get(index));
             }
             case CREATE_ARRAY: {
                 uint16_t size = get_bytes<uint16_t>(current_op, 2);
-                registers[2] = Array::make(ehi->get_parent(), size);
+                registers[2].set_pointer(Array::make(ehi->get_parent(), size));
                 break;
             }
             case SET_ARRAY: {
                 uint16_t index = get_bytes<uint16_t>(current_op, 2);
-                registers[2]->get<Array>()->v[index] = registers[0];
+                registers[2].get_pointer()->get<Array>()->v[index] = registers[0].get_pointer();
                 break;
             }
             case CREATE_MAP: {
                 // the size given here is currently unused; a future optimization may be to use it to allocate
                 // the underlying object in a more efficient manner.
-                registers[2] = Map::make(ehi);
+                registers[2].set_pointer(Map::make(ehi));
                 break;
             }
             case SET_MAP: {
-                Map::t *map = registers[2]->get<Map>();
-                map->set(registers[0], registers[1]);
+                Map::t *map = registers[2].get_pointer()->get<Map>();
+                map->set(registers[0].get_pointer(), registers[1].get_pointer());
                 break;
             }
             case CREATE_RANGE: {
-                registers[2] = Range::make(registers[1], registers[0], ehi->get_parent());
+                registers[2].set_pointer(Range::make(registers[1].get_pointer(), registers[0].get_pointer(), ehi->get_parent()));
                 break;
             }
             case CREATE_FUNCTION: {
@@ -238,7 +325,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 f->bytecode.code_object = frame->co;
                 f->bytecode.offset = target;
                 f->parent = context.scope;
-                registers[0] = Function::make(f, ehi->get_parent());
+                registers[0].set_pointer(Function::make(f, ehi->get_parent()));
                 break;
             }
             case LOAD_CLASS: {
@@ -246,7 +333,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
 
                 // execute the code within the class
                 eh_frame_t nested_frame(eh_frame_t::class_e, frame->co, target, context);
-                registers[0] = eh_execute_frame(&nested_frame, ehi);
+                registers[0].set_pointer(eh_execute_frame(&nested_frame, ehi));
                 break;
             }
             case CLASS_INIT: {
@@ -265,7 +352,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
 
                 // execute the code within the enum
                 eh_frame_t nested_frame(eh_frame_t::enum_e, frame->co, target, context);
-                registers[0] = eh_execute_frame(&nested_frame, ehi);
+                registers[0].set_pointer(eh_execute_frame(&nested_frame, ehi));
                 break;
             }
             case ENUM_INIT: {
@@ -292,18 +379,56 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 context.object->get<Enum>()->enum_members[outer_index].members[inner_index] = name;
                 break;
             }
-            case ASSERT_NULL: {
-                ehval_p val = registers[current_op[2]];
-                if(!val->is_a<Null>()) {
-                    throw_RuntimeError("Expected a null value", ehi);
-                }
+            case GET_ENUM_ARGUMENT: {
+                uint32_t index = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
+                ehval_p value = registers[current_op[2]].get_pointer()->get<Enum_Instance>()->get(index);
+                registers[current_op[3]].set_pointer(value);
                 break;
             }
+            case THROW_EXCEPTION: {
+                uint16_t type_id = get_bytes<uint16_t>(current_op, 2);
+                ehval_p args = registers[0].get_pointer();
+                ehval_p class_object = ehi->get_parent()->repo.get_object(type_id);
+                ehval_p e = ehi->call_method(class_object, "operator()", args, ehi->global());
+                throw eh_exception(e);
+            }
             case RETURN:
-                return registers[0];
+                return registers[0].get_pointer();
             case HALT:
                 // HALT returns the context object; this makes classes and enums work
                 return context.object;
+            case LOAD_RAW_INTEGER:
+                registers[current_op[1]].set_integer(get_bytes<uint32_t>(current_op, SIZEOF_OFFSET));
+                break;
+            case GET_RAW_TYPE:
+                registers[current_op[3]].set_integer(registers[current_op[2]].get_pointer()->get_type_id(ehi->get_parent()));
+                break;
+            case RAW_TUPLE_SIZE:
+                registers[current_op[3]].set_integer(registers[current_op[2]].get_pointer()->get<Tuple>()->size());
+                break;
+            case MATCH_ENUM_INSTANCE: {
+                ehval_p pattern = registers[current_op[2]].get_pointer();
+                ehval_p to_match = registers[current_op[3]].get_pointer();
+                uint32_t next_label = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
+                if(!pattern->is_a<Enum_Instance>()) {
+                    throw_TypeError("match case is not an Enum constructor", pattern, ehi);
+                }
+                const auto em = pattern->get<Enum_Instance>();
+                if(em->members != nullptr) {
+                    throw_TypeError("match case is not an Enum constructor", pattern, ehi);
+                }
+                if(!to_match->is_a<Enum_Instance>()) {
+                    frame->current_offset = next_label;
+                    break;
+                }
+                const auto to_match_ei = to_match->get<Enum_Instance>();
+                if(to_match_ei->members == nullptr || em->type_compare(to_match_ei) != 0 || em->member_id != to_match_ei->member_id) {
+                    frame->current_offset = next_label;
+                    break;
+                }
+                registers[3].set_integer(em->nmembers);
+                break;
+            }
             default:
                 throw_RuntimeError("Unrecognized opcode", ehi);
         }

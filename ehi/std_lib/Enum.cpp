@@ -52,6 +52,7 @@ EH_INITIALIZER(Enum_Instance) {
 	REGISTER_METHOD(Enum_Instance, compare);
 	REGISTER_METHOD(Enum_Instance, toString);
 	REGISTER_METHOD(Enum_Instance, numericValue);
+	REGISTER_METHOD(Enum_Instance, constructor);
 }
 
 void Enum::t::add_enum_member(const char *name, const std::vector<std::string> &params, EHInterpreter *interpreter_parent, unsigned int member_id) {
@@ -360,4 +361,22 @@ EH_METHOD(Enum_Instance, numericValue) {
 	obj->assert_type<Enum_Instance>("Enum.Instance.numericValue", ehi);
 	auto data = obj->get<Enum_Instance>();
 	return Integer::make(data->member_id);
+}
+
+/*
+ * @description Gets the constructor object for the enum instance
+ * @args None
+ * @returns Constructor
+ */
+EH_METHOD(Enum_Instance, constructor) {
+	obj->assert_type<Enum_Instance>("Enum.Instance.constructor", ehi);
+	auto data = obj->get<Enum_Instance>();
+	if(data->is_constructor()) {
+		return obj;
+	} else {
+		auto parent_enum = data->get_parent_enum(ehi);
+		const auto &member_info = data->get_member_info(ehi);
+		auto member = parent_enum->get_property_current_object(member_info.name.c_str(), obj, ehi);
+		return member->value;
+	}
 }

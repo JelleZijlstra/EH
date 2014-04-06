@@ -89,6 +89,8 @@ EH_ENUM_INITIALIZER(Node) {
 	TOKEN(T_WHEN, 3);
 	TOKEN(T_LIST, 1); // used for the convenience of the compiler: gives a tuple of code blocks rather than the nasty T_COMMA stuff
 	TOKEN(T_INSTANCE_ACCESS, 2);
+	TOKEN(T_YIELD, 1);
+	TOKEN(T_GENERATOR, 1);
 	REGISTER_CLASS(Node, Context);
 }
 

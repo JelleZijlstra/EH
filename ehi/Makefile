@@ -65,4 +65,4 @@ $(JSON)eh_json.bison.cpp $(JSON)eh_json.bison.hpp: $(JSON)json.y
 	cd $(JSON) && bison -v -y -d json.y --output='eh_json.bison.cpp'
 
 clean:
-	rm -f *.o ehphp.so ehphp.dylib ehi ehc eh.flex.cpp eh.bison.cpp eh.bison.hpp y.output eh_wrap.c ehphp.php ehphp.php.save eh_wrap.cpp php_ehphp.h eh_wrap.h std_lib/*.o
+	rm -f *.o ehphp.so ehphp.dylib ehi ehc eh.flex.cpp eh.flex.hpp eh.bison.cpp eh.bison.hpp eh.bison.output eh_wrap.c ehphp.php ehphp.php.save eh_wrap.cpp php_ehphp.h eh_wrap.h std_lib/*.o std_lib/json/eh_json.* libeh.a

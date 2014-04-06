@@ -267,7 +267,7 @@ class CodeObject
                     ba.wrappedSetInteger(offset + SIZEOF_OFFSET, name)
                 case Opcode.PUSH(@register) | Opcode.POP(@register) | Opcode.LOAD_TRUE(@register) | Opcode.LOAD_FALSE(@register) | Opcode.LOAD_NULL(@register) | Opcode.LOAD_THIS(@register) | Opcode.LOAD_SCOPE(@register) | Opcode.THROW_VARIABLE(@register) | Opcode.YIELD(@register)
                     ba->(offset + 2) = register
-                case Opcode.CALL | Opcode.RETURN | Opcode.CREATE_RANGE | Opcode.HALT | Opcode.BEGIN_FINALLY | Opcode.END_TRY_FINALLY | Opcode.BEGIN_CATCH | Opcode.END_TRY_CATCH | Opcode.END_TRY_BLOCK
+                case Opcode.CALL | Opcode.RETURN | Opcode.CREATE_RANGE | Opcode.HALT | Opcode.BEGIN_FINALLY | Opcode.END_TRY_FINALLY | Opcode.BEGIN_CATCH | Opcode.END_TRY_CATCH | Opcode.END_TRY_BLOCK | Opcode.POST_YIELD
                     ()
                 case Opcode.LOAD_FLOAT(@value)
                     # TODO once we switch to double: use a separate float registry

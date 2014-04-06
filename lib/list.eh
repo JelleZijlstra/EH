@@ -39,7 +39,11 @@ enum List
 
 	const length = () => this.reduce(0, (k, rest => rest + 1))
 
-	const toString = () => this.reduce("[]", (k, rest => (k.toString() + "::" + rest)))
+	const toString() = if this == Cons
+		"Cons(head, tail)"
+	else
+		this.reduce("[]", (k, rest => (k.toString() + "::" + rest)))
+	end
 
 	const filter = f => this.reduce(Nil, (elt, accum => match (f elt)
 		case true; Cons(elt, accum)

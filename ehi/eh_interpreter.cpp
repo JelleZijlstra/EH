@@ -26,6 +26,7 @@
 #include "std_lib/Node.hpp"
 #include "std_lib/Object.hpp"
 #include "std_lib/Range.hpp"
+#include "std_lib/Exception.hpp"
 #include "std_lib/Tuple.hpp"
 #include "std_lib/VisibilityError.hpp"
 
@@ -437,12 +438,7 @@ ehval_p EHI::eh_op_for_in(ehval_p *paras, const ehcontext_t &context) {
 	return do_for_loop(paras[1], paras[2], T_FOR_IN, paras[0], context);
 }
 ehval_p EHI::eh_op_yield(ehval_p para, const ehcontext_t &context) {
-	ehval_p top_of_stack = stack.back()->scope_object;
-	if(!top_of_stack->is_a<Generator>()) {
-		throw_TypeError("attempted yield outside a generator", top_of_stack, this);
-	}
-	ehval_p argument = eh_execute(para, context);
-	return top_of_stack->get<Generator>()->yield(argument);
+	throw_RuntimeError("yield is not allowed in the AST interpreter", this);
 }
 void EHI::eh_op_break(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p level_v = eh_execute(paras[0], context);

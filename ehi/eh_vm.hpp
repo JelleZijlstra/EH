@@ -51,6 +51,7 @@ enum eh_opcode_t {
     SET_MAP,
     CREATE_RANGE,
     CREATE_FUNCTION,
+    CREATE_GENERATOR,
     LOAD_CLASS,
     CLASS_INIT,
     LOAD_ENUM,
@@ -72,6 +73,8 @@ enum eh_opcode_t {
     END_TRY_BLOCK,
     BEGIN_CATCH,
     END_TRY_CATCH,
+    YIELD,
+    POST_YIELD,
 };
 
 struct code_object_header {
@@ -181,17 +184,21 @@ public:
 class eh_frame_t {
 public:
     enum type {
-        class_e, enum_e, function_e, module_e
+        class_e, enum_e, function_e, module_e, generator_e
+    };
+    enum generator_response {
+        none_e, value_e, exception_e, closing_e
     };
 
     type typ;
+    generator_response response;
     code_object *co;
     uint32_t current_offset;
     ehcontext_t context;
     register_value registers[4];
     std::vector<ehval_p> stack;
 
-    eh_frame_t(type typ_, code_object *co_, uint32_t current_offset_, ehcontext_t context_, ehval_p argument_ = nullptr) : typ(typ_), co(co_), current_offset(current_offset_), context(context_), registers(), stack() {
+    eh_frame_t(type typ_, code_object *co_, uint32_t current_offset_, ehcontext_t context_, ehval_p argument_ = nullptr) : typ(typ_), response(none_e), co(co_), current_offset(current_offset_), context(context_), registers(), stack() {
         this->registers[0].set_pointer(argument_);
     }
 };

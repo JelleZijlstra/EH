@@ -279,6 +279,31 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 registers[0].set_pointer(Function::make(f, ehi->get_parent()));
                 break;
             }
+            case CREATE_GENERATOR: {
+                uint32_t target = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
+                Function::t *f = new Function::t(Function::bytecode_e);
+                f->bytecode.code_object = frame->co;
+                f->bytecode.offset = target;
+                f->parent = context.scope;
+                f->is_generator = true;
+                registers[0].set_pointer(Function::make(f, ehi->get_parent()));
+                break;
+            }
+            case YIELD:
+                return registers[0].get_pointer();
+            case POST_YIELD: {
+                switch(frame->response) {
+                    case eh_frame_t::none_e:
+                        assert(false); // must have a response
+                    case eh_frame_t::value_e:
+                        break; // we put the value in #0 but it's already there
+                    case eh_frame_t::exception_e:
+                        throw eh_exception(registers[0].get_pointer());
+                    case eh_frame_t::closing_e:
+                        throw_GeneratorExit(ehi);
+                }
+                break;
+            }
             case LOAD_CLASS: {
                 uint32_t target = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
 

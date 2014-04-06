@@ -58,6 +58,7 @@ enum Opcode
     SET_MAP(n), # sets value n in a tuple literal in #2 to the key in #0 and value in #1
     CREATE_RANGE, # creates a range object out of the objects in #0 (right end) and #1 (left end) and puts it in #2
     CREATE_FUNCTION(target), # creates a function object with code starting at target and puts it in #0
+    CREATE_GENERATOR(target), # creates a generator object with code starting at target and puts it in #0
     LOAD_CLASS(target), # loads the class defined starting at target into #0. This will create a special frame terminated by an END_CLASS instruction
     CLASS_INIT(name), # sets the name of the class
     LOAD_ENUM(target), # loads an enum defined at target into #0
@@ -79,6 +80,8 @@ enum Opcode
     END_TRY_BLOCK, # ends the try block in a try-catch
     BEGIN_CATCH, # begins a catch block
     END_TRY_CATCH, # ends the try-catch block
+    YIELD(register), # yields the value in register
+    POST_YIELD, # always follows YIELD; processes the message that comes in after a yield
 
     LABEL(n) # pseudo-opcode for a jump target (keep this last)
 end
@@ -243,7 +246,7 @@ class CodeObject
             end
             ba->offset = opcode.numericValue()
             match opcode
-                case Opcode.JUMP(@target) | Opcode.JUMP_TRUE(@target) | Opcode.JUMP_FALSE(@target) | Opcode.CREATE_FUNCTION(@target) | Opcode.LOAD_CLASS(@target) | Opcode.LOAD_ENUM(@target) | Opcode.BEGIN_TRY_FINALLY(@target) | Opcode.BEGIN_TRY_CATCH(@target)
+                case Opcode.JUMP(@target) | Opcode.JUMP_TRUE(@target) | Opcode.JUMP_FALSE(@target) | Opcode.CREATE_FUNCTION(@target) | Opcode.LOAD_CLASS(@target) | Opcode.LOAD_ENUM(@target) | Opcode.BEGIN_TRY_FINALLY(@target) | Opcode.BEGIN_TRY_CATCH(@target) | Opcode.CREATE_GENERATOR(@target)
                     ba.wrappedSetInteger(offset + SIZEOF_OFFSET, target.get_location())
                 case Opcode.MOVE(@register_a, @register_b) | Opcode.GET_RAW_TYPE(@register_a, @register_b) | Opcode.RAW_TUPLE_SIZE(@register_a, @register_b)
                     # offset + 1 is unused
@@ -262,7 +265,7 @@ class CodeObject
                 case Opcode.SET(@attributes, @name) | Opcode.SET_PROPERTY(@attributes, @name) | Opcode.SET_INSTANCE_PROPERTY(@attributes, @name)
                     ba->(offset + 2) = attributes.toInteger()
                     ba.wrappedSetInteger(offset + SIZEOF_OFFSET, name)
-                case Opcode.PUSH(@register) | Opcode.POP(@register) | Opcode.LOAD_TRUE(@register) | Opcode.LOAD_FALSE(@register) | Opcode.LOAD_NULL(@register) | Opcode.LOAD_THIS(@register) | Opcode.LOAD_SCOPE(@register) | Opcode.THROW_VARIABLE(@register)
+                case Opcode.PUSH(@register) | Opcode.POP(@register) | Opcode.LOAD_TRUE(@register) | Opcode.LOAD_FALSE(@register) | Opcode.LOAD_NULL(@register) | Opcode.LOAD_THIS(@register) | Opcode.LOAD_SCOPE(@register) | Opcode.THROW_VARIABLE(@register) | Opcode.YIELD(@register)
                     ba->(offset + 2) = register
                 case Opcode.CALL | Opcode.RETURN | Opcode.CREATE_RANGE | Opcode.HALT | Opcode.BEGIN_FINALLY | Opcode.END_TRY_FINALLY | Opcode.BEGIN_CATCH | Opcode.END_TRY_CATCH | Opcode.END_TRY_BLOCK
                     ()
@@ -364,6 +367,17 @@ class NestedCodeObject
 
     public register_string string = this.co.register_string string
     public register_function() = this.co.register_function()
+
+    public contains_opcode needle = do
+        for opcode in this.function_code
+            echo(opcode, opcode.constructor(), needle, opcode.numericValue(), needle.numericValue())
+            if opcode.numericValue() == needle.numericValue()
+                echo "it matches"
+                return true
+            end
+        end
+        return false
+    end
 end
 
 public compile code = do
@@ -530,7 +544,15 @@ private compile_rec code co = do
             compile_set args nco (CAttributes.Null)
             compile_rec code nco
             nco.append(Opcode.RETURN)
-            co.append(Opcode.CREATE_FUNCTION label)
+            if nco.contains_opcode(Opcode.YIELD)
+                co.append(Opcode.CREATE_GENERATOR label)
+            else
+                co.append(Opcode.CREATE_FUNCTION label)
+            end
+        case Node.T_YIELD(@value)
+            compile_rec value co
+            co.append(Opcode.YIELD 0)
+            co.append(Opcode.POST_YIELD)
         case Node.T_RANGE(@left, @right)
             compile_rec left co
             co.append(Opcode.PUSH 0)

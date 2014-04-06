@@ -380,7 +380,9 @@ public:
 		 */
 		pointer() : pointer(nullptr) {}
 		// my compiler apparently doesn't have std::nullptr_t
-		pointer(decltype(nullptr)) : content(T::null_object().content) {}
+		pointer(decltype(nullptr)) : content(T::null_object().content) {
+			inc_rc();
+		}
 		pointer(const pointer &rhs) : pointer(rhs.content) {}
 		pointer(T *in, bool do_inc_rc=true) : content(in) {
 			assert(content != nullptr);

@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 include '../lib/library.eh'
 
-f = x => given x
+f = x => match x
 	case false, false; echo x
 	case true, false; echo x
 	case false, true; echo x

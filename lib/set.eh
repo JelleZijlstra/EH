@@ -25,14 +25,14 @@ class BinaryTreeSet
 		end
 
 		const reduce = func: firstVal, f
-			private tmp = given this.n->0
+			private tmp = match this.n->0
 				case null; firstVal
-				default; this.n->0.reduce(firstVal, f)
+				case _; this.n->0.reduce(firstVal, f)
 			end
 			tmp = f(tmp, this.n->1)
-			given this.n->2
+			match this.n->2
 				case null; tmp
-				default; this.n->2.reduce(tmp, f)
+				case _; this.n->2.reduce(tmp, f)
 			end
 		end
 
@@ -60,19 +60,19 @@ class BinaryTreeSet
 
 	private base = null
 
-	const add elt = given this.base
+	const add elt = match this.base
 		case null; this.base = BTNode(null, elt, null); null
-		default; this.base.insert elt; null
+		case _; this.base.insert elt; null
 	end
 
-	const has = elt => given this.base
+	const has = elt => match this.base
 		case null; false
-		default; this.base.has elt
+		case _; this.base.has elt
 	end
 
-	const reduce = firstVal, f => given this.base
+	const reduce = firstVal, f => match this.base
 		case null; firstVal
-		default; this.base.reduce(firstVal, f)
+		case _; this.base.reduce(firstVal, f)
 	end
 
 	const toString() = '{' + this.reduce("", func: accum, val

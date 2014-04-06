@@ -31,10 +31,8 @@ EH_ENUM_INITIALIZER(Node) {
 	TOKEN(T_ELSIF, 2);
 	TOKEN(T_WHILE, 2);
 	TOKEN(T_FOR, 2);
-	TOKEN(T_GIVEN, 2);
 	TOKEN(T_MATCH, 2);
 	TOKEN(T_END, 0);
-	TOKEN(T_SWITCH, 2);
 	TOKEN(T_DEFAULT, 1);
 	TOKEN(T_CASE, 2);
 	TOKEN(T_BREAK, 1);
@@ -139,15 +137,9 @@ static void decompile_match_like(std::ostringstream &out, const char *name, ehva
 		out << "\n";
 		add_tabs(out, level + 1);
 		Enum_Instance::t *inner_op = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>();
-		if(inner_op->member_id == T_DEFAULT) {
-			out << "default\n";
-			add_tabs(out, level + 2);
-			out << inner_op->members[0]->decompile(level + 2);
-		} else {
-			out << "case " << inner_op->members[0]->decompile(level + 1) << "\n";
-			add_tabs(out, level + 2);
-			out << inner_op->members[1]->decompile(level + 2);
-		}
+		out << "case " << inner_op->members[0]->decompile(level + 1) << "\n";
+		add_tabs(out, level + 2);
+		out << inner_op->members[1]->decompile(level + 2);
 	}
 	add_end(out, level);
 }
@@ -370,14 +362,8 @@ std::string Node::decompile(int level) const {
 			out << op->members[1]->decompile(level + 1);
 			add_end(out, level);
 			break;
-		case T_SWITCH:
-			decompile_match_like(out, "switch", op->members, level);
-			break;
 		case T_MATCH:
 			decompile_match_like(out, "match", op->members, level);
-			break;
-		case T_GIVEN:
-			decompile_match_like(out, "given", op->members, level);
 			break;
 		case T_FOR:
 			out << "for " << op->members[0]->decompile(level) << "\n";

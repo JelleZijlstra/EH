@@ -7,10 +7,10 @@ enum List
 	const empty = () => Nil
 
 	const operator-> = n => match this
-		case Cons(@hd, @tl); given n
+		case Cons(@hd, @tl); match n
 			case 0; hd
 			case 1; tl
-			default; throw(ArgumentError.new("Argument must be 0 or 1", "List.operator->", n))
+			case _; throw(ArgumentError("Argument must be 0 or 1", "List.operator->", n))
 		end
 	end
 
@@ -41,7 +41,7 @@ enum List
 
 	const toString = () => this.reduce("[]", (k, rest => (k.toString() + "::" + rest)))
 
-	const filter = f => this.reduce(Nil, (elt, accum => given (f elt)
+	const filter = f => this.reduce(Nil, (elt, accum => match (f elt)
 		case true; Cons(elt, accum)
 		case false; accum
 	end))
@@ -89,14 +89,14 @@ enum List
 	const append rhs = this.concat(Cons(rhs, Nil))
 
 	# Count list members for which f elt returns true
-	const count = f => this.reduce(Nil, (base, val => given (f val)
+	const count = f => this.reduce(Nil, (base, val => match (f val)
 		case true; base + 1
 		case false; base
 	end))
 
-	const join = glue => this.reduce(null, (val, base => given base
+	const join = glue => this.reduce(null, (val, base => match base
 		case null; val.toString()
-		default; val.toString() + glue + base
+		case _; val.toString() + glue + base
 	end))
 
 	class Iterator

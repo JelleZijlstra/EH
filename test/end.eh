@@ -11,7 +11,7 @@ end
 baz = func: n
 	echo n
 end
-n = given 2
+n = match 2
 	case 1
 		41
 	case 2

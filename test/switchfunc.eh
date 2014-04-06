@@ -11,10 +11,10 @@ switcher = func: n
 			ret true
 		end
 	end
-	switch n
-		case testfunc
+	match n
+		case _ when testfunc n
 			echo 'This number is even'
-		default
+		case _
 			echo 'This number is odd'
 	end
 end

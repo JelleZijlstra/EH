@@ -105,8 +105,6 @@ OPCHAR		[@=$+\-*/<>,:&\|^%~!\.?]
 "null"		return T_NULL;
 "()"		return T_NULL;
 "class"		return T_CLASS;
-"switch"	return T_SWITCH;
-"given"		return T_GIVEN;
 "match"		return T_MATCH;
 "end"		return T_END;
 "case"		return T_CASE;

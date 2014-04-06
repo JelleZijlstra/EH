@@ -6,9 +6,9 @@ private testf = func: arg
 		echo 3
 	end
 
-	switch arg
+	match arg
 		case 42; 3
-		default; 5
+		case _; 5
 	end
 
 	$bfind --test --test2=42 -asdf -sjkl=3

@@ -3,10 +3,10 @@ func: arg
 	for 5
 		echo 3
 	end
-	switch arg
+	match arg
 		case 42
 			3
-		default
+		case _
 			5
 	end
 	$bfind --"test"=true --"test2"=42 -"asdf"=true -"sjkl"=3

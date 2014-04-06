@@ -20,7 +20,7 @@ func: f
 end
 func: f
 	this.reduce (Nil, (func: base, val
-		given (f val)
+		match (f val)
 			case true
 				base.operator+(1)
 			case false
@@ -31,13 +31,13 @@ end
 func: n
 	match this
 		case Cons (@hd, @tl)
-			given n
+			match n
 				case 0
 					hd
 				case 1
 					tl
-				default
-					throw (ArgumentError.new ("Argument must be 0 or 1", "List.operator->", n))
+				case _
+					throw (ArgumentError ("Argument must be 0 or 1", "List.operator->", n))
 			end
 	end
 end

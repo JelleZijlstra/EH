@@ -1,23 +1,23 @@
 #!/usr/bin/ehi
 # The default keyword, and some type juggling
-switch argc
+match argc
 	case 0
 		echo 'That is impossible'
 	case 1
 		echo 'That is one'
 	case 2
 		echo 'That is two'
-	default
+	case _
 		echo 'That is some other number'
 	case 4
 		echo 'That will not work'
 end
-bar = given true
+bar = match true
 	case 2
 		false
 	case 0
 		true
-	default
+	case _
 		1..3
 end
 echo bar

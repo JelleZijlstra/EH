@@ -1,12 +1,11 @@
 #!/usr/bin/ehi
 # Using the continue keyword in switches
-switch argc
+match argc
 	case 1
 		echo 'I got no arguments'
-		continue
 	case 2
 		echo 'I got two'
-	case x => x.isA Integer
+	case _ when argc.isA Integer
 		echo 'Will this get executed?'
 	case "2"
 		echo 'And this?'

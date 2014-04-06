@@ -25,21 +25,21 @@ class BinaryTreeMap
 		end
 
 		const reduce = func: firstVal, f
-			private tmp = given this.n->0
+			private tmp = match this.n->0
 				case null; firstVal
-				default; this.n->0.reduce(firstVal, f)
+				case _; this.n->0.reduce(firstVal, f)
 			end
 			tmp = f(tmp, this.n->1, this.n->2)
-			given this.n->3
+			match this.n->3
 				case null; tmp
-				default; this.n->3.reduce(tmp, f)
+				case _; this.n->3.reduce(tmp, f)
 			end
 		end
 
 		const get = func: key
-			private const helper = node, key => given node
+			private const helper = node, key => match node
 				case null; null
-				default; node.get key
+				case _; node.get key
 			end
 			private const comparison = key <=> this.n->1
 			if comparison < 0
@@ -57,19 +57,19 @@ class BinaryTreeMap
 
 	private base = null
 
-	const add = key, val => given base
+	const add = key, val => match base
 		case null; base = Node.new(null, key, val, null); null
-		default; base.insert(key, val); null
+		case _; base.insert(key, val); null
 	end
 
-	const reduce = firstVal, f => given base
+	const reduce = firstVal, f => match base
 		case null; firstVal
-		default; base.reduce(firstVal, f)
+		case _; base.reduce(firstVal, f)
 	end
 
-	const get = key => given base
+	const get = key => match base
 		case null; null
-		default; base.get key
+		case _; base.get key
 	end
 
 	const operator-> = get

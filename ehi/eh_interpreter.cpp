@@ -163,13 +163,6 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 				return eh_op_for(paras, context);
 			case T_FOR_IN:
 				return eh_op_for_in(paras, context);
-			case T_SWITCH: // switch statements
-				ret = eh_op_switch(paras, context);
-				// incremented in the eh_op_switch function
-				inloop--;
-				break;
-			case T_GIVEN: // inline switch statements
-				return eh_op_given(paras, context);
 			case T_MATCH:
 				return eh_op_match(paras, context);
 		/*
@@ -648,83 +641,6 @@ ehval_p EHI::eh_op_classmember(ehval_p *paras, const ehcontext_t &context) {
 	// set the member
 	return set(paras[1], nullptr, &attributes, context);
 }
-ehval_p EHI::eh_op_switch(ehval_p *paras, const ehcontext_t &context) {
-	ehval_p ret;
-	// because we use continue, we'll pretend this is a loop
-	inloop++;
-
-	// switch variable
-	ehval_p switchvar = eh_execute(paras[0], context);
-	for(ehval_p node = paras[1]; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
-		Enum_Instance::t *op = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>();
-		// execute default
-		if(op->member_id == T_DEFAULT) {
-			ret = eh_execute(op->members[0], context);
-		} else {
-			ehval_p casevar = eh_execute(op->members[0], context);
-			ehval_p decider;
-			// try to call function
-			if(casevar->is_a<Function>() || casevar->is_a<Binding>()) {
-				decider = call_function(casevar, switchvar, context);
-				if(!decider->is_a<Bool>()) {
-					throw_TypeError("Method in a switch case must return a Bool", decider, this);
-				}
-			} else {
-				decider = call_method_typed<Bool>(casevar, "operator==", switchvar, context);
-			}
-			// apply the decider
-			if(decider->get<Bool>()) {
-				ret = eh_execute(op->members[1], context);
-			} else {
-				continue;
-			}
-		}
-		// check whether we need to leave
-		if(returning) {
-			return ret;
-		} else if(breaking) {
-			breaking--;
-			return ret;
-		} else if(continuing) {
-			// if continuing == 1, then continue
-			continuing--;
-			// so if continuing now > 0, leave the switch
-			if(continuing) {
-				return ret;
-			}
-		} else {
-			return ret;
-		}
-	}
-	return nullptr;
-}
-ehval_p EHI::eh_op_given(ehval_p *paras, const ehcontext_t &context) {
-	// switch variable
-	ehval_p switchvar = eh_execute(paras[0], context);
-	for(ehval_p node = paras[1]; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
-		const Enum_Instance::t *op = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>();
-		// execute default
-		if(op->member_id == T_DEFAULT) {
-			return eh_execute(op->members[0], context);
-		}
-		ehval_p casevar = eh_execute(op->members[0], context);
-		ehval_p decider;
-		if(casevar->is_a<Function>() || casevar->is_a<Binding>()) {
-			decider = call_function(casevar, switchvar, context);
-			if(!decider->is_a<Bool>()) {
-				throw_TypeError("Method in a given case must return a Bool", decider, this);
-			}
-		} else {
-			decider = call_method_typed<Bool>(switchvar, "operator==", casevar, context);
-		}
-		if(decider->get<Bool>()) {
-			return eh_execute(op->members[1], context);
-		}
-	}
-	std::string switchvar_str = toString(switchvar, context)->get<String>();
-	const char *msg = strdup(("No matching case in given statement: " + switchvar_str).c_str());
-	throw_MiscellaneousError(msg, this);
-}
 
 bool EHI::match(ehval_p node, ehval_p var, const ehcontext_t &context) {
 	if(!Node::is_a(node)) {
@@ -847,9 +763,7 @@ ehval_p EHI::eh_op_match(ehval_p *paras, const ehcontext_t &context) {
 	ehval_p switchvar = eh_execute(paras[0], context);
 	for(ehval_p node = paras[1]; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
 		Enum_Instance::t *case_node = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>();
-		if(case_node->member_id == T_DEFAULT) {
-			throw_MiscellaneousError("Cannot use T_DEFAULT in match statement", this);
-		} else if(case_node->member_id == T_WHEN) {
+		if(case_node->member_id == T_WHEN) {
 			bool does_match = match(case_node->members[0], switchvar, context);
 			if(does_match && this->toBool(eh_execute(case_node->members[1], context), context)->get<Bool>()) {
 				return eh_execute(case_node->members[2], context);
@@ -859,7 +773,7 @@ ehval_p EHI::eh_op_match(ehval_p *paras, const ehcontext_t &context) {
 		}
 	}
 	std::string switchvar_str = toString(switchvar, context)->get<String>();
-	const char *msg = strdup(("No matching case in given statement: " + switchvar_str).c_str());
+	const char *msg = strdup(("No matching case in match statement: " + switchvar_str).c_str());
 	throw_MiscellaneousError(msg, this);
 }
 ehval_p EHI::eh_op_customop(ehval_p *paras, const ehcontext_t &context) {

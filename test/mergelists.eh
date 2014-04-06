@@ -20,7 +20,7 @@ public merge = func: l, r
 	else
 		lhd, ltl = l
 		rhd, rtl = r
-		given lhd <=> rhd
+		match lhd <=> rhd
 			case -1; lhd::merge(ltl, r)
 			case 0; lhd::merge(ltl, rtl)
 			case 1; rhd::merge(l, rtl)

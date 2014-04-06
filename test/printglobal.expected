@@ -143,7 +143,6 @@
 		T_FOR <public,constant>: @enum constructor T_FOR <Node>: parameter, parameter
 		T_FOR_IN <public,constant>: @enum constructor T_FOR_IN <Node>: parameter, parameter, parameter
 		T_FUNC <public,constant>: @enum constructor T_FUNC <Node>: parameter, parameter
-		T_GIVEN <public,constant>: @enum constructor T_GIVEN <Node>: parameter, parameter
 		T_GROUPING <public,constant>: @enum constructor T_GROUPING <Node>: parameter
 		T_HASH_LITERAL <public,constant>: @enum constructor T_HASH_LITERAL <Node>: parameter
 		T_IF <public,constant>: @enum constructor T_IF <Node>: parameter, parameter, parameter
@@ -169,7 +168,6 @@
 		]
 		T_SEPARATOR <public,constant>: @enum constructor T_SEPARATOR <Node>: parameter, parameter
 		T_SHORTPARA <public,constant>: @enum constructor T_SHORTPARA <Node>: parameter, parameter
-		T_SWITCH <public,constant>: @enum constructor T_SWITCH <Node>: parameter, parameter
 		T_THIS <public,constant>: @enum instance T_THIS <Node> [
 		]
 		T_TRY <public,constant>: @enum constructor T_TRY <Node>: parameter, parameter

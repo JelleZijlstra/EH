@@ -25,7 +25,7 @@ class BrainInterpreter
 
 	public run() = do
 		while true
-			given this.program->(this.rip)
+			match this.program->(this.rip)
 				case '>'
 					this.dataptr += 1
 				case '<'
@@ -46,7 +46,7 @@ class BrainInterpreter
 					if this.data->(this.dataptr) != 0
 						this.rip = this.findOpeningBracket()
 					end
-				default
+				case _
 					# ignore it
 			end
 			this.rip += 1

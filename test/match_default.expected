@@ -1,3 +1,2 @@
 %%stdout%%
 %%stderr%%
-Uncaught exception of type MiscellaneousError: <MiscellaneousError: Cannot use T_DEFAULT in match statement>

@@ -4,5 +4,5 @@
 
 match 3
 	case 4; echo "it's 4"
-	default; 3
+	case _; 3
 end

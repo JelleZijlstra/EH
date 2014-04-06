@@ -1,22 +1,22 @@
 #!/usr/bin/ehi
-# Illustrate the ability to use anonymous functions within a `given' block.
+# Illustrate the ability to use anonymous functions within a `match' block.
 func gettype: input
-	echo given input
-		case func: input; ret input.isA Integer; end
+	echo match input
+		case _ when input.isA Integer
 			"int"
-		case func: input; ret input.isA String; end
+		case _ when input.isA String
 			"string"
-		case func: input; ret input.isA Bool; end
+		case _ when input.isA Bool
 			"bool"
-		case func: input; ret input.isA Range; end
+		case _ when input.isA Range
 			"range"
-		case func: input; ret input.isA Float; end
+		case _ when input.isA Float
 			"float"
-		case func: input; ret input.isA Array; end
+		case _ when input.isA Array
 			"array"
-		case func: input; ret input.isA Object; end
+		case _ when input.isA Object
 			"object"
-		case func: input; ret input.isA Function; end
+		case _ when input.isA Function
 			"func"
 	end
 end

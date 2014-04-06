@@ -58,10 +58,8 @@ void yyerror(void *, const char *s);
 %token T_AS
 %token T_WHEN
 %token T_IN
-%token T_GIVEN
 %token T_MATCH
 %token T_END
-%token T_SWITCH
 %token T_DEFAULT
 %token T_CASE
 %token T_BREAK
@@ -113,7 +111,7 @@ void yyerror(void *, const char *s);
 %left T_RANGE T_ARROW '.'
 %nonassoc '[' ']' '{' '}'
 %nonassoc '(' ')'
-%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_GIVEN T_MATCH T_SWITCH T_FUNC T_DO T_CLASS T_ENUM T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
+%nonassoc T_INTEGER T_FLOAT T_NULL T_BOOL T_VARIABLE T_STRING T_MATCH T_FUNC T_DO T_CLASS T_ENUM T_IF T_TRY T_FOR T_WHILE T_THIS T_SCOPE '_'
 
 %type<ehNode> statement expression statement_list parglist arraylist arraylist_i anonclasslist anonclassmember
 %type<ehNode> anonclasslist_i attributelist attributelist_inner caselist acase command paralist para global_list
@@ -374,10 +372,6 @@ base_expression:
 							{ $$ = ADD_NODE1(T_CLASS, $3); }
 	| T_ENUM T_VARIABLE T_SEPARATOR separators enum_list T_SEPARATOR statement_list T_END
 							{ $$ = eh_addnode(T_ENUM, String::make($2), NODE($5), NODE($7)); }
-	| T_SWITCH expression T_SEPARATOR separators caselist T_END
-							{ $$ = ADD_NODE2(T_SWITCH, $2, $5); }
-	| T_GIVEN expression T_SEPARATOR separators caselist T_END
-							{ $$ = ADD_NODE2(T_GIVEN, $2, $5); }
 	| T_MATCH expression T_SEPARATOR separators caselist T_END
 							{ $$ = ADD_NODE2(T_MATCH, $2, $5); }
 	| T_IF expression T_SEPARATOR statement_list elseif_clauses T_END
@@ -501,8 +495,6 @@ acase:
 							{ $$ = ADD_NODE2(T_CASE, $2, $4); }
 	| T_CASE expression T_WHEN expression T_SEPARATOR statement_list
 							{ $$ = ADD_NODE3(T_WHEN, $2, $4, $6); }
-	| T_DEFAULT T_SEPARATOR statement_list
-							{ $$ = ADD_NODE1(T_DEFAULT, $3); }
 	;
 
 separators:

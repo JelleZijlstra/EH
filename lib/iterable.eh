@@ -9,28 +9,27 @@ class Iterable
 		end
 	end
 
-	private static reduceHelper = it, b, f => given it.hasNext()
+	private static reduceHelper(it, b, f) = match it.hasNext()
 		case true; f(it.next(), reduceHelper(it, b, f))
 		case false; b
 	end
 
 	public reduce = b, f => reduceHelper(this.getIterator(), b, f)
 
-	public iterableLength = () => this.reduce(0, (v, b => b + 1))
+	public iterableLength() = this.reduce(0, (v, b => b + 1))
 
-	private static foldLeftHelper = it, base, f => given (it.hasNext())
-		case true
-			base = f(it.next(), base)
-			foldLeftHelper(it, base, f)
-		case false
-			base
+	private static foldLeftHelper(it, base, f) = if it.hasNext()
+		base = f(it.next(), base)
+		foldLeftHelper(it, base, f)
+	else
+		base
 	end
 
 	public foldLeft = base, f => foldLeftHelper(this.getIterator(), base, f)
 
 	public map = f => this.foldLeft(this.type().empty(), (v, collection => collection.add(f v)))
 
-	public filter = f => this.foldLeft(this.type().empty(), (v, collection => given f v
+	public filter = f => this.foldLeft(this.type().empty(), (v, collection => match f v
 		case true; collection.add v
 		case false; collection
 	end))
@@ -42,7 +41,7 @@ class Iterable
 	public append elt = this.add elt
 
 	# sorting implementation
-	const private static split = it, l, r => given it.hasNext()
+	const private static split = it, l, r => match it.hasNext()
 		case true
 			val = it.next()
 			split(it, r, l.add val)
@@ -50,12 +49,12 @@ class Iterable
 	end
 
 	const private merge(l, r) = if !(l.hasNext())
-		given (r.hasNext())
+		match (r.hasNext())
 			case false; this
 			case true; this.add(r.next()).merge(l, r)
 		end
 	else
-		given (r.hasNext())
+		match (r.hasNext())
 			case false; (this.add(l.next())).merge(l, r)
 			case true
 				const private l_head = l.peek()
@@ -75,10 +74,10 @@ class Iterable
 		end
 	end
 
-	const sort() = given (this.iterableLength())
+	const sort() = match (this.iterableLength())
 		case 0; this
 		case 1; this
-		default
+		case _
 			private l, r = split(this.getIterator(), this.type().empty(), this.type().empty())
 			l = l.sort()
 			r = r.sort()

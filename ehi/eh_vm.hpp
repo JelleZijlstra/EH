@@ -64,6 +64,12 @@ enum eh_opcode_t {
     GET_RAW_TYPE,
     RAW_TUPLE_SIZE,
     MATCH_ENUM_INSTANCE,
+    BEGIN_TRY_FINALLY,
+    BEGIN_FINALLY,
+    END_TRY_FINALLY,
+    BEGIN_TRY_CATCH,
+    BEGIN_CATCH,
+    END_TRY_CATCH,
 };
 
 struct code_object_header {
@@ -91,6 +97,85 @@ public:
     void validate_header(EHI *ehi);
 };
 
+// a tagged union for register values
+// integer if LSB == 1, pointer if LSB == 0
+class register_value {
+private:
+    union {
+        long integer_value;
+        void *pointer_value;
+    };
+    static_assert(sizeof(long) == sizeof(void *), "value must be the size of a single pointer");
+
+    // dec_rc's the pointer if there is one
+    void destruct_pointer() {
+        if(this->is_pointer()) {
+            // rely on destructor
+            ehval_p to_destruct = ehval_p(static_cast<ehval_t *>(this->pointer_value), false);
+        }
+    }
+
+    // disallowed operations
+    register_value(const register_value&);
+    register_value operator=(const register_value&);
+
+public:
+    // integer_value(1) == 0
+    register_value() : integer_value(1) {
+        assert(this->is_integer());
+        assert(!this->is_pointer());
+    }
+
+    ~register_value() {
+        this->destruct_pointer();
+    }
+
+    bool is_pointer() {
+        return ((~(this->integer_value)) & 1) == 1;
+    }
+
+    ehval_p get_pointer() {
+        assert(this->is_pointer());
+        return ehval_p(static_cast<ehval_t *>(this->pointer_value));
+    }
+
+    void set_pointer(ehval_p new_value) {
+        this->destruct_pointer();
+        // we're keeping a reference around
+        new_value->inc_rc();
+        this->pointer_value = static_cast<void *>(new_value.operator->());
+        assert(this->is_pointer());
+    }
+
+    bool is_integer() {
+        return (this->integer_value & 1) == 1;
+    }
+
+    long get_integer() {
+        assert(this->is_integer());
+        return this->integer_value >> 1;
+    }
+
+    void set_integer(long new_value) {
+        this->destruct_pointer();
+        this->integer_value = (new_value << 1) | 1;
+        assert(this->is_integer());
+    }
+
+    void move(const register_value &other) {
+        this->destruct_pointer();
+        this->integer_value = other.integer_value;
+        if(this->is_pointer()) {
+            this->get_pointer()->inc_rc();
+        }
+    }
+
+    bool equal(const register_value &other) {
+        return this->integer_value == other.integer_value;
+    }
+};
+
+
 class eh_frame_t {
 public:
     enum type {
@@ -101,9 +186,11 @@ public:
     code_object *co;
     uint32_t current_offset;
     ehcontext_t context;
-    ehval_p argument;
+    register_value registers[4];
 
-    eh_frame_t(type typ_, code_object *co_, uint32_t current_offset_, ehcontext_t context_, ehval_p argument_ = nullptr) : typ(typ_), co(co_), current_offset(current_offset_), context(context_), argument(argument_) {}
+    eh_frame_t(type typ_, code_object *co_, uint32_t current_offset_, ehcontext_t context_, ehval_p argument_ = nullptr) : typ(typ_), co(co_), current_offset(current_offset_), context(context_), registers() {
+        this->registers[0].set_pointer(argument_);
+    }
 };
 
 void eh_execute_bytecode(const uint8_t *data, EHI *ehi);

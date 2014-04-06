@@ -71,9 +71,14 @@ enum Opcode
     GET_RAW_TYPE(register_a, register_b), # loads the raw type_id of the value in register_a into register_b
     RAW_TUPLE_SIZE(register_a, register_b), # loads the size of the tuple in register_a into register_b as an integer
     MATCH_ENUM_INSTANCE(register_a, register_b, target), # matches the pattern in register_a (an enum constructor) against the variable in register_b (an enum instance) and if the match fails, jumps to target, else puts the size (number of arguments) of the constructor in #3
+    BEGIN_TRY_FINALLY(target), # begins a try-finally block, with its finally block starting at target
+    BEGIN_FINALLY, # begins the finally block
+    END_TRY_FINALLY, # ends the finally block
+    BEGIN_TRY_CATCH(target), # begins a try-catch statement. Always repeated: first instance indicates where the catch blocks starts and second where the subsequent code starts
+    BEGIN_CATCH, # begins a catch block
+    END_TRY_CATCH, # ends the try-catch block
 
     LABEL(n) # pseudo-opcode for a jump target (keep this last)
-    # TODO: try/catch, special opcodes for match?
 end
 
 enum CAttributes
@@ -230,7 +235,7 @@ class CodeObject
             end
             ba->offset = opcode.numericValue()
             match opcode
-                case Opcode.JUMP(@target) | Opcode.JUMP_TRUE(@target) | Opcode.JUMP_FALSE(@target) | Opcode.CREATE_FUNCTION(@target) | Opcode.LOAD_CLASS(@target) | Opcode.LOAD_ENUM(@target)
+                case Opcode.JUMP(@target) | Opcode.JUMP_TRUE(@target) | Opcode.JUMP_FALSE(@target) | Opcode.CREATE_FUNCTION(@target) | Opcode.LOAD_CLASS(@target) | Opcode.LOAD_ENUM(@target) | Opcode.BEGIN_TRY_FINALLY(@target) | Opcode.BEGIN_TRY_CATCH(@target)
                     ba.wrappedSetInteger(offset + SIZEOF_OFFSET, target.get_location())
                 case Opcode.MOVE(@register_a, @register_b) | Opcode.GET_RAW_TYPE(@register_a, @register_b) | Opcode.RAW_TUPLE_SIZE(@register_a, @register_b)
                     # offset + 1 is unused
@@ -251,7 +256,7 @@ class CodeObject
                     ba.wrappedSetInteger(offset + SIZEOF_OFFSET, name)
                 case Opcode.PUSH(@register) | Opcode.POP(@register) | Opcode.LOAD_TRUE(@register) | Opcode.LOAD_FALSE(@register) | Opcode.LOAD_NULL(@register) | Opcode.LOAD_THIS(@register) | Opcode.LOAD_SCOPE(@register)
                     ba->(offset + 2) = register
-                case Opcode.CALL | Opcode.RETURN | Opcode.CREATE_RANGE | Opcode.HALT
+                case Opcode.CALL | Opcode.RETURN | Opcode.CREATE_RANGE | Opcode.HALT | Opcode.BEGIN_FINALLY | Opcode.END_TRY_FINALLY | Opcode.BEGIN_CATCH | Opcode.END_TRY_CATCH
                     ()
                 case Opcode.LOAD_FLOAT(@value)
                     # TODO once we switch to double: use a separate float registry
@@ -335,7 +340,7 @@ public disassemble ba = do
         catch if exception.isA ArgumentError
             opcode = '(unrecognized opcode: ' + String(ba->offset) + ')'
         end
-        sb << "\t" << offset << " " << opcode << ": "
+        sb << "\t" << offset << " " << opcode << " (" << String(ba->offset) << "): "
         sb << ba->(offset + 1) << ", " << ba->(offset + 2) << ", " << ba->(offset + 3) << "; "
         sb << ba.getInteger(offset + 4) << "\n"
         offset += SIZEOF_OPCODE
@@ -535,25 +540,17 @@ private compile_rec code co = do
             co.append(Opcode.LABEL end_label)
         # Exceptions
         case Node.T_TRY(@try_block, Node.T_LIST(@catch_blocks))
-            sb << assignment << "Null::make();\n"
-            this.compile_try_catch(sb, try_block, catch_blocks, var_name)
+            compile_try_catch try_block catch_blocks co
         case Node.T_TRY_FINALLY(@try_block, Node.T_LIST(@catch_blocks), @finally_block)
-            sb << assignment << "Null::make();\n"
-            # wrap finally block in a function, so we can call it twice
-            private finally_builder = String.Builder.new()
-            private finally_name = this.get_var_name "finally_function"
-            finally_builder << "void " << finally_name << "(const ehcontext_t &context, EHI *ehi) {\n"
-            finally_builder << "ehval_p ret;\n"
-            this.doCompile(finally_builder, finally_block)
-            finally_builder << "}\n"
-            this.add_function finally_builder
-            sb << "try {\n"
-            this.compile_try_catch(sb, try_block, catch_blocks, var_name)
-            sb << "} catch(...) {\n"
-            sb << finally_name << "(context, ehi);\n"
-            sb << "throw;\n"
-            sb << "}\n"
-            sb << finally_name << "(context, ehi)"
+            private finally_label = Label()
+            co.append(Opcode.BEGIN_TRY_FINALLY finally_label)
+            compile_try_catch try_block catch_blocks co
+            co.append(Opcode.BEGIN_FINALLY)
+            co.append(Opcode.LABEL finally_label)
+            co.append(Opcode.PUSH 0)
+            compile_rec finally_block co
+            co.append(Opcode.POP 0)
+            co.append(Opcode.END_TRY_FINALLY)
         # Boolean operators
         case Node.T_AND(@left, @right)
             compile_rec left co
@@ -867,4 +864,36 @@ private compile_pattern pattern next_label co = match pattern
         co.append(Opcode.POP 0)
         co.append(Opcode.CALL_METHOD(co.register_string "operator=="))
         co.append(Opcode.JUMP_FALSE next_label)
+end
+
+private compile_try_catch try_block catch_blocks co = if catch_blocks == Tuple []
+    # simplify case where there are no catch blocks (e.g., in a try-finally)
+    compile_rec try_block co
+else
+    private start_catch_label = Label()
+    private end_try_catch_label = Label()
+    co.append(Opcode.BEGIN_TRY_CATCH start_catch_label)
+    co.append(Opcode.BEGIN_TRY_CATCH end_try_catch_label)
+    compile_rec try_block co
+    co.append(Opcode.JUMP end_try_catch_label)
+    co.append(Opcode.LABEL start_catch_label)
+
+    for block in catch_blocks
+        private next_label = Label()
+        co.append(Opcode.BEGIN_CATCH)
+        match block
+            case Node.T_CATCH(@body)
+                compile_rec body co
+                co.append(Opcode.JUMP end_try_catch_label)
+            case Node.T_CATCH_IF(@guard, @body)
+                compile_rec guard co
+                co.append(Opcode.JUMP_FALSE next_label)
+                compile_rec body co
+                co.append(Opcode.JUMP end_try_catch_label)
+        end
+        co.append(Opcode.LABEL next_label)
+    end
+
+    co.append(Opcode.END_TRY_CATCH)
+    co.append(Opcode.LABEL end_try_catch_label)
 end

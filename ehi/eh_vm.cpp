@@ -27,83 +27,7 @@
 // Needs to come after inclusion of Attribute
 #include "eh.bison.hpp"
 
-// a tagged union for register values
-// integer if LSB == 1, pointer if LSB == 0
-class register_value {
-private:
-    union {
-        long integer_value;
-        void *pointer_value;
-    };
-    static_assert(sizeof(long) == sizeof(void *), "value must be the size of a single pointer");
-
-    // dec_rc's the pointer if there is one
-    void destruct_pointer() {
-        if(this->is_pointer()) {
-            // rely on destructor
-            ehval_p to_destruct = ehval_p(static_cast<ehval_t *>(this->pointer_value), false);
-        }
-    }
-
-    // disallowed operations
-    register_value(const register_value&);
-    register_value operator=(const register_value&);
-
-public:
-    // integer_value(1) == 0
-    register_value() : integer_value(1) {
-        assert(this->is_integer());
-        assert(!this->is_pointer());
-    }
-
-    ~register_value() {
-        this->destruct_pointer();
-    }
-
-    bool is_pointer() {
-        return ((~(this->integer_value)) & 1) == 1;
-    }
-
-    ehval_p get_pointer() {
-        assert(this->is_pointer());
-        return ehval_p(static_cast<ehval_t *>(this->pointer_value));
-    }
-
-    void set_pointer(ehval_p new_value) {
-        this->destruct_pointer();
-        // we're keeping a reference around
-        new_value->inc_rc();
-        this->pointer_value = static_cast<void *>(new_value.operator->());
-        assert(this->is_pointer());
-    }
-
-    bool is_integer() {
-        return (this->integer_value & 1) == 1;
-    }
-
-    long get_integer() {
-        assert(this->is_integer());
-        return this->integer_value >> 1;
-    }
-
-    void set_integer(long new_value) {
-        this->destruct_pointer();
-        this->integer_value = (new_value << 1) | 1;
-        assert(this->is_integer());
-    }
-
-    void move(const register_value &other) {
-        this->destruct_pointer();
-        this->integer_value = other.integer_value;
-        if(this->is_pointer()) {
-            this->get_pointer()->inc_rc();
-        }
-    }
-
-    bool equal(const register_value &other) {
-        return this->integer_value == other.integer_value;
-    }
-};
+const bool verbose = true;
 
 static void dump(ehval_p object, EHI *ehi) {
     printvar_set s;
@@ -169,11 +93,15 @@ static char *load_string(const uint8_t *const code, const uint8_t *const current
 ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
     const uint8_t *const code = frame->co->data;
     ehcontext_t context = frame->context;
-    register register_value registers[4];
-    registers[0].set_pointer(frame->argument);
+    register_value *registers = frame->registers;
     std::vector<ehval_p> stack;
     while(true) {
         const uint8_t *const current_op = &code[frame->current_offset];
+
+        if(verbose) {
+            printf("Executing opcode (position = %d): %d (%d, %d, %d; %d)\n", frame->current_offset, current_op[0], current_op[1], current_op[2], current_op[3], get_bytes<uint32_t>(current_op, SIZEOF_OFFSET));
+        }
+
         frame->current_offset += SIZEOF_OPCODE;
         switch(current_op[0]) {
             case JUMP:
@@ -393,6 +321,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 throw eh_exception(e);
             }
             case RETURN:
+                frame->current_offset = 0;
                 return registers[0].get_pointer();
             case HALT:
                 // HALT returns the context object; this makes classes and enums work
@@ -427,6 +356,51 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                     break;
                 }
                 registers[3].set_integer(em->nmembers);
+                break;
+            }
+            case BEGIN_TRY_FINALLY: {
+                uint32_t start_finally = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
+
+                ehval_p ret;
+                try {
+                    ret = eh_execute_frame(frame, ehi);
+                } catch(...) {
+                    // execute finally block, then re-throw the exception
+                    frame->current_offset = start_finally;
+                    eh_execute_frame(frame, ehi);
+                    throw;
+                }
+
+                bool should_return = (frame->current_offset == 0);
+                frame->current_offset = start_finally;
+                eh_execute_frame(frame, ehi);
+
+                if(should_return) {
+                    return ret;
+                }
+                break;
+            }
+            case BEGIN_FINALLY:
+            case END_TRY_FINALLY:
+                return registers[0].get_pointer();
+            case BEGIN_CATCH:
+            case END_TRY_CATCH:
+                break;
+            case BEGIN_TRY_CATCH: {
+                uint32_t start_catch = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
+                uint32_t end_catch = get_bytes<uint32_t>(current_op + SIZEOF_OPCODE, SIZEOF_OFFSET);
+                frame->current_offset += SIZEOF_OPCODE;
+
+                ehval_p ret;
+                try {
+                    ret = eh_execute_frame(frame, ehi);
+                } catch(eh_exception &e) {
+                    frame->current_offset = start_catch;
+                    attributes_t attributes(public_e, nonstatic_e, nonconst_e);
+                    ehi->set_bare_variable("exception", e.content, frame->context, &attributes);
+                    break;
+                }
+                frame->current_offset = end_catch;
                 break;
             }
             default:

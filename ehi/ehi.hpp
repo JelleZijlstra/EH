@@ -51,26 +51,6 @@ public:
 	}
 };
 
-struct generator_info {
-	enum message_enum {
-		value_e,
-		exception_e,
-		exit_e,
-	};
-	std::mutex mutex;
-	std::condition_variable cv;
-
-	bool in_master;
-	message_enum current_message_type;
-	ehval_p current_message;
-
-	generator_info() : mutex(), cv(), in_master(true), current_message_type(value_e), current_message(nullptr) {}
-
-	void send(message_enum type, ehval_p message);
-	void wait(bool is_master);
-	void init();
-};
-
 class EHInterpreter {
 public:
 	Hash::ehhash_t *cmdtable;
@@ -262,8 +242,6 @@ public:
 	char *get_string() const {
 		return strdup(str_str.str().c_str());
 	}
-
-	generator_info generator_info;
 
 private:
 

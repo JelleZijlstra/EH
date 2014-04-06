@@ -12,26 +12,6 @@
 
 int yyparse(void *);
 
-void generator_info::init() {
-
-}
-void generator_info::wait(bool is_master) {
-	// printf("wait: %d (%p)\n", is_master, this);
-	std::unique_lock<std::mutex> lock(mutex);
-	cv.wait(lock, [this, is_master]() { return this->in_master == is_master; });
-}
-void generator_info::send(message_enum type, ehval_p message) {
-	{
-		// printf("send: %d (%p)\n", type, this);
-		std::unique_lock<std::mutex> lock(mutex); // TODO: what is the difference between unique_lock and lock_guard?
-		// printf("got lock\n");
-		in_master = !in_master;
-		current_message_type = type;
-		current_message = message;
-	}
-	cv.notify_one();
-}
-
 EHI::EHI(interactivity_enum _inter, EHInterpreter *_parent, ehcontext_t _context, const std::string &dir, const std::string &name) : scanner(), interactivity(_inter), yy_buffer(), buffer(), str_str(), parent(_parent), interpreter_context(_context), program_code(nullptr), stack(), stack_entry(name, nullptr, stack), inloop(0), breaking(0), continuing(0), returning(false), working_dir(dir), context_name(name) {
 	yylex_init_extra(this, &scanner);
 }

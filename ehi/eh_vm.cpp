@@ -275,7 +275,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
             case CREATE_FUNCTION: {
                 uint32_t target = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
                 Function::t *f = new Function::t(Function::bytecode_e);
-                f->bytecode.code_object = frame->co;
+                f->bytecode.co = frame->co;
                 f->bytecode.offset = target;
                 f->parent = context.scope;
                 registers[0].set_pointer(Function::make(f, ehi->get_parent()));
@@ -284,7 +284,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
             case CREATE_GENERATOR: {
                 uint32_t target = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
                 Function::t *f = new Function::t(Function::bytecode_e);
-                f->bytecode.code_object = frame->co;
+                f->bytecode.co = frame->co;
                 f->bytecode.offset = target;
                 f->parent = context.scope;
                 f->is_generator = true;

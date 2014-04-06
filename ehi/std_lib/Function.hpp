@@ -24,7 +24,7 @@ public:
 	typedef ehval_p (*compiled_method)(ehval_p, ehval_p, class EHI *, const ehcontext_t &context);
 
 	struct bytecode_data {
-		code_object *code_object;
+		code_object *co;
 		uint32_t offset;
 	};
 

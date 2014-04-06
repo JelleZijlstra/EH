@@ -72,4 +72,4 @@ typename T::type call_function_typed(ehval_p func, ehval_p args, const ehcontext
 	return ret->get<T>();
 }
 
-};
+}

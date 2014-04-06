@@ -378,7 +378,7 @@ public:
 		/*
 		 * Constructors
 		 */
-		pointer() : content(T::null_object().content) {}
+		pointer() : pointer(nullptr) {}
 		// my compiler apparently doesn't have std::nullptr_t
 		pointer(decltype(nullptr)) : content(T::null_object().content) {}
 		pointer(const pointer &rhs) : pointer(rhs.content) {}

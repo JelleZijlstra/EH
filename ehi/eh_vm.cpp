@@ -94,7 +94,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
     const uint8_t *const code = frame->co->data;
     ehcontext_t context = frame->context;
     register_value *registers = frame->registers;
-    std::vector<ehval_p> stack;
+    std::vector<ehval_p> &stack = frame->stack;
     while(true) {
         const uint8_t *const current_op = &code[frame->current_offset];
 
@@ -320,6 +320,9 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 ehval_p e = ehi->call_method(class_object, "operator()", args, ehi->global());
                 throw eh_exception(e);
             }
+            case THROW_VARIABLE: {
+                throw eh_exception(registers[current_op[2]].get_pointer());
+            }
             case RETURN:
                 frame->current_offset = 0;
                 return registers[0].get_pointer();
@@ -382,6 +385,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
             }
             case BEGIN_FINALLY:
             case END_TRY_FINALLY:
+            case END_TRY_BLOCK:
                 return registers[0].get_pointer();
             case BEGIN_CATCH:
             case END_TRY_CATCH:
@@ -397,6 +401,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 } catch(eh_exception &e) {
                     frame->current_offset = start_catch;
                     attributes_t attributes(public_e, nonstatic_e, nonconst_e);
+                    registers[3].set_pointer(e.content);
                     ehi->set_bare_variable("exception", e.content, frame->context, &attributes);
                     break;
                 }

@@ -60,6 +60,7 @@ enum eh_opcode_t {
     GET_ENUM_ARGUMENT,
     HALT,
     THROW_EXCEPTION,
+    THROW_VARIABLE,
     LOAD_RAW_INTEGER,
     GET_RAW_TYPE,
     RAW_TUPLE_SIZE,
@@ -68,6 +69,7 @@ enum eh_opcode_t {
     BEGIN_FINALLY,
     END_TRY_FINALLY,
     BEGIN_TRY_CATCH,
+    END_TRY_BLOCK,
     BEGIN_CATCH,
     END_TRY_CATCH,
 };
@@ -187,8 +189,9 @@ public:
     uint32_t current_offset;
     ehcontext_t context;
     register_value registers[4];
+    std::vector<ehval_p> stack;
 
-    eh_frame_t(type typ_, code_object *co_, uint32_t current_offset_, ehcontext_t context_, ehval_p argument_ = nullptr) : typ(typ_), co(co_), current_offset(current_offset_), context(context_), registers() {
+    eh_frame_t(type typ_, code_object *co_, uint32_t current_offset_, ehcontext_t context_, ehval_p argument_ = nullptr) : typ(typ_), co(co_), current_offset(current_offset_), context(context_), registers(), stack() {
         this->registers[0].set_pointer(argument_);
     }
 };

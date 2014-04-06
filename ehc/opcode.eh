@@ -67,6 +67,7 @@ enum Opcode
     GET_ENUM_ARGUMENT(register_a, register_b, n), # puts argument n of the enum instance in #a into #b
     HALT, # ends a class, enum, or module definition
     THROW_EXCEPTION(n), # throws an instance of the exception class with type_id n with the value in #0 as the argument
+    THROW_VARIABLE(register), # throws the variable in register as an exception (useful for re-throwing)
     LOAD_RAW_INTEGER(n, value), # loads a raw integer with the given value into #n
     GET_RAW_TYPE(register_a, register_b), # loads the raw type_id of the value in register_a into register_b
     RAW_TUPLE_SIZE(register_a, register_b), # loads the size of the tuple in register_a into register_b as an integer
@@ -74,7 +75,8 @@ enum Opcode
     BEGIN_TRY_FINALLY(target), # begins a try-finally block, with its finally block starting at target
     BEGIN_FINALLY, # begins the finally block
     END_TRY_FINALLY, # ends the finally block
-    BEGIN_TRY_CATCH(target), # begins a try-catch statement. Always repeated: first instance indicates where the catch blocks starts and second where the subsequent code starts
+    BEGIN_TRY_CATCH(target), # begins a try-catch statement. Always repeated: first instance indicates where the catch blocks starts and second where the subsequent code starts. If an exception is thrown, it will be put in #3 at the end of the block.
+    END_TRY_BLOCK, # ends the try block in a try-catch
     BEGIN_CATCH, # begins a catch block
     END_TRY_CATCH, # ends the try-catch block
 
@@ -116,6 +118,12 @@ enum CAttributes
         Set(lst->0, lst->1, lst->2)
     end
 end
+
+enum Option
+    None, Some(value)
+end
+public None = Option.None
+public Some = Option.Some
 
 # round_up_to_multiple 15 4 = 16, 16 4 = 16
 round_up_to_multiple m n = do
@@ -254,9 +262,9 @@ class CodeObject
                 case Opcode.SET(@attributes, @name) | Opcode.SET_PROPERTY(@attributes, @name) | Opcode.SET_INSTANCE_PROPERTY(@attributes, @name)
                     ba->(offset + 2) = attributes.toInteger()
                     ba.wrappedSetInteger(offset + SIZEOF_OFFSET, name)
-                case Opcode.PUSH(@register) | Opcode.POP(@register) | Opcode.LOAD_TRUE(@register) | Opcode.LOAD_FALSE(@register) | Opcode.LOAD_NULL(@register) | Opcode.LOAD_THIS(@register) | Opcode.LOAD_SCOPE(@register)
+                case Opcode.PUSH(@register) | Opcode.POP(@register) | Opcode.LOAD_TRUE(@register) | Opcode.LOAD_FALSE(@register) | Opcode.LOAD_NULL(@register) | Opcode.LOAD_THIS(@register) | Opcode.LOAD_SCOPE(@register) | Opcode.THROW_VARIABLE(@register)
                     ba->(offset + 2) = register
-                case Opcode.CALL | Opcode.RETURN | Opcode.CREATE_RANGE | Opcode.HALT | Opcode.BEGIN_FINALLY | Opcode.END_TRY_FINALLY | Opcode.BEGIN_CATCH | Opcode.END_TRY_CATCH
+                case Opcode.CALL | Opcode.RETURN | Opcode.CREATE_RANGE | Opcode.HALT | Opcode.BEGIN_FINALLY | Opcode.END_TRY_FINALLY | Opcode.BEGIN_CATCH | Opcode.END_TRY_CATCH | Opcode.END_TRY_BLOCK
                     ()
                 case Opcode.LOAD_FLOAT(@value)
                     # TODO once we switch to double: use a separate float registry
@@ -265,8 +273,6 @@ class CodeObject
                         ba->(offset + SIZEOF_OFFSET + i) = float_bytes->i
                     end
                 case Opcode.CREATE_TUPLE(@n) | Opcode.SET_TUPLE(@n) | Opcode.CREATE_ARRAY(@n) | Opcode.SET_ARRAY(@n) | Opcode.CREATE_MAP(@n) | Opcode.SET_MAP(@n) | Opcode.THROW_EXCEPTION(@n)
-                    echo opcode
-                    echo(this.bytes_of_short n)
                     ba->(offset + 2), ba->(offset + 3) = this.bytes_of_short n
                 case Opcode.LOAD_RAW_INTEGER(@register, @value)
                     ba->(offset + 1) = register
@@ -455,29 +461,9 @@ private compile_rec code co = do
             # make sure while loop always returns null. Perhaps we can do without this.
             co.append(Node.LOAD_NULL 0)
         case Node.T_FOR(@iteree, @body)
-            # TODO
-            private iteree_name = this.doCompile(sb, iteree)
-            private iterator_name = this.get_var_name "for_iterator"
-            sb << "ehval_p " << iterator_name << " = ehi->call_method(" << iteree_name
-            sb << ", \"getIterator\", nullptr, context);\n"
-            sb << "while(ehi->call_method_typed<Bool>(" << iterator_name << ", \"hasNext\", nullptr, context)->get<Bool>()) {\n"
-            sb << "ehi->call_method(" << iterator_name << ", \"next\", nullptr, context);\n"
-            this.doCompile(sb, body)
-            sb << "}\n"
-            sb << assignment << iteree_name
+            compile_for None iteree body co
         case Node.T_FOR_IN(@inner_var_name, @iteree, @body)
-            # TODO
-            private iteree_name = this.doCompile(sb, iteree)
-            private iterator_name = this.get_var_name "for_iterator"
-            sb << "ehval_p " << iterator_name << " = ehi->call_method(" << iteree_name
-            sb << ", \"getIterator\", nullptr, context);\n"
-            sb << "while(ehi->call_method_typed<Bool>(" << iterator_name << ", \"hasNext\", nullptr, context)->get<Bool>()) {\n"
-            # name will not clash, because there won't be another one in this scope
-            sb << "ehval_p next = ehi->call_method(" << iterator_name << ", \"next\", nullptr, context);\n"
-            this.compile_set(sb, inner_var_name, "next", Attributes.make_private())
-            this.doCompile(sb, body)
-            sb << "}\n"
-            sb << assignment << iteree_name
+            compile_for (Some inner_var_name) iteree body co
         case Node.T_IF(@condition, @if_block, Node.T_LIST(@elsif_blocks))
             compile_elsifs condition if_block elsif_blocks () co
         case Node.T_IF_ELSE(@condition, @if_block, Node.T_LIST(@elsif_blocks), @else_block)
@@ -875,12 +861,13 @@ else
     co.append(Opcode.BEGIN_TRY_CATCH start_catch_label)
     co.append(Opcode.BEGIN_TRY_CATCH end_try_catch_label)
     compile_rec try_block co
-    co.append(Opcode.JUMP end_try_catch_label)
+    co.append(Opcode.END_TRY_BLOCK)
     co.append(Opcode.LABEL start_catch_label)
 
     for block in catch_blocks
         private next_label = Label()
         co.append(Opcode.BEGIN_CATCH)
+        co.append(Opcode.PUSH 3)
         match block
             case Node.T_CATCH(@body)
                 compile_rec body co
@@ -892,8 +879,73 @@ else
                 co.append(Opcode.JUMP end_try_catch_label)
         end
         co.append(Opcode.LABEL next_label)
+        co.append(Opcode.POP 3)
     end
 
+    co.append(Opcode.THROW_VARIABLE 3)
     co.append(Opcode.END_TRY_CATCH)
     co.append(Opcode.LABEL end_try_catch_label)
+end
+
+private compile_for var_name iteree body co = do
+    compile_rec iteree co
+    co.append(Opcode.PUSH 0)
+    co.append(Opcode.MOVE(0, 1))
+    co.append(Opcode.LOAD_NULL 0)
+    co.append(Opcode.CALL_METHOD (co.register_string "getIterator"))
+    co.append(Opcode.PUSH 0)
+
+    private begin_loop_label = Label()
+    private end_loop_label = Label()
+    private catch_label = Label()
+    private end_catch_label = Label()
+    private set_var_label = Label()
+
+    co.append(Opcode.LABEL begin_loop_label)
+    co.append(Opcode.POP 1)
+
+    co.append(Opcode.BEGIN_TRY_CATCH catch_label)
+    co.append(Opcode.BEGIN_TRY_CATCH end_catch_label)
+    co.append(Opcode.LOAD_NULL 0)
+    co.append(Opcode.CALL_METHOD (co.register_string "next"))
+    co.append(Opcode.PUSH 1)
+    co.append(Opcode.LOAD_RAW_INTEGER(2, 0))
+    co.append(Opcode.END_TRY_BLOCK)
+    co.append(Opcode.LABEL catch_label)
+    co.append(Opcode.BEGIN_CATCH)
+    co.append(Opcode.LOAD_RAW_INTEGER(2, 1))
+    co.append(Opcode.END_TRY_CATCH)
+    co.append(Opcode.LABEL end_catch_label)
+
+    # we set #2 to 0 if the call to next succeeded and 1 if an exception was thrown
+    # can't do the jumps inside the try-catch block because that's in its own function, and
+    # we won't exit it if we simply jump
+    co.append(Opcode.LOAD_RAW_INTEGER(1, 0))
+    co.append(Opcode.JUMP_EQUAL(1, 2, set_var_label))
+
+    # now there must be an active exception
+    co.append(Opcode.GET_RAW_TYPE(3, 2))
+    co.append(Opcode.LOAD_RAW_INTEGER(1, EmptyIterator.typeId()))
+    co.append(Opcode.JUMP_EQUAL(1, 2, end_loop_label))
+    co.append(Opcode.THROW_VARIABLE 3)
+
+    co.append(Opcode.LABEL set_var_label)
+    match var_name
+        case None
+            ()
+        case Some(@ast)
+            compile_set ast co (CAttributes.Null)
+    end
+
+    compile_rec body co
+
+    co.append(Opcode.JUMP begin_loop_label)
+    co.append(Opcode.LABEL end_loop_label)
+    # NOTE: we may need to POP the iterator off the stack here. Currently
+    # this is not necessary because the loop exit always goes through the
+    # above try-catch block, where it is already popped, but if we add
+    # support for break we'll have to POP it off explicitly.
+    # for loops return the thing they're iterating over
+    # this isn't very sensible behavior and maybe we should get rid of it
+    co.append(Opcode.POP 0)
 end

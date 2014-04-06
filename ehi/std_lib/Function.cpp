@@ -50,27 +50,29 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 		}
 		case user_e: {
 			ehval_p newcontext = Function_Scope::make(f->parent, ehi->get_parent());
-			if(f->is_generator) {
-				return Generator::make(base_object, function_object, args, newcontext, ehi);
-			} else {
-				ehstack_entry_t stk(function_object->get_full_name(), newcontext, ehi->get_stack());
-				ehcontext_t context(base_object, newcontext);
+			ehstack_entry_t stk(function_object->get_full_name(), newcontext, ehi->get_stack());
+			ehcontext_t context(base_object, newcontext);
 
-				// set arguments
-				attributes_t attributes(private_e, nonstatic_e, nonconst_e);
-				ehi->set(f->args, args, &attributes, context);
+			// set arguments
+			attributes_t attributes(private_e, nonstatic_e, nonconst_e);
+			ehi->set(f->args, args, &attributes, context);
 
-				// execute the function
-				ehval_p ret = ehi->eh_execute(f->code, context);
-				ehi->not_returning();
-				return ret;
-			}
+			// execute the function
+			ehval_p ret = ehi->eh_execute(f->code, context);
+			ehi->not_returning();
+			return ret;
 		}
 		case bytecode_e: {
 			ehval_p newcontext = Function_Scope::make(f->parent, ehi->get_parent());
 			ehstack_entry_t stk(function_object->get_full_name(), newcontext, ehi->get_stack());
-			eh_frame_t frame(eh_frame_t::function_e, f->bytecode.code_object, f->bytecode.offset, newcontext, args);
-			return eh_execute_frame(&frame, ehi);
+
+			if(f->is_generator) {
+				auto frame = new eh_frame_t(eh_frame_t::generator_e, f->bytecode.code_object, f->bytecode.offset, newcontext, args);
+				return Generator::make(function_object, frame, ehi);
+			} else {
+				eh_frame_t frame(eh_frame_t::function_e, f->bytecode.code_object, f->bytecode.offset, newcontext, args);
+				return eh_execute_frame(&frame, ehi);
+			}
 		}
 	}
 }

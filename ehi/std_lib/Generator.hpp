@@ -1,7 +1,17 @@
+/*
+ * Generators are implemented by saving the frame object, which contains
+ * the current code offset. When a YIELD opcode is executed, the eh_execute_frame
+ * function returns the value yielded to the caller. Subsequently, a value is sent
+ * to the generator (using its .next() or .send() method), which then executes
+ * a POST_YIELD instruction processing the response.
+ *
+ * Known issues:
+ * - yielding from inside a try-catch will likely break
+ * - returning can't be distinguished from yielding
+ */
+
 #ifndef EH_GENERATOR_H_
 #define EH_GENERATOR_H_
-
-#include <thread>
 
 #include "std_lib_includes.hpp"
 
@@ -9,16 +19,16 @@ EH_CLASS(Generator) {
 public:
 	class t {
 	public:
-		ehval_p scope;
-		EHI *ehi;
-		std::thread thread;
+		ehval_p function_object;
+		eh_frame_t *frame;
 
-		ehval_p yield(ehval_p value);
+		ehval_p run(EHI *ehi);
 
-		template<class Lambda>
-		t(ehval_p _scope, EHI *_ehi, Lambda runner) : scope(_scope), ehi(_ehi), thread(runner) {}
+		t(ehval_p function_object_, eh_frame_t *frame_) : function_object(function_object_), frame(frame_) {}
 
-		~t();
+		~t() {
+			delete frame;
+		}
 	};
 	typedef t *type;
 	type value;
@@ -34,10 +44,12 @@ public:
 	}
 
 	virtual std::list<ehval_p> children() const override {
-		return {value->scope};
+		// TODO probably also need to retrieve local variables from the frame
+		//return {value->frame->context.object, value->frame->context.scope, value->function_object};
+		return std::list<ehval_p>{};
 	}
 
-	static ehval_p make(ehval_p base_object, ehval_p function_object, ehval_p args, ehval_p function_scope, EHI *ehi);
+	static ehval_p make(ehval_p function_object, eh_frame_t *frame, EHI *ehi);
 
 };
 

@@ -34,6 +34,12 @@ static void dump(ehval_p object, EHI *ehi) {
     object->printvar(s, 0, ehi);
 }
 
+static attributes_t parse_attributes(int attr) {
+    visibility_enum v = (attr & 4) ? private_e : public_e;
+    const_enum c = (attr & 2) ? const_e : nonconst_e;
+    return attributes_t(v, nonstatic_e, c);
+}
+
 code_object::code_object(const uint8_t *data_) : data(data_) {
     header = static_cast<const code_object_header *>(static_cast<const void *>(data));
 }
@@ -141,23 +147,40 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 if(attr == 0) {
                     ehi->set_bare_variable(name, registers[0].get_pointer(), context, nullptr);
                 } else {
-                    visibility_enum v = (attr & 4) ? private_e : public_e;
-                    const_enum c = (attr & 2) ? const_e : nonconst_e;
-                    attributes_t attributes(v, nonstatic_e, c);
+                    attributes_t attributes = parse_attributes(attr);
                     ehi->set_bare_variable(name, registers[0].get_pointer(), context, &attributes);
                 }
                 break;
             }
-            case SET_PROPERTY:
-            case SET_INSTANCE_PROPERTY:
-                // TODO (fix attributes)
-                break;
+            case SET_PROPERTY: {
+                uint8_t attr = current_op[2];
+                char *accessor = load_string(code, current_op);
+                ehval_p obj = registers[1].get_pointer();
+                ehval_p rvalue = registers[0].get_pointer();
+                if(attr == 0) {
+                    obj->set_property(accessor, rvalue, context, ehi);
+                } else {
+                    ehmember_p new_member = ehmember_t::make(parse_attributes(attr), rvalue);
+                    obj->set_member(accessor, new_member, context, ehi);
+                }
+            }
+            case SET_INSTANCE_PROPERTY: {
+                uint8_t attr = current_op[2];
+                char *accessor = load_string(code, current_op);
+                ehval_p obj = registers[1].get_pointer();
+                ehval_p rvalue = registers[0].get_pointer();
+                if(attr == 0) {
+                    obj->set_instance_property(accessor, rvalue, context, ehi);
+                } else {
+                    ehmember_p new_member = ehmember_t::make(parse_attributes(attr), rvalue);
+                    obj->set_instance_member(accessor, new_member, context, ehi);
+                }
+            }
             case PUSH:
                 stack.push_back(registers[current_op[2]].get_pointer());
                 break;
             case POP:
-                // TODO: does vector have a special operation for this? pop_back returns void
-                registers[current_op[2]].set_pointer(stack.at(stack.size() - 1));
+                registers[current_op[2]].set_pointer(stack.back());
                 stack.pop_back();
                 break;
             case CALL: {

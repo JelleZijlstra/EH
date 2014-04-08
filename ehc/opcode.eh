@@ -82,6 +82,7 @@ enum Opcode
     END_TRY_CATCH, # ends the try-catch block
     YIELD(register), # yields the value in register
     POST_YIELD, # always follows YIELD; processes the message that comes in after a yield
+    POST_ARGUMENTS, # always follows the argument-setting code in a function, for use in generators
 
     LABEL(n) # pseudo-opcode for a jump target (keep this last)
 end
@@ -267,7 +268,7 @@ class CodeObject
                     ba.wrappedSetInteger(offset + SIZEOF_OFFSET, name)
                 case Opcode.PUSH(@register) | Opcode.POP(@register) | Opcode.LOAD_TRUE(@register) | Opcode.LOAD_FALSE(@register) | Opcode.LOAD_NULL(@register) | Opcode.LOAD_THIS(@register) | Opcode.LOAD_SCOPE(@register) | Opcode.THROW_VARIABLE(@register) | Opcode.YIELD(@register)
                     ba->(offset + 2) = register
-                case Opcode.CALL | Opcode.RETURN | Opcode.CREATE_RANGE | Opcode.HALT | Opcode.BEGIN_FINALLY | Opcode.END_TRY_FINALLY | Opcode.BEGIN_CATCH | Opcode.END_TRY_CATCH | Opcode.END_TRY_BLOCK | Opcode.POST_YIELD
+                case Opcode.CALL | Opcode.RETURN | Opcode.CREATE_RANGE | Opcode.HALT | Opcode.BEGIN_FINALLY | Opcode.END_TRY_FINALLY | Opcode.BEGIN_CATCH | Opcode.END_TRY_CATCH | Opcode.END_TRY_BLOCK | Opcode.POST_YIELD | Opcode.POST_ARGUMENTS
                     ()
                 case Opcode.LOAD_FLOAT(@value)
                     # TODO once we switch to double: use a separate float registry
@@ -466,14 +467,14 @@ private compile_rec code co = do
         case Node.T_WHILE(@condition, @body)
             private begin_label = Label()
             private end_label = Label()
-            co.append(Node.JUMP end_label)
-            co.append(Node.LABEL begin_label)
+            co.append(Opcode.JUMP end_label)
+            co.append(Opcode.LABEL begin_label)
             compile_rec body co
-            co.append(Node.LABEL end_label)
+            co.append(Opcode.LABEL end_label)
             compile_rec condition co
-            co.append(Node.JUMP_TRUE begin_label)
+            co.append(Opcode.JUMP_TRUE begin_label)
             # make sure while loop always returns null. Perhaps we can do without this.
-            co.append(Node.LOAD_NULL 0)
+            co.append(Opcode.LOAD_NULL 0)
         case Node.T_FOR(@iteree, @body)
             compile_for None iteree body co
         case Node.T_FOR_IN(@inner_var_name, @iteree, @body)
@@ -542,6 +543,7 @@ private compile_rec code co = do
         case Node.T_FUNC(@args, @code)
             private label, nco = co.register_function()
             compile_set args nco (CAttributes.Null)
+            nco.append(Opcode.POST_ARGUMENTS)
             compile_rec code nco
             nco.append(Opcode.RETURN)
             if nco.contains_opcode(Opcode.YIELD)

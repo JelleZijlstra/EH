@@ -68,7 +68,10 @@ ehval_p Function::exec(ehval_p base_object, ehval_p function_object, ehval_p arg
 
 			if(f->is_generator) {
 				auto frame = new eh_frame_t(eh_frame_t::generator_e, f->bytecode.code_object, f->bytecode.offset, newcontext, args);
-				return Generator::make(function_object, frame, ehi);
+				auto gen = Generator::make(function_object, frame, ehi);
+				// execute the argument-setting code of the generator function
+				eh_execute_frame(frame, ehi);
+				return gen;
 			} else {
 				eh_frame_t frame(eh_frame_t::function_e, f->bytecode.code_object, f->bytecode.offset, newcontext, args);
 				return eh_execute_frame(&frame, ehi);

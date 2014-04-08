@@ -4,7 +4,11 @@
 #include "Generator.hpp"
 
 ehval_p Generator::t::run(EHI *ehi) {
-    return eh_execute_frame(this->frame, ehi);
+    ehval_p ret = eh_execute_frame(this->frame, ehi);
+    if(this->frame->response != eh_frame_t::yielding_e) {
+        throw_EmptyIterator(ehi);
+    }
+    return ret;
 }
 
 ehval_p Generator::make(ehval_p function_object, eh_frame_t *frame, EHI *ehi) {

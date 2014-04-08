@@ -75,6 +75,7 @@ enum eh_opcode_t {
     END_TRY_CATCH,
     YIELD,
     POST_YIELD,
+    POST_ARGUMENTS,
 };
 
 struct code_object_header {
@@ -187,7 +188,7 @@ public:
         class_e, enum_e, function_e, module_e, generator_e
     };
     enum generator_response {
-        none_e, value_e, exception_e, closing_e
+        none_e, value_e, exception_e, closing_e, yielding_e
     };
 
     type typ;

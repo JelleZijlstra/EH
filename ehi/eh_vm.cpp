@@ -27,7 +27,7 @@
 // Needs to come after inclusion of Attribute
 #include "eh.bison.hpp"
 
-const bool verbose = true;
+const bool verbose = false;
 
 static void dump(ehval_p object, EHI *ehi) {
     printvar_set s;
@@ -289,7 +289,15 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 registers[0].set_pointer(Function::make(f, ehi->get_parent()));
                 break;
             }
+            case POST_ARGUMENTS:
+                if(frame->typ == eh_frame_t::generator_e) {
+                    frame->response = eh_frame_t::yielding_e;
+                    return Null::make();
+                } else {
+                    break;
+                }
             case YIELD:
+                frame->response = eh_frame_t::yielding_e;
                 return registers[0].get_pointer();
             case POST_YIELD: {
                 switch(frame->response) {

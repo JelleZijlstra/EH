@@ -718,9 +718,16 @@ private compile_set code co attributes = match code
     case Node.T_GROUPING(@lval)
         compile_set lval co attributes
     case Node.T_LIST(@vars)
+        co.append(Opcode.MOVE(0, 1))
         for i in vars.length()
-            this.compile_set_list_member(sb, vars->i, i, name, attributes)
+            private lval = vars->i
+            co.append(Opcode.LOAD_INTEGER i)
+            co.append(Opcode.CALL_METHOD(co.register_string "operator->"))
+            co.append(Opcode.PUSH 1)
+            compile_set lval co attributes
+            co.append(Opcode.POP 1)
         end
+        co.append(Opcode.MOVE(1, 0))
     case ExtendedNode.T_MIXED_TUPLE_LIST(@vars)
         raise(CompileError "The bytecode compiler does not support named arguments")
     case _

@@ -7,24 +7,24 @@ class AssertionFailure
 
 	public initialize = this.desc => ()
 
-	public toString = () => this.desc
+	public toString() = this.desc
 end
 
-public assert = func: expr
+public assert expr = do
 	if expr.isA Tuple
 		expr, desc = expr
 	else
 		desc = "(no description)"
 	end
 	if !(expr.isA Bool)
-		throw(AssertionFailure.new "assert expression must be a Bool")
+		throw(AssertionFailure "assert expression must be a Bool")
 	end
 	if !expr
-		throw(AssertionFailure.new desc)
+		throw(AssertionFailure desc)
 	end
 end
 
-public assertThrows = func: args
+public assertThrows args = do
 	if args.length() > 2
 		expr, exceptionClass, desc = args
 	else
@@ -33,7 +33,8 @@ public assertThrows = func: args
 	end
 	try
 		expr()
-		throw(AssertionFailure.new(desc))
 	catch if exception.isA exceptionClass
+		return
 	end
+	throw(AssertionFailure desc)
 end

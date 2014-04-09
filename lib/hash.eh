@@ -3,9 +3,9 @@
 
 Hash##toString() = do
 	private it = this.getIterator()
-	out = '{'
+	private out = '{'
 	while it.hasNext()
-		item = it.next()
+		private item = it.next()
 		out += item->0 + ': ' + item->1
 		if it.hasNext()
 			out += ', '

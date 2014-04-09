@@ -20,7 +20,7 @@ Hash##toJSON() = do
 		end
 	end
 	sb << "}"
-	sb##toString()
+	sb.toString()
 end
 
 Iterable##toJSON() = do
@@ -34,5 +34,5 @@ Iterable##toJSON() = do
 		end
 	end
 	sb << "]"
-	sb##toString()
+	sb.toString()
 end

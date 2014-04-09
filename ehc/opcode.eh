@@ -602,26 +602,7 @@ private compile_rec code co = do
             end
             co.append(Opcode.MOVE(2, 0))
         case ExtendedNode.T_MIXED_TUPLE_LIST(@items)
-            private member_names = []
-            private size = items.countWithPredicate(elt => match elt
-                case Node.T_NAMED_ARGUMENT(_, _); false
-                case _; true
-            end)
-            private twsk_name = this.get_var_name "twsk"
-            sb << "auto " << twsk_name << " = new Tuple_WithStringKeys::t(" << size << ");\n"
-            sb << assignment << "Tuple_WithStringKeys::make(" << twsk_name << ", ehi->get_parent());\n"
-            private i = 0
-            for item in items
-                match item
-                    case Node.T_NAMED_ARGUMENT(@name, @code)
-                        private arg_name = this.doCompile(sb, code)
-                        sb << twsk_name << '->set("' << name << '", ' << arg_name << ");\n"
-                    case _
-                        private arg_name = this.doCompile(sb, item)
-                        sb << twsk_name << "->set(" << i << ", " << arg_name << ");\n"
-                        i += 1
-                end
-            end
+            raise(CompileError "The bytecode compiler does not support named arguments")
         case Node.T_ENUM(@enum_name, Node.T_LIST(@members), @body)
             private label, nco = co.register_function()
             private name_id = co.register_string enum_name
@@ -741,29 +722,7 @@ private compile_set code co attributes = match code
             this.compile_set_list_member(sb, vars->i, i, name, attributes)
         end
     case ExtendedNode.T_MIXED_TUPLE_LIST(@vars)
-        private i = 0
-        for var in vars
-            match var
-                case Node.T_NAMED_ARGUMENT(@var_name, @dflt)
-                    private na_var_name = this.get_var_name "na_var"
-                    sb << "ehval_p " << na_var_name << ";\n"
-                    sb << "if(ehi->call_method_typed<Bool>(" << name << ', "has", String::make(strdup("' << var_name << "\")), context)->get<Bool>()) {\n"
-                    sb << na_var_name << " = ehi->call_method(" << name << ', "operator->", String::make(strdup("' << var_name << "\")), context);\n"
-                    sb << "} else {\n"
-                    private dflt_name = this.doCompile(sb, dflt)
-                    sb << na_var_name << " = " << dflt_name << ";\n}\n"
-                    sb << 'context.scope->set_member("' << var_name << '", ehmember_p('
-                    if attributes == null
-                        sb << "attributes_t::make_private()"
-                    else
-                        sb << attributes
-                    end
-                    sb << ", " << na_var_name << "), context, ehi);\n"
-                case _
-                    this.compile_set_list_member(sb, var, i, name, attributes)
-                    i++
-            end
-        end
+        raise(CompileError "The bytecode compiler does not support named arguments")
     case _
         printvar lvalue
         throw(NotImplemented "Cannot compile this lvalue")

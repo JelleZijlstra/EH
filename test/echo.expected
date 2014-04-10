@@ -1,0 +1,16 @@
+%%stdout%%
+42
+1764
+() => (user code)
+42
+Nil
+Nil
+true
+0x7f984a8080ac
+Cons(3, Nil)
+List of 3
+in try block
+in finally block
+42
+caught VisibilityError
+%%stderr%%

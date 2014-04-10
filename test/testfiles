@@ -341,3 +341,12 @@ do.eh
 makeclass.eh
 classinherit.eh
 optimize.eh
+echo.eh
+enum_constructor.eh
+for_loop.eh
+is_constructor.eh
+man_or_boy.eh
+set_null.eh
+simple_tuple.eh
+try_finally.eh
+ByteArray.eh

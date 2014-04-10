@@ -1,0 +1,7 @@
+%%stdout%%
+enum List
+	Cons(head, tail), Nil
+end
+Cons(3, Nil)
+Cons(head, tail)
+%%stderr%%

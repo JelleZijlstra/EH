@@ -1,0 +1,5 @@
+%%stdout%%
+@bytearray <0,0,0,>
+@bytearray <3,0,0,>
+@bytearray <3,0,0,0,0,>
+%%stderr%%

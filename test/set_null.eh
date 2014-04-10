@@ -1,0 +1,3 @@
+echo 'executing'
+() = ()
+() = 3

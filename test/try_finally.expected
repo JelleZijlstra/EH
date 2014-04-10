@@ -1,0 +1,10 @@
+%%stdout%%
+in try block
+in try block
+in finally block
+before throw
+in catch block
+in finally block
+before throw 2
+%%stderr%%
+Uncaught exception of type RuntimeError: <RuntimeError: hello 2>

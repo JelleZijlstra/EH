@@ -1,0 +1,11 @@
+%%stdout%%
+enum List
+	Cons(head, tail), Nil
+end
+3::[]
+@enum constructor Cons <List>: head, tail
+enum List
+	Cons(head, tail), Nil
+end
+@enum constructor Cons <List>: head, tail
+%%stderr%%

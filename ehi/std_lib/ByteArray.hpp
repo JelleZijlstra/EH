@@ -15,10 +15,11 @@ public:
 
         void resize(size_t new_size) {
             uint8_t *old_content = content;
-            uint8_t *new_content = new uint8_t[size]();
+            uint8_t *new_content = new uint8_t[new_size]();
             memcpy(new_content, old_content, std::min(size, new_size));
             content = new_content;
             delete[] old_content;
+            size = new_size;
         }
         bool has(int index) {
             return index >= 0 && ((size_t) index) < size;

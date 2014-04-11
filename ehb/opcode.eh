@@ -532,8 +532,16 @@ private compile_rec code co = do
                 co.append(Opcode.JUMP end_label)
                 co.append(Opcode.LABEL next_label)
             end
-            private message = "No matching case in match statement"
+            private message = "No matching case in match statement: "
+            co.append(Opcode.MOVE(0, 1))
+
             co.append(Opcode.LOAD_STRING(co.register_string message))
+            co.append(Opcode.MOVE(0, 2))
+            co.append(Opcode.LOAD_NULL)
+            co.append(Opcode.CALL_METHOD(co.register_string "toString"))
+            co.append(Opcode.MOVE(2, 1))
+            co.append(Opcode.CALL_METHOD(co.register_string "operator+"))
+
             co.append(Opcode.THROW_EXCEPTION(RuntimeError.typeId()))
             co.append(Opcode.LABEL end_label)
         # Exceptions
@@ -720,7 +728,7 @@ private compile_set code co attributes = match code
         compile_rec base co
         co.append(Opcode.PUSH 0)
         compile_rec accessor co
-        co.append(Opcode.CREATE_TUPLE)
+        co.append(Opcode.CREATE_TUPLE 2)
         co.append(Opcode.SET_TUPLE 0)
         co.append(Opcode.POP 1)
         co.append(Opcode.POP 0)

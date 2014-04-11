@@ -350,3 +350,4 @@ set_null.eh
 simple_tuple.eh
 try_finally.eh
 ByteArray.eh
+continue_while.eh

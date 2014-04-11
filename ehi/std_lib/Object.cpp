@@ -1,6 +1,7 @@
 #include <set>
 
 #include "Array.hpp"
+#include "Enum.hpp"
 #include "Function.hpp"
 #include "Object.hpp"
 
@@ -128,7 +129,9 @@ EH_METHOD(Object, finalize) {
 	return nullptr;
 }
 EH_METHOD(Object, isA) {
-	args->assert_type<Class>("Object.isA", ehi);
+    if(!args->is_a<Class>() && !args->is_a<Enum>()) {
+        throw_TypeError("Argument to Object##isA must be Class or Enum", args, ehi);
+    }
 	ehval_p type_object = obj->get_type_object(ehi->get_parent());
 	// everything inherits Object
 	if(type_object == args || args == ehi->get_parent()->base_object) {

@@ -21,6 +21,7 @@ EH_INITIALIZER(Array) {
 	REGISTER_METHOD_RENAME(Array, operator_arrow, "operator->");
 	REGISTER_METHOD_RENAME(Array, operator_arrow_equals, "operator->=");
 	REGISTER_METHOD(Array, push);
+	REGISTER_METHOD(Array, pop);
 	REGISTER_METHOD(Array, toArray);
 	REGISTER_METHOD(Array, toTuple);
 	REGISTER_METHOD(Array, compare);
@@ -40,6 +41,12 @@ void Array::t::insert(int index, ehval_p val) {
 
 void Array::t::append(ehval_p val) {
 	this->v.push_back(val);
+}
+
+ehval_p Array::t::pop() {
+	ehval_p val = this->v.back();
+	this->v.pop_back();
+	return val;
 }
 
 int Array::t::compare(Array::t *rhs, ehcontext_t context, EHI *ehi) {
@@ -134,9 +141,19 @@ EH_METHOD(Array, operator_arrow_equals) {
  * @returns The array
  */
 EH_METHOD(Array, push) {
-	ASSERT_OBJ_TYPE(Array, "Array.operator->");
+	ASSERT_OBJ_TYPE(Array, "Array.push");
 	obj->get<Array>()->append(args);
 	return obj;
+}
+
+/*
+ * @description Removes the last value from the array
+ * @argument None
+ * @returns Value removed
+ */
+EH_METHOD(Array, pop) {
+  ASSERT_NULL_AND_TYPE(Array, "Array.pop");
+	return obj->get<Array>()->pop();
 }
 
 /*

@@ -36,6 +36,7 @@ public:
 		// methods
 		void insert(int index, ehval_p value);
 		void append(ehval_p value);
+		ehval_p pop();
 		int compare(t *rhs, ehcontext_t context, EHI *ehi);
 	};
 	typedef t *type;
@@ -91,6 +92,7 @@ EH_METHOD(Array, toTuple);
 EH_METHOD(Array, compare);
 EH_METHOD(Array, getIterator);
 EH_METHOD(Array, push);
+EH_METHOD(Array, pop);
 
 EH_INITIALIZER(Array);
 

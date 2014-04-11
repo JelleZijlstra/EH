@@ -1,6 +1,6 @@
 %%stdout%%
 <NameError: Unknown member foo in object of type Function.Scope: (function scope)>
 <NameError: Unknown member foo in object of type Function.Scope: (function scope)>
-<NameError: Unknown member bar in object of type Function.Scope: (function scope)>
+<NameError: Unknown member foo in object of type Function.Scope: (function scope)>
 <NameError: Unknown member foo in object of type Function.Scope: (function scope)>
 %%stderr%%

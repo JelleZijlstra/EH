@@ -822,10 +822,10 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 	ehval_p *internal_paras = lvalue->get<Enum_Instance>()->members;
 	switch(lvalue->get<Enum_Instance>()->member_id) {
 		case T_ARROW: {
+			ehval_p base_var = eh_execute(internal_paras[0], context);
 			ehval_p args[2];
 			args[0] = eh_execute(internal_paras[1], context);
 			args[1] = rvalue;
-			ehval_p base_var = eh_execute(internal_paras[0], context);
 			return call_method(base_var, "operator->=", Tuple::make(2, args, parent), context);
 		}
 		case T_INSTANCE_ACCESS: {

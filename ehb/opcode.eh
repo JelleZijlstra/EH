@@ -24,6 +24,8 @@ ByteArray##wrappedSetInteger(loc, value) = do
     this.setInteger(loc, value)
 end
 
+Array##append = Array##push
+
 enum Opcode
     JUMP(target), # unconditionally jumps to position target in the current code object
     JUMP_TRUE(target), # jumps to target if the current value in #0 is true
@@ -205,9 +207,6 @@ class CodeObject
 
         # initialize the header
         private ba = ByteArray size
-        echo size
-        printvar ba
-        echo(ba.length())
         ba->0 = 'E'.charAtPosition 0
         ba->1 = 'H'.charAtPosition 0
         ba->2 = 0
@@ -229,7 +228,6 @@ class CodeObject
         # write the code
         private offset = code_offset
         for fn in this.functions
-            printvar fn
             offset = this.write_code ba offset fn
         end
         this.write_code ba offset (this.main_code)
@@ -349,7 +347,6 @@ class NestedCodeObject
 
     public contains_opcode needle = do
         for opcode in this.function_code
-            echo(opcode, opcode.constructor(), needle, opcode.numericValue(), needle.numericValue())
             if opcode.numericValue() == needle.numericValue()
                 return true
             end
@@ -409,7 +406,7 @@ public compile code = do
 end
 
 private compile_rec code co = do
-    if !(Node.isNode code)
+    if !(code.isA Node)
         match code.type()
             case String
                 string_id = co.register_string code
@@ -634,8 +631,6 @@ private compile_rec code co = do
                 co.append(Opcode.SET_TUPLE i)
             end
             co.append(Opcode.MOVE(2, 0))
-        case ExtendedNode.T_MIXED_TUPLE_LIST(@items)
-            raise(CompileError "The bytecode compiler does not support named arguments")
         case Node.T_ENUM(@enum_name, Node.T_LIST(@members), @body)
             private label, nco = co.register_function()
             private name_id = co.register_string enum_name
@@ -761,11 +756,8 @@ private compile_set code co attributes = match code
             co.append(Opcode.POP 1)
         end
         co.append(Opcode.MOVE(1, 0))
-    case ExtendedNode.T_MIXED_TUPLE_LIST(@vars)
-        raise(CompileError "The bytecode compiler does not support named arguments")
     case _
-        printvar lvalue
-        throw(NotImplemented "Cannot compile this lvalue")
+        throw(NotImplemented("Cannot compile this lvalue: " + String lvalue))
 end
 
 private compile_pattern pattern next_label co = match pattern

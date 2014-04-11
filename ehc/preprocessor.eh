@@ -16,7 +16,7 @@ end)()
 class Preprocessor
 	public static preprocess(code, filename, verbose: false) = do
 		private path = File.fullPath filename
-		private pp = Preprocessor.new()
+		private pp = Preprocessor()
 
 		if verbose
 			echo "Calling replace_include..."

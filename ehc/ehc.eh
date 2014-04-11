@@ -58,7 +58,6 @@ private main(argc, argv) = do
 		{name: "input", desc: "Input file"},
 		{name: "--to-cpp", synonyms: ['-c'], desc: "Output C++ code; do not compile to machine code", type: Bool, dflt: false},
 		{name: "--verbose", synonyms: ['-v'], desc: "Give verbose output", type: Bool, dflt: false},
-		{name: "--bytecode", synonyms: ['-b'], desc: "Use the bytecode compiler", type: Bool, dflt: false},
 		{name: "--optimize", synonyms: ['-O'], desc: "Turn on optimizations", type: Bool, dflt: false}
 	))
 	private args = ap.parse argv
@@ -69,14 +68,6 @@ private main(argc, argv) = do
 	private code = EH.parseFile(args->'input')
 
 	private preprocessed_code = Preprocessor.preprocess(code, args->'input', verbose: args->'verbose')
-
-	if args->'bytecode'
-		include 'opcode.eh'
-		private compiled_code = compile preprocessed_code
-		echo(disassemble compiled_code)
-		EH.executeBytecode(compiled_code)
-		return
-	end
 
 	if args->'output' == null
 		if args->'to-cpp'

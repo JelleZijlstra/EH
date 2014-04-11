@@ -166,6 +166,7 @@ class CodeObject
         this.next_string_index = CODE_OBJECT_HEADER_SIZE
         this.functions = []
         this.main_code = []
+        this.loop_stack = []
     end
 
     public register_string string = do
@@ -314,6 +315,47 @@ class CodeObject
         end
         size
     end
+
+    public push_loop loop = do
+        assert (loop->0.isA Label) "first entry in loop object must be label at beginning of loop"
+        assert (loop->1.isA Label) "second entry in loop object must be label after loop"
+        this.loop_stack.append loop
+    end
+
+    public pop_loop() = this.loop_stack.pop()
+
+    public get_loop depth = do
+        private available_loops = this.loop_stack.length()
+        if depth > available_loops
+            None
+        else
+            Some(this.loop_stack->(available_loops - depth))
+        end
+    end
+end
+
+class NestedCodeObject
+    this.inherit CodeObject
+
+    public initialize(this.co) = do
+        this.function_code = []
+        this.loop_stack = []
+    end
+
+    public append opcode = this.function_code.append opcode
+
+    public register_string string = this.co.register_string string
+    public register_function() = this.co.register_function()
+
+    public contains_opcode needle = do
+        for opcode in this.function_code
+            echo(opcode, opcode.constructor(), needle, opcode.numericValue(), needle.numericValue())
+            if opcode.numericValue() == needle.numericValue()
+                return true
+            end
+        end
+        return false
+    end
 end
 
 public disassemble ba = do
@@ -357,28 +399,6 @@ public disassemble ba = do
     end
 
     sb.toString()
-end
-
-class NestedCodeObject
-    public initialize(this.co) = do
-        this.function_code = []
-    end
-
-    public append opcode = this.function_code.append opcode
-
-    public register_string string = this.co.register_string string
-    public register_function() = this.co.register_function()
-
-    public contains_opcode needle = do
-        for opcode in this.function_code
-            echo(opcode, opcode.constructor(), needle, opcode.numericValue(), needle.numericValue())
-            if opcode.numericValue() == needle.numericValue()
-                echo "it matches"
-                return true
-            end
-        end
-        return false
-    end
 end
 
 public compile code = do
@@ -458,21 +478,34 @@ private compile_rec code co = do
         case Node.T_RET(@val)
             compile_rec val co
             co.append(Opcode.RETURN)
-        case Node.T_BREAK(1)
-            # TODO
-            # sb << "ehval_p " << var_name << ";\nbreak"
-        case Node.T_CONTINUE(1)
-            # TODO
-            # sb << "ehval_p " << var_name << ";\ncontinue"
+        case Node.T_BREAK(@n)
+            match co.get_loop n
+                case None
+                    throw(CompileError("Cannot break " + String n + " levels"))
+                case Some((_, @label))
+                    co.append(Opcode.JUMP label)
+            end
+        case Node.T_CONTINUE(@n)
+            match co.get_loop n
+                case None
+                    throw(CompileError("Cannot continue " + String n + " levels"))
+                case Some((@label, _))
+                    co.append(Opcode.JUMP label)
+            end
         case Node.T_WHILE(@condition, @body)
             private begin_label = Label()
             private end_label = Label()
+            private after_loop_label = Label()
             co.append(Opcode.JUMP end_label)
             co.append(Opcode.LABEL begin_label)
+            co.push_loop(end_label, after_loop_label)
             compile_rec body co
+            # pop before compiling the condition, since break inside the condition should not have an effect
+            co.pop_loop()
             co.append(Opcode.LABEL end_label)
             compile_rec condition co
             co.append(Opcode.JUMP_TRUE begin_label)
+            co.append(Opcode.LABEL after_loop_label)
             # make sure while loop always returns null. Perhaps we can do without this.
             co.append(Opcode.LOAD_NULL 0)
         case Node.T_FOR(@iteree, @body)
@@ -894,7 +927,9 @@ private compile_for var_name iteree body co = do
             compile_set ast co (CAttributes.Null)
     end
 
+    co.push_loop(begin_loop_label, end_loop_label)
     compile_rec body co
+    co.pop_loop()
 
     co.append(Opcode.JUMP begin_loop_label)
     co.append(Opcode.LABEL end_loop_label)
@@ -902,6 +937,7 @@ private compile_for var_name iteree body co = do
     # this is not necessary because the loop exit always goes through the
     # above try-catch block, where it is already popped, but if we add
     # support for break we'll have to POP it off explicitly.
+
     # for loops return the thing they're iterating over
     # this isn't very sensible behavior and maybe we should get rid of it
     co.append(Opcode.POP 0)

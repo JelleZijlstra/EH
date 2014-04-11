@@ -237,39 +237,6 @@ class Compiler
 					this.compile_elsifs(sb, var_name, condition, if_block, elsif_blocks, null)
 				case Node.T_IF_ELSE(@condition, @if_block, Node.T_LIST(@elsif_blocks), @else_block)
 					this.compile_elsifs(sb, var_name, condition, if_block, elsif_blocks, else_block)
-				case Node.T_GIVEN(@given_var, Node.T_LIST(@cases))
-					private given_var_name = this.doCompile(sb, given_var)
-					private cases_length = cases.length()
-					sb << assignment << "Null::make();\n"
-					for cse in cases
-						match cse
-							case Node.T_DEFAULT(@body)
-								sb << "if(true) {\n"
-								private default_name = this.doCompile(sb, body)
-								sb << var_name << " = " << default_name << ";\n"
-							case Node.T_CASE(@pattern, @body)
-								private case_var_name = this.doCompile(sb, pattern)
-								# use an indicator variable that is set by the code to decide whether the case matches
-								private does_match = this.get_var_name "given_does_match"
-								sb << "bool " << does_match << " = true;\n"
-								sb << "if(" << case_var_name << "->is_a<Function>() || " << case_var_name
-								sb << "->is_a<Binding>()) {\n"
-								sb << does_match << " = eh_compiled::call_function_typed<Bool>(" << case_var_name
-								sb << ", " << given_var_name << ", context, ehi);\n"
-								sb << "} else {\n"
-								sb << does_match << " = ehi->call_method_typed<Bool>(" << given_var_name
-								sb << ', "operator==", ' << case_var_name << ", context)->get<Bool>();\n"
-								sb << "}\n"
-								sb << "if(" << does_match << ") {\n"
-								private body_name = this.doCompile(sb, body)
-								sb << var_name << " = " << body_name << ";\n"
-						end
-						sb << "} else {\n"
-					end
-					sb << "throw_MiscellaneousError(\"No matching case in given statement\", ehi);\n"
-					for cases_length
-						sb << "}\n"
-					end
 				case Node.T_MATCH(@match_var, Node.T_LIST(@cases))
 					private match_var_name = this.doCompile(sb, match_var)
 					sb << assignment << "Null::make();\n"

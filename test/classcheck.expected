@@ -1,6 +1,6 @@
 %%stdout%%
 true
-<TypeError: Invalid type for argument to Object.isA (expected Class): Null>
+<TypeError: Argument to Object##isA must be Class or Enum: Null>
 <TypeError: Invalid type for argument to pow (expected Tuple): Integer>
 <ArgumentError: Argument must be a tuple of size 2 (method pow): (3, 2, false)>
 false

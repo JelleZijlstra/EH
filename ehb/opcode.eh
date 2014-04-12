@@ -580,7 +580,7 @@ private compile_rec code co = do
         # Literals
         case Node.T_FUNC(@args, @code)
             private label, nco = co.register_function()
-            compile_set args nco (CAttributes.Null)
+            compile_set args nco (CAttributes.Set(true, false, false))
             nco.append(Opcode.POST_ARGUMENTS)
             compile_rec code nco
             nco.append(Opcode.RETURN)
@@ -617,14 +617,14 @@ private compile_rec code co = do
                 i += 1
             end
             co.append(Opcode.MOVE(2, 0))
-        case Node.T_ARRAY_LITERAL(Node.T_LIST(@array))
-            # reverse, because the parser produces them in reverse order
-            private members = array.reverse()
+        case Node.T_ARRAY_LITERAL(Node.T_LIST(@members))
             private size = members.length()
             co.append(Opcode.CREATE_ARRAY size)
             for i in size
+                # reverse, because the parser produces them in reverse order
+                private index = size - i - 1
                 co.append(Opcode.PUSH 2)
-                compile_rec (members->i) co
+                compile_rec (members->index) co
                 co.append(Opcode.POP 2)
                 co.append(Opcode.SET_ARRAY i)
             end

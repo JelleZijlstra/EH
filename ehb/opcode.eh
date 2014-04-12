@@ -560,15 +560,19 @@ private compile_rec code co = do
         # Boolean operators
         case Node.T_AND(@left, @right)
             compile_rec left co
+            compile_boolify co
             private end_label = Label()
             co.append(Opcode.JUMP_FALSE end_label)
             compile_rec right co
+            compile_boolify co
             co.append(Opcode.LABEL end_label)
         case Node.T_OR(@left, @right)
             compile_rec left co
+            compile_boolify co
             private end_label = Label()
             co.append(Opcode.JUMP_TRUE end_label)
             compile_rec right co
+            compile_boolify co
             co.append(Opcode.LABEL end_label)
         # Literals
         case Node.T_FUNC(@args, @code)
@@ -591,6 +595,21 @@ private compile_rec code co = do
             co.append(Opcode.PUSH 0)
             compile_rec right co
             co.append(Opcode.POP 1)
+
+            # check that the types match and throw a TypeError if not
+            co.append(Opcode.GET_RAW_TYPE(0, 2))
+            co.append(Opcode.GET_RAW_TYPE(1, 3))
+            private success_label = Label()
+            co.append(Opcode.JUMP_EQUAL(2, 3, success_label))
+            co.append(Opcode.CREATE_TUPLE 2)
+            co.append(Opcode.SET_TUPLE 1)
+            co.append(Opcode.LOAD_STRING(co.register_string "Range members must have the same type"))
+            co.append(Opcode.SET_TUPLE 0)
+            co.append(Opcode.MOVE(2, 0))
+            co.append(Opcode.THROW_EXCEPTION(TypeError.typeId()))
+
+            # now actually create the range
+            co.append(Opcode.LABEL success_label)
             co.append(Opcode.CREATE_RANGE)
             co.append(Opcode.MOVE(2, 0))
         case Node.T_HASH_LITERAL(Node.T_LIST(@hash))
@@ -699,9 +718,11 @@ end
 
 private compile_class body name_id co = do
     private label, nco = co.register_function()
-    co.append(Opcode.CLASS_INIT name_id)
-    compile_rec body co
-    co.append(Opcode.HALT)
+    co.append(Opcode.LOAD_CLASS label)
+
+    nco.append(Opcode.CLASS_INIT name_id)
+    compile_rec body nco
+    nco.append(Opcode.HALT)
 end
 
 # compiles a set-expression lvalue, assuming the rvalue is in #0
@@ -868,6 +889,13 @@ else
     co.append(Opcode.THROW_VARIABLE 3)
     co.append(Opcode.END_TRY_CATCH)
     co.append(Opcode.LABEL end_try_catch_label)
+end
+
+# converts the element in #0 to bool
+private compile_boolify co = do
+    co.append(Opcode.MOVE(0, 1))
+    co.append(Opcode.LOAD_NULL 0)
+    co.append(Opcode.CALL_METHOD(co.register_string "toBool"))
 end
 
 private compile_for var_name iteree body co = do

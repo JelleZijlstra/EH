@@ -127,7 +127,6 @@ EHInterpreter::~EHInterpreter() {
 ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 	// variables used
 	ehval_p ret, operand1, operand2;
-	bool b1, b2;
 
 	if(Node::is_a(node)) {
 		Enum_Instance::t *op = node->get<Enum_Instance>();

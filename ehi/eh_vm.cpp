@@ -163,6 +163,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                     ehmember_p new_member = ehmember_t::make(parse_attributes(attr), rvalue);
                     obj->set_member(accessor, new_member, context, ehi);
                 }
+                break;
             }
             case SET_INSTANCE_PROPERTY: {
                 uint8_t attr = current_op[2];
@@ -175,6 +176,7 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                     ehmember_p new_member = ehmember_t::make(parse_attributes(attr), rvalue);
                     obj->set_instance_member(accessor, new_member, context, ehi);
                 }
+                break;
             }
             case PUSH:
                 stack.push_back(registers[current_op[2]].get_pointer());

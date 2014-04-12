@@ -1,4 +1,4 @@
 %%stdout%%
 no
 %%stderr-regex%%
-Uncaught exception of type NameError: <NameError: Unknown member toBool in object of type Hash: 0x[a-f\d]+>
+Uncaught exception of type NameError: <NameError: Unknown member toBool in object of type Map: 0x[a-f\d]+>

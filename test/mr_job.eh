@@ -1,7 +1,7 @@
 #!/usr/bin/ehi
 
 include '../lib/map_reduce.eh'
-include '../lib/hash.eh'
+include '../lib/map.eh'
 
 class WordCounter
 	this.inherit MapReduceJob

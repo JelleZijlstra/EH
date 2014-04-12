@@ -351,3 +351,6 @@ simple_tuple.eh
 try_finally.eh
 ByteArray.eh
 continue_while.eh
+map_crash.eh
+nested_loops.eh
+read_this.eh

@@ -2,7 +2,7 @@
 
 # Test newlines within hash and array literals and parentheses
 printvar {
-	foo: 'bar', 'hello': 'world'}
+	'foo': 'bar', 'hello': 'world'}
 
 printvar [
 	'bar', 'world', 3]

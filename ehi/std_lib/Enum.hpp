@@ -52,7 +52,7 @@ public:
 
 	Enum(type val) : value(val) {}
 
-    virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+    virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, EHInterpreter *) {
     	if(value->has(name)) {
     		return value->get_known(name);
     	} else {
@@ -68,8 +68,8 @@ public:
     	return value->parent;
     }
 
-    virtual ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
-        return value->get_instance_member_current_object(name, context, ehi);
+    virtual ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, EHInterpreter *interpreter_parent) {
+        return value->get_instance_member_current_object(name, context, interpreter_parent);
     }
 
     virtual const std::list<ehval_w> get_super_classes() {

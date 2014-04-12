@@ -33,7 +33,7 @@ public:
         return true;
     }
 
-    virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi);
+    virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent);
 
     virtual void set_member_directly(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
 
@@ -47,8 +47,8 @@ public:
 
     static ehval_p make(ehclass_t *obj, EHInterpreter *parent);
 
-    virtual ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
-        return value->get_instance_member_current_object(name, context, ehi);
+    virtual ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent) {
+        return value->get_instance_member_current_object(name, context, interpreter_parent);
     }
 
     virtual const std::string get_name() const override {
@@ -69,7 +69,7 @@ public:
         return value->inherits(superclass);
     }
 
-    virtual bool can_access_private(ehcontext_t context, class EHI *ehi) override;
+    virtual bool can_access_private(ehcontext_t context, EHInterpreter *interpreter_parent) override;
 
     virtual std::set<std::string> instance_member_set(const EHInterpreter *interpreter_parent) override;
 };

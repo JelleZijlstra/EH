@@ -115,7 +115,7 @@ ehval_p EHI::execute_string(const char *cmd) {
 }
 ehval_p EHI::set_bare_variable(const char *name, ehval_p rvalue, ehcontext_t context, attributes_t *attributes) {
 	if(attributes == nullptr) {
-		ehmember_p member = context.scope->get_property_up_scope_chain(name, context, this);
+		ehmember_p member = context.scope->get_property_up_scope_chain(name, context, this->get_parent());
 		if(!member.null()) {
 			if(member->isconst()) {
 				// bug: if the const member is actually in a higher scope, this error message will be wrong

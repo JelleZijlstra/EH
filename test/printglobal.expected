@@ -83,6 +83,7 @@
 		Iterator <public,non-constant>: @class Hash.Iterator [
 			operator() <public,non-constant>: @function <library>: 
 		]
+		operator() <public,non-constant>: @function <library>: 
 	]
 	Integer <public,constant>: @class Integer [
 		Iterator <public,non-constant>: @class Integer.Iterator [

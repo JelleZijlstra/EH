@@ -37,11 +37,11 @@ public:
 
     virtual unsigned int get_type_id(const class EHInterpreter *parent) override;
 
-    virtual ehval_p get_type_object(const EHInterpreter *parent) override {
+    virtual ehval_p get_type_object(const EHInterpreter *) override {
         return value->cls;
     }
 
-    virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi);
+    virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent);
 
     virtual void set_member_directly(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
 

@@ -15,19 +15,14 @@ EH_INITIALIZER(Map) {
 }
 
 ehval_p Map::make(EHI* ehi) {
-	return ehi->get_parent()->allocate<Map>(new t(ehi));
+	return ehi->get_parent()->allocate<Map>(new eh_map_t(ehi));
 }
 
-bool Map::Comparator::operator()(const ehval_p &l, const ehval_p &r) const {
-	return ehi->call_method_typed<Bool>(l, "operator<", r, l)->get<Bool>();
+bool MapComparator::operator()(const ehval_p &l, const ehval_p &r) const {
+	return map_obj->current_ehi->call_method_typed<Bool>(l, "operator<", r, l)->get<Bool>();
 }
 
-Map::t::t(EHI *ehi) : map(Comparator(ehi)) {}
-
-// Map::t::t(EHI *ehi) : map([ehi](const ehval_p &l, const ehval_p &r) {
-// 	return ehi->call_method_typed<Bool>(l, "operator<", r, l)->get<Bool>();
-// }) {}
-
+eh_map_t::eh_map_t(EHI *ehi) : current_ehi(ehi), map(MapComparator(this)) {}
 
 EH_METHOD(Map, operator_colon) {
 	args->assert_type<Null>("Map()", ehi);
@@ -36,8 +31,8 @@ EH_METHOD(Map, operator_colon) {
 
 EH_METHOD(Map, operator_arrow) {
 	ASSERT_RESOURCE(Map, "Map.operator->");
-	if(data->has(args)) {
-		return data->get(args);
+	if(data->has(args, ehi)) {
+		return data->get(args, ehi);
 	} else {
 		return nullptr;
 	}
@@ -49,7 +44,7 @@ EH_METHOD(Map, operator_arrow_equals) {
 	const Tuple::t *tuple = args->get<Tuple>();
 	ehval_p key = tuple->get(0);
 	ehval_p value = tuple->get(1);
-	data->set(key, value);
+	data->set(key, value, ehi);
 	return value;
 }
 
@@ -61,7 +56,7 @@ EH_METHOD(Map, size) {
 
 EH_METHOD(Map, has) {
 	ASSERT_RESOURCE(Map, "Map.operator->");
-	return Bool::make(data->has(args));
+	return Bool::make(data->has(args, ehi));
 }
 
 EH_METHOD(Map, getIterator) {
@@ -78,13 +73,13 @@ EH_METHOD(Map, getIterator) {
 EH_METHOD(Map, compare) {
 	ASSERT_RESOURCE(Map, "Map.compare");
 	ASSERT_TYPE(args, Map, "Map.compare");
-	Map::t *lhs = data;
-	Map::t *rhs = args->get<Map>();
+	eh_map_t *lhs = data;
+	eh_map_t *rhs = args->get<Map>();
 
-	Map::t::iterator lhs_it = lhs->map.begin();
-	Map::t::iterator rhs_it = rhs->map.begin();
-	Map::t::iterator lhs_end = lhs->map.end();
-	Map::t::iterator rhs_end = rhs->map.end();
+	eh_map_t::iterator lhs_it = lhs->map.begin();
+	eh_map_t::iterator rhs_it = rhs->map.begin();
+	eh_map_t::iterator lhs_end = lhs->map.end();
+	eh_map_t::iterator rhs_end = rhs->map.end();
 	while(true) {
 		// check whether we've reached the end
 		if(lhs_it == lhs_end) {
@@ -128,7 +123,7 @@ ehval_p Map_Iterator::make(ehval_p map, EHInterpreter *parent) {
 }
 
 Map_Iterator::t::t(ehval_p _map) : map(_map) {
-	Map::t *data = _map->get<Map>();
+	eh_map_t *data = _map->get<Map>();
 	begin = data->map.begin();
 	end = data->map.end();
 }

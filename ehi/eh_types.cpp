@@ -35,7 +35,7 @@ void ehval_t::check_can_set_member(ehmember_p current_member, const char *name, 
     if(!current_member.null()) {
         if(current_member->isconst()) {
             throw_ConstError(this, name, ehi);
-        } else if(current_member->attribute.visibility == private_e && !can_access_private(context, ehi)) {
+        } else if(current_member->attribute.visibility == private_e && !can_access_private(context, ehi->get_parent())) {
             throw_VisibilityError(this, name, ehi);
         }
     }
@@ -64,17 +64,17 @@ const std::string ehval_t::get_full_name() {
 void ehval_t::set_member(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
 	check_static_attribute(name, member, context, ehi);
     // if a property with this name already exists, confirm that it is not const or inaccessible
-    ehmember_p current_member = get_property_current_object(name, context, ehi);
+    ehmember_p current_member = get_property_current_object(name, context, ehi->get_parent());
     check_can_set_member(current_member, name, context, ehi);
     set_member_directly(name, member, context, ehi);
 }
 
 ehmember_p ehval_t::set_property(const char *name, ehval_p new_value, ehcontext_t context, class EHI *ehi) {
-	ehmember_p current_member = get_property_current_object(name, context, ehi);
+	ehmember_p current_member = get_property_current_object(name, context, ehi->get_parent());
 	if(current_member.null()) {
 		// now check the type object
 		ehval_p type = get_type_object(ehi->get_parent());
-		current_member = type->get_instance_member(name, context, ehi);
+		current_member = type->get_instance_member(name, context, ehi->get_parent());
 	}
 	check_can_set_member(current_member, name, context, ehi);
 	attributes_t attributes = current_member.null() ? attributes_t() : current_member->attribute;
@@ -91,12 +91,12 @@ void ehval_t::set_member_directly(const char *name, ehmember_p value, ehcontext_
 void ehval_t::set_instance_member(const char *name, ehmember_p member, ehcontext_t context, EHI *ehi) {
 	check_static_attribute(name, member, context, ehi);
     // if a property with this name already exists, confirm that it is not const or inaccessible
-    ehmember_p current_member = get_instance_member_current_object(name, context, ehi);
+    ehmember_p current_member = get_instance_member_current_object(name, context, ehi->get_parent());
     check_can_set_member(current_member, name, context, ehi);
     set_instance_member_directly(name, member, context, ehi);
 }
 ehmember_p ehval_t::set_instance_property(const char *name, ehval_p new_value, ehcontext_t context, class EHI *ehi) {
-	ehmember_p current_member = get_instance_member(name, context, ehi);
+	ehmember_p current_member = get_instance_member(name, context, ehi->get_parent());
 	check_can_set_member(current_member, name, context, ehi);
 	attributes_t attributes = current_member.null() ? attributes_t() : current_member->attribute;
     // set in this object
@@ -106,7 +106,7 @@ ehmember_p ehval_t::set_instance_property(const char *name, ehval_p new_value, e
 }
 
 ehval_p ehval_t::get_instance_member_throwing(const char *name, ehcontext_t context, class EHI *ehi) {
-	ehmember_p member = get_instance_member(name, context, ehi);
+	ehmember_p member = get_instance_member(name, context, ehi->get_parent());
 	if(member.null()) {
 		throw_NameError(this, name, ehi);
 	} else {
@@ -114,20 +114,20 @@ ehval_p ehval_t::get_instance_member_throwing(const char *name, ehcontext_t cont
 	}
 }
 
-ehmember_p ehval_t::get_instance_member(const char *name, ehcontext_t context, class EHI *ehi, bool include_object) {
-    ehmember_p my_member = get_instance_member_current_object(name, context, ehi);
+ehmember_p ehval_t::get_instance_member(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent, bool include_object) {
+    ehmember_p my_member = get_instance_member_current_object(name, context, interpreter_parent);
     if(!my_member.null()) {
         return my_member;
     }
     for(auto superclass : get_super_classes()) {
-        ehmember_p super_member = superclass->get_instance_member(name, context, ehi, false);
+        ehmember_p super_member = superclass->get_instance_member(name, context, interpreter_parent, false);
         if(!super_member.null()) {
             return super_member;
         }
     }
     if(include_object) {
-        ehval_p object_class = ehi->get_parent()->repo.get_primitive_class<Object>();
-        return object_class->get_instance_member(name, context, ehi, false);
+        ehval_p object_class = interpreter_parent->repo.get_primitive_class<Object>();
+        return object_class->get_instance_member(name, context, interpreter_parent, false);
     }
     return nullptr;
 }
@@ -135,32 +135,32 @@ ehmember_p ehval_t::get_instance_member(const char *name, ehcontext_t context, c
 void ehval_t::set_instance_member_directly(const char *name, ehmember_p value, ehcontext_t context, EHI *ehi) {
 	throw_TypeError("object does not allow instance member assignment", this, ehi);
 }
-ehmember_p ehval_t::get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+ehmember_p ehval_t::get_instance_member_current_object(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent) {
 	// by default, no properties on the actual object
 	return nullptr;
 }
 
-ehmember_p ehval_t::get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+ehmember_p ehval_t::get_property_current_object(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent) {
 	// by default, no properties on the actual object
 	return nullptr;
 }
 ehmember_p ehval_t::get_property_no_binding(const char *name, ehcontext_t context, EHI *ehi) {
-	ehmember_p member = get_property_current_object(name, context, ehi);
+	ehmember_p member = get_property_current_object(name, context, ehi->get_parent());
 	if(member.null()) {
 		// now check the type object
 		ehval_p type = get_type_object(ehi->get_parent());
-		member = type->get_instance_member(name, context, ehi);
+		member = type->get_instance_member(name, context, ehi->get_parent());
 	}
 	if(member.null()) {
 		throw_NameError(this, name, ehi);
-	} else if(member->attribute.visibility == private_e && !can_access_private(context, ehi)) {
+	} else if(member->attribute.visibility == private_e && !can_access_private(context, ehi->get_parent())) {
 		throw_VisibilityError(this, name, ehi);
 	} else {
 		return member;
 	}
 }
 // get a property of the given name from the base_var object, creating a binding if necessary
-ehval_p ehval_t::get_property(const char *name, ehcontext_t context, EHI *ehi) {
+ehval_p ehval_t::get_property(const char *name, ehcontext_t context, class EHI *ehi) {
 	ehval_p out = get_property_no_binding(name, context, ehi)->value;
 	if(out->is_a<Function>()) {
 		return Binding::make(this, out, ehi->get_parent());
@@ -168,19 +168,19 @@ ehval_p ehval_t::get_property(const char *name, ehcontext_t context, EHI *ehi) {
 		return out;
 	}
 }
-ehmember_p ehval_t::get_property_up_scope_chain(const char *name, ehcontext_t context, class EHI *ehi) {
-	ehmember_p member = get_property_current_object(name, context, ehi);
+ehmember_p ehval_t::get_property_up_scope_chain(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent) {
+	ehmember_p member = get_property_current_object(name, context, interpreter_parent);
 	if(member.null()) {
 		ehval_p parent = get_parent_scope();
 		if(!parent->is_a<Null>()) {
-			member = parent->get_property_up_scope_chain(name, context, ehi);
+			member = parent->get_property_up_scope_chain(name, context, interpreter_parent);
 		}
 	}
 	return member;
 }
 
-bool ehval_t::can_access_private(ehcontext_t context, EHI *ehi) {
-	return (context.scope == this) || (context.object == this) || get_type_object(ehi->get_parent())->can_access_private(context, ehi);
+bool ehval_t::can_access_private(ehcontext_t context, EHInterpreter *parent) {
+	return (context.scope == this) || (context.object == this) || get_type_object(parent)->can_access_private(context, parent);
 }
 
 std::set<std::string> ehval_t::member_set(const EHInterpreter *interpreter_parent) {

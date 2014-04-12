@@ -58,7 +58,7 @@ public:
     // constructor
     ehclass_t(const std::string &_name) : ehobj_t(), instance_members(), type_id(0), parent(nullptr), super(), name(_name) {}
 
-    ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi);
+    ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, EHInterpreter *interpreter_parent);
 
     void inherit(ehval_p superclass);
 

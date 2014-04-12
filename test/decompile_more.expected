@@ -34,7 +34,7 @@ func: f
 	out
 end
 func: ()
-	[3, 2, 1], {"foo": "bar"}
+	[3, 2, 1], {foo: "bar"}
 end
 func: ()
 	private it = this.hash.getIterator ()
@@ -75,7 +75,7 @@ func: ()
 	end
 end
 func: ()
-	$test --"foo"=3 --"bar"=true -"adf"=true -"kjkl"={"foo": "baz"}
+	$test --"foo"=3 --"bar"=true -"adf"=true -"kjkl"={foo: "baz"}
 
 end
 func: f

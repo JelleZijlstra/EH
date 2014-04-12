@@ -7,16 +7,16 @@
 %{
 #include "eh.hpp"
 
-ehval_p EHI::execute_cmd(const char *name, Map::t *paras) {
+ehval_p EHI::execute_cmd(const char *name, eh_map_t *paras) {
 	return nullptr;
 }
 char *EHI::eh_getline() {
-	execute_cmd("man", new Map::t(this));
+	execute_cmd("man", new eh_map_t(this));
 	return nullptr;
 }
 
 ehval_p zvaltoeh_map(HashTable *hash, EHI *ehi);
-zval *maptozval(Map::t *paras, EHI *ehi);
+zval *maptozval(eh_map_t *paras, EHI *ehi);
 zval *hashtozval(Hash::ehhash_t *hash, EHI *ehi);
 zval *tupletozval(Tuple::t *tuple, EHI *ehi);
 
@@ -69,7 +69,7 @@ zval *tupletozval(Tuple::t *tuple, EHI *ehi) {
 	return arr;
 }
 
-zval *maptozval(Map::t *paras, EHI *ehi) {
+zval *maptozval(eh_map_t *paras, EHI *ehi) {
 	zval *arr;
 	MAKE_STD_ZVAL(arr);
 
@@ -112,8 +112,8 @@ ehval_p zvaltoeh(zval *in, EHI *ehi) {
 }
 
 ehval_p zvaltoeh_map(HashTable *hash, EHI *ehi) {
-    ehval_p ret = Map::make(ehi);
-    Map::t *retval = ret->get<Map>();
+	ehval_p ret = Map::make(ehi);
+	eh_map_t *retval = ret->get<Map>();
 	// variables for our new array
 	ehval_p index, value;
 	for(Bucket *curr = hash->pListHead; curr != nullptr; curr = curr->pListNext) {
@@ -123,14 +123,14 @@ ehval_p zvaltoeh_map(HashTable *hash, EHI *ehi) {
 		value = zvaltoeh((zval *)curr->pDataPtr, ehi);
 		// determine index type and value
 		if(curr->nKeyLength == 0) {
-	    	// numeric index
-	    	retval->set(Integer::make(curr->h), value);
+			// numeric index
+			retval->set(Integer::make(curr->h), value, ehi);
 		} else {
 			// string index
-			retval->set(String::make(strdup(curr->arKey)), value);
+			retval->set(String::make(strdup(curr->arKey)), value, ehi);
 		}
-    }
-    return ret;
+	}
+	return ret;
 }
 %}
 %module(directors="1") ehphp
@@ -141,7 +141,7 @@ ehval_p zvaltoeh_map(HashTable *hash, EHI *ehi) {
 	ZVAL_STRING($input, $1_name, 1);
 }
 // Typemap from EH array to PHP array
-%typemap(directorin) Map::t* {
+%typemap(directorin) eh_map_t* {
 	*$input = *maptozval($1, this);
 }
 %typemap(directorin) EHI* {
@@ -162,7 +162,7 @@ public:
 	ehval_p global_parse_file(const char *name);
 	ehval_p global_parse_string(const char *cmd);
 
-	virtual ehval_p execute_cmd(const char *name, Map::t *paras);
+	virtual ehval_p execute_cmd(const char *name, eh_map_t *paras);
 	virtual char *eh_getline();
 	virtual ~EHI();
 };

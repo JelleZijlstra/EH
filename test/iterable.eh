@@ -16,8 +16,8 @@ String.inherit Iterable
 Range.inherit Iterable
 1..3.each printvar
 
-Hash.inherit Iterable
-{foo: 'bar'}.each printvar
+Map.inherit Iterable
+{'foo': 'bar'}.each printvar
 
 Array.inherit Iterable
 [1, 2, 3].each printvar

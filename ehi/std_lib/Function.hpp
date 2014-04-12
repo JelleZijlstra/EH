@@ -164,13 +164,13 @@ public:
 		return out;
 	}
 
-	virtual bool can_access_private(ehcontext_t context, class EHI *ehi) override {
+	virtual bool can_access_private(ehcontext_t context, class EHInterpreter *) override {
 		return ehval_p(this) == context.scope;
 	}
 
 	virtual void set_member_directly(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
 
-	virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi);
+	virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, EHInterpreter *interpreter_parent);
 
     virtual ehval_p get_parent_scope();
 

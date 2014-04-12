@@ -264,8 +264,8 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 break;
             }
             case SET_MAP: {
-                Map::t *map = registers[2].get_pointer()->get<Map>();
-                map->set(registers[0].get_pointer(), registers[1].get_pointer());
+                eh_map_t *map = registers[2].get_pointer()->get<Map>();
+                map->set(registers[0].get_pointer(), registers[1].get_pointer(), ehi);
                 break;
             }
             case CREATE_RANGE: {

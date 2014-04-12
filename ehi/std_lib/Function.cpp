@@ -166,7 +166,7 @@ void Function_Scope::set_member_directly(const char *name, ehmember_p member, eh
     // if a property with this name already exists, confirm that it is not const or inaccessible
     value->insert(name, member);
 }
-ehmember_p Function_Scope::get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+ehmember_p Function_Scope::get_property_current_object(const char *name, ehcontext_t context, class EHInterpreter *) {
 	if(value->has(name)) {
 		return value->get(name);
 	} else {

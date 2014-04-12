@@ -1,11 +1,14 @@
 %%stdout%%
 foo
-@hash [
-	'test': @string "foo"
+@map [
+	@string "test"
+	 => @string "foo"
 ]
-@hash [
-	'baz': @string "bah"
-	'foo': @string "bar"
+@map [
+	@string "baz"
+	 => @string "bah"
+	@string "foo"
+	 => @string "bar"
 ]
 2
 %%stderr%%

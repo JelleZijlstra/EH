@@ -1,0 +1,18 @@
+%%stdout%%
+@tuple <2> [
+	@int 1
+	@int 3
+]
+@tuple <2> [
+	@int 1
+	@int 4
+]
+@tuple <2> [
+	@int 2
+	@int 3
+]
+@tuple <2> [
+	@int 2
+	@int 4
+]
+%%stderr%%

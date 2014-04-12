@@ -20,7 +20,7 @@ bool ehclass_t::inherits(ehval_p superclass) {
     return false;
 }
 
-ehmember_p ehclass_t::get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+ehmember_p ehclass_t::get_instance_member_current_object(const char *name, ehcontext_t context, EHInterpreter *) {
     if(instance_members.count(name) != 0) {
         return instance_members[name];
     } else {
@@ -83,12 +83,12 @@ ehval_p Class::get_parent_scope() {
     return value->parent;
 }
 
-ehmember_p Class::get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+ehmember_p Class::get_property_current_object(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent) {
     if(value->members.count(name) != 0) {
         return value->members[name];
     }
     for(ehval_p superclass : value->super) {
-        ehmember_p member = superclass->get_property_current_object(name, context, ehi);
+        ehmember_p member = superclass->get_property_current_object(name, context, interpreter_parent);
         if(!member.null()) {
             return member;
         }
@@ -100,11 +100,11 @@ void Class::set_member_directly(const char *name, ehmember_p member, ehcontext_t
     value->insert(name, member);
 }
 
-bool Class::can_access_private(ehcontext_t context, class EHI *ehi) {
+bool Class::can_access_private(ehcontext_t context, class EHInterpreter *interpreter_parent) {
     if(context.object == this || context.object->inherits(this)) {
         return true;
     } else {
-        ehval_p type_object = context.object->get_type_object(ehi->get_parent());
+        ehval_p type_object = context.object->get_type_object(interpreter_parent);
         if(type_object == this || type_object->inherits(this)) {
             return true;
         } else {

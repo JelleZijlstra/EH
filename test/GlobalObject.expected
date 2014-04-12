@@ -3,7 +3,7 @@ null
 @int 3
 @array [
 ]
-@hash [
+@map [
 ]
 @extended tuple <1> [
 	@int 3

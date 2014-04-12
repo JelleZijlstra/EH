@@ -8,7 +8,7 @@ printvar [
 ]
 
 printvar {
-	foo: 'bar',
-	baz: 42,
-	quux: []
+	'foo': 'bar',
+	'baz': 42,
+	'quux': []
 }

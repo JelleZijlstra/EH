@@ -38,7 +38,7 @@ static inline bool boolify(ehval_p val, const ehcontext_t &context, EHI *ehi) {
 }
 
 static inline ehval_p get_variable(const char *name, const ehcontext_t &context, EHI *ehi) {
-	ehmember_p var = context.scope->get_property_up_scope_chain(name, context, ehi);
+	ehmember_p var = context.scope->get_property_up_scope_chain(name, context, ehi->get_parent());
 	if(var.null()) {
 		throw_NameError(context.scope, name, ehi);
 	} else {

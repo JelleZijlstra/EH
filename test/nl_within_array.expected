@@ -5,10 +5,13 @@
 	@int 5
 	@string "hello"
 ]
-@hash [
-	'baz': @int 42
-	'foo': @string "bar"
-	'quux': @array [
+@map [
+	@string "baz"
+	 => @int 42
+	@string "foo"
+	 => @string "bar"
+	@string "quux"
+	 => @array [
 	]
 ]
 %%stderr%%

@@ -117,7 +117,7 @@ public:
 	ehval_p optimize(ehval_p node, ehcontext_t context, bool &is_generator);
 
 	virtual char *eh_getline();
-	virtual ehval_p execute_cmd(const char *rawcmd, Map::t *paras);
+	virtual ehval_p execute_cmd(const char *rawcmd, eh_map_t *paras);
 
 	// simply parse a FILE or string
 	void parse_file(FILE *infile);

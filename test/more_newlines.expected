@@ -1,7 +1,9 @@
 %%stdout%%
-@hash [
-	'foo': @string "bar"
-	'hello': @string "world"
+@map [
+	@string "foo"
+	 => @string "bar"
+	@string "hello"
+	 => @string "world"
 ]
 @array [
 	@string "bar"

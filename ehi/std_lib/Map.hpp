@@ -17,55 +17,72 @@
 
 #include "std_lib_includes.hpp"
 
-EH_CLASS(Map) {
-	struct Comparator : std::binary_function<ehval_p, ehval_p, bool> {
-	private:
-		mutable EHI *ehi;
-	public:
-		Comparator(EHI *e) : ehi(e) {}
+struct MapComparator : std::binary_function<ehval_p, ehval_p, bool> {
+private:
+	// We include a pointer to the encompassing Map::t object here so we have access to an ehi object
+	// that can be mutated by outside code. Initially, this would simply keep a reference to the
+	// EHI object active when the map was created, but this would fail horribly if the map is used
+	// after that EHI object is destroyed (for example, if the map is created in an include'ed file).
+	// Instead, every Map::t method now needs to be passed an EHI object, ensuring that the Comparator
+	// has a usable EHI object that it can use to call operator< on objects.
 
-		bool operator()(const ehval_p &l, const ehval_p &r) const;
-	};
+	// This is still bad in a broader way, because we rely on the EHI object for the location of files
+	// to be include'ed. Therefore, include'ing a file in a function that is called from a different
+	// file is doomed to failure. Fixing this requires a more radical rethinking of the EHI/EHInterpreter
+	// structure.
+	mutable class eh_map_t *map_obj;
+public:
+	MapComparator(class eh_map_t *m) : map_obj(m) {}
+
+	bool operator()(const ehval_p &l, const ehval_p &r) const;
+};
+
+class eh_map_t {
+public:
+	typedef std::map<ehval_p, ehval_p, MapComparator> eh_map;
+	typedef eh_map::iterator iterator;
+
+	size_t size() const {
+		return map.size();
+	}
+	ehval_p get(ehval_p index, EHI *ehi) const {
+		current_ehi = ehi;
+		return map.at(index);
+	}
+	ehval_p safe_get(ehval_p index, EHI *ehi) const {
+		current_ehi = ehi;
+		if(has(index, ehi)) {
+			return get(index, ehi);
+		} else {
+			return nullptr;
+		}
+	}
+	void set(ehval_p index, ehval_p val, EHI *ehi) {
+		current_ehi = ehi;
+		map[index] = val;
+	}
+	bool has(ehval_p index, EHI *ehi) const {
+		current_ehi = ehi;
+		return map.count(index) != 0;
+	}
+	eh_map_t(EHI *ehi);
+	~eh_map_t() {}
+
+	mutable EHI *current_ehi;
+	eh_map map;
+private:
+	eh_map_t(const eh_map_t&) = delete;
+	eh_map_t operator=(const eh_map_t&) = delete;
+
+	friend class Map_Iterator;
+
+	friend EH_METHOD(Map, compare);
+};
+
+EH_CLASS(Map) {
 
 public:
-	class t {
-	public:
-		typedef std::map<ehval_p, ehval_p, Comparator> eh_map;
-		typedef eh_map::iterator iterator;
-
-		size_t size() const {
-			return map.size();
-		}
-		ehval_p get(ehval_p index) const {
-			return map.at(index);
-		}
-		ehval_p safe_get(ehval_p index) const {
-			if(has(index)) {
-				return get(index);
-			} else {
-				return nullptr;
-			}
-		}
-		void set(ehval_p index, ehval_p val) {
-			map[index] = val;
-		}
-		bool has(ehval_p index) const {
-			return map.count(index);
-		}
-		t(EHI *ehi);
-		~t() {}
-
-		eh_map map;
-	private:
-		t(const t&);
-		t operator=(const t&);
-
-		friend class Map_Iterator;
-
-		friend EH_METHOD(Map, compare);
-	};
-
-	typedef t *type;
+	typedef eh_map_t *type;
 	type value;
 
 	virtual ~Map() {
@@ -131,8 +148,8 @@ public:
 
 		ehval_p map;
 	private:
-		Map::t::iterator begin;
-		Map::t::iterator end;
+		eh_map_t::iterator begin;
+		eh_map_t::iterator end;
 		t(const t&);
 		t operator=(const t&);
 	};

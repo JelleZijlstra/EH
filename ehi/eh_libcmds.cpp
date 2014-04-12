@@ -13,10 +13,10 @@ EH_LIBCMD(quit) {
 
 EH_LIBCMD(echo) {
 	paras->assert_type<Map>("echo", ehi);
-	return ehlm_GlobalObject_echo(obj, paras->get<Map>()->safe_get(Integer::make(0)), ehi);
+	return ehlm_GlobalObject_echo(obj, paras->get<Map>()->safe_get(Integer::make(0), ehi), ehi);
 }
 
 EH_LIBCMD(put) {
 	paras->assert_type<Map>("put", ehi);
-	return ehlm_GlobalObject_put(obj, paras->get<Map>()->safe_get(Integer::make(0)), ehi);
+	return ehlm_GlobalObject_put(obj, paras->get<Map>()->safe_get(Integer::make(0), ehi), ehi);
 }

@@ -14,9 +14,9 @@ trier func:
 end
 trier(() => printvar([]->(1..3)))
 trier func:
-	{}->1 = 3
+	Hash()->1 = 3
 end
-trier(() => printvar({}->4))
+trier(() => printvar(Hash()->4))
 trier func:
 	(1, 2)->'test' = 42
 end

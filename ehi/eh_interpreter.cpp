@@ -320,7 +320,7 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, const ehcontext_t &co
 	int count = 0;
 	// we're making an array of parameters
 	ehval_p args = Map::make(this);
-	Map::t *paras = args->get<Map>();
+	eh_map_t *paras = args->get<Map>();
 	// loop through the paras given
 	for( ; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
 		ehval_p node2 = node->get<Enum_Instance>()->members[0];
@@ -336,26 +336,26 @@ ehval_p EHI::eh_op_command(const char *name, ehval_p node, const ehcontext_t &co
 						char index[2];
 						index[0] = shorts[i];
 						index[1] = '\0';
-						paras->set(String::make(strdup(index)), value_r);
+						paras->set(String::make(strdup(index)), value_r, this);
 					}
 					break;
 				}
 				case T_LONGPARA:
 					// long-form paras
-					paras->set(node_paras[0], eh_execute(node_paras[1], context));
+					paras->set(node_paras[0], eh_execute(node_paras[1], context), this);
 					break;
 				default: // non-named parameters with an expression
-					paras->set(Integer::make(count), eh_execute(node2, context));
+					paras->set(Integer::make(count), eh_execute(node2, context), this);
 					count++;
 					break;
 			}
 		} else {
-			paras->set(Integer::make(count), eh_execute(node2, context));
+			paras->set(Integer::make(count), eh_execute(node2, context), this);
 			count++;
 		}
 	}
 	// insert indicator that this is an EH-PHP command
-	paras->set(String::make(strdup("_ehphp")), Bool::make(true));
+	paras->set(String::make(strdup("_ehphp")), Bool::make(true), this);
 	// get the command to execute
 	ehval_p libcmd = parent->get_command(name);
 	ehval_p ret;
@@ -471,13 +471,13 @@ ehval_p EHI::eh_op_array(ehval_p node, const ehcontext_t &context) {
 	return ret;
 }
 ehval_p EHI::eh_op_anonclass(ehval_p node, const ehcontext_t &context) {
-	ehval_p ret = Hash::make(parent);
-	Hash::ehhash_t *new_hash = ret->get<Hash>();
+	ehval_p ret = Map::make(this);
+	auto new_hash = ret->get<Map>();
 	for( ; node->get<Enum_Instance>()->member_id != T_END; node = node->get<Enum_Instance>()->members[1]) {
 		ehval_p *myparas = node->get<Enum_Instance>()->members[0]->get<Enum_Instance>()->members;
-		// nodes here will always have the name in para 0 and value in para 1
+		ehval_p key = eh_execute(myparas[0], context);
 		ehval_p value = eh_execute(myparas[1], context);
-		new_hash->set(myparas[0]->get<String>(), value);
+		new_hash->set(key, value, this);
 	}
 	return ret;
 }
@@ -778,7 +778,7 @@ ehval_p EHI::eh_op_colon(ehval_p *paras, const ehcontext_t &context) {
 	return call_function(function, args, context);
 }
 ehval_p EHI::eh_op_dollar(ehval_p node, const ehcontext_t &context) {
-	ehmember_p var = context.scope->get_property_up_scope_chain(node->get<String>(), context, this);
+	ehmember_p var = context.scope->get_property_up_scope_chain(node->get<String>(), context, this->get_parent());
 	if(var.null()) {
 		throw_NameError(context.scope, node->get<String>(), this);
 	} else {

@@ -376,7 +376,7 @@ EH_METHOD(Enum_Instance, constructor) {
 	} else {
 		auto parent_enum = data->get_parent_enum(ehi);
 		const auto &member_info = data->get_member_info(ehi);
-		auto member = parent_enum->get_property_current_object(member_info.name.c_str(), obj, ehi);
+		auto member = parent_enum->get_property_current_object(member_info.name.c_str(), obj, ehi->get_parent());
 		return member->value;
 	}
 }

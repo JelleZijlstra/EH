@@ -212,7 +212,7 @@ public:
 	ehmember_p get_property_no_binding(const char *name, ehcontext_t context, class EHI *ehi);
 
 	// similar, but looks up the scope chain
-	ehmember_p get_property_up_scope_chain(const char *name, ehcontext_t context, class EHI *ehi);
+	ehmember_p get_property_up_scope_chain(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent);
 
 	// get a member on a class's prototype, throwing a NameError if it's not found
     ehval_p get_instance_member_throwing(const char *name, ehcontext_t context, class EHI *ehi);
@@ -221,10 +221,10 @@ public:
     const std::string get_full_name();
 
 	// get a member on a class's prototype
-    virtual ehmember_p get_instance_member(const char *name, ehcontext_t context, class EHI *ehi, bool include_object = true);
+    virtual ehmember_p get_instance_member(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent, bool include_object = true);
 
 	// get the property of this name, only looking at the current object
-	virtual ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, class EHI *ehi);
+	virtual ehmember_p get_instance_member_current_object(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent);
 
 	// get the underlying type object for this value
 	virtual ehval_p get_type_object(const class EHInterpreter *parent);
@@ -232,7 +232,7 @@ public:
 	virtual unsigned int get_type_id(const class EHInterpreter *parent);
 
 	// get the property of this name, only looking at the current object
-	virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi);
+	virtual ehmember_p get_property_current_object(const char *name, ehcontext_t context, class EHInterpreter *interpreter_parent);
 
 	// set this member directly, with no further checks
 	virtual void set_member_directly(const char *name, ehmember_p value, ehcontext_t context, class EHI *ehi);
@@ -268,7 +268,7 @@ public:
 	}
 
 	// visibility
-	virtual bool can_access_private(ehcontext_t context, class EHI *ehi);
+	virtual bool can_access_private(ehcontext_t context, class EHInterpreter *interpreter_parent);
 
 	/*
 	 * Permissions

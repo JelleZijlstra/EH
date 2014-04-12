@@ -84,6 +84,7 @@ public:
 	static ehval_p make(EHInterpreter *parent);
 };
 
+EH_METHOD(Hash, operator_colon);
 EH_METHOD(Hash, toArray);
 EH_METHOD(Hash, operator_arrow);
 EH_METHOD(Hash, operator_arrow_equals);

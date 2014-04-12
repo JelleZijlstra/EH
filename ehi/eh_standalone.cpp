@@ -3,7 +3,7 @@
 #include "eh.hpp"
 #include "std_lib/UnknownCommandError.hpp"
 
-ehval_p EHI::execute_cmd(const char *name, Map::t *paras) {
+ehval_p EHI::execute_cmd(const char *name, eh_map_t *paras) {
 	throw_UnknownCommandError(name, this);
 	return nullptr;
 }

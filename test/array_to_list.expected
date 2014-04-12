@@ -3,7 +3,7 @@
 @enum instance Cons <List> [
 	head: @int 4
 	tail: @enum instance Cons <List> [
-		head: @hash [
+		head: @map [
 		]
 		tail: @enum instance Nil <List> [
 		]

@@ -473,10 +473,8 @@ anonclasslist_i:
 	;
 
 anonclassmember:
-	T_VARIABLE ':' namedvar_expression
-							{ $$ = eh_addnode(T_ARRAY_MEMBER, String::make($1), NODE($3)); }
-	| T_STRING ':' namedvar_expression
-							{ $$ = eh_addnode(T_ARRAY_MEMBER, String::make($1), NODE($3)); }
+	boolean_expression ':' namedvar_expression
+							{ $$ = eh_addnode(T_ARRAY_MEMBER, NODE($1), NODE($3)); }
 	;
 
 parglist:

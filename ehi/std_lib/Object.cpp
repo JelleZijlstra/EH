@@ -67,7 +67,7 @@ void Object::set_member_directly(const char *name, ehmember_p member, ehcontext_
 	value->insert(name, member);
 }
 
-ehmember_p Object::get_property_current_object(const char *name, ehcontext_t context, class EHI *ehi) {
+ehmember_p Object::get_property_current_object(const char *name, ehcontext_t context, class EHInterpreter *) {
 	if(value->members.count(name) != 0) {
 		return value->members[name];
 	} else {

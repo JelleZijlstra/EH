@@ -9,6 +9,7 @@ ehval_p Hash::make(EHInterpreter *parent) {
 }
 
 EH_INITIALIZER(Hash) {
+	REGISTER_CONSTRUCTOR(Hash);
 	REGISTER_METHOD(Hash, toArray);
 	REGISTER_METHOD_RENAME(Hash, operator_arrow, "operator->");
 	REGISTER_METHOD_RENAME(Hash, operator_arrow_equals, "operator->=");
@@ -19,6 +20,16 @@ EH_INITIALIZER(Hash) {
 	REGISTER_METHOD(Hash, length);
 	REGISTER_METHOD(Hash, getIterator);
 	REGISTER_CLASS(Hash, Iterator);
+}
+
+/*
+ * @description Constructs a Hash object
+ * @argument None
+ * @returns Hash
+ */
+EH_METHOD(Hash, operator_colon) {
+	args->assert_type<Null>("Hash()", ehi);
+	return Hash::make(ehi->get_parent());
 }
 
 /*

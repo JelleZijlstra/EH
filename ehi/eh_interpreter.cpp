@@ -287,12 +287,6 @@ ehval_p EHI::eh_execute(ehval_p node, const ehcontext_t context) {
 					operand2 = eh_execute(paras[1], context);
 					return this->toBool(operand2, context);
 				}
-			case T_XOR:
-				operand1 = eh_execute(paras[0], context);
-				operand2 = eh_execute(paras[1], context);
-				b1 = this->toBool(operand1, context)->get<Bool>();
-				b2 = this->toBool(operand2, context)->get<Bool>();
-				return Bool::make(b1 != b2);
 		/*
 		 * Variable manipulation
 		 */

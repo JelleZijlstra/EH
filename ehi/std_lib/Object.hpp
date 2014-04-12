@@ -64,6 +64,7 @@ EH_METHOD(Object, operator_gt);
 EH_METHOD(Object, operator_gte);
 EH_METHOD(Object, operator_lt);
 EH_METHOD(Object, operator_lte);
+EH_METHOD(Object, operator_xor);
 EH_METHOD(Object, type);
 EH_METHOD(Object, typeId);
 EH_METHOD(Object, members);

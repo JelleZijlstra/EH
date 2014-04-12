@@ -230,7 +230,7 @@ boolean_expression:
 	| boolean_expression T_OR bar_expression
 							{ $$ = ADD_NODE2(T_OR, $1, $3); }
 	| boolean_expression T_XOR bar_expression
-							{ $$ = ADD_NODE2(T_XOR, $1, $3); }
+							{ $$ = eh_addnode(T_CALL_METHOD, NODE($1), OPERATOR("^^"), NODE($3)); }
 	| bar_expression		{ $$ = $1; }
 	;
 

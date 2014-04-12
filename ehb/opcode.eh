@@ -570,13 +570,6 @@ private compile_rec code co = do
             co.append(Opcode.JUMP_TRUE end_label)
             compile_rec right co
             co.append(Opcode.LABEL end_label)
-        case Node.T_XOR(@left, @right)
-            # why is this an operator rather than a method on Object?
-            private left_name = this.doCompile(sb, left)
-            sb << "bool " << left_name << "_bool = eh_compiled::boolify(" << left_name << ", context, ehi)) {\n"
-            private right_name = this.doCompile(sb, right)
-            sb << "bool " << right_name << "_bool = eh_compiled::boolify(" << right_name << ", context, ehi)) {\n"
-            sb << assignment << "Bool::make(" << left_name << "_bool != " << right_name << "_bool);\n"
         # Literals
         case Node.T_FUNC(@args, @code)
             private label, nco = co.register_function()

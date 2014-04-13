@@ -54,11 +54,11 @@ end
 
 private main(argc, argv) = do
 	private ap = ArgumentParser.new("Compiler for the EH language", (
-		{name: "--output", synonyms: ['-o'], desc: "Output file to use", nargs: 1, dflt: null},
-		{name: "input", desc: "Input file"},
-		{name: "--to-cpp", synonyms: ['-c'], desc: "Output C++ code; do not compile to machine code", type: Bool, dflt: false},
-		{name: "--verbose", synonyms: ['-v'], desc: "Give verbose output", type: Bool, dflt: false},
-		{name: "--optimize", synonyms: ['-O'], desc: "Turn on optimizations", type: Bool, dflt: false}
+		{"name": "--output", "synonyms": ['-o'], "desc": "Output file to use", "nargs": 1, "dflt": null},
+		{"name": "input", "desc": "Input file"},
+		{"name": "--to-cpp", "synonyms": ['-c'], "desc": "Output C++ code; do not compile to machine code", "type": Bool, "dflt": false},
+		{"name": "--verbose", "synonyms": ['-v'], "desc": "Give verbose output", "type": Bool, "dflt": false},
+		{"name": "--optimize", "synonyms": ['-O'], "desc": "Turn on optimizations", "type": Bool, "dflt": false}
 	))
 	private args = ap.parse argv
 	private verbose = args->'verbose'

@@ -36,11 +36,11 @@ class ArgumentParser
 			this.process_input_argument arg
 		end
 
-		this.process_input_argument {name: '--help', \
-			synonyms: ['-h'], \
-			desc: 'Print a help message', \
-			dflt: false, \
-			action: (ap, value => if value; ap.usage(); end) \
+		this.process_input_argument {'name': '--help', \
+			'synonyms': ['-h'], \
+			'desc': 'Print a help message', \
+			'dflt': false, \
+			'action': (ap, value => if value; ap.usage(); end) \
 		}
 	end
 

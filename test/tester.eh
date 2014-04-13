@@ -113,12 +113,12 @@ class TestCase
 	private cleanUp() = shell("rm tmp/" + this.short_name + ".*")
 end
 
-private ap = ArgumentParser.new("Test case runner", (
-	{name: '--valgrind', desc: 'Whether to use Valgrind', type: Bool, dflt: false},
-	{name: '--verbose', desc: 'Be verbose', type: Bool, dflt: false},
-	{name: '--optimize', synonyms: ['-O'], desc: "Whether to use the optimizing interpreter", type: Bool, dflt: false},
-	{name: '--program', synonyms: ['-p'], desc: "Program to run tests on", type: String, dflt: "/usr/bin/ehi", nargs: 1},
-	{name: 'file', desc: "File to test", nargs: '+'}
+private ap = ArgumentParser("Test case runner", (
+	{'name': '--valgrind', 'desc': 'Whether to use Valgrind', 'type': Bool, 'dflt': false},
+	{'name': '--verbose', 'desc': 'Be verbose', 'type': Bool, 'dflt': false},
+	{'name': '--optimize', 'synonyms': ['-O'], 'desc': "Whether to use the optimizing interpreter", 'type': Bool, 'dflt': false},
+	{'name': '--program', 'synonyms': ['-p'], 'desc': "Program to run tests on", 'type': String, 'dflt': "/usr/bin/ehi", 'nargs': 1},
+	{'name': 'file', 'desc': "File to test", 'nargs': '+'}
 ))
 private args = ap.parse argv
 private executer = args->'program'
@@ -134,7 +134,7 @@ TestCase.executer = executer
 execute "mkdir -p tmp"
 
 if args->'file'.length() == 0
-	private testfiles = File.new "testfiles"
+	private testfiles = File "testfiles"
 	private total = 0
 	private passed = 0
 	while((private file = testfiles.gets()) != null)

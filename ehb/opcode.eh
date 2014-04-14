@@ -875,11 +875,13 @@ else
         match block
             case Node.T_CATCH(@body)
                 compile_rec body co
+                co.append(Opcode.POP 3)
                 co.append(Opcode.JUMP end_try_catch_label)
             case Node.T_CATCH_IF(@guard, @body)
                 compile_rec guard co
                 co.append(Opcode.JUMP_FALSE next_label)
                 compile_rec body co
+                co.append(Opcode.POP 3)
                 co.append(Opcode.JUMP end_try_catch_label)
         end
         co.append(Opcode.LABEL next_label)

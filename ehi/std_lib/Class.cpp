@@ -178,6 +178,6 @@ EH_METHOD(Class, toString) {
 }
 
 EH_METHOD(Class, typeId) {
-    obj->assert_type<Class>("Class.toString", ehi);
+    obj->assert_type<Class>("Class.typeId", ehi);
     return Integer::make(obj->get<Class>()->type_id);
 }

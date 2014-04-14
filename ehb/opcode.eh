@@ -537,7 +537,7 @@ private compile_rec code co = do
 
             co.append(Opcode.LOAD_STRING(co.register_string message))
             co.append(Opcode.MOVE(0, 2))
-            co.append(Opcode.LOAD_NULL)
+            co.append(Opcode.LOAD_NULL 0)
             co.append(Opcode.CALL_METHOD(co.register_string "toString"))
             co.append(Opcode.MOVE(2, 1))
             co.append(Opcode.CALL_METHOD(co.register_string "operator+"))

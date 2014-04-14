@@ -732,7 +732,7 @@ private compile_set code co attributes = match code
         co.append(Opcode.GET_RAW_TYPE(0, 1))
         co.append(Opcode.LOAD_RAW_INTEGER(2, null.typeId()))
         co.append(Opcode.JUMP_EQUAL(1, 2, safe_label))
-        co.append(Opcode.LOAD_STRING(co.register_string "Expected a null value"))
+        co.append(Opcode.LOAD_STRING(co.register_string "Expected a null value to be assigned to null"))
         co.append(Opcode.THROW_EXCEPTION(RuntimeError.typeId()))
         co.append(Opcode.LABEL safe_label)
     case Node.T_ANYTHING

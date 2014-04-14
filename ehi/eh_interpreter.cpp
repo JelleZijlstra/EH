@@ -909,7 +909,7 @@ ehval_p EHI::set(ehval_p lvalue, ehval_p rvalue, attributes_t *attributes, const
 		case T_NULL:
 			// assert rvalue is null, and ignore it
 			if(!rvalue->is_a<Null>()) {
-				throw_MiscellaneousError("Non-null value assigned to null", this);
+				throw_RuntimeError("Expected a null value to be assigned to null", this);
 			}
 			return rvalue;
 		case T_CLASS_MEMBER: {

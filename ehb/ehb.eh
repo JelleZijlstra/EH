@@ -8,8 +8,16 @@ include 'simplify.eh'
 
 const public VERBOSE = false
 
+private slice arr start = do
+    private out = []
+    for i in 1..(arr.length() - 1)
+        out.push(arr->i)
+    end
+    return out
+end
+
 public main argc argv = do
-    if argc != 2
+    if argc < 2
         echo "ehb: no filename provided"
         exit 1
     end
@@ -22,6 +30,8 @@ public main argc argv = do
     if VERBOSE
         echo(disassemble bytecode)
     end
+    global.argc -= 1
+    global.argv = slice argv 1
     EH.executeBytecode bytecode
 end
 

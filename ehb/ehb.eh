@@ -8,6 +8,15 @@ include 'simplify.eh'
 
 const public VERBOSE = false
 
+private reset_argv() = do
+    private new_argv = Array()
+    for i in 1..(argc - 1)
+        new_argv.push(argv->i)
+    end
+    global.argc -= 1
+    global.argv = new_argv
+end
+
 public main argc argv = do
     if argc != 2
         echo "ehb: no filename provided"
@@ -22,6 +31,8 @@ public main argc argv = do
     if VERBOSE
         echo(disassemble bytecode)
     end
+
+    reset_argv()
     EH.executeBytecode bytecode
 end
 

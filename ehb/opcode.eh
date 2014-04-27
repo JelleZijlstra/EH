@@ -537,7 +537,7 @@ private compile_rec code co = do
 
             co.append(Opcode.LOAD_STRING(co.register_string message))
             co.append(Opcode.MOVE(0, 2))
-            co.append(Opcode.LOAD_NULL)
+            co.append(Opcode.LOAD_NULL 0)
             co.append(Opcode.CALL_METHOD(co.register_string "toString"))
             co.append(Opcode.MOVE(2, 1))
             co.append(Opcode.CALL_METHOD(co.register_string "operator+"))
@@ -732,7 +732,7 @@ private compile_set code co attributes = match code
         co.append(Opcode.GET_RAW_TYPE(0, 1))
         co.append(Opcode.LOAD_RAW_INTEGER(2, null.typeId()))
         co.append(Opcode.JUMP_EQUAL(1, 2, safe_label))
-        co.append(Opcode.LOAD_STRING(co.register_string "Expected a null value"))
+        co.append(Opcode.LOAD_STRING(co.register_string "Expected a null value to be assigned to null"))
         co.append(Opcode.THROW_EXCEPTION(RuntimeError.typeId()))
         co.append(Opcode.LABEL safe_label)
     case Node.T_ANYTHING
@@ -875,11 +875,13 @@ else
         match block
             case Node.T_CATCH(@body)
                 compile_rec body co
+                co.append(Opcode.POP 3)
                 co.append(Opcode.JUMP end_try_catch_label)
             case Node.T_CATCH_IF(@guard, @body)
                 compile_rec guard co
                 co.append(Opcode.JUMP_FALSE next_label)
                 compile_rec body co
+                co.append(Opcode.POP 3)
                 co.append(Opcode.JUMP end_try_catch_label)
         end
         co.append(Opcode.LABEL next_label)

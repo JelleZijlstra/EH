@@ -18,7 +18,7 @@ private reset_argv() = do
 end
 
 public main argc argv = do
-    if argc != 2
+    if argc < 2
         echo "ehb: no filename provided"
         exit 1
     end

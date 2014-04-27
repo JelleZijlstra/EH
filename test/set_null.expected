@@ -1,4 +1,4 @@
 %%stdout%%
 executing
 %%stderr%%
-Uncaught exception of type MiscellaneousError: <MiscellaneousError: Non-null value assigned to null>
+Uncaught exception of type RuntimeError: <RuntimeError: Expected a null value to be assigned to null>

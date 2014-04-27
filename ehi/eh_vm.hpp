@@ -116,14 +116,22 @@ private:
     // dec_rc's the pointer if there is one
     void destruct_pointer() {
         if(this->is_pointer()) {
-            // rely on destructor
-            ehval_p to_destruct = ehval_p(static_cast<ehval_t *>(this->pointer_value), false);
+            int old_refcount = get_refcount();
+            {
+                // rely on destructor
+                ehval_p to_destruct = ehval_p(static_cast<ehval_t *>(this->pointer_value), false);
+            }
+            assert(get_refcount() == old_refcount - 1);
         }
     }
 
     // disallowed operations
     register_value(const register_value&);
     register_value operator=(const register_value&);
+
+    int get_refcount() {
+        return static_cast<ehval_t *>(this->pointer_value)->refcount;
+    }
 
 public:
     // integer_value(1) == 0
@@ -172,18 +180,27 @@ public:
         this->destruct_pointer();
         this->integer_value = other.integer_value;
         if(this->is_pointer()) {
+            int old_refcount = get_refcount();
             this->get_pointer()->inc_rc();
+            assert(get_refcount() == old_refcount + 1);
         }
     }
 
     bool equal(const register_value &other) {
         return this->integer_value == other.integer_value;
     }
+
+    void clear() {
+        this->destruct_pointer();
+        this->integer_value = 1;
+    }
 };
 
 
 class eh_frame_t {
 public:
+    const static int N_REGISTERS = 4;
+
     enum type {
         class_e, enum_e, function_e, module_e, generator_e
     };
@@ -196,7 +213,7 @@ public:
     code_object *co;
     uint32_t current_offset;
     ehcontext_t context;
-    register_value registers[4];
+    register_value registers[N_REGISTERS];
     std::vector<ehval_p> stack;
 
     eh_frame_t(type typ_, code_object *co_, uint32_t current_offset_, ehcontext_t context_, ehval_p argument_ = nullptr) : typ(typ_), response(none_e), co(co_), current_offset(current_offset_), context(context_), registers(), stack() {

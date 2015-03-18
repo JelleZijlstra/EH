@@ -28,9 +28,10 @@ Array##append = Array##push
 
 enum Opcode
     JUMP(target), # unconditionally jumps to position target in the current code object
-    JUMP_TRUE(target), # jumps to target if the current value in #0 is true
-    JUMP_FALSE(target), # jumps to target if the current value in #0 is false
+    JUMP_TRUE(n, target), # jumps to target if the current value in #n is true
+    JUMP_FALSE(n, target), # jumps to target if the current value in #n is false
     JUMP_EQUAL(register_a, register_b, target), # jumps to target if register_a and register_b contain the same value
+    JUMP_NOT_EQUAL(register_a, register_b, target), # jumps to target if register_a and register_b do not contain the same value
     MOVE(register_a, register_b), # moves a value from register a to register b
     LOAD(name), # looks up the value associated with the name and puts it in #0
     SET(attributes, name), # sets name to the value in #0 with the attributes given
@@ -95,8 +96,8 @@ enum CAttributes
     public toInteger() = match this
         case Null
             0
-        case Set(@is_private, _, @is_const)
-            (is_private.toInteger() << 2) | (is_const.toInteger() << 1) | 1
+        case Set(@is_private, @is_static, @is_const)
+             (is_static.toInteger() << 3) | (is_private.toInteger() << 2) | (is_const.toInteger() << 1) | 1
     end
 
     public static parse attributes = do
@@ -246,13 +247,16 @@ class CodeObject
             end
             ba->offset = opcode.numericValue()
             match opcode
-                case Opcode.JUMP(@target) | Opcode.JUMP_TRUE(@target) | Opcode.JUMP_FALSE(@target) | Opcode.CREATE_FUNCTION(@target) | Opcode.LOAD_CLASS(@target) | Opcode.LOAD_ENUM(@target) | Opcode.BEGIN_TRY_FINALLY(@target) | Opcode.BEGIN_TRY_CATCH(@target) | Opcode.CREATE_GENERATOR(@target)
+                case Opcode.JUMP(@target) | Opcode.CREATE_FUNCTION(@target) | Opcode.LOAD_CLASS(@target) | Opcode.LOAD_ENUM(@target) | Opcode.BEGIN_TRY_FINALLY(@target) | Opcode.BEGIN_TRY_CATCH(@target) | Opcode.CREATE_GENERATOR(@target)
+                    ba.wrappedSetInteger(offset + SIZEOF_OFFSET, target.get_location())
+                case Opcode.JUMP_TRUE(@register, @target) | Opcode.JUMP_FALSE(@register, @target)
+                    ba->(offset + 2) = register
                     ba.wrappedSetInteger(offset + SIZEOF_OFFSET, target.get_location())
                 case Opcode.MOVE(@register_a, @register_b) | Opcode.GET_RAW_TYPE(@register_a, @register_b) | Opcode.RAW_TUPLE_SIZE(@register_a, @register_b)
                     # offset + 1 is unused
                     ba->(offset + 2) = register_a
                     ba->(offset + 3) = register_b
-                case Opcode.JUMP_EQUAL(@register_a, @register_b, @target) | Opcode.MATCH_ENUM_INSTANCE(@register_a, @register_b, @target)
+                case Opcode.JUMP_EQUAL(@register_a, @register_b, @target) | Opcode.JUMP_NOT_EQUAL(@register_a, @register_b, @target) | Opcode.MATCH_ENUM_INSTANCE(@register_a, @register_b, @target)
                     ba->(offset + 2) = register_a
                     ba->(offset + 3) = register_b
                     ba.wrappedSetInteger(offset + SIZEOF_OFFSET, target.get_location())
@@ -501,7 +505,7 @@ private compile_rec code co = do
             co.pop_loop()
             co.append(Opcode.LABEL end_label)
             compile_rec condition co
-            co.append(Opcode.JUMP_TRUE begin_label)
+            co.append(Opcode.JUMP_TRUE(0, begin_label))
             co.append(Opcode.LABEL after_loop_label)
             # make sure while loop always returns null. Perhaps we can do without this.
             co.append(Opcode.LOAD_NULL 0)
@@ -515,7 +519,6 @@ private compile_rec code co = do
             compile_elsifs condition if_block elsif_blocks else_block co
         case Node.T_MATCH(@match_var, Node.T_LIST(@cases))
             private end_label = Label()
-            private next_label = Label()
             compile_rec match_var co
             for kase in cases
                 private next_label = Label()
@@ -525,21 +528,34 @@ private compile_rec code co = do
                         compile_rec body co
                     case Node.T_WHEN(@pattern, @guard, @body)
                         compile_pattern pattern next_label co
+                        co.append(Opcode.PUSH 0)
                         compile_rec guard co
-                        co.append(Opcode.JUMP_TRUE next_label)
+                        co.append(Opcode.MOVE(0, 1))
+                        co.append(Opcode.POP 0)
+                        co.append(Opcode.JUMP_TRUE(1, next_label))
                         compile_rec body co
                 end
                 co.append(Opcode.JUMP end_label)
                 co.append(Opcode.LABEL next_label)
             end
-            private message = "No matching case in match statement: "
-            co.append(Opcode.MOVE(0, 1))
 
-            co.append(Opcode.LOAD_STRING(co.register_string message))
-            co.append(Opcode.MOVE(0, 2))
+            # co.append(Opcode.MOVE(0, 1))
+            # co.append(Opcode.LOAD(co.register_string "printvar"))
+            # co.append(Opcode.MOVE(0, 2))
+            # co.append(Opcode.MOVE(1, 0))
+            # co.append(Opcode.MOVE(2, 1))
+            # co.append(Opcode.CALL)
+
+            # the variable matched on is in #0
+            co.append(Opcode.MOVE(0, 1))
             co.append(Opcode.LOAD_NULL 0)
             co.append(Opcode.CALL_METHOD(co.register_string "toString"))
-            co.append(Opcode.MOVE(2, 1))
+            co.append(Opcode.MOVE(0, 2))
+
+            private message = "No matching case in match statement: "
+            co.append(Opcode.LOAD_STRING(co.register_string message))
+            co.append(Opcode.MOVE(0, 1))
+            co.append(Opcode.MOVE(2, 0))
             co.append(Opcode.CALL_METHOD(co.register_string "operator+"))
 
             co.append(Opcode.THROW_EXCEPTION(RuntimeError.typeId()))
@@ -570,7 +586,7 @@ private compile_rec code co = do
             compile_rec left co
             compile_boolify co
             private end_label = Label()
-            co.append(Opcode.JUMP_TRUE end_label)
+            co.append(Opcode.JUMP_TRUE(0, end_label))
             compile_rec right co
             compile_boolify co
             co.append(Opcode.LABEL end_label)
@@ -685,7 +701,8 @@ private compile_rec code co = do
         case Node.T_NAMED_CLASS(@name, @body)
             name_id = co.register_string name
             compile_class body name_id co
-            co.append(Opcode.SET(CAttributes.Null, name_id))
+            co.append(Opcode.LOAD_THIS 1)
+            co.append(Opcode.SET_PROPERTY(CAttributes.Set(false, false, false), name_id))
     end
 end
 
@@ -693,7 +710,7 @@ private compile_elsifs condition if_block elsif_blocks else_block co = do
     compile_rec condition co
     private next_block = Label()
     private bottom = Label()
-    co.append(Opcode.JUMP_FALSE next_block)
+    co.append(Opcode.JUMP_FALSE(0, next_block))
     compile_rec if_block co
     co.append(Opcode.JUMP bottom)
     co.append(Opcode.LABEL next_block)
@@ -703,7 +720,7 @@ private compile_elsifs condition if_block elsif_blocks else_block co = do
             case Node.T_ELSIF(@elsif_condition, @elsif_body)
                 next_block = Label()
                 compile_rec elsif_condition co
-                co.append(Opcode.JUMP_FALSE next_block)
+                co.append(Opcode.JUMP_FALSE(0, next_block))
                 compile_rec elsif_body co
                 co.append(Opcode.JUMP bottom)
                 co.append(Opcode.LABEL next_block)
@@ -783,6 +800,7 @@ private compile_set code co attributes = match code
 end
 
 private compile_pattern pattern next_label co = match pattern
+    # pattern to match on is in #0
     case Node.T_ANYTHING
         # do nothing, it's always true
     case Node.T_GROUPING(@inner)
@@ -806,10 +824,10 @@ private compile_pattern pattern next_label co = match pattern
         # first check that the match var is a tuple
         co.append(Opcode.GET_RAW_TYPE(0, 2))
         co.append(Opcode.LOAD_RAW_INTEGER(Tuple.typeId(), 3))
-        co.append(Opcode.JUMP_EQUAL(2, 3, next_label))
+        co.append(Opcode.JUMP_NOT_EQUAL(2, 3, next_label))
         co.append(Opcode.RAW_TUPLE_SIZE(0, 2))
         co.append(Opcode.LOAD_RAW_INTEGER(members_size, 3))
-        co.append(Opcode.JUMP_EQUAL(2, 3, next_label))
+        co.append(Opcode.JUMP_NOT_EQUAL(2, 3, next_label))
         co.append(Opcode.PUSH 0)
         for i in members_size
             co.append(Opcode.POP 1)
@@ -833,27 +851,42 @@ private compile_pattern pattern next_label co = match pattern
         co.append(Opcode.LOAD_STRING(co.register_string "Invalid argument number in Enum.Member match"))
         co.append(Opcode.THROW_EXCEPTION(RuntimeError.typeId()))
         co.append(Opcode.LABEL after_exception_label)
+        # now #0 has the enum constructor and #1 has the pattern
+        private fixup_label = Label()
+        private end_label = Label()
         match args
             case Node.T_LIST(@args_list)
-                co.append(Opcode.PUSH 1)
                 for i in args_size
-                    co.append(Opcode.POP 1)
                     co.append(Opcode.GET_ENUM_ARGUMENT(1, 0, i))
                     co.append(Opcode.PUSH 1)
-                    compile_pattern (args_list->i) next_label co
+                    compile_pattern (args_list->i) fixup_label co
+                    co.append(Opcode.POP 1)
                 end
-                co.append(Opcode.POP 0)
+                co.append(Opcode.MOVE(1, 0))
             case _
                 co.append(Opcode.GET_ENUM_ARGUMENT(1, 0, 0))
-                compile_pattern args next_label co
+                co.append(Opcode.PUSH 1)
+                compile_pattern args fixup_label co
+                co.append(Opcode.POP 0)
         end
+        co.append(Opcode.JUMP end_label)
+        # if the inner match fails, make sure we reset #0 to contain the pattern 
+        # (which is going to be at the top of the stack)
+        co.append(Opcode.LABEL fixup_label)
+        co.append(Opcode.POP 0)
+        co.append(Opcode.JUMP next_label)
+        co.append(Opcode.LABEL end_label)
     case _
         co.append(Opcode.PUSH 0)
         compile_rec pattern co
+        # This is ugly but I can't think of a way to do it with fewer MOVEs
         co.append(Opcode.MOVE(0, 1))
         co.append(Opcode.POP 0)
+        co.append(Opcode.MOVE(0, 2))
         co.append(Opcode.CALL_METHOD(co.register_string "operator=="))
-        co.append(Opcode.JUMP_FALSE next_label)
+        co.append(Opcode.MOVE(0, 3))
+        co.append(Opcode.MOVE(2, 0))
+        co.append(Opcode.JUMP_FALSE(3, next_label))
 end
 
 private compile_try_catch try_block catch_blocks co = if catch_blocks == Tuple []

@@ -5,7 +5,7 @@ class A
 	catch
 		echo 'Too bad, that did not work'
 	end
-	
+
 	class A
 		public b
 	end

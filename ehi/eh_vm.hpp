@@ -22,6 +22,7 @@ enum eh_opcode_t {
     JUMP_TRUE,
     JUMP_FALSE,
     JUMP_EQUAL,
+    JUMP_NOT_EQUAL,
     MOVE,
     LOAD,
     SET,
@@ -116,12 +117,8 @@ private:
     // dec_rc's the pointer if there is one
     void destruct_pointer() {
         if(this->is_pointer()) {
-            int old_refcount = get_refcount();
-            {
-                // rely on destructor
-                ehval_p to_destruct = ehval_p(static_cast<ehval_t *>(this->pointer_value), false);
-            }
-            assert(get_refcount() == old_refcount - 1);
+            // rely on destructor
+            ehval_p to_destruct = ehval_p(static_cast<ehval_t *>(this->pointer_value), false);
         }
     }
 

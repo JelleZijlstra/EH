@@ -6,7 +6,7 @@ include 'listify.eh'
 include 'opcode.eh'
 include 'simplify.eh'
 
-const public VERBOSE = false
+const public VERBOSE = true
 
 private reset_argv() = do
     private new_argv = Array()

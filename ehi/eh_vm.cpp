@@ -37,7 +37,8 @@ static void dump(ehval_p object, EHI *ehi) {
 static attributes_t parse_attributes(int attr) {
     visibility_enum v = (attr & 4) ? private_e : public_e;
     const_enum c = (attr & 2) ? const_e : nonconst_e;
-    return attributes_t(v, nonstatic_e, c);
+    static_enum s = (attr & 8) ? static_e : nonstatic_e;
+    return attributes_t(v, s, c);
 }
 
 code_object::code_object(const uint8_t *data_) : data(data_) {
@@ -114,14 +115,14 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
                 frame->current_offset = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
                 break;
             case JUMP_TRUE: {
-                bool val = eh_compiled::boolify(registers[0].get_pointer(), context, ehi);
+                bool val = eh_compiled::boolify(registers[current_op[2]].get_pointer(), context, ehi);
                 if(val) {
                     frame->current_offset = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
                 }
                 break;
             }
             case JUMP_FALSE: {
-                bool val = eh_compiled::boolify(registers[0].get_pointer(), context, ehi);
+                bool val = eh_compiled::boolify(registers[current_op[2]].get_pointer(), context, ehi);
                 if(!val) {
                     frame->current_offset = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
                 }
@@ -129,6 +130,11 @@ ehval_p eh_execute_frame(eh_frame_t *frame, EHI *ehi) {
             }
             case JUMP_EQUAL:
                 if(registers[current_op[2]].equal(registers[current_op[3]])) {
+                    frame->current_offset = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
+                }
+                break;
+            case JUMP_NOT_EQUAL:
+                if(!registers[current_op[2]].equal(registers[current_op[3]])) {
                     frame->current_offset = get_bytes<uint32_t>(current_op, SIZEOF_OFFSET);
                 }
                 break;

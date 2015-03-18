@@ -83,6 +83,7 @@ struct code_object_header {
     uint8_t magic[2]; // always "EH"
     uint8_t version[2]; // for now, always 00
     uint32_t size; // total size of the code object in bytes
+    uint32_t filename_offset; // offset of the file name
     uint32_t string_offset; // offset of the string registry
     uint32_t code_offset; // offset of the actual code
     uint32_t entry_point; // offset of first piece of code to be executed
@@ -90,7 +91,7 @@ struct code_object_header {
 };
 
 // hardcoded for easy reference from the EH code
-const static int CODE_OBJECT_HEADER_SIZE = 20;
+const static int CODE_OBJECT_HEADER_SIZE = 24;
 static_assert(CODE_OBJECT_HEADER_SIZE == sizeof(code_object_header), "needs to be kept in sync");
 
 class code_object {
@@ -102,6 +103,8 @@ public:
     ~code_object();
 
     void validate_header(EHI *ehi);
+
+    const std::string get_file_name();
 };
 
 // a tagged union for register values

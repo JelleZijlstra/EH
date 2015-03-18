@@ -27,7 +27,7 @@ public main argc argv = do
     private code = EH.parse(File.readFile filename)
     code = optimize code
     code = listify code
-    bytecode = compile code
+    bytecode = compile code filename
     if VERBOSE
         echo(disassemble bytecode)
     end

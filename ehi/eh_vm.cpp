@@ -45,6 +45,11 @@ code_object::code_object(const uint8_t *data_) : data(data_) {
     header = static_cast<const code_object_header *>(static_cast<const void *>(data));
 }
 
+const std::string code_object::get_file_name() {
+    auto length = this->header->string_offset - this->header->filename_offset;
+    return std::string(this->data[this->header->filename_offset], length);
+}
+
 code_object::~code_object() {
 }
 
@@ -61,7 +66,7 @@ void code_object::validate_header(EHI *ehi) {
     if(header->size < CODE_OBJECT_HEADER_SIZE) {
         throw_CompileError("Code object is too small", ehi);
     }
-    if(header->string_offset != CODE_OBJECT_HEADER_SIZE) {
+    if(header->filename_offset != CODE_OBJECT_HEADER_SIZE) {
         throw_CompileError("String offset must be immediately after header", ehi);
     }
     if(header->entry_point < header->string_offset) {
@@ -73,11 +78,16 @@ void eh_execute_bytecode(const uint8_t *data, EHI *ehi) {
     code_object co(data);
     co.validate_header(ehi);
 
-    // create blob-global frame object
-    ehval_p global_object = ehi->get_parent()->global_object;
+    auto parent = ehi->get_parent();
+    ehval_p global_object = parent->global_object;
     ehcontext_t context(global_object, global_object);
+    auto filename = co.get_file_name();
+    auto dir = eh_dirname(filename);
+    EHI new_ehi(end_is_end_e, parent, context, dir, filename);
+
+    // create blob-global frame object
     eh_frame_t frame(eh_frame_t::module_e, &co, co.header->entry_point, context);
-    eh_execute_frame(&frame, ehi);
+    eh_execute_frame(&frame, &new_ehi);
 }
 
 template<class T>
